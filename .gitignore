@@ -1,24 +1,6 @@
-# Dependências
-node_modules/
-
-# Build
-dist/
-
-# Variáveis de ambiente — NUNCA versionar
+node_modules
+dist
 .env
 .env.local
-.env.*.local
-
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Sistema
+.env.production
 .DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
