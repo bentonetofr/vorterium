@@ -1,0 +1,49 @@
+.app-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* Imagem com fundo transparente real — sem container de cor artificial */
+.app-logo__img {
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  /* Zoom leve: a imagem tem padding interno gerado pelo personagem */
+  transform: scale(1.15);
+  transform-origin: center;
+  /* Glow sutil no modo escuro para integração com fundo navy */
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.15));
+  transition: filter var(--transition-base), transform var(--transition-fast);
+}
+
+[data-theme="light"] .app-logo__img {
+  /* No modo claro: sombra leve para destacar o personagem do fundo claro */
+  filter: drop-shadow(0 2px 6px rgba(80, 55, 10, 0.2));
+}
+
+/* Hover em contexto de link ou botão */
+a .app-logo__img,
+button .app-logo__img {
+  transition: transform var(--transition-base), filter var(--transition-base);
+}
+a:hover .app-logo__img,
+button:hover .app-logo__img {
+  transform: scale(1.22);
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.35));
+}
+
+/* Texto ao lado */
+.app-logo__text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--accent-bright);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.app-logo--sm .app-logo__text { font-size: var(--text-xl);  }
+.app-logo--md .app-logo__text { font-size: var(--text-3xl); }
+.app-logo--lg .app-logo__text { font-size: var(--text-4xl); }

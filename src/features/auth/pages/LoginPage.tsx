@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../AuthProvider'
 import { processPendingInvite } from '../../invites/services/inviteService'
+import { AppLogo } from '../../../shared/components/AppLogo'
 import './AuthPages.css'
 
 export function LoginPage() {
@@ -49,7 +50,7 @@ export function LoginPage() {
   return (
     <div className="auth-card animate-fade-up">
       <header className="auth-card__header">
-        <div className="auth-card__sigil" aria-hidden="true">⚔</div>
+        <AppLogo size="md" />
         <h1 className="auth-card__title">Campaign Lab</h1>
         <p className="auth-card__subtitle">Acesse sua conta para gerenciar suas campanhas.</p>
       </header>

@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
+import { AppLogo } from '../../../shared/components/AppLogo'
 import './PublicPages.css'
 
 export function LandingPage() {
   return (
     <div className="landing animate-fade-in">
       <div className="landing__hero">
-        <span className="landing__icon" aria-hidden="true">⚔</span>
+        <AppLogo size="lg" />
         <h1 className="landing__title">Campaign Lab</h1>
         <p className="landing__subtitle">
           Organize suas campanhas de RPG de mesa. Gerencie membros, fichas de

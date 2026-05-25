@@ -114,12 +114,7 @@
   gap: var(--space-4);
 }
 
-.landing__icon {
-  font-size: 3rem;
-  color: var(--accent-bright);
-  line-height: 1;
-  animation: glowPulse 4s ease-in-out infinite;
-}
+/* .landing__icon substituído por AppLogo */
 
 .landing__title {
   font-family: var(--font-display);

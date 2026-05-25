@@ -30,19 +30,7 @@
   border-bottom: 1px solid var(--border-dim);
 }
 
-.sidebar__brand-icon {
-  font-size: var(--text-2xl);
-  color: var(--accent-bright);
-  line-height: 1;
-}
-
-.sidebar__brand-name {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: var(--accent-bright);
-}
+/* .sidebar__brand-icon e .sidebar__brand-name substituídos por AppLogo */
 
 /* Usuário */
 .sidebar__user {
@@ -159,13 +147,7 @@
   justify-content: space-between;
 }
 
-.topbar__brand {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--accent-bright);
-  letter-spacing: 0.01em;
-}
+/* .topbar__brand substituído por AppLogo */
 
 .topbar__actions { display: flex; align-items: center; gap: var(--space-2); }
 

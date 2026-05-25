@@ -1,6 +1,7 @@
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { ThemeToggle } from '../../shared/components/ThemeToggle'
+import { AppLogo }     from '../../shared/components/AppLogo'
 import './PrivateLayout.css'
 
 export function PrivateLayout() {
@@ -23,8 +24,7 @@ export function PrivateLayout() {
       {/* ── Sidebar (desktop) ── */}
       <aside className="sidebar">
         <div className="sidebar__brand">
-          <span className="sidebar__brand-icon">⚔</span>
-          <span className="sidebar__brand-name">Campaign Lab</span>
+          <AppLogo size="sm" showText />
         </div>
 
         {user && (
@@ -70,7 +70,7 @@ export function PrivateLayout() {
 
       {/* ── Topbar (mobile) ── */}
       <header className="topbar">
-        <span className="topbar__brand">Campaign Lab</span>
+        <AppLogo size="sm" showText />
         <div className="topbar__actions">
           <ThemeToggle />
           <button

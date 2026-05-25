@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthProvider'
 import { processPendingInvite } from '../../invites/services/inviteService'
+import { AppLogo } from '../../../shared/components/AppLogo'
 import './AuthPages.css'
 
 export function RegisterPage() {
@@ -56,7 +57,7 @@ export function RegisterPage() {
   return (
     <div className="auth-card animate-fade-up">
       <header className="auth-card__header">
-        <div className="auth-card__sigil" aria-hidden="true">📜</div>
+        <AppLogo size="md" />
         <h1 className="auth-card__title">Campaign Lab</h1>
         <p className="auth-card__subtitle">Crie sua conta para organizar campanhas de RPG.</p>
       </header>
