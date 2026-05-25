@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../AuthProvider'
+import { processPendingInvite } from '../../invites/services/inviteService'
 import './AuthPages.css'
 
 export function LoginPage() {
@@ -23,7 +24,8 @@ export function LoginPage() {
     setSubmitting(true)
     try {
       await signInWithEmail(email, password)
-      navigate(from, { replace: true })
+      const pendingCampaignId = await processPendingInvite()
+      navigate(pendingCampaignId ? `/campanhas/${pendingCampaignId}` : from, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado.')
     } finally {

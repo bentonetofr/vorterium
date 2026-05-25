@@ -5,6 +5,11 @@ import {
   addCampaignMember,
   removeCampaignMember,
 } from '../services/memberService'
+import {
+  buildInviteUrl,
+  createCampaignInvite,
+  deactivateCampaignInvite,
+} from '../../invites/services/inviteService'
 import type { CampaignMemberWithProfile } from '../../../shared/types'
 import { formatRole } from '../../../shared/utils/campaign'
 import './CampaignMembersPanel.css'
@@ -65,6 +70,13 @@ export function CampaignMembersPanel({
   // ── Estado: remoção ──
   const [removingId, setRemovingId] = useState<string | null>(null)
 
+  // ── Estado: convite ──
+  const [inviteUrl, setInviteUrl]         = useState<string | null>(null)
+  const [inviteToken, setInviteToken]     = useState<string | null>(null)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError, setInviteError]     = useState<string | null>(null)
+  const [inviteCopied, setInviteCopied]   = useState(false)
+
   // ── Carregamento inicial ──
   const loadMembers = useCallback(async () => {
     setLoading(true)
@@ -111,6 +123,46 @@ export function CampaignMembersPanel({
       setAddError(err instanceof Error ? err.message : 'Não foi possível adicionar o jogador.')
     } finally {
       setAdding(false)
+    }
+  }
+
+  // ── Gerar convite ──
+  async function handleGenerateInvite() {
+    setInviteError(null)
+    setInviteLoading(true)
+    try {
+      const invite = await createCampaignInvite(campaignId)
+      const url    = buildInviteUrl(invite.token)
+      setInviteToken(invite.token)
+      setInviteUrl(url)
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : 'Não foi possível gerar o convite.')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
+  async function handleCopyInvite() {
+    if (!inviteUrl) return
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setInviteCopied(true)
+      setTimeout(() => setInviteCopied(false), 2500)
+    } catch {
+      // Fallback: select text
+      setInviteCopied(true)
+      setTimeout(() => setInviteCopied(false), 2500)
+    }
+  }
+
+  async function handleDeactivateInvite() {
+    if (!inviteToken) return
+    try {
+      await deactivateCampaignInvite(inviteToken)
+      setInviteUrl(null)
+      setInviteToken(null)
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : 'Não foi possível desativar o convite.')
     }
   }
 
@@ -212,6 +264,64 @@ export function CampaignMembersPanel({
             )
           })}
         </ul>
+      )}
+
+      {/* Seção de convite por link — apenas para o mestre */}
+      {isMaster && (
+        <div className="members-panel__invite">
+          <div className="members-panel__add-header">
+            <h4 className="members-panel__invite-title">Convite da campanha</h4>
+            <p className="members-panel__invite-hint">
+              Compartilhe o link para que jogadores entrem diretamente na campanha.
+            </p>
+          </div>
+
+          {inviteError && (
+            <div className="members-panel__feedback members-panel__feedback--error" role="alert">
+              {inviteError}
+            </div>
+          )}
+
+          {!inviteUrl ? (
+            <button
+              className="btn btn-ghost"
+              onClick={handleGenerateInvite}
+              disabled={inviteLoading}
+              style={{ alignSelf: 'flex-start', fontSize: 'var(--text-xs)' }}
+            >
+              {inviteLoading
+                ? <><span className="spinner spinner--sm" /> Gerando...</>
+                : '🔗 Gerar link de convite'
+              }
+            </button>
+          ) : (
+            <div className="members-panel__invite-link">
+              <span className="members-panel__invite-url" title={inviteUrl}>
+                {inviteUrl}
+              </span>
+              <button
+                className="btn btn-primary members-panel__invite-copy"
+                onClick={handleCopyInvite}
+                disabled={inviteCopied}
+              >
+                {inviteCopied ? '✓ Copiado' : 'Copiar'}
+              </button>
+            </div>
+          )}
+
+          {inviteCopied && (
+            <span className="members-panel__invite-copied">Link copiado!</span>
+          )}
+
+          {inviteUrl && (
+            <button
+              className="btn btn-danger members-panel__invite-deactivate"
+              onClick={handleDeactivateInvite}
+            >
+              Desativar convite
+            </button>
+          )}
+        </div>
       )}
 
       {/* Formulário de adição — apenas para o mestre */}

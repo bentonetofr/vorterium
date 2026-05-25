@@ -110,6 +110,7 @@ As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashb
 | 5 | `20240105000000_dice_rolls.sql` | Tabela `dice_rolls`; RLS por membro da campanha |
 | 6 | `20240106000000_harden_character_sheets_and_dice.sql` | Trigger que impede alteração de `campaign_id`/`user_id` em fichas; constraint de resultado máximo por tipo de dado; remove `dice_rolls` do Realtime |
 | 7 | `20240107000000_allow_profile_self_insert.sql` | Policy de INSERT em `profiles` para o próprio usuário — permite que `ensureProfile()` sincronize perfis ausentes com segurança |
+| 8 | `20240108000000_campaign_invites.sql` | Tabela `campaign_invites`; RLS; RPCs `create_campaign_invite`, `accept_campaign_invite`, `deactivate_campaign_invite` |
 
 > **Usuários criados antes da migration 1:** o trigger `handle_new_user` cria perfis apenas para novos cadastros. Para sincronizar usuários já existentes, rode o script de backfill comentado na seção 9 da migration 1.
 
@@ -224,6 +225,7 @@ src/
 | `/sobre` | Público | Sobre o Campaign Lab |
 | `/termos` | Público | Termos de uso |
 | `/privacidade` | Público | Política de privacidade |
+| `/convite/:token` | Público | Aceitar convite de campanha |
 
 ---
 
@@ -239,6 +241,24 @@ O Campaign Lab suporta alternância entre **modo escuro** (padrão) e **modo cla
 - A **preferência fica salva no navegador** via `localStorage` com a chave `campaign-lab-theme`.
 - O tema é aplicado antes do React montar (script no `<head>`) para evitar flash de tema errado.
 - A tela de login possui **animação de partículas douradas** subindo ao fundo, reforçando a atmosfera medieval/fantasia.
+
+
+---
+
+## Convites de campanha
+
+O mestre de uma campanha pode gerar um **link de convite** para compartilhar com jogadores.
+
+- Na seção **Membros** da campanha, o mestre vê o botão **"Gerar link de convite"**.
+- O link gerado tem o formato `/convite/:token`.
+- O jogador abre o link:
+  - Se **autenticado**: é adicionado como jogador e redirecionado para a campanha.
+  - Se **não autenticado**: o token é salvo e o usuário é levado para `/login`; após autenticar, o convite é processado automaticamente.
+- Convites **nunca concedem papel de mestre** — sempre adicionam como jogador.
+- O mestre pode **desativar** um convite ativo pelo botão correspondente.
+- Convites desativados deixam de funcionar imediatamente.
+
+> **Migration necessária:** `20240108000000_campaign_invites.sql` deve ser aplicada antes de usar esta funcionalidade.
 
 
 ---

@@ -105,3 +105,13 @@ export interface DiceRollWithProfile {
   created_at: string
   profile: Pick<ProfilePublic, 'id' | 'display_name'>
 }
+
+export interface CampaignInvite {
+  id: string
+  campaign_id: string
+  token: string
+  created_by: string
+  is_active: boolean
+  expires_at: string | null
+  created_at: string
+}

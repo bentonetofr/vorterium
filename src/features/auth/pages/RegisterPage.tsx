@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthProvider'
+import { processPendingInvite } from '../../invites/services/inviteService'
 import './AuthPages.css'
 
 export function RegisterPage() {
@@ -29,7 +30,8 @@ export function RegisterPage() {
       if (needsConfirmation) {
         setSuccess('Conta criada! Verifique seu e-mail para confirmar o cadastro antes de entrar.')
       } else {
-        navigate('/campanhas', { replace: true })
+        const pendingCampaignId = await processPendingInvite()
+        navigate(pendingCampaignId ? `/campanhas/${pendingCampaignId}` : '/campanhas', { replace: true })
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível criar sua conta.')

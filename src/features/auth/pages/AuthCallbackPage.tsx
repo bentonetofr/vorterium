@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../../shared/lib/supabase'
+import { processPendingInvite } from '../../invites/services/inviteService'
 
 /**
  * Rota: /auth/callback
@@ -32,7 +33,8 @@ export function AuthCallbackPage() {
 
       if (data.session) {
         clearInterval(interval)
-        navigate('/campanhas', { replace: true })
+        const pendingCampaignId = await processPendingInvite()
+        navigate(pendingCampaignId ? `/campanhas/${pendingCampaignId}` : '/campanhas', { replace: true })
         return
       }
 
