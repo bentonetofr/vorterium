@@ -220,6 +220,10 @@ src/
 | `/campanhas` | Autenticado | Lista de campanhas |
 | `/campanhas/nova` | Autenticado | Criar campanha |
 | `/campanhas/:campaignId` | Autenticado + membro | Área da campanha |
+| `/` | Público | Página inicial |
+| `/sobre` | Público | Sobre o Campaign Lab |
+| `/termos` | Público | Termos de uso |
+| `/privacidade` | Público | Política de privacidade |
 
 ---
 

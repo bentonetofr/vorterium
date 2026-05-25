@@ -293,3 +293,25 @@
     radial-gradient(ellipse at 60% 0%, rgba(180, 130, 10, 0.1) 0%, transparent 50%),
     radial-gradient(ellipse at 0% 100%, rgba(120, 88, 18, 0.06) 0%, transparent 50%);
 }
+
+/* ── Links institucionais no card de auth ── */
+.auth-card__legal {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card__legal-link {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color var(--transition-fast);
+}
+.auth-card__legal-link:hover { color: var(--accent-bright); }
+
+[data-theme="light"] .auth-card__legal-link { color: var(--text-muted); }
+[data-theme="light"] .auth-card__legal-link:hover { color: var(--accent-bright); }

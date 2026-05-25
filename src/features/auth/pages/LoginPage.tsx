@@ -116,6 +116,11 @@ export function LoginPage() {
         <span>Ainda não tem conta?</span>
         <Link to="/cadastro" className="auth-card__footer-link">Criar conta</Link>
       </footer>
+
+      <nav className="auth-card__legal" aria-label="Links institucionais">
+        <Link to="/termos"      className="auth-card__legal-link">Termos de uso</Link>
+        <Link to="/privacidade" className="auth-card__legal-link">Privacidade</Link>
+      </nav>
     </div>
   )
 }

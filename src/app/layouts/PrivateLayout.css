@@ -208,3 +208,21 @@
   font-size: var(--text-xs);
   padding: var(--space-2) var(--space-4);
 }
+
+/* ── Links institucionais (sidebar) ── */
+.sidebar__legal {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-1);
+}
+
+.sidebar__legal-link {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.sidebar__legal-link:hover { color: var(--accent-bright); }

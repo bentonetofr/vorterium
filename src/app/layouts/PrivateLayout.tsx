@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { ThemeToggle } from '../../shared/components/ThemeToggle'
 import './PrivateLayout.css'
@@ -58,6 +58,13 @@ export function PrivateLayout() {
               Sair
             </button>
           </div>
+
+          {/* Links institucionais discretos */}
+          <nav className="sidebar__legal" aria-label="Links institucionais">
+            <Link to="/sobre"       className="sidebar__legal-link">Sobre</Link>
+            <Link to="/termos"      className="sidebar__legal-link">Termos</Link>
+            <Link to="/privacidade" className="sidebar__legal-link">Privacidade</Link>
+          </nav>
         </div>
       </aside>
 
