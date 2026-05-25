@@ -1,0 +1,67 @@
+.magic-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.magic-particle {
+  position: absolute;
+  bottom: -12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(255, 220, 100, 1)   0%,
+    rgba(212, 175, 55, 0.8) 40%,
+    rgba(212, 175, 55, 0.1) 80%,
+    transparent              100%
+  );
+  box-shadow: 0 0 4px 1px rgba(212, 175, 55, 0.4);
+  animation: particleRise linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Partícula especial com brilho extra */
+.magic-particle--glow {
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(255, 240, 160, 1)   0%,
+    rgba(240, 200, 60,  0.9) 30%,
+    rgba(212, 175, 55,  0.3) 70%,
+    transparent              100%
+  );
+  box-shadow: 0 0 8px 3px rgba(212, 175, 55, 0.5),
+              0 0 16px 6px rgba(212, 175, 55, 0.15);
+}
+
+/* Modo claro: partículas um pouco mais discretas */
+[data-theme="light"] .magic-particle {
+  box-shadow: 0 0 4px 1px rgba(160, 110, 0, 0.4);
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(200, 150, 20, 1)   0%,
+    rgba(180, 130, 10, 0.7) 40%,
+    rgba(160, 110,  0, 0.1) 80%,
+    transparent              100%
+  );
+}
+
+@keyframes particleRise {
+  0%   {
+    transform: translateY(0) translateX(0)   scale(0.2);
+    opacity: 0;
+  }
+  8%   {
+    opacity: 0.9;
+  }
+  /* Leve oscilação horizontal para efeito mágico */
+  25%  { transform: translateY(-25vh) translateX(6px)  scale(0.9); }
+  50%  { transform: translateY(-50vh) translateX(-4px) scale(1.0); }
+  75%  { transform: translateY(-75vh) translateX(5px)  scale(0.85); opacity: 0.5; }
+  95%  { opacity: 0.1; }
+  100% {
+    transform: translateY(-105vh) translateX(0)  scale(0.5);
+    opacity: 0;
+  }
+}

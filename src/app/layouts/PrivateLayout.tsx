@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
+import { ThemeToggle } from '../../shared/components/ThemeToggle'
 import './PrivateLayout.css'
 
 export function PrivateLayout() {
@@ -51,12 +52,12 @@ export function PrivateLayout() {
         </nav>
 
         <div className="sidebar__footer">
-          <button
-            className="btn btn-ghost sidebar__signout"
-            onClick={handleSignOut}
-          >
-            Sair
-          </button>
+          <div className="sidebar__footer-actions">
+            <ThemeToggle />
+            <button className="btn btn-ghost sidebar__signout" onClick={handleSignOut}>
+              Sair
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -64,6 +65,7 @@ export function PrivateLayout() {
       <header className="topbar">
         <span className="topbar__brand">Campaign Lab</span>
         <div className="topbar__actions">
+          <ThemeToggle />
           <button
             className="topbar__btn"
             onClick={handleSignOut}

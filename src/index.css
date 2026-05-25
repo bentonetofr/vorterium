@@ -353,3 +353,84 @@ a:hover { color: var(--text-primary); }
   display: flex;
   flex-direction: column;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TEMA CLARO — Modo Pergaminho
+   Ativado via [data-theme="light"] no <html>
+   ═══════════════════════════════════════════════════════════ */
+
+[data-theme="light"] {
+  /* Backgrounds — pergaminho envelhecido */
+  --bg-void:     #ece4cc;
+  --bg-base:     #f5eed8;
+  --bg-surface:  #ede6cf;
+  --bg-elevated: #e4dcc4;
+  --bg-overlay:  #dbd2b8;
+  --bg-bright:   #cec5a8;
+
+  /* Bordas — dourado/marrom suave */
+  --border-dim:    rgba(120, 90, 30, 0.18);
+  --border-base:   rgba(120, 90, 30, 0.35);
+  --border-bright: rgba(120, 90, 30, 0.65);
+
+  /* Texto — marrom escuro sobre pergaminho */
+  --text-primary:   #1a1205;
+  --text-secondary: #4a3820;
+  --text-muted:     #8a7050;
+  --text-inverse:   #f5eed8;
+
+  /* Acento — âmbar mais saturado para contraste no fundo claro */
+  --accent:        #9a6800;
+  --accent-bright: #b07a00;
+  --accent-dim:    #7a5200;
+  --accent-glow:   rgba(160, 110, 0, 0.12);
+  --gilded:        rgba(120, 88, 18, 0.32);
+  --gilded-bright: rgba(120, 88, 18, 0.75);
+
+  /* Status */
+  --danger:   #c03030;
+  --warning:  #9a6000;
+  --success:  #2a7050;
+}
+
+/* Fundo do body no modo claro */
+[data-theme="light"] body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/* Glass panel — frosted parchment */
+[data-theme="light"] .glass-panel {
+  background: rgba(245, 238, 216, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Scrollbar no modo claro */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--border-base);
+}
+
+/* ── Transições suaves ao trocar de tema ── */
+/* Aplicadas apenas nos containers principais para não interferir
+   com animações de hover, spinner e partículas. */
+.public-layout,
+.private-layout,
+.sidebar,
+.topbar,
+.auth-card,
+.page,
+.card,
+.section-card,
+.campaign-card-row,
+.sheet-panel,
+.members-panel,
+.dice-panel,
+.die-btn,
+.member-row,
+.dice-history__row {
+  transition: background-color 280ms ease, border-color 200ms ease, color 200ms ease;
+}

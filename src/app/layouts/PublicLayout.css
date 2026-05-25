@@ -86,3 +86,11 @@
   color: var(--text-muted);
   letter-spacing: 0.05em;
 }
+
+/* ── Botão de tema (público) ── */
+.public-layout__theme-toggle {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 200;
+}

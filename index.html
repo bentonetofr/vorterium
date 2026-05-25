@@ -10,6 +10,16 @@
       rel="stylesheet"
     />
     <title>Campaign Lab</title>
+    <!--
+      Aplica o tema salvo ANTES do React montar para evitar
+      flash de tema errado (FOUC — Flash of Unstyled Content).
+    -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('campaign-lab-theme');
+        document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

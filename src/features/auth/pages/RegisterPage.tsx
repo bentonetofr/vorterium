@@ -56,7 +56,7 @@ export function RegisterPage() {
       <header className="auth-card__header">
         <div className="auth-card__sigil" aria-hidden="true">📜</div>
         <h1 className="auth-card__title">Campaign Lab</h1>
-        <p className="auth-card__subtitle">Forje seu legado nas Crônicas.</p>
+        <p className="auth-card__subtitle">Crie sua conta para organizar campanhas de RPG.</p>
       </header>
 
       {error   && <div className="auth-feedback auth-feedback--error"   role="alert">{error}</div>}
@@ -70,7 +70,7 @@ export function RegisterPage() {
               <div className="auth-input-wrap">
                 <span className="auth-input-icon" aria-hidden="true">👤</span>
                 <input id="display-name" type="text" className="input"
-                  placeholder="Como os bardos o chamarão?"
+                  placeholder="Nome que aparecerá para outros usuários"
                   autoComplete="name"
                   value={displayName} onChange={(e) => setDisplayName(e.target.value)}
                   disabled={busy} required />
@@ -82,7 +82,7 @@ export function RegisterPage() {
               <div className="auth-input-wrap">
                 <span className="auth-input-icon" aria-hidden="true">✉</span>
                 <input id="email" type="email" className="input"
-                  placeholder="seu@pergaminho.com"
+                  placeholder="seu@email.com"
                   autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)}
                   disabled={busy} required />

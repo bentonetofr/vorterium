@@ -40,7 +40,7 @@ export function CampaignsPage() {
             Olá, {displayName}
           </h2>
           <p className="page__meta">
-            Seus tomos e mapas estão prontos. Qual narrativa moldaremos hoje?
+            Escolha uma campanha para continuar ou crie uma nova.
           </p>
         </div>
         <Link to="/campanhas/nova" className="btn btn-primary" style={{ borderColor: 'rgba(255,221,184,0.5)', flexShrink: 0 }}>

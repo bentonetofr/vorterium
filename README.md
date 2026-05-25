@@ -223,6 +223,163 @@ src/
 
 ---
 
+## Tema claro/escuro
+
+O Campaign Lab suporta alternância entre **modo escuro** (padrão) e **modo claro** (pergaminho medieval).
+
+- O **tema padrão é escuro** (Medieval Dark v2).
+- O botão de alternância aparece em **todas as páginas** — canto superior direito nas telas públicas e na barra lateral/topbar nas telas privadas.
+- **Modo escuro:** o botão exibe ☀ (clicar para ir para modo claro).
+- **Modo claro:** o botão exibe ☾ (clicar para ir para modo escuro).
+- A troca de ícone tem animação de rotação.
+- A **preferência fica salva no navegador** via `localStorage` com a chave `campaign-lab-theme`.
+- O tema é aplicado antes do React montar (script no `<head>`) para evitar flash de tema errado.
+- A tela de login possui **animação de partículas douradas** subindo ao fundo, reforçando a atmosfera medieval/fantasia.
+
+
+---
+
+## Deploy de teste na Vercel
+
+### Pré-requisitos
+
+Antes de fazer o deploy, certifique-se de que:
+
+- Conta no [GitHub](https://github.com)
+- Conta na [Vercel](https://vercel.com)
+- Projeto no Supabase criado e configurado
+- Todas as migrations aplicadas no Supabase (ver seção acima)
+- Supabase Auth configurado (e-mail/senha e Google OAuth)
+
+---
+
+### Passo 1 — Subir para o GitHub
+
+```bash
+# Na raiz do projeto
+git init
+git add .
+git commit -m "feat: Campaign Lab MVP"
+
+# Crie um repositório no GitHub e depois:
+git remote add origin https://github.com/seu-usuario/campaign-lab.git
+git push -u origin main
+```
+
+> **Importante:** confirme que `.env` **não** está no commit. Ele deve estar no `.gitignore`.
+
+---
+
+### Passo 2 — Importar na Vercel
+
+1. Acesse [vercel.com](https://vercel.com) e faça login
+2. Clique em **Add New → Project**
+3. Importe o repositório do GitHub
+4. Configure o projeto:
+   - **Framework Preset:** Vite
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+5. **Não clique em Deploy ainda** — configure as variáveis de ambiente primeiro
+
+---
+
+### Passo 3 — Variáveis de ambiente na Vercel
+
+Na tela de configuração do projeto (ou em **Settings → Environment Variables** depois):
+
+| Nome | Valor |
+|---|---|
+| `VITE_SUPABASE_URL` | `https://seu-projeto.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | sua anon key do Supabase |
+
+Após adicionar as variáveis, clique em **Deploy**.
+
+A Vercel irá gerar uma URL no formato:
+```
+https://campaign-lab-xxxx.vercel.app
+```
+
+---
+
+### Passo 4 — Atualizar Supabase Auth
+
+Com a URL da Vercel em mãos, acesse o Supabase Dashboard:
+
+```
+Authentication → URL Configuration
+```
+
+**Site URL:**
+```
+https://campaign-lab-xxxx.vercel.app
+```
+
+**Redirect URLs** (adicione os dois — mantenha localhost para desenvolvimento):
+```
+http://localhost:5173/auth/callback
+https://campaign-lab-xxxx.vercel.app/auth/callback
+```
+
+Salve as alterações.
+
+---
+
+### Passo 5 — Revisar Google OAuth
+
+No [Google Cloud Console](https://console.cloud.google.com) → **APIs & Services → Credentials → seu OAuth 2.0 Client**:
+
+**Authorized JavaScript origins** — adicione:
+```
+https://campaign-lab-xxxx.vercel.app
+```
+
+**Authorized redirect URIs** — a URI de callback do Supabase não muda:
+```
+https://SEU-PROJETO.supabase.co/auth/v1/callback
+```
+
+> Se essa URI já estava configurada antes, não é necessário alterar. O redirect vai para o Supabase, não para a Vercel diretamente.
+
+---
+
+### Passo 6 — Testar online
+
+Após o deploy, valide os fluxos principais:
+
+1. Abra a URL da Vercel
+2. Crie uma conta (`/cadastro`)
+3. Faça login (`/login`)
+4. Teste login com Google
+5. Crie uma campanha
+6. Adicione um segundo usuário como jogador
+7. Edite a ficha de personagem
+8. Role dados e verifique o histórico
+9. Faça logout e confirme redirecionamento para `/login`
+
+---
+
+### Checklist de deploy
+
+- [ ] `npm run build` passou localmente
+- [ ] `.env` não está no repositório (está no `.gitignore`)
+- [ ] Projeto subido para o GitHub
+- [ ] Projeto importado na Vercel com framework Vite
+- [ ] `VITE_SUPABASE_URL` configurada na Vercel
+- [ ] `VITE_SUPABASE_ANON_KEY` configurada na Vercel
+- [ ] Deploy realizado com sucesso na Vercel
+- [ ] Supabase **Site URL** atualizado para a URL da Vercel
+- [ ] Supabase **Redirect URLs** atualizadas (localhost + Vercel)
+- [ ] Google OAuth revisado (JavaScript origins + redirect URIs)
+- [ ] Login com e-mail/senha testado na URL de produção
+- [ ] Login com Google testado na URL de produção
+- [ ] Logout testado
+- [ ] Criação de campanha testada
+- [ ] Adição de membros testada
+- [ ] Ficha de personagem testada
+- [ ] Rolagem de dados testada
+
+---
+
 ## Checklist de teste manual
 
 Execute na ordem para validar o MVP completo:
@@ -242,5 +399,3 @@ Execute na ordem para validar o MVP completo:
 - [ ] **Rolar dados** — selecionar um dado (ex: d20), clicar em "Rolar d20". Confirmar que o resultado aparece e entra no histórico.
 - [ ] **Ver histórico** — confirmar que o histórico mostra jogador, dado, resultado e horário.
 - [ ] **Testar bloqueio de rota privada** — deslogar e acessar `/campanhas` diretamente. Confirmar redirecionamento para `/login`.
-#   c a m p a i g n - l a b - v 2  
- 

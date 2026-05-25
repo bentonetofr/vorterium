@@ -49,7 +49,7 @@ export function LoginPage() {
       <header className="auth-card__header">
         <div className="auth-card__sigil" aria-hidden="true">⚔</div>
         <h1 className="auth-card__title">Campaign Lab</h1>
-        <p className="auth-card__subtitle">Desvende os segredos de Arton.</p>
+        <p className="auth-card__subtitle">Acesse sua conta para gerenciar suas campanhas.</p>
       </header>
 
       {error && (
@@ -63,7 +63,7 @@ export function LoginPage() {
             <span className="auth-input-icon" aria-hidden="true">✉</span>
             <input
               id="email" type="email" className="input"
-              placeholder="mago@guilda.com"
+              placeholder="seu@email.com"
               autoComplete="email"
               value={email} onChange={(e) => setEmail(e.target.value)}
               disabled={busy} required
@@ -72,7 +72,7 @@ export function LoginPage() {
         </div>
 
         <div className="auth-field">
-          <label className="label" htmlFor="password">Senha mística</label>
+          <label className="label" htmlFor="password">Senha</label>
           <div className="auth-input-wrap">
             <span className="auth-input-icon" aria-hidden="true">🗝</span>
             <input
@@ -92,7 +92,7 @@ export function LoginPage() {
         >
           {submitting
             ? <><span className="spinner spinner--sm" /> Entrando...</>
-            : 'Entrar nos Registros'
+            : 'Entrar'
           }
         </button>
       </form>
@@ -113,7 +113,7 @@ export function LoginPage() {
       </button>
 
       <footer className="auth-card__footer">
-        <span>Novo na Guilda?</span>
+        <span>Ainda não tem conta?</span>
         <Link to="/cadastro" className="auth-card__footer-link">Criar conta</Link>
       </footer>
     </div>

@@ -31,7 +31,7 @@ export function NewCampaignPage() {
         <div>
           <Link to="/campanhas" className="page__back">← Campanhas</Link>
           <h2 className="page__title">Criar Campanha</h2>
-          <p className="page__meta">Forje as fundações do seu novo mundo.</p>
+          <p className="page__meta">Informe os dados básicos da campanha.</p>
         </div>
       </header>
 
@@ -55,7 +55,7 @@ export function NewCampaignPage() {
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)',
             color: 'var(--accent-bright)', marginBottom: 'var(--space-6)',
           }}>
-            Detalhes do Tomo
+            Dados da campanha
           </h3>
 
           {error && (
