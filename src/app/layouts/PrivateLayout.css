@@ -1,0 +1,198 @@
+/* ── Layout privado ── */
+.private-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-base);
+}
+
+/* ── Sidebar — desktop ── */
+.sidebar {
+  width: 256px;
+  min-height: 100vh;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+/* Brand */
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-5);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.sidebar__brand-icon {
+  font-size: var(--text-2xl);
+  color: var(--accent-bright);
+  line-height: 1;
+}
+
+.sidebar__brand-name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--accent-bright);
+}
+
+/* Usuário */
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.sidebar__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--bg-overlay);
+  border: 1px solid var(--gilded);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--accent-bright);
+  flex-shrink: 0;
+}
+
+.sidebar__user-info { min-width: 0; flex: 1; }
+
+.sidebar__user-name {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__user-email {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Nav */
+.sidebar__nav {
+  flex: 1;
+  padding: var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.sidebar__link:hover {
+  color: var(--text-primary);
+  background: var(--bg-overlay);
+  border-color: var(--border-dim);
+}
+.sidebar__link--active {
+  color: var(--accent-bright);
+  background: rgba(255, 193, 116, 0.08);
+  border-color: var(--gilded);
+}
+
+.sidebar__link-icon { font-size: var(--text-lg); line-height: 1; }
+
+/* Footer do sidebar */
+.sidebar__footer {
+  padding: var(--space-4) var(--space-3);
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebar__signout {
+  width: 100%;
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-4);
+}
+
+/* ── Topbar — mobile ── */
+.topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 19, 38, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-dim);
+  padding: var(--space-3) var(--space-5);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar__brand {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--accent-bright);
+  letter-spacing: 0.01em;
+}
+
+.topbar__actions { display: flex; align-items: center; gap: var(--space-2); }
+
+.topbar__btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  transition: all var(--transition-fast);
+}
+.topbar__btn:hover { background: var(--bg-overlay); color: var(--text-primary); }
+
+/* ── Conteúdo principal ── */
+.private-layout__main {
+  flex: 1;
+  margin-left: 256px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 768px) {
+  .sidebar          { display: none; }
+  .topbar           { display: flex; }
+  .private-layout__main { margin-left: 0; }
+}

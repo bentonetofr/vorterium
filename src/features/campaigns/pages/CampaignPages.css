@@ -1,0 +1,275 @@
+/* ═══════════════════════════════════════════════════════
+   Campaign Pages — Stitch Medieval Dark v2
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Layout base de página ── */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-8) var(--space-8);
+  max-width: 1100px;
+  width: 100%;
+  gap: var(--space-8);
+}
+
+.page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+  transition: color var(--transition-fast);
+  text-decoration: none;
+}
+.page__back:hover { color: var(--accent-bright); }
+
+.page__title {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--accent-bright);
+  letter-spacing: 0.01em;
+}
+
+.page__meta {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  margin-top: var(--space-1);
+}
+
+.page__content { flex: 1; }
+
+/* ── Estado vazio ── */
+.page__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-4);
+  border: 1px dashed var(--border-dim);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+.page__empty-icon {
+  font-size: var(--text-4xl);
+  color: var(--accent-dim);
+  opacity: 0.5;
+  line-height: 1;
+}
+.page__empty-title { font-size: var(--text-xl); color: var(--text-secondary); }
+.page__empty-text  { max-width: 360px; font-size: var(--text-md); }
+
+/* ── Feedback ── */
+.page__feedback {
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  border: 1px solid transparent;
+}
+.page__feedback--error {
+  background: rgba(255, 180, 171, 0.07);
+  border-color: rgba(255, 180, 171, 0.4);
+  color: #ffb4ab;
+}
+
+/* ── Loading ── */
+.page__loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8) 0;
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Lista de campanhas ── */
+.campaigns-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.campaigns-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.campaigns-section__title-icon {
+  font-size: var(--text-xl);
+  color: var(--accent-dim);
+}
+
+.campaign-cards { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* ── Card de campanha ── */
+.campaign-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Acento esquerdo dourado no hover */
+.campaign-card-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent-bright), var(--accent-dim));
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+.campaign-card-row:hover { border-color: var(--gilded); background: var(--bg-elevated); }
+.campaign-card-row:hover::before { opacity: 1; }
+
+.campaign-card-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.campaign-card-row__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition-fast);
+}
+.campaign-card-row:hover .campaign-card-row__name { color: var(--accent-bright); }
+
+.campaign-card-row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.campaign-card-role {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.campaign-card-role--master { color: var(--accent-bright); }
+.campaign-card-role--player { color: var(--text-secondary); }
+
+/* Botão entrar */
+.campaign-card-row__enter {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-4);
+  border-color: var(--gilded);
+}
+.campaign-card-row:hover .campaign-card-row__enter {
+  border-color: var(--gilded-bright);
+  color: var(--accent-bright);
+}
+
+/* ── Formulário de campanha ── */
+.campaign-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.campaign-form__textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+}
+.campaign-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-dim);
+}
+
+/* ── Área da campanha ── */
+.campaign-area { flex: 1; }
+
+.campaign-area__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.campaign-area__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  transition: all var(--transition-base);
+}
+.campaign-area__card:hover {
+  border-color: var(--gilded);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.campaign-area__card-icon { font-size: var(--text-2xl); color: var(--accent-dim); line-height: 1; }
+.campaign-area__card-title { font-size: var(--text-lg); font-weight: 600; }
+.campaign-area__card-desc  { font-size: var(--text-md); color: var(--text-muted); flex: 1; margin: 0; }
+
+.campaign-area__header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* ── Spinner ── */
+.spinner--sm { width: 14px; height: 14px; border-width: 2px; }
+
+@media (max-width: 600px) {
+  .page { padding: var(--space-5) var(--space-4); }
+  .page__header { flex-direction: column; }
+}

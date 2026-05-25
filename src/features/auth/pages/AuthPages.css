@@ -1,0 +1,178 @@
+/* ═══════════════════════════════════════════════════════
+   Auth pages — Stitch Medieval Dark v2
+   ═══════════════════════════════════════════════════════ */
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  overflow: hidden;
+
+  /* Glass panel */
+  background: rgba(19, 27, 46, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  box-shadow: 0 0 40px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255, 193, 116, 0.08);
+}
+
+/* Linha dourada no topo */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-bright), transparent);
+}
+
+/* Textura sutil */
+.auth-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+}
+
+/* ── Cabeçalho ── */
+.auth-card__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card__sigil {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-overlay);
+  border: 1px solid var(--gilded);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xl);
+  color: var(--accent-bright);
+  margin-bottom: var(--space-1);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.15);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+.auth-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--accent-bright);
+}
+
+.auth-card__subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Formulário ── */
+.auth-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input estilo Stitch — com ícone e borda completa */
+.auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-wrap .input {
+  padding-left: var(--space-8);
+  background: rgba(6, 14, 32, 0.6);
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  pointer-events: none;
+  user-select: none;
+}
+
+.auth-card__submit {
+  margin-top: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+}
+
+/* ── Feedback ── */
+.auth-feedback {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  border: 1px solid transparent;
+  position: relative;
+  z-index: 1;
+}
+.auth-feedback--error {
+  background: rgba(255, 180, 171, 0.07);
+  border-color: rgba(255, 180, 171, 0.4);
+  color: #ffb4ab;
+}
+.auth-feedback--success {
+  background: rgba(77, 158, 120, 0.07);
+  border-color: rgba(77, 158, 120, 0.4);
+  color: #6ec99a;
+}
+
+/* ── Rodapé do card ── */
+.auth-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card__footer-link {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.auth-card__footer-link:hover { color: var(--warning); }
+
+/* Spinner inline */
+.spinner--sm { width: 14px; height: 14px; border-width: 2px; }
