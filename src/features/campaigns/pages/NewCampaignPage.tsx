@@ -69,7 +69,7 @@ export function NewCampaignPage() {
               <label className="label" htmlFor="campaign-name">Nome da campanha</label>
               <input
                 id="campaign-name" type="text" className="input"
-                placeholder="Ex: O Retorno dos Dragões"
+                placeholder="Ex: Minha primeira campanha"
                 autoComplete="off"
                 value={name} onChange={(e) => setName(e.target.value)}
                 disabled={submitting} required
@@ -90,7 +90,7 @@ export function NewCampaignPage() {
               <button type="submit" className="btn btn-primary" disabled={submitting}>
                 {submitting
                   ? <><span className="spinner spinner--sm" /> Criando...</>
-                  : <><span aria-hidden="true">⚔</span> Criar Campanha</>
+                  : 'Criar Campanha'
                 }
               </button>
             </div>

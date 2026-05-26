@@ -52,7 +52,7 @@ export function InvitePage() {
   return (
     <div className="invite-page animate-fade-in">
       <div className="invite-page__card">
-        <span className="invite-page__icon" aria-hidden="true">⚔</span>
+        <span className="invite-page__icon" aria-hidden="true">◈</span>
 
         {status === 'loading' && (
           <>
