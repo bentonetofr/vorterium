@@ -3,51 +3,90 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import {
   acceptCampaignInviteWithProfile,
+  getCampaignInvitePublic,
   savePendingInvite,
 } from '../services/inviteService'
+import type { CampaignInvitePublic } from '../../../shared/types'
 import './InvitePage.css'
 
-type Status = 'loading' | 'redirecting-login' | 'accepting' | 'success' | 'error'
+type Status =
+  | 'loading'
+  | 'valid'
+  | 'accepting'
+  | 'success'
+  | 'disabled'
+  | 'expired'
+  | 'invalid'
+  | 'error'
 
 export function InvitePage() {
-  const { token }   = useParams<{ token: string }>()
-  const { user, loading } = useAuth()
-  const navigate    = useNavigate()
+  const { token }          = useParams<{ token: string }>()
+  const { user, loading }  = useAuth()
+  const navigate           = useNavigate()
 
-  const [status, setStatus]   = useState<Status>('loading')
-  const [errorMsg, setErrorMsg] = useState('')
+  const [status, setStatus]       = useState<Status>('loading')
+  const [inviteInfo, setInviteInfo] = useState<CampaignInvitePublic | null>(null)
+  const [errorMsg, setErrorMsg]   = useState('')
 
   useEffect(() => {
-    // Aguarda AuthProvider resolver o estado inicial
     if (loading) return
 
     if (!token) {
-      setStatus('error')
-      setErrorMsg('Link de convite inválido.')
+      setStatus('invalid')
       return
     }
 
-    // ── Usuário NÃO autenticado ──────────────────────────
-    if (!user) {
-      savePendingInvite(token)
-      setStatus('redirecting-login')
-      const timer = setTimeout(() => navigate('/login', { replace: true }), 1800)
-      return () => clearTimeout(timer)
-    }
+    getCampaignInvitePublic(token)
+      .then((info) => {
+        setInviteInfo(info)
 
-    // ── Usuário autenticado — aceita convite ─────────────
-    setStatus('accepting')
+        if (!info.is_active) {
+          setStatus('disabled')
+          return
+        }
 
-    acceptCampaignInviteWithProfile(token)
-      .then((campaignId) => {
-        setStatus('success')
-        setTimeout(() => navigate(`/campanhas/${campaignId}`, { replace: true }), 1200)
+        if (info.expires_at && new Date(info.expires_at) <= new Date()) {
+          setStatus('expired')
+          return
+        }
+
+        if (!user) {
+          setStatus('valid')
+          return
+        }
+
+        // Usuário autenticado — aceita imediatamente
+        setStatus('accepting')
+        acceptCampaignInviteWithProfile(token)
+          .then((campaignId) => {
+            setStatus('success')
+            setTimeout(() => navigate(`/campanhas/${campaignId}`, { replace: true }), 1200)
+          })
+          .catch((err) => {
+            setStatus('error')
+            setErrorMsg(err instanceof Error ? err.message : 'Não foi possível aceitar o convite.')
+          })
       })
       .catch((err) => {
-        setStatus('error')
-        setErrorMsg(err instanceof Error ? err.message : 'Não foi possível aceitar o convite.')
+        const msg = err instanceof Error ? err.message : ''
+        if (msg.includes('não encontrado')) {
+          setStatus('invalid')
+        } else {
+          setStatus('error')
+          setErrorMsg(msg || 'Erro ao carregar convite.')
+        }
       })
   }, [loading, user, token, navigate])
+
+  function handleLoginRedirect() {
+    if (token) savePendingInvite(token)
+    navigate('/login', { replace: true })
+  }
+
+  function handleRegisterRedirect() {
+    if (token) savePendingInvite(token)
+    navigate('/cadastro', { replace: true })
+  }
 
   return (
     <div className="invite-page animate-fade-in">
@@ -61,14 +100,21 @@ export function InvitePage() {
           </>
         )}
 
-        {status === 'redirecting-login' && (
+        {status === 'valid' && inviteInfo && (
           <>
-            <div className="spinner" />
-            <h2 className="invite-page__title">Convite encontrado</h2>
+            <h2 className="invite-page__title">Você foi convidado</h2>
             <p className="invite-page__text">
-              Para aceitar o convite, você precisa entrar na sua conta.
+              Entre na campanha <strong>{inviteInfo.campaign_name}</strong>.
             </p>
-            <p className="invite-page__hint">Redirecionando para o login...</p>
+            <p className="invite-page__hint">Faça login ou crie uma conta para aceitar o convite.</p>
+            <div className="invite-page__actions">
+              <button className="btn btn-ghost" onClick={handleRegisterRedirect}>
+                Criar conta
+              </button>
+              <button className="btn btn-primary" onClick={handleLoginRedirect}>
+                Entrar
+              </button>
+            </div>
           </>
         )}
 
@@ -86,16 +132,48 @@ export function InvitePage() {
           </>
         )}
 
+        {status === 'disabled' && (
+          <>
+            <p className="invite-page__error">Este convite foi desativado.</p>
+            {inviteInfo && (
+              <p className="invite-page__hint">Campanha: {inviteInfo.campaign_name}</p>
+            )}
+            <div className="invite-page__actions">
+              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
+              <Link to="/login" className="btn btn-primary">Entrar</Link>
+            </div>
+          </>
+        )}
+
+        {status === 'expired' && (
+          <>
+            <p className="invite-page__error">Este convite expirou.</p>
+            {inviteInfo && (
+              <p className="invite-page__hint">Campanha: {inviteInfo.campaign_name}</p>
+            )}
+            <div className="invite-page__actions">
+              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
+              <Link to="/login" className="btn btn-primary">Entrar</Link>
+            </div>
+          </>
+        )}
+
+        {status === 'invalid' && (
+          <>
+            <p className="invite-page__error">Convite inválido ou não encontrado.</p>
+            <div className="invite-page__actions">
+              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
+              <Link to="/login" className="btn btn-primary">Entrar</Link>
+            </div>
+          </>
+        )}
+
         {status === 'error' && (
           <>
             <p className="invite-page__error">{errorMsg}</p>
             <div className="invite-page__actions">
-              <Link to="/campanhas" className="btn btn-ghost">
-                Minhas campanhas
-              </Link>
-              <Link to="/login" className="btn btn-primary">
-                Entrar
-              </Link>
+              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
+              <Link to="/login" className="btn btn-primary">Entrar</Link>
             </div>
           </>
         )}

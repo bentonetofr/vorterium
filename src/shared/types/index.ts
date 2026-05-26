@@ -115,3 +115,12 @@ export interface CampaignInvite {
   expires_at: string | null
   created_at: string
 }
+
+/** Dados públicos de um convite — retornados sem autenticação pela RPC get_campaign_invite_public */
+export interface CampaignInvitePublic {
+  campaign_id: string
+  campaign_name: string
+  campaign_system: string
+  is_active: boolean
+  expires_at: string | null
+}

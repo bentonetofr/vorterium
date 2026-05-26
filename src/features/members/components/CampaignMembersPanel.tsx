@@ -9,6 +9,7 @@ import {
   buildInviteUrl,
   createCampaignInvite,
   deactivateCampaignInvite,
+  getActiveCampaignInvite,
 } from '../../invites/services/inviteService'
 import type { CampaignMemberWithProfile } from '../../../shared/types'
 import { formatRole } from '../../../shared/utils/campaign'
@@ -71,11 +72,12 @@ export function CampaignMembersPanel({
   const [removingId, setRemovingId] = useState<string | null>(null)
 
   // ── Estado: convite ──
-  const [inviteUrl, setInviteUrl]         = useState<string | null>(null)
-  const [inviteToken, setInviteToken]     = useState<string | null>(null)
-  const [inviteLoading, setInviteLoading] = useState(false)
-  const [inviteError, setInviteError]     = useState<string | null>(null)
-  const [inviteCopied, setInviteCopied]   = useState(false)
+  const [inviteUrl, setInviteUrl]               = useState<string | null>(null)
+  const [inviteToken, setInviteToken]           = useState<string | null>(null)
+  const [inviteInitLoading, setInviteInitLoading] = useState(true)
+  const [inviteLoading, setInviteLoading]       = useState(false)
+  const [inviteError, setInviteError]           = useState<string | null>(null)
+  const [inviteCopied, setInviteCopied]         = useState(false)
 
   // ── Carregamento inicial ──
   const loadMembers = useCallback(async () => {
@@ -91,9 +93,26 @@ export function CampaignMembersPanel({
     }
   }, [campaignId])
 
+  const loadExistingInvite = useCallback(async () => {
+    if (!isMaster) { setInviteInitLoading(false); return }
+    setInviteInitLoading(true)
+    try {
+      const invite = await getActiveCampaignInvite(campaignId)
+      if (invite) {
+        setInviteToken(invite.token)
+        setInviteUrl(buildInviteUrl(invite.token))
+      }
+    } catch {
+      // Falha silenciosa — painel mostra botão "Gerar link"
+    } finally {
+      setInviteInitLoading(false)
+    }
+  }, [campaignId, isMaster])
+
   useEffect(() => {
     loadMembers()
-  }, [loadMembers])
+    loadExistingInvite()
+  }, [loadMembers, loadExistingInvite])
 
   // ── Adicionar jogador ──
   async function handleAdd(e: FormEvent) {
@@ -282,7 +301,12 @@ export function CampaignMembersPanel({
             </div>
           )}
 
-          {!inviteUrl ? (
+          {inviteInitLoading ? (
+            <div className="members-panel__loading">
+              <div className="spinner spinner--sm" />
+              <span>Carregando convite...</span>
+            </div>
+          ) : !inviteUrl ? (
             <button
               className="btn btn-ghost"
               onClick={handleGenerateInvite}
@@ -295,31 +319,32 @@ export function CampaignMembersPanel({
               }
             </button>
           ) : (
-            <div className="members-panel__invite-link">
-              <span className="members-panel__invite-url" title={inviteUrl}>
-                {inviteUrl}
-              </span>
+            <>
+              <div className="members-panel__invite-status-row">
+                <span className="badge members-panel__invite-status-badge">Ativo</span>
+              </div>
+              <div className="members-panel__invite-link">
+                <span className="members-panel__invite-url" title={inviteUrl}>
+                  {inviteUrl}
+                </span>
+                <button
+                  className="btn btn-primary members-panel__invite-copy"
+                  onClick={handleCopyInvite}
+                  disabled={inviteCopied}
+                >
+                  {inviteCopied ? '✓ Copiado' : 'Copiar'}
+                </button>
+              </div>
+              {inviteCopied && (
+                <span className="members-panel__invite-copied">Link copiado!</span>
+              )}
               <button
-                className="btn btn-primary members-panel__invite-copy"
-                onClick={handleCopyInvite}
-                disabled={inviteCopied}
+                className="btn btn-danger members-panel__invite-deactivate"
+                onClick={handleDeactivateInvite}
               >
-                {inviteCopied ? '✓ Copiado' : 'Copiar'}
+                Desativar convite
               </button>
-            </div>
-          )}
-
-          {inviteCopied && (
-            <span className="members-panel__invite-copied">Link copiado!</span>
-          )}
-
-          {inviteUrl && (
-            <button
-              className="btn btn-danger members-panel__invite-deactivate"
-              onClick={handleDeactivateInvite}
-            >
-              Desativar convite
-            </button>
+            </>
           )}
         </div>
       )}

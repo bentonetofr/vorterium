@@ -1,6 +1,6 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { ensureProfile } from '../../users/services/profileService'
-import type { CampaignInvite } from '../../../shared/types'
+import type { CampaignInvite, CampaignInvitePublic } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
 // Constantes
@@ -89,6 +89,43 @@ export async function deactivateCampaignInvite(token: string): Promise<void> {
   })
 
   if (error) throw new Error('Não foi possível desativar o convite.')
+}
+
+/**
+ * Busca dados públicos de um convite (funciona sem autenticação).
+ * Retorna campaign_id, campaign_name, campaign_system, is_active, expires_at.
+ */
+export async function getCampaignInvitePublic(token: string): Promise<CampaignInvitePublic> {
+  const { data, error } = await supabase.rpc('get_campaign_invite_public', {
+    invite_token: token,
+  })
+
+  if (error) {
+    if (error.message?.includes('não encontrado')) throw new Error('Convite não encontrado.')
+    throw new Error('Não foi possível carregar os dados do convite.')
+  }
+
+  return data as CampaignInvitePublic
+}
+
+/**
+ * Busca o convite ativo mais recente da campanha (apenas para o mestre).
+ * Retorna null se não houver convite ativo.
+ */
+export async function getActiveCampaignInvite(
+  campaignId: string
+): Promise<CampaignInvite | null> {
+  const { data, error } = await supabase
+    .from('campaign_invites')
+    .select('*')
+    .eq('campaign_id', campaignId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw new Error('Não foi possível carregar o convite.')
+  return data
 }
 
 // ────────────────────────────────────────────────────────
