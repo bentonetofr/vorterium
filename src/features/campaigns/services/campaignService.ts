@@ -77,6 +77,62 @@ export async function createCampaign(name: string): Promise<Campaign> {
 }
 
 /**
+ * Atualiza o nome de uma campanha. Apenas o mestre pode chamar.
+ * Retorna a campanha com o nome atualizado.
+ */
+export async function updateCampaignName(
+  campaignId: string,
+  name: string
+): Promise<Campaign> {
+  const { data, error } = await supabase.rpc('update_campaign_name', {
+    campaign_id_input: campaignId,
+    new_name:          name.trim(),
+  })
+
+  if (error) {
+    const msg = error.message ?? ''
+    if (msg.includes('não pode ser vazio'))  throw new Error('O nome da campanha não pode ser vazio.')
+    if (msg.includes('Apenas o mestre'))     throw new Error('Apenas o mestre pode editar a campanha.')
+    throw new Error('Não foi possível atualizar a campanha.')
+  }
+
+  return data as Campaign
+}
+
+/**
+ * Exclui uma campanha e todos os dados relacionados (cascade).
+ * Apenas o mestre pode chamar.
+ */
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_campaign', {
+    campaign_id_input: campaignId,
+  })
+
+  if (error) {
+    const msg = error.message ?? ''
+    if (msg.includes('Apenas o mestre')) throw new Error('Apenas o mestre pode excluir a campanha.')
+    throw new Error('Não foi possível excluir a campanha.')
+  }
+}
+
+/**
+ * Remove o usuário autenticado da campanha como jogador.
+ * Mestre não pode usar este fluxo.
+ */
+export async function leaveCampaign(campaignId: string): Promise<void> {
+  const { error } = await supabase.rpc('leave_campaign', {
+    campaign_id_input: campaignId,
+  })
+
+  if (error) {
+    const msg = error.message ?? ''
+    if (msg.includes('mestre não pode sair')) throw new Error('O mestre não pode sair da campanha por este fluxo.')
+    if (msg.includes('não é membro'))         throw new Error('Você não é membro desta campanha.')
+    throw new Error('Não foi possível sair da campanha.')
+  }
+}
+
+/**
  * Busca uma campanha por ID junto com o papel do usuário.
  * Retorna null se a campanha não existir ou o usuário não tiver acesso.
  *

@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
 import { formatSystem, formatRole } from '../../../shared/utils/campaign'
-import { CampaignMembersPanel } from '../../members/components/CampaignMembersPanel'
-import { SimpleSheetPanel }      from '../../sheets/components/SimpleSheetPanel'
-import { DiceRollerPanel }        from '../../dice/components/DiceRollerPanel'
-import type { CampaignWithRole }  from '../../../shared/types'
+import { CampaignMembersPanel }    from '../../members/components/CampaignMembersPanel'
+import { SimpleSheetPanel }         from '../../sheets/components/SimpleSheetPanel'
+import { DiceRollerPanel }          from '../../dice/components/DiceRollerPanel'
+import { CampaignSettingsPanel }    from '../components/CampaignSettingsPanel'
+import type { CampaignWithRole }    from '../../../shared/types'
 import './CampaignPages.css'
 
 export function CampaignAreaPage() {
@@ -94,6 +95,16 @@ export function CampaignAreaPage() {
         <DiceRollerPanel
           campaignId={campaign.id}
           currentUserId={user!.id}
+        />
+      </div>
+
+      {/* Configurações */}
+      <div className="animate-fade-up" style={{ animationDelay: '240ms' }}>
+        <CampaignSettingsPanel
+          campaign={campaign}
+          onNameUpdate={(newName) =>
+            setCampaign((prev) => prev ? { ...prev, name: newName } : prev)
+          }
         />
       </div>
     </div>

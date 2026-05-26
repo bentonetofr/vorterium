@@ -111,6 +111,8 @@ As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashb
 | 6 | `20240106000000_harden_character_sheets_and_dice.sql` | Trigger que impede alteração de `campaign_id`/`user_id` em fichas; constraint de resultado máximo por tipo de dado; remove `dice_rolls` do Realtime |
 | 7 | `20240107000000_allow_profile_self_insert.sql` | Policy de INSERT em `profiles` para o próprio usuário — permite que `ensureProfile()` sincronize perfis ausentes com segurança |
 | 8 | `20240108000000_campaign_invites.sql` | Tabela `campaign_invites`; RLS; RPCs `create_campaign_invite`, `accept_campaign_invite`, `deactivate_campaign_invite` |
+| 9 | `20240109000000_improve_campaign_invites.sql` | RPC pública `get_campaign_invite_public` — retorna dados do convite sem autenticação (nome da campanha, status, expiração) |
+| 10 | `20240110000000_campaign_management.sql` | RPCs `update_campaign_name`, `delete_campaign`, `leave_campaign` — gerenciamento seguro de campanha |
 
 > **Usuários criados antes da migration 1:** o trigger `handle_new_user` cria perfis apenas para novos cadastros. Para sincronizar usuários já existentes, rode o script de backfill comentado na seção 9 da migration 1.
 
@@ -152,6 +154,10 @@ npm run preview
 | Histórico de rolagens da campanha | ✅ |
 | Proteção de rotas (RLS + front-end) | ✅ |
 | Design Medieval Dark v2 | ✅ |
+| Convite por link com dados públicos (nome da campanha antes do login) | ✅ |
+| Mestre edita nome da campanha | ✅ |
+| Mestre exclui campanha (com cascata) | ✅ |
+| Jogador sai da campanha | ✅ |
 
 ## O que está fora do MVP (futuras features)
 
@@ -196,7 +202,7 @@ src/
 │
 ├── features/
 │   ├── auth/               # AuthProvider, GuestRoute, ProtectedRoute, páginas de auth
-│   ├── campaigns/          # Listagem, criação, área da campanha + campaignService
+│   ├── campaigns/          # Listagem, criação, área da campanha, configurações + campaignService
 │   ├── members/            # CampaignMembersPanel + memberService
 │   ├── sheets/             # SimpleSheetPanel, SimpleSheetForm, CampaignSheetsList + sheetService
 │   ├── dice/               # DiceRollerPanel + diceService
