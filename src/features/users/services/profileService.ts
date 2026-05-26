@@ -6,27 +6,30 @@ import type { Profile } from '../../../shared/types'
 // ────────────────────────────────────────────────────────
 
 /**
- * Retorna o perfil do usuário autenticado.
- * A RLS garante que só o próprio perfil seja retornado.
+ * Retorna o perfil do usuário autenticado, ou null se não existir.
+ *
+ * Obtém o user.id explicitamente via auth.getUser() e filtra a query
+ * com .eq('id', user.id) + maybeSingle() para não depender exclusivamente
+ * do RLS e evitar erros falsos quando o perfil existe mas a sessão
+ * não passou o filtro implícito do .single().
  */
 export async function getCurrentProfile(): Promise<Profile | null> {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) throw new Error('Usuário não autenticado.')
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .single()
+    .eq('id', user.id)
+    .maybeSingle()
 
-  if (error) {
-    if (error.code === 'PGRST116') return null // perfil não existe ainda
-    throw new Error('Não foi possível carregar o perfil.')
-  }
-
-  return data as Profile
+  if (error) throw new Error('Não foi possível carregar o perfil.')
+  return data as Profile | null
 }
 
 /**
  * Atualiza o nome público do usuário autenticado.
- * Envia apenas `display_name` — nunca e-mail ou id.
- * A RLS do Supabase garante que só o próprio perfil é alterado.
+ * Envia apenas display_name — nunca e-mail, id ou outros campos.
  */
 export async function updateCurrentProfile(
   data: { display_name: string }
@@ -46,30 +49,38 @@ export async function updateCurrentProfile(
 }
 
 /**
- * Garante que o usuário autenticado possui um registro em `profiles`.
+ * Garante que o usuário autenticado possui um registro em public.profiles.
  *
- * Necessário para usuários criados antes da migration, já que o trigger
- * `handle_new_user` só age em novos inserts em `auth.users`.
+ * Fluxo:
+ *  1. Obtém user via auth.getUser()
+ *  2. Busca perfil por id = user.id com maybeSingle()
+ *  3. Se existir, retorna imediatamente
+ *  4. Se não existir, cria o perfil
+ *  5. Busca novamente após o insert (evita depender do retorno do INSERT,
+ *     que pode ser afetado por policies de SELECT pós-insert)
  *
- * A função lê os dados diretamente de `supabase.auth.getUser()` e replica
- * a mesma lógica de prioridade de nome do trigger:
- *   1. display_name (enviado pelo cadastro do front-end)
- *   2. full_name    (Google OAuth)
- *   3. name         (outros providers)
- *   4. parte do e-mail antes do @
+ * Lida com race condition (23505 = duplicate key) buscando novamente
+ * em vez de lançar erro.
  */
 export async function ensureProfile(): Promise<Profile> {
-  // 1. Obtém dados reais do usuário autenticado
   const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) {
-    throw new Error('Usuário não autenticado.')
+  if (userError || !user) throw new Error('Usuário não autenticado.')
+
+  // 1. Tenta buscar o perfil existente
+  const { data: existing, error: selectError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (selectError) {
+    console.error('Erro ao buscar perfil:', selectError)
+    throw new Error('Não foi possível verificar o perfil.')
   }
 
-  // 2. Se o perfil já existe, retorna sem fazer nada
-  const existing = await getCurrentProfile()
-  if (existing) return existing
+  if (existing) return existing as Profile
 
-  // 3. Deriva o nome público com a mesma ordem de prioridade do trigger SQL
+  // 2. Perfil não existe — cria com os dados do auth
   const meta = user.user_metadata ?? {}
   const displayName =
     (meta['display_name'] as string | undefined)?.trim() ||
@@ -77,27 +88,34 @@ export async function ensureProfile(): Promise<Profile> {
     (meta['name']         as string | undefined)?.trim() ||
     user.email!.split('@')[0]
 
-  // 4. Cria o perfil
-  const { data, error } = await supabase
+  const { error: insertError } = await supabase
     .from('profiles')
     .insert({
       id:            user.id,
       email:         user.email!,
       display_name:  displayName,
       avatar_url:    (meta['avatar_url'] as string | undefined) ?? null,
-      main_provider: (user.app_metadata?.provider as string | undefined) ?? null,
+      main_provider: (user.app_metadata?.provider as string | undefined) ?? 'email',
     })
-    .select('*')
-    .single()
 
-  if (error) {
-    // Conflito de chave primária: outro processo criou o perfil entre os dois checks
-    if (error.code === '23505') {
-      const existing2 = await getCurrentProfile()
-      if (existing2) return existing2
-    }
+  // 23505 = conflito de chave primária: outro processo criou o perfil
+  // entre o SELECT e o INSERT — tenta buscar novamente
+  if (insertError && insertError.code !== '23505') {
+    console.error('Erro ao criar perfil:', insertError)
     throw new Error('Não foi possível sincronizar o perfil. Tente novamente.')
   }
 
-  return data as Profile
+  // 3. Busca o perfil após insert (tanto para insert bem-sucedido quanto para race condition)
+  const { data: created, error: refetchError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (refetchError || !created) {
+    console.error('Erro ao buscar perfil após criação:', refetchError)
+    throw new Error('Não foi possível carregar o perfil após sincronização.')
+  }
+
+  return created as Profile
 }

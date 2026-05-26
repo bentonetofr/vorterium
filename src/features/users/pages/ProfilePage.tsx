@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getCurrentProfile, updateCurrentProfile } from '../services/profileService'
+import { ensureProfile, updateCurrentProfile } from '../services/profileService'
 import type { Profile } from '../../../shared/types'
 import '../../../features/campaigns/pages/CampaignPages.css'
 import './ProfilePage.css'
@@ -31,13 +31,15 @@ export function ProfilePage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
 
   useEffect(() => {
-    getCurrentProfile()
+    ensureProfile()
       .then((p) => {
-        if (!p) { setLoadError('Perfil não encontrado.'); return }
         setProfile(p)
         setDisplayName(p.display_name)
       })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : 'Erro ao carregar perfil.'))
+      .catch((err) => {
+        console.error('Erro ao carregar perfil:', err)
+        setLoadError('Não foi possível carregar seu perfil. Tente sair e entrar novamente.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -81,7 +83,7 @@ export function ProfilePage() {
     return (
       <div className="page">
         <div className="page__feedback page__feedback--error animate-fade-up" role="alert">
-          {loadError ?? 'Perfil não encontrado.'}
+          {loadError ?? 'Não foi possível carregar seu perfil. Tente sair e entrar novamente.'}
         </div>
         <Link to="/campanhas" className="btn btn-ghost" style={{ alignSelf: 'flex-start' }}>
           ← Voltar para campanhas
