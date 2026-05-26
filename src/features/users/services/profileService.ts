@@ -24,6 +24,28 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 }
 
 /**
+ * Atualiza o nome público do usuário autenticado.
+ * Envia apenas `display_name` — nunca e-mail ou id.
+ * A RLS do Supabase garante que só o próprio perfil é alterado.
+ */
+export async function updateCurrentProfile(
+  data: { display_name: string }
+): Promise<Profile> {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) throw new Error('Usuário não autenticado.')
+
+  const { data: updated, error } = await supabase
+    .from('profiles')
+    .update({ display_name: data.display_name.trim() })
+    .eq('id', user.id)
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível atualizar o perfil.')
+  return updated as Profile
+}
+
+/**
  * Garante que o usuário autenticado possui um registro em `profiles`.
  *
  * Necessário para usuários criados antes da migration, já que o trigger

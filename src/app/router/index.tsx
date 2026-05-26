@@ -12,6 +12,7 @@ import { AuthCallbackPage } from '../../features/auth/pages/AuthCallbackPage'
 import { CampaignsPage }   from '../../features/campaigns/pages/CampaignsPage'
 import { NewCampaignPage } from '../../features/campaigns/pages/NewCampaignPage'
 import { CampaignAreaPage } from '../../features/campaigns/pages/CampaignAreaPage'
+import { ProfilePage }     from '../../features/users/pages/ProfilePage'
 
 import { LandingPage }     from '../../features/public/pages/LandingPage'
 import { SobrePage }       from '../../features/public/pages/SobrePage'
@@ -46,6 +47,7 @@ export function AppRouter() {
           <Route path="/campanhas"             element={<CampaignsPage />} />
           <Route path="/campanhas/nova"        element={<NewCampaignPage />} />
           <Route path="/campanhas/:campaignId" element={<CampaignAreaPage />} />
+          <Route path="/perfil"               element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

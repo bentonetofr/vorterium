@@ -81,6 +81,16 @@
   letter-spacing: 0.02em;
 }
 
+/* Bloco de usuário como link */
+.sidebar__user--link {
+  text-decoration: none;
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+.sidebar__user--link:hover {
+  background: var(--bg-overlay);
+}
+
 /* Nav */
 .sidebar__nav {
   flex: 1;

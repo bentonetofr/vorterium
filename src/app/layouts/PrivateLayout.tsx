@@ -28,7 +28,7 @@ export function PrivateLayout() {
         </div>
 
         {user && (
-          <div className="sidebar__user">
+          <Link to="/perfil" className="sidebar__user sidebar__user--link">
             <div className="sidebar__avatar" aria-hidden="true">{initial}</div>
             <div className="sidebar__user-info">
               <span className="sidebar__user-name">{displayName}</span>
@@ -36,7 +36,7 @@ export function PrivateLayout() {
                 <span className="sidebar__user-email">{user.email}</span>
               )}
             </div>
-          </div>
+          </Link>
         )}
 
         <nav className="sidebar__nav">
@@ -48,6 +48,15 @@ export function PrivateLayout() {
           >
             <span className="sidebar__link-icon">◈</span>
             Campanhas
+          </NavLink>
+          <NavLink
+            to="/perfil"
+            className={({ isActive }) =>
+              `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+            }
+          >
+            <span className="sidebar__link-icon">○</span>
+            Perfil
           </NavLink>
         </nav>
 

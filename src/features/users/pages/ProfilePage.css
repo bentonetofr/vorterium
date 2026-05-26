@@ -1,0 +1,92 @@
+/* ── Página de perfil ── */
+.profile-card {
+  max-width: 520px;
+  background: var(--bg-surface);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card__top-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-bright), transparent);
+}
+
+.profile-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--accent-bright);
+  margin-bottom: var(--space-6);
+}
+
+/* Campos somente leitura */
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.profile-field__label {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.profile-field__value {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  padding: var(--space-2) 0;
+}
+
+.profile-field__value--mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.03em;
+}
+
+/* Separador */
+.profile-divider {
+  border: none;
+  border-top: 1px solid var(--border-dim);
+  margin: var(--space-4) 0;
+}
+
+/* Formulário de edição */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.profile-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Feedback */
+.profile-msg {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  margin: 0;
+}
+.profile-msg--error {
+  color: #ffb4ab;
+  background: rgba(255, 180, 171, 0.07);
+  border-color: rgba(255, 180, 171, 0.4);
+}
+.profile-msg--success {
+  color: #6ec99a;
+  background: rgba(77, 158, 120, 0.07);
+  border-color: rgba(77, 158, 120, 0.4);
+}

@@ -158,6 +158,7 @@ npm run preview
 | Mestre edita nome da campanha | ✅ |
 | Mestre exclui campanha (com cascata) | ✅ |
 | Jogador sai da campanha | ✅ |
+| Página de perfil (`/perfil`) — editar nome público | ✅ |
 
 ## O que está fora do MVP (futuras features)
 
@@ -227,6 +228,7 @@ src/
 | `/campanhas` | Autenticado | Lista de campanhas |
 | `/campanhas/nova` | Autenticado | Criar campanha |
 | `/campanhas/:campaignId` | Autenticado + membro | Área da campanha |
+| `/perfil` | Autenticado | Perfil do usuário — editar nome público |
 | `/` | Público | Página inicial |
 | `/sobre` | Público | Sobre o Campaign Lab |
 | `/termos` | Público | Termos de uso |
