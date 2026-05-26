@@ -77,7 +77,31 @@ export interface SheetWithProfile extends CharacterSheet {
   profile: ProfilePublic
 }
 
-export type DieType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'
+export type DieType  = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'
+export type RollMode = 'sum' | 'keep_highest'
+
+export type RollBreakdownItem =
+  | {
+      type: 'sum'
+      notation: string
+      quantity: number
+      sides: number
+      results: number[]
+      subtotal: number
+    }
+  | {
+      type: 'keep_highest'
+      notation: string
+      quantity: number
+      sides: number
+      results: number[]
+      kept: number
+      subtotal: number
+    }
+  | {
+      type: 'modifier'
+      value: number
+    }
 
 export interface DiceRoll {
   id: string
@@ -85,6 +109,14 @@ export interface DiceRoll {
   user_id: string
   die_type: DieType
   result: number
+  quantity: number
+  modifier: number
+  individual_results: number[] | null
+  total_result: number | null
+  roll_mode: RollMode
+  kept_result: number | null
+  formula: string | null
+  roll_breakdown: RollBreakdownItem[] | null
   created_at: string
 }
 
@@ -96,13 +128,7 @@ export type AsyncState<T> =
   | { status: 'error'; error: string }
 
 /** Rolagem enriquecida com dados públicos do autor — para exibição no histórico */
-export interface DiceRollWithProfile {
-  id: string
-  campaign_id: string
-  user_id: string
-  die_type: DieType
-  result: number
-  created_at: string
+export interface DiceRollWithProfile extends DiceRoll {
   profile: Pick<ProfilePublic, 'id' | 'display_name'>
 }
 

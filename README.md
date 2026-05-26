@@ -113,6 +113,8 @@ As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashb
 | 8 | `20240108000000_campaign_invites.sql` | Tabela `campaign_invites`; RLS; RPCs `create_campaign_invite`, `accept_campaign_invite`, `deactivate_campaign_invite` |
 | 9 | `20240109000000_improve_campaign_invites.sql` | RPC pública `get_campaign_invite_public` — retorna dados do convite sem autenticação (nome da campanha, status, expiração) |
 | 10 | `20240110000000_campaign_management.sql` | RPCs `update_campaign_name`, `delete_campaign`, `leave_campaign` — gerenciamento seguro de campanha |
+| 11 | `20240111000000_improve_dice_rolls.sql` | Adiciona campos `quantity`, `modifier`, `individual_results`, `total_result`, `roll_mode`, `kept_result`, `formula` em `dice_rolls`; trigger de validação |
+| 12 | `20240112000000_custom_dice_rolls.sql` | Adiciona `roll_breakdown jsonb`; ajusta limites de `quantity` (100) e `modifier` (±999); substitui trigger com validação matemática completa do breakdown |
 
 > **Usuários criados antes da migration 1:** o trigger `handle_new_user` cria perfis apenas para novos cadastros. Para sincronizar usuários já existentes, rode o script de backfill comentado na seção 9 da migration 1.
 
@@ -150,8 +152,10 @@ npm run preview
 | Remover jogador | ✅ |
 | Ficha simples de personagem | ✅ |
 | Mestre vê todas as fichas da campanha | ✅ |
-| Rolagem de dados (d4–d100) | ✅ |
-| Histórico de rolagens da campanha | ✅ |
+| Rolagem rápida de dados (d4–d100) | ✅ |
+| Rolagem personalizada por fórmula (`2d6+3`, `2#d20`, `1#d3+4`…) | ✅ |
+| Histórico de rolagens com breakdown detalhado | ✅ |
+| Área da campanha por abas (Membros / Ficha / Rolagem / Configurações) | ✅ |
 | Proteção de rotas (RLS + front-end) | ✅ |
 | Design Medieval Dark v2 | ✅ |
 | Convite por link com dados públicos (nome da campanha antes do login) | ✅ |
@@ -170,11 +174,48 @@ npm run preview
 - Modificadores automáticos de atributos
 - Classe de armadura / Mana / Perícias / Magias
 - Explorar campanhas públicas
-- Rolagem com fórmula (1d20+5), vantagem/desvantagem
 - Rolagem privada / dano oculto
 - Notas de sessão
 - Configurações de conta
 - Plano premium / monetização
+
+---
+
+## Rolagem de dados
+
+A área de rolagem é acessível pela aba **"Rolagem"** dentro de qualquer campanha.
+
+### Rolagem rápida
+
+Botões de um clique: **1d4 · 1d6 · 1d8 · 1d10 · 1d12 · 1d20 · 1d100**
+
+Clique → rola imediatamente → salva no histórico → exibe resultado.
+
+### Rolagem personalizada por fórmula
+
+Campo de texto que aceita uma gramática controlada (sem eval, sem funções):
+
+| Fórmula | Significado |
+|---|---|
+| `1d20` | 1 dado de 20 lados |
+| `d20` | equivalente a `1d20` |
+| `2d6+3` | soma 2d6 e adiciona 3 |
+| `3d4-1` | soma 3d4 e subtrai 1 |
+| `2#d20` | rola 2d20, **mantém o maior resultado** |
+| `1#d3+4` | rola 1d3, mantém o maior resultado, adiciona 4 |
+| `3#d6+2` | rola 3d6, mantém o maior resultado, adiciona 2 |
+| `2#d20+1d4+3` | keep-highest 2d20 + soma 1d4 + modificador 3 |
+
+O operador `#` significa "rolar N dados e manter o maior resultado".
+O resultado detalhado sempre exibe os dados individuais e qual foi mantido.
+
+**Limites aceitos:** quantidade por termo 1–100 · lados 2–1000 · modificador ±999 · até 10 termos · fórmula até 80 caracteres.
+
+### Histórico
+
+- Últimas 20 rolagens, mais recentes primeiro
+- Exibe fórmula, resultados individuais, kept result (quando `#`), modificador e resultado final
+- Botão **"Atualizar histórico"** recarrega manualmente (sem Realtime / sem polling)
 
 ---
 
