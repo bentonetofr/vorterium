@@ -27,7 +27,7 @@ export function CampaignsPage() {
   }, [])
 
   const displayName =
-    (user?.user_metadata?.display_name as string | undefined) ?? 'Aventureiro'
+    (user?.user_metadata?.display_name as string | undefined) ?? 'Usuário'
 
   const asMaster = campaigns.filter((c) => c.role === 'master')
   const asPlayer = campaigns.filter((c) => c.role === 'player')
@@ -87,7 +87,7 @@ export function CampaignsPage() {
           {asPlayer.length > 0 && (
             <section>
               <h3 className="campaigns-section__title">
-                <span className="campaigns-section__title-icon">⚔</span>
+                <span className="campaigns-section__title-icon">◈</span>
                 Campanhas como jogador
               </h3>
               <div className="campaign-cards">
