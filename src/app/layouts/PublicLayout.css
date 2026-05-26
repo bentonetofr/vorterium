@@ -5,7 +5,9 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-base);
-  overflow: hidden;
+  /* overflow: hidden removido — partículas e bg usam position: fixed,
+     não causam scroll horizontal; manter hidden bloqueava scroll vertical */
+  overflow-x: clip;
 }
 
 /* Gradiente atmosférico — dourado no topo, escuro nas bordas */
@@ -73,6 +75,12 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-8) var(--space-4);
+}
+
+/* Landing page ocupa a largura total sem padding centrado */
+.public-layout__main--landing {
+  align-items: stretch;
+  padding: 0;
 }
 
 .public-layout__footer {
