@@ -1,10 +1,10 @@
-# Campaign Lab
+# Vorterium
 
 Plataforma web para gerenciamento de campanhas de RPG de mesa.
 
 ## Visão geral
 
-Campaign Lab permite que mestres criem campanhas, adicionem jogadores, gerenciem fichas simples de personagem e registrem rolagens de dados — tudo persistido em banco de dados real via Supabase.
+Vorterium permite que mestres criem campanhas, adicionem jogadores, gerenciem fichas simples de personagem e registrem rolagens de dados — tudo persistido em banco de dados real via Supabase.
 
 > **Nota sobre tempo real:** o MVP não usa Supabase Realtime para economizar recursos. O histórico de rolagens atualiza para o próprio usuário após cada rolagem. Outros membros veem as novas rolagens ao recarregar a página. Realtime pode ser reativado futuramente.
 
@@ -316,7 +316,7 @@ src/
 | `/campanhas/:campaignId` | Autenticado + membro | Área da campanha |
 | `/perfil` | Autenticado | Perfil do usuário — editar nome público |
 | `/` | Público | Página inicial |
-| `/sobre` | Público | Sobre o Campaign Lab |
+| `/sobre` | Público | Sobre o Vorterium |
 | `/termos` | Público | Termos de uso |
 | `/privacidade` | Público | Política de privacidade |
 | `/convite/:token` | Público | Aceitar convite de campanha |
@@ -325,7 +325,7 @@ src/
 
 ## Tema claro/escuro
 
-O Campaign Lab suporta alternância entre **modo escuro** (padrão) e **modo claro** (pergaminho medieval).
+O Vorterium suporta alternância entre **modo escuro** (padrão) e **modo claro** (pergaminho medieval).
 
 - O **tema padrão é escuro** (Medieval Dark v2).
 - O botão de alternância aparece em **todas as páginas** — canto superior direito nas telas públicas e na barra lateral/topbar nas telas privadas.
@@ -377,7 +377,7 @@ Antes de fazer o deploy, certifique-se de que:
 # Na raiz do projeto
 git init
 git add .
-git commit -m "feat: Campaign Lab MVP"
+git commit -m "feat: Vorterium MVP"
 
 # Crie um repositório no GitHub e depois:
 git remote add origin https://github.com/seu-usuario/campaign-lab.git

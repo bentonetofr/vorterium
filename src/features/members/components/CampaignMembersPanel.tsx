@@ -380,7 +380,7 @@ function AddPlayerForm({
         <div className="members-block__header-text">
           <h4 className="members-block__title">Adicionar jogador</h4>
           <p className="members-block__desc">
-            O jogador precisa ter uma conta no Campaign Lab.
+            O jogador precisa ter uma conta no Vorterium.
           </p>
         </div>
       </div>

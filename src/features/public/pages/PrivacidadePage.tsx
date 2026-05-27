@@ -11,7 +11,7 @@ export function PrivacidadePage() {
       </header>
 
       <div className="public-page__note">
-        Esta é uma versão simplificada da política de privacidade do Campaign Lab.
+        Esta é uma versão simplificada da política de privacidade do Vorterium.
         O texto pode ser atualizado conforme o projeto evolui. Esta política não
         constitui aconselhamento jurídico.
       </div>
@@ -19,7 +19,7 @@ export function PrivacidadePage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">1. Dados coletados</h2>
         <p className="public-page__text">
-          Ao usar o Campaign Lab, coletamos e armazenamos os seguintes dados:
+          Ao usar o Vorterium, coletamos e armazenamos os seguintes dados:
         </p>
         <ul className="public-page__list">
           <li><strong>Conta:</strong> e-mail e nome público informados no cadastro ou fornecidos pelo login com Google.</li>
@@ -34,7 +34,7 @@ export function PrivacidadePage() {
         <h2 className="public-page__section-title">2. Uso dos dados</h2>
         <p className="public-page__text">
           Os dados coletados são usados exclusivamente para o funcionamento do
-          Campaign Lab: autenticar usuários, exibir campanhas e fichas, registrar
+          Vorterium: autenticar usuários, exibir campanhas e fichas, registrar
           rolagens e associar membros às campanhas.
         </p>
         <p className="public-page__text">
@@ -46,7 +46,7 @@ export function PrivacidadePage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">3. Infraestrutura</h2>
         <p className="public-page__text">
-          O Campaign Lab utiliza o <strong>Supabase</strong> como plataforma de
+          O Vorterium utiliza o <strong>Supabase</strong> como plataforma de
           autenticação e banco de dados. Os dados são armazenados nos servidores do
           Supabase. Consulte a{' '}
           <a
@@ -63,7 +63,7 @@ export function PrivacidadePage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">4. Login com Google</h2>
         <p className="public-page__text">
-          Se você optar pelo login com Google, o Campaign Lab recebe da Google os
+          Se você optar pelo login com Google, o Vorterium recebe da Google os
           dados básicos da sua conta, como e-mail e nome. Esses dados são usados
           apenas para criar e identificar sua conta no sistema.
         </p>

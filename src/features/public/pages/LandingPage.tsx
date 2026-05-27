@@ -17,7 +17,7 @@ export function LandingPage() {
       {/* ── Hero ── */}
       <section className="landing__hero">
         <AppLogo size="lg" />
-        <h1 className="landing__title">Campaign Lab</h1>
+        <h1 className="landing__title">Vorterium</h1>
         <p className="landing__tagline">
           Organize suas campanhas de RPG em um só lugar.
         </p>
@@ -57,7 +57,7 @@ export function LandingPage() {
             <div className="landing__role-block">
               <h3 className="landing__role-title">Para mestres</h3>
               <p className="landing__role-desc">
-                O Campaign Lab centraliza a organização da campanha, os participantes
+                O Vorterium centraliza a organização da campanha, os participantes
                 e os recursos básicos da mesa. Crie uma campanha, adicione jogadores,
                 acompanhe membros, visualize fichas e gerencie a mesa em um único painel.
               </p>

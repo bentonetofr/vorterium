@@ -29,7 +29,7 @@ export function PublicLayout() {
           <Link to="/login"       className="public-layout__footer-link">Login</Link>
           <Link to="/cadastro"    className="public-layout__footer-link">Cadastro</Link>
         </nav>
-        <span className="public-layout__footer-copy">© Campaign Lab</span>
+        <span className="public-layout__footer-copy">© Vorterium</span>
       </footer>
     </div>
   )

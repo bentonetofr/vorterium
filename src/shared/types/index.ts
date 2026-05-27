@@ -1,5 +1,5 @@
 // ────────────────────────────────────────────────────────
-// Tipos do modelo de dados — Campaign Lab MVP
+// Tipos do modelo de dados — Vorterium
 // ────────────────────────────────────────────────────────
 
 export interface Profile {

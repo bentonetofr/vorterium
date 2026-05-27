@@ -11,15 +11,15 @@ export function TermosPage() {
       </header>
 
       <div className="public-page__note">
-        Este documento é uma versão simplificada dos termos de uso do Campaign Lab.
+        Este documento é uma versão simplificada dos termos de uso do Vorterium.
         Ele pode ser atualizado futuramente para refletir mudanças no serviço ou
-        adequações legais. Ao usar o Campaign Lab, você concorda com os termos abaixo.
+        adequações legais. Ao usar o Vorterium, você concorda com os termos abaixo.
       </div>
 
       <section className="public-page__section">
         <h2 className="public-page__section-title">1. Uso do serviço</h2>
         <p className="public-page__text">
-          O Campaign Lab é uma plataforma para organização de campanhas de RPG de
+          O Vorterium é uma plataforma para organização de campanhas de RPG de
           mesa. O uso do serviço é pessoal e não comercial, salvo acordo explícito.
         </p>
         <p className="public-page__text">
@@ -44,7 +44,7 @@ export function TermosPage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">3. Disponibilidade do serviço</h2>
         <p className="public-page__text">
-          O Campaign Lab é oferecido sem garantia de disponibilidade contínua ou
+          O Vorterium é oferecido sem garantia de disponibilidade contínua ou
           permanente. O serviço pode passar por manutenção, atualizações ou
           indisponibilidades sem aviso prévio.
         </p>
@@ -57,7 +57,7 @@ export function TermosPage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">4. Mudanças no serviço</h2>
         <p className="public-page__text">
-          O Campaign Lab está em desenvolvimento. Funcionalidades podem ser
+          O Vorterium está em desenvolvimento. Funcionalidades podem ser
           adicionadas, modificadas ou removidas ao longo do tempo. Estes termos
           também podem ser atualizados. O uso continuado do serviço após alterações
           implica aceite dos novos termos.

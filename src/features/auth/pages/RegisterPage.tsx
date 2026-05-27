@@ -58,7 +58,7 @@ export function RegisterPage() {
     <div className="auth-card animate-fade-up">
       <header className="auth-card__header">
         <AppLogo size="md" />
-        <h1 className="auth-card__title">Campaign Lab</h1>
+        <h1 className="auth-card__title">Vorterium</h1>
         <p className="auth-card__subtitle">Crie sua conta para organizar campanhas de RPG.</p>
       </header>
 

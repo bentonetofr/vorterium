@@ -31,7 +31,7 @@ export function AppLogo({
     <div className={`app-logo app-logo--${size} ${className}`}>
       <img
         src="/assets/logo-campaign-lab.png"
-        alt="Logo do Campaign Lab"
+        alt="Logo do Vorterium"
         className="app-logo__img"
         width={px}
         height={px}
@@ -39,7 +39,7 @@ export function AppLogo({
       />
 
       {showText && (
-        <span className="app-logo__text">Campaign Lab</span>
+        <span className="app-logo__text">Vorterium</span>
       )}
     </div>
   )

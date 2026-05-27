@@ -6,13 +6,13 @@ export function SobrePage() {
     <div className="public-page animate-fade-up">
       <header className="public-page__header">
         <Link to="/" className="public-page__back">← Início</Link>
-        <h1 className="public-page__title">Sobre o Campaign Lab</h1>
+        <h1 className="public-page__title">Sobre o Vorterium</h1>
       </header>
 
       <section className="public-page__section">
         <h2 className="public-page__section-title">O que é</h2>
         <p className="public-page__text">
-          Campaign Lab é uma plataforma web para organização e gerenciamento de
+          Vorterium é uma plataforma web para organização e gerenciamento de
           campanhas de RPG de mesa. O objetivo é centralizar o que acontece em uma
           campanha: quem são os participantes, quais são os personagens e como estão
           progredindo as sessões.
@@ -33,7 +33,7 @@ export function SobrePage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">Status do projeto</h2>
         <p className="public-page__text">
-          O Campaign Lab está em desenvolvimento ativo. A versão atual é um MVP
+          O Vorterium está em desenvolvimento ativo. A versão atual é um MVP
           (Minimum Viable Product) — uma primeira versão funcional com as
           funcionalidades essenciais.
         </p>
