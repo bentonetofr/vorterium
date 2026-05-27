@@ -1,40 +1,30 @@
-/* ── Painel de membros — Stitch ── */
+/* ═══════════════════════════════════════════════════════
+   Painel de Membros — Stitch Medieval Dark v2
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Container principal ── */
 .members-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: border-color var(--transition-base);
-}
-.members-panel:hover { border-color: var(--gilded); }
-
-.members-panel__header {
-  padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-dim);
-  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
-.members-panel__title-row {
+/* Feedback e loading do painel */
+.members-panel__state {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  padding: var(--space-5) 0;
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.members-panel__icon { font-size: var(--text-lg); color: var(--accent-dim); }
-
-.members-panel__title {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* Feedback */
 .members-panel__feedback {
-  margin: var(--space-4) var(--space-6) 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  font-family: var(--font-body);
   font-size: var(--text-sm);
   border: 1px solid transparent;
 }
@@ -49,153 +39,114 @@
   color: #6ec99a;
 }
 
-/* Loading */
-.members-panel__loading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+/* ── Blocos (convite / adicionar jogador) ── */
+.members-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
   padding: var(--space-5) var(--space-6);
-  color: var(--text-muted);
-  font-family: var(--font-label);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* Lista */
-.members-list { list-style: none; padding: var(--space-2) 0; }
-
-.member-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-3) var(--space-6);
-  border-bottom: 1px solid var(--border-dim);
-  transition: background var(--transition-fast);
+  transition: border-color var(--transition-base);
 }
-.member-row:last-child { border-bottom: none; }
-.member-row:hover { background: var(--bg-elevated); }
+.members-block:hover { border-color: var(--gilded); }
 
-/* Avatar */
-.member-avatar {
-  width: 36px; height: 36px;
-  border-radius: var(--radius-md);
-  background: var(--bg-overlay);
-  border: 1px solid var(--gilded);
+.members-block__header {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--accent-bright);
-  flex-shrink: 0;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
-/* Info */
-.member-row__info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.members-block__header-text { flex: 1; min-width: 0; }
 
-.member-row__name {
-  font-family: var(--font-body);
+.members-block__icon {
+  font-size: var(--text-lg);
+  color: var(--accent-dim);
+  flex-shrink: 0;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.members-block__title {
+  font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 600;
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.member-row__you {
-  font-weight: 400;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}
-.member-row__email {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
 }
 
-/* Meta */
-.member-row__meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-1);
-  flex-shrink: 0;
+.members-block__desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: var(--space-1) 0 0;
+  line-height: 1.5;
 }
-.member-row__role {
+
+.members-block__loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.members-block__feedback {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  border: 1px solid transparent;
+}
+.members-block__feedback--error {
+  background: rgba(255, 180, 171, 0.07);
+  border-color: rgba(255, 180, 171, 0.4);
+  color: #ffb4ab;
+}
+.members-block__feedback--success {
+  background: rgba(77, 158, 120, 0.07);
+  border-color: rgba(77, 158, 120, 0.4);
+  color: #6ec99a;
+}
+
+.members-block__action-btn {
+  align-self: flex-start;
+  font-size: var(--text-sm);
+}
+
+/* ── Badge de status do convite ── */
+.invite-status-badge {
+  flex-shrink: 0;
   font-family: var(--font-label);
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
-.member-row__role--master { color: var(--accent-bright); }
-.member-row__role--player { color: var(--text-secondary); }
-.member-row__date {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+.invite-status-badge--active {
+  background: rgba(77, 158, 120, 0.12);
+  color: #6ec99a;
+  border: 1px solid rgba(77, 158, 120, 0.3);
+}
+.invite-status-badge--inactive {
+  background: var(--bg-overlay);
   color: var(--text-muted);
+  border: 1px solid var(--border-dim);
 }
 
-/* Remover */
-.member-row__remove {
-  flex-shrink: 0;
-  font-size: var(--text-xs);
-  padding: var(--space-2) var(--space-3);
-  min-width: 76px;
-  justify-content: center;
-  border-color: rgba(255, 180, 171, 0.35);
-  color: var(--danger);
-}
-.member-row__remove:hover:not(:disabled) {
-  background: rgba(255, 180, 171, 0.08);
-  border-color: var(--danger);
-}
-
-/* Formulário adicionar */
-.members-panel__add {
-  padding: var(--space-5) var(--space-6);
-  border-top: 1px solid var(--border-dim);
-  background: var(--bg-void);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-.members-panel__add-title { font-size: var(--text-md); font-weight: 600; }
-.members-panel__add-hint  { font-size: var(--text-sm); color: var(--text-muted); margin: 0; }
-.members-panel__add-form  { display: flex; gap: var(--space-3); align-items: center; }
-.members-panel__add-form .input { flex: 1; }
-
-@media (max-width: 640px) {
-  .member-row { flex-wrap: wrap; gap: var(--space-3); }
-  .member-row__meta { align-items: flex-start; flex-direction: row; gap: var(--space-3); }
-  .members-panel__add-form { flex-direction: column; align-items: stretch; }
-}
-
-/* ── Seção de convite ── */
-.members-panel__invite {
-  padding: var(--space-5) var(--space-6);
-  border-top: 1px solid var(--border-dim);
-  background: var(--bg-void);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.members-panel__invite-title { font-size: var(--text-md); font-weight: 600; }
-.members-panel__invite-hint  { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); margin: 0; }
-
-.members-panel__invite-link {
+/* ── Link de convite ── */
+.invite-link-row {
   display: flex;
   gap: var(--space-2);
   align-items: center;
 }
 
-.members-panel__invite-url {
+.invite-link-url {
   flex: 1;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -210,23 +161,279 @@
   letter-spacing: 0.03em;
 }
 
-.members-panel__invite-copy {
+.invite-link-copy {
   flex-shrink: 0;
   font-size: var(--text-xs);
   padding: var(--space-2) var(--space-4);
 }
 
-.members-panel__invite-copied {
+.invite-copied-msg {
   font-family: var(--font-label);
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--success);
-  padding: var(--space-1) 0;
 }
 
-.members-panel__invite-deactivate {
+.invite-deactivate-btn {
+  align-self: flex-start;
   font-size: var(--text-xs);
   padding: var(--space-2) var(--space-3);
-  align-self: flex-start;
+  color: var(--danger);
+  border-color: rgba(255, 180, 171, 0.3);
+}
+.invite-deactivate-btn:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: rgba(255, 180, 171, 0.07);
+}
+
+/* ── Formulário de adicionar jogador ── */
+.add-player-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.add-player-form__label {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.add-player-form__row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.add-player-form__input { flex: 1; }
+
+/* ── Container da lista de membros ── */
+.members-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Seção (Mestre / Jogadores) ── */
+.members-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.members-section__title {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.members-section__empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+  padding: var(--space-2) 0;
+}
+
+.members-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ── Card de membro ── */
+.member-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-fast);
+}
+.member-card:hover { border-color: var(--border-bright); }
+.member-card--self { border-left: 2px solid var(--gilded); }
+
+/* Avatar */
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--bg-overlay);
+  border: 1px solid var(--gilded);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--accent-bright);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Info */
+.member-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.member-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.member-card__name {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.member-card__you {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-overlay);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-dim);
+}
+
+.member-card__role {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.member-card__role--master { color: var(--accent-bright); }
+.member-card__role--player { color: var(--text-secondary); }
+
+.member-card__email {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+}
+
+.member-card__date {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* ── Badges de status de ficha ── */
+.member-sheet-badge {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.member-sheet-badge--filled {
+  background: rgba(77, 158, 120, 0.12);
+  color: #6ec99a;
+  border: 1px solid rgba(77, 158, 120, 0.3);
+}
+.member-sheet-badge--empty {
+  background: rgba(230, 184, 110, 0.1);
+  color: #e6b86e;
+  border: 1px solid rgba(230, 184, 110, 0.25);
+}
+.member-sheet-badge--none {
+  background: var(--bg-overlay);
+  color: var(--text-muted);
+  border: 1px solid var(--border-dim);
+}
+
+/* ── Ações do card ── */
+.member-card__actions {
+  display: flex;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.member-card__remove {
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+  color: var(--danger);
+  border-color: rgba(255, 180, 171, 0.3);
+}
+.member-card__remove:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: rgba(255, 180, 171, 0.07);
+}
+
+.member-card__confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.member-card__confirm-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.member-card__confirm-btn {
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+  min-width: 80px;
+  justify-content: center;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 640px) {
+  .members-block { padding: var(--space-4) var(--space-5); }
+  .members-block__header { flex-wrap: wrap; }
+  .invite-status-badge { width: 100%; text-align: center; }
+
+  .member-card {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+  }
+  .member-card__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .member-card__confirm { justify-content: flex-end; }
+
+  .add-player-form__row { flex-direction: column; align-items: stretch; }
+  .invite-link-row      { flex-direction: column; align-items: stretch; }
+  .invite-link-copy     { width: 100%; justify-content: center; }
 }

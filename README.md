@@ -148,8 +148,11 @@ npm run preview
 | Criar campanha (sistema Genérico) | ✅ |
 | Listar campanhas como mestre e jogador | ✅ |
 | Área da campanha por abas com aba "Visão geral" como padrão | ✅ |
+| Aba Membros com seções separadas (Mestre / Jogadores) | ✅ |
 | Adicionar jogador por e-mail | ✅ |
-| Remover jogador | ✅ |
+| Remover jogador (com confirmação inline) | ✅ |
+| Convite por link — gerar, copiar e desativar | ✅ |
+| Status de ficha por membro na aba Membros (preenchida / não preenchida / não criada) | ✅ |
 | Ficha simples de personagem (identificação, PV, atributos, anotações) | ✅ |
 | Indicador "Preenchida / Não preenchida" na ficha | ✅ |
 | Barra de HP visual na ficha | ✅ |
@@ -160,7 +163,7 @@ npm run preview
 | Área da campanha por abas (Membros / Ficha / Rolagem / Configurações) | ✅ |
 | Proteção de rotas (RLS + front-end) | ✅ |
 | Design Medieval Dark v2 | ✅ |
-| Convite por link com dados públicos (nome da campanha antes do login) | ✅ |
+| Convite por link — aceitar com dados públicos antes do login | ✅ |
 | Mestre edita nome da campanha | ✅ |
 | Mestre exclui campanha (com cascata) | ✅ |
 | Jogador sai da campanha | ✅ |

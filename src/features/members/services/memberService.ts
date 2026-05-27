@@ -1,9 +1,22 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { getCampaignSheets, isSheetFilled } from '../../sheets/services/sheetService'
 import type {
   CampaignMember,
   CampaignMemberWithProfile,
   ProfilePublic,
 } from '../../../shared/types'
+
+// ────────────────────────────────────────────────────────
+// Tipos exportados
+// ────────────────────────────────────────────────────────
+
+/** Status da ficha de um membro — 'no_sheet' quando não há ficha criada. */
+export type SheetStatus = 'filled' | 'not_filled' | 'no_sheet'
+
+/** Membro enriquecido com status de ficha (apenas disponível para o mestre via RLS). */
+export interface CampaignMemberWithSheetStatus extends CampaignMemberWithProfile {
+  sheetStatus: SheetStatus
+}
 
 // ────────────────────────────────────────────────────────
 // Tipos internos para join campaign_members → profiles
@@ -116,4 +129,29 @@ export async function removeCampaignMember(
     if (msg.includes('não encontrado'))   throw new Error('Jogador não encontrado na campanha.')
     throw new Error('Não foi possível remover o jogador.')
   }
+}
+
+/**
+ * Lista membros com status de ficha calculado a partir das fichas da campanha.
+ * Requer papel de mestre — a RLS de `character_sheets` bloqueia jogadores.
+ * Faz as duas consultas em paralelo.
+ */
+export async function getCampaignMembersWithSheetStatus(
+  campaignId: string
+): Promise<CampaignMemberWithSheetStatus[]> {
+  const [members, sheets] = await Promise.all([
+    getCampaignMembers(campaignId),
+    getCampaignSheets(campaignId),
+  ])
+
+  const sheetMap = new Map(sheets.map((s) => [s.user_id, s]))
+
+  return members.map((m) => {
+    const sheet = sheetMap.get(m.user_id)
+    let sheetStatus: SheetStatus
+    if (!sheet)                  sheetStatus = 'no_sheet'
+    else if (isSheetFilled(sheet)) sheetStatus = 'filled'
+    else                         sheetStatus = 'not_filled'
+    return { ...m, sheetStatus }
+  })
 }
