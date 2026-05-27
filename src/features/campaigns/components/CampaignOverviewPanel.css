@@ -32,6 +32,34 @@
   margin: 0;
 }
 
+/* ── Descrição da campanha ── */
+.ov-description {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+}
+
+.ov-description__label {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.ov-description__text {
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* ── Dashboard container ── */
 .ov-dashboard {
   display: flex;

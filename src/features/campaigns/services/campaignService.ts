@@ -3,6 +3,16 @@ import { ensureProfile } from '../../users/services/profileService'
 import type { Campaign, CampaignMember, CampaignWithRole } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
+// Tipos de formulário
+// ────────────────────────────────────────────────────────
+
+export interface CampaignDetailsData {
+  name:        string
+  description: string | null
+  status:      Campaign['status']
+}
+
+// ────────────────────────────────────────────────────────
 // Tipos internos para resultado das queries com join
 // ────────────────────────────────────────────────────────
 
@@ -57,19 +67,23 @@ export async function getMyCampaigns(): Promise<CampaignWithRole[]> {
  * passaram pelo trigger `handle_new_user` e portanto não têm perfil —
  * o que causaria falha na FK campaigns.master_id.
  */
-export async function createCampaign(name: string): Promise<Campaign> {
+export async function createCampaign(
+  name: string,
+  description?: string | null
+): Promise<Campaign> {
   // Garante perfil antes de tentar criar campanha (FK constraint)
   await ensureProfile()
 
   const { data, error } = await supabase.rpc('create_campaign', {
-    campaign_name:   name.trim(),
-    campaign_system: 'generic',
+    campaign_name:        name.trim(),
+    campaign_system:      'generic',
+    campaign_description: description ?? null,
   })
 
   if (error) {
-    if (error.message.includes('não pode ser vazio')) {
-      throw new Error('O nome da campanha não pode ser vazio.')
-    }
+    const msg = error.message ?? ''
+    if (msg.includes('não pode ser vazio'))  throw new Error('O nome da campanha não pode ser vazio.')
+    if (msg.includes('1000 caracteres'))     throw new Error('A descrição deve ter no máximo 1000 caracteres.')
     throw new Error('Não foi possível criar a campanha. Tente novamente.')
   }
 
@@ -77,8 +91,36 @@ export async function createCampaign(name: string): Promise<Campaign> {
 }
 
 /**
+ * Atualiza nome, descrição e status de uma campanha.
+ * Apenas o mestre pode chamar. Retorna a campanha atualizada.
+ */
+export async function updateCampaignDetails(
+  campaignId: string,
+  data: CampaignDetailsData
+): Promise<Campaign> {
+  const { data: result, error } = await supabase.rpc('update_campaign_details', {
+    campaign_id_input: campaignId,
+    new_name:          data.name.trim(),
+    new_description:   data.description,
+    new_status:        data.status,
+  })
+
+  if (error) {
+    const msg = error.message ?? ''
+    if (msg.includes('não pode ser vazio'))  throw new Error('O nome da campanha não pode ser vazio.')
+    if (msg.includes('Apenas o mestre'))     throw new Error('Apenas o mestre pode editar a campanha.')
+    if (msg.includes('1000 caracteres'))     throw new Error('A descrição deve ter no máximo 1000 caracteres.')
+    if (msg.includes('Status inválido'))     throw new Error('Selecione um status válido.')
+    throw new Error('Não foi possível atualizar a campanha.')
+  }
+
+  return result as Campaign
+}
+
+/**
  * Atualiza o nome de uma campanha. Apenas o mestre pode chamar.
  * Retorna a campanha com o nome atualizado.
+ * @deprecated Use updateCampaignDetails para editar nome, descrição e status.
  */
 export async function updateCampaignName(
   campaignId: string,

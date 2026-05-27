@@ -3,20 +3,33 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createCampaign } from '../services/campaignService'
 import './CampaignPages.css'
 
+const NAME_MAX        = 120
+const DESCRIPTION_MAX = 1000
+
 export function NewCampaignPage() {
   const navigate = useNavigate()
-  const [name, setName]             = useState('')
-  const [error, setError]           = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [name,        setName]        = useState('')
+  const [description, setDescription] = useState('')
+  const [error,       setError]       = useState<string | null>(null)
+  const [submitting,  setSubmitting]  = useState(false)
+
+  const nameOver = name.length > NAME_MAX
+  const descOver = description.length > DESCRIPTION_MAX
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    const trimmed = name.trim()
-    if (!trimmed) { setError('O nome da campanha não pode ser vazio.'); return }
+    const trimmedName = name.trim()
+    if (!trimmedName) { setError('O nome da campanha não pode ser vazio.'); return }
+    if (nameOver)     { setError(`O nome deve ter no máximo ${NAME_MAX} caracteres.`); return }
+    if (descOver)     { setError(`A descrição deve ter no máximo ${DESCRIPTION_MAX} caracteres.`); return }
+
     setSubmitting(true)
     try {
-      const campaign = await createCampaign(trimmed)
+      const campaign = await createCampaign(
+        trimmedName,
+        description.trim() || null,
+      )
       navigate(`/campanhas/${campaign.id}`, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível criar a campanha.')
@@ -68,12 +81,21 @@ export function NewCampaignPage() {
             <div className="auth-field">
               <label className="label" htmlFor="campaign-name">Nome da campanha</label>
               <input
-                id="campaign-name" type="text" className="input"
+                id="campaign-name" type="text"
+                className={`input${nameOver ? ' input--error' : ''}`}
                 placeholder="Ex: Minha primeira campanha"
                 autoComplete="off"
-                value={name} onChange={(e) => setName(e.target.value)}
+                value={name} onChange={(e) => { setName(e.target.value); setError(null) }}
                 disabled={submitting} required
               />
+              <span style={{
+                fontSize: 'var(--text-xs)',
+                color: nameOver ? '#ffb4ab' : 'var(--text-muted)',
+                textAlign: 'right',
+                display: 'block',
+              }}>
+                {name.length}/{NAME_MAX}
+              </span>
             </div>
 
             <div className="auth-field">
@@ -85,9 +107,32 @@ export function NewCampaignPage() {
               />
             </div>
 
+            <div className="auth-field">
+              <label className="label" htmlFor="campaign-description">
+                Descrição <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(opcional)</span>
+              </label>
+              <textarea
+                id="campaign-description"
+                className={`input campaign-form__textarea${descOver ? ' input--error' : ''}`}
+                placeholder="Uma breve descrição da campanha, cenário ou premissa..."
+                value={description}
+                onChange={(e) => { setDescription(e.target.value); setError(null) }}
+                disabled={submitting}
+                rows={4}
+              />
+              <span style={{
+                fontSize: 'var(--text-xs)',
+                color: descOver ? '#ffb4ab' : 'var(--text-muted)',
+                textAlign: 'right',
+                display: 'block',
+              }}>
+                {description.length}/{DESCRIPTION_MAX}
+              </span>
+            </div>
+
             <div className="campaign-form__actions">
               <Link to="/campanhas" className="btn btn-ghost">Cancelar</Link>
-              <button type="submit" className="btn btn-primary" disabled={submitting}>
+              <button type="submit" className="btn btn-primary" disabled={submitting || nameOver || descOver}>
                 {submitting
                   ? <><span className="spinner spinner--sm" /> Criando...</>
                   : 'Criar Campanha'

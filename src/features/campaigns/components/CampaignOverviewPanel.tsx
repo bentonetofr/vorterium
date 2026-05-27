@@ -137,6 +137,14 @@ export function CampaignOverviewPanel({
         </p>
       </div>
 
+      {/* ── Descrição (quando existir) ── */}
+      {campaign.description && (
+        <div className="ov-description">
+          <p className="ov-description__label">Descrição</p>
+          <p className="ov-description__text">{campaign.description}</p>
+        </div>
+      )}
+
       {isMaster
         ? <MasterDashboard
             campaignId={campaign.id}

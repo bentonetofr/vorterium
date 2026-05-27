@@ -74,6 +74,41 @@
   gap: var(--space-3);
 }
 
+/* Textarea de descrição */
+.settings-panel__textarea {
+  resize: vertical;
+  min-height: 90px;
+  font-family: var(--font-body);
+}
+
+/* Contador de caracteres */
+.settings-panel__counter {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-align: right;
+  display: block;
+  margin-top: 2px;
+}
+.settings-panel__counter--over { color: #ffb4ab; }
+
+/* Confirmação inline de exclusão */
+.settings-panel__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.settings-panel__confirm-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+.settings-panel__confirm-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 /* Mensagens */
 .settings-panel__msg {
   font-family: var(--font-body);

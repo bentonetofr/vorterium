@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
-import { formatSystem, formatRole } from '../../../shared/utils/campaign'
+import { formatSystem, formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
 import { CampaignSessionsPanel }  from '../../sessions/components/CampaignSessionsPanel'
@@ -104,6 +104,9 @@ export function CampaignAreaPage() {
               }}
             >
               {formatRole(campaign.role)}
+            </span>
+            <span className={`campaign-status ${getCampaignStatusClass(campaign.status)}`}>
+              {getCampaignStatusLabel(campaign.status)}
             </span>
           </div>
         </div>
@@ -219,8 +222,8 @@ export function CampaignAreaPage() {
         {activeTab === 'configuracoes' && (
           <CampaignSettingsPanel
             campaign={campaign}
-            onNameUpdate={(newName) =>
-              setCampaign((prev) => prev ? { ...prev, name: newName } : prev)
+            onCampaignUpdate={(updated) =>
+              setCampaign((prev) => prev ? { ...prev, ...updated } : prev)
             }
           />
         )}

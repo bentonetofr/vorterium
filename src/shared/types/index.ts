@@ -25,6 +25,8 @@ export interface Campaign {
   name: string
   system: string
   master_id: string
+  description: string | null
+  status: 'active' | 'paused' | 'archived'
   created_at: string
   updated_at: string
 }

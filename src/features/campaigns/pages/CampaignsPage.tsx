@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getMyCampaigns } from '../services/campaignService'
-import { formatSystem, formatRole } from '../../../shared/utils/campaign'
+import { formatSystem, formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
 
@@ -111,7 +111,13 @@ function CampaignCard({ campaign }: { campaign: CampaignWithRole }) {
           <span className={`campaign-card-role campaign-card-role--${campaign.role}`}>
             {formatRole(campaign.role)}
           </span>
+          <span className={`campaign-status ${getCampaignStatusClass(campaign.status)}`}>
+            {getCampaignStatusLabel(campaign.status)}
+          </span>
         </div>
+        {campaign.description && (
+          <p className="campaign-card-row__desc">{campaign.description}</p>
+        )}
       </div>
       <Link
         to={`/campanhas/${campaign.id}`}
