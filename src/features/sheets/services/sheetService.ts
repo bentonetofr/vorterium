@@ -2,6 +2,44 @@ import { supabase } from '../../../shared/lib/supabase'
 import type { CharacterSheet, ProfilePublic, SheetWithProfile } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
+// Constantes / utilidades
+// ────────────────────────────────────────────────────────
+
+/** Valores padrão de uma ficha recém-criada (espelham o DEFAULT do banco). */
+export const SHEET_DEFAULTS = {
+  level:          1,
+  hp_current:     10,
+  hp_max:         10,
+  strength:       10,
+  dexterity:      10,
+  constitution:   10,
+  intelligence:   10,
+  wisdom:         10,
+  charisma:       10,
+} as const
+
+/**
+ * Considera uma ficha "preenchida" quando o jogador modificou pelo menos
+ * um campo em relação aos valores padrão.
+ */
+export function isSheetFilled(sheet: CharacterSheet): boolean {
+  return (
+    !!sheet.character_name?.trim() ||
+    !!sheet.archetype?.trim()      ||
+    !!sheet.notes?.trim()          ||
+    sheet.level          !== SHEET_DEFAULTS.level          ||
+    sheet.hp_current     !== SHEET_DEFAULTS.hp_current     ||
+    sheet.hp_max         !== SHEET_DEFAULTS.hp_max         ||
+    sheet.strength       !== SHEET_DEFAULTS.strength       ||
+    sheet.dexterity      !== SHEET_DEFAULTS.dexterity      ||
+    sheet.constitution   !== SHEET_DEFAULTS.constitution   ||
+    sheet.intelligence   !== SHEET_DEFAULTS.intelligence   ||
+    sheet.wisdom         !== SHEET_DEFAULTS.wisdom         ||
+    sheet.charisma       !== SHEET_DEFAULTS.charisma
+  )
+}
+
+// ────────────────────────────────────────────────────────
 // Tipos
 // ────────────────────────────────────────────────────────
 

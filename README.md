@@ -150,8 +150,10 @@ npm run preview
 | Área da campanha com nome e papel | ✅ |
 | Adicionar jogador por e-mail | ✅ |
 | Remover jogador | ✅ |
-| Ficha simples de personagem | ✅ |
-| Mestre vê todas as fichas da campanha | ✅ |
+| Ficha simples de personagem (identificação, PV, atributos, anotações) | ✅ |
+| Indicador "Preenchida / Não preenchida" na ficha | ✅ |
+| Barra de HP visual na ficha | ✅ |
+| Mestre vê todas as fichas com status de preenchimento | ✅ |
 | Rolagem rápida de dados (d4–d100) | ✅ |
 | Rolagem personalizada por fórmula (`2d6+3`, `2#d20`, `1#d3+4`…) | ✅ |
 | Histórico de rolagens com breakdown detalhado | ✅ |

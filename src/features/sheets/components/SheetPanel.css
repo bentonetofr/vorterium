@@ -16,9 +16,35 @@
   border-bottom: 1px solid var(--border-dim);
   background: var(--bg-elevated);
 }
-.sheet-panel__title-row { display: flex; align-items: center; gap: var(--space-3); }
+.sheet-panel__title-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .sheet-panel__icon  { font-size: var(--text-lg); color: var(--accent-dim); }
 .sheet-panel__title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 600; }
+
+/* ── Badge preenchida/não preenchida ── */
+.sheet-filled-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  flex-shrink: 0;
+}
+.sheet-filled-badge--filled {
+  background: rgba(77, 158, 120, 0.1);
+  border-color: rgba(77, 158, 120, 0.4);
+  color: #6ec99a;
+}
+.sheet-filled-badge--empty {
+  background: transparent;
+  border-color: var(--border-dim);
+  color: var(--text-muted);
+}
+.sheet-filled-badge--sm { font-size: 0.6rem; padding: 1px var(--space-2); }
 
 .sheet-panel__body { padding: var(--space-6); }
 
@@ -90,6 +116,14 @@
 
 /* Seção */
 .sheet-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.sheet-section__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-dim);
+}
 .sheet-section__title {
   font-family: var(--font-label);
   font-size: var(--text-xs);
@@ -105,7 +139,12 @@
 .sheet-section__row--3 { grid-template-columns: 1fr 1fr auto; }
 
 /* PV */
-.sheet-hp-row { display: flex; align-items: flex-end; gap: var(--space-3); }
+.sheet-hp-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
 .sheet-hp-input {
   width: 90px !important;
   text-align: center !important;
@@ -119,6 +158,27 @@
   padding-bottom: var(--space-2);
   flex-shrink: 0;
 }
+
+/* Barra de HP */
+.sheet-hp-bar {
+  flex: 1;
+  min-width: 80px;
+  height: 8px;
+  background: var(--bg-overlay);
+  border-radius: 4px;
+  overflow: hidden;
+  align-self: center;
+  margin-bottom: var(--space-2);
+}
+.sheet-hp-bar__fill {
+  height: 100%;
+  border-radius: 4px;
+  background: #6ec99a;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.sheet-hp-bar__fill--low      { background: #e6b86e; }
+.sheet-hp-bar__fill--critical { background: #e67e7e; }
+.sheet-hp-bar__fill--dead     { background: var(--danger); width: 0 !important; }
 
 /* Grid de atributos */
 .sheet-attrs-grid {
@@ -173,6 +233,15 @@
   font-size: var(--text-md);
   line-height: 1.6;
 }
+
+/* Contador de notas */
+.sheet-notes-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.sheet-notes-count--over { color: #ffb4ab; }
 
 .sheet-form__feedback {
   padding: var(--space-3) var(--space-4);
@@ -230,7 +299,8 @@
 .sheets-list__info   { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .sheets-list__player { font-family: var(--font-body); font-size: var(--text-md); font-weight: 600; color: var(--text-primary); }
 .sheets-list__char   { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sheets-list__hp     { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+.sheets-list__right  { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); flex-shrink: 0; }
+.sheets-list__hp     { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); }
 .sheets-list__form   { padding-top: var(--space-4); border-top: 1px solid var(--border-dim); }
 
 @media (max-width: 640px) {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   getCampaignSheets,
+  isSheetFilled,
   updateSheet,
   type SheetUpdateData,
 } from '../services/sheetService'
@@ -20,13 +21,13 @@ interface CampaignSheetsListProps {
 // ────────────────────────────────────────────────────────
 
 export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
-  const [sheets, setSheets]               = useState<SheetWithProfile[]>([])
-  const [loading, setLoading]             = useState(true)
-  const [listError, setListError]         = useState<string | null>(null)
-  const [selected, setSelected]           = useState<SheetWithProfile | null>(null)
-  const [saving, setSaving]               = useState(false)
-  const [saveError, setSaveError]         = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess]     = useState(false)
+  const [sheets, setSheets]           = useState<SheetWithProfile[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [listError, setListError]     = useState<string | null>(null)
+  const [selected, setSelected]       = useState<SheetWithProfile | null>(null)
+  const [saving, setSaving]           = useState(false)
+  const [saveError, setSaveError]     = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -44,8 +45,7 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
     } finally {
       setLoading(false)
     }
-  // `selected` é intencionalmente excluído das deps: a re-seleção dentro de load
-  // é um efeito secundário, não o gatilho do carregamento.
+  // `selected` é intencionalmente excluído das deps
   }, [campaignId])
 
   useEffect(() => { load() }, [load])
@@ -57,10 +57,9 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
     setSaveSuccess(false)
     try {
       const updated = await updateSheet(selected.id, data)
-      setSelected({ ...updated, profile: selected.profile })
-      setSheets((prev) =>
-        prev.map((s) => (s.id === updated.id ? { ...updated, profile: s.profile } : s))
-      )
+      const withProfile = { ...updated, profile: selected.profile }
+      setSelected(withProfile)
+      setSheets((prev) => prev.map((s) => (s.id === updated.id ? withProfile : s)))
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
@@ -100,10 +99,12 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
 
   return (
     <div className="sheets-list-wrapper">
-      {/* Lista de fichas */}
+      {/* ── Lista de fichas ── */}
       <div className="sheets-list">
         {sheets.map((sheet) => {
           const isSelected = selected?.id === sheet.id
+          const filled     = isSheetFilled(sheet)
+
           return (
             <button
               key={sheet.id}
@@ -113,28 +114,41 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
                 setSaveError(null)
                 setSaveSuccess(false)
               }}
+              aria-pressed={isSelected}
             >
               <span className="sheets-list__avatar">
                 {sheet.profile.display_name.charAt(0).toUpperCase()}
               </span>
+
               <div className="sheets-list__info">
                 <span className="sheets-list__player">{sheet.profile.display_name}</span>
                 <span className="sheets-list__char">
-                  {sheet.character_name ?? 'Sem nome'}
-                  {sheet.archetype ? ` · ${sheet.archetype}` : ''}
-                  {` · Nv ${sheet.level}`}
+                  {sheet.character_name
+                    ? <>
+                        <strong>{sheet.character_name}</strong>
+                        {sheet.archetype ? ` · ${sheet.archetype}` : ''}
+                        {` · Nv ${sheet.level}`}
+                      </>
+                    : `Sem nome · Nv ${sheet.level}`
+                  }
                 </span>
               </div>
-              <span className="sheets-list__hp">
-                {sheet.hp_current}<span className="text-muted">/{sheet.hp_max} PV</span>
-              </span>
+
+              <div className="sheets-list__right">
+                <span className="sheets-list__hp">
+                  {sheet.hp_current}<span className="text-muted">/{sheet.hp_max} PV</span>
+                </span>
+                <span className={`sheet-filled-badge sheet-filled-badge--sm ${filled ? 'sheet-filled-badge--filled' : 'sheet-filled-badge--empty'}`}>
+                  {filled ? 'Preenchida' : 'Não preenchida'}
+                </span>
+              </div>
             </button>
           )
         })}
       </div>
 
-      {/* Ficha selecionada */}
-      {selected && (
+      {/* ── Ficha selecionada ── */}
+      {selected ? (
         <div className="sheets-list__form">
           <SimpleSheetForm
             key={selected.id}
@@ -146,9 +160,7 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
             saveSuccess={saveSuccess}
           />
         </div>
-      )}
-
-      {!selected && (
+      ) : (
         <p className="sheet-empty sheet-empty--hint">
           Selecione um jogador acima para ver e editar a ficha.
         </p>

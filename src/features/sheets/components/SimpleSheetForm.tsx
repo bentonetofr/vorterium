@@ -3,6 +3,12 @@ import type { CharacterSheet } from '../../../shared/types'
 import type { SheetUpdateData } from '../services/sheetService'
 
 // ────────────────────────────────────────────────────────
+// Constantes
+// ────────────────────────────────────────────────────────
+
+const NOTES_MAX = 2000
+
+// ────────────────────────────────────────────────────────
 // Props
 // ────────────────────────────────────────────────────────
 
@@ -19,9 +25,63 @@ interface SimpleSheetFormProps {
 // Helpers
 // ────────────────────────────────────────────────────────
 
-function parseNum(val: string | number, min: number): number {
+function parseNum(val: string | number, min: number, max?: number): number {
   const n = typeof val === 'number' ? val : parseInt(val, 10)
-  return isNaN(n) ? min : Math.max(min, n)
+  const clamped = isNaN(n) ? min : Math.max(min, n)
+  return max !== undefined ? Math.min(max, clamped) : clamped
+}
+
+type FormData = {
+  character_name: string
+  archetype: string
+  level: number
+  hp_current: number
+  hp_max: number
+  strength: number
+  dexterity: number
+  constitution: number
+  intelligence: number
+  wisdom: number
+  charisma: number
+  notes: string
+}
+
+function sheetToForm(sheet: CharacterSheet): FormData {
+  return {
+    character_name: sheet.character_name ?? '',
+    archetype:      sheet.archetype ?? '',
+    level:          sheet.level,
+    hp_current:     sheet.hp_current,
+    hp_max:         sheet.hp_max,
+    strength:       sheet.strength,
+    dexterity:      sheet.dexterity,
+    constitution:   sheet.constitution,
+    intelligence:   sheet.intelligence,
+    wisdom:         sheet.wisdom,
+    charisma:       sheet.charisma,
+    notes:          sheet.notes ?? '',
+  }
+}
+
+function validateSheet(f: FormData): string | null {
+  if (f.character_name.trim().length > 80)
+    return 'O nome do personagem deve ter no máximo 80 caracteres.'
+  if (f.archetype.trim().length > 80)
+    return 'A classe/arquétipo deve ter no máximo 80 caracteres.'
+  if (f.level < 1)
+    return 'O nível deve ser maior ou igual a 1.'
+  if (f.hp_current < 0)
+    return 'Os pontos de vida atuais devem ser maiores ou iguais a 0.'
+  if (f.hp_max < 1)
+    return 'Os pontos de vida máximos devem ser maiores ou iguais a 1.'
+  if (f.hp_current > f.hp_max)
+    return 'Os pontos de vida atuais não podem ser maiores que os pontos de vida máximos.'
+  const attrs = [f.strength, f.dexterity, f.constitution, f.intelligence, f.wisdom, f.charisma]
+  if (attrs.some((a) => a < 1 || a > 99))
+    return 'Os atributos devem estar entre 1 e 99.'
+  if (f.notes.length > NOTES_MAX)
+    return `As anotações devem ter no máximo ${NOTES_MAX} caracteres.`
+  return null
 }
 
 // ────────────────────────────────────────────────────────
@@ -32,12 +92,11 @@ interface AttrFieldProps {
   label: string
   abbr: string
   value: number
-  min: number
   disabled: boolean
   onChange: (v: number) => void
 }
 
-function AttrField({ label, abbr, value, min, disabled, onChange }: AttrFieldProps) {
+function AttrField({ label, abbr, value, disabled, onChange }: AttrFieldProps) {
   return (
     <div className="sheet-attr">
       <span className="sheet-attr__abbr">{abbr}</span>
@@ -46,9 +105,10 @@ function AttrField({ label, abbr, value, min, disabled, onChange }: AttrFieldPro
         type="number"
         className="input sheet-attr__input"
         value={value}
-        min={min}
+        min={1}
+        max={99}
         disabled={disabled}
-        onChange={(e) => onChange(parseNum(e.target.value, min))}
+        onChange={(e) => onChange(parseNum(e.target.value, 1, 99))}
         aria-label={label}
       />
     </div>
@@ -67,45 +127,25 @@ export function SimpleSheetForm({
   saveError,
   saveSuccess,
 }: SimpleSheetFormProps) {
-  const [formData, setFormData] = useState({
-    character_name: sheet.character_name ?? '',
-    archetype:      sheet.archetype ?? '',
-    level:          sheet.level,
-    hp_current:     sheet.hp_current,
-    hp_max:         sheet.hp_max,
-    strength:       sheet.strength,
-    dexterity:      sheet.dexterity,
-    constitution:   sheet.constitution,
-    intelligence:   sheet.intelligence,
-    wisdom:         sheet.wisdom,
-    charisma:       sheet.charisma,
-    notes:          sheet.notes ?? '',
-  })
+  const [formData, setFormData]           = useState<FormData>(() => sheetToForm(sheet))
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   // Reseta o formulário quando a ficha mudar (mestre troca de ficha)
   useEffect(() => {
-    setFormData({
-      character_name: sheet.character_name ?? '',
-      archetype:      sheet.archetype ?? '',
-      level:          sheet.level,
-      hp_current:     sheet.hp_current,
-      hp_max:         sheet.hp_max,
-      strength:       sheet.strength,
-      dexterity:      sheet.dexterity,
-      constitution:   sheet.constitution,
-      intelligence:   sheet.intelligence,
-      wisdom:         sheet.wisdom,
-      charisma:       sheet.charisma,
-      notes:          sheet.notes ?? '',
-    })
+    setFormData(sheetToForm(sheet))
+    setValidationError(null)
   }, [sheet.id])
 
-  function set<K extends keyof typeof formData>(key: K, value: typeof formData[K]) {
+  function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setFormData((prev) => ({ ...prev, [key]: value }))
+    setValidationError(null)
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    const err = validateSheet(formData)
+    if (err) { setValidationError(err); return }
+    setValidationError(null)
     await onSave({
       character_name: formData.character_name.trim() || null,
       archetype:      formData.archetype.trim() || null,
@@ -122,6 +162,8 @@ export function SimpleSheetForm({
     })
   }
 
+  const notesOverLimit = formData.notes.length > NOTES_MAX
+
   return (
     <form onSubmit={handleSubmit} className="sheet-form" noValidate>
       {/* Identificação do dono (visível para mestre) */}
@@ -132,9 +174,9 @@ export function SimpleSheetForm({
         </div>
       )}
 
-      {/* ── Identidade ── */}
+      {/* ── Identificação ── */}
       <section className="sheet-section">
-        <h4 className="sheet-section__title">Personagem</h4>
+        <h4 className="sheet-section__title">Identificação</h4>
         <div className="sheet-section__row sheet-section__row--3">
           <div className="auth-field sheet-section__field--grow">
             <label className="label" htmlFor="char-name">Nome do personagem</label>
@@ -146,6 +188,7 @@ export function SimpleSheetForm({
               value={formData.character_name}
               onChange={(e) => set('character_name', e.target.value)}
               disabled={saving}
+              maxLength={80}
             />
           </div>
           <div className="auth-field sheet-section__field--grow">
@@ -158,6 +201,7 @@ export function SimpleSheetForm({
               value={formData.archetype}
               onChange={(e) => set('archetype', e.target.value)}
               disabled={saving}
+              maxLength={80}
             />
           </div>
           <div className="auth-field sheet-section__field--fixed">
@@ -204,6 +248,28 @@ export function SimpleSheetForm({
               disabled={saving}
             />
           </div>
+          {/* Barra de HP visual */}
+          {formData.hp_max > 0 && (
+            <div
+              className="sheet-hp-bar"
+              role="progressbar"
+              aria-valuenow={formData.hp_current}
+              aria-valuemin={0}
+              aria-valuemax={formData.hp_max}
+              aria-label="Pontos de vida"
+            >
+              <div
+                className={[
+                  'sheet-hp-bar__fill',
+                  formData.hp_current <= 0 ? 'sheet-hp-bar__fill--dead'
+                  : formData.hp_current / formData.hp_max <= 0.25 ? 'sheet-hp-bar__fill--critical'
+                  : formData.hp_current / formData.hp_max <= 0.5 ? 'sheet-hp-bar__fill--low'
+                  : '',
+                ].join(' ').trim()}
+                style={{ width: `${Math.min(100, Math.max(0, (formData.hp_current / formData.hp_max) * 100))}%` }}
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -211,18 +277,23 @@ export function SimpleSheetForm({
       <section className="sheet-section">
         <h4 className="sheet-section__title">Atributos</h4>
         <div className="sheet-attrs-grid">
-          <AttrField label="Força"        abbr="FOR" value={formData.strength}     min={1} disabled={saving} onChange={(v) => set('strength', v)} />
-          <AttrField label="Destreza"     abbr="DES" value={formData.dexterity}    min={1} disabled={saving} onChange={(v) => set('dexterity', v)} />
-          <AttrField label="Constituição" abbr="CON" value={formData.constitution} min={1} disabled={saving} onChange={(v) => set('constitution', v)} />
-          <AttrField label="Inteligência" abbr="INT" value={formData.intelligence} min={1} disabled={saving} onChange={(v) => set('intelligence', v)} />
-          <AttrField label="Sabedoria"    abbr="SAB" value={formData.wisdom}       min={1} disabled={saving} onChange={(v) => set('wisdom', v)} />
-          <AttrField label="Carisma"      abbr="CAR" value={formData.charisma}     min={1} disabled={saving} onChange={(v) => set('charisma', v)} />
+          <AttrField label="Força"        abbr="FOR" value={formData.strength}     disabled={saving} onChange={(v) => set('strength', v)} />
+          <AttrField label="Destreza"     abbr="DES" value={formData.dexterity}    disabled={saving} onChange={(v) => set('dexterity', v)} />
+          <AttrField label="Constituição" abbr="CON" value={formData.constitution} disabled={saving} onChange={(v) => set('constitution', v)} />
+          <AttrField label="Inteligência" abbr="INT" value={formData.intelligence} disabled={saving} onChange={(v) => set('intelligence', v)} />
+          <AttrField label="Sabedoria"    abbr="SAB" value={formData.wisdom}       disabled={saving} onChange={(v) => set('wisdom', v)} />
+          <AttrField label="Carisma"      abbr="CAR" value={formData.charisma}     disabled={saving} onChange={(v) => set('charisma', v)} />
         </div>
       </section>
 
       {/* ── Anotações ── */}
       <section className="sheet-section">
-        <h4 className="sheet-section__title">Anotações</h4>
+        <div className="sheet-section__title-row">
+          <h4 className="sheet-section__title" style={{ borderBottom: 'none', marginBottom: 0 }}>Anotações</h4>
+          <span className={`sheet-notes-count ${notesOverLimit ? 'sheet-notes-count--over' : ''}`}>
+            {formData.notes.length}/{NOTES_MAX}
+          </span>
+        </div>
         <textarea
           className="input sheet-notes"
           placeholder="Histórico, equipamentos, anotações de sessão..."
@@ -233,7 +304,12 @@ export function SimpleSheetForm({
         />
       </section>
 
-      {/* ── Feedback + botão ── */}
+      {/* ── Feedback ── */}
+      {validationError && (
+        <div className="sheet-form__feedback sheet-form__feedback--error" role="alert">
+          {validationError}
+        </div>
+      )}
       {saveError && (
         <div className="sheet-form__feedback sheet-form__feedback--error" role="alert">
           {saveError}
