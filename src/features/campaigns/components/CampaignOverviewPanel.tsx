@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import {
   getMasterOverview,
   getPlayerOverview,
@@ -45,6 +45,79 @@ function formatRelativeTime(iso: string): string {
 }
 
 // ────────────────────────────────────────────────────────
+// StatCard
+// ────────────────────────────────────────────────────────
+
+interface StatCardProps {
+  icon:     string
+  title:    string
+  action:   { label: string; onClick: () => void }
+  children: ReactNode
+}
+
+function StatCard({ icon, title, action, children }: StatCardProps) {
+  return (
+    <div className="ov-stat">
+      <div className="ov-stat__header">
+        <span className="ov-stat__icon" aria-hidden="true">{icon}</span>
+        <span className="ov-stat__title">{title}</span>
+      </div>
+      <div className="ov-stat__body">{children}</div>
+      <button className="btn btn-ghost ov-stat__action" onClick={action.onClick}>
+        {action.label} →
+      </button>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// RecentRollsCard
+// ────────────────────────────────────────────────────────
+
+interface RecentRollsCardProps {
+  rolls:         OverviewMasterData['recentRolls']
+  currentUserId: string
+  onNavigate:    (tab: TabId) => void
+}
+
+function RecentRollsCard({ rolls, currentUserId, onNavigate }: RecentRollsCardProps) {
+  return (
+    <div className="ov-rolls-card">
+      <div className="ov-rolls-card__header">
+        <span className="ov-rolls-card__icon" aria-hidden="true">⬡</span>
+        <span className="ov-rolls-card__title">Rolagens recentes</span>
+        <button
+          className="btn btn-ghost ov-rolls-card__link"
+          onClick={() => onNavigate('rolagem')}
+        >
+          Rolar dados →
+        </button>
+      </div>
+
+      {rolls.length > 0 ? (
+        <ul className="ov-rolls-list">
+          {rolls.map((r) => (
+            <li
+              key={r.id}
+              className={`ov-roll${r.user_id === currentUserId ? ' ov-roll--own' : ''}`}
+            >
+              <span className="ov-roll__formula">{r.formula ?? r.die_type}</span>
+              <span className="ov-roll__meta">
+                {r.user_id === currentUserId ? 'Você' : r.profile.display_name}
+                {' · '}{formatRelativeTime(r.created_at)}
+              </span>
+              <span className="ov-roll__result">{r.result}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="ov-rolls-card__empty">Nenhuma rolagem registrada ainda.</p>
+      )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────
 // Componente principal
 // ────────────────────────────────────────────────────────
 
@@ -57,7 +130,6 @@ export function CampaignOverviewPanel({
 
   return (
     <div className="overview">
-      {/* ── Cabeçalho discreto ── */}
       <div className="overview-intro">
         <h4 className="overview-intro__title">Resumo da campanha</h4>
         <p className="overview-intro__sub">
@@ -65,10 +137,17 @@ export function CampaignOverviewPanel({
         </p>
       </div>
 
-      {/* ── Cards ── */}
       {isMaster
-        ? <MasterCards campaignId={campaign.id} onNavigate={onNavigate} />
-        : <PlayerCards campaignId={campaign.id} currentUserId={currentUserId} onNavigate={onNavigate} />
+        ? <MasterDashboard
+            campaignId={campaign.id}
+            currentUserId={currentUserId}
+            onNavigate={onNavigate}
+          />
+        : <PlayerDashboard
+            campaignId={campaign.id}
+            currentUserId={currentUserId}
+            onNavigate={onNavigate}
+          />
       }
     </div>
   )
@@ -78,16 +157,18 @@ export function CampaignOverviewPanel({
 // Vista do mestre
 // ────────────────────────────────────────────────────────
 
-function MasterCards({
+function MasterDashboard({
   campaignId,
+  currentUserId,
   onNavigate,
 }: {
-  campaignId: string
-  onNavigate: (tab: TabId) => void
+  campaignId:    string
+  currentUserId: string
+  onNavigate:    (tab: TabId) => void
 }) {
-  const [data, setData]     = useState<OverviewMasterData | null>(null)
+  const [data,    setData]    = useState<OverviewMasterData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
     getMasterOverview(campaignId)
@@ -104,139 +185,72 @@ function MasterCards({
   const players = data.members.filter((m) => m.role === 'player')
 
   return (
-    <div className="overview-grid">
+    <div className="ov-dashboard">
 
-      {/* ── Membros ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">⚔</span>
-          <span className="overview-card__title">Membros</span>
-        </div>
-        <div className="overview-card__body">
-          <div className="overview-card__stat">{data.members.length}</div>
-          <div className="overview-card__details">
+      {/* ── Linha 1: cards de resumo ── */}
+      <div className="ov-stats">
+
+        <StatCard
+          icon="⚔"
+          title="Membros"
+          action={{ label: 'Gerenciar membros', onClick: () => onNavigate('membros') }}
+        >
+          <div className="ov-stat__num">{data.members.length}</div>
+          <div className="ov-stat__details">
             <span>{players.length} jogador{players.length !== 1 ? 'es' : ''}</span>
             {master && <span>Mestre: {master.profile.display_name}</span>}
           </div>
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('membros')}
-        >
-          Gerenciar membros →
-        </button>
-      </div>
+        </StatCard>
 
-      {/* ── Fichas ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">📜</span>
-          <span className="overview-card__title">Fichas</span>
-        </div>
-        <div className="overview-card__body">
-          <div className="overview-card__stat">
+        <StatCard
+          icon="📜"
+          title="Fichas"
+          action={{ label: 'Ver fichas', onClick: () => onNavigate('ficha') }}
+        >
+          <div className="ov-stat__num">
             {data.sheetsFilled}
-            <span className="overview-card__stat-denom">/{data.sheetsTotal}</span>
+            <span className="ov-stat__denom">/{data.sheetsTotal}</span>
           </div>
-          <div className="overview-card__details">
+          <div className="ov-stat__details">
             <span>preenchidas</span>
-            {data.sheetsTotal < players.length && (
-              <span className="overview-card__detail--warn">
-                {players.length - data.sheetsTotal} sem ficha criada
+            {data.sheetsTotal > 0 && data.sheetsFilled < data.sheetsTotal && (
+              <span className="ov-stat__detail--warn">
+                {data.sheetsTotal - data.sheetsFilled} pendente{data.sheetsTotal - data.sheetsFilled !== 1 ? 's' : ''}
               </span>
             )}
-            {data.sheetsTotal > 0 && data.sheetsFilled < data.sheetsTotal && (
-              <span className="overview-card__detail--warn">
-                {data.sheetsTotal - data.sheetsFilled} não preenchida{data.sheetsTotal - data.sheetsFilled !== 1 ? 's' : ''}
+            {data.sheetsTotal < players.length && (
+              <span className="ov-stat__detail--warn">
+                {players.length - data.sheetsTotal} sem ficha
               </span>
             )}
           </div>
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('ficha')}
-        >
-          Ver fichas →
-        </button>
-      </div>
+        </StatCard>
 
-      {/* ── Rolagens ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">⬡</span>
-          <span className="overview-card__title">Rolagens</span>
-        </div>
-        <div className="overview-card__body">
-          {data.recentRolls.length > 0 ? (
-            <ul className="overview-rolls">
-              {data.recentRolls.map((r) => (
-                <li key={r.id} className="overview-rolls__item">
-                  <span className="overview-rolls__formula">{r.formula ?? r.die_type}</span>
-                  <span className="overview-rolls__result">{r.result}</span>
-                  <span className="overview-rolls__meta">
-                    {r.profile.display_name} · {formatRelativeTime(r.created_at)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="overview-card__empty">Nenhuma rolagem registrada ainda.</p>
-          )}
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('rolagem')}
+        <StatCard
+          icon="✦"
+          title="Sessões"
+          action={{ label: 'Ver sessões', onClick: () => onNavigate('sessoes') }}
         >
-          Rolar dados →
-        </button>
-      </div>
-
-      {/* ── Sessões ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">✦</span>
-          <span className="overview-card__title">Sessões</span>
-        </div>
-        <div className="overview-card__body">
-          <div className="overview-card__stat">{data.sessionsTotal}</div>
-          <div className="overview-card__details">
+          <div className="ov-stat__num">{data.sessionsTotal}</div>
+          <div className="ov-stat__details">
             <span>registrada{data.sessionsTotal !== 1 ? 's' : ''}</span>
             {data.latestSession && (
-              <span className="overview-card__detail--name">
-                {data.latestSession.title}
-              </span>
+              <span className="ov-stat__detail--name">{data.latestSession.title}</span>
             )}
             {data.latestSession?.session_date && (
               <span>{formatDateShort(data.latestSession.session_date)}</span>
             )}
           </div>
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('sessoes')}
-        >
-          Ver sessões →
-        </button>
+        </StatCard>
+
       </div>
 
-      {/* ── Configurações ── */}
-      <div className="overview-card overview-card--slim">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">◈</span>
-          <span className="overview-card__title">Configurações</span>
-        </div>
-        <div className="overview-card__body">
-          <p className="overview-card__desc">
-            Edite dados da campanha, exclua a campanha ou saia da campanha, conforme sua permissão.
-          </p>
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('configuracoes')}
-        >
-          Abrir configurações →
-        </button>
-      </div>
+      {/* ── Linha 2: rolagens ── */}
+      <RecentRollsCard
+        rolls={data.recentRolls}
+        currentUserId={currentUserId}
+        onNavigate={onNavigate}
+      />
 
     </div>
   )
@@ -246,7 +260,7 @@ function MasterCards({
 // Vista do jogador
 // ────────────────────────────────────────────────────────
 
-function PlayerCards({
+function PlayerDashboard({
   campaignId,
   currentUserId,
   onNavigate,
@@ -255,9 +269,9 @@ function PlayerCards({
   currentUserId: string
   onNavigate:    (tab: TabId) => void
 }) {
-  const [data, setData]     = useState<OverviewPlayerData | null>(null)
+  const [data,    setData]    = useState<OverviewPlayerData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
     getPlayerOverview(campaignId)
@@ -270,130 +284,77 @@ function PlayerCards({
   if (error)   return <OverviewError message={error} />
   if (!data)   return null
 
-  const sheetFilled = data.mySheet ? isSheetFilled(data.mySheet) : false
+  const sheetFilled  = data.mySheet ? isSheetFilled(data.mySheet) : false
+  const masterMember = data.members.find((m) => m.role === 'master')
 
   return (
-    <div className="overview-grid">
+    <div className="ov-dashboard">
 
-      {/* ── Minha ficha ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">📜</span>
-          <span className="overview-card__title">Minha ficha</span>
-        </div>
-        <div className="overview-card__body">
+      {/* ── Linha 1: cards de resumo ── */}
+      <div className="ov-stats">
+
+        <StatCard
+          icon="📜"
+          title="Minha ficha"
+          action={{ label: 'Abrir ficha', onClick: () => onNavigate('ficha') }}
+        >
           {data.mySheet ? (
             <>
-              <div className="overview-card__stat overview-card__stat--sm">
-                <span className={`sheet-filled-badge ${sheetFilled ? 'sheet-filled-badge--filled' : 'sheet-filled-badge--empty'}`}>
-                  {sheetFilled ? 'Preenchida' : 'Não preenchida'}
+              <div className="ov-stat__num ov-stat__num--sm">
+                <span className={`ov-sheet-badge ${sheetFilled ? 'ov-sheet-badge--filled' : 'ov-sheet-badge--empty'}`}>
+                  {sheetFilled ? 'Preenchida' : 'Incompleta'}
                 </span>
               </div>
-              <div className="overview-card__details">
+              <div className="ov-stat__details">
                 {data.mySheet.character_name && (
-                  <span className="overview-card__detail--name">{data.mySheet.character_name}</span>
+                  <span className="ov-stat__detail--name">{data.mySheet.character_name}</span>
                 )}
                 {data.mySheet.archetype && <span>{data.mySheet.archetype}</span>}
                 <span>Nível {data.mySheet.level} · {data.mySheet.hp_current}/{data.mySheet.hp_max} PV</span>
               </div>
             </>
           ) : (
-            <p className="overview-card__empty">Ficha ainda não criada.</p>
+            <p className="ov-stat__empty">Ficha não criada.</p>
           )}
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('ficha')}
-        >
-          Abrir ficha →
-        </button>
-      </div>
+        </StatCard>
 
-      {/* ── Membros ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">⚔</span>
-          <span className="overview-card__title">Membros</span>
-        </div>
-        <div className="overview-card__body">
-          <div className="overview-card__stat">{data.members.length}</div>
-          <div className="overview-card__details">
+        <StatCard
+          icon="⚔"
+          title="Membros"
+          action={{ label: 'Ver membros', onClick: () => onNavigate('membros') }}
+        >
+          <div className="ov-stat__num">{data.members.length}</div>
+          <div className="ov-stat__details">
             <span>na campanha</span>
-            {data.members.find((m) => m.role === 'master') && (
-              <span>Mestre: {data.members.find((m) => m.role === 'master')!.profile.display_name}</span>
-            )}
+            {masterMember && <span>Mestre: {masterMember.profile.display_name}</span>}
           </div>
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('membros')}
-        >
-          Ver membros →
-        </button>
-      </div>
+        </StatCard>
 
-      {/* ── Sessões ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">✦</span>
-          <span className="overview-card__title">Sessões</span>
-        </div>
-        <div className="overview-card__body">
-          <div className="overview-card__stat">{data.sessionsTotal}</div>
-          <div className="overview-card__details">
+        <StatCard
+          icon="✦"
+          title="Sessões"
+          action={{ label: 'Ver sessões', onClick: () => onNavigate('sessoes') }}
+        >
+          <div className="ov-stat__num">{data.sessionsTotal}</div>
+          <div className="ov-stat__details">
             <span>registrada{data.sessionsTotal !== 1 ? 's' : ''}</span>
             {data.latestSession && (
-              <span className="overview-card__detail--name">
-                {data.latestSession.title}
-              </span>
+              <span className="ov-stat__detail--name">{data.latestSession.title}</span>
             )}
             {data.latestSession?.session_date && (
               <span>{formatDateShort(data.latestSession.session_date)}</span>
             )}
           </div>
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('sessoes')}
-        >
-          Ver sessões →
-        </button>
+        </StatCard>
+
       </div>
 
-      {/* ── Rolagens ── */}
-      <div className="overview-card">
-        <div className="overview-card__header">
-          <span className="overview-card__icon" aria-hidden="true">⬡</span>
-          <span className="overview-card__title">Rolagens recentes</span>
-        </div>
-        <div className="overview-card__body">
-          {data.recentRolls.length > 0 ? (
-            <ul className="overview-rolls">
-              {data.recentRolls.map((r) => (
-                <li
-                  key={r.id}
-                  className={`overview-rolls__item ${r.user_id === currentUserId ? 'overview-rolls__item--own' : ''}`}
-                >
-                  <span className="overview-rolls__formula">{r.formula ?? r.die_type}</span>
-                  <span className="overview-rolls__result">{r.result}</span>
-                  <span className="overview-rolls__meta">
-                    {r.user_id === currentUserId ? 'Você' : r.profile.display_name}
-                    {' · '}{formatRelativeTime(r.created_at)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="overview-card__empty">Nenhuma rolagem registrada ainda.</p>
-          )}
-        </div>
-        <button
-          className="btn btn-ghost overview-card__action"
-          onClick={() => onNavigate('rolagem')}
-        >
-          Rolar dados →
-        </button>
-      </div>
+      {/* ── Linha 2: rolagens ── */}
+      <RecentRollsCard
+        rolls={data.recentRolls}
+        currentUserId={currentUserId}
+        onNavigate={onNavigate}
+      />
 
     </div>
   )
