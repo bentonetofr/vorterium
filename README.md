@@ -147,7 +147,7 @@ npm run preview
 | Perfis de usuário (profiles) | ✅ |
 | Criar campanha (sistema Genérico) | ✅ |
 | Listar campanhas como mestre e jogador | ✅ |
-| Área da campanha com nome e papel | ✅ |
+| Área da campanha por abas com aba "Visão geral" como padrão | ✅ |
 | Adicionar jogador por e-mail | ✅ |
 | Remover jogador | ✅ |
 | Ficha simples de personagem (identificação, PV, atributos, anotações) | ✅ |

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
 import { formatSystem, formatRole } from '../../../shared/utils/campaign'
+import { CampaignOverviewPanel } from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }  from '../../members/components/CampaignMembersPanel'
 import { SimpleSheetPanel }      from '../../sheets/components/SimpleSheetPanel'
 import { DiceRollerPanel }       from '../../dice/components/DiceRollerPanel'
@@ -11,10 +12,10 @@ import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
 
 // ────────────────────────────────────────────────────────
-// Abas disponíveis
+// Abas disponíveis — exportado para uso no CampaignOverviewPanel
 // ────────────────────────────────────────────────────────
 
-type TabId = 'membros' | 'ficha' | 'rolagem' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'ficha' | 'rolagem' | 'configuracoes'
 
 interface Tab {
   id: TabId
@@ -23,10 +24,11 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: 'membros',       label: 'Membros',       icon: '⚔' },
-  { id: 'ficha',         label: 'Ficha',         icon: '📜' },
-  { id: 'rolagem',       label: 'Rolagem',       icon: '⬡' },
-  { id: 'configuracoes', label: 'Configurações', icon: '◈' },
+  { id: 'visao-geral',   label: 'Visão geral',   icon: '◎' },
+  { id: 'membros',       label: 'Membros',        icon: '⚔' },
+  { id: 'ficha',         label: 'Ficha',          icon: '📜' },
+  { id: 'rolagem',       label: 'Rolagem',        icon: '⬡' },
+  { id: 'configuracoes', label: 'Configurações',  icon: '◈' },
 ]
 
 // ────────────────────────────────────────────────────────
@@ -37,10 +39,10 @@ export function CampaignAreaPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
   const { user } = useAuth()
 
-  const [campaign, setCampaign] = useState<CampaignWithRole | null>(null)
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<TabId>('membros')
+  const [campaign, setCampaign]   = useState<CampaignWithRole | null>(null)
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabId>('visao-geral')
 
   useEffect(() => {
     if (!campaignId || !user) return
@@ -122,7 +124,24 @@ export function CampaignAreaPage() {
         ))}
       </nav>
 
-      {/* ── Painéis ── */}
+      {/* ── Visão geral ── */}
+      <div
+        id="tabpanel-visao-geral"
+        role="tabpanel"
+        aria-labelledby="tab-visao-geral"
+        hidden={activeTab !== 'visao-geral'}
+        className="animate-fade-up"
+      >
+        {activeTab === 'visao-geral' && (
+          <CampaignOverviewPanel
+            campaign={campaign}
+            currentUserId={user!.id}
+            onNavigate={setActiveTab}
+          />
+        )}
+      </div>
+
+      {/* ── Membros ── */}
       <div
         id="tabpanel-membros"
         role="tabpanel"
@@ -139,6 +158,7 @@ export function CampaignAreaPage() {
         )}
       </div>
 
+      {/* ── Ficha ── */}
       <div
         id="tabpanel-ficha"
         role="tabpanel"
@@ -154,6 +174,7 @@ export function CampaignAreaPage() {
         )}
       </div>
 
+      {/* ── Rolagem ── */}
       <div
         id="tabpanel-rolagem"
         role="tabpanel"
@@ -169,6 +190,7 @@ export function CampaignAreaPage() {
         )}
       </div>
 
+      {/* ── Configurações ── */}
       <div
         id="tabpanel-configuracoes"
         role="tabpanel"
