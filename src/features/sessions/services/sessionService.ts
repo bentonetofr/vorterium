@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { logActivity } from '../../activity/services/activityService'
 import type { CampaignSession } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -64,7 +65,9 @@ export async function createCampaignSession(
     throw new Error('Não foi possível criar a sessão.')
   }
 
-  return data as CampaignSession
+  const session = data as CampaignSession
+  logActivity(session.campaign_id, 'session_created', session.title)
+  return session
 }
 
 /**
@@ -93,18 +96,22 @@ export async function updateCampaignSession(
     throw new Error('Não foi possível atualizar a sessão.')
   }
 
-  return data as CampaignSession
+  const session = data as CampaignSession
+  logActivity(session.campaign_id, 'session_updated', session.title)
+  return session
 }
 
 /**
  * Remove uma sessão pelo id.
  * RLS garante que apenas o mestre pode excluir.
+ * Passa campaignId opcionalmente para registrar atividade.
  */
-export async function deleteCampaignSession(sessionId: string): Promise<void> {
+export async function deleteCampaignSession(sessionId: string, campaignId?: string): Promise<void> {
   const { error } = await supabase
     .from('campaign_sessions')
     .delete()
     .eq('id', sessionId)
 
   if (error) throw new Error('Não foi possível excluir a sessão.')
+  if (campaignId) logActivity(campaignId, 'session_deleted', 'Sessão excluída')
 }

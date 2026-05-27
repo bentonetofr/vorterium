@@ -258,7 +258,7 @@ function InviteCard({ campaignId }: { campaignId: string }) {
     if (!inviteToken) return
     setError(null)
     try {
-      await deactivateCampaignInvite(inviteToken)
+      await deactivateCampaignInvite(inviteToken, campaignId)
       setInviteUrl(null)
       setInviteToken(null)
     } catch (err) {

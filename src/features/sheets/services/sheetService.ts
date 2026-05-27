@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { logActivity } from '../../activity/services/activityService'
 import type { CharacterSheet, ProfilePublic, SheetWithProfile } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -132,7 +133,9 @@ export async function updateSheet(
     .single()
 
   if (error) throw new Error('Não foi possível salvar a ficha.')
-  return updated as CharacterSheet
+  const sheet = updated as CharacterSheet
+  logActivity(sheet.campaign_id, 'sheet_updated', 'Ficha atualizada')
+  return sheet
 }
 
 /**

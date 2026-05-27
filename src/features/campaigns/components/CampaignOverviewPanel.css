@@ -160,6 +160,12 @@
   text-overflow: ellipsis;
 }
 
+.ov-stat__detail--online {
+  color: #6fcf8e;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
 .ov-stat__empty {
   font-size: var(--text-sm);
   color: var(--text-muted);

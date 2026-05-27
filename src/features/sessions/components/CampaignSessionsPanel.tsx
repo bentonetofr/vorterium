@@ -338,7 +338,7 @@ export function CampaignSessionsPanel({
     setDeleteError(null)
     setDeletingId(session.id)
     try {
-      await deleteCampaignSession(session.id)
+      await deleteCampaignSession(session.id, session.campaign_id)
       setSessions((prev) => prev.filter((s) => s.id !== session.id))
       setSuccessMsg('Sessão excluída com sucesso.')
       setTimeout(() => setSuccessMsg(null), 3500)

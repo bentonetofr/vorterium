@@ -1,5 +1,6 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { ensureProfile } from '../../users/services/profileService'
+import { logActivity, createCampaignActivity } from '../../activity/services/activityService'
 import type { Campaign, CampaignMember, CampaignWithRole } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -114,6 +115,7 @@ export async function updateCampaignDetails(
     throw new Error('Não foi possível atualizar a campanha.')
   }
 
+  logActivity(campaignId, 'campaign_updated', 'Campanha atualizada')
   return result as Campaign
 }
 
@@ -162,6 +164,9 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
  * Mestre não pode usar este fluxo.
  */
 export async function leaveCampaign(campaignId: string): Promise<void> {
+  // Registrar antes de sair — após a remoção o usuário perde acesso à RPC
+  try { await createCampaignActivity(campaignId, 'member_left', 'Saiu da campanha') } catch { /* silently ignore */ }
+
   const { error } = await supabase.rpc('leave_campaign', {
     campaign_id_input: campaignId,
   })

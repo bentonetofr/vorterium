@@ -1,5 +1,6 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { getCampaignSheets, isSheetFilled } from '../../sheets/services/sheetService'
+import { logActivity } from '../../activity/services/activityService'
 import type {
   CampaignMember,
   CampaignMemberWithProfile,
@@ -106,6 +107,7 @@ export async function addCampaignMember(
     throw new Error('Não foi possível adicionar o jogador.')
   }
 
+  logActivity(campaignId, 'member_joined', 'Jogador adicionado à campanha')
   return data as CampaignMember
 }
 
@@ -129,6 +131,8 @@ export async function removeCampaignMember(
     if (msg.includes('não encontrado'))   throw new Error('Jogador não encontrado na campanha.')
     throw new Error('Não foi possível remover o jogador.')
   }
+
+  logActivity(campaignId, 'member_removed', 'Jogador removido da campanha')
 }
 
 /**

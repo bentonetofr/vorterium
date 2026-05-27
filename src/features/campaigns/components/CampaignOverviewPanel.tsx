@@ -207,6 +207,9 @@ function MasterDashboard({
           <div className="ov-stat__details">
             <span>{players.length} jogador{players.length !== 1 ? 'es' : ''}</span>
             {master && <span>Mestre: {master.profile.display_name}</span>}
+            {data.onlineCount > 0 && (
+              <span className="ov-stat__detail--online">● {data.onlineCount} online</span>
+            )}
           </div>
         </StatCard>
 
@@ -335,6 +338,9 @@ function PlayerDashboard({
           <div className="ov-stat__details">
             <span>na campanha</span>
             {masterMember && <span>Mestre: {masterMember.profile.display_name}</span>}
+            {data.onlineCount > 0 && (
+              <span className="ov-stat__detail--online">● {data.onlineCount} online</span>
+            )}
           </div>
         </StatCard>
 

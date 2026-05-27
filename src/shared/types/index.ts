@@ -146,6 +146,24 @@ export interface CampaignSession {
   updated_at:   string
 }
 
+/** Evento de atividade registrado em uma campanha. */
+export interface CampaignActivity {
+  id:          string
+  campaign_id: string
+  actor_id:    string | null
+  type:        string
+  message:     string
+  metadata:    Record<string, unknown> | null
+  created_at:  string
+}
+
+/** Registro de presença de um membro na campanha (atualizado via heartbeat). */
+export interface CampaignPresenceRecord {
+  campaign_id:  string
+  user_id:      string
+  last_seen_at: string
+}
+
 export interface CampaignInvite {
   id: string
   campaign_id: string

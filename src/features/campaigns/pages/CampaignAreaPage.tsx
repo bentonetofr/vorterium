@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
+import { touchCampaignPresence } from '../../activity/services/activityService'
 import { formatSystem, formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
@@ -9,6 +10,7 @@ import { CampaignSessionsPanel }  from '../../sessions/components/CampaignSessio
 import { SimpleSheetPanel }       from '../../sheets/components/SimpleSheetPanel'
 import { DiceRollerPanel }        from '../../dice/components/DiceRollerPanel'
 import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
+import { CampaignActivityPanel }  from '../../activity/components/CampaignActivityPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
 
@@ -16,7 +18,7 @@ import './CampaignPages.css'
 // Abas disponíveis — exportado para uso no CampaignOverviewPanel
 // ────────────────────────────────────────────────────────
 
-export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'ficha' | 'rolagem' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'ficha' | 'rolagem' | 'atividade' | 'configuracoes'
 
 interface Tab {
   id: TabId
@@ -30,6 +32,7 @@ const TABS: Tab[] = [
   { id: 'sessoes',       label: 'Sessões',        icon: '✦' },
   { id: 'ficha',         label: 'Ficha',          icon: '📜' },
   { id: 'rolagem',       label: 'Rolagem',        icon: '⬡' },
+  { id: 'atividade',     label: 'Atividade',      icon: '◉' },
   { id: 'configuracoes', label: 'Configurações',  icon: '◈' },
 ]
 
@@ -59,6 +62,16 @@ export function CampaignAreaPage() {
     }
     load()
   }, [campaignId, user])
+
+  // ── Heartbeat de presença — atualiza a cada 60 segundos ──
+  useEffect(() => {
+    if (!campaign?.id) return
+    void touchCampaignPresence(campaign.id).catch(() => {})
+    const interval = setInterval(() => {
+      void touchCampaignPresence(campaign.id).catch(() => {})
+    }, 60_000)
+    return () => clearInterval(interval)
+  }, [campaign?.id])
 
   if (loading) {
     return (
@@ -207,6 +220,22 @@ export function CampaignAreaPage() {
           <DiceRollerPanel
             campaignId={campaign.id}
             currentUserId={user!.id}
+          />
+        )}
+      </div>
+
+      {/* ── Atividade ── */}
+      <div
+        id="tabpanel-atividade"
+        role="tabpanel"
+        aria-labelledby="tab-atividade"
+        hidden={activeTab !== 'atividade'}
+        className="animate-fade-up"
+      >
+        {activeTab === 'atividade' && (
+          <CampaignActivityPanel
+            campaignId={campaign.id}
+            userRole={campaign.role}
           />
         )}
       </div>

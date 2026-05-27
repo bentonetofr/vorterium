@@ -1,5 +1,6 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { ensureProfile } from '../../users/services/profileService'
+import { logActivity } from '../../activity/services/activityService'
 import type { CampaignInvite, CampaignInvitePublic } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ export async function createCampaignInvite(
     throw new Error('Não foi possível gerar o convite.')
   }
 
+  logActivity(campaignId, 'invite_created', 'Convite gerado')
   return data as CampaignInvite
 }
 
@@ -77,18 +79,22 @@ export async function acceptCampaignInviteWithProfile(
     throw new Error('Não foi possível sincronizar seu perfil para aceitar o convite.')
   }
 
-  return acceptCampaignInvite(token)
+  const campaignId = await acceptCampaignInvite(token)
+  logActivity(campaignId, 'member_joined', 'Entrou na campanha via convite')
+  return campaignId
 }
 
 /**
  * Desativa um convite. Apenas o mestre pode chamar.
+ * Passa campaignId opcionalmente para registrar atividade.
  */
-export async function deactivateCampaignInvite(token: string): Promise<void> {
+export async function deactivateCampaignInvite(token: string, campaignId?: string): Promise<void> {
   const { error } = await supabase.rpc('deactivate_campaign_invite', {
     invite_token: token,
   })
 
   if (error) throw new Error('Não foi possível desativar o convite.')
+  if (campaignId) logActivity(campaignId, 'invite_deactivated', 'Convite desativado')
 }
 
 /**

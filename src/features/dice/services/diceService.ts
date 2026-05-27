@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { logActivity } from '../../activity/services/activityService'
 import type { DiceRoll, DiceRollWithProfile, DieType, RollBreakdownItem, RollMode } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -277,7 +278,9 @@ export async function rollDice(
     .single()
 
   if (error) throw new Error('Não foi possível registrar a rolagem.')
-  return data as DiceRoll
+  const roll = data as DiceRoll
+  logActivity(campaignId, 'dice_rolled', `${roll.formula ?? roll.die_type} → ${roll.result}`)
+  return roll
 }
 
 /**
