@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
 import { formatSystem, formatRole } from '../../../shared/utils/campaign'
-import { CampaignOverviewPanel } from '../components/CampaignOverviewPanel'
-import { CampaignMembersPanel }  from '../../members/components/CampaignMembersPanel'
-import { SimpleSheetPanel }      from '../../sheets/components/SimpleSheetPanel'
-import { DiceRollerPanel }       from '../../dice/components/DiceRollerPanel'
-import { CampaignSettingsPanel } from '../components/CampaignSettingsPanel'
+import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
+import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
+import { CampaignSessionsPanel }  from '../../sessions/components/CampaignSessionsPanel'
+import { SimpleSheetPanel }       from '../../sheets/components/SimpleSheetPanel'
+import { DiceRollerPanel }        from '../../dice/components/DiceRollerPanel'
+import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
 
@@ -15,7 +16,7 @@ import './CampaignPages.css'
 // Abas disponíveis — exportado para uso no CampaignOverviewPanel
 // ────────────────────────────────────────────────────────
 
-export type TabId = 'visao-geral' | 'membros' | 'ficha' | 'rolagem' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'ficha' | 'rolagem' | 'configuracoes'
 
 interface Tab {
   id: TabId
@@ -26,6 +27,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'visao-geral',   label: 'Visão geral',   icon: '◎' },
   { id: 'membros',       label: 'Membros',        icon: '⚔' },
+  { id: 'sessoes',       label: 'Sessões',        icon: '✦' },
   { id: 'ficha',         label: 'Ficha',          icon: '📜' },
   { id: 'rolagem',       label: 'Rolagem',        icon: '⬡' },
   { id: 'configuracoes', label: 'Configurações',  icon: '◈' },
@@ -154,6 +156,22 @@ export function CampaignAreaPage() {
             campaignId={campaign.id}
             userRole={campaign.role}
             currentUserId={user!.id}
+          />
+        )}
+      </div>
+
+      {/* ── Sessões ── */}
+      <div
+        id="tabpanel-sessoes"
+        role="tabpanel"
+        aria-labelledby="tab-sessoes"
+        hidden={activeTab !== 'sessoes'}
+        className="animate-fade-up"
+      >
+        {activeTab === 'sessoes' && (
+          <CampaignSessionsPanel
+            campaignId={campaign.id}
+            userRole={campaign.role}
           />
         )}
       </div>

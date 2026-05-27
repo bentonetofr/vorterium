@@ -132,6 +132,18 @@ export interface DiceRollWithProfile extends DiceRoll {
   profile: Pick<ProfilePublic, 'id' | 'display_name'>
 }
 
+/** Uma sessão (encontro) da campanha — criada e editada apenas pelo mestre. */
+export interface CampaignSession {
+  id:           string
+  campaign_id:  string
+  title:        string
+  session_date: string | null  // formato 'YYYY-MM-DD' ou null
+  summary:      string | null
+  created_by:   string
+  created_at:   string
+  updated_at:   string
+}
+
 export interface CampaignInvite {
   id: string
   campaign_id: string

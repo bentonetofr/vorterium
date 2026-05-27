@@ -103,7 +103,7 @@ As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashb
 
 | # | Arquivo | O que faz |
 |---|---|---|
-| 1 | `20240101000000_initial_schema.sql` | Tabelas `profiles`, `campaigns`, `campaign_members`; triggers; RLS; RPCs `create_campaign`, `is_campaign_member`, `is_campaign_master` |
+| 1  | `20240101000000_initial_schema.sql` | Tabelas `profiles`, `campaigns`, `campaign_members`; triggers; RLS; RPCs `create_campaign`, `is_campaign_member`, `is_campaign_master` |
 | 2 | `20240102000000_campaign_members.sql` | Policy de perfis entre co-membros; RPCs `find_profile_by_email`, `add_campaign_player`, `remove_campaign_player` |
 | 3 | `20240103000000_harden_campaign_members_insert.sql` | Remove policy de insert direto em `campaign_members` — toda inserção passa a ser via RPC |
 | 4 | `20240104000000_character_sheets.sql` | Tabela `character_sheets`; RLS por dono e mestre |
@@ -115,6 +115,8 @@ As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashb
 | 10 | `20240110000000_campaign_management.sql` | RPCs `update_campaign_name`, `delete_campaign`, `leave_campaign` — gerenciamento seguro de campanha |
 | 11 | `20240111000000_improve_dice_rolls.sql` | Adiciona campos `quantity`, `modifier`, `individual_results`, `total_result`, `roll_mode`, `kept_result`, `formula` em `dice_rolls`; trigger de validação |
 | 12 | `20240112000000_custom_dice_rolls.sql` | Adiciona `roll_breakdown jsonb`; ajusta limites de `quantity` (100) e `modifier` (±999); substitui trigger com validação matemática completa do breakdown |
+| 13 | `20240113000000_campaign_sessions.sql` | Tabela `campaign_sessions` (título, data, resumo, created_by); RLS — membros visualizam, mestre cria/edita/exclui; trigger `updated_at` |
+| 14 | `20240114000000_harden_campaign_sessions.sql` | Trigger `enforce_session_immutable_fields` — impede alteração de `campaign_id`, `created_by` e `created_at` após criação |
 
 > **Usuários criados antes da migration 1:** o trigger `handle_new_user` cria perfis apenas para novos cadastros. Para sincronizar usuários já existentes, rode o script de backfill comentado na seção 9 da migration 1.
 
@@ -160,7 +162,10 @@ npm run preview
 | Rolagem rápida de dados (d4–d100) | ✅ |
 | Rolagem personalizada por fórmula (`2d6+3`, `2#d20`, `1#d3+4`…) | ✅ |
 | Histórico de rolagens com breakdown detalhado | ✅ |
-| Área da campanha por abas (Membros / Ficha / Rolagem / Configurações) | ✅ |
+| Área da campanha por abas (Visão geral / Membros / Sessões / Ficha / Rolagem / Configurações) | ✅ |
+| Sessões da campanha — criar, editar e excluir pelo mestre | ✅ |
+| Sessões — visualização com título, data e resumo para jogadores | ✅ |
+| Sessões na Visão Geral — contagem e última sessão com ação rápida | ✅ |
 | Proteção de rotas (RLS + front-end) | ✅ |
 | Design Medieval Dark v2 | ✅ |
 | Convite por link — aceitar com dados públicos antes do login | ✅ |
@@ -221,6 +226,41 @@ O resultado detalhado sempre exibe os dados individuais e qual foi mantido.
 - Últimas 20 rolagens, mais recentes primeiro
 - Exibe fórmula, resultados individuais, kept result (quando `#`), modificador e resultado final
 - Botão **"Atualizar histórico"** recarrega manualmente (sem Realtime / sem polling)
+
+---
+
+## Sessões de campanha
+
+A aba **"Sessões"** fica acessível dentro de qualquer campanha.
+
+### Para o mestre
+
+- **Criar sessão**: botão "+ Nova sessão" abre um formulário inline com título (obrigatório), data e resumo.
+- **Editar sessão**: botão "Editar" em cada card reabre o formulário preenchido.
+- **Excluir sessão**: botão "Excluir" exibe confirmação inline — sem diálogos nativos do browser.
+
+### Para o jogador
+
+- Visualiza todas as sessões registradas: título, data formatada e resumo completo.
+- Não vê os botões de criar, editar ou excluir.
+
+### Campos
+
+| Campo | Tipo | Obrigatório | Limite |
+|---|---|---|---|
+| Título | texto | sim | 120 caracteres |
+| Data da sessão | date | não | — |
+| Resumo | texto longo | não | 5000 caracteres |
+
+### Segurança
+
+- RLS garante que usuários fora da campanha não acessam sessões.
+- INSERT e UPDATE e DELETE são restritos ao mestre da campanha via `is_campaign_master`.
+- `created_by` é sempre o `auth.uid()` do usuário autenticado (verificado no banco).
+
+### Visão Geral
+
+A aba **"Visão Geral"** mostra um card de Sessões com a contagem total, o título e a data da sessão mais recente, além do botão "Ver sessões →" para navegar direto à aba.
 
 ---
 

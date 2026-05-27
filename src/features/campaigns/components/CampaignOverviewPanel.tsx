@@ -21,8 +21,16 @@ interface CampaignOverviewPanelProps {
 }
 
 // ────────────────────────────────────────────────────────
-// Utilitário
+// Utilitários
 // ────────────────────────────────────────────────────────
+
+/** Formata 'YYYY-MM-DD' sem desvio de timezone UTC → local. */
+function formatDateShort(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'short',
+  })
+}
 
 function formatRelativeTime(iso: string): string {
   const diff    = Date.now() - new Date(iso).getTime()
@@ -183,6 +191,34 @@ function MasterCards({
         </button>
       </div>
 
+      {/* ── Sessões ── */}
+      <div className="overview-card">
+        <div className="overview-card__header">
+          <span className="overview-card__icon" aria-hidden="true">✦</span>
+          <span className="overview-card__title">Sessões</span>
+        </div>
+        <div className="overview-card__body">
+          <div className="overview-card__stat">{data.sessionsTotal}</div>
+          <div className="overview-card__details">
+            <span>registrada{data.sessionsTotal !== 1 ? 's' : ''}</span>
+            {data.latestSession && (
+              <span className="overview-card__detail--name">
+                {data.latestSession.title}
+              </span>
+            )}
+            {data.latestSession?.session_date && (
+              <span>{formatDateShort(data.latestSession.session_date)}</span>
+            )}
+          </div>
+        </div>
+        <button
+          className="btn btn-ghost overview-card__action"
+          onClick={() => onNavigate('sessoes')}
+        >
+          Ver sessões →
+        </button>
+      </div>
+
       {/* ── Configurações ── */}
       <div className="overview-card overview-card--slim">
         <div className="overview-card__header">
@@ -293,6 +329,34 @@ function PlayerCards({
           onClick={() => onNavigate('membros')}
         >
           Ver membros →
+        </button>
+      </div>
+
+      {/* ── Sessões ── */}
+      <div className="overview-card">
+        <div className="overview-card__header">
+          <span className="overview-card__icon" aria-hidden="true">✦</span>
+          <span className="overview-card__title">Sessões</span>
+        </div>
+        <div className="overview-card__body">
+          <div className="overview-card__stat">{data.sessionsTotal}</div>
+          <div className="overview-card__details">
+            <span>registrada{data.sessionsTotal !== 1 ? 's' : ''}</span>
+            {data.latestSession && (
+              <span className="overview-card__detail--name">
+                {data.latestSession.title}
+              </span>
+            )}
+            {data.latestSession?.session_date && (
+              <span>{formatDateShort(data.latestSession.session_date)}</span>
+            )}
+          </div>
+        </div>
+        <button
+          className="btn btn-ghost overview-card__action"
+          onClick={() => onNavigate('sessoes')}
+        >
+          Ver sessões →
         </button>
       </div>
 
