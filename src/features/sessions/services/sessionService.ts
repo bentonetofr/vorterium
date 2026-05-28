@@ -3,13 +3,26 @@ import { logActivity } from '../../activity/services/activityService'
 import type { CampaignSession } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
-// Tipos
+// Tipos e helpers de status
 // ────────────────────────────────────────────────────────
+
+export type SessionStatus = 'planned' | 'completed' | 'canceled'
+
+export const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
+  planned:   'Planejada',
+  completed: 'Concluída',
+  canceled:  'Cancelada',
+}
+
+export function getSessionStatusLabel(status: SessionStatus): string {
+  return SESSION_STATUS_LABELS[status] ?? status
+}
 
 export interface SessionFormData {
   title:        string
   session_date: string | null  // 'YYYY-MM-DD' ou null
   summary:      string | null
+  status:       SessionStatus
 }
 
 // ────────────────────────────────────────────────────────
@@ -53,6 +66,7 @@ export async function createCampaignSession(
       title:        formData.title.trim(),
       session_date: formData.session_date || null,
       summary:      formData.summary?.trim() || null,
+      status:       formData.status,
       created_by:   user.id,
     })
     .select('*')
@@ -62,11 +76,16 @@ export async function createCampaignSession(
     const msg = error.message ?? ''
     if (msg.includes('title_length'))   throw new Error('O título deve ter no máximo 120 caracteres.')
     if (msg.includes('summary_length')) throw new Error('O resumo deve ter no máximo 5000 caracteres.')
+    if (msg.includes('status_check'))   throw new Error('Selecione um status válido.')
     throw new Error('Não foi possível criar a sessão.')
   }
 
   const session = data as CampaignSession
-  logActivity(session.campaign_id, 'session_created', session.title)
+  logActivity(
+    session.campaign_id,
+    'session_created',
+    `Sessão "${session.title}" criada como ${getSessionStatusLabel(session.status)}.`
+  )
   return session
 }
 
@@ -84,6 +103,7 @@ export async function updateCampaignSession(
       title:        formData.title.trim(),
       session_date: formData.session_date || null,
       summary:      formData.summary?.trim() || null,
+      status:       formData.status,
     })
     .eq('id', sessionId)
     .select('*')
@@ -93,11 +113,16 @@ export async function updateCampaignSession(
     const msg = error.message ?? ''
     if (msg.includes('title_length'))   throw new Error('O título deve ter no máximo 120 caracteres.')
     if (msg.includes('summary_length')) throw new Error('O resumo deve ter no máximo 5000 caracteres.')
+    if (msg.includes('status_check'))   throw new Error('Selecione um status válido.')
     throw new Error('Não foi possível atualizar a sessão.')
   }
 
   const session = data as CampaignSession
-  logActivity(session.campaign_id, 'session_updated', session.title)
+  logActivity(
+    session.campaign_id,
+    'session_updated',
+    `Sessão "${session.title}" marcada como ${getSessionStatusLabel(session.status)}.`
+  )
   return session
 }
 
@@ -106,12 +131,15 @@ export async function updateCampaignSession(
  * RLS garante que apenas o mestre pode excluir.
  * Passa campaignId opcionalmente para registrar atividade.
  */
-export async function deleteCampaignSession(sessionId: string, campaignId?: string): Promise<void> {
+export async function deleteCampaignSession(sessionId: string, campaignId?: string, title?: string): Promise<void> {
   const { error } = await supabase
     .from('campaign_sessions')
     .delete()
     .eq('id', sessionId)
 
   if (error) throw new Error('Não foi possível excluir a sessão.')
-  if (campaignId) logActivity(campaignId, 'session_deleted', 'Sessão excluída')
+  if (campaignId) {
+    const msg = title ? `Sessão "${title}" excluída.` : 'Sessão excluída.'
+    logActivity(campaignId, 'session_deleted', msg)
+  }
 }

@@ -279,7 +279,7 @@ export async function rollDice(
 
   if (error) throw new Error('Não foi possível registrar a rolagem.')
   const roll = data as DiceRoll
-  logActivity(campaignId, 'dice_rolled', `${roll.formula ?? roll.die_type} → ${roll.result}`)
+  logActivity(campaignId, 'dice_rolled', `Rolagem registrada: ${roll.formula ?? roll.die_type}, resultado ${roll.result}.`)
   return roll
 }
 

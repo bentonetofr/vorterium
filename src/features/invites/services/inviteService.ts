@@ -37,7 +37,7 @@ export async function createCampaignInvite(
     throw new Error('Não foi possível gerar o convite.')
   }
 
-  logActivity(campaignId, 'invite_created', 'Convite gerado')
+  logActivity(campaignId, 'invite_created', 'Um convite de acesso foi criado.')
   return data as CampaignInvite
 }
 
@@ -73,14 +73,19 @@ export async function acceptCampaignInvite(token: string): Promise<string> {
 export async function acceptCampaignInviteWithProfile(
   token: string
 ): Promise<string> {
+  let displayName: string | null = null
   try {
-    await ensureProfile()
+    const profile = await ensureProfile()
+    displayName = profile.display_name?.trim() || null
   } catch {
     throw new Error('Não foi possível sincronizar seu perfil para aceitar o convite.')
   }
 
   const campaignId = await acceptCampaignInvite(token)
-  logActivity(campaignId, 'member_joined', 'Entrou na campanha via convite')
+  const joinMsg = displayName
+    ? `${displayName} entrou na campanha.`
+    : 'Um jogador entrou na campanha por convite.'
+  logActivity(campaignId, 'member_joined', joinMsg)
   return campaignId
 }
 
@@ -94,7 +99,7 @@ export async function deactivateCampaignInvite(token: string, campaignId?: strin
   })
 
   if (error) throw new Error('Não foi possível desativar o convite.')
-  if (campaignId) logActivity(campaignId, 'invite_deactivated', 'Convite desativado')
+  if (campaignId) logActivity(campaignId, 'invite_deactivated', 'Um convite de acesso foi desativado.')
 }
 
 /**

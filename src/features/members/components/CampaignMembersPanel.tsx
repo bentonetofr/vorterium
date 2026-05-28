@@ -362,7 +362,7 @@ function AddPlayerForm({
         setError('Usuário não encontrado. Verifique o e-mail ou peça para o jogador criar uma conta.')
         return
       }
-      await addCampaignMember(campaignId, profile.id)
+      await addCampaignMember(campaignId, profile.id, profile.display_name)
       setSuccess(`${profile.display_name} adicionado com sucesso!`)
       setEmail('')
       onAdded()
@@ -466,7 +466,7 @@ export function CampaignMembersPanel({
     setRemoveError(null)
     setRemovingId(member.user_id)
     try {
-      await removeCampaignMember(campaignId, member.user_id)
+      await removeCampaignMember(campaignId, member.user_id, member.profile.display_name)
       setMembers((prev) => prev.filter((m) => m.user_id !== member.user_id))
     } catch (err) {
       setRemoveError(err instanceof Error ? err.message : 'Não foi possível remover o jogador.')

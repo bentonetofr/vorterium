@@ -115,7 +115,7 @@ export async function updateCampaignDetails(
     throw new Error('Não foi possível atualizar a campanha.')
   }
 
-  logActivity(campaignId, 'campaign_updated', 'Campanha atualizada')
+  logActivity(campaignId, 'campaign_updated', 'Configurações da campanha foram atualizadas.')
   return result as Campaign
 }
 
@@ -165,7 +165,7 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
  */
 export async function leaveCampaign(campaignId: string): Promise<void> {
   // Registrar antes de sair — após a remoção o usuário perde acesso à RPC
-  try { await createCampaignActivity(campaignId, 'member_left', 'Saiu da campanha') } catch { /* silently ignore */ }
+  try { await createCampaignActivity(campaignId, 'member_left', 'Um jogador saiu da campanha.') } catch { /* silently ignore */ }
 
   const { error } = await supabase.rpc('leave_campaign', {
     campaign_id_input: campaignId,

@@ -141,6 +141,7 @@ export interface CampaignSession {
   title:        string
   session_date: string | null  // formato 'YYYY-MM-DD' ou null
   summary:      string | null
+  status:       'planned' | 'completed' | 'canceled'
   created_by:   string
   created_at:   string
   updated_at:   string

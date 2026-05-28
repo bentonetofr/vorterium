@@ -92,7 +92,8 @@ export async function findProfileByEmail(
  */
 export async function addCampaignMember(
   campaignId: string,
-  playerId: string
+  playerId: string,
+  displayName?: string
 ): Promise<CampaignMember> {
   const { data, error } = await supabase.rpc('add_campaign_player', {
     campaign_id_input: campaignId,
@@ -107,7 +108,10 @@ export async function addCampaignMember(
     throw new Error('Não foi possível adicionar o jogador.')
   }
 
-  logActivity(campaignId, 'member_joined', 'Jogador adicionado à campanha')
+  const joinMsg = displayName?.trim()
+    ? `${displayName.trim()} foi adicionado à campanha.`
+    : 'Um jogador foi adicionado à campanha.'
+  logActivity(campaignId, 'member_joined', joinMsg)
   return data as CampaignMember
 }
 
@@ -117,7 +121,8 @@ export async function addCampaignMember(
  */
 export async function removeCampaignMember(
   campaignId: string,
-  playerId: string
+  playerId: string,
+  displayName?: string
 ): Promise<void> {
   const { error } = await supabase.rpc('remove_campaign_player', {
     campaign_id_input: campaignId,
@@ -132,7 +137,10 @@ export async function removeCampaignMember(
     throw new Error('Não foi possível remover o jogador.')
   }
 
-  logActivity(campaignId, 'member_removed', 'Jogador removido da campanha')
+  const removeMsg = displayName?.trim()
+    ? `${displayName.trim()} foi removido da campanha.`
+    : 'Um jogador foi removido da campanha.'
+  logActivity(campaignId, 'member_removed', removeMsg)
 }
 
 /**

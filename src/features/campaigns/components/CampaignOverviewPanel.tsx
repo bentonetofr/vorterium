@@ -244,12 +244,25 @@ function MasterDashboard({
         >
           <div className="ov-stat__num">{data.sessionsTotal}</div>
           <div className="ov-stat__details">
-            <span>registrada{data.sessionsTotal !== 1 ? 's' : ''}</span>
-            {data.latestSession && (
-              <span className="ov-stat__detail--name">{data.latestSession.title}</span>
-            )}
-            {data.latestSession?.session_date && (
-              <span>{formatDateShort(data.latestSession.session_date)}</span>
+            {data.sessionsTotal === 0 ? (
+              <span>nenhuma registrada</span>
+            ) : (
+              <>
+                {data.sessionsPlanned > 0 && (
+                  <span>{data.sessionsPlanned} planejada{data.sessionsPlanned !== 1 ? 's' : ''}</span>
+                )}
+                {data.sessionsCompleted > 0 && (
+                  <span>{data.sessionsCompleted} concluída{data.sessionsCompleted !== 1 ? 's' : ''}</span>
+                )}
+                {data.nextPlannedSession && (
+                  <span className="ov-stat__detail--name">
+                    Próxima: {data.nextPlannedSession.title}
+                  </span>
+                )}
+                {data.nextPlannedSession?.session_date && (
+                  <span>{formatDateShort(data.nextPlannedSession.session_date)}</span>
+                )}
+              </>
             )}
           </div>
         </StatCard>
@@ -351,12 +364,25 @@ function PlayerDashboard({
         >
           <div className="ov-stat__num">{data.sessionsTotal}</div>
           <div className="ov-stat__details">
-            <span>registrada{data.sessionsTotal !== 1 ? 's' : ''}</span>
-            {data.latestSession && (
-              <span className="ov-stat__detail--name">{data.latestSession.title}</span>
-            )}
-            {data.latestSession?.session_date && (
-              <span>{formatDateShort(data.latestSession.session_date)}</span>
+            {data.sessionsTotal === 0 ? (
+              <span>nenhuma registrada</span>
+            ) : (
+              <>
+                {data.sessionsPlanned > 0 && (
+                  <span>{data.sessionsPlanned} planejada{data.sessionsPlanned !== 1 ? 's' : ''}</span>
+                )}
+                {data.sessionsCompleted > 0 && (
+                  <span>{data.sessionsCompleted} concluída{data.sessionsCompleted !== 1 ? 's' : ''}</span>
+                )}
+                {data.nextPlannedSession && (
+                  <span className="ov-stat__detail--name">
+                    Próxima: {data.nextPlannedSession.title}
+                  </span>
+                )}
+                {data.nextPlannedSession?.session_date && (
+                  <span>{formatDateShort(data.nextPlannedSession.session_date)}</span>
+                )}
+              </>
             )}
           </div>
         </StatCard>

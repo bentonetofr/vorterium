@@ -134,7 +134,9 @@ export async function updateSheet(
 
   if (error) throw new Error('Não foi possível salvar a ficha.')
   const sheet = updated as CharacterSheet
-  logActivity(sheet.campaign_id, 'sheet_updated', 'Ficha atualizada')
+  const charName = sheet.character_name?.trim()
+  const sheetMsg = charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.'
+  logActivity(sheet.campaign_id, 'sheet_updated', sheetMsg)
   return sheet
 }
 
