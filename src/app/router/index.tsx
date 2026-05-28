@@ -13,6 +13,8 @@ import { CampaignsPage }   from '../../features/campaigns/pages/CampaignsPage'
 import { NewCampaignPage } from '../../features/campaigns/pages/NewCampaignPage'
 import { CampaignAreaPage } from '../../features/campaigns/pages/CampaignAreaPage'
 import { ProfilePage }     from '../../features/users/pages/ProfilePage'
+import { MySheetsPage }        from '../../features/sheets/pages/MySheetsPage'
+import { GlobalActivityPage } from '../../features/activity/pages/GlobalActivityPage'
 
 import { LandingPage }     from '../../features/public/pages/LandingPage'
 import { SobrePage }       from '../../features/public/pages/SobrePage'
@@ -47,6 +49,8 @@ export function AppRouter() {
           <Route path="/campanhas"             element={<CampaignsPage />} />
           <Route path="/campanhas/nova"        element={<NewCampaignPage />} />
           <Route path="/campanhas/:campaignId" element={<CampaignAreaPage />} />
+          <Route path="/minhas-fichas"         element={<MySheetsPage />} />
+          <Route path="/atividade"            element={<GlobalActivityPage />} />
           <Route path="/perfil"               element={<ProfilePage />} />
         </Route>
 

@@ -50,6 +50,24 @@ export function PrivateLayout() {
             Campanhas
           </NavLink>
           <NavLink
+            to="/minhas-fichas"
+            className={({ isActive }) =>
+              `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+            }
+          >
+            <span className="sidebar__link-icon">◎</span>
+            Minhas fichas
+          </NavLink>
+          <NavLink
+            to="/atividade"
+            className={({ isActive }) =>
+              `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+            }
+          >
+            <span className="sidebar__link-icon">◉</span>
+            Atividade
+          </NavLink>
+          <NavLink
             to="/perfil"
             className={({ isActive }) =>
               `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`

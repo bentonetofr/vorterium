@@ -1,0 +1,250 @@
+/* ═══════════════════════════════════════════════════════
+   Atividade Global — Medieval Dark v2
+   ═══════════════════════════════════════════════════════ */
+
+.gact-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-6);
+  max-width: 760px;
+}
+
+/* ── Cabeçalho ── */
+.gact-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.gact-page__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.gact-page__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.gact-page__sub {
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.gact-page__refresh {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+}
+
+@keyframes gact-spin-kf {
+  to { transform: rotate(360deg); }
+}
+
+.gact-spin {
+  display: inline-block;
+  animation: gact-spin-kf 0.8s linear infinite;
+}
+
+/* ── Toolbar / filtro ── */
+.gact-toolbar {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.gact-filter {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  color-scheme: dark;
+  transition: border-color var(--transition-fast);
+  min-width: 200px;
+}
+
+.gact-filter:hover,
+.gact-filter:focus {
+  border-color: var(--border-bright);
+  outline: none;
+}
+
+/* ── Estados ── */
+.gact-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) 0;
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gact-state--error {
+  color: #ffb4ab;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+
+/* ── Estado vazio ── */
+.gact-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+}
+
+.gact-empty__icon {
+  font-size: 2.5rem;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-2);
+  opacity: 0.5;
+}
+
+.gact-empty__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.gact-empty__text {
+  font-size: var(--text-md);
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 380px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Lista de atividades
+   ═══════════════════════════════════════════════════════ */
+
+.gact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  transition: border-color var(--transition-base);
+}
+
+.gact-item:hover {
+  border-color: var(--border-bright);
+}
+
+/* ── Ícone ── */
+.gact-item__icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--accent-bright);
+  background: rgba(var(--accent-rgb, 212, 175, 55), 0.08);
+  border-radius: var(--radius-sm);
+  margin-top: 2px;
+}
+
+/* ── Conteúdo ── */
+.gact-item__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.gact-item__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.gact-item__campaign {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gilded, #d4af37);
+}
+
+.gact-item__time {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.gact-item__message {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: 1.45;
+  margin: 0;
+  word-break: break-word;
+}
+
+/* ── Botão ── */
+.gact-item__btn {
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+  flex-shrink: 0;
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 640px) {
+  .gact-page {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .gact-item {
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .gact-item__content {
+    flex-basis: calc(100% - 44px);
+  }
+
+  .gact-item__btn {
+    width: 100%;
+    margin-left: 44px;
+    justify-content: center;
+  }
+}

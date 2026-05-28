@@ -2,6 +2,14 @@ import { supabase } from '../../../shared/lib/supabase'
 import type { CampaignActivity, CampaignPresenceRecord } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
+// Tipos exportados
+// ────────────────────────────────────────────────────────
+
+export interface ActivityWithCampaign extends CampaignActivity {
+  campaign_name: string
+}
+
+// ────────────────────────────────────────────────────────
 // Constantes
 // ────────────────────────────────────────────────────────
 
@@ -136,6 +144,44 @@ export function formatPresenceTime(lastSeenAt: string | undefined): string {
   const hours = Math.floor(minutes / 60)
   if (hours < 24)    return `há ${hours}h`
   return new Date(lastSeenAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+/**
+ * Busca as 50 atividades mais recentes de todas as campanhas
+ * em que o usuário autenticado participa.
+ * A filtragem por campaign_id garante que apenas atividades das campanhas
+ * do usuário sejam retornadas, independente da RLS.
+ */
+export async function getMyRecentActivity(): Promise<ActivityWithCampaign[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuário não autenticado.')
+
+  const { data: memberRows, error: memberError } = await supabase
+    .from('campaign_members')
+    .select('campaign_id')
+    .eq('user_id', user.id)
+
+  if (memberError) throw new Error('Não foi possível carregar as atividades.')
+  const campaignIds = (memberRows ?? []).map((r: { campaign_id: string }) => r.campaign_id)
+  if (campaignIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('campaign_activity')
+    .select('*, campaigns(id, name)')
+    .in('campaign_id', campaignIds)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (error) throw new Error('Não foi possível carregar as atividades.')
+  if (!data || data.length === 0) return []
+
+  type RawRow = CampaignActivity & { campaigns: { id: string; name: string } | null }
+  return (data as unknown as RawRow[])
+    .filter((row) => row.campaigns != null)
+    .map(({ campaigns, ...activity }) => ({
+      ...activity,
+      campaign_name: campaigns!.name,
+    }))
 }
 
 /** Formata o timestamp de atividade de forma relativa. */

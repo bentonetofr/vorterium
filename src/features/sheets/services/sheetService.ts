@@ -140,6 +140,45 @@ export async function updateSheet(
   return sheet
 }
 
+// ────────────────────────────────────────────────────────
+// Minhas fichas
+// ────────────────────────────────────────────────────────
+
+export interface SheetWithCampaign extends CharacterSheet {
+  campaign_name:   string
+  campaign_system: string
+}
+
+interface RawSheetWithCampaign extends CharacterSheet {
+  campaigns: { id: string; name: string; system: string } | null
+}
+
+/**
+ * Busca todas as fichas do usuário autenticado em todas as campanhas,
+ * enriquecidas com nome e sistema da campanha.
+ */
+export async function getMySheets(): Promise<SheetWithCampaign[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuário não autenticado.')
+
+  const { data, error } = await supabase
+    .from('character_sheets')
+    .select('*, campaigns(id, name, system)')
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false })
+
+  if (error) throw new Error('Não foi possível carregar suas fichas.')
+  if (!data || data.length === 0) return []
+
+  return (data as unknown as RawSheetWithCampaign[])
+    .filter((row) => row.campaigns != null)
+    .map(({ campaigns, ...sheet }) => ({
+      ...sheet,
+      campaign_name:   campaigns!.name,
+      campaign_system: campaigns!.system,
+    }))
+}
+
 /**
  * Lista todas as fichas de uma campanha com perfil do dono.
  * Disponível apenas para o mestre (a RLS de select garante isso).
