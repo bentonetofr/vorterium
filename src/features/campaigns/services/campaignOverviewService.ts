@@ -7,6 +7,7 @@ import {
 import { getCampaignRolls } from '../../dice/services/diceService'
 import { getCampaignSessions } from '../../sessions/services/sessionService'
 import { getCampaignPresence, isUserOnline } from '../../activity/services/activityService'
+import { getCampaignNotesSummary } from '../../notes/services/noteService'
 import type {
   CampaignMemberWithProfile,
   CampaignSession,
@@ -28,6 +29,8 @@ export interface OverviewMasterData {
   sessionsCompleted:  number
   nextPlannedSession: CampaignSession | null
   onlineCount:        number
+  notesTotal:         number
+  latestNote:         { title: string; updated_at: string } | null
 }
 
 export interface OverviewPlayerData {
@@ -39,6 +42,8 @@ export interface OverviewPlayerData {
   sessionsCompleted:  number
   nextPlannedSession: CampaignSession | null
   onlineCount:        number
+  notesTotal:         number
+  latestNote:         { title: string; updated_at: string } | null
 }
 
 // ────────────────────────────────────────────────────────
@@ -72,12 +77,13 @@ function findNextPlannedSession(sessions: CampaignSession[]): CampaignSession | 
 export async function getMasterOverview(
   campaignId: string
 ): Promise<OverviewMasterData> {
-  const [members, recentRolls, allSheets, sessions, presence] = await Promise.all([
+  const [members, recentRolls, allSheets, sessions, presence, notesSummary] = await Promise.all([
     getCampaignMembers(campaignId),
     getCampaignRolls(campaignId, 3),
     getCampaignSheets(campaignId),
     getCampaignSessions(campaignId),
     getCampaignPresence(campaignId),
+    getCampaignNotesSummary(campaignId).catch(() => ({ total: 0, latest: null })),
   ])
 
   const sheetsFilled = allSheets.filter(isSheetFilled).length
@@ -93,6 +99,8 @@ export async function getMasterOverview(
     sessionsCompleted:  sessions.filter((s) => s.status === 'completed').length,
     nextPlannedSession: findNextPlannedSession(sessions),
     onlineCount,
+    notesTotal:         notesSummary.total,
+    latestNote:         notesSummary.latest,
   }
 }
 
@@ -103,12 +111,13 @@ export async function getMasterOverview(
 export async function getPlayerOverview(
   campaignId: string
 ): Promise<OverviewPlayerData> {
-  const [members, recentRolls, mySheet, sessions, presence] = await Promise.all([
+  const [members, recentRolls, mySheet, sessions, presence, notesSummary] = await Promise.all([
     getCampaignMembers(campaignId),
     getCampaignRolls(campaignId, 3),
     getMySheet(campaignId),
     getCampaignSessions(campaignId),
     getCampaignPresence(campaignId),
+    getCampaignNotesSummary(campaignId).catch(() => ({ total: 0, latest: null })),
   ])
 
   const onlineCount = presence.filter((p) => isUserOnline(p.last_seen_at)).length
@@ -122,5 +131,7 @@ export async function getPlayerOverview(
     sessionsCompleted:  sessions.filter((s) => s.status === 'completed').length,
     nextPlannedSession: findNextPlannedSession(sessions),
     onlineCount,
+    notesTotal:         notesSummary.total,
+    latestNote:         notesSummary.latest,
   }
 }

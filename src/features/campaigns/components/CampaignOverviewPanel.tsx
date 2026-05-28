@@ -71,6 +71,52 @@ function StatCard({ icon, title, action, children }: StatCardProps) {
 }
 
 // ────────────────────────────────────────────────────────
+// OverviewNotesCard
+// ────────────────────────────────────────────────────────
+
+interface OverviewNotesCardProps {
+  notesTotal:  number
+  latestNote:  { title: string; updated_at: string } | null
+  onNavigate:  (tab: TabId) => void
+}
+
+function OverviewNotesCard({ notesTotal, latestNote, onNavigate }: OverviewNotesCardProps) {
+  return (
+    <div className="ov-notes-card">
+      <div className="ov-notes-card__header">
+        <span className="ov-notes-card__icon" aria-hidden="true">◇</span>
+        <span className="ov-notes-card__title">Notas</span>
+        <button
+          className="btn btn-ghost ov-notes-card__link"
+          onClick={() => onNavigate('notas')}
+        >
+          Ver notas →
+        </button>
+      </div>
+      {notesTotal === 0 ? (
+        <p className="ov-notes-card__empty">Nenhuma nota registrada ainda.</p>
+      ) : (
+        <div className="ov-notes-card__body">
+          <span>{notesTotal} nota{notesTotal !== 1 ? 's' : ''}</span>
+          {latestNote && (
+            <>
+              <span className="ov-notes-card__sep">·</span>
+              <span className="ov-notes-card__latest-title" title={latestNote.title}>
+                {latestNote.title}
+              </span>
+              <span className="ov-notes-card__sep">·</span>
+              <span className="ov-notes-card__latest-time">
+                {formatRelativeTime(latestNote.updated_at)}
+              </span>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────
 // RecentRollsCard
 // ────────────────────────────────────────────────────────
 
@@ -269,7 +315,14 @@ function MasterDashboard({
 
       </div>
 
-      {/* ── Linha 2: rolagens ── */}
+      {/* ── Linha 2: notas ── */}
+      <OverviewNotesCard
+        notesTotal={data.notesTotal}
+        latestNote={data.latestNote}
+        onNavigate={onNavigate}
+      />
+
+      {/* ── Linha 3: rolagens ── */}
       <RecentRollsCard
         rolls={data.recentRolls}
         currentUserId={currentUserId}
@@ -389,7 +442,14 @@ function PlayerDashboard({
 
       </div>
 
-      {/* ── Linha 2: rolagens ── */}
+      {/* ── Linha 2: notas ── */}
+      <OverviewNotesCard
+        notesTotal={data.notesTotal}
+        latestNote={data.latestNote}
+        onNavigate={onNavigate}
+      />
+
+      {/* ── Linha 3: rolagens ── */}
       <RecentRollsCard
         rolls={data.recentRolls}
         currentUserId={currentUserId}

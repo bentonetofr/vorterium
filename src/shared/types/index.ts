@@ -165,6 +165,22 @@ export interface CampaignPresenceRecord {
   last_seen_at: string
 }
 
+/** Nota compartilhada de uma campanha. */
+export interface CampaignNote {
+  id:          string
+  campaign_id: string
+  author_id:   string
+  title:       string
+  content:     string
+  created_at:  string
+  updated_at:  string
+  author?: {
+    id:           string
+    display_name: string
+    email:        string
+  }
+}
+
 export interface CampaignInvite {
   id: string
   campaign_id: string

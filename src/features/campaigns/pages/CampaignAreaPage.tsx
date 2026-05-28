@@ -11,6 +11,7 @@ import { SimpleSheetPanel }       from '../../sheets/components/SimpleSheetPanel
 import { DiceRollerPanel }        from '../../dice/components/DiceRollerPanel'
 import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
 import { CampaignActivityPanel }  from '../../activity/components/CampaignActivityPanel'
+import { CampaignNotesPanel }     from '../../notes/components/CampaignNotesPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
 
@@ -18,7 +19,7 @@ import './CampaignPages.css'
 // Abas disponíveis — exportado para uso no CampaignOverviewPanel
 // ────────────────────────────────────────────────────────
 
-export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'ficha' | 'rolagem' | 'atividade' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'ficha' | 'rolagem' | 'notas' | 'atividade' | 'configuracoes'
 
 interface Tab {
   id: TabId
@@ -32,6 +33,7 @@ const TABS: Tab[] = [
   { id: 'sessoes',       label: 'Sessões',        icon: '✦' },
   { id: 'ficha',         label: 'Ficha',          icon: '📜' },
   { id: 'rolagem',       label: 'Rolagem',        icon: '⬡' },
+  { id: 'notas',         label: 'Notas',          icon: '◇' },
   { id: 'atividade',     label: 'Atividade',      icon: '◉' },
   { id: 'configuracoes', label: 'Configurações',  icon: '◈' },
 ]
@@ -220,6 +222,23 @@ export function CampaignAreaPage() {
           <DiceRollerPanel
             campaignId={campaign.id}
             currentUserId={user!.id}
+          />
+        )}
+      </div>
+
+      {/* ── Notas ── */}
+      <div
+        id="tabpanel-notas"
+        role="tabpanel"
+        aria-labelledby="tab-notas"
+        hidden={activeTab !== 'notas'}
+        className="animate-fade-up"
+      >
+        {activeTab === 'notas' && (
+          <CampaignNotesPanel
+            campaignId={campaign.id}
+            currentUserId={user!.id}
+            userRole={campaign.role}
           />
         )}
       </div>
