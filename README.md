@@ -101,7 +101,7 @@ Authentication → URL Configuration
 
 As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashboard → SQL Editor → New query**.
 
-O repositório contém **34 migrations SQL**. A lista abaixo é o contrato canônico da
+O repositório contém **36 migrations SQL**. A lista abaixo é o contrato canônico da
 ordem de aplicação; não existe uma migration `20240121000000_my_sheets.sql` neste
 repositório e ela não deve ser criada ou aplicada sem uma decisão explícita de
 schema.
@@ -142,6 +142,8 @@ schema.
 | 32 | `20240134000000_campaign_messages_replica_identity.sql` | `REPLICA IDENTITY FULL` em `campaign_messages` — sem isso, o evento de DELETE em tempo real não chega (o filtro por `campaign_id` não bate com o payload reduzido padrão) |
 | 33 | `20240135000000_private_messages.sql` | Adiciona `campaign_messages.recipient_id` (mensagem privada) com policies atualizadas — só mestre⇄jogador, nunca jogador⇄jogador — e `campaign_private_message_reads` + RPCs `mark_private_thread_read`/`get_private_message_unread_counts` |
 | 34 | `20240136000000_dice_rolls_realtime.sql` | Adiciona `dice_rolls` de volta à publicação Realtime — só para o pop-up global de notificação disparar na hora, sem esperar o polling de 20s |
+| 35 | `20240137000000_leave_campaign_atomic_activity.sql` | Move o registro de atividade "saiu da campanha" pra dentro da própria RPC `leave_campaign`, atomicamente com a remoção — antes podia ficar um registro falso se a saída falhasse depois de já ter sido registrada |
+| 36 | `20240138000000_campaign_initiative.sql` | Adiciona `campaign_initiative_participants` e `campaign_initiative_state` + RPCs `start_initiative_encounter`/`advance_initiative_turn`/`end_initiative_encounter`, com Realtime — rastreador de iniciativa compartilhado da Mesa da Sessão |
 
 > **Usuários criados antes da migration 1:** o trigger `handle_new_user` cria perfis apenas para novos cadastros. Para sincronizar usuários já existentes, rode o script de backfill comentado na seção 9 da migration 1.
 
@@ -169,7 +171,7 @@ Antes de abrir um deploy ou adicionar uma migration, execute:
 npm run verify
 ```
 
-O comando valida as 34 migrations registradas e depois executa o build de produção.
+O comando valida as 36 migrations registradas e depois executa o build de produção.
 
 ---
 
@@ -221,7 +223,9 @@ O sistema de uma campanha é escolhido no momento da criação e **não pode ser
 | Pop-up ao vivo (5s) para rolagem pública, nova nota, nova sessão e novo membro | ✅ |
 | Chat da campanha em tempo real (Realtime), com selo de não lidas na aba | ✅ |
 | Mensagens privadas no chat — mestre com cada jogador, individualmente | ✅ |
-| Área da campanha por abas (Visão geral / Membros / Sessões / Ficha / Configurações) | ✅ |
+| Mesa da Sessão — Chat / Ficha / Atividade / Iniciativa agrupados numa aba só | ✅ |
+| Rastreador de iniciativa compartilhado (rolar, editar, avançar turno/rodada) | ✅ |
+| Área da campanha por abas (Visão geral / Membros / Sessões / Notas / Mesa da Sessão / Configurações) | ✅ |
 | Sessões da campanha — criar, editar e excluir pelo mestre | ✅ |
 | Sessões — visualização com título, data e resumo para jogadores | ✅ |
 | Sessões na Visão Geral — contagem e última sessão com ação rápida | ✅ |
@@ -397,6 +401,44 @@ chat — também habilita a publicação Realtime para `campaign_messages` via
 
 ---
 
+## Mesa da Sessão
+
+Aba **"Mesa da Sessão"**, no lugar onde antes existiam abas separadas de
+Chat, Ficha e Atividade — as três continuam existindo, agora como
+sub-abas dentro dela, junto com a nova sub-aba **Iniciativa**. A barra
+principal da campanha fica: Visão geral / Membros / Sessões / Notas / Mesa
+da Sessão / Configurações. O selo de mensagem não lida (mesa + privada)
+aparece na própria aba "Mesa da Sessão".
+
+### Iniciativa
+
+Rastreador de combate compartilhado em tempo real — todo mundo na mesa vê a
+mesma ordem, rolagem e turno atual.
+
+- **Iniciar combate** (mestre) popula a lista com os membros atuais da
+  campanha, iniciativa em branco.
+- Cada participante rola pelo botão **"Rolar"** — reaproveita o rolador de
+  dados já existente (`1d20`, aparece no histórico/notificação de dado
+  normalmente) — ou tem o valor digitado direto clicando nele. Jogador rola
+  ou edita a própria linha; mestre controla qualquer uma, inclusive NPCs.
+- **Adicionar NPC/monstro** (mestre): nome à mão, sem vínculo com membro.
+- Lista reordena sozinha, maior iniciativa primeiro.
+- **Linha de valores**: barra horizontal abaixo da lista com um marcador
+  por participante já rolado, posicionado proporcionalmente entre o menor e
+  o maior valor da mesa.
+- **Avançar turno** (mestre) marca a vez atual (linha destacada) e soma uma
+  rodada ao voltar pro primeiro da lista.
+- **Encerrar combate** (mestre) limpa participantes e estado.
+- Sem modificador de atributo automático (a ficha D&D ainda não está
+  conectada) e sem histórico de combates encerrados — só existe "o combate
+  atual" por campanha.
+
+**Migration necessária:** `20240138000000_campaign_initiative.sql` — cria
+`campaign_initiative_participants`/`campaign_initiative_state`, as RPCs de
+iniciar/avançar/encerrar e habilita Realtime nas duas tabelas.
+
+---
+
 ## Sessões de campanha
 
 A aba **"Sessões"** fica acessível dentro de qualquer campanha.
@@ -446,7 +488,7 @@ Toda inserção em `campaign_members` acontece via RPC (`add_campaign_player`, `
 
 ```
 supabase/
-└── migrations/             ← 34 migrations em ordem
+└── migrations/             ← 36 migrations em ordem
 
 src/
 ├── app/
@@ -456,13 +498,14 @@ src/
 │
 ├── features/
 │   ├── auth/               # AuthProvider, GuestRoute, ProtectedRoute, páginas de auth
-│   ├── campaigns/          # Listagem, criação, área da campanha, configurações + campaignService
+│   ├── campaigns/          # Listagem, criação, área da campanha, SessionTablePanel (Mesa da Sessão) + campaignService
 │   ├── members/            # CampaignMembersPanel + memberService
 │   ├── sheets/
 │   │   ├── components/     # SimpleSheetPanel, CampaignSheetPanel (roteador de sistemas)
-│   │   ├── dnd/
+│   │   ├── dnd/            # Ficha D&D 5e completa — escrita, mas NÃO conectada ainda
+│   │   │   │                 (CampaignSheetPanel mostra DndComingSoon pra campanhas dnd5e)
 │   │   │   ├── services/   # dndSheetService (getMyDndSheet, ensureMyDndSheet, updateDndSheet)
-│   │   │   ├── DndCharacterSheetPanel.tsx  # Ficha D&D 5e real (dados do banco)
+│   │   │   ├── DndCharacterSheetPanel.tsx  # Painel real, pronto pra ligar
 │   │   │   ├── DndCharacterSheetPreview.tsx # Prévia visual com dados mock (referência)
 │   │   │   ├── DndCharacterSheet.css
 │   │   │   ├── mockCharacter.ts
@@ -473,7 +516,9 @@ src/
 │   ├── notes/              # CampaignNotesPanel + noteService
 │   ├── sessions/           # CampaignSessionsPanel + sessionService
 │   ├── activity/           # CampaignActivityPanel, GlobalActivityPage, NotificationBell + activityService
-│   ├── chat/               # CampaignChatPanel + chatService (Realtime)
+│   ├── chat/               # CampaignChatPanel (mesa + mensagens privadas) + chatService (Realtime)
+│   ├── initiative/         # InitiativeTrackerPanel + initiativeService (Realtime)
+│   ├── invites/            # InvitePage + inviteService
 │   └── users/              # profileService
 │
 └── shared/

@@ -7,7 +7,7 @@ import {
 } from '../services/campaignOverviewService'
 import { isSheetFilled } from '../../sheets/services/sheetService'
 import type { CampaignWithRole } from '../../../shared/types'
-import type { TabId } from '../pages/CampaignAreaPage'
+import type { TabId, SessionSubTabId } from '../pages/CampaignAreaPage'
 import './CampaignOverviewPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ import './CampaignOverviewPanel.css'
 
 interface CampaignOverviewPanelProps {
   campaign:   CampaignWithRole
-  onNavigate: (tab: TabId) => void
+  onNavigate: (tab: TabId, sessionSubTab?: SessionSubTabId) => void
 }
 
 // ────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ function StatCard({ icon, title, action, children }: StatCardProps) {
 interface OverviewNotesCardProps {
   notesTotal:  number
   latestNote:  { title: string; updated_at: string } | null
-  onNavigate:  (tab: TabId) => void
+  onNavigate:  (tab: TabId, sessionSubTab?: SessionSubTabId) => void
 }
 
 function OverviewNotesCard({ notesTotal, latestNote, onNavigate }: OverviewNotesCardProps) {
@@ -165,7 +165,7 @@ function MasterDashboard({
   onNavigate,
 }: {
   campaignId: string
-  onNavigate: (tab: TabId) => void
+  onNavigate: (tab: TabId, sessionSubTab?: SessionSubTabId) => void
 }) {
   const [data,    setData]    = useState<OverviewMasterData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -209,7 +209,7 @@ function MasterDashboard({
         <StatCard
           icon="📜"
           title="Fichas"
-          action={{ label: 'Ver fichas', onClick: () => onNavigate('ficha') }}
+          action={{ label: 'Ver fichas', onClick: () => onNavigate('mesa-sessao', 'ficha') }}
         >
           <div className="ov-stat__num">
             {data.sheetsFilled}
@@ -282,7 +282,7 @@ function PlayerDashboard({
   onNavigate,
 }: {
   campaignId: string
-  onNavigate: (tab: TabId) => void
+  onNavigate: (tab: TabId, sessionSubTab?: SessionSubTabId) => void
 }) {
   const [data,    setData]    = useState<OverviewPlayerData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -311,7 +311,7 @@ function PlayerDashboard({
         <StatCard
           icon="📜"
           title="Minha ficha"
-          action={{ label: 'Abrir ficha', onClick: () => onNavigate('ficha') }}
+          action={{ label: 'Abrir ficha', onClick: () => onNavigate('mesa-sessao', 'ficha') }}
         >
           {data.mySheet ? (
             <>

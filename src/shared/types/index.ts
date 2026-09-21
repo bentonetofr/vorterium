@@ -174,6 +174,23 @@ export interface CampaignActivity {
   created_at:  string
 }
 
+/** Participante do combate atual — membro (user_id preenchido) ou NPC/monstro (user_id nulo). */
+export interface InitiativeParticipant {
+  id:               string
+  campaign_id:      string
+  user_id:          string | null
+  name:             string
+  initiative_value: number | null
+  created_at:       string
+}
+
+/** Rodada atual e de quem é a vez, uma linha por campanha. */
+export interface InitiativeState {
+  campaign_id:                 string
+  round_number:                number
+  current_turn_participant_id: string | null
+}
+
 /** Registro de presença de um membro na campanha (atualizado via heartbeat). */
 export interface CampaignPresenceRecord {
   campaign_id:  string

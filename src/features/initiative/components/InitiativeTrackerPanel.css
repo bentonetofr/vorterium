@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════════
+   Iniciativa — Stitch Medieval Dark v2
+   ═══════════════════════════════════════════════════════ */
+
+.initiative-panel__state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: var(--space-8) 0;
+}
+
+.initiative-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+.initiative-empty__text {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.initiative-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.initiative-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.initiative-panel__round {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--gilded-bright);
+}
+.initiative-panel__header-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ── Lista ── */
+.initiative-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.initiative-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.initiative-row--current {
+  border-color: var(--gilded);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.initiative-row__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent-dim);
+  flex-shrink: 0;
+}
+
+.initiative-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.initiative-row--current .initiative-row__name { color: var(--gilded-bright); font-weight: 600; }
+
+.initiative-row__npc-tag {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.initiative-row__value {
+  flex-shrink: 0;
+  min-width: 40px;
+  text-align: center;
+  background: var(--bg-base);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+.initiative-row__value:disabled { cursor: default; opacity: 0.7; }
+.initiative-row__value:not(:disabled):hover { border-color: var(--gilded); }
+
+.initiative-row__value-input {
+  flex-shrink: 0;
+  width: 56px;
+  text-align: center;
+  padding: var(--space-1) var(--space-2);
+}
+
+.initiative-row__roll { flex-shrink: 0; }
+
+.initiative-row__remove {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  padding: var(--space-1);
+  transition: color var(--transition-fast);
+}
+.initiative-row__remove:hover { color: var(--danger); }
+
+/* ── Linha de valores ── */
+.initiative-value-bar {
+  padding-top: var(--space-2);
+}
+.initiative-value-bar__track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  margin: var(--space-4) var(--space-2) var(--space-1);
+}
+.initiative-value-bar__marker {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
+  transform: translate(-50%, -50%);
+}
+.initiative-value-bar__marker--current {
+  background: var(--gilded-bright);
+  width: 14px;
+  height: 14px;
+}
+.initiative-value-bar__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 0 var(--space-2);
+}
+
+/* ── Adicionar NPC ── */
+.initiative-add-npc {
+  display: flex;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-dim);
+}
+.initiative-add-npc .input { flex: 1; }

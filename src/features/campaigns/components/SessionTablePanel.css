@@ -1,0 +1,19 @@
+/* ═══════════════════════════════════════════════════════
+   Mesa da sessão — sub-abas (Chat / Ficha / Atividade / Iniciativa)
+   ═══════════════════════════════════════════════════════ */
+
+.session-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Reaproveita o visual de .campaign-tabs/.campaign-tab (barra principal),
+   só um pouco mais compacta pra marcar que é um nível abaixo. */
+.session-table__subtabs {
+  align-self: flex-start;
+}
+.session-table__subtabs.campaign-tabs .campaign-tab {
+  padding: var(--space-1) var(--space-4);
+  font-size: 0.7rem;
+}

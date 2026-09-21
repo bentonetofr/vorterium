@@ -8,12 +8,10 @@ import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/
 import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
 import { CampaignSessionsPanel }  from '../../sessions/components/CampaignSessionsPanel'
-import { CampaignSheetPanel }     from '../../sheets/components/CampaignSheetPanel'
 import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
-import { CampaignActivityPanel }  from '../../activity/components/CampaignActivityPanel'
 import { CampaignNotesPanel }     from '../../notes/components/CampaignNotesPanel'
-import { CampaignChatPanel }      from '../../chat/components/CampaignChatPanel'
-import { getChatUnreadCount, markChatRead, getPrivateUnreadCounts } from '../../chat/services/chatService'
+import { SessionTablePanel }      from '../components/SessionTablePanel'
+import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
 
@@ -21,7 +19,10 @@ import './CampaignPages.css'
 // Abas disponíveis — exportado para uso no CampaignOverviewPanel
 // ────────────────────────────────────────────────────────
 
-export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'ficha' | 'notas' | 'atividade' | 'chat' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'mesa-sessao' | 'configuracoes'
+
+/** Sub-abas dentro de "Mesa da Sessão" — chat, ficha, atividade e iniciativa viveram na barra principal até virarem parte da mesa. */
+export type SessionSubTabId = 'chat' | 'ficha' | 'atividade' | 'iniciativa'
 
 interface Tab {
   id: TabId
@@ -32,10 +33,8 @@ const TABS: Tab[] = [
   { id: 'visao-geral',   label: 'Visão geral' },
   { id: 'membros',       label: 'Membros' },
   { id: 'sessoes',       label: 'Sessões' },
-  { id: 'ficha',         label: 'Ficha' },
   { id: 'notas',         label: 'Notas' },
-  { id: 'atividade',     label: 'Atividade' },
-  { id: 'chat',          label: 'Chat' },
+  { id: 'mesa-sessao',   label: 'Mesa da Sessão' },
   { id: 'configuracoes', label: 'Configurações' },
 ]
 
@@ -51,6 +50,7 @@ export function CampaignAreaPage() {
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('visao-geral')
+  const [activeSessionTab, setActiveSessionTab] = useState<SessionSubTabId>('chat')
   const [chatUnread, setChatUnread] = useState(0)
   const [privateUnread, setPrivateUnread] = useState(0)
 
@@ -83,9 +83,11 @@ export function CampaignAreaPage() {
     return () => clearInterval(interval)
   }, [campaign?.id])
 
-  // ── Selo de chat não lido — só enquanto a aba de chat não está ativa ──
+  // ── Selo de chat não lido — só enquanto a Mesa da Sessão não está ativa
+  // (a sub-aba padrão dela já é o Chat). O próprio CampaignChatPanel marca
+  // como lida quando monta — aqui é só o selo visual da aba de fora. ──
   useEffect(() => {
-    if (!campaign?.id || activeTab === 'chat') { setChatUnread(0); return }
+    if (!campaign?.id || activeTab === 'mesa-sessao') { setChatUnread(0); return }
     let cancelled = false
     async function refresh() {
       try {
@@ -99,9 +101,8 @@ export function CampaignAreaPage() {
   }, [campaign?.id, activeTab])
 
   // ── Selo de mensagem privada não lida — selo separado do selo da mesa
-  // acima; não zera ao simplesmente abrir a aba Chat (que abre na visão
-  // "Mesa" por padrão), só quando o usuário entra em cada conversa
-  // privada específica dentro do painel ──
+  // acima; não zera ao simplesmente abrir a Mesa da Sessão, só quando o
+  // usuário entra em cada conversa privada específica dentro do chat ──
   useEffect(() => {
     if (!campaign?.id) { setPrivateUnread(0); return }
     let cancelled = false
@@ -118,10 +119,14 @@ export function CampaignAreaPage() {
 
   function handleTabClick(tabId: TabId) {
     setActiveTab(tabId)
-    if (tabId === 'chat' && campaign?.id) {
-      setChatUnread(0)
-      markChatRead(campaign.id).catch(() => {})
-    }
+    if (tabId === 'mesa-sessao') setChatUnread(0)
+  }
+
+  // Passado pro CampaignOverviewPanel — os atalhos de lá que hoje pedem
+  // "ficha" precisam também escolher a sub-aba dentro da Mesa da Sessão.
+  function handleNavigate(tab: TabId, sessionSubTab?: SessionSubTabId) {
+    handleTabClick(tab)
+    if (sessionSubTab) setActiveSessionTab(sessionSubTab)
   }
 
   if (loading) {
@@ -200,10 +205,10 @@ export function CampaignAreaPage() {
             onClick={() => handleTabClick(tab.id)}
           >
             <span className="campaign-tab__label">{tab.label}</span>
-            {tab.id === 'chat' && chatUnread > 0 && (
+            {tab.id === 'mesa-sessao' && chatUnread > 0 && (
               <span className="campaign-tab__badge">{chatUnread > 99 ? '99+' : chatUnread}</span>
             )}
-            {tab.id === 'chat' && privateUnread > 0 && (
+            {tab.id === 'mesa-sessao' && privateUnread > 0 && (
               <span className="campaign-tab__badge campaign-tab__badge--private" title="Mensagem privada não lida">
                 {privateUnread > 99 ? '99+' : privateUnread}
               </span>
@@ -223,7 +228,7 @@ export function CampaignAreaPage() {
         {activeTab === 'visao-geral' && (
           <CampaignOverviewPanel
             campaign={campaign}
-            onNavigate={setActiveTab}
+            onNavigate={handleNavigate}
           />
         )}
       </div>
@@ -261,22 +266,6 @@ export function CampaignAreaPage() {
         )}
       </div>
 
-      {/* ── Ficha ── */}
-      <div
-        id="tabpanel-ficha"
-        role="tabpanel"
-        aria-labelledby="tab-ficha"
-        hidden={activeTab !== 'ficha'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'ficha' && (
-          <CampaignSheetPanel
-            campaign={campaign}
-            currentUserId={user!.id}
-          />
-        )}
-      </div>
-
       {/* ── Notas ── */}
       <div
         id="tabpanel-notas"
@@ -294,35 +283,20 @@ export function CampaignAreaPage() {
         )}
       </div>
 
-      {/* ── Atividade ── */}
+      {/* ── Mesa da Sessão (Chat / Ficha / Atividade / Iniciativa) ── */}
       <div
-        id="tabpanel-atividade"
+        id="tabpanel-mesa-sessao"
         role="tabpanel"
-        aria-labelledby="tab-atividade"
-        hidden={activeTab !== 'atividade'}
+        aria-labelledby="tab-mesa-sessao"
+        hidden={activeTab !== 'mesa-sessao'}
         className="animate-fade-up"
       >
-        {activeTab === 'atividade' && (
-          <CampaignActivityPanel
-            campaignId={campaign.id}
-            userRole={campaign.role}
-          />
-        )}
-      </div>
-
-      {/* ── Chat ── */}
-      <div
-        id="tabpanel-chat"
-        role="tabpanel"
-        aria-labelledby="tab-chat"
-        hidden={activeTab !== 'chat'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'chat' && (
-          <CampaignChatPanel
-            campaignId={campaign.id}
+        {activeTab === 'mesa-sessao' && (
+          <SessionTablePanel
+            campaign={campaign}
             currentUserId={user!.id}
-            userRole={campaign.role}
+            activeSubTab={activeSessionTab}
+            onSubTabChange={setActiveSessionTab}
           />
         )}
       </div>
