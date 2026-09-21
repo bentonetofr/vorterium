@@ -6,9 +6,10 @@ import { processPendingInvite } from '../../invites/services/inviteService'
 /**
  * Rota: /auth/callback
  *
- * Destino do redirect após autenticação OAuth (Google).
- * O Supabase troca o code por uma sessão automaticamente via PKCE.
- * Esta página aguarda a sessão ser estabelecida e redireciona.
+ * Destino do redirect após autenticação OAuth (Google) e após confirmação
+ * de e-mail no cadastro. Em ambos os casos o Supabase processa o token da
+ * URL automaticamente (PKCE ou hash) via `detectSessionInUrl`; esta página
+ * só aguarda a sessão ser estabelecida e redireciona.
  */
 export function AuthCallbackPage() {
   const navigate = useNavigate()
