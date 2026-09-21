@@ -18,18 +18,20 @@ interface SubTab {
   label: string
 }
 
-const SUB_TABS: SubTab[] = [
-  { id: 'chat',       label: 'Chat' },
-  { id: 'ficha',      label: 'Ficha' },
-  { id: 'atividade',  label: 'Atividade' },
-  { id: 'iniciativa', label: 'Iniciativa' },
-]
-
 export function SessionTablePanel({ campaign, currentUserId, activeSubTab, onSubTabChange }: SessionTablePanelProps) {
+  // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
+  // sentido na visão dele; jogador só tem a própria ficha.
+  const subTabs: SubTab[] = [
+    { id: 'chat',       label: 'Chat' },
+    { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
+    { id: 'atividade',  label: 'Atividade' },
+    { id: 'iniciativa', label: 'Iniciativa' },
+  ]
+
   return (
     <div className="session-table">
       <nav className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Mesa da sessão">
-        {SUB_TABS.map((tab) => (
+        {subTabs.map((tab) => (
           <button
             key={tab.id}
             role="tab"

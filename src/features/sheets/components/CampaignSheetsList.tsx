@@ -99,8 +99,8 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
 
   return (
     <div className="sheets-list-wrapper">
-      {/* ── Lista de fichas ── */}
-      <div className="sheets-list">
+      {/* ── Cards de resumo, um por jogador ── */}
+      <div className="sheets-cards">
         {sheets.map((sheet) => {
           const isSelected = selected?.id === sheet.id
           const filled     = isSheetFilled(sheet)
@@ -108,7 +108,7 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
           return (
             <button
               key={sheet.id}
-              className={`sheets-list__item ${isSelected ? 'sheets-list__item--active' : ''}`}
+              className={`sheet-card ${isSelected ? 'sheet-card--active' : ''}`}
               onClick={() => {
                 setSelected(sheet)
                 setSaveError(null)
@@ -116,32 +116,33 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
               }}
               aria-pressed={isSelected}
             >
-              <span className="sheets-list__avatar">
-                {sheet.profile.display_name.charAt(0).toUpperCase()}
+              <div className="sheet-card__top">
+                <span className="sheet-card__avatar">
+                  {sheet.profile.display_name.charAt(0).toUpperCase()}
+                </span>
+                <span className="sheet-card__player">{sheet.profile.display_name}</span>
+              </div>
+
+              <span className="sheet-card__char">
+                {sheet.character_name
+                  ? <>
+                      <strong>{sheet.character_name}</strong>
+                      {sheet.archetype ? ` · ${sheet.archetype}` : ''}
+                    </>
+                  : 'Sem nome'
+                }
               </span>
 
-              <div className="sheets-list__info">
-                <span className="sheets-list__player">{sheet.profile.display_name}</span>
-                <span className="sheets-list__char">
-                  {sheet.character_name
-                    ? <>
-                        <strong>{sheet.character_name}</strong>
-                        {sheet.archetype ? ` · ${sheet.archetype}` : ''}
-                        {` · Nv ${sheet.level}`}
-                      </>
-                    : `Sem nome · Nv ${sheet.level}`
-                  }
+              <div className="sheet-card__meta">
+                <span className="sheet-card__level">Nv {sheet.level}</span>
+                <span>
+                  {sheet.hp_current}<span className="text-muted">/{sheet.hp_max} PV</span>
                 </span>
               </div>
 
-              <div className="sheets-list__right">
-                <span className="sheets-list__hp">
-                  {sheet.hp_current}<span className="text-muted">/{sheet.hp_max} PV</span>
-                </span>
-                <span className={`sheet-filled-badge sheet-filled-badge--sm ${filled ? 'sheet-filled-badge--filled' : 'sheet-filled-badge--empty'}`}>
-                  {filled ? 'Preenchida' : 'Não preenchida'}
-                </span>
-              </div>
+              <span className={`sheet-filled-badge sheet-filled-badge--sm ${filled ? 'sheet-filled-badge--filled' : 'sheet-filled-badge--empty'}`}>
+                {filled ? 'Preenchida' : 'Não preenchida'}
+              </span>
             </button>
           )
         })}

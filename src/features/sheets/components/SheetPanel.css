@@ -264,25 +264,35 @@
 
 /* ── Lista de fichas (mestre) ── */
 .sheets-list-wrapper { display: flex; flex-direction: column; gap: var(--space-5); }
-.sheets-list         { display: flex; flex-direction: column; gap: var(--space-2); }
 
-.sheets-list__item {
+/* ── Cards de resumo (visão do mestre) ── */
+.sheets-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.sheet-card {
   display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
   background: var(--bg-elevated);
   border: 1px solid var(--border-dim);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   text-align: left;
   transition: all var(--transition-fast);
-  width: 100%;
 }
-.sheets-list__item:hover         { border-color: var(--border-bright); background: var(--bg-overlay); }
-.sheets-list__item--active       { border-color: var(--gilded); background: rgba(212, 175, 55, 0.05); }
+.sheet-card:hover   { border-color: var(--border-bright); background: var(--bg-overlay); }
+.sheet-card--active { border-color: var(--gilded); background: rgba(212, 175, 55, 0.05); }
 
-.sheets-list__avatar {
+.sheet-card__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sheet-card__avatar {
   width: 32px; height: 32px;
   border-radius: var(--radius-md);
   background: var(--bg-overlay);
@@ -296,12 +306,35 @@
   color: var(--accent-bright);
   flex-shrink: 0;
 }
-.sheets-list__info   { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.sheets-list__player { font-family: var(--font-body); font-size: var(--text-md); font-weight: 600; color: var(--text-primary); }
-.sheets-list__char   { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sheets-list__right  { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); flex-shrink: 0; }
-.sheets-list__hp     { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); }
-.sheets-list__form   { padding-top: var(--space-4); border-top: 1px solid var(--border-dim); }
+.sheet-card__player {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet-card__char {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sheet-card__level { color: var(--text-secondary); font-size: var(--text-xs); font-weight: 600; }
+
+.sheets-list__form { padding-top: var(--space-4); border-top: 1px solid var(--border-dim); }
 
 @media (max-width: 640px) {
   .sheet-section__row--3 { grid-template-columns: 1fr 1fr; }
