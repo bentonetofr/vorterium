@@ -80,7 +80,18 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
     else { setHistLoading(true); setHistError(null) }
     try {
       const data = await getCampaignRolls(campaignId, RECENT_ROLLS_LIMIT)
-      setHistory(data)
+      // Mescla por id em vez de substituir: se uma rolagem de outro
+      // jogador chegou via Realtime enquanto essa busca estava em voo,
+      // ela não desaparece só porque essa resposta (tirada antes) não a tinha.
+      setHistory((prev) => {
+        const merged = new Map(data.map((r) => [r.id, r]))
+        for (const r of prev) {
+          if (!merged.has(r.id)) merged.set(r.id, r)
+        }
+        return Array.from(merged.values())
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .slice(0, RECENT_ROLLS_LIMIT)
+      })
       setHistError(null)
     } catch (err) {
       setHistError(err instanceof Error ? err.message : 'Erro ao carregar histórico.')

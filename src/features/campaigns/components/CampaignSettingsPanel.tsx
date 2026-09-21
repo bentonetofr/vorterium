@@ -112,16 +112,16 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
 
     setEditSaving(true)
     try {
-      await updateCampaignDetails(campaign.id, {
+      const updated = await updateCampaignDetails(campaign.id, {
         name:        trimmedName,
         description: editDesc.trim() || null,
         status:      editStatus,
       })
       onCampaignUpdate({
-        name:        trimmedName,
-        description: editDesc.trim() || null,
-        status:      editStatus,
-        cover_url:   campaign.cover_url,
+        name:        updated.name,
+        description: updated.description,
+        status:      updated.status,
+        cover_url:   updated.cover_url,
       })
       setEditOpen(false)
       setEditSuccess(true)

@@ -47,22 +47,27 @@ export function NotificationPopup() {
   const activeChatCampaignIdRef = useRef(activeChatCampaignId)
   useEffect(() => { activeChatCampaignIdRef.current = activeChatCampaignId }, [activeChatCampaignId])
 
-  // IDs já mostrados — só em memória. null = ainda não fez a primeira
-  // checagem. Na primeira checagem só registra o que já existe, sem
-  // disparar pop-up (senão vira uma enxurrada de coisa antiga a cada F5);
-  // dali pra frente, só o que for realmente novo entra na fila.
-  const seenIdsRef = useRef<Set<string> | null>(null)
+  // IDs já mostrados — só em memória, sempre existe (nunca null: os
+  // handlers de Realtime abaixo já podem gravar nele antes da primeira
+  // resposta do poll chegar, então "já inicializado" não pode ser o sinal
+  // de "já fez a primeira checagem" — ver `seededRef`).
+  const seenIdsRef = useRef<Set<string>>(new Set())
+  // true só depois que a PRIMEIRA resposta do poll chegar — é esse sinal,
+  // não o Set estar vazio ou não, que decide se um evento é "de antes de
+  // abrir a página" (não notifica) ou "novo de verdade" (notifica).
+  const seededRef = useRef(false)
 
   const poll = useCallback(async () => {
     try {
       const events = await getLiveNotifications()
 
-      if (seenIdsRef.current === null) {
-        seenIdsRef.current = new Set(events.map((e) => e.id))
+      if (!seededRef.current) {
+        for (const e of events) seenIdsRef.current.add(e.id)
+        seededRef.current = true
         return
       }
 
-      const fresh = events.filter((e) => !seenIdsRef.current!.has(e.id))
+      const fresh = events.filter((e) => !seenIdsRef.current.has(e.id))
       for (const e of fresh) seenIdsRef.current.add(e.id)
       if (fresh.length > 0) setQueue((q) => [...q, ...fresh])
     } catch (err) {
@@ -88,7 +93,6 @@ export function NotificationPopup() {
       if (campaignId === activeChatCampaignIdRef.current) return
 
       const id = `message-${messageId}`
-      if (!seenIdsRef.current) seenIdsRef.current = new Set()
       if (seenIdsRef.current.has(id)) return
       seenIdsRef.current.add(id)
 
@@ -106,7 +110,6 @@ export function NotificationPopup() {
 
     const unsubscribe = subscribeToNewRollsGlobally(user.id, async (rollId) => {
       const id = `dice-${rollId}`
-      if (!seenIdsRef.current) seenIdsRef.current = new Set()
       if (seenIdsRef.current.has(id)) return
       seenIdsRef.current.add(id)
 

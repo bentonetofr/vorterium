@@ -38,6 +38,7 @@ const expectedMigrations = [
   '20240134000000_campaign_messages_replica_identity.sql',
   '20240135000000_private_messages.sql',
   '20240136000000_dice_rolls_realtime.sql',
+  '20240137000000_leave_campaign_atomic_activity.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

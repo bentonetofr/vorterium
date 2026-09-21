@@ -1,6 +1,6 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { ensureProfile } from '../../users/services/profileService'
-import { logActivity, createCampaignActivity } from '../../activity/services/activityService'
+import { logActivity } from '../../activity/services/activityService'
 import { isSupportedSystem } from '../../../shared/constants/systems'
 import type { Campaign, CampaignMember, CampaignWithRole, CampaignSystem } from '../../../shared/types'
 
@@ -233,9 +233,10 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
  * Mestre não pode usar este fluxo.
  */
 export async function leaveCampaign(campaignId: string): Promise<void> {
-  // Registrar antes de sair — após a remoção o usuário perde acesso à RPC
-  try { await createCampaignActivity(campaignId, 'member_left', 'Um jogador saiu da campanha.') } catch { /* silently ignore */ }
-
+  // O registro de atividade "member_left" acontece dentro da própria RPC
+  // (atomicamente com a remoção) — ver migration 37. Não registrar aqui
+  // evita tanto duplicar o evento quanto criar um falso histórico caso a
+  // RPC falhe.
   const { error } = await supabase.rpc('leave_campaign', {
     campaign_id_input: campaignId,
   })

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import {
@@ -28,6 +28,12 @@ export function InvitePage() {
   const [inviteInfo, setInviteInfo] = useState<CampaignInvitePublic | null>(null)
   const [errorMsg, setErrorMsg]   = useState('')
 
+  // `user` (de useAuth()) ganha uma referência nova a cada evento de auth,
+  // incluindo refresh de token — o que pode disparar este efeito de novo
+  // enquanto o aceite anterior ainda está em voo. Esta ref garante no
+  // máximo uma tentativa de aceite por visita à página.
+  const acceptStartedRef = useRef(false)
+
   useEffect(() => {
     if (loading) return
 
@@ -54,6 +60,9 @@ export function InvitePage() {
           setStatus('valid')
           return
         }
+
+        if (acceptStartedRef.current) return
+        acceptStartedRef.current = true
 
         // Usuário autenticado — aceita imediatamente
         setStatus('accepting')

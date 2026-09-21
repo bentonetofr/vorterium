@@ -1,0 +1,126 @@
+src/features/activity/services/activityService.ts: export interface ActivityWithCampaign
+src/features/activity/services/activityService.ts: export const ONLINE_THRESHOLD_MS
+src/features/activity/services/activityService.ts: export type ActivityType
+src/features/activity/services/activityService.ts: export const ACTIVITY_ICONS
+src/features/activity/services/activityService.ts: export async function getCampaignActivity
+src/features/activity/services/activityService.ts: export async function createCampaignActivity
+src/features/activity/services/activityService.ts: export function logActivity
+src/features/activity/services/activityService.ts: export async function getCampaignPresence
+src/features/activity/services/activityService.ts: export async function touchCampaignPresence
+src/features/activity/services/activityService.ts: export function isUserOnline
+src/features/activity/services/activityService.ts: export function formatPresenceTime
+src/features/activity/services/activityService.ts: export async function getMyRecentActivity
+src/features/activity/services/activityService.ts: export function formatActivityTime
+src/features/activity/services/activityService.ts: export async function getActivitySeenAt
+src/features/activity/services/activityService.ts: export async function markActivitySeen
+src/features/activity/services/activityService.ts: export async function getUnreadNotificationCount
+src/features/activity/services/activityService.ts: export interface LiveNotification
+src/features/activity/services/activityService.ts: export async function getLiveNotifications
+src/features/activity/services/activityService.ts: export function subscribeToNewRollsGlobally
+src/features/activity/services/activityService.ts: export async function getDiceRollNotification
+src/features/activity/services/activityService.ts: export function subscribeToNewMessagesGlobally
+src/features/activity/services/activityService.ts: export async function getMessageNotification
+src/features/activity/services/activityService.ts: export async function getRecentNotifications
+src/features/campaigns/services/campaignOverviewService.ts: export interface OverviewMasterData
+src/features/campaigns/services/campaignOverviewService.ts: export interface OverviewPlayerData
+src/features/campaigns/services/campaignOverviewService.ts: export async function getMasterOverview
+src/features/campaigns/services/campaignOverviewService.ts: export async function getPlayerOverview
+src/features/campaigns/services/campaignService.ts: export const CAMPAIGN_COVER_MAX_BYTES
+src/features/campaigns/services/campaignService.ts: export const CAMPAIGN_COVER_TYPES
+src/features/campaigns/services/campaignService.ts: export interface CampaignDetailsData
+src/features/campaigns/services/campaignService.ts: export async function getMyCampaigns
+src/features/campaigns/services/campaignService.ts: export async function createCampaign
+src/features/campaigns/services/campaignService.ts: export async function updateCampaignDetails
+src/features/campaigns/services/campaignService.ts: export async function uploadCampaignCover
+src/features/campaigns/services/campaignService.ts: export async function removeCampaignCover
+src/features/campaigns/services/campaignService.ts: export async function updateCampaignName
+src/features/campaigns/services/campaignService.ts: export async function deleteCampaign
+src/features/campaigns/services/campaignService.ts: export async function leaveCampaign
+src/features/campaigns/services/campaignService.ts: export async function getCampaignWithRole
+src/features/chat/services/chatService.ts: export interface ChatMessage
+src/features/chat/services/chatService.ts: export async function getCampaignMessages
+src/features/chat/services/chatService.ts: export async function sendMessage
+src/features/chat/services/chatService.ts: export async function deleteMessage
+src/features/chat/services/chatService.ts: export interface TypingPayload
+src/features/chat/services/chatService.ts: export function subscribeToMessages
+src/features/chat/services/chatService.ts: export async function getChatUnreadCount
+src/features/chat/services/chatService.ts: export async function markChatRead
+src/features/chat/services/chatService.ts: export async function getPrivateUnreadCounts
+src/features/chat/services/chatService.ts: export async function markPrivateThreadRead
+src/features/dice/services/diceService.ts: export const DIE_TYPES
+src/features/dice/services/diceService.ts: export const QUICK_FORMULAS
+src/features/dice/services/diceService.ts: export interface ParsedDiceTerm
+src/features/dice/services/diceService.ts: export interface ParsedFormula
+src/features/dice/services/diceService.ts: export function parseDiceFormula
+src/features/dice/services/diceService.ts: export function rollParsedFormula
+src/features/dice/services/diceService.ts: export async function rollDice
+src/features/dice/services/diceService.ts: export async function getCampaignRolls
+src/features/dice/services/diceService.ts: export function subscribeToRolls
+src/features/invites/services/inviteService.ts: export const PENDING_INVITE_KEY
+src/features/invites/services/inviteService.ts: export function buildInviteUrl
+src/features/invites/services/inviteService.ts: export async function createCampaignInvite
+src/features/invites/services/inviteService.ts: export async function acceptCampaignInvite
+src/features/invites/services/inviteService.ts: export async function acceptCampaignInviteWithProfile
+src/features/invites/services/inviteService.ts: export async function deactivateCampaignInvite
+src/features/invites/services/inviteService.ts: export async function getCampaignInvitePublic
+src/features/invites/services/inviteService.ts: export async function getActiveCampaignInvite
+src/features/invites/services/inviteService.ts: export function savePendingInvite
+src/features/invites/services/inviteService.ts: export async function processPendingInvite
+src/features/members/services/memberService.ts: export type SheetStatus
+src/features/members/services/memberService.ts: export interface CampaignMemberWithSheetStatus
+src/features/members/services/memberService.ts: export async function getCampaignMembers
+src/features/members/services/memberService.ts: export async function findProfileByEmail
+src/features/members/services/memberService.ts: export async function addCampaignMember
+src/features/members/services/memberService.ts: export async function removeCampaignMember
+src/features/members/services/memberService.ts: export async function getCampaignMembersWithSheetStatus
+src/features/notes/services/noteService.ts: export interface NoteFormData
+src/features/notes/services/noteService.ts: export async function getCampaignNotes
+src/features/notes/services/noteService.ts: export async function getCampaignNotesSummary
+src/features/notes/services/noteService.ts: export async function createCampaignNote
+src/features/notes/services/noteService.ts: export async function updateCampaignNote
+src/features/notes/services/noteService.ts: export async function deleteCampaignNote
+src/features/sessions/services/sessionService.ts: export type SessionStatus
+src/features/sessions/services/sessionService.ts: export const SESSION_STATUS_LABELS
+src/features/sessions/services/sessionService.ts: export function getSessionStatusLabel
+src/features/sessions/services/sessionService.ts: export interface SessionFormData
+src/features/sessions/services/sessionService.ts: export async function getCampaignSessions
+src/features/sessions/services/sessionService.ts: export async function createCampaignSession
+src/features/sessions/services/sessionService.ts: export async function updateCampaignSession
+src/features/sessions/services/sessionService.ts: export async function deleteCampaignSession
+src/features/sheets/services/sheetService.ts: export const SHEET_DEFAULTS
+src/features/sheets/services/sheetService.ts: export function isSheetFilled
+src/features/sheets/services/sheetService.ts: export type SheetUpdateData
+src/features/sheets/services/sheetService.ts: export async function getMySheet
+src/features/sheets/services/sheetService.ts: export async function createMySheet
+src/features/sheets/services/sheetService.ts: export async function getOrCreateMySheet
+src/features/sheets/services/sheetService.ts: export async function updateSheet
+src/features/sheets/services/sheetService.ts: export interface SheetWithCampaign
+src/features/sheets/services/sheetService.ts: export async function getMySheets
+src/features/sheets/services/sheetService.ts: export async function getCampaignSheets
+src/features/users/services/profileService.ts: export const AVATAR_MAX_BYTES
+src/features/users/services/profileService.ts: export const AVATAR_TYPES
+src/features/users/services/profileService.ts: export async function getCurrentProfile
+src/features/users/services/profileService.ts: export async function updateCurrentProfile
+src/features/users/services/profileService.ts: export async function updateCurrentPassword
+src/features/users/services/profileService.ts: export async function uploadCurrentAvatar
+src/features/users/services/profileService.ts: export async function removeCurrentAvatar
+src/features/users/services/profileService.ts: export async function ensureProfile
+src/features/sheets/dnd/services/dndSheetService.ts: export interface DndSheetWithProfile
+src/features/sheets/dnd/services/dndSheetService.ts: export async function getMyDndSheet
+src/features/sheets/dnd/services/dndSheetService.ts: export async function ensureMyDndSheet
+src/features/sheets/dnd/services/dndSheetService.ts: export async function getCampaignDndSheets
+src/features/sheets/dnd/services/dndSheetService.ts: export async function updateDndSheet
+src/features/sheets/dnd/services/dndSheetService.ts: export async function getDndSheetDetails
+src/features/sheets/dnd/services/dndSheetService.ts: export async function saveDndOverride
+src/features/sheets/dnd/services/dndSheetService.ts: export async function removeDndOverride
+src/features/sheets/dnd/services/dndSheetService.ts: export async function getDndCatalogEntries
+src/features/sheets/dnd/services/dndSheetService.ts: export async function upsertDndSkill
+src/features/sheets/dnd/services/dndSheetService.ts: export async function createDndAttack
+src/features/sheets/dnd/services/dndSheetService.ts: export async function updateDndAttack
+src/features/sheets/dnd/services/dndSheetService.ts: export async function deleteDndAttack
+src/features/sheets/dnd/services/dndSheetService.ts: export async function createDndInventoryItem
+src/features/sheets/dnd/services/dndSheetService.ts: export async function updateDndInventoryItem
+src/features/sheets/dnd/services/dndSheetService.ts: export async function deleteDndInventoryItem
+src/features/sheets/dnd/services/dndSheetService.ts: export async function createDndSpell
+src/features/sheets/dnd/services/dndSheetService.ts: export async function updateDndSpell
+src/features/sheets/dnd/services/dndSheetService.ts: export async function deleteDndSpell

@@ -63,6 +63,17 @@ function playNewMessageSound() {
 // Utilitários
 // ────────────────────────────────────────────────────────
 
+/** Mesa (recipient_id null) ou a conversa privada específica com `threadWith`. */
+function messageBelongsToThread(
+  row: { recipient_id: string | null; user_id: string },
+  threadWith: string | undefined,
+  currentUserId: string,
+): boolean {
+  if (!threadWith) return row.recipient_id === null
+  return (row.user_id === currentUserId && row.recipient_id === threadWith)
+      || (row.user_id === threadWith && row.recipient_id === currentUserId)
+}
+
 function formatMessageTime(iso: string): string {
   const d = new Date(iso)
   const now = new Date()
@@ -107,6 +118,10 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
   // ver useEffect mais abaixo) sempre lerem a conversa ATUAL, sem recriar
   // o canal a cada troca de conversa.
   const activeThreadRef = useRef<ActiveThread>(activeThread)
+  // Conversas privadas já marcadas como lidas nesta sessão do componente —
+  // evita que a busca inicial de não lidas (mais lenta) resolva DEPOIS de
+  // o usuário já ter aberto e lido aquela conversa, e reapareça o selo.
+  const locallyReadThreadsRef = useRef<Set<string>>(new Set())
 
   const { setActiveChatCampaignId } = useActiveChat()
 
@@ -161,9 +176,39 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
       try {
         const initial = await getCampaignMessages(campaignId, undefined, PAGE_SIZE, threadWith)
         if (cancelled) return
-        setMessages(initial)
+
+        // Mescla por id em vez de substituir a lista inteira: se uma
+        // mensagem dessa MESMA conversa já chegou via Realtime enquanto
+        // essa busca estava em voo, ela fica — só quem "perde" aqui é o
+        // que pertencia à conversa anterior (que nem passa no filtro de
+        // `messageBelongsToThread`).
+        setMessages((prev) => {
+          const merged = new Map(initial.map((m) => [m.id, m]))
+          for (const m of prev) {
+            if (messageBelongsToThread(m, threadWith, currentUserId) && !merged.has(m.id)) {
+              merged.set(m.id, m)
+            }
+          }
+          return Array.from(merged.values()).sort((a, b) => a.created_at.localeCompare(b.created_at))
+        })
         setHasMore(initial.length >= PAGE_SIZE)
         setError(null)
+
+        // Só marca como lida depois que a busca realmente funcionar — uma
+        // falha aqui não deve fazer o selo de não lida sumir silenciosamente
+        // pra mensagens que o usuário nunca chegou a ver.
+        if (threadWith) {
+          markPrivateThreadRead(campaignId, threadWith).catch(() => { /* silencioso */ })
+          locallyReadThreadsRef.current.add(threadWith)
+          setPrivateUnread((prev) => {
+            if (!prev.has(threadWith)) return prev
+            const next = new Map(prev)
+            next.delete(threadWith)
+            return next
+          })
+        } else {
+          markChatRead(campaignId).catch(() => { /* silencioso */ })
+        }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Não foi possível carregar o chat.')
       } finally {
@@ -176,27 +221,28 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
 
     loadThread()
 
-    if (threadWith) {
-      markPrivateThreadRead(campaignId, threadWith).catch(() => { /* silencioso */ })
-      setPrivateUnread((prev) => {
-        if (!prev.has(threadWith)) return prev
-        const next = new Map(prev)
-        next.delete(threadWith)
-        return next
-      })
-    } else {
-      markChatRead(campaignId).catch(() => { /* silencioso */ })
-    }
-
     return () => { cancelled = true }
-  }, [campaignId, threadWith, scrollToBottom])
+  }, [campaignId, threadWith, currentUserId, scrollToBottom])
 
   // ── Não lidas de conversas privadas — carga inicial (cobre mensagens
   // que chegaram enquanto o usuário estava fora desta campanha) ──
   useEffect(() => {
     let cancelled = false
     getPrivateUnreadCounts(campaignId)
-      .then((counts) => { if (!cancelled) setPrivateUnread(counts) })
+      .then((counts) => {
+        if (cancelled) return
+        // Mescla em vez de substituir: se o usuário já abriu (e leu) uma
+        // conversa antes dessa busca mais lenta voltar, `locallyReadThreadsRef`
+        // impede que o retrato antigo dela reapareça no selo.
+        setPrivateUnread((prev) => {
+          const next = new Map(prev)
+          for (const [userId, count] of counts) {
+            if (locallyReadThreadsRef.current.has(userId)) continue
+            next.set(userId, count)
+          }
+          return next
+        })
+      })
       .catch(() => { /* selo só deixa de aparecer, não quebra o chat */ })
     return () => { cancelled = true }
   }, [campaignId])
@@ -209,27 +255,22 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
       campaignId,
       (row) => {
         const current = activeThreadRef.current
-        const isPublicRow = row.recipient_id === null
+        const currentThreadWith = current.type === 'private' ? current.userId : undefined
+        const isActiveThread = messageBelongsToThread(row, currentThreadWith, currentUserId)
 
-        if (isPublicRow) {
-          if (current.type !== 'public') return
-        } else {
-          const otherParty = row.user_id === currentUserId ? row.recipient_id : row.user_id
-          const isActiveThread = current.type === 'private' && current.userId === otherParty
-          if (!isActiveThread) {
-            // Mensagem privada de/para outra conversa — só soma no
-            // contador local se for endereçada a mim (não ao ver a minha
-            // própria mensagem privada ecoar em outra aba/dispositivo).
-            if (row.recipient_id === currentUserId) {
-              setPrivateUnread((prev) => {
-                const next = new Map(prev)
-                next.set(row.user_id, (next.get(row.user_id) ?? 0) + 1)
-                return next
-              })
-              playNewMessageSound()
-            }
-            return
+        if (!isActiveThread) {
+          // Mensagem privada de/para outra conversa — só soma no contador
+          // local se for endereçada a mim (não ao ver a minha própria
+          // mensagem privada ecoar em outra aba/dispositivo).
+          if (row.recipient_id !== null && row.recipient_id === currentUserId) {
+            setPrivateUnread((prev) => {
+              const next = new Map(prev)
+              next.set(row.user_id, (next.get(row.user_id) ?? 0) + 1)
+              return next
+            })
+            playNewMessageSound()
           }
+          return
         }
 
         setMessages((prev) => {

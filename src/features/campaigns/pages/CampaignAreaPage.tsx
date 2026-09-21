@@ -56,16 +56,21 @@ export function CampaignAreaPage() {
 
   useEffect(() => {
     if (!campaignId || !user) return
+    let cancelled = false
     async function load() {
       try {
         const data = await getCampaignWithRole(campaignId!, user!.id)
+        if (cancelled) return
         if (!data) setError('Campanha não encontrada ou você não tem acesso a ela.')
         else setCampaign(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Não foi possível carregar a campanha.')
-      } finally { setLoading(false) }
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Não foi possível carregar a campanha.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
     load()
+    return () => { cancelled = true }
   }, [campaignId, user])
 
   // ── Heartbeat de presença — atualiza a cada 60 segundos ──
