@@ -1,6 +1,6 @@
 import { SimpleSheetPanel }           from './SimpleSheetPanel'
 import { DndComingSoon }             from '../dnd/DndComingSoon'
-import { AltheriumSheetComingSoon }  from '../altherium/components/AltheriumSheetComingSoon'
+import { AltheriumSheetPanel }       from '../altherium/components/AltheriumSheetPanel'
 import type { CampaignWithRole }     from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -22,7 +22,12 @@ export function CampaignSheetPanel({ campaign }: CampaignSheetPanelProps) {
       return <DndComingSoon />
 
     case 'altherium':
-      return <AltheriumSheetComingSoon />
+      return (
+        <AltheriumSheetPanel
+          campaignId={campaign.id}
+          userRole={campaign.role}
+        />
+      )
 
     case 'generic':
     default:

@@ -174,6 +174,53 @@ export interface CampaignActivity {
   created_at:  string
 }
 
+/** Ficha do sistema Altherium — base (identidade, atributos, recursos, dinheiro, DB). */
+export interface AltheriumSheet {
+  id:                 string
+  campaign_id:        string
+  user_id:            string
+  character_name:     string | null
+  level:              number
+  raiz:               'berserker' | 'runaskin' | 'pilar' | null
+  genesis:            string | null
+  attr_furia:         number
+  attr_destino:       number
+  attr_espirito:      number
+  attr_impulso:       number
+  attr_estrategia:    number
+  attr_runico:        number
+  vitality_roll:      number | null
+  vitality_current:   number
+  equilibrio_roll:    number | null
+  equilibrio_current: number
+  fv_roll:            number | null
+  fv_current:         number
+  pr_roll:            number | null
+  pr_current:         number
+  cards_current:      number
+  hacksilvers:        number
+  db_pernas:          number
+  db_bracos:          number
+  db_tronco:          number
+  db_cabeca:          number
+  notes:              string | null
+  created_at:         string
+  updated_at:         string
+}
+
+/** Pontos de um domínio numa ficha Altherium (0 a 2). */
+export interface AltheriumDomainPoints {
+  id:       string
+  sheet_id: string
+  domain:   string
+  points:   number
+}
+
+/** Ficha Altherium enriquecida com o perfil do dono — usada na visão do mestre. */
+export interface AltheriumSheetWithProfile extends AltheriumSheet {
+  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'>
+}
+
 /** Participante do combate atual — membro (user_id preenchido) ou NPC/monstro (user_id nulo). */
 export interface InitiativeParticipant {
   id:               string

@@ -101,7 +101,7 @@ Authentication → URL Configuration
 
 As migrations devem ser aplicadas **em ordem**, uma por vez, no **Supabase Dashboard → SQL Editor → New query**.
 
-O repositório contém **36 migrations SQL**. A lista abaixo é o contrato canônico da
+O repositório contém **37 migrations SQL**. A lista abaixo é o contrato canônico da
 ordem de aplicação; não existe uma migration `20240121000000_my_sheets.sql` neste
 repositório e ela não deve ser criada ou aplicada sem uma decisão explícita de
 schema.
@@ -144,6 +144,7 @@ schema.
 | 34 | `20240136000000_dice_rolls_realtime.sql` | Adiciona `dice_rolls` de volta à publicação Realtime — só para o pop-up global de notificação disparar na hora, sem esperar o polling de 20s |
 | 35 | `20240137000000_leave_campaign_atomic_activity.sql` | Move o registro de atividade "saiu da campanha" pra dentro da própria RPC `leave_campaign`, atomicamente com a remoção — antes podia ficar um registro falso se a saída falhasse depois de já ter sido registrada |
 | 36 | `20240138000000_campaign_initiative.sql` | Adiciona `campaign_initiative_participants` e `campaign_initiative_state` + RPCs `start_initiative_encounter`/`advance_initiative_turn`/`end_initiative_encounter`, com Realtime — rastreador de iniciativa compartilhado da Mesa da Sessão |
+| 37 | `20240139000000_altherium_character_sheets.sql` | Adiciona `altherium_character_sheets` (identidade, atributos, recursos, hacksilvers, DB por parte do corpo) e `altherium_character_domains` (0-2 pontos por domínio) — base da ficha do sistema Altherium |
 
 > **Usuários criados antes da migration 1:** o trigger `handle_new_user` cria perfis apenas para novos cadastros. Para sincronizar usuários já existentes, rode o script de backfill comentado na seção 9 da migration 1.
 
@@ -171,7 +172,7 @@ Antes de abrir um deploy ou adicionar uma migration, execute:
 npm run verify
 ```
 
-O comando valida as 36 migrations registradas e depois executa o build de produção.
+O comando valida as 37 migrations registradas e depois executa o build de produção.
 
 ---
 
@@ -238,10 +239,11 @@ O sistema de uma campanha é escolhido no momento da criação e **não pode ser
 | Página de perfil (`/perfil`) — editar nome público | ✅ |
 | Preferência de tema, avatar com ajuste e capa de campanha com recorte | ✅ |
 | Ficha D&D 5e — perícias, ataques, inventário e magias persistentes | ✅ |
+| Ficha Altherium (base) — raízes, atributos, domínios, recursos, hacksilvers e DB | ✅ |
 
 ## O que está fora do MVP (futuras features)
 
-- Ficha Altherium completa
+- Ficha Altherium: triunfos (trilhas de Runaskin, baralho do Pilar), catálogo de armas/armaduras e inventário
 - Explorar campanhas públicas
 - Configurações de conta
 - Plano premium / monetização
@@ -401,6 +403,43 @@ chat — também habilita a publicação Realtime para `campaign_messages` via
 
 ---
 
+## Ficha Altherium
+
+Sistema próprio, baseado no *Livro de regras básicas de ALTHERIUM 1.0*. Campanhas
+com sistema **Altherium** abrem a ficha real na sub-aba Ficha da Mesa da Sessão.
+
+**Estrutura do personagem**
+
+- **Raiz**: Berserker, Runaskin ou Pilar — define bases de recurso e de domínios
+- **Atributos** (0-6 cada): Fúria, Destino, Espírito, Impulso, Estratégia e Rúnico
+  (exclusivo de Runaskin, que começa com +2 fora dos 16 pontos da criação).
+  Atributo em 0 sinaliza 1d de desvantagem
+- **Gênesis**: 12 origens, cada uma com seu efeito descrito na ficha
+- **24 Domínios**, cada um ligado a um atributo, 0 a 2 pontos — cada ponto vale
+  +1d10 no teste daquele domínio (a ficha mostra os dados resultantes)
+
+**Recursos derivados** — a ficha guarda só o d10 rolado na criação e o valor
+atual; o máximo é recalculado a partir da raiz e do atributo, então acompanha
+mudanças de atributo sozinho:
+
+| Raiz | Vitalidade | Recurso próprio | Equilíbrio | Domínios |
+|---|---|---|---|---|
+| Berserker | 20 + d10 + Espírito | FV 14 + d10 + Impulso | 10 + d10 + Destino | 4 + Estratégia |
+| Runaskin | 10 + d10 + Espírito | PR 20 + d10 + Rúnico | 20 + d10 + Destino | 6 + Estratégia |
+| Pilar | 15 + d10 + Espírito | Cartas = 13 × nível | 15 + d10 + Destino | 8 + Estratégia |
+
+Além disso: Hacksilvers (₴2000 na criação), DB por parte do corpo (Pernas 1-3,
+Braços 4-6, Tronco 7-9, Cabeça 10 no d10 de localização) e movimento derivado do
+Impulso (5m até 8, 10m de 9 em diante).
+
+Contadores de criação (16 pontos de atributo, limite de domínios da raiz) aparecem
+como aviso, sem travar o salvamento — o mestre pode liberar exceções. Jogador edita
+a própria ficha; mestre vê os cards de resumo de todos e edita qualquer uma.
+
+**Migration necessária:** `20240139000000_altherium_character_sheets.sql`.
+
+---
+
 ## Mesa da Sessão
 
 Aba **"Mesa da Sessão"**, no lugar onde antes existiam abas separadas de
@@ -488,7 +527,7 @@ Toda inserção em `campaign_members` acontece via RPC (`add_campaign_player`, `
 
 ```
 supabase/
-└── migrations/             ← 36 migrations em ordem
+└── migrations/             ← 37 migrations em ordem
 
 src/
 ├── app/
@@ -510,7 +549,7 @@ src/
 │   │   │   ├── DndCharacterSheet.css
 │   │   │   ├── mockCharacter.ts
 │   │   │   └── tabs/       # Componentes de aba (mock — referência)
-│   │   ├── altherium/      # Placeholder de ficha Altherium
+│   │   ├── altherium/      # Ficha Altherium (base): painel, formulário, cálculos, constantes
 │   │   └── services/       # sheetService (ficha genérica)
 │   ├── dice/               # DiceRollerProvider, DiceFab, DiceRollerPanel + diceService
 │   ├── notes/              # CampaignNotesPanel + noteService

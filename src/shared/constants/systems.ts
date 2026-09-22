@@ -36,8 +36,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
   {
     id:          'altherium',
     label:       'Altherium',
-    description: 'Sistema próprio em desenvolvimento para campanhas no universo de Altherium.',
-    status:      'coming-soon',
+    description: 'Sistema próprio do universo de Altherium: raízes, atributos, domínios e recursos do Livro de Regras 1.0.',
+    status:      'available',
     icon:        '✦',
   },
 ]
