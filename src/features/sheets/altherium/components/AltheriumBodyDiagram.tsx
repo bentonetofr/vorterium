@@ -67,6 +67,22 @@ const JOINT_ZONE: Record<JointId, BodyZone> = {
 }
 const JOINT_IDS = Object.keys(JOINT_PIVOT) as JointId[]
 
+// Amplitude de movimento humana (graus, delta a partir da pose de descanso
+// já desenhada = 0). Cotovelo e joelho são dobradiças: só flexionam pra um
+// lado (valor negativo = flexiona, nesta convenção de eixo) e quase não
+// hiperestendem. Ombro e quadril têm alcance maior, mas nada de giro livre.
+const JOINT_RANGE: Record<JointId, readonly [number, number]> = {
+  neck: [-35, 35],
+  shoulderL: [-190, 60], shoulderR: [-190, 60],
+  elbowL: [-140, 10],    elbowR: [-140, 10],
+  hipL: [-110, 40],      hipR: [-110, 40],
+  kneeL: [-140, 5],      kneeR: [-140, 5],
+}
+function clampToRange(id: JointId, angle: number): number {
+  const [min, max] = JOINT_RANGE[id]
+  return Math.max(min, Math.min(max, angle))
+}
+
 // Mola amortecida: ao soltar, a junta oscila em volta de onde parou e
 // assenta — não é uma simulação de corpo inteiro, só "física de brinquedo".
 const SPRING_STIFFNESS = 0.06
@@ -92,7 +108,7 @@ function useJointRig() {
       let vel = velocities.current[id]
       const accel = (target - angle) * SPRING_STIFFNESS
       vel = (vel + accel) * SPRING_DAMPING
-      const next = angle + vel
+      const next = clampToRange(id, angle + vel)
       angles.current[id] = next
       velocities.current[id] = vel
       if (Math.abs(vel) < SETTLE_EPSILON && Math.abs(target - next) < SETTLE_EPSILON) {
@@ -134,7 +150,7 @@ function useJointRig() {
 
     function onMove(e: globalThis.PointerEvent) {
       const delta = pointAngle(e.clientX, e.clientY) - startPointerAngle
-      const nextAngle = startJointAngle + delta
+      const nextAngle = clampToRange(id, startJointAngle + delta)
       angles.current[id] = nextAngle
 
       const now = performance.now()
