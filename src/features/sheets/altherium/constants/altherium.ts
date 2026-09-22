@@ -34,8 +34,10 @@ export const ATTRIBUTES: { id: AltheriumAttribute; label: string; description: s
 
 /** Total de pontos distribuídos na criação do personagem. */
 export const ATTRIBUTE_POINTS_AT_CREATION = 16
-/** Teto de pontos por atributo. */
-export const ATTRIBUTE_MAX = 6
+/** Teto por atributo na criação — subir de nível (+2 pontos) passa disso. */
+export const ATTRIBUTE_MAX_AT_CREATION = 6
+/** Âncora de sanidade do campo, bem acima do que o sistema alcança. */
+export const ATTRIBUTE_HARD_MAX = 20
 /** Runaskin começa com +2 em Rúnico, fora dos 16 pontos. */
 export const RUNASKIN_FREE_RUNICO = 2
 

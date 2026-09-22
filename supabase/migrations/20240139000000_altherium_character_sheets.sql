@@ -33,14 +33,16 @@ create table public.altherium_character_sheets (
                        'sem_passado'
                      )),
 
-  -- Atributos (16 pontos na criação, pares, máx 6 — validação de criação
-  -- é orientativa no cliente; aqui só o teto absoluto do sistema)
-  attr_furia         integer     not null default 0 check (attr_furia      between 0 and 6),
-  attr_destino       integer     not null default 0 check (attr_destino    between 0 and 6),
-  attr_espirito      integer     not null default 0 check (attr_espirito   between 0 and 6),
-  attr_impulso       integer     not null default 0 check (attr_impulso    between 0 and 6),
-  attr_estrategia    integer     not null default 0 check (attr_estrategia between 0 and 6),
-  attr_runico        integer     not null default 0 check (attr_runico     between 0 and 6),
+  -- Atributos. O teto de 6 do livro vale na CRIAÇÃO (16 pontos, pares);
+  -- subir de nível dá +2 pontos, então o valor cresce além disso — o
+  -- limite aqui é só uma âncora de sanidade contra erro de digitação, e
+  -- a regra de criação é conferida no cliente.
+  attr_furia         integer     not null default 0 check (attr_furia      between 0 and 20),
+  attr_destino       integer     not null default 0 check (attr_destino    between 0 and 20),
+  attr_espirito      integer     not null default 0 check (attr_espirito   between 0 and 20),
+  attr_impulso       integer     not null default 0 check (attr_impulso    between 0 and 20),
+  attr_estrategia    integer     not null default 0 check (attr_estrategia between 0 and 20),
+  attr_runico        integer     not null default 0 check (attr_runico     between 0 and 20),
 
   -- Recursos: d10 rolado uma vez na criação + valor atual
   vitality_roll      integer     check (vitality_roll     between 1 and 10),

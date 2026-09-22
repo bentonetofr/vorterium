@@ -411,8 +411,9 @@ com sistema **Altherium** abrem a ficha real na sub-aba Ficha da Mesa da Sessão
 **Estrutura do personagem**
 
 - **Raiz**: Berserker, Runaskin ou Pilar — define bases de recurso e de domínios
-- **Atributos** (0-6 cada): Fúria, Destino, Espírito, Impulso, Estratégia e Rúnico
+- **Atributos**: Fúria, Destino, Espírito, Impulso, Estratégia e Rúnico
   (exclusivo de Runaskin, que começa com +2 fora dos 16 pontos da criação).
+  O teto de 6 vale na criação — subir de nível dá +2 pontos e passa disso.
   Atributo em 0 sinaliza 1d de desvantagem
 - **Gênesis**: 12 origens, cada uma com seu efeito descrito na ficha
 - **24 Domínios**, cada um ligado a um atributo, 0 a 2 pontos — cada ponto vale
