@@ -308,7 +308,7 @@
 }
 
 .alth-body {
-  width: 160px;
+  width: 220px;
   height: auto;
   flex-shrink: 0;
   touch-action: none;
@@ -472,4 +472,5 @@
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
   .alth-domains__attr { display: none; }
   .alth-anatomy { flex-direction: column; }
+  .alth-body { width: min(280px, 80vw); margin: 0 auto; }
 }

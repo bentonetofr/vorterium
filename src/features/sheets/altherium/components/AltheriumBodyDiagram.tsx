@@ -41,6 +41,7 @@ const WRIST    = { x: 57, y: 144 }
 const HIP      = { x: 86, y: 126 }
 const KNEE     = { x: 83, y: 175 }
 const ANKLE    = { x: 82, y: 227 }
+const HEAD     = { x: 100, y: 40 }
 
 // ────────────────────────────────────────────────────────
 // Articulações — cadeia cinemática (pai → filho) + física de mola
@@ -53,6 +54,11 @@ type JointId =
   | 'hipL'      | 'hipR'
   | 'kneeL'     | 'kneeR'
 
+// Pivô = centro de rotação real da junta. A alça (handle) fica longe do
+// pivô, na ponta do osso — segurar a mão pra girar o cotovelo, não um
+// ponto minúsculo bem em cima da própria dobradiça. Isso dá um braço de
+// alavanca longo e estável: perto do pivô, um pixel de mouse vira graus
+// demais (tremido); longe dele, o controle fica preciso e previsível.
 const JOINT_PIVOT: Record<JointId, { x: number; y: number }> = {
   neck: NECK_PIVOT,
   shoulderL: SHOULDER,               shoulderR: { x: mirror(SHOULDER.x), y: SHOULDER.y },
@@ -83,12 +89,17 @@ function clampToRange(id: JointId, angle: number): number {
   return Math.max(min, Math.min(max, angle))
 }
 
-// Mola amortecida: ao soltar, a junta oscila em volta de onde parou e
-// assenta — não é uma simulação de corpo inteiro, só "física de brinquedo".
-const SPRING_STIFFNESS = 0.06
-const SPRING_DAMPING   = 0.82
-const VELOCITY_CLAMP   = 14
-const SETTLE_EPSILON   = 0.03
+// Mola amortecida — mas agora ela é o ÚNICO motor do ângulo, arrastando
+// ou não. Durante o arraste ela persegue o alvo (ponteiro do mouse) com
+// resposta ágil e pouco balanço, pra parecer responsivo, não largado. Ao
+// soltar, troca pra uma mola mais solta que assenta com uma leve
+// oscilação — a sensação de largar um boneco de verdade.
+const DRAG_STIFFNESS    = 0.55
+const DRAG_DAMPING      = 0.6
+const RELEASE_STIFFNESS = 0.08
+const RELEASE_DAMPING   = 0.8
+const VELOCITY_CLAMP    = 40
+const SETTLE_EPSILON    = 0.02
 
 function useJointRig() {
   const angles     = useRef<Record<JointId, number>>(Object.fromEntries(JOINT_IDS.map((j) => [j, 0])) as Record<JointId, number>)
@@ -103,15 +114,18 @@ function useJointRig() {
   function tick() {
     let stillActive = false
     settling.current.forEach((id) => {
+      const isDragging = dragging.current === id
+      const stiffness = isDragging ? DRAG_STIFFNESS : RELEASE_STIFFNESS
+      const damping   = isDragging ? DRAG_DAMPING   : RELEASE_DAMPING
       const angle = angles.current[id]
       const target = targets.current[id]
       let vel = velocities.current[id]
-      const accel = (target - angle) * SPRING_STIFFNESS
-      vel = (vel + accel) * SPRING_DAMPING
+      const accel = (target - angle) * stiffness
+      vel = Math.max(-VELOCITY_CLAMP, Math.min(VELOCITY_CLAMP, (vel + accel) * damping))
       const next = clampToRange(id, angle + vel)
       angles.current[id] = next
       velocities.current[id] = vel
-      if (Math.abs(vel) < SETTLE_EPSILON && Math.abs(target - next) < SETTLE_EPSILON) {
+      if (!isDragging && Math.abs(vel) < SETTLE_EPSILON && Math.abs(target - next) < SETTLE_EPSILON) {
         angles.current[id] = target
         velocities.current[id] = 0
         settling.current.delete(id)
@@ -129,10 +143,8 @@ function useJointRig() {
   }
 
   function beginDrag(id: JointId, svg: SVGSVGElement, startClientX: number, startClientY: number) {
-    settling.current.delete(id)
-    velocities.current[id] = 0
     dragging.current = id
-    bump()
+    startSettle(id)
 
     const pivot = JOINT_PIVOT[id]
     const pointAngle = (clientX: number, clientY: number) => {
@@ -145,21 +157,11 @@ function useJointRig() {
 
     const startPointerAngle = pointAngle(startClientX, startClientY)
     const startJointAngle = angles.current[id]
-    let lastAngle = startJointAngle
-    let lastTime = performance.now()
+    targets.current[id] = startJointAngle
 
     function onMove(e: globalThis.PointerEvent) {
       const delta = pointAngle(e.clientX, e.clientY) - startPointerAngle
-      const nextAngle = clampToRange(id, startJointAngle + delta)
-      angles.current[id] = nextAngle
-
-      const now = performance.now()
-      const dt = Math.max(1, now - lastTime)
-      const rawVel = ((nextAngle - lastAngle) / dt) * 16
-      velocities.current[id] = Math.max(-VELOCITY_CLAMP, Math.min(VELOCITY_CLAMP, rawVel))
-      lastAngle = nextAngle
-      lastTime = now
-      bump()
+      targets.current[id] = clampToRange(id, startJointAngle + delta)
     }
 
     function onUp() {
@@ -167,8 +169,6 @@ function useJointRig() {
       window.removeEventListener('pointerup', onUp)
       cleanupDrag.current = null
       dragging.current = null
-      targets.current[id] = angles.current[id]
-      startSettle(id)
       bump()
     }
 
@@ -228,14 +228,13 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
     }
   }
 
-  function JointHandle({ id }: { id: JointId }) {
-    const { x, y } = JOINT_PIVOT[id]
+  function JointHandle({ id, x, y, r = 8 }: { id: JointId; x: number; y: number; r?: number }) {
     const db = values[JOINT_ZONE[id]]
     const isDragging = rig.dragging.current === id
     return (
       <circle
         className={`alth-body__joint${isDragging ? ' alth-body__joint--dragging' : ''}`}
-        cx={x} cy={y} r={id.startsWith('shoulder') || id.startsWith('hip') ? 5.5 : id === 'neck' ? 5 : 6.5}
+        cx={x} cy={y} r={r}
         style={{ '--zone-color': jointColor(db) } as ZoneStyle}
         onPointerDown={handleJointPointerDown(id)}
         role="slider"
@@ -252,9 +251,11 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
       className={`alth-body${rig.dragging.current ? ' alth-body--dragging' : ''}`}
       viewBox="0 0 200 268"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Manequim articulado — arraste as articulações pra posar, clique nos membros pra editar a proteção"
+      aria-label="Manequim articulado — arraste as mãos, pés ou a cabeça pra posar, clique nos membros pra editar a proteção"
     >
-      {/* Pernas: cadeia quadril → joelho, cada lado com sua própria rotação aninhada */}
+      {/* Pernas: cadeia quadril → joelho. A alça do quadril fica no joelho
+          (gira a perna toda) e a do joelho fica no pé (dobra só a canela) —
+          cada uma na ponta do osso que ela controla, não no próprio dobradiço. */}
       {(['L', 'R'] as const).map((side) => {
         const hipId = `hip${side}` as JointId
         const kneeId = `knee${side}` as JointId
@@ -274,13 +275,16 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
               <g {...limbClickProps('db_pernas', 'alth-body__mass', limbColor)}>
                 <ellipse cx={footX} cy={ANKLE.y + 10} rx={11} ry={7} />
               </g>
-              <JointHandle id={kneeId} />
+              <JointHandle id={kneeId} x={ankleX} y={ANKLE.y + 10} />
             </g>
+            <JointHandle id={hipId} x={kneeX} y={KNEE.y} r={7} />
           </g>
         )
       })}
 
-      {/* Braços: cadeia ombro → cotovelo */}
+      {/* Braços: cadeia ombro → cotovelo. Alça do ombro na mão (gira o
+          braço todo), alça do cotovelo... também precisa ficar livre da
+          mão — fica no meio do antebraço. */}
       {(['L', 'R'] as const).map((side) => {
         const shoulderId = `shoulder${side}` as JointId
         const elbowId = `elbow${side}` as JointId
@@ -299,8 +303,9 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
               <g {...limbClickProps('db_bracos', 'alth-body__mass', limbColor)}>
                 <ellipse cx={wristX} cy={WRIST.y + 3} rx={7} ry={6} />
               </g>
-              <JointHandle id={elbowId} />
+              <JointHandle id={elbowId} x={wristX} y={WRIST.y + 3} />
             </g>
+            <JointHandle id={shoulderId} x={elbowX} y={ELBOW.y} r={7} />
           </g>
         )
       })}
@@ -311,20 +316,15 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
         <path d="M 86 110 L 114 110 L 120 122 Q 100 140 80 122 Z" />
       </g>
 
-      {/* Cabeça: gira em torno da base do pescoço */}
+      {/* Cabeça: gira em torno da base do pescoço; a alça fica na própria
+          cabeça, bem mais longe do pivô do que o pescocinho fino. */}
       <g transform={rotate('neck')}>
         <g {...limbClickProps('db_cabeca', 'alth-body__mass', limbColor)}>
           <rect x={94} y={56} width={12} height={10} rx={3} />
-          <circle cx={100} cy={40} r={17} />
+          <circle cx={HEAD.x} cy={HEAD.y} r={17} />
         </g>
+        <JointHandle id="neck" x={HEAD.x} y={HEAD.y} r={6} />
       </g>
-      <JointHandle id="neck" />
-
-      {/* Alças de ombro/quadril — pontos fixos, não se movem ao girar em torno de si mesmas */}
-      <JointHandle id="shoulderL" />
-      <JointHandle id="shoulderR" />
-      <JointHandle id="hipL" />
-      <JointHandle id="hipR" />
     </svg>
   )
 }
