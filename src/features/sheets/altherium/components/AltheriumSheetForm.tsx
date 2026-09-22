@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ATTRIBUTES,
   ATTRIBUTE_HARD_MAX,
@@ -25,6 +25,7 @@ import {
   usesRunico,
   vitalityMax,
 } from '../utils/altheriumCalculations'
+import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import type { AltheriumSheet, AltheriumDomainPoints } from '../../../../shared/types'
 import type { AltheriumSheetUpdate } from '../services/altheriumSheetService'
 import './AltheriumSheet.css'
@@ -130,11 +131,23 @@ function clampOrNull(value: string, min: number, max: number): number | null {
   return clamp(value, min, max)
 }
 
+function normalize(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
+
 export function AltheriumSheetForm({
   sheet, domains, ownerName, onSave, onDomainChange, saving, saveError, saveSuccess,
 }: AltheriumSheetFormProps) {
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
+  const [domainFilter, setDomainFilter] = useState('')
+
+  const dbInputRefs = {
+    db_cabeca: useRef<HTMLInputElement>(null),
+    db_bracos: useRef<HTMLInputElement>(null),
+    db_tronco: useRef<HTMLInputElement>(null),
+    db_pernas: useRef<HTMLInputElement>(null),
+  }
 
   useEffect(() => { setForm(sheetToForm(sheet)) }, [sheet])
 
@@ -143,14 +156,33 @@ export function AltheriumSheetForm({
     setError(null)
   }
 
+  function handleZoneClick(zone: BodyZone) {
+    const input = dbInputRefs[zone].current
+    input?.focus()
+    input?.select()
+  }
+
   // Estado projetado: os máximos acompanham o que está sendo editado agora
   const projected  = formToSheet(sheet, form)
   const raiz       = form.raiz === '' ? null : form.raiz
+  const vitMax     = vitalityMax(projected)
+  const eqMax      = equilibrioMax(projected)
+  const forcaMax   = fvMax(projected)
+  const runicoMax  = prMax(projected)
+  const cartasMax  = cardsMax(projected)
   const pointsUsed = attributePointsUsed(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
-  const domainMap   = new Map(domains.map((d) => [d.domain, d.points]))
-  const domainsUsed = domains.reduce((sum, d) => sum + d.points, 0)
+  const vitalityPct = vitMax ? Math.max(0, Math.min(100, (form.vitality_current / vitMax) * 100)) : 0
+  const isCritical   = vitMax != null && form.vitality_current <= 0
+
+  const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
+  const domainsUsed  = domains.reduce((sum, d) => sum + d.points, 0)
+  const filteredDomains = useMemo(() => {
+    const q = normalize(domainFilter.trim())
+    if (!q) return DOMAINS
+    return DOMAINS.filter((d) => normalize(d.label).includes(q))
+  }, [domainFilter])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -198,39 +230,41 @@ export function AltheriumSheetForm({
         <p className="alth-sheet__owner">Ficha de <strong>{ownerName}</strong></p>
       )}
 
-      {/* ── Cabeçalho: nome, raiz, gênesis ── */}
-      <header className="alth-header">
-        <input
-          type="text"
-          className="input alth-header__name"
-          placeholder="Nome do personagem"
-          maxLength={80}
-          value={form.character_name}
-          onChange={(e) => set('character_name', e.target.value)}
-          disabled={saving}
-          aria-label="Nome do personagem"
-        />
+      {/* ── Cabeçalho ── */}
+      <header className="alth-hero">
+        <div className="alth-hero__identity">
+          <input
+            type="text"
+            className="alth-hero__name"
+            placeholder="Nome do personagem"
+            maxLength={80}
+            value={form.character_name}
+            onChange={(e) => set('character_name', e.target.value)}
+            disabled={saving}
+            aria-label="Nome do personagem"
+          />
+          <div className="alth-hero__tags">
+            <select
+              className="input alth-hero__select" value={form.raiz}
+              onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
+              disabled={saving} aria-label="Raiz"
+            >
+              <option value="">Raiz —</option>
+              {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+            </select>
+            <select
+              className="input alth-hero__select" value={form.genesis}
+              onChange={(e) => set('genesis', e.target.value)}
+              disabled={saving} aria-label="Gênesis"
+            >
+              <option value="">Gênesis —</option>
+              {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+            </select>
+          </div>
+        </div>
 
-        <div className="alth-header__row">
-          <select
-            className="input alth-header__select" value={form.raiz}
-            onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
-            disabled={saving} aria-label="Raiz"
-          >
-            <option value="">Raiz —</option>
-            {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-          </select>
-
-          <select
-            className="input alth-header__select" value={form.genesis}
-            onChange={(e) => set('genesis', e.target.value)}
-            disabled={saving} aria-label="Gênesis"
-          >
-            <option value="">Gênesis —</option>
-            {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-          </select>
-
-          <label className="alth-header__level">
+        <div className="alth-hero__stats">
+          <label className="alth-hero__level">
             <span className="label">Nível</span>
             <input
               type="number" className="input" min={1} max={5}
@@ -239,131 +273,166 @@ export function AltheriumSheetForm({
               disabled={saving}
             />
           </label>
+          <label className="alth-hero__coins">
+            <span className="label">Hacksilvers (₴)</span>
+            <input
+              type="number" className="input" min={0}
+              value={form.hacksilvers}
+              onChange={(e) => set('hacksilvers', clamp(e.target.value, 0, 9_999_999))}
+              disabled={saving}
+            />
+          </label>
         </div>
-
-        {form.genesis && (
-          <p className="alth-hint alth-hint--center">
-            {GENESIS.find((g) => g.id === form.genesis)?.effect}
-          </p>
-        )}
       </header>
 
-      {/* ── Recursos: PV / PE / FV-PR-Cartas ── */}
-      <section className="alth-section">
-        <div className="alth-vitals">
-          <VitalRow
-            sigla="PV" label="Vitalidade"
-            current={form.vitality_current} max={vitalityMax(projected)} roll={form.vitality_roll}
-            onCurrent={(v) => set('vitality_current', v)} onRoll={(v) => set('vitality_roll', v)}
-            disabled={saving}
-          />
-          <VitalRow
-            sigla="PE" label="Equilíbrio"
-            current={form.equilibrio_current} max={equilibrioMax(projected)} roll={form.equilibrio_roll}
-            onCurrent={(v) => set('equilibrio_current', v)} onRoll={(v) => set('equilibrio_roll', v)}
-            disabled={saving}
-          />
-          {usesFv(raiz) && (
-            <VitalRow
-              sigla="FV" label="Força de Vontade"
-              current={form.fv_current} max={fvMax(projected)} roll={form.fv_roll}
-              onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
-              disabled={saving}
-            />
-          )}
-          {usesPr(raiz) && (
-            <VitalRow
-              sigla="PR" label="Pontos Rúnicos"
-              current={form.pr_current} max={prMax(projected)} roll={form.pr_roll}
-              onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
-              disabled={saving}
-            />
-          )}
-          {usesCards(raiz) && (
-            <div className="alth-vital">
-              <span className="alth-vital__sigla" title="Cartas">Cartas</span>
-              <input
-                type="number" className="input alth-vital__current" min={0}
-                value={form.cards_current}
-                onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
-                disabled={saving} aria-label="Cartas atuais"
-              />
-              <span className="alth-vital__max">/ {cardsMax(projected) ?? '—'}</span>
-              <span className="alth-vital__note">13 × nível</span>
-            </div>
-          )}
-        </div>
-        <p className="alth-hint">
-          O campo <strong>d10</strong> é o resultado rolado uma vez na criação — o máximo sai dele
-          somado à base da raiz e ao atributo, então acompanha mudanças de atributo sozinho.
+      {form.genesis && (
+        <p className="alth-hint alth-hint--center">
+          {GENESIS.find((g) => g.id === form.genesis)?.effect}
         </p>
-      </section>
+      )}
 
-      {/* ── Atributos ── */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Atributos</h4>
-          <span className={`alth-counter${pointsUsed > ATTRIBUTE_POINTS_AT_CREATION ? ' alth-counter--over' : ''}`}>
-            {pointsUsed} / {ATTRIBUTE_POINTS_AT_CREATION} pontos de criação
-          </span>
+      {isCritical && (
+        <div className="alth-alert" role="alert">
+          <span className="alth-alert__icon" aria-hidden="true">⚠</span>
+          Estado crítico — Vitalidade em 0/{vitMax}. Ao chegar a 0 PV o personagem entra em
+          Estado Caído (teste de Determinação a cada turno para resistir).
         </div>
+      )}
 
-        <div className="alth-table alth-table--attrs">
-          {ATTRIBUTES.map((attr) => {
-            const key    = `attr_${attr.id}` as keyof FormData
-            const value  = form[key] as number
-            const hidden = attr.id === 'runico' && raiz !== null && !usesRunico(raiz)
-            if (hidden) return null
-            return (
-              <div key={attr.id} className="alth-table__col" title={attr.description}>
-                <span className="alth-table__head">{attr.label}</span>
+      {/* ── Faixa de vitais ── */}
+      <div className="alth-vitals-strip">
+        <VitalWidget
+          sigla="PV" label="Vitalidade" tone="vitality"
+          current={form.vitality_current} max={vitMax} roll={form.vitality_roll} pct={vitalityPct}
+          onCurrent={(v) => set('vitality_current', v)} onRoll={(v) => set('vitality_roll', v)}
+          disabled={saving}
+        />
+        <VitalWidget
+          sigla="PE" label="Equilíbrio" tone="mystic"
+          current={form.equilibrio_current} max={eqMax}
+          roll={form.equilibrio_roll}
+          pct={eqMax ? Math.max(0, Math.min(100, (form.equilibrio_current / eqMax) * 100)) : 0}
+          onCurrent={(v) => set('equilibrio_current', v)} onRoll={(v) => set('equilibrio_roll', v)}
+          disabled={saving}
+        />
+        {usesFv(raiz) && (
+          <VitalWidget
+            sigla="FV" label="Força de Vontade" tone="resource"
+            current={form.fv_current} max={forcaMax} roll={form.fv_roll}
+            pct={forcaMax ? Math.max(0, Math.min(100, (form.fv_current / forcaMax) * 100)) : 0}
+            onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
+            disabled={saving}
+          />
+        )}
+        {usesPr(raiz) && (
+          <VitalWidget
+            sigla="PR" label="Pontos Rúnicos" tone="mystic"
+            current={form.pr_current} max={runicoMax} roll={form.pr_roll}
+            pct={runicoMax ? Math.max(0, Math.min(100, (form.pr_current / runicoMax) * 100)) : 0}
+            onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
+            disabled={saving}
+          />
+        )}
+        {usesCards(raiz) && (
+          <div className="alth-vital-widget alth-vital-widget--resource">
+            <div className="alth-vital-widget__top">
+              <span className="alth-vital-widget__sigla">Cartas</span>
+              <span className="alth-vital-widget__values">
                 <input
-                  type="number" className="input alth-table__value"
-                  min={0} max={ATTRIBUTE_HARD_MAX}
-                  value={value}
-                  onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
-                  disabled={saving}
-                  aria-label={attr.label}
+                  type="number" className="input" min={0}
+                  value={form.cards_current}
+                  onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
+                  disabled={saving} aria-label="Cartas atuais"
                 />
-                {value === 0 && <span className="alth-table__warn">1d desvantagem</span>}
-              </div>
-            )
-          })}
-        </div>
-        <p className="alth-hint">
-          Na criação: 16 pontos, valores pares, teto {ATTRIBUTE_MAX_AT_CREATION} por atributo.
-          Subir de nível dá +2 pontos e passa desse teto.
-          {raiz === 'runaskin' && ' Runaskin ganha +2 em Rúnico fora dos 16.'}
-        </p>
-      </section>
-
-      {/* ── Defesa por parte do corpo ── */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Defesa (DB por parte)</h4>
-          <span className="alth-counter">Movimento: {movementMeters(form.attr_impulso)}m</span>
-        </div>
-
-        <div className="alth-table alth-table--db">
-          {BODY_PARTS.map((part) => (
-            <div key={part.id} className="alth-table__col">
-              <span className="alth-table__head">
-                {part.label} <span className="alth-table__range">({part.range})</span>
+                <span className="alth-vital-widget__max">/ {cartasMax ?? '—'}</span>
               </span>
-              <input
-                type="number" className="input alth-table__value" min={0}
-                value={form[part.id] as number}
-                onChange={(e) => set(part.id, clamp(e.target.value, 0, 999) as never)}
-                disabled={saving}
-                aria-label={`DB em ${part.label}`}
-              />
             </div>
-          ))}
-        </div>
-        <p className="alth-hint">
-          O inimigo rola 1d10 pra saber onde acerta; o DB daquela parte é subtraído do dano.
-        </p>
-      </section>
+            <span className="alth-vital-widget__note">13 × nível</span>
+          </div>
+        )}
+      </div>
+      <p className="alth-hint">
+        O campo <strong>d10</strong> é o resultado rolado uma vez na criação — o máximo sai dele
+        somado à base da raiz e ao atributo, então acompanha mudanças de atributo sozinho.
+      </p>
+
+      {/* ── Grade principal: atributos | anatomia ── */}
+      <div className="alth-main-grid">
+        <section className="alth-card">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Atributos</h4>
+            <span className={`alth-counter${pointsUsed > ATTRIBUTE_POINTS_AT_CREATION ? ' alth-counter--over' : ''}`}>
+              {pointsUsed} / {ATTRIBUTE_POINTS_AT_CREATION} na criação
+            </span>
+          </div>
+
+          <div className="alth-table alth-table--attrs">
+            {ATTRIBUTES.map((attr) => {
+              const key    = `attr_${attr.id}` as keyof FormData
+              const value  = form[key] as number
+              const hidden = attr.id === 'runico' && raiz !== null && !usesRunico(raiz)
+              if (hidden) return null
+              return (
+                <div key={attr.id} className="alth-table__col" title={attr.description}>
+                  <span className="alth-table__head">{attr.label}</span>
+                  <input
+                    type="number" className="input alth-table__value"
+                    min={0} max={ATTRIBUTE_HARD_MAX}
+                    value={value}
+                    onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
+                    disabled={saving}
+                    aria-label={attr.label}
+                  />
+                  {value === 0 && <span className="alth-table__warn">1d desvantagem</span>}
+                </div>
+              )
+            })}
+          </div>
+          <p className="alth-hint">
+            Criação: 16 pontos, valores pares, teto {ATTRIBUTE_MAX_AT_CREATION}. Nível dá +2 e passa do teto.
+            {raiz === 'runaskin' && ' Runaskin ganha +2 em Rúnico fora dos 16.'}
+          </p>
+        </section>
+
+        <section className="alth-card">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Anatomia &amp; Armadura</h4>
+            <span className="alth-counter">Movimento {movementMeters(form.attr_impulso)}m</span>
+          </div>
+
+          <div className="alth-anatomy">
+            <AltheriumBodyDiagram
+              values={{
+                db_cabeca: form.db_cabeca,
+                db_bracos: form.db_bracos,
+                db_tronco: form.db_tronco,
+                db_pernas: form.db_pernas,
+              }}
+              onZoneClick={handleZoneClick}
+            />
+
+            <div className="alth-anatomy__fields">
+              {BODY_PARTS.map((part) => (
+                <label key={part.id} className="alth-anatomy__field">
+                  <span className="label">{part.label} <span className="alth-table__range">({part.range})</span></span>
+                  <input
+                    ref={dbInputRefs[part.id]}
+                    type="number" className="input" min={0}
+                    value={form[part.id] as number}
+                    onChange={(e) => set(part.id, clamp(e.target.value, 0, 999) as never)}
+                    disabled={saving}
+                    aria-label={`DB em ${part.label}`}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+          <p className="alth-hint">
+            DB = dano bloqueado. O inimigo rola 1d10 pra saber onde acerta; a zona armada
+            (destacada no diagrama) reduz o dano recebido ali. Clique numa zona pra editar.
+          </p>
+        </section>
+      </div>
 
       {/* ── Domínios ── */}
       <section className="alth-section">
@@ -374,6 +443,14 @@ export function AltheriumSheetForm({
           </span>
         </div>
 
+        <input
+          type="text"
+          className="input alth-domains__search"
+          placeholder="Buscar domínio (ex: Brutalidade, Luta, Resiliência)..."
+          value={domainFilter}
+          onChange={(e) => setDomainFilter(e.target.value)}
+        />
+
         <div className="alth-domains" role="table" aria-label="Domínios">
           <div className="alth-domains__head" role="row">
             <span role="columnheader">Domínio</span>
@@ -382,7 +459,11 @@ export function AltheriumSheetForm({
             <span role="columnheader">Pontos</span>
           </div>
 
-          {DOMAINS.map((d) => {
+          {filteredDomains.length === 0 && (
+            <p className="alth-domains__empty">Nenhum domínio encontrado.</p>
+          )}
+
+          {filteredDomains.map((d) => {
             const points    = domainMap.get(d.id) ?? 0
             const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
             return (
@@ -414,24 +495,12 @@ export function AltheriumSheetForm({
         </p>
       </section>
 
-      {/* ── Hacksilvers e anotações ── */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Posses e anotações</h4>
-          <label className="alth-hacksilvers">
-            <span className="label">Hacksilvers (₴)</span>
-            <input
-              type="number" className="input" min={0}
-              value={form.hacksilvers}
-              onChange={(e) => set('hacksilvers', clamp(e.target.value, 0, 9_999_999))}
-              disabled={saving}
-            />
-          </label>
-        </div>
-
+      {/* ── Crônicas (anotações) ── */}
+      <section className="alth-section alth-journal">
+        <h4 className="alth-section__title">Crônicas</h4>
         <textarea
           className="input alth-notes" rows={6} maxLength={NOTES_MAX}
-          placeholder="Inventário, triunfos, armas, histórico..."
+          placeholder="Inventário, triunfos, armas, histórico, NPCs, pistas..."
           value={form.notes}
           onChange={(e) => set('notes', e.target.value)}
           disabled={saving}
@@ -453,31 +522,40 @@ export function AltheriumSheetForm({
 
 // ────────────────────────────────────────────────────────
 
-interface VitalRowProps {
+interface VitalWidgetProps {
   sigla:     string
   label:     string
+  tone:      'vitality' | 'mystic' | 'resource'
   current:   number
   max:       number | null
   roll:      number | null
+  pct:       number
   onCurrent: (value: number) => void
   onRoll:    (value: number | null) => void
   disabled:  boolean
 }
 
-function VitalRow({ sigla, label, current, max, roll, onCurrent, onRoll, disabled }: VitalRowProps) {
+function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, onRoll, disabled }: VitalWidgetProps) {
   return (
-    <div className="alth-vital">
-      <span className="alth-vital__sigla" title={label}>{sigla}</span>
-      <input
-        type="number" className="input alth-vital__current" min={0}
-        value={current}
-        onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
-        disabled={disabled}
-        aria-label={`${label} atual`}
-      />
-      <span className="alth-vital__max">/ {max ?? '—'}</span>
-      <label className="alth-vital__roll">
-        <span className="alth-vital__note">d10</span>
+    <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
+      <div className="alth-vital-widget__top">
+        <span className="alth-vital-widget__sigla" title={label}>{sigla}</span>
+        <span className="alth-vital-widget__values">
+          <input
+            type="number" className="input" min={0}
+            value={current}
+            onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
+            disabled={disabled}
+            aria-label={`${label} atual`}
+          />
+          <span className="alth-vital-widget__max">/ {max ?? '—'}</span>
+        </span>
+      </div>
+      <div className="alth-vital-widget__bar">
+        <div className="alth-vital-widget__bar-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <label className="alth-vital-widget__roll">
+        <span className="alth-vital-widget__note">d10 na criação</span>
         <input
           type="number" className="input" min={1} max={10}
           value={roll ?? ''}
