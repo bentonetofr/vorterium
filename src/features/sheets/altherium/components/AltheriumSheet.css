@@ -311,13 +311,29 @@
   width: 160px;
   height: auto;
   flex-shrink: 0;
+  touch-action: none;
+  overflow: visible;
 }
+.alth-body--dragging, .alth-body--dragging * { cursor: grabbing !important; }
+
 .alth-body__zone {
   cursor: pointer;
   transition: filter var(--transition-base);
 }
 .alth-body__zone:hover { filter: brightness(1.25); }
 .alth-body__zone:focus-visible { outline: 2px solid var(--gilded-bright); outline-offset: 4px; }
+
+/* ── Alças de articulação (arrastáveis) ── */
+.alth-body__joint {
+  fill: var(--zone-color);
+  stroke: var(--bg-void);
+  stroke-width: 1.5;
+  cursor: grab;
+  transition: fill var(--transition-base), filter var(--transition-fast);
+}
+.alth-body__joint:hover { filter: brightness(1.3); }
+.alth-body__joint:focus-visible { outline: 2px solid var(--gilded-bright); outline-offset: 2px; }
+.alth-body__joint--dragging { cursor: grabbing; filter: brightness(1.4); }
 
 /* Membros: linhas grossas de ponta arredondada simulando cápsulas.
    Massa (cabeça/tronco/mãos/pés/juntas): formas preenchidas com um
