@@ -308,32 +308,34 @@
 }
 
 .alth-body {
-  width: 140px;
+  width: 160px;
   height: auto;
   flex-shrink: 0;
 }
-.alth-body__zone { cursor: pointer; }
-.alth-body__zone:focus-visible { outline: 2px solid var(--gilded-bright); outline-offset: 2px; }
+.alth-body__zone {
+  cursor: pointer;
+  transition: filter var(--transition-base);
+}
+.alth-body__zone:hover { filter: brightness(1.25); }
+.alth-body__zone:focus-visible { outline: 2px solid var(--gilded-bright); outline-offset: 4px; }
 
-.alth-body__zone line {
-  stroke: var(--bg-overlay);
-  stroke-width: 22;
+/* Membros: linhas grossas de ponta arredondada simulando cápsulas.
+   Massa (cabeça/tronco/mãos/pés/juntas): formas preenchidas com um
+   contorno escuro fino pra marcar a costura entre as peças do manequim.
+   A cor em si (--zone-color) é calculada em JS a partir do DB daquela
+   zona — mistura contínua entre "sem armadura" e dourado máximo, não um
+   liga/desliga. */
+.alth-body__limb line {
+  stroke: var(--zone-color);
   stroke-linecap: round;
   transition: stroke var(--transition-base);
 }
-.alth-body__zone:hover line { stroke: var(--border-bright); }
-.alth-body__zone--armored line { stroke: var(--gilded); }
-.alth-body__zone--armored:hover line { stroke: var(--gilded-bright); }
-
-circle.alth-body__zone {
-  fill: var(--bg-overlay);
+.alth-body__mass {
+  fill: var(--zone-color);
   stroke: var(--bg-void);
   stroke-width: 2;
   transition: fill var(--transition-base);
 }
-circle.alth-body__zone:hover { fill: var(--border-bright); }
-circle.alth-body__zone--armored { fill: var(--gilded); }
-circle.alth-body__zone--armored:hover { fill: var(--gilded-bright); }
 
 .alth-anatomy__fields {
   display: flex;
