@@ -28,7 +28,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // navegação (CampaignAreaLayout.handleNavigate), lido só na primeira
   // renderização.
   const location = useLocation()
-  const initialSubTab = (location.state as NavigationState | null)?.initialSessionSubTab ?? 'chat'
+  const initialSubTab = (location.state as NavigationState | null)?.initialSessionSubTab ?? 'ficha'
   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(initialSubTab)
 
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
