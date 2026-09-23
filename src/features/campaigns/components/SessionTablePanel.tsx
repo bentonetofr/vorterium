@@ -34,8 +34,8 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.
   const subTabs: SubTab[] = [
-    { id: 'chat',       label: 'Chat' },
     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
+    { id: 'chat',       label: 'Chat' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
   ]
