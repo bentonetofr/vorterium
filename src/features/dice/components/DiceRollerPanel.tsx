@@ -322,15 +322,18 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
                 const isOwn = roll.user_id === currentUserId
                 const diceTerms = roll.roll_breakdown?.filter((b) => b.type !== 'modifier') ?? []
                 const hasBreakdown = diceTerms.length > 0
+                // profile vem null quando o autor não é mais membro da campanha
+                // (RLS de profiles exige co-membro atual) — a rolagem continua existindo.
+                const authorName = roll.profile?.display_name ?? 'Usuário removido'
 
                 return (
                   <li key={roll.id} className={`dice-history__row ${isOwn ? 'dice-history__row--own' : ''}`}>
                     <div className="dice-history__row-main">
                       <span className="dice-history__avatar" aria-hidden="true">
-                        {roll.profile.display_name.charAt(0).toUpperCase()}
+                        {authorName.charAt(0).toUpperCase()}
                       </span>
                       <span className="dice-history__player">
-                        {isOwn ? 'Você' : roll.profile.display_name}
+                        {isOwn ? 'Você' : authorName}
                         {roll.is_private && (
                           <span className="dice-history__private-badge" title="Rolagem privada" aria-label="Rolagem privada">🔒</span>
                         )}

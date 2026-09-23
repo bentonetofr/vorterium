@@ -12,7 +12,10 @@ export interface ChatMessage {
   recipient_id: string | null
   content:      string
   created_at:   string
-  profile:      { id: string; display_name: string; avatar_url: string | null }
+  // null quando o autor não é mais membro da campanha — a RLS de profiles
+  // exige co-membro ATUAL pra revelar o perfil, então mensagens antigas de
+  // alguém removido perdem o join (a linha em si continua existindo).
+  profile:      { id: string; display_name: string; avatar_url: string | null } | null
 }
 
 const MAX_MESSAGE_LENGTH = 2000
@@ -24,7 +27,7 @@ interface RawMessageRow {
   recipient_id: string | null
   content: string
   created_at: string
-  profiles: { id: string; display_name: string; avatar_url: string | null }
+  profiles: { id: string; display_name: string; avatar_url: string | null } | null
 }
 
 function mapRow(row: RawMessageRow): ChatMessage {

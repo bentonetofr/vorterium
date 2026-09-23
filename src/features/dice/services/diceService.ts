@@ -273,7 +273,7 @@ interface RawRollRow {
   roll_breakdown: RollBreakdownItem[] | null
   is_private: boolean
   created_at: string
-  profiles: { id: string; display_name: string }
+  profiles: { id: string; display_name: string } | null
 }
 
 // ────────────────────────────────────────────────────────

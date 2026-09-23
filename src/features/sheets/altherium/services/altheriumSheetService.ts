@@ -17,7 +17,7 @@ export type AltheriumSheetUpdate = Partial<Omit<
 >>
 
 interface RawSheetWithProfile extends AltheriumSheet {
-  profiles: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'>
+  profiles: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
 const SHEET_COLUMNS = '*'

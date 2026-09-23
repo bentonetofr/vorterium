@@ -202,6 +202,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
           const raizLabel = s.raiz ? RAIZES.find((r) => r.id === s.raiz)?.label ?? '—' : 'Sem raiz'
           const vit = vitalityMax(s)
           const eq  = equilibrioMax(s)
+          // profile vem null quando o dono não é mais membro da campanha
+          // (RLS de profiles exige co-membro atual) — a ficha continua existindo.
+          const ownerLabel = s.profile?.display_name ?? 'Jogador removido'
           return (
             <button
               key={s.id}
@@ -211,9 +214,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
             >
               <div className="sheet-card__top">
                 <span className="sheet-card__avatar">
-                  {s.profile.display_name.charAt(0).toUpperCase()}
+                  {ownerLabel.charAt(0).toUpperCase()}
                 </span>
-                <span className="sheet-card__player">{s.profile.display_name}</span>
+                <span className="sheet-card__player">{ownerLabel}</span>
               </div>
 
               <span className="sheet-card__char">
@@ -245,7 +248,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
         <div className="sheets-list__form">
           <SheetEditor
             sheet={selected}
-            ownerName={selected.profile.display_name}
+            ownerName={selected.profile?.display_name ?? 'Jogador removido'}
             onSheetUpdated={handleSheetUpdated}
           />
         </div>

@@ -104,6 +104,9 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
         {sheets.map((sheet) => {
           const isSelected = selected?.id === sheet.id
           const filled     = isSheetFilled(sheet)
+          // profile vem null quando o dono não é mais membro da campanha
+          // (RLS de profiles exige co-membro atual) — a ficha continua existindo.
+          const ownerLabel = sheet.profile?.display_name ?? 'Jogador removido'
 
           return (
             <button
@@ -118,9 +121,9 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
             >
               <div className="sheet-card__top">
                 <span className="sheet-card__avatar">
-                  {sheet.profile.display_name.charAt(0).toUpperCase()}
+                  {ownerLabel.charAt(0).toUpperCase()}
                 </span>
-                <span className="sheet-card__player">{sheet.profile.display_name}</span>
+                <span className="sheet-card__player">{ownerLabel}</span>
               </div>
 
               <span className="sheet-card__char">
@@ -154,7 +157,7 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
           <SimpleSheetForm
             key={selected.id}
             sheet={selected}
-            ownerName={selected.profile.display_name}
+            ownerName={selected.profile?.display_name ?? 'Jogador removido'}
             onSave={handleSave}
             saving={saving}
             saveError={saveError}

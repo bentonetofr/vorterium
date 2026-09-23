@@ -493,16 +493,20 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
           {!loading && messages.map((m) => {
             const isOwn = m.user_id === currentUserId
             const canDelete = isOwn || userRole === 'master'
+            // profile vem null quando o autor não é mais membro da campanha
+            // (RLS de profiles exige co-membro atual) — a mensagem continua existindo.
+            const authorName = m.profile?.display_name ?? 'Usuário removido'
+            const authorAvatar = m.profile?.avatar_url ?? null
             return (
               <div key={m.id} className={`chat-message${isOwn ? ' chat-message--own' : ''}`}>
                 <span className="chat-message__avatar" aria-hidden="true">
-                  {m.profile.avatar_url
-                    ? <img src={m.profile.avatar_url} alt="" />
-                    : m.profile.display_name.charAt(0).toUpperCase()}
+                  {authorAvatar
+                    ? <img src={authorAvatar} alt="" />
+                    : authorName.charAt(0).toUpperCase()}
                 </span>
                 <div className="chat-message__body">
                   <div className="chat-message__meta">
-                    <span className="chat-message__name">{isOwn ? 'Você' : m.profile.display_name}</span>
+                    <span className="chat-message__name">{isOwn ? 'Você' : authorName}</span>
                     <time className="chat-message__time" dateTime={m.created_at}>
                       {formatMessageTime(m.created_at)}
                     </time>

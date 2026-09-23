@@ -80,9 +80,11 @@ export interface CharacterSheet {
   updated_at: string
 }
 
-/** Ficha enriquecida com dados do dono — para listagem pelo mestre */
+/** Ficha enriquecida com dados do dono — para listagem pelo mestre.
+ *  `profile` é null quando o dono não é mais membro da campanha (a RLS de
+ *  profiles exige co-membro atual — a ficha em si continua existindo). */
 export interface SheetWithProfile extends CharacterSheet {
-  profile: ProfilePublic
+  profile: ProfilePublic | null
 }
 
 export type DieType  = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'
@@ -145,9 +147,10 @@ export type AsyncState<T> =
   | { status: 'success'; data: T }
   | { status: 'error'; error: string }
 
-/** Rolagem enriquecida com dados públicos do autor — para exibição no histórico */
+/** Rolagem enriquecida com dados públicos do autor — para exibição no histórico.
+ *  `profile` é null quando o autor não é mais membro da campanha. */
 export interface DiceRollWithProfile extends DiceRoll {
-  profile: Pick<ProfilePublic, 'id' | 'display_name'>
+  profile: Pick<ProfilePublic, 'id' | 'display_name'> | null
 }
 
 /** Uma sessão (encontro) da campanha — criada e editada apenas pelo mestre. */
@@ -216,9 +219,10 @@ export interface AltheriumDomainPoints {
   points:   number
 }
 
-/** Ficha Altherium enriquecida com o perfil do dono — usada na visão do mestre. */
+/** Ficha Altherium enriquecida com o perfil do dono — usada na visão do mestre.
+ *  `profile` é null quando o dono não é mais membro da campanha. */
 export interface AltheriumSheetWithProfile extends AltheriumSheet {
-  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'>
+  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
 /** Participante do combate atual — membro (user_id preenchido) ou NPC/monstro (user_id nulo). */

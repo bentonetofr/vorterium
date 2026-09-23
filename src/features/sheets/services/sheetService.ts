@@ -60,7 +60,7 @@ export type SheetUpdateData = {
 }
 
 interface RawSheetWithProfile extends CharacterSheet {
-  profiles: ProfilePublic
+  profiles: ProfilePublic | null
 }
 
 // ────────────────────────────────────────────────────────
