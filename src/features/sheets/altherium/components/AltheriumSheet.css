@@ -384,12 +384,6 @@
   font-size: var(--text-lg);
   font-weight: 700;
 }
-.alth-table__warn {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--warning);
-}
-
 /* ── Anatomia & Armadura ── */
 .alth-anatomy {
   display: flex;

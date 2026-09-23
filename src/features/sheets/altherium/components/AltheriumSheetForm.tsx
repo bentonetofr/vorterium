@@ -2,8 +2,6 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ATTRIBUTES,
   ATTRIBUTE_HARD_MAX,
-  ATTRIBUTE_MAX_AT_CREATION,
-  ATTRIBUTE_POINTS_AT_CREATION,
   BODY_PARTS,
   DOMAINS,
   DOMAIN_MAX_POINTS,
@@ -12,7 +10,6 @@ import {
   type AltheriumRaiz,
 } from '../constants/altherium'
 import {
-  attributePointsUsed,
   cardsMax,
   domainSlotsTotal,
   fvMax,
@@ -190,7 +187,6 @@ export function AltheriumSheetForm({
   const forcaMax   = fvMax(projected)
   const runicoMax  = prMax(projected)
   const cartasMax  = cardsMax(projected)
-  const pointsUsed = attributePointsUsed(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
   const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
@@ -393,9 +389,6 @@ export function AltheriumSheetForm({
             <section className="alth-card">
               <div className="alth-card__header">
                 <h4 className="alth-card__title">Atributos</h4>
-                <span className={`alth-counter${pointsUsed > ATTRIBUTE_POINTS_AT_CREATION ? ' alth-counter--over' : ''}`}>
-                  {pointsUsed} / {ATTRIBUTE_POINTS_AT_CREATION} na criação
-                </span>
               </div>
 
               <div className="alth-table alth-table--attrs">
@@ -415,15 +408,10 @@ export function AltheriumSheetForm({
                         disabled={saving}
                         aria-label={attr.label}
                       />
-                      {value === 0 && <span className="alth-table__warn">1d desvantagem</span>}
                     </div>
                   )
                 })}
               </div>
-              <p className="alth-hint">
-                Criação: 16 pontos, valores pares, teto {ATTRIBUTE_MAX_AT_CREATION}. Nível dá +2 e passa do teto.
-                {raiz === 'runaskin' && ' Runaskin ganha +2 em Rúnico fora dos 16.'}
-              </p>
             </section>
 
             <section className="alth-section alth-journal">
