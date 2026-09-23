@@ -75,18 +75,38 @@ const JOINT_IDS = Object.keys(JOINT_PIVOT) as JointId[]
 
 // Amplitude de movimento humana (graus, delta a partir da pose de descanso
 // já desenhada = 0). Cotovelo e joelho são dobradiças: só flexionam pra um
-// lado (valor negativo = flexiona, nesta convenção de eixo) e quase não
-// hiperestendem. Ombro e quadril têm alcance maior, mas nada de giro livre.
+// lado e quase não hiperestendem. Ombro e quadril têm alcance maior, mas
+// nada de giro livre.
+//
+// O sinal do ângulo não espelha sozinho: girar +N° em torno do pivô da
+// direita e girar +N° em torno do pivô espelhado da esquerda produz o
+// MESMO sentido absoluto na tela, não sentidos opostos — por isso o lado
+// direito flexiona "pra fora" (longe do tronco) com delta negativo, mas
+// esse mesmo delta negativo na esquerda flexiona "pra dentro" (cruzando
+// por cima do tronco). O lado direito é a referência; a esquerda usa o
+// intervalo espelhado (min/max trocados e invertidos) pra flexionar pro
+// mesmo lado relativo ao corpo — pra fora, longe do tronco e da outra perna.
 const JOINT_RANGE: Record<JointId, readonly [number, number]> = {
   neck: [-35, 35],
-  shoulderL: [-190, 60], shoulderR: [-190, 60],
-  elbowL: [-140, 10],    elbowR: [-140, 10],
-  hipL: [-110, 40],      hipR: [-110, 40],
-  kneeL: [-140, 5],      kneeR: [-140, 5],
+  shoulderR: [-190, 60], shoulderL: [-60, 190],
+  elbowR: [-140, 10],    elbowL: [-10, 140],
+  hipR: [-110, 40],      hipL: [-40, 110],
+  kneeR: [-140, 5],      kneeL: [-5, 140],
 }
 function clampToRange(id: JointId, angle: number): number {
   const [min, max] = JOINT_RANGE[id]
   return Math.max(min, Math.min(max, angle))
+}
+
+// atan2 salta de +180° pra -180° do outro lado do pivô — um arraste que
+// passa por trás do pivô (comum ao levantar bem alto) cruza esse corte e
+// fazia o ângulo "dar um 360" antes de bater no limite. Normaliza cada
+// passo do arraste pra sempre pegar o caminho mais curto (no máximo 180°).
+function normalizeAngleDelta(deg: number): number {
+  let d = deg % 360
+  if (d > 180) d -= 360
+  if (d < -180) d += 360
+  return d
 }
 
 // Mola amortecida — mas agora ela é o ÚNICO motor do ângulo, arrastando
@@ -155,13 +175,17 @@ function useJointRig() {
       return Math.atan2(p.y - pivot.y, p.x - pivot.x) * (180 / Math.PI)
     }
 
-    const startPointerAngle = pointAngle(startClientX, startClientY)
-    const startJointAngle = angles.current[id]
-    targets.current[id] = startJointAngle
+    // Acompanha o ângulo do ponteiro passo a passo (não a diferença total
+    // desde o início do arraste) — cada passo entre dois eventos de
+    // pointermove é sempre pequeno, então normalizar por passo nunca perde
+    // a intenção de um arraste grande, só corrige o salto do corte de +-180°.
+    let lastPointerAngle = pointAngle(startClientX, startClientY)
 
     function onMove(e: globalThis.PointerEvent) {
-      const delta = pointAngle(e.clientX, e.clientY) - startPointerAngle
-      targets.current[id] = clampToRange(id, startJointAngle + delta)
+      const currentPointerAngle = pointAngle(e.clientX, e.clientY)
+      const step = normalizeAngleDelta(currentPointerAngle - lastPointerAngle)
+      lastPointerAngle = currentPointerAngle
+      targets.current[id] = clampToRange(id, targets.current[id] + step)
     }
 
     function onUp() {
