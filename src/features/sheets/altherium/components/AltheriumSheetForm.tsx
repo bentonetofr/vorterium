@@ -263,6 +263,23 @@ export function AltheriumSheetForm({
           </div>
         </div>
 
+        <div className="alth-hero__vitals">
+          <VitalWidget
+            sigla="PV" label="Vitalidade" tone="vitality" compact
+            current={form.vitality_current} max={vitMax} roll={form.vitality_roll} pct={vitalityPct}
+            onCurrent={(v) => set('vitality_current', v)} onRoll={(v) => set('vitality_roll', v)}
+            disabled={saving}
+          />
+          <VitalWidget
+            sigla="PE" label="Equilíbrio" tone="mystic" compact
+            current={form.equilibrio_current} max={eqMax}
+            roll={form.equilibrio_roll}
+            pct={eqMax ? Math.max(0, Math.min(100, (form.equilibrio_current / eqMax) * 100)) : 0}
+            onCurrent={(v) => set('equilibrio_current', v)} onRoll={(v) => set('equilibrio_roll', v)}
+            disabled={saving}
+          />
+        </div>
+
         <div className="alth-hero__stats">
           <label className="alth-hero__level">
             <span className="label">Nível</span>
@@ -299,22 +316,8 @@ export function AltheriumSheetForm({
         </div>
       )}
 
-      {/* ── Faixa de vitais ── */}
+      {/* ── Faixa de vitais adicionais (dependem da raiz) ── */}
       <div className="alth-vitals-strip">
-        <VitalWidget
-          sigla="PV" label="Vitalidade" tone="vitality"
-          current={form.vitality_current} max={vitMax} roll={form.vitality_roll} pct={vitalityPct}
-          onCurrent={(v) => set('vitality_current', v)} onRoll={(v) => set('vitality_roll', v)}
-          disabled={saving}
-        />
-        <VitalWidget
-          sigla="PE" label="Equilíbrio" tone="mystic"
-          current={form.equilibrio_current} max={eqMax}
-          roll={form.equilibrio_roll}
-          pct={eqMax ? Math.max(0, Math.min(100, (form.equilibrio_current / eqMax) * 100)) : 0}
-          onCurrent={(v) => set('equilibrio_current', v)} onRoll={(v) => set('equilibrio_roll', v)}
-          disabled={saving}
-        />
         {usesFv(raiz) && (
           <VitalWidget
             sigla="FV" label="Força de Vontade" tone="resource"
@@ -533,11 +536,13 @@ interface VitalWidgetProps {
   onCurrent: (value: number) => void
   onRoll:    (value: number | null) => void
   disabled:  boolean
+  /** Versão sem moldura própria — usada no cabeçalho, onde PV/PE já vivem dentro do box do herói. */
+  compact?:  boolean
 }
 
-function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, onRoll, disabled }: VitalWidgetProps) {
+function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, onRoll, disabled, compact }: VitalWidgetProps) {
   return (
-    <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
+    <div className={`alth-vital-widget alth-vital-widget--${tone}${compact ? ' alth-vital-widget--compact' : ''}`}>
       <div className="alth-vital-widget__top">
         <span className="alth-vital-widget__sigla" title={label}>{sigla}</span>
         <span className="alth-vital-widget__values">

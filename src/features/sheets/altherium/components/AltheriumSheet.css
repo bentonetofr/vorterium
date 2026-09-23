@@ -68,19 +68,33 @@
   padding: var(--space-2) var(--space-3);
 }
 
+/* PV e PE — moram dentro do próprio box do herói, entre a identidade e
+   os stats, como duas barras compactas (sem moldura própria: ver
+   .alth-vital-widget--compact). O resto dos vitais (FV/PR/Cartas,
+   dependem da raiz) continua na faixa abaixo. */
+.alth-hero__vitals {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 200px;
+  max-width: 280px;
+}
+
 .alth-hero__stats {
   display: flex;
-  gap: var(--space-4);
+  flex-direction: column;
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 .alth-hero__level, .alth-hero__coins {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  width: 140px;
 }
-.alth-hero__level { width: 72px; }
 .alth-hero__level .input { text-align: center; font-family: var(--font-display); font-weight: 700; }
-.alth-hero__coins { width: 140px; }
 .alth-hero__coins .input { text-align: right; font-family: var(--font-display); color: var(--accent-bright); }
 
 /* ── Alerta de estado crítico ── */
@@ -118,6 +132,16 @@
 .alth-vital-widget--vitality { border-top-color: var(--danger); }
 .alth-vital-widget--mystic   { border-top-color: var(--alth-mystic); }
 .alth-vital-widget--resource { border-top-color: var(--gilded-bright); }
+
+/* Sem moldura própria — já está dentro do box do herói */
+.alth-vital-widget--compact {
+  padding: 0;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  border-top: none;
+  border-radius: 0;
+}
 
 .alth-vital-widget__top {
   display: flex;
@@ -466,7 +490,8 @@
 
 @media (max-width: 640px) {
   .alth-hero { flex-direction: column; }
-  .alth-hero__stats { width: 100%; }
+  .alth-hero__vitals { max-width: none; width: 100%; }
+  .alth-hero__stats { flex-direction: row; width: 100%; }
   .alth-hero__level, .alth-hero__coins { flex: 1; width: auto; }
   .alth-domains__head,
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
