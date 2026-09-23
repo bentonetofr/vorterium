@@ -31,10 +31,10 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: 'visao-geral',   label: 'Visão geral' },
+  { id: 'mesa-sessao',   label: 'Mesa da Sessão' },
   { id: 'membros',       label: 'Membros' },
   { id: 'sessoes',       label: 'Sessões' },
   { id: 'notas',         label: 'Notas' },
-  { id: 'mesa-sessao',   label: 'Mesa da Sessão' },
   { id: 'configuracoes', label: 'Configurações' },
 ]
 
@@ -201,7 +201,7 @@ export function CampaignAreaPage() {
             role="tab"
             aria-selected={activeTab === tab.id}
             aria-controls={`tabpanel-${tab.id}`}
-            className={`campaign-tab ${activeTab === tab.id ? 'campaign-tab--active' : ''}`}
+            className={`campaign-tab ${activeTab === tab.id ? 'campaign-tab--active' : ''} ${tab.id === 'mesa-sessao' ? 'campaign-tab--highlight' : ''}`}
             onClick={() => handleTabClick(tab.id)}
           >
             <span className="campaign-tab__label">{tab.label}</span>

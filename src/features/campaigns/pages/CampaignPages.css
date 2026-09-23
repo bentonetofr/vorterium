@@ -486,6 +486,18 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
 
+.campaign-tab--highlight {
+  color: var(--gilded-bright);
+  box-shadow: 0 0 0 1.5px var(--gilded-bright), var(--shadow-glow);
+}
+.campaign-tab--highlight:hover:not(.campaign-tab--active) {
+  background: var(--bg-overlay);
+  color: var(--gilded-bright);
+}
+.campaign-tab--highlight.campaign-tab--active {
+  box-shadow: 0 0 0 1.5px var(--gilded-bright), var(--shadow-glow), 0 1px 4px rgba(0,0,0,0.25);
+}
+
 .campaign-tab__label {
   line-height: 1;
 }
