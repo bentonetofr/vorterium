@@ -7,7 +7,7 @@ import {
 } from '../services/campaignOverviewService'
 import { isSheetFilled } from '../../sheets/services/sheetService'
 import type { CampaignWithRole } from '../../../shared/types'
-import type { TabId, SessionSubTabId } from '../pages/CampaignAreaPage'
+import type { TabId, SessionSubTabId } from '../campaignSections'
 import './CampaignOverviewPanel.css'
 
 // ────────────────────────────────────────────────────────

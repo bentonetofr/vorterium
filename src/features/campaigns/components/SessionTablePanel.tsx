@@ -1,16 +1,16 @@
+import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { CampaignChatPanel } from '../../chat/components/CampaignChatPanel'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
 import { CampaignActivityPanel } from '../../activity/components/CampaignActivityPanel'
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import type { CampaignWithRole } from '../../../shared/types'
-import type { SessionSubTabId } from '../pages/CampaignAreaPage'
+import type { SessionSubTabId } from '../campaignSections'
 import './SessionTablePanel.css'
 
 interface SessionTablePanelProps {
   campaign:       CampaignWithRole
   currentUserId:  string
-  activeSubTab:   SessionSubTabId
-  onSubTabChange: (tab: SessionSubTabId) => void
 }
 
 interface SubTab {
@@ -18,7 +18,19 @@ interface SubTab {
   label: string
 }
 
-export function SessionTablePanel({ campaign, currentUserId, activeSubTab, onSubTabChange }: SessionTablePanelProps) {
+interface NavigationState {
+  initialSessionSubTab?: SessionSubTabId
+}
+
+export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanelProps) {
+  // Sub-aba não vive na URL (ver spec) — só estado local. O atalho "Ver
+  // fichas" da Visão Geral manda a sub-aba inicial desejada via state da
+  // navegação (CampaignAreaLayout.handleNavigate), lido só na primeira
+  // renderização.
+  const location = useLocation()
+  const initialSubTab = (location.state as NavigationState | null)?.initialSessionSubTab ?? 'chat'
+  const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(initialSubTab)
+
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.
   const subTabs: SubTab[] = [
@@ -38,7 +50,7 @@ export function SessionTablePanel({ campaign, currentUserId, activeSubTab, onSub
             aria-selected={activeSubTab === tab.id}
             aria-controls={`session-subtabpanel-${tab.id}`}
             className={`campaign-tab ${activeSubTab === tab.id ? 'campaign-tab--active' : ''}`}
-            onClick={() => onSubTabChange(tab.id)}
+            onClick={() => setActiveSubTab(tab.id)}
           >
             <span className="campaign-tab__label">{tab.label}</span>
           </button>

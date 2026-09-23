@@ -1,58 +1,35 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
 import { touchCampaignPresence } from '../../activity/services/activityService'
 import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
+import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
+import { useCurrentCampaign } from '../CurrentCampaignContext'
+import type { TabId, SessionSubTabId } from '../campaignSections'
 import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
 import { CampaignSessionsPanel }  from '../../sessions/components/CampaignSessionsPanel'
 import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
 import { CampaignNotesPanel }     from '../../notes/components/CampaignNotesPanel'
 import { SessionTablePanel }      from '../components/SessionTablePanel'
-import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
-import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
-
-// ────────────────────────────────────────────────────────
-// Abas disponíveis — exportado para uso no CampaignOverviewPanel
-// ────────────────────────────────────────────────────────
-
-export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'mesa-sessao' | 'configuracoes'
-
-/** Sub-abas dentro de "Mesa da Sessão" — chat, ficha, atividade e iniciativa viveram na barra principal até virarem parte da mesa. */
-export type SessionSubTabId = 'chat' | 'ficha' | 'atividade' | 'iniciativa'
-
-interface Tab {
-  id: TabId
-  label: string
-}
-
-const TABS: Tab[] = [
-  { id: 'visao-geral',   label: 'Visão geral' },
-  { id: 'mesa-sessao',   label: 'Mesa da Sessão' },
-  { id: 'membros',       label: 'Membros' },
-  { id: 'sessoes',       label: 'Sessões' },
-  { id: 'notas',         label: 'Notas' },
-  { id: 'configuracoes', label: 'Configurações' },
-]
 
 // ────────────────────────────────────────────────────────
 // Componente
 // ────────────────────────────────────────────────────────
 
-export function CampaignAreaPage() {
+export function CampaignAreaLayout() {
   const { campaignId } = useParams<{ campaignId: string }>()
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { campaign, setCampaign, setChatUnread, setPrivateUnread } = useCurrentCampaign()
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState<string | null>(null)
 
-  const [campaign, setCampaign]   = useState<CampaignWithRole | null>(null)
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<TabId>('visao-geral')
-  const [activeSessionTab, setActiveSessionTab] = useState<SessionSubTabId>('chat')
-  const [chatUnread, setChatUnread] = useState(0)
-  const [privateUnread, setPrivateUnread] = useState(0)
+  const onMesaSessao = location.pathname.endsWith('/mesa-sessao')
 
   useEffect(() => {
     if (!campaignId || !user) return
@@ -71,7 +48,10 @@ export function CampaignAreaPage() {
     }
     load()
     return () => { cancelled = true }
-  }, [campaignId, user])
+  }, [campaignId, user, setCampaign])
+
+  // Fecha o submenu da barra lateral ao sair da campanha.
+  useEffect(() => () => setCampaign(null), [setCampaign])
 
   // ── Heartbeat de presença — atualiza a cada 60 segundos ──
   useEffect(() => {
@@ -85,9 +65,9 @@ export function CampaignAreaPage() {
 
   // ── Selo de chat não lido — só enquanto a Mesa da Sessão não está ativa
   // (a sub-aba padrão dela já é o Chat). O próprio CampaignChatPanel marca
-  // como lida quando monta — aqui é só o selo visual da aba de fora. ──
+  // como lida quando monta — aqui é só o selo visual do submenu lateral. ──
   useEffect(() => {
-    if (!campaign?.id || activeTab === 'mesa-sessao') { setChatUnread(0); return }
+    if (!campaign?.id || onMesaSessao) { setChatUnread(0); return }
     let cancelled = false
     async function refresh() {
       try {
@@ -98,7 +78,7 @@ export function CampaignAreaPage() {
     refresh()
     const interval = setInterval(refresh, 60_000)
     return () => { cancelled = true; clearInterval(interval) }
-  }, [campaign?.id, activeTab])
+  }, [campaign?.id, onMesaSessao, setChatUnread])
 
   // ── Selo de mensagem privada não lida — selo separado do selo da mesa
   // acima; não zera ao simplesmente abrir a Mesa da Sessão, só quando o
@@ -115,18 +95,16 @@ export function CampaignAreaPage() {
     refresh()
     const interval = setInterval(refresh, 60_000)
     return () => { cancelled = true; clearInterval(interval) }
-  }, [campaign?.id])
-
-  function handleTabClick(tabId: TabId) {
-    setActiveTab(tabId)
-    if (tabId === 'mesa-sessao') setChatUnread(0)
-  }
+  }, [campaign?.id, setPrivateUnread])
 
   // Passado pro CampaignOverviewPanel — os atalhos de lá que hoje pedem
-  // "ficha" precisam também escolher a sub-aba dentro da Mesa da Sessão.
+  // "ficha" precisam também escolher a sub-aba dentro da Mesa da Sessão,
+  // que não vive na URL — vai como state da navegação.
   function handleNavigate(tab: TabId, sessionSubTab?: SessionSubTabId) {
-    handleTabClick(tab)
-    if (sessionSubTab) setActiveSessionTab(sessionSubTab)
+    navigate(
+      `/campanhas/${campaignId}/${tab}`,
+      sessionSubTab ? { state: { initialSessionSubTab: sessionSubTab } } : undefined,
+    )
   }
 
   if (loading) {
@@ -193,130 +171,42 @@ export function CampaignAreaPage() {
         </div>
       </header>
 
-      {/* ── Navegação por abas ── */}
-      <nav className="campaign-tabs animate-fade-up" role="tablist" aria-label="Seções da campanha">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            aria-controls={`tabpanel-${tab.id}`}
-            className={`campaign-tab ${activeTab === tab.id ? 'campaign-tab--active' : ''} ${tab.id === 'mesa-sessao' ? 'campaign-tab--highlight' : ''}`}
-            onClick={() => handleTabClick(tab.id)}
-          >
-            <span className="campaign-tab__label">{tab.label}</span>
-            {tab.id === 'mesa-sessao' && chatUnread > 0 && (
-              <span className="campaign-tab__badge">{chatUnread > 99 ? '99+' : chatUnread}</span>
-            )}
-            {tab.id === 'mesa-sessao' && privateUnread > 0 && (
-              <span className="campaign-tab__badge campaign-tab__badge--private" title="Mensagem privada não lida">
-                {privateUnread > 99 ? '99+' : privateUnread}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-      {/* ── Visão geral ── */}
-      <div
-        id="tabpanel-visao-geral"
-        role="tabpanel"
-        aria-labelledby="tab-visao-geral"
-        hidden={activeTab !== 'visao-geral'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'visao-geral' && (
-          <CampaignOverviewPanel
-            campaign={campaign}
-            onNavigate={handleNavigate}
+      <div className="animate-fade-up">
+        <Routes>
+          <Route index element={<Navigate to="visao-geral" replace />} />
+          <Route
+            path="visao-geral"
+            element={<CampaignOverviewPanel campaign={campaign} onNavigate={handleNavigate} />}
           />
-        )}
-      </div>
-
-      {/* ── Membros ── */}
-      <div
-        id="tabpanel-membros"
-        role="tabpanel"
-        aria-labelledby="tab-membros"
-        hidden={activeTab !== 'membros'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'membros' && (
-          <CampaignMembersPanel
-            campaignId={campaign.id}
-            userRole={campaign.role}
-            currentUserId={user!.id}
+          <Route
+            path="membros"
+            element={<CampaignMembersPanel campaignId={campaign.id} userRole={campaign.role} currentUserId={user!.id} />}
           />
-        )}
-      </div>
-
-      {/* ── Sessões ── */}
-      <div
-        id="tabpanel-sessoes"
-        role="tabpanel"
-        aria-labelledby="tab-sessoes"
-        hidden={activeTab !== 'sessoes'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'sessoes' && (
-          <CampaignSessionsPanel
-            campaignId={campaign.id}
-            userRole={campaign.role}
+          <Route
+            path="sessoes"
+            element={<CampaignSessionsPanel campaignId={campaign.id} userRole={campaign.role} />}
           />
-        )}
-      </div>
-
-      {/* ── Notas ── */}
-      <div
-        id="tabpanel-notas"
-        role="tabpanel"
-        aria-labelledby="tab-notas"
-        hidden={activeTab !== 'notas'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'notas' && (
-          <CampaignNotesPanel
-            campaignId={campaign.id}
-            currentUserId={user!.id}
-            userRole={campaign.role}
+          <Route
+            path="notas"
+            element={<CampaignNotesPanel campaignId={campaign.id} currentUserId={user!.id} userRole={campaign.role} />}
           />
-        )}
-      </div>
-
-      {/* ── Mesa da Sessão (Chat / Ficha / Atividade / Iniciativa) ── */}
-      <div
-        id="tabpanel-mesa-sessao"
-        role="tabpanel"
-        aria-labelledby="tab-mesa-sessao"
-        hidden={activeTab !== 'mesa-sessao'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'mesa-sessao' && (
-          <SessionTablePanel
-            campaign={campaign}
-            currentUserId={user!.id}
-            activeSubTab={activeSessionTab}
-            onSubTabChange={setActiveSessionTab}
+          <Route
+            path="mesa-sessao"
+            element={<SessionTablePanel campaign={campaign} currentUserId={user!.id} />}
           />
-        )}
-      </div>
-
-      {/* ── Configurações ── */}
-      <div
-        id="tabpanel-configuracoes"
-        role="tabpanel"
-        aria-labelledby="tab-configuracoes"
-        hidden={activeTab !== 'configuracoes'}
-        className="animate-fade-up"
-      >
-        {activeTab === 'configuracoes' && (
-          <CampaignSettingsPanel
-            campaign={campaign}
-            onCampaignUpdate={(updated) =>
-              setCampaign((prev) => prev ? { ...prev, ...updated } : prev)
+          <Route
+            path="configuracoes"
+            element={
+              <CampaignSettingsPanel
+                campaign={campaign}
+                onCampaignUpdate={(updated) =>
+                  setCampaign((prev) => prev ? { ...prev, ...updated } : prev)
+                }
+              />
             }
           />
-        )}
+          <Route path="*" element={<Navigate to="visao-geral" replace />} />
+        </Routes>
       </div>
     </div>
   )

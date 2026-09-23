@@ -11,7 +11,7 @@ import { AuthCallbackPage } from '../../features/auth/pages/AuthCallbackPage'
 
 import { CampaignsPage }   from '../../features/campaigns/pages/CampaignsPage'
 import { NewCampaignPage } from '../../features/campaigns/pages/NewCampaignPage'
-import { CampaignAreaPage } from '../../features/campaigns/pages/CampaignAreaPage'
+import { CampaignAreaLayout } from '../../features/campaigns/pages/CampaignAreaLayout'
 import { ProfilePage }     from '../../features/users/pages/ProfilePage'
 import { MySheetsPage }        from '../../features/sheets/pages/MySheetsPage'
 import { GlobalActivityPage } from '../../features/activity/pages/GlobalActivityPage'
@@ -48,7 +48,7 @@ export function AppRouter() {
         <Route element={<ProtectedRoute><PrivateLayout /></ProtectedRoute>}>
           <Route path="/campanhas"             element={<CampaignsPage />} />
           <Route path="/campanhas/nova"        element={<NewCampaignPage />} />
-          <Route path="/campanhas/:campaignId" element={<CampaignAreaPage />} />
+          <Route path="/campanhas/:campaignId/*" element={<CampaignAreaLayout />} />
           <Route path="/minhas-fichas"         element={<MySheetsPage />} />
           <Route path="/atividade"            element={<GlobalActivityPage />} />
           <Route path="/perfil"               element={<ProfilePage />} />
