@@ -99,21 +99,6 @@
 .alth-hero__level .input { text-align: center; font-family: var(--font-display); font-weight: 700; }
 .alth-hero__coins .input { text-align: right; font-family: var(--font-display); color: var(--accent-bright); }
 
-/* ── Alerta de estado crítico ── */
-.alth-alert {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: rgba(255, 180, 171, 0.08);
-  border: 1px solid rgba(255, 180, 171, 0.4);
-  border-radius: var(--radius-md);
-  color: var(--danger);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-}
-.alth-alert__icon { flex-shrink: 0; font-size: var(--text-lg); }
-
 /* ── Faixa de vitais ── */
 .alth-vitals-strip {
   display: grid;

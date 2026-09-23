@@ -193,8 +193,6 @@ export function AltheriumSheetForm({
   const pointsUsed = attributePointsUsed(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
-  const isCritical = form.vitality_current <= 0
-
   const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
   const domainsUsed  = domains.reduce((sum, d) => sum + d.points, 0)
   const filteredDomains = useMemo(() => {
@@ -323,14 +321,6 @@ export function AltheriumSheetForm({
         <p className="alth-hint alth-hint--center">
           {GENESIS.find((g) => g.id === form.genesis)?.effect}
         </p>
-      )}
-
-      {isCritical && (
-        <div className="alth-alert" role="alert">
-          <span className="alth-alert__icon" aria-hidden="true">⚠</span>
-          Estado crítico — Vitalidade em 0/{form.vitality_max}. Ao chegar a 0 PV o personagem entra em
-          Estado Caído (teste de Determinação a cada turno para resistir).
-        </div>
       )}
 
       {/* ── Abas ── */}
