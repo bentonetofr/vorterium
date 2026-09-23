@@ -41,6 +41,7 @@ const expectedMigrations = [
   '20240137000000_leave_campaign_atomic_activity.sql',
   '20240138000000_campaign_initiative.sql',
   '20240139000000_altherium_character_sheets.sql',
+  '20240140000000_altherium_vitality_equilibrio_max.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

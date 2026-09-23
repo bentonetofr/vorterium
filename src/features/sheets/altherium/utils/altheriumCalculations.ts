@@ -10,22 +10,13 @@ import type { AltheriumSheet } from '../../../../shared/types'
 // ────────────────────────────────────────────────────────
 // Máximos derivados
 //
-// O "+1d10" das fórmulas do livro é rolado uma única vez na criação: a
-// ficha guarda o resultado (`*_roll`) e o máximo é recalculado aqui, então
-// acompanha mudanças de atributo sem precisar rolar de novo.
+// Vitalidade e Equilíbrio NÃO são mais calculados aqui — viraram campos
+// diretos (`vitality_max`/`equilibrio_max`) editáveis na ficha. FV e PR
+// continuam pela fórmula antiga: o "+1d10" do livro é rolado uma única
+// vez na criação, a ficha guarda o resultado (`*_roll`) e o máximo é
+// recalculado aqui, então acompanha mudanças de atributo sem precisar
+// rolar de novo.
 // ────────────────────────────────────────────────────────
-
-/** Vitalidade máxima: base da raiz + d10 rolado + Espírito. */
-export function vitalityMax(sheet: AltheriumSheet): number | null {
-  if (!sheet.raiz || sheet.vitality_roll == null) return null
-  return getRaiz(sheet.raiz).vitalityBase + sheet.vitality_roll + sheet.attr_espirito
-}
-
-/** Equilíbrio máximo: base da raiz + d10 rolado + Destino. */
-export function equilibrioMax(sheet: AltheriumSheet): number | null {
-  if (!sheet.raiz || sheet.equilibrio_roll == null) return null
-  return getRaiz(sheet.raiz).equilibrioBase + sheet.equilibrio_roll + sheet.attr_destino
-}
 
 /** Força de Vontade máxima (só Berserker): 14 + d10 rolado + Impulso. */
 export function fvMax(sheet: AltheriumSheet): number | null {

@@ -9,7 +9,6 @@ import {
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
 import { RAIZES } from '../constants/altherium'
-import { equilibrioMax, vitalityMax } from '../utils/altheriumCalculations'
 import type {
   AltheriumSheet,
   AltheriumDomainPoints,
@@ -200,8 +199,6 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
       <div className="sheets-cards">
         {sheets.map((s) => {
           const raizLabel = s.raiz ? RAIZES.find((r) => r.id === s.raiz)?.label ?? '—' : 'Sem raiz'
-          const vit = vitalityMax(s)
-          const eq  = equilibrioMax(s)
           // profile vem null quando o dono não é mais membro da campanha
           // (RLS de profiles exige co-membro atual) — a ficha continua existindo.
           const ownerLabel = s.profile?.display_name ?? 'Jogador removido'
@@ -229,14 +226,14 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
               <div className="sheet-card__meta">
                 <span className="sheet-card__level">Nv {s.level}</span>
                 <span>
-                  {s.vitality_current}<span className="text-muted">/{vit ?? '—'} PV</span>
+                  {s.vitality_current}<span className="text-muted">/{s.vitality_max} PV</span>
                 </span>
               </div>
 
               <div className="sheet-card__meta">
                 <span className="sheet-card__level">Equilíbrio</span>
                 <span>
-                  {s.equilibrio_current}<span className="text-muted">/{eq ?? '—'}</span>
+                  {s.equilibrio_current}<span className="text-muted">/{s.equilibrio_max}</span>
                 </span>
               </div>
             </button>

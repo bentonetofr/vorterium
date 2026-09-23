@@ -194,8 +194,10 @@ export interface AltheriumSheet {
   attr_runico:        number
   vitality_roll:      number | null
   vitality_current:   number
+  vitality_max:       number
   equilibrio_roll:    number | null
   equilibrio_current: number
+  equilibrio_max:     number
   fv_roll:            number | null
   fv_current:         number
   pr_roll:            number | null

@@ -15,7 +15,6 @@ import {
   attributePointsUsed,
   cardsMax,
   domainSlotsTotal,
-  equilibrioMax,
   fvMax,
   movementMeters,
   prMax,
@@ -23,7 +22,6 @@ import {
   usesFv,
   usesPr,
   usesRunico,
-  vitalityMax,
 } from '../utils/altheriumCalculations'
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import type { AltheriumSheet, AltheriumDomainPoints } from '../../../../shared/types'
@@ -54,10 +52,10 @@ type FormData = {
   attr_impulso:       number
   attr_estrategia:    number
   attr_runico:        number
-  vitality_roll:      number | null
   vitality_current:   number
-  equilibrio_roll:    number | null
+  vitality_max:       number
   equilibrio_current: number
+  equilibrio_max:     number
   fv_roll:            number | null
   fv_current:         number
   pr_roll:            number | null
@@ -83,10 +81,10 @@ function sheetToForm(s: AltheriumSheet): FormData {
     attr_impulso:       s.attr_impulso,
     attr_estrategia:    s.attr_estrategia,
     attr_runico:        s.attr_runico,
-    vitality_roll:      s.vitality_roll,
     vitality_current:   s.vitality_current,
-    equilibrio_roll:    s.equilibrio_roll,
+    vitality_max:       s.vitality_max,
     equilibrio_current: s.equilibrio_current,
+    equilibrio_max:     s.equilibrio_max,
     fv_roll:            s.fv_roll,
     fv_current:         s.fv_current,
     pr_roll:            s.pr_roll,
@@ -113,8 +111,8 @@ function formToSheet(sheet: AltheriumSheet, f: FormData): AltheriumSheet {
     attr_impulso:    f.attr_impulso,
     attr_estrategia: f.attr_estrategia,
     attr_runico:     f.attr_runico,
-    vitality_roll:   f.vitality_roll,
-    equilibrio_roll: f.equilibrio_roll,
+    vitality_max:    f.vitality_max,
+    equilibrio_max:  f.equilibrio_max,
     fv_roll:         f.fv_roll,
     pr_roll:         f.pr_roll,
   }
@@ -162,19 +160,18 @@ export function AltheriumSheetForm({
     input?.select()
   }
 
-  // Estado projetado: os máximos acompanham o que está sendo editado agora
+  // Estado projetado: os máximos de FV/PR/Cartas acompanham o que está
+  // sendo editado agora. PV/PE não são mais derivados — são campos
+  // diretos do form, lidos direto (form.vitality_max/equilibrio_max).
   const projected  = formToSheet(sheet, form)
   const raiz       = form.raiz === '' ? null : form.raiz
-  const vitMax     = vitalityMax(projected)
-  const eqMax      = equilibrioMax(projected)
   const forcaMax   = fvMax(projected)
   const runicoMax  = prMax(projected)
   const cartasMax  = cardsMax(projected)
   const pointsUsed = attributePointsUsed(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
-  const vitalityPct = vitMax ? Math.max(0, Math.min(100, (form.vitality_current / vitMax) * 100)) : 0
-  const isCritical   = vitMax != null && form.vitality_current <= 0
+  const isCritical = form.vitality_current <= 0
 
   const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
   const domainsUsed  = domains.reduce((sum, d) => sum + d.points, 0)
@@ -206,10 +203,10 @@ export function AltheriumSheetForm({
       attr_impulso:       form.attr_impulso,
       attr_estrategia:    form.attr_estrategia,
       attr_runico:        form.attr_runico,
-      vitality_roll:      form.vitality_roll,
       vitality_current:   form.vitality_current,
-      equilibrio_roll:    form.equilibrio_roll,
+      vitality_max:       form.vitality_max,
       equilibrio_current: form.equilibrio_current,
+      equilibrio_max:     form.equilibrio_max,
       fv_roll:            form.fv_roll,
       fv_current:         form.fv_current,
       pr_roll:            form.pr_roll,
@@ -264,18 +261,16 @@ export function AltheriumSheetForm({
         </div>
 
         <div className="alth-hero__vitals">
-          <VitalWidget
-            sigla="PV" label="Vitalidade" tone="vitality" compact
-            current={form.vitality_current} max={vitMax} roll={form.vitality_roll} pct={vitalityPct}
-            onCurrent={(v) => set('vitality_current', v)} onRoll={(v) => set('vitality_roll', v)}
+          <VitalBar
+            sigla="PV" label="Vitalidade" tone="vitality"
+            current={form.vitality_current} max={form.vitality_max}
+            onCurrent={(v) => set('vitality_current', v)} onMax={(v) => set('vitality_max', v)}
             disabled={saving}
           />
-          <VitalWidget
-            sigla="PE" label="Equilíbrio" tone="mystic" compact
-            current={form.equilibrio_current} max={eqMax}
-            roll={form.equilibrio_roll}
-            pct={eqMax ? Math.max(0, Math.min(100, (form.equilibrio_current / eqMax) * 100)) : 0}
-            onCurrent={(v) => set('equilibrio_current', v)} onRoll={(v) => set('equilibrio_roll', v)}
+          <VitalBar
+            sigla="PE" label="Equilíbrio" tone="mystic"
+            current={form.equilibrio_current} max={form.equilibrio_max}
+            onCurrent={(v) => set('equilibrio_current', v)} onMax={(v) => set('equilibrio_max', v)}
             disabled={saving}
           />
         </div>
@@ -311,7 +306,7 @@ export function AltheriumSheetForm({
       {isCritical && (
         <div className="alth-alert" role="alert">
           <span className="alth-alert__icon" aria-hidden="true">⚠</span>
-          Estado crítico — Vitalidade em 0/{vitMax}. Ao chegar a 0 PV o personagem entra em
+          Estado crítico — Vitalidade em 0/{form.vitality_max}. Ao chegar a 0 PV o personagem entra em
           Estado Caído (teste de Determinação a cada turno para resistir).
         </div>
       )}
@@ -536,13 +531,11 @@ interface VitalWidgetProps {
   onCurrent: (value: number) => void
   onRoll:    (value: number | null) => void
   disabled:  boolean
-  /** Versão sem moldura própria — usada no cabeçalho, onde PV/PE já vivem dentro do box do herói. */
-  compact?:  boolean
 }
 
-function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, onRoll, disabled, compact }: VitalWidgetProps) {
+function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, onRoll, disabled }: VitalWidgetProps) {
   return (
-    <div className={`alth-vital-widget alth-vital-widget--${tone}${compact ? ' alth-vital-widget--compact' : ''}`}>
+    <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
       <div className="alth-vital-widget__top">
         <span className="alth-vital-widget__sigla" title={label}>{sigla}</span>
         <span className="alth-vital-widget__values">
@@ -569,6 +562,54 @@ function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, o
           aria-label={`d10 rolado de ${label}`}
         />
       </label>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// PV/PE — vivem no cabeçalho (compactas, sem moldura própria) e não têm
+// mais d10-na-criação: atual e máximo são dois campos diretos, e a
+// barra acompanha os dois em tempo real (recalculada a cada render).
+// ────────────────────────────────────────────────────────
+
+interface VitalBarProps {
+  sigla:     string
+  label:     string
+  tone:      'vitality' | 'mystic'
+  current:   number
+  max:       number
+  onCurrent: (value: number) => void
+  onMax:     (value: number) => void
+  disabled:  boolean
+}
+
+function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled }: VitalBarProps) {
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0
+  return (
+    <div className={`alth-vital-bar alth-vital-bar--${tone}`}>
+      <div className="alth-vital-bar__top">
+        <span className="alth-vital-bar__sigla" title={label}>{sigla}</span>
+        <span className="alth-vital-bar__values">
+          <input
+            type="number" className="input" min={0}
+            value={current}
+            onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
+            disabled={disabled}
+            aria-label={`${label} atual`}
+          />
+          <span className="alth-vital-bar__sep">/</span>
+          <input
+            type="number" className="input alth-vital-bar__max-input" min={1}
+            value={max}
+            onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
+            disabled={disabled}
+            aria-label={`${label} máximo`}
+          />
+        </span>
+      </div>
+      <div className="alth-vital-bar__bar">
+        <div className="alth-vital-bar__bar-fill" style={{ width: `${pct}%` }} />
+      </div>
     </div>
   )
 }
