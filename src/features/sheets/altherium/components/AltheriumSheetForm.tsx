@@ -133,12 +133,34 @@ function normalize(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 }
 
+// ────────────────────────────────────────────────────────
+// Abas — Fase 1: só organização do que já existe. Sem URL própria (a
+// ficha é um painel dentro da Mesa da Sessão, não uma rota) — mesmo
+// padrão de SessionTablePanel.tsx. Reseta sozinha quando o `key={sheet.id}`
+// troca de ficha (o componente inteiro remonta).
+// ────────────────────────────────────────────────────────
+
+type AltheriumFormTabId = 'visao-geral' | 'combate' | 'dominios' | 'triunfos'
+
+interface AltheriumFormTab {
+  id:    AltheriumFormTabId
+  label: string
+}
+
+const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
+  { id: 'visao-geral', label: 'Visão Geral' },
+  { id: 'combate',     label: 'Combate' },
+  { id: 'dominios',    label: 'Domínios' },
+  { id: 'triunfos',    label: 'Triunfos' },
+]
+
 export function AltheriumSheetForm({
   sheet, domains, ownerName, onSave, onDomainChange, saving, saveError, saveSuccess,
 }: AltheriumSheetFormProps) {
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
   const [domainFilter, setDomainFilter] = useState('')
+  const [activeTab, setActiveTab] = useState<AltheriumFormTabId>('visao-geral')
 
   const dbInputRefs = {
     db_cabeca: useRef<HTMLInputElement>(null),
@@ -311,87 +333,127 @@ export function AltheriumSheetForm({
         </div>
       )}
 
-      {/* ── Faixa de vitais adicionais (dependem da raiz) ── */}
-      <div className="alth-vitals-strip">
-        {usesFv(raiz) && (
-          <VitalWidget
-            sigla="FV" label="Força de Vontade" tone="resource"
-            current={form.fv_current} max={forcaMax} roll={form.fv_roll}
-            pct={forcaMax ? Math.max(0, Math.min(100, (form.fv_current / forcaMax) * 100)) : 0}
-            onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
-            disabled={saving}
-          />
-        )}
-        {usesPr(raiz) && (
-          <VitalWidget
-            sigla="PR" label="Pontos Rúnicos" tone="mystic"
-            current={form.pr_current} max={runicoMax} roll={form.pr_roll}
-            pct={runicoMax ? Math.max(0, Math.min(100, (form.pr_current / runicoMax) * 100)) : 0}
-            onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
-            disabled={saving}
-          />
-        )}
-        {usesCards(raiz) && (
-          <div className="alth-vital-widget alth-vital-widget--resource">
-            <div className="alth-vital-widget__top">
-              <span className="alth-vital-widget__sigla">Cartas</span>
-              <span className="alth-vital-widget__values">
-                <input
-                  type="number" className="input" min={0}
-                  value={form.cards_current}
-                  onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
-                  disabled={saving} aria-label="Cartas atuais"
-                />
-                <span className="alth-vital-widget__max">/ {cartasMax ?? '—'}</span>
-              </span>
-            </div>
-            <span className="alth-vital-widget__note">13 × nível</span>
+      {/* ── Abas ── */}
+      <nav className="campaign-tabs alth-sheet-tabs" role="tablist" aria-label="Seções da ficha">
+        {ALTHERIUM_FORM_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`alth-tabpanel-${tab.id}`}
+            className={`campaign-tab ${activeTab === tab.id ? 'campaign-tab--active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="campaign-tab__label">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* ── Visão Geral: recursos que dependem da raiz, atributos, crônicas ── */}
+      <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
+        {activeTab === 'visao-geral' && (
+          <div className="alth-tab-panel animate-fade-up">
+            {(usesFv(raiz) || usesPr(raiz) || usesCards(raiz)) && (
+              <>
+                <div className="alth-vitals-strip">
+                  {usesFv(raiz) && (
+                    <VitalWidget
+                      sigla="FV" label="Força de Vontade" tone="resource"
+                      current={form.fv_current} max={forcaMax} roll={form.fv_roll}
+                      pct={forcaMax ? Math.max(0, Math.min(100, (form.fv_current / forcaMax) * 100)) : 0}
+                      onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
+                      disabled={saving}
+                    />
+                  )}
+                  {usesPr(raiz) && (
+                    <VitalWidget
+                      sigla="PR" label="Pontos Rúnicos" tone="mystic"
+                      current={form.pr_current} max={runicoMax} roll={form.pr_roll}
+                      pct={runicoMax ? Math.max(0, Math.min(100, (form.pr_current / runicoMax) * 100)) : 0}
+                      onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
+                      disabled={saving}
+                    />
+                  )}
+                  {usesCards(raiz) && (
+                    <div className="alth-vital-widget alth-vital-widget--resource">
+                      <div className="alth-vital-widget__top">
+                        <span className="alth-vital-widget__sigla">Cartas</span>
+                        <span className="alth-vital-widget__values">
+                          <input
+                            type="number" className="input" min={0}
+                            value={form.cards_current}
+                            onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
+                            disabled={saving} aria-label="Cartas atuais"
+                          />
+                          <span className="alth-vital-widget__max">/ {cartasMax ?? '—'}</span>
+                        </span>
+                      </div>
+                      <span className="alth-vital-widget__note">13 × nível</span>
+                    </div>
+                  )}
+                </div>
+                <p className="alth-hint">
+                  O campo <strong>d10</strong> é o resultado rolado uma vez na criação — o máximo sai dele
+                  somado à base da raiz e ao atributo, então acompanha mudanças de atributo sozinho.
+                </p>
+              </>
+            )}
+
+            <section className="alth-card">
+              <div className="alth-card__header">
+                <h4 className="alth-card__title">Atributos</h4>
+                <span className={`alth-counter${pointsUsed > ATTRIBUTE_POINTS_AT_CREATION ? ' alth-counter--over' : ''}`}>
+                  {pointsUsed} / {ATTRIBUTE_POINTS_AT_CREATION} na criação
+                </span>
+              </div>
+
+              <div className="alth-table alth-table--attrs">
+                {ATTRIBUTES.map((attr) => {
+                  const key    = `attr_${attr.id}` as keyof FormData
+                  const value  = form[key] as number
+                  const hidden = attr.id === 'runico' && raiz !== null && !usesRunico(raiz)
+                  if (hidden) return null
+                  return (
+                    <div key={attr.id} className="alth-table__col" title={attr.description}>
+                      <span className="alth-table__head">{attr.label}</span>
+                      <input
+                        type="number" className="input alth-table__value"
+                        min={0} max={ATTRIBUTE_HARD_MAX}
+                        value={value}
+                        onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
+                        disabled={saving}
+                        aria-label={attr.label}
+                      />
+                      {value === 0 && <span className="alth-table__warn">1d desvantagem</span>}
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="alth-hint">
+                Criação: 16 pontos, valores pares, teto {ATTRIBUTE_MAX_AT_CREATION}. Nível dá +2 e passa do teto.
+                {raiz === 'runaskin' && ' Runaskin ganha +2 em Rúnico fora dos 16.'}
+              </p>
+            </section>
+
+            <section className="alth-section alth-journal">
+              <h4 className="alth-section__title">Crônicas</h4>
+              <textarea
+                className="input alth-notes" rows={6} maxLength={NOTES_MAX}
+                placeholder="Histórico, NPCs, pistas..."
+                value={form.notes}
+                onChange={(e) => set('notes', e.target.value)}
+                disabled={saving}
+              />
+            </section>
           </div>
         )}
       </div>
-      <p className="alth-hint">
-        O campo <strong>d10</strong> é o resultado rolado uma vez na criação — o máximo sai dele
-        somado à base da raiz e ao atributo, então acompanha mudanças de atributo sozinho.
-      </p>
 
-      {/* ── Grade principal: atributos | anatomia ── */}
-      <div className="alth-main-grid">
-        <section className="alth-card">
-          <div className="alth-card__header">
-            <h4 className="alth-card__title">Atributos</h4>
-            <span className={`alth-counter${pointsUsed > ATTRIBUTE_POINTS_AT_CREATION ? ' alth-counter--over' : ''}`}>
-              {pointsUsed} / {ATTRIBUTE_POINTS_AT_CREATION} na criação
-            </span>
-          </div>
-
-          <div className="alth-table alth-table--attrs">
-            {ATTRIBUTES.map((attr) => {
-              const key    = `attr_${attr.id}` as keyof FormData
-              const value  = form[key] as number
-              const hidden = attr.id === 'runico' && raiz !== null && !usesRunico(raiz)
-              if (hidden) return null
-              return (
-                <div key={attr.id} className="alth-table__col" title={attr.description}>
-                  <span className="alth-table__head">{attr.label}</span>
-                  <input
-                    type="number" className="input alth-table__value"
-                    min={0} max={ATTRIBUTE_HARD_MAX}
-                    value={value}
-                    onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
-                    disabled={saving}
-                    aria-label={attr.label}
-                  />
-                  {value === 0 && <span className="alth-table__warn">1d desvantagem</span>}
-                </div>
-              )
-            })}
-          </div>
-          <p className="alth-hint">
-            Criação: 16 pontos, valores pares, teto {ATTRIBUTE_MAX_AT_CREATION}. Nível dá +2 e passa do teto.
-            {raiz === 'runaskin' && ' Runaskin ganha +2 em Rúnico fora dos 16.'}
-          </p>
-        </section>
-
+      {/* ── Combate: anatomia/armadura (armas chegam numa próxima atualização) ── */}
+      <div id="alth-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>
+        {activeTab === 'combate' && (
+          <div className="alth-tab-panel animate-fade-up">
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Anatomia &amp; Armadura</h4>
@@ -430,9 +492,19 @@ export function AltheriumSheetForm({
             (destacada no diagrama) reduz o dano recebido ali. Clique numa zona pra editar.
           </p>
         </section>
+
+            <AltheriumComingSoon
+              title="Armas e armaduras"
+              message="O catálogo de armas e armaduras com estatísticas chega numa próxima atualização."
+            />
+          </div>
+        )}
       </div>
 
       {/* ── Domínios ── */}
+      <div id="alth-tabpanel-dominios" role="tabpanel" hidden={activeTab !== 'dominios'}>
+        {activeTab === 'dominios' && (
+          <div className="alth-tab-panel animate-fade-up">
       <section className="alth-section">
         <div className="alth-section__header">
           <h4 className="alth-section__title">Domínios</h4>
@@ -492,18 +564,21 @@ export function AltheriumSheetForm({
           Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}). Alterações aqui salvam na hora.
         </p>
       </section>
+          </div>
+        )}
+      </div>
 
-      {/* ── Crônicas (anotações) ── */}
-      <section className="alth-section alth-journal">
-        <h4 className="alth-section__title">Crônicas</h4>
-        <textarea
-          className="input alth-notes" rows={6} maxLength={NOTES_MAX}
-          placeholder="Inventário, triunfos, armas, histórico, NPCs, pistas..."
-          value={form.notes}
-          onChange={(e) => set('notes', e.target.value)}
-          disabled={saving}
-        />
-      </section>
+      {/* ── Triunfos: fase futura ── */}
+      <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
+        {activeTab === 'triunfos' && (
+          <div className="alth-tab-panel animate-fade-up">
+            <AltheriumComingSoon
+              title="Triunfos"
+              message="Trilhas, naipes e habilidades especiais por raiz chegam numa próxima atualização."
+            />
+          </div>
+        )}
+      </div>
 
       {error && <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>}
       {saveError && <div className="sheet-feedback sheet-feedback--error" role="alert">{saveError}</div>}
@@ -610,6 +685,26 @@ function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled
       <div className="alth-vital-bar__bar">
         <div className="alth-vital-bar__bar-fill" style={{ width: `${pct}%` }} />
       </div>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// Placeholder pras abas/seções que ainda não existem (Fase 2 e 3 —
+// catálogo de armas/armaduras e Triunfos, ver spec).
+// ────────────────────────────────────────────────────────
+
+interface AltheriumComingSoonProps {
+  title:   string
+  message: string
+}
+
+function AltheriumComingSoon({ title, message }: AltheriumComingSoonProps) {
+  return (
+    <div className="alth-coming-soon">
+      <span className="alth-coming-soon__icon" aria-hidden="true">✦</span>
+      <h4 className="alth-coming-soon__title">{title}</h4>
+      <p className="alth-coming-soon__message">{message}</p>
     </div>
   )
 }

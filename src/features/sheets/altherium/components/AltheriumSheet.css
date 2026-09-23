@@ -294,12 +294,44 @@
 }
 .alth-hint--center { text-align: center; }
 
-/* ── Cards (grade principal: atributos | anatomia) ── */
-.alth-main-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-4);
-  align-items: start;
+/* ── Abas da ficha (Visão Geral | Combate | Domínios | Triunfos) —
+   reaproveita .campaign-tabs/.campaign-tab (mesmo visual das sub-abas
+   da Mesa da Sessão), sem CSS de tamanho próprio. ── */
+.alth-sheet-tabs {
+  align-self: flex-start;
+}
+
+.alth-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.alth-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-dim);
+  border-radius: var(--radius-lg);
+}
+.alth-coming-soon__icon {
+  font-size: var(--text-2xl);
+  color: var(--gilded-bright);
+}
+.alth-coming-soon__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+.alth-coming-soon__message {
+  max-width: 40ch;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .alth-card {
