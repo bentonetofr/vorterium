@@ -225,18 +225,31 @@
 .alth-vital-widget__values {
   display: flex;
   align-items: baseline;
-  gap: var(--space-1);
+  gap: 2px;
 }
-.alth-vital-widget__values .input {
-  width: 56px;
+.alth-vital-widget__values .alth-vital-widget__value-input {
+  width: 2.4em;
+  border: none;
+  background: transparent;
+  padding: 0;
   text-align: right;
-  padding: var(--space-1) var(--space-2);
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+  -moz-appearance: textfield;
+}
+.alth-vital-widget__values .alth-vital-widget__value-input::-webkit-inner-spin-button,
+.alth-vital-widget__values .alth-vital-widget__value-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.alth-vital-widget__values .alth-vital-widget__value-input:focus {
+  outline: none;
+  color: var(--accent-bright);
 }
 .alth-vital-widget__max {
-  font-family: var(--font-display);
   font-size: var(--text-sm);
   color: var(--text-muted);
 }

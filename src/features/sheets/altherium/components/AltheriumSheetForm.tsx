@@ -474,7 +474,7 @@ export function AltheriumSheetForm({
                         <span className="alth-vital-widget__sigla">Cartas</span>
                         <span className="alth-vital-widget__values">
                           <input
-                            type="number" className="input" min={0}
+                            type="number" className="alth-vital-widget__value-input" min={0}
                             value={form.cards_current}
                             onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
                             disabled={saving} aria-label="Cartas atuais"
@@ -704,7 +704,7 @@ function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, o
         <span className="alth-vital-widget__sigla" title={label}>{sigla}</span>
         <span className="alth-vital-widget__values">
           <input
-            type="number" className="input" min={0}
+            type="number" className="alth-vital-widget__value-input" min={0}
             value={current}
             onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
             disabled={disabled}
