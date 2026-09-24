@@ -510,7 +510,7 @@ export function AltheriumSheetForm({
                             onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
                             disabled={saving} aria-label="Cartas atuais"
                           />
-                          <span className="alth-vital-widget__max">/ {cartasMax ?? '—'}</span>
+                          <span className="alth-vital-widget__max">{` / ${cartasMax ?? '—'}`}</span>
                         </span>
                       </div>
                       <span className="alth-vital-widget__note">13 × nível</span>
@@ -775,7 +775,7 @@ function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, o
             disabled={disabled}
             aria-label={`${label} atual`}
           />
-          <span className="alth-vital-widget__max">/ {max ?? '—'}</span>
+          <span className="alth-vital-widget__max">{` / ${max ?? '—'}`}</span>
         </span>
       </div>
       <div className="alth-vital-widget__bar">
