@@ -19,38 +19,38 @@
   color: var(--text-muted);
 }
 
-/* ── Cabeçalho (nome, raiz, gênesis, nível, hacksilvers) ── */
+/* ── Cabeçalho (nome, raiz, gênesis, nível, hacksilvers) ──
+   Grid de 4 colunas × 2 linhas: retrato (ocupa as 2 linhas) | nome/tags |
+   PV/PE | nível/hacksilvers — assim a linha 1 (nome, PV, nível) e a
+   linha 2 (tags, PE, hacksilvers) ficam sempre alinhadas horizontalmente
+   entre as colunas, em vez de cada bloco flutuar com sua própria altura.
+   Os wrappers antigos (__identity, __identity-main, __vitals, __stats)
+   viram `display: contents` pra seus filhos entrarem direto no grid,
+   sem precisar mudar a estrutura do JSX. */
 .alth-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-6);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(210px, 1fr) minmax(240px, 1.4fr) auto;
+  align-items: start;
+  column-gap: var(--space-6);
+  row-gap: var(--space-3);
   padding: var(--space-5);
   background: var(--bg-surface);
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-lg);
 }
 
-.alth-hero__identity {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex: 1;
-  min-width: 220px;
-}
-
-.alth-hero__identity-main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  flex: 1;
-  min-width: 0;
+.alth-hero__identity,
+.alth-hero__identity-main,
+.alth-hero__vitals,
+.alth-hero__stats {
+  display: contents;
 }
 
 .alth-hero__portrait-wrap {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
   position: relative;
-  flex-shrink: 0;
 }
 
 .alth-hero__portrait {
@@ -129,6 +129,8 @@
 }
 
 .alth-hero__name {
+  grid-column: 2;
+  grid-row: 1;
   width: 100%;
   background: transparent;
   border: none;
@@ -144,6 +146,8 @@
 .alth-hero__name:focus { outline: none; border-bottom-color: var(--gilded); }
 
 .alth-hero__tags {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   gap: var(--space-2);
 }
@@ -160,23 +164,11 @@
    os stats, como duas barras (sem moldura própria, ver .alth-vital-bar).
    O resto dos vitais (FV/PR/Cartas, dependem da raiz) continua na faixa
    abaixo. */
-.alth-hero__vitals {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-5);
-  flex: 1.3;
-  min-width: 240px;
-  max-width: 360px;
-}
+.alth-hero__vitals .alth-vital-bar--vitality { grid-column: 3; grid-row: 1; }
+.alth-hero__vitals .alth-vital-bar--mystic   { grid-column: 3; grid-row: 2; }
 
-.alth-hero__stats {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
+.alth-hero__level  { grid-column: 4; grid-row: 1; }
+.alth-hero__coins  { grid-column: 4; grid-row: 2; }
 .alth-hero__level, .alth-hero__coins {
   display: flex;
   flex-direction: column;
@@ -862,9 +854,16 @@
 .alth-inventory__zone-cancel:hover { border-color: var(--danger); color: var(--danger-bright); }
 
 @media (max-width: 640px) {
-  .alth-hero { flex-direction: column; }
-  .alth-hero__vitals { max-width: none; width: 100%; }
-  .alth-hero__stats { flex-direction: row; width: 100%; }
+  .alth-hero { grid-template-columns: 1fr; }
+  .alth-hero__portrait-wrap,
+  .alth-hero__name,
+  .alth-hero__tags,
+  .alth-hero__vitals .alth-vital-bar--vitality,
+  .alth-hero__vitals .alth-vital-bar--mystic {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .alth-hero__stats { display: flex; grid-column: 1; flex-direction: row; width: 100%; }
   .alth-hero__level, .alth-hero__coins { flex: 1; width: auto; }
   .alth-domains__head,
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
