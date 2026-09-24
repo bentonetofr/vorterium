@@ -297,8 +297,11 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
               aria-pressed={selectedId === s.id}
             >
               <div className="sheet-card__top">
-                <span className="sheet-card__avatar">
-                  {ownerLabel.charAt(0).toUpperCase()}
+                <span className="sheet-card__avatar" aria-hidden={s.portrait_url ? undefined : true}>
+                  {s.portrait_url
+                    ? <img src={s.portrait_url} alt="" loading="lazy" />
+                    : ownerLabel.charAt(0).toUpperCase()
+                  }
                 </span>
                 <span className="sheet-card__player">{ownerLabel}</span>
               </div>
