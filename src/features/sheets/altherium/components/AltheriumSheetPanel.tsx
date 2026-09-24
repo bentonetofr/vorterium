@@ -10,12 +10,15 @@ import {
   removeAltheriumPortrait,
   getAltheriumInventory,
   addAltheriumInventoryItem,
+  addAltheriumCustomInventoryItem,
+  updateAltheriumCustomInventoryItem,
   updateAltheriumInventoryItem,
   removeAltheriumInventoryItem,
   getAltheriumRunes,
   createAltheriumRune,
   updateAltheriumRune,
   deleteAltheriumRune,
+  type AltheriumCustomItemInput,
   type AltheriumRuneInput,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
@@ -147,6 +150,18 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     }
   }
 
+  // Criar/editar item personalizado deixam o erro subir: a janela mostra
+  // a mensagem e continua aberta, sem perder o que foi digitado.
+  async function handleInventoryAddCustom(input: AltheriumCustomItemInput) {
+    await addAltheriumCustomInventoryItem(sheet.id, input)
+    loadInventory()
+  }
+
+  async function handleInventoryUpdateCustom(item: AltheriumInventoryItem, input: AltheriumCustomItemInput) {
+    await updateAltheriumCustomInventoryItem(item, input)
+    loadInventory()
+  }
+
   async function handleInventoryUpdateQuantity(id: string, quantity: number) {
     setSaveError(null)
     try {
@@ -215,6 +230,8 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
       onInventoryUpdateQuantity={handleInventoryUpdateQuantity}
       onInventoryRemove={handleInventoryRemove}
       onInventoryEquip={handleInventoryEquip}
+      onInventoryAddCustom={handleInventoryAddCustom}
+      onInventoryUpdateCustom={handleInventoryUpdateCustom}
       runes={runes}
       onRuneCreate={handleRuneCreate}
       onRuneUpdate={handleRuneUpdate}

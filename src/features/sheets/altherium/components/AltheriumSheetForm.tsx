@@ -25,17 +25,17 @@ import {
 } from '../utils/altheriumCalculations'
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
-import { AltheriumInventoryCard } from './AltheriumInventoryCard'
+import { AltheriumInventoryCard, inventoryArmor } from './AltheriumInventoryCard'
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
 import { AltheriumDragBar } from './AltheriumDragBar'
 import { AltheriumRunaskinTriumphs } from './AltheriumRunaskinTriumphs'
 import type { RunaskinTrail } from '../constants/altheriumTriumphs'
-import { findArmor } from '../constants/altheriumItems'
 import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune } from '../../../../shared/types'
 import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
   announceTriumphUse,
+  type AltheriumCustomItemInput,
   type AltheriumRuneInput,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
@@ -59,6 +59,8 @@ interface AltheriumSheetFormProps {
   onInventoryUpdateQuantity: (id: string, quantity: number) => Promise<void>
   onInventoryRemove:        (id: string) => Promise<void>
   onInventoryEquip:         (id: string, equipped: boolean, zone: BodyZone | null) => Promise<void>
+  onInventoryAddCustom:     (input: AltheriumCustomItemInput) => Promise<void>
+  onInventoryUpdateCustom:  (item: AltheriumInventoryItem, input: AltheriumCustomItemInput) => Promise<void>
   runes:                    AltheriumRune[]
   onRuneCreate:             (input: AltheriumRuneInput, image: File | null) => Promise<void>
   onRuneUpdate:             (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
@@ -249,6 +251,7 @@ export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,
   onPortraitChange, onPortraitRemove, portraitBusy,
   onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
+  onInventoryAddCustom, onInventoryUpdateCustom,
   runes, onRuneCreate, onRuneUpdate, onRuneDelete,
   saveError,
 }: AltheriumSheetFormProps) {
@@ -408,7 +411,7 @@ export function AltheriumSheetForm({
       void onInventoryEquip(item.id, false, null)
       return
     }
-    const armor = findArmor(item.item_id)
+    const armor = inventoryArmor(item)
     if (!armor) return
 
     if (armor.coverage === 'todas') {
@@ -761,6 +764,8 @@ export function AltheriumSheetForm({
               onUpdateQuantity={onInventoryUpdateQuantity}
               onRemove={onInventoryRemove}
               onToggleEquip={handleToggleEquip}
+              onAddCustom={onInventoryAddCustom}
+              onUpdateCustom={onInventoryUpdateCustom}
             />
           </div>
         )}

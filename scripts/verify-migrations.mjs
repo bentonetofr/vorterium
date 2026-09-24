@@ -51,6 +51,7 @@ const expectedMigrations = [
   '20240147000000_altherium_sheets_realtime.sql',
   '20240148000000_altherium_runes_action_range.sql',
   '20240149000000_triumph_used_activity.sql',
+  '20240150000000_altherium_custom_inventory_items.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

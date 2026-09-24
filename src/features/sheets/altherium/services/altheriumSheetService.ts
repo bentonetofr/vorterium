@@ -275,10 +275,60 @@ export async function addAltheriumInventoryItem(
   return data as AltheriumInventoryItem
 }
 
-/** Atualiza quantidade e/ou estado de equipado de um item do inventário. */
+/** Dados de um item personalizado — criado pelo jogador ou pelo mestre. */
+export interface AltheriumCustomItemInput {
+  item_type: AltheriumInventoryItem['item_type']
+  name:      string
+  detail:    string
+  /** Só vale pra armadura/escudo; ignorado nos outros tipos. */
+  db:        number
+}
+
+function customItemColumns(input: AltheriumCustomItemInput) {
+  const isArmor = input.item_type === 'armadura' || input.item_type === 'escudo'
+  return {
+    item_type:     input.item_type,
+    custom_name:   input.name.trim(),
+    custom_detail: input.detail.trim() || null,
+    custom_db:     isArmor ? Math.max(0, Math.min(99, Math.round(input.db))) : null,
+  }
+}
+
+/** Cria um item personalizado (fora do catálogo) no inventário. */
+export async function addAltheriumCustomInventoryItem(
+  sheetId: string,
+  input: AltheriumCustomItemInput,
+): Promise<AltheriumInventoryItem> {
+  const { data, error } = await supabase
+    .from('altherium_character_inventory')
+    .insert({ sheet_id: sheetId, item_id: `custom:${crypto.randomUUID()}`, ...customItemColumns(input) })
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível criar o item.')
+  return data as AltheriumInventoryItem
+}
+
+/**
+ * Edita um item personalizado. Trocar o tipo desequipa a peça — o DB
+ * que ela somou continua nos campos manuais, como ao desequipar.
+ */
+export async function updateAltheriumCustomInventoryItem(
+  item: AltheriumInventoryItem,
+  input: AltheriumCustomItemInput,
+): Promise<AltheriumInventoryItem> {
+  const typeChanged = input.item_type !== item.item_type
+  return updateAltheriumInventoryItem(item.id, {
+    ...customItemColumns(input),
+    ...(typeChanged ? { equipped: false, equipped_zone: null } : {}),
+  })
+}
+
+/** Atualiza quantidade, equipado ou (nos personalizados) os dados do item. */
 export async function updateAltheriumInventoryItem(
   id: string,
-  data: Partial<Pick<AltheriumInventoryItem, 'quantity' | 'equipped' | 'equipped_zone'>>,
+  data: Partial<Pick<AltheriumInventoryItem,
+    'quantity' | 'equipped' | 'equipped_zone' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'>>,
 ): Promise<AltheriumInventoryItem> {
   const { data: updated, error } = await supabase
     .from('altherium_character_inventory')

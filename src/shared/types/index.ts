@@ -247,6 +247,11 @@ export interface AltheriumInventoryItem {
   quantity:      number
   equipped:      boolean
   equipped_zone: 'db_cabeca' | 'db_bracos' | 'db_tronco' | 'db_pernas' | null
+  /** Só nos itens personalizados (item_id "custom:..."); null nos do catálogo. */
+  custom_name:   string | null
+  custom_detail: string | null
+  /** DB da peça personalizada (armadura/escudo) — somado ao equipar. */
+  custom_db:     number | null
   created_at:    string
 }
 

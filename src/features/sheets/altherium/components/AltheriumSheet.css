@@ -1001,6 +1001,76 @@
 .alth-inventory__remove:hover:not(:disabled) { color: var(--danger-bright); border-color: var(--danger); }
 .alth-inventory__add:disabled, .alth-inventory__remove:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* ── Itens personalizados ── */
+.alth-inventory__owned-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.alth-inventory__custom-btn {
+  padding: 4px var(--space-3);
+  background: transparent;
+  border: 1px dashed var(--gilded);
+  border-radius: var(--radius-md);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent-bright);
+  cursor: pointer;
+  transition: all var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.alth-inventory__custom-btn:hover:not(:disabled) {
+  background: var(--accent-glow);
+  border-style: solid;
+  border-color: var(--gilded-bright);
+}
+.alth-inventory__custom-btn:active:not(:disabled) { transform: scale(0.95); }
+.alth-inventory__custom-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.alth-inventory__empty .alth-inventory__custom-btn { margin-top: var(--space-3); white-space: normal; }
+.alth-inventory__tag--custom {
+  display: inline-block;
+  margin-right: var(--space-2);
+  padding: 0 5px;
+  font-size: 9px;
+  vertical-align: 1px;
+  color: var(--accent-bright);
+  border-color: var(--gilded);
+}
+.alth-inventory__edit {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.alth-inventory__edit:hover:not(:disabled) { color: var(--accent-bright); border-color: var(--gilded); }
+.alth-inventory__edit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Janela do item personalizado (mesma base da janela de runa). */
+.alth-custom-item {
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-lg);
+}
+.alth-custom-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.alth-custom-item__field { display: flex; flex-direction: column; }
+.alth-custom-item__field .label { margin-bottom: var(--space-1); }
+.alth-custom-item textarea { resize: vertical; }
+
 .alth-inventory__empty {
   padding: var(--space-4);
   text-align: center;
@@ -1341,6 +1411,8 @@
   .alth-inventory__add,
   .alth-inventory__remove { width: 34px; height: 34px; }
   .alth-inventory__qty-btn { width: 32px; height: 32px; }
+  .alth-inventory__edit { width: 34px; height: 34px; }
+  .alth-inventory__custom-btn { min-height: 34px; }
   .alth-triumph__btn { min-height: 36px; padding: var(--space-2) var(--space-4); }
   .alth-vital-bar__values .alth-vital-bar__value-input,
   .alth-vital-widget__values .alth-vital-widget__value-input { min-height: 30px; }
