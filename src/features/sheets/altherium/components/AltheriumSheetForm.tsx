@@ -582,18 +582,6 @@ export function AltheriumSheetForm({
               onZoneClick={handleZoneClick}
             />
 
-            <AltheriumBodyDiagram
-              variant="dano"
-              visualMax={form.vitality_max}
-              values={{
-                db_cabeca: form.dano_cabeca,
-                db_bracos: form.dano_bracos,
-                db_tronco: form.dano_tronco,
-                db_pernas: form.dano_pernas,
-              }}
-              onZoneClick={handleWoundZoneClick}
-            />
-
             <div className="alth-anatomy__fields">
               {BODY_PARTS.map((part) => {
                 const woundField = (`dano_${part.id.slice(3)}` as const) as keyof typeof woundInputRefs
@@ -628,6 +616,18 @@ export function AltheriumSheetForm({
                 )
               })}
             </div>
+
+            <AltheriumBodyDiagram
+              variant="dano"
+              visualMax={form.vitality_max}
+              values={{
+                db_cabeca: form.dano_cabeca,
+                db_bracos: form.dano_bracos,
+                db_tronco: form.dano_tronco,
+                db_pernas: form.dano_pernas,
+              }}
+              onZoneClick={handleWoundZoneClick}
+            />
           </div>
           <p className="alth-hint">
             DB = dano bloqueado. O inimigo rola 1d10 pra saber onde acerta; a zona armada
