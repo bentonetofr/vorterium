@@ -111,6 +111,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             campaignId={campaign.id}
             currentUserId={currentUserId}
             userRole={campaign.role}
+            campaignSystem={campaign.system}
           />
         )}
       </div>

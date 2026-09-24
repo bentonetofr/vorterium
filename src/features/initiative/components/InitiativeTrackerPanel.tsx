@@ -11,22 +11,26 @@ import {
   rollInitiative,
   subscribeToInitiative,
 } from '../services/initiativeService'
+import { getCampaignAltheriumSheets } from '../../sheets/altherium/services/altheriumSheetService'
 import type { InitiativeParticipant, InitiativeState } from '../../../shared/types'
+import type { CampaignSystem } from '../../../shared/constants/systems'
 import './InitiativeTrackerPanel.css'
 
 interface InitiativeTrackerPanelProps {
-  campaignId:    string
-  currentUserId: string
-  userRole:      'master' | 'player'
+  campaignId:     string
+  currentUserId:  string
+  userRole:       'master' | 'player'
+  campaignSystem: CampaignSystem
 }
 
-export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole }: InitiativeTrackerPanelProps) {
+export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, campaignSystem }: InitiativeTrackerPanelProps) {
   const isMaster = userRole === 'master'
 
   const [participants, setParticipants] = useState<InitiativeParticipant[]>([])
   const [state, setState]               = useState<InitiativeState | null>(null)
   const [loading, setLoading]           = useState(true)
   const [error, setError]               = useState<string | null>(null)
+  const [portraitByUserId, setPortraitByUserId] = useState<Record<string, string>>({})
 
   const [starting, setStarting]   = useState(false)
   const [advancing, setAdvancing] = useState(false)
@@ -64,6 +68,25 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole }: 
     load()
     return () => { cancelled = true }
   }, [campaignId])
+
+  // Retrato do personagem por participante — só existe no sistema Altherium
+  // (as fichas D&D/genérica ainda não têm retrato). Sem relação direta no
+  // banco entre participantes e fichas, então monta o mapa no cliente.
+  useEffect(() => {
+    if (campaignSystem !== 'altherium') return
+    let cancelled = false
+    getCampaignAltheriumSheets(campaignId)
+      .then((sheets) => {
+        if (cancelled) return
+        const map: Record<string, string> = {}
+        for (const s of sheets) {
+          if (s.portrait_url) map[s.user_id] = s.portrait_url
+        }
+        setPortraitByUserId(map)
+      })
+      .catch(() => { /* retrato só não aparece */ })
+    return () => { cancelled = true }
+  }, [campaignId, campaignSystem])
 
   useEffect(() => {
     const unsubscribe = subscribeToInitiative(campaignId, refreshParticipants, setState)
@@ -230,10 +253,16 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole }: 
             const isNpc = p.user_id === null
             const isRolling = rollingIds.has(p.id)
             const isEditing = editingValueId === p.id
+            const portraitUrl = p.user_id ? portraitByUserId[p.user_id] : undefined
 
             return (
               <li key={p.id} className={`initiative-row${isCurrentTurn ? ' initiative-row--current' : ''}`}>
-                <span className="initiative-row__avatar" aria-hidden="true">{p.name.charAt(0).toUpperCase()}</span>
+                <span className="initiative-row__avatar" aria-hidden="true">
+                  {portraitUrl
+                    ? <img src={portraitUrl} alt="" loading="lazy" />
+                    : p.name.charAt(0).toUpperCase()
+                  }
+                </span>
                 <span className="initiative-row__name">
                   {p.name}
                   {isNpc && <span className="initiative-row__npc-tag">NPC</span>}
@@ -298,13 +327,19 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole }: 
             {rolled.map((p) => {
               const position = valueRange === 0 ? 50 : ((p.initiative_value - minValue) / valueRange) * 100
               const isCurrentTurn = state.current_turn_participant_id === p.id
+              const portraitUrl = p.user_id ? portraitByUserId[p.user_id] : undefined
               return (
                 <span
                   key={p.id}
                   className={`initiative-value-bar__marker${isCurrentTurn ? ' initiative-value-bar__marker--current' : ''}`}
                   style={{ left: `${position}%` }}
                   title={`${p.name}: ${p.initiative_value}`}
-                />
+                >
+                  {portraitUrl
+                    ? <img src={portraitUrl} alt="" loading="lazy" />
+                    : p.name.charAt(0).toUpperCase()
+                  }
+                </span>
               )
             })}
           </div>
