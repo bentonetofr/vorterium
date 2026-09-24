@@ -237,6 +237,15 @@ a:hover { color: var(--text-primary); }
   border-color: var(--gilded-bright);
   box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3);
 }
+/* Sem as setinhas (spinner) nativas dos campos numéricos em todo o site —
+   o valor continua editável pelo teclado e pelas setas do teclado. */
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .input--error {
   border-color: rgba(255, 180, 171, 0.6) !important;
   box-shadow: 0 0 0 1px rgba(255, 180, 171, 0.2);
