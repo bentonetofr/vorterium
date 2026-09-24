@@ -1143,20 +1143,7 @@
   color: var(--text-muted);
 }
 
-/* Janela modal do editor de runa — centralizada, com o site embaçado
-   atrás. Acima do cabeçalho fixo do app (z-index 500). */
-.alth-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: rgba(4, 7, 16, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: fadeIn 0.15s ease-out;
-}
+/* Janela modal do editor de runa (o fundo embaçado é o ModalOverlay). */
 .alth-modal__window {
   width: min(480px, 100%);
   max-height: calc(100vh - 2 * var(--space-4));
@@ -1180,20 +1167,6 @@
   font-weight: 700;
   color: var(--accent-bright);
 }
-.alth-modal__close {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: 1px solid var(--border-base);
-  border-radius: 50%;
-  color: var(--text-secondary);
-  font-size: var(--text-lg);
-  line-height: 1;
-  cursor: pointer;
-}
-.alth-modal__close:hover:not(:disabled) { color: var(--danger-bright); border-color: var(--danger); }
 .alth-modal__window .alth-rune__media { aspect-ratio: 2 / 1; }
 
 .alth-rune--editing .alth-rune__body { gap: var(--space-3); }

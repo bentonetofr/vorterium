@@ -1,12 +1,20 @@
+/* Janela modal (o fundo embaçado é o ModalOverlay) — usada no avatar do
+   perfil e no retrato da ficha Altherium. */
 .avatar-crop-editor {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 2 * var(--space-4));
+  max-height: calc(100dvh - 2 * var(--space-4));
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-5);
-  margin-bottom: var(--space-6);
   border: 1px solid var(--gilded);
+  border-top: 3px solid var(--gilded-bright);
   border-radius: var(--radius-lg);
-  background: var(--bg-elevated);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.2s ease-out;
 }
 
 .avatar-crop-editor__header {
@@ -83,8 +91,6 @@
 }
 
 @media (max-width: 520px) {
-  .avatar-crop-editor__header { flex-direction: column; }
-  .avatar-crop-editor__header .btn { align-self: flex-start; }
   .avatar-crop-editor__preview-wrap,
   .avatar-crop-editor__canvas { width: 200px; height: 200px; }
   .avatar-crop-editor__controls label { grid-template-columns: 76px 1fr; }

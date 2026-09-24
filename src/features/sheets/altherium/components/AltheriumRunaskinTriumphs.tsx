@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
+import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import {
   RUNASKIN_TRAILS,
   RUNASKIN_TRIUMPHS,
@@ -249,10 +249,10 @@ function RuneCard({ trailClass, media, name, cost, test, description, chips, chi
 }
 
 // ────────────────────────────────────────────────────────
-// Editor de runa — janela modal no centro da tela, com o fundo embaçado.
-// Vai por portal pro <body>, fora do <form> da ficha, então Enter nos
-// campos não salva a ficha (e é barrado de qualquer forma). Esc ou clique
-// fora fecham (menos enquanto salva); a página atrás não rola.
+// Editor de runa — janela modal (ModalOverlay: portal, fundo embaçado,
+// Esc/clique fora fecham menos enquanto salva). Fica fora do <form> da
+// ficha no DOM, então Enter nos campos não salva a ficha (e é barrado de
+// qualquer forma).
 // ────────────────────────────────────────────────────────
 
 interface RuneEditorProps {
@@ -281,20 +281,7 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
     return () => URL.revokeObjectURL(url)
   }, [image])
 
-  useEffect(() => {
-    nameRef.current?.focus()
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = previousOverflow }
-  }, [])
-
-  useEffect(() => {
-    function onKey(e: globalThis.KeyboardEvent) {
-      if (e.key === 'Escape' && !busy) onCancel()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [busy, onCancel])
+  useEffect(() => { nameRef.current?.focus() }, [])
 
   function handlePick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -339,11 +326,8 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
     }
   }
 
-  return createPortal(
-    <div
-      className="alth-modal"
-      onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onCancel() }}
-    >
+  return (
+    <ModalOverlay onClose={onCancel} closeDisabled={busy}>
       <div
         className="alth-modal__window alth-rune alth-rune--descoberta alth-rune--editing"
         role="dialog" aria-modal="true" aria-labelledby="alth-rune-editor-title"
@@ -353,7 +337,7 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
           <h4 id="alth-rune-editor-title" className="alth-modal__title">
             {initial ? 'Editar runa' : 'Nova runa'}
           </h4>
-          <button type="button" className="alth-modal__close" onClick={onCancel} disabled={busy} aria-label="Fechar">
+          <button type="button" className="modal-close" onClick={onCancel} disabled={busy} aria-label="Fechar">
             ×
           </button>
         </header>
@@ -411,7 +395,6 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
           </div>
         </div>
       </div>
-    </div>,
-    document.body,
+    </ModalOverlay>
   )
 }

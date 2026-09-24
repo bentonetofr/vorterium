@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import './AvatarCropEditor.css'
 
 const PREVIEW_SIZE = 240
@@ -129,81 +130,83 @@ export function AvatarCropEditor({
   }
 
   return (
-    <div className="avatar-crop-editor" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
-      <div className="avatar-crop-editor__header">
-        <div>
-          <h3 id="avatar-crop-title">{title}</h3>
-          <p>{description}</p>
-        </div>
-        <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
-          Fechar
-        </button>
-      </div>
-
-      <div className="avatar-crop-editor__preview-wrap">
-        {loading && <span className="spinner" />}
-        <canvas
-          ref={canvasRef}
-          width={PREVIEW_SIZE}
-          height={PREVIEW_SIZE}
-          className="avatar-crop-editor__canvas"
-          aria-label="Prévia do avatar"
-        />
-        {imageError && <span className="avatar-crop-editor__preview-error">Não foi possível ler esta imagem.</span>}
-      </div>
-
-      <div className="avatar-crop-editor__controls">
-        <label>
-          <span>Zoom</span>
-          <input
-            type="range"
-            min="1"
-            max="3"
-            step="0.01"
-            value={zoom}
-            onChange={(event) => setZoom(Number(event.target.value))}
-            disabled={loading || saving}
-          />
-        </label>
-        <label>
-          <span>Horizontal</span>
-          <input
-            type="range"
-            min="-120"
-            max="120"
-            step="1"
-            value={offsetX}
-            onChange={(event) => setOffsetX(Number(event.target.value))}
-            disabled={loading || saving}
-          />
-        </label>
-        <label>
-          <span>Vertical</span>
-          <input
-            type="range"
-            min="-120"
-            max="120"
-            step="1"
-            value={offsetY}
-            onChange={(event) => setOffsetY(Number(event.target.value))}
-            disabled={loading || saving}
-          />
-        </label>
-      </div>
-
-      <div className="avatar-crop-editor__actions">
-        <button type="button" className="btn btn-ghost" onClick={resetCrop} disabled={loading || saving}>
-          Resetar ajuste
-        </button>
-        <div>
-          <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
-            Cancelar
-          </button>
-          <button type="button" className="btn btn-primary" onClick={() => void handleSave()} disabled={!image || loading || saving}>
-            {saving ? <><span className="spinner spinner--sm" /> Salvando...</> : confirmLabel}
+    <ModalOverlay onClose={onCancel} closeDisabled={saving}>
+      <div className="avatar-crop-editor" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
+        <div className="avatar-crop-editor__header">
+          <div>
+            <h3 id="avatar-crop-title">{title}</h3>
+            <p>{description}</p>
+          </div>
+          <button type="button" className="modal-close" onClick={onCancel} disabled={saving} aria-label="Fechar">
+            ×
           </button>
         </div>
+
+        <div className="avatar-crop-editor__preview-wrap">
+          {loading && <span className="spinner" />}
+          <canvas
+            ref={canvasRef}
+            width={PREVIEW_SIZE}
+            height={PREVIEW_SIZE}
+            className="avatar-crop-editor__canvas"
+            aria-label="Prévia do avatar"
+          />
+          {imageError && <span className="avatar-crop-editor__preview-error">Não foi possível ler esta imagem.</span>}
+        </div>
+
+        <div className="avatar-crop-editor__controls">
+          <label>
+            <span>Zoom</span>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.01"
+              value={zoom}
+              onChange={(event) => setZoom(Number(event.target.value))}
+              disabled={loading || saving}
+            />
+          </label>
+          <label>
+            <span>Horizontal</span>
+            <input
+              type="range"
+              min="-120"
+              max="120"
+              step="1"
+              value={offsetX}
+              onChange={(event) => setOffsetX(Number(event.target.value))}
+              disabled={loading || saving}
+            />
+          </label>
+          <label>
+            <span>Vertical</span>
+            <input
+              type="range"
+              min="-120"
+              max="120"
+              step="1"
+              value={offsetY}
+              onChange={(event) => setOffsetY(Number(event.target.value))}
+              disabled={loading || saving}
+            />
+          </label>
+        </div>
+
+        <div className="avatar-crop-editor__actions">
+          <button type="button" className="btn btn-ghost" onClick={resetCrop} disabled={loading || saving}>
+            Resetar ajuste
+          </button>
+          <div>
+            <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
+              Cancelar
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => void handleSave()} disabled={!image || loading || saving}>
+              {saving ? <><span className="spinner spinner--sm" /> Salvando...</> : confirmLabel}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </ModalOverlay>
   )
 }
