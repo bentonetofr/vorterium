@@ -146,7 +146,7 @@ export function CampaignAreaLayout() {
           {!campaign.cover_url && '◈'}
         </div>
         <div>
-          <Link to="/campanhas" className="page__back">← Campanhas</Link>
+          <Link to="/campanhas" className="page__back"><span className="page__back-arrow" aria-hidden="true">←</span> Campanhas</Link>
           <h2 className="page__title">{campaign.name}</h2>
           <div className="campaign-area__header-meta">
             <span className="badge">{getSystemLabel(campaign.system)}</span>

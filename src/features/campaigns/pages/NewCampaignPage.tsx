@@ -52,7 +52,7 @@ export function NewCampaignPage() {
     <div className="page">
       <header className="page__header animate-fade-up">
         <div>
-          <Link to="/campanhas" className="page__back">← Campanhas</Link>
+          <Link to="/campanhas" className="page__back"><span className="page__back-arrow" aria-hidden="true">←</span> Campanhas</Link>
           <h2 className="page__title">Criar Campanha</h2>
           <p className="page__meta">Informe os dados básicos da campanha.</p>
         </div>
