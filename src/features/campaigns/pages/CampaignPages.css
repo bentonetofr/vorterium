@@ -556,4 +556,10 @@
   .campaign-area__page-header { grid-template-columns: 104px minmax(0, 1fr); gap: var(--space-4); }
   .campaign-area__cover { width: 104px; height: 64px; }
   .campaign-card-row__cover { width: 76px; height: 52px; flex-basis: 76px; }
+  /* O "Entrar" desce pra uma linha própria — sem ele do lado, o nome da
+     campanha cabe inteiro em vez de virar "campa…". */
+  .campaign-card-row { flex-wrap: wrap; padding: var(--space-3) var(--space-4); gap: var(--space-3); }
+  .campaign-card-row__info { flex: 1 1 0; min-width: 0; }
+  .campaign-card-row__enter { flex: 1 1 100%; justify-content: center; min-height: 40px; }
+  .page__back { min-height: 36px; }
 }

@@ -303,9 +303,38 @@
   color: #ffb4ab;
 }
 
+/* Celular: as conversas viram uma faixa de abas rolável no topo (em vez
+   de coluna lateral, que espremia as mensagens), a data da mensagem não
+   quebra palavra por palavra e o campo de escrever ocupa a largura toda —
+   com folga à direita pro botão flutuante de dados não cobrir o Enviar. */
 @media (max-width: 600px) {
-  .chat-message { max-width: 92%; }
-  .chat-panel { height: 70vh; }
-  .chat-sidebar { width: 96px; }
-  .chat-sidebar__name { font-size: 10px; }
+  .chat-panel {
+    flex-direction: column;
+    height: calc(100dvh - 280px);
+    min-height: 360px;
+  }
+  .chat-sidebar {
+    width: auto;
+    flex-direction: row;
+    gap: var(--space-2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-dim);
+  }
+  .chat-sidebar::-webkit-scrollbar { display: none; }
+  .chat-sidebar__item { flex-shrink: 0; min-height: 36px; }
+  .chat-sidebar__name { max-width: 140px; }
+
+  .chat-panel__list { padding: var(--space-3); gap: var(--space-3); }
+  .chat-message { max-width: 90%; gap: var(--space-2); }
+  .chat-message__avatar { width: 28px; height: 28px; }
+  .chat-message__body { padding: var(--space-2) var(--space-3); }
+  .chat-message__meta { flex-wrap: wrap; }
+  .chat-message__time { white-space: nowrap; }
+
+  .chat-panel__composer { padding: var(--space-3) 72px var(--space-3) var(--space-3); }
+  .chat-composer__row { gap: var(--space-2); }
+  .chat-composer__send { padding: var(--space-2) var(--space-4); }
 }

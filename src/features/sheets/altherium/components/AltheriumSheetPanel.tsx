@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getOrCreateMyAltheriumSheet,
   getCampaignAltheriumSheets,
@@ -287,6 +287,14 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
   // acompanham o Realtime, mas o editor só muda com o próprio "Salvar" do
   // mestre — assim um save do jogador não apaga edições não salvas aqui.
   const [editing, setEditing]   = useState<AltheriumSheetWithProfile | null>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  // No celular os cards ficam empilhados e a ficha abre bem abaixo deles —
+  // ao escolher um card, rola até a ficha pra não precisar procurar.
+  useEffect(() => {
+    if (!editing || !window.matchMedia('(max-width: 768px)').matches) return
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [editing?.id])
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -383,7 +391,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
       </div>
 
       {selected ? (
-        <div className="sheets-list__form">
+        <div className="sheets-list__form" ref={formRef}>
           <SheetEditor
             key={selected.id}
             sheet={selected}

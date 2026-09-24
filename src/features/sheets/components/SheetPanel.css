@@ -339,6 +339,10 @@
 .sheets-list__form { padding-top: var(--space-4); border-top: 1px solid var(--border-dim); }
 
 @media (max-width: 640px) {
+  /* Celular: menos folga lateral — a ficha já fica dentro da página e do
+     próprio card, cada um com sua borda. */
+  .sheet-panel__header { padding: var(--space-4); }
+  .sheet-panel__body { padding: var(--space-3); }
   .sheet-section__row--3 { grid-template-columns: 1fr 1fr; }
   .sheet-section__field--fixed { grid-column: 1; }
   .sheet-attrs-grid { grid-template-columns: repeat(2, 1fr); }

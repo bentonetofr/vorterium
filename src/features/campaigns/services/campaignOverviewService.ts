@@ -1,16 +1,10 @@
 import { getCampaignMembers } from '../../members/services/memberService'
-import {
-  getCampaignSheets,
-  getMySheet,
-  isSheetFilled,
-} from '../../sheets/services/sheetService'
 import { getCampaignSessions } from '../../sessions/services/sessionService'
 import { getCampaignPresence, isUserOnline } from '../../activity/services/activityService'
 import { getCampaignNotesSummary } from '../../notes/services/noteService'
 import type {
   CampaignMemberWithProfile,
   CampaignSession,
-  CharacterSheet,
 } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -19,8 +13,6 @@ import type {
 
 export interface OverviewMasterData {
   members:            CampaignMemberWithProfile[]
-  sheetsFilled:       number
-  sheetsTotal:        number
   sessionsTotal:      number
   sessionsPlanned:    number
   sessionsCompleted:  number
@@ -32,7 +24,6 @@ export interface OverviewMasterData {
 
 export interface OverviewPlayerData {
   members:            CampaignMemberWithProfile[]
-  mySheet:            CharacterSheet | null
   sessionsTotal:      number
   sessionsPlanned:    number
   sessionsCompleted:  number
@@ -68,26 +59,22 @@ function findNextPlannedSession(sessions: CampaignSession[]): CampaignSession | 
 
 /**
  * Carrega os dados da visão geral para o mestre.
- * Executa membros + rolagens em paralelo; fichas em seguida.
+ * Membros, sessões, presença e notas em paralelo (as fichas ficam no card da Mesa da Sessão).
  */
 export async function getMasterOverview(
   campaignId: string
 ): Promise<OverviewMasterData> {
-  const [members, allSheets, sessions, presence, notesSummary] = await Promise.all([
+  const [members, sessions, presence, notesSummary] = await Promise.all([
     getCampaignMembers(campaignId),
-    getCampaignSheets(campaignId),
     getCampaignSessions(campaignId),
     getCampaignPresence(campaignId),
     getCampaignNotesSummary(campaignId).catch(() => ({ total: 0, latest: null })),
   ])
 
-  const sheetsFilled = allSheets.filter(isSheetFilled).length
-  const onlineCount  = presence.filter((p) => isUserOnline(p.last_seen_at)).length
+  const onlineCount = presence.filter((p) => isUserOnline(p.last_seen_at)).length
 
   return {
     members,
-    sheetsFilled,
-    sheetsTotal:        allSheets.length,
     sessionsTotal:      sessions.length,
     sessionsPlanned:    sessions.filter((s) => s.status === 'planned').length,
     sessionsCompleted:  sessions.filter((s) => s.status === 'completed').length,
@@ -100,14 +87,13 @@ export async function getMasterOverview(
 
 /**
  * Carrega os dados da visão geral para o jogador.
- * Executa membros + rolagens + ficha própria em paralelo.
+ * Membros, sessões, presença e notas em paralelo (a ficha fica no card da Mesa da Sessão).
  */
 export async function getPlayerOverview(
   campaignId: string
 ): Promise<OverviewPlayerData> {
-  const [members, mySheet, sessions, presence, notesSummary] = await Promise.all([
+  const [members, sessions, presence, notesSummary] = await Promise.all([
     getCampaignMembers(campaignId),
-    getMySheet(campaignId),
     getCampaignSessions(campaignId),
     getCampaignPresence(campaignId),
     getCampaignNotesSummary(campaignId).catch(() => ({ total: 0, latest: null })),
@@ -117,7 +103,6 @@ export async function getPlayerOverview(
 
   return {
     members,
-    mySheet,
     sessionsTotal:      sessions.length,
     sessionsPlanned:    sessions.filter((s) => s.status === 'planned').length,
     sessionsCompleted:  sessions.filter((s) => s.status === 'completed').length,

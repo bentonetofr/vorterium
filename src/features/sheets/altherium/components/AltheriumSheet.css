@@ -1295,6 +1295,21 @@
 }
 .alth-rune__remove-img:hover { color: var(--danger-bright); }
 
+/* Toque (dedo em vez de mouse): botões pequenos da ficha ganham área de
+   toque de ~34-36px — pontos de domínio, +/− do inventário, "Usar" etc.
+   O desktop com mouse continua com o tamanho compacto original. */
+@media (pointer: coarse) {
+  .alth-domains__pt { width: 34px; height: 34px; }
+  .alth-domains__head,
+  .alth-domains__row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 64px 110px; }
+  .alth-inventory__add,
+  .alth-inventory__remove { width: 34px; height: 34px; }
+  .alth-inventory__qty-btn { width: 32px; height: 32px; }
+  .alth-triumph__btn { min-height: 36px; padding: var(--space-2) var(--space-4); }
+  .alth-vital-bar__values .alth-vital-bar__value-input,
+  .alth-vital-widget__values .alth-vital-widget__value-input { min-height: 30px; }
+}
+
 /* Toque (sem hover): "Trocar" do retrato fica sempre visível, como uma
    faixa na base do círculo, já que não dá pra "passar o mouse". */
 @media (hover: none) {
@@ -1343,6 +1358,7 @@
     grid-row: auto;
   }
   .alth-hero__field-label { font-size: var(--text-lg); }
+  .alth-hero__select { padding: 0 var(--space-2); font-size: var(--text-sm); }
 
   /* Abas da ficha em 2×2, sem cortar "Triunfos". */
   .alth-sheet-tabs {
@@ -1359,11 +1375,15 @@
   .alth-domains__head,
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
   .alth-domains__attr { display: none; }
+  @media (pointer: coarse) {
+    .alth-domains__head,
+    .alth-domains__row { grid-template-columns: minmax(0, 1fr) 48px 110px; padding: var(--space-2) var(--space-3); }
+  }
 
   /* Manequins lado a lado em cima, campos de zona embaixo (no HTML os
      campos ficam entre os dois; `order` só muda a ordem visual). */
   .alth-anatomy { justify-content: center; gap: var(--space-3); }
-  .alth-body { width: min(150px, 42vw); }
+  .alth-body { width: calc(50% - var(--space-3) / 2); max-width: 150px; }
   .alth-anatomy__fields { width: 100%; min-width: 0; order: 3; }
 
   .alth-inventory__grid { grid-template-columns: 1fr; }
