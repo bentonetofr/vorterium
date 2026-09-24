@@ -18,7 +18,7 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
           key={section.id}
           to={`/campanhas/${campaignId}/${section.id}`}
           className={({ isActive }) =>
-            `campaign-submenu__item${isActive ? ' campaign-submenu__item--active' : ''}${section.id === 'mesa-sessao' ? ' campaign-submenu__item--highlight' : ''}`
+            `campaign-submenu__item${isActive ? ' campaign-submenu__item--active' : ''}`
           }
           onClick={onNavigate}
         >

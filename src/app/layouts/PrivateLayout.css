@@ -279,11 +279,6 @@
 }
 .campaign-submenu__item:hover { background: var(--bg-overlay); color: var(--text-secondary); }
 .campaign-submenu__item--active { background: var(--bg-surface); color: var(--accent-bright); }
-.campaign-submenu__item--highlight {
-  color: var(--gilded-bright);
-  box-shadow: 0 0 0 1.5px var(--gilded-bright), var(--shadow-glow);
-}
-.campaign-submenu__item--highlight:hover { color: var(--gilded-bright); }
 
 .campaign-submenu__badge {
   min-width: 16px;
