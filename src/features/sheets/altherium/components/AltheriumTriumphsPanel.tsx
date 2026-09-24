@@ -111,7 +111,7 @@ export function AltheriumTriumphsPanel({
         : (
           <div className="alth-triumphs__grid">
             {owned.map((t) => (
-              <BerserkerTriumphCard key={t.id} triumph={t}>
+              <BerserkerTriumphCard key={t.id} triumph={t} owned>
                 <button
                   type="button" className="alth-triumph__btn alth-triumph__btn--use"
                   disabled={disabled || fvCurrent < t.cost}
@@ -154,9 +154,9 @@ export function AltheriumTriumphsPanel({
   )
 }
 
-function BerserkerTriumphCard({ triumph: t, children }: { triumph: BerserkerTriumphDef; children: ReactNode }) {
+function BerserkerTriumphCard({ triumph: t, owned = false, children }: { triumph: BerserkerTriumphDef; owned?: boolean; children: ReactNode }) {
   return (
-    <article className="alth-triumph">
+    <article className={`alth-triumph${owned ? ' alth-triumph--owned' : ''}`}>
       <header className="alth-triumph__head">
         <h5 className="alth-triumph__name">{t.name}</h5>
         <span className="alth-triumph__cost">{t.cost} FV</span>
