@@ -284,6 +284,15 @@
    da Mesa da Sessão), sem CSS de tamanho próprio. ── */
 .alth-sheet-tabs {
   align-self: flex-start;
+  border-color: var(--gilded);
+  box-shadow: var(--shadow-md);
+}
+.alth-sheet-tabs .campaign-tab {
+  padding: var(--space-2) var(--space-6);
+  font-size: var(--text-sm);
+}
+.alth-sheet-tabs .campaign-tab--active {
+  box-shadow: 0 0 0 1px var(--gilded-bright), var(--shadow-glow);
 }
 
 .alth-tab-panel {
