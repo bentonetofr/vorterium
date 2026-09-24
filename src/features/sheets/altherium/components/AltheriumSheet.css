@@ -8,6 +8,9 @@
   --alth-mystic-dim:  rgba(94, 234, 212, 0.14);
   --alth-mystic-glow: rgba(94, 234, 212, 0.25);
   --alth-vitality-glow: rgba(255, 180, 171, 0.3);
+  /* Recurso dos triunfos (FV, PR, Cartas). */
+  --alth-resource:      #54ff9f;
+  --alth-resource-glow: rgba(84, 255, 159, 0.3);
 
   display: flex;
   flex-direction: column;
@@ -226,8 +229,8 @@
 }
 .alth-vital-widget--vitality { border-top-color: var(--danger); }
 .alth-vital-widget--mystic   { border-top-color: var(--alth-mystic); }
-/* "resource" = recurso dos triunfos (FV, PR, Cartas) — sempre verde-água. */
-.alth-vital-widget--resource { border-top-color: var(--alth-mystic); }
+/* "resource" = recurso dos triunfos (FV, PR, Cartas) — sempre verde (--alth-resource). */
+.alth-vital-widget--resource { border-top-color: var(--alth-resource); }
 
 /* Título, números e barra no mesmo estilo das barras de PV/PE do
    cabeçalho (.alth-vital-bar): sigla grande na cor do recurso, "atual /
@@ -249,7 +252,7 @@
 }
 .alth-vital-widget--vitality .alth-vital-widget__sigla { color: var(--danger); }
 .alth-vital-widget--mystic   .alth-vital-widget__sigla { color: var(--alth-mystic); }
-.alth-vital-widget--resource .alth-vital-widget__sigla { color: var(--alth-mystic); }
+.alth-vital-widget--resource .alth-vital-widget__sigla { color: var(--alth-resource); }
 .alth-vital-widget__values {
   display: flex;
   align-items: baseline;
@@ -298,7 +301,7 @@
 }
 .alth-vital-widget--vitality .alth-vital-widget__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
 .alth-vital-widget--mystic   .alth-vital-widget__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
-.alth-vital-widget--resource .alth-vital-widget__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
+.alth-vital-widget--resource .alth-vital-widget__bar-fill { background: var(--alth-resource); box-shadow: 0 0 8px var(--alth-resource-glow); }
 
 .alth-vital-widget__values .alth-vital-widget__max-input { width: 2em; text-align: left; }
 .alth-vital-widget__sep { color: var(--text-secondary); font-size: var(--text-sm); padding: 0 2px; }
@@ -393,7 +396,7 @@
 .sheet-card__bar { --bar-color: var(--text-muted); --bar-glow: transparent; }
 .sheet-card__bar--vitality { --bar-color: var(--danger);        --bar-glow: rgba(255, 180, 171, 0.3); }
 .sheet-card__bar--mystic   { --bar-color: #5eead4;              --bar-glow: rgba(94, 234, 212, 0.25); }
-.sheet-card__bar--resource { --bar-color: #5eead4;              --bar-glow: rgba(94, 234, 212, 0.25); }
+.sheet-card__bar--resource { --bar-color: #54ff9f;              --bar-glow: rgba(84, 255, 159, 0.3); }
 .sheet-card__bar-top {
   display: flex;
   align-items: baseline;
