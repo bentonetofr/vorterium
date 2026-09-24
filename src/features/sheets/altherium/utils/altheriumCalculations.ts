@@ -77,6 +77,17 @@ export function berserkerTriumphLimit(domains: { points: number }[]): number {
   return Math.floor((2 + withPoints) / 2)
 }
 
+/**
+ * NR do Runaskin — quantos triunfos pode usar numa cena: 15% do PR máximo
+ * (arredondado pra cima) no nível 1, dobrando a cada nível. Conta em
+ * inteiros (×15 ÷100) pra 15% de 20 dar 3 e não 3,0000000000000004 → 4.
+ */
+export function runaskinUsesPerScene(prMaximum: number | null, level: number): number | null {
+  if (prMaximum == null) return null
+  const base = Math.ceil((prMaximum * 15) / 100)
+  return base * 2 ** (level - 1)
+}
+
 // ────────────────────────────────────────────────────────
 // Combate / deslocamento
 // ────────────────────────────────────────────────────────

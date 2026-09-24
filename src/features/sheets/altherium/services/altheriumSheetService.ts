@@ -4,6 +4,7 @@ import type {
   AltheriumSheet,
   AltheriumDomainPoints,
   AltheriumInventoryItem,
+  AltheriumRune,
   AltheriumSheetWithProfile,
   ProfilePublic,
 } from '../../../../shared/types'
@@ -254,4 +255,115 @@ export async function removeAltheriumInventoryItem(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) throw new Error('Não foi possível remover o item.')
+}
+
+// ────────────────────────────────────────────────────────
+// Runas descobertas (Runaskin)
+// ────────────────────────────────────────────────────────
+
+export type AltheriumRuneInput = Pick<AltheriumRune, 'name' | 'description' | 'pr_cost' | 'test'>
+
+const RUNES_BUCKET = 'altherium-runes'
+
+/** Runas descobertas da ficha, na ordem em que foram criadas. */
+export async function getAltheriumRunes(sheetId: string): Promise<AltheriumRune[]> {
+  const { data, error } = await supabase
+    .from('altherium_runaskin_runes')
+    .select('*')
+    .eq('sheet_id', sheetId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw new Error('Não foi possível carregar as runas.')
+  return (data ?? []) as AltheriumRune[]
+}
+
+/** Envia a foto da runa (caminho <sheet_id>/<rune_id>) e devolve a URL pública. */
+async function uploadRuneImage(sheetId: string, runeId: string, file: File): Promise<string> {
+  if (!ALTHERIUM_PORTRAIT_TYPES.includes(file.type as (typeof ALTHERIUM_PORTRAIT_TYPES)[number])) {
+    throw new Error('Escolha uma imagem JPG, PNG ou WebP.')
+  }
+  if (file.size > ALTHERIUM_PORTRAIT_MAX_BYTES) {
+    throw new Error('A imagem deve ter no máximo 2 MB.')
+  }
+
+  const path = `${sheetId}/${runeId}`
+  const { error } = await supabase.storage
+    .from(RUNES_BUCKET)
+    .upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
+
+  if (error) {
+    console.error('Erro do Storage ao enviar imagem da runa:', error)
+    throw new Error(`Não foi possível enviar a imagem: ${error.message}`)
+  }
+
+  const { data } = supabase.storage.from(RUNES_BUCKET).getPublicUrl(path)
+  return `${data.publicUrl}?v=${Date.now()}`
+}
+
+async function removeRuneImage(sheetId: string, runeId: string): Promise<void> {
+  const { error } = await supabase.storage.from(RUNES_BUCKET).remove([`${sheetId}/${runeId}`])
+  if (error) console.error('Erro do Storage ao remover imagem da runa:', error)
+}
+
+/** Cria uma runa descoberta — a foto (opcional) é enviada depois de a linha existir. */
+export async function createAltheriumRune(
+  sheetId: string,
+  input: AltheriumRuneInput,
+  image: File | null,
+): Promise<AltheriumRune> {
+  const { data, error } = await supabase
+    .from('altherium_runaskin_runes')
+    .insert({ sheet_id: sheetId, ...input })
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível criar a runa.')
+  const rune = data as AltheriumRune
+  if (!image) return rune
+
+  const imageUrl = await uploadRuneImage(sheetId, rune.id, image)
+  return updateRuneRow(rune.id, { image_url: imageUrl })
+}
+
+/**
+ * Atualiza uma runa. `image`: File troca a foto, null remove, undefined
+ * mantém a atual.
+ */
+export async function updateAltheriumRune(
+  rune: AltheriumRune,
+  input: AltheriumRuneInput,
+  image: File | null | undefined,
+): Promise<AltheriumRune> {
+  let imageUrl = rune.image_url
+  if (image) {
+    imageUrl = await uploadRuneImage(rune.sheet_id, rune.id, image)
+  } else if (image === null && rune.image_url) {
+    await removeRuneImage(rune.sheet_id, rune.id)
+    imageUrl = null
+  }
+  return updateRuneRow(rune.id, { ...input, image_url: imageUrl })
+}
+
+async function updateRuneRow(id: string, data: Partial<AltheriumRune>): Promise<AltheriumRune> {
+  const { data: updated, error } = await supabase
+    .from('altherium_runaskin_runes')
+    .update(data)
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível salvar a runa.')
+  return updated as AltheriumRune
+}
+
+/** Exclui a runa e a foto dela, se houver. */
+export async function deleteAltheriumRune(rune: AltheriumRune): Promise<void> {
+  if (rune.image_url) await removeRuneImage(rune.sheet_id, rune.id)
+
+  const { error } = await supabase
+    .from('altherium_runaskin_runes')
+    .delete()
+    .eq('id', rune.id)
+
+  if (error) throw new Error('Não foi possível excluir a runa.')
 }

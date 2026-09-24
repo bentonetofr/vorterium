@@ -89,6 +89,65 @@ export const PILAR_TRIUMPHS: PilarTriumphDef[] = [
   { id: 'trilha-do-pressagio',    name: 'Trilha do Presságio',    cost: 3, description: 'Até o fim do turno, seu deslocamento dobra.' },
 ]
 
+// ── Runaskin ─────────────────────────────────────────────
+// Três trilhas, cada uma com 3 triunfos iniciais (custo 1 PR). Os
+// triunfos descobertos por runas são criados na ficha (tabela
+// altherium_runaskin_runes), não vivem aqui.
+
+export type RunaskinTrail = 'regente' | 'sentinela' | 'carniceiro'
+
+export interface RunaskinTrailDef {
+  id:    RunaskinTrail
+  label: string
+  /** Runa que ilustra os cards da trilha (no lugar de foto). */
+  glyph: string
+  focus: string
+  /** Condição para usar os triunfos da trilha. */
+  rule:  string
+}
+
+export const RUNASKIN_TRAILS: RunaskinTrailDef[] = [
+  {
+    id: 'regente', label: 'Regente', glyph: 'ᛒ',
+    focus: 'Suporte curativo, utilizando das forças da natureza.',
+    rule: 'As runas precisam estar sempre à mostra (se estiver de camisa, precisa tirá-la) e o regente não pode utilizar armaduras.',
+  },
+  {
+    id: 'sentinela', label: 'Sentinela', glyph: 'ᛉ',
+    focus: 'Suporte defensivo, utilizando o lado dos mortos.',
+    rule: 'Precisa de um corpo morto recente ao redor para se conectar ao outro lado.',
+  },
+  {
+    id: 'carniceiro', label: 'Carniceiro', glyph: 'ᚦ',
+    focus: 'Suporte ofensivo, utilizando o sangue dos vivos e dos mortos.',
+    rule: 'Precisa ter sangue recente extraído de seu corpo (causando 1d4 de dano em si mesmo) ou ao redor.',
+  },
+]
+
+export interface RunaskinTriumphDef {
+  id:          string
+  trail:       RunaskinTrail
+  name:        string
+  description: string
+  action:      TriumphAction
+  /** Custo em PR. */
+  cost:        number
+  range:       string
+  test:        string
+}
+
+export const RUNASKIN_TRIUMPHS: RunaskinTriumphDef[] = [
+  { id: 'raiz-vital',           trail: 'regente',    name: 'Raiz Vital',           action: 'bonus',  cost: 1, range: 'Curto', test: 'Medicina com Rúnico',    description: 'Manipulação da essência natural para curar (+1d10+Rúnico). Raízes emergem do solo e envolvem o alvo, restaurando sua vitalidade.' },
+  { id: 'casca-protetora',      trail: 'regente',    name: 'Casca Protetora',      action: 'bonus',  cost: 1, range: 'Toque', test: 'Resiliência com Rúnico', description: 'Manipulação da seiva ancestral para defender (+2 DB para 1 aliado ou você). Uma camada de madeira viva endurece a pele do alvo.' },
+  { id: 'esporos-espinhosos',   trail: 'regente',    name: 'Esporos Espinhosos',   action: 'padrao', cost: 1, range: 'Curto', test: 'Luta com Rúnico',        description: 'Manipulação de esporos naturais para atacar (+1d6+Rúnico). Esporos cortantes se espalham em linha reta causando ferimentos leves.' },
+  { id: 'veu-ancestral',        trail: 'sentinela',  name: 'Véu Ancestral',        action: 'bonus',  cost: 1, range: 'Curto', test: 'Resiliência com Rúnico', description: 'Manipulação espiritual para defender (+1d4+Rúnico como escudo/corpo todo do seu e de +3 aliados por 2 turnos). Espíritos antigos envolvem o alvo absorvendo dano.' },
+  { id: 'marca-eterea',         trail: 'sentinela',  name: 'Marca Etérea',         action: 'padrao', cost: 1, range: 'Curto', test: 'Luta com Rúnico',        description: 'Manipulação espiritual para enfraquecer (+1d4+Rúnico). Uma marca espectral atinge o alvo causando dano.' },
+  { id: 'sussurro-restaurador', trail: 'sentinela',  name: 'Sussurro Restaurador', action: 'bonus',  cost: 1, range: 'Toque', test: 'Medicina com Rúnico',    description: 'Manipulação espiritual para curar (+1d4+Rúnico). Um espírito toca o alvo e estabiliza seus ferimentos.' },
+  { id: 'sangue-cortante',      trail: 'carniceiro', name: 'Sangue Cortante',      action: 'padrao', cost: 1, range: 'Toque', test: 'Luta com Rúnico',        description: 'Manipulação do sangue dos mortos para atacar (+1d10+Rúnico). Cria uma lâmina de sangue afiada o suficiente para causar um grande ferimento; ao usar 1 vez a lâmina se desfaz.' },
+  { id: 'batismo-rubro',        trail: 'carniceiro', name: 'Batismo Rubro',        action: 'bonus',  cost: 1, range: 'Toque', test: 'Resiliência com Rúnico', description: 'Manipulação do sangue dos mortos para defender (+1 DB/corpo todo seu e de +2 aliados). Cria uma camada de armadura de sangue envolta dos alvos, criando proteção.' },
+  { id: 'uncao-escarlate',      trail: 'carniceiro', name: 'Unção Escarlate',      action: 'bonus',  cost: 1, range: 'Curto', test: 'Medicina com Rúnico',    description: 'Manipulação do sangue dos mortos para curar (+1d4 de PV para 1 aliado). Cria um fio de sangue que se conecta no alvo e o recupera.' },
+]
+
 const _berserkerById = new Map(BERSERKER_TRIUMPHS.map((t) => [t.id, t]))
 
 export function findBerserkerTriumph(id: string): BerserkerTriumphDef | undefined {

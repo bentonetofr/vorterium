@@ -10,12 +10,13 @@ import {
 
 // ────────────────────────────────────────────────────────
 // Aba Triunfos — Berserker escolhe da lista (até o limite) e paga em FV;
-// Pilar tem todos e paga em cartas; Runaskin fica pra depois. "Usar" só
+// Pilar tem todos e paga em cartas (Runaskin: AltheriumRunaskinTriumphs). "Usar" só
 // desconta do recurso no formulário (persiste com "Salvar ficha").
 // ────────────────────────────────────────────────────────
 
 interface AltheriumTriumphsPanelProps {
-  raiz:           AltheriumRaiz | null
+  /** Runaskin tem painel próprio (AltheriumRunaskinTriumphs). */
+  raiz:           Exclude<AltheriumRaiz, 'runaskin'> | null
   triumphIds:     string[]
   limit:          number
   fvCurrent:      number
@@ -34,9 +35,6 @@ export function AltheriumTriumphsPanel({
 
   if (raiz === null) {
     return <TriumphsNotice title="Triunfos" message="Escolha uma raiz no cabeçalho para ver os triunfos do personagem." />
-  }
-  if (raiz === 'runaskin') {
-    return <TriumphsNotice title="Runas" message="Os Runaskins descobrem runas em vez de triunfos — chegam numa próxima atualização." />
   }
 
   if (raiz === 'pilar') {

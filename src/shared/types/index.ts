@@ -215,6 +215,10 @@ export interface AltheriumSheet {
   dano_cabeca:        number
   /** Ids dos triunfos escolhidos (só Berserker — catálogo em altheriumTriumphs.ts). */
   berserker_triumphs: string[]
+  /** Trilha do Runaskin — define os 3 triunfos iniciais. */
+  runaskin_trail:     'regente' | 'sentinela' | 'carniceiro' | null
+  /** Triunfos usados na cena atual (limitado pelo NR, zera em "Nova cena"). */
+  runaskin_scene_uses: number
   notes:              string | null
   created_at:         string
   updated_at:         string
@@ -240,6 +244,19 @@ export interface AltheriumInventoryItem {
   equipped:      boolean
   equipped_zone: 'db_cabeca' | 'db_bracos' | 'db_tronco' | 'db_pernas' | null
   created_at:    string
+}
+
+/** Triunfo que o Runaskin descobriu por uma runa — criado pelo jogador ou
+ *  pelo mestre (os 3 iniciais da trilha vêm do catálogo fixo). */
+export interface AltheriumRune {
+  id:          string
+  sheet_id:    string
+  name:        string
+  description: string
+  pr_cost:     number
+  test:        string | null
+  image_url:   string | null
+  created_at:  string
 }
 
 /** Ficha Altherium enriquecida com o perfil do dono — usada na visão do mestre.

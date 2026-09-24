@@ -17,6 +17,7 @@ import {
   fvMax,
   movementMeters,
   prMax,
+  runaskinUsesPerScene,
   usesCards,
   usesFv,
   usesPr,
@@ -25,11 +26,14 @@ import {
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import { AltheriumInventoryCard } from './AltheriumInventoryCard'
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
+import { AltheriumRunaskinTriumphs } from './AltheriumRunaskinTriumphs'
+import type { RunaskinTrail } from '../constants/altheriumTriumphs'
 import { findArmor } from '../constants/altheriumItems'
-import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem } from '../../../../shared/types'
+import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune } from '../../../../shared/types'
 import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
+  type AltheriumRuneInput,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
 import './AltheriumSheet.css'
@@ -50,6 +54,10 @@ interface AltheriumSheetFormProps {
   onInventoryUpdateQuantity: (id: string, quantity: number) => Promise<void>
   onInventoryRemove:        (id: string) => Promise<void>
   onInventoryEquip:         (id: string, equipped: boolean, zone: BodyZone | null) => Promise<void>
+  runes:                    AltheriumRune[]
+  onRuneCreate:             (input: AltheriumRuneInput, image: File | null) => Promise<void>
+  onRuneUpdate:             (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
+  onRuneDelete:             (rune: AltheriumRune) => Promise<void>
   saving:                   boolean
   saveError:                string | null
   saveSuccess:              boolean
@@ -85,6 +93,8 @@ type FormData = {
   dano_tronco:        number
   dano_cabeca:        number
   berserker_triumphs: string[]
+  runaskin_trail:     RunaskinTrail | ''
+  runaskin_scene_uses: number
   notes:              string
 }
 
@@ -119,6 +129,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     dano_tronco:        s.dano_tronco,
     dano_cabeca:        s.dano_cabeca,
     berserker_triumphs: s.berserker_triumphs ?? [],
+    runaskin_trail:     s.runaskin_trail ?? '',
+    runaskin_scene_uses: s.runaskin_scene_uses ?? 0,
     notes:              s.notes ?? '',
   }
 }
@@ -182,6 +194,7 @@ export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,
   onPortraitChange, onPortraitRemove, portraitBusy,
   onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
+  runes, onRuneCreate, onRuneUpdate, onRuneDelete,
   saving, saveError, saveSuccess,
 }: AltheriumSheetFormProps) {
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
@@ -283,8 +296,17 @@ export function AltheriumSheetForm({
     return DOMAINS.filter((d) => normalize(d.label).includes(q))
   }, [domainFilter])
 
-  // FV e Cartas aparecem na Visão Geral e também na aba Triunfos (onde
+  // FV, PR e Cartas aparecem na Visão Geral e também na aba Triunfos (onde
   // são gastos) — mesmo elemento nas duas, só uma aba renderiza por vez.
+  const prWidget = usesPr(raiz) && (
+    <VitalWidget
+      sigla="PR" label="Pontos Rúnicos" tone="mystic"
+      current={form.pr_current} max={runicoMax} roll={form.pr_roll}
+      pct={runicoMax ? Math.max(0, Math.min(100, (form.pr_current / runicoMax) * 100)) : 0}
+      onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
+      disabled={saving}
+    />
+  )
   const fvWidget = usesFv(raiz) && (
     <VitalWidget
       sigla="FV" label="Força de Vontade" tone="resource"
@@ -359,6 +381,8 @@ export function AltheriumSheetForm({
       dano_tronco:        form.dano_tronco,
       dano_cabeca:        form.dano_cabeca,
       berserker_triumphs: form.berserker_triumphs,
+      runaskin_trail:     form.runaskin_trail === '' ? null : form.runaskin_trail,
+      runaskin_scene_uses: form.runaskin_scene_uses,
       notes:              form.notes.trim() || null,
     })
   }
@@ -522,15 +546,7 @@ export function AltheriumSheetForm({
               <>
                 <div className="alth-vitals-strip">
                   {fvWidget}
-                  {usesPr(raiz) && (
-                    <VitalWidget
-                      sigla="PR" label="Pontos Rúnicos" tone="mystic"
-                      current={form.pr_current} max={runicoMax} roll={form.pr_roll}
-                      pct={runicoMax ? Math.max(0, Math.min(100, (form.pr_current / runicoMax) * 100)) : 0}
-                      onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
-                      disabled={saving}
-                    />
-                  )}
+                  {prWidget}
                   {cardsWidget}
                 </div>
                 <p className="alth-hint">
@@ -742,23 +758,47 @@ export function AltheriumSheetForm({
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
         {activeTab === 'triunfos' && (
           <div className="alth-tab-panel animate-fade-up">
-            {(fvWidget || cardsWidget) && (
+            {(fvWidget || prWidget || cardsWidget) && (
               <div className="alth-vitals-strip">
                 {fvWidget}
+                {prWidget}
                 {cardsWidget}
               </div>
             )}
-            <AltheriumTriumphsPanel
-              raiz={raiz}
-              triumphIds={form.berserker_triumphs}
-              limit={berserkerTriumphLimit(domains)}
-              fvCurrent={form.fv_current}
-              cardsCurrent={form.cards_current}
-              onChange={(ids) => set('berserker_triumphs', ids)}
-              onSpendFv={(cost) => set('fv_current', Math.max(0, form.fv_current - cost))}
-              onSpendCards={(cost) => set('cards_current', Math.max(0, form.cards_current - cost))}
-              disabled={saving}
-            />
+            {raiz === 'runaskin'
+              ? (
+                <AltheriumRunaskinTriumphs
+                  trail={form.runaskin_trail === '' ? null : form.runaskin_trail}
+                  onTrailChange={(t) => set('runaskin_trail', t ?? '')}
+                  sceneUses={form.runaskin_scene_uses}
+                  usesLimit={runaskinUsesPerScene(runicoMax, form.level)}
+                  onNewScene={() => set('runaskin_scene_uses', 0)}
+                  prCurrent={form.pr_current}
+                  onUse={(cost) => setForm((prev) => ({
+                    ...prev,
+                    pr_current:          Math.max(0, prev.pr_current - cost),
+                    runaskin_scene_uses: prev.runaskin_scene_uses + 1,
+                  }))}
+                  runes={runes}
+                  onRuneCreate={onRuneCreate}
+                  onRuneUpdate={onRuneUpdate}
+                  onRuneDelete={onRuneDelete}
+                  disabled={saving}
+                />
+              )
+              : (
+                <AltheriumTriumphsPanel
+                  raiz={raiz}
+                  triumphIds={form.berserker_triumphs}
+                  limit={berserkerTriumphLimit(domains)}
+                  fvCurrent={form.fv_current}
+                  cardsCurrent={form.cards_current}
+                  onChange={(ids) => set('berserker_triumphs', ids)}
+                  onSpendFv={(cost) => set('fv_current', Math.max(0, form.fv_current - cost))}
+                  onSpendCards={(cost) => set('cards_current', Math.max(0, form.cards_current - cost))}
+                  disabled={saving}
+                />
+              )}
           </div>
         )}
       </div>

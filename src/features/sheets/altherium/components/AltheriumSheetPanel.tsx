@@ -11,6 +11,11 @@ import {
   addAltheriumInventoryItem,
   updateAltheriumInventoryItem,
   removeAltheriumInventoryItem,
+  getAltheriumRunes,
+  createAltheriumRune,
+  updateAltheriumRune,
+  deleteAltheriumRune,
+  type AltheriumRuneInput,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
@@ -20,6 +25,7 @@ import type {
   AltheriumSheet,
   AltheriumDomainPoints,
   AltheriumInventoryItem,
+  AltheriumRune,
   AltheriumSheetWithProfile,
 } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
@@ -63,6 +69,7 @@ interface SheetEditorProps {
 function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   const [domains, setDomains]         = useState<AltheriumDomainPoints[]>([])
   const [inventory, setInventory]     = useState<AltheriumInventoryItem[]>([])
+  const [runes, setRunes]             = useState<AltheriumRune[]>([])
   const [saving, setSaving]           = useState(false)
   const [saveError, setSaveError]     = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
@@ -76,8 +83,13 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     getAltheriumInventory(sheet.id).then(setInventory).catch(() => { /* inventário só não aparece */ })
   }, [sheet.id])
 
+  const loadRunes = useCallback(() => {
+    getAltheriumRunes(sheet.id).then(setRunes).catch(() => { /* runas só não aparecem */ })
+  }, [sheet.id])
+
   useEffect(() => { loadDomains() }, [loadDomains])
   useEffect(() => { loadInventory() }, [loadInventory])
+  useEffect(() => { loadRunes() }, [loadRunes])
 
   async function handleSave(data: AltheriumSheetUpdate) {
     setSaving(true)
@@ -169,6 +181,28 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     }
   }
 
+  // Criar/editar deixam o erro subir: o editor da runa mostra a mensagem
+  // e continua aberto, sem perder o que foi digitado.
+  async function handleRuneCreate(input: AltheriumRuneInput, image: File | null) {
+    await createAltheriumRune(sheet.id, input, image)
+    loadRunes()
+  }
+
+  async function handleRuneUpdate(rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) {
+    await updateAltheriumRune(rune, input, image)
+    loadRunes()
+  }
+
+  async function handleRuneDelete(rune: AltheriumRune) {
+    setSaveError(null)
+    try {
+      await deleteAltheriumRune(rune)
+      loadRunes()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível excluir a runa.')
+    }
+  }
+
   return (
     <AltheriumSheetForm
       key={sheet.id}
@@ -185,6 +219,10 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
       onInventoryUpdateQuantity={handleInventoryUpdateQuantity}
       onInventoryRemove={handleInventoryRemove}
       onInventoryEquip={handleInventoryEquip}
+      runes={runes}
+      onRuneCreate={handleRuneCreate}
+      onRuneUpdate={handleRuneUpdate}
+      onRuneDelete={handleRuneDelete}
       saving={saving}
       saveError={saveError}
       saveSuccess={saveSuccess}
