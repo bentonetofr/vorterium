@@ -44,7 +44,6 @@ export function AltheriumTriumphsPanel({
       <section className="alth-card alth-triumphs">
         <div className="alth-card__header">
           <h4 className="alth-card__title">Triunfos do Pilar</h4>
-          <span className="alth-counter">{cardsCurrent} cartas na mão</span>
         </div>
         <ul className="alth-triumphs__rules">
           <li><strong>Coringa:</strong> vale como qualquer carta.</li>
@@ -94,7 +93,7 @@ export function AltheriumTriumphsPanel({
       <div className="alth-card__header">
         <h4 className="alth-card__title">Triunfos do Berserker</h4>
         <span className={`alth-counter${over ? ' alth-counter--over' : ''}`}>
-          Triunfos: {owned.length} / {limit} · FV {fvCurrent}
+          Triunfos: {owned.length} / {limit}
         </span>
       </div>
       <p className="alth-hint">

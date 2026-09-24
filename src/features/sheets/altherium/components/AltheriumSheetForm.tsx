@@ -283,6 +283,41 @@ export function AltheriumSheetForm({
     return DOMAINS.filter((d) => normalize(d.label).includes(q))
   }, [domainFilter])
 
+  // FV e Cartas aparecem na Visão Geral e também na aba Triunfos (onde
+  // são gastos) — mesmo elemento nas duas, só uma aba renderiza por vez.
+  const fvWidget = usesFv(raiz) && (
+    <VitalWidget
+      sigla="FV" label="Força de Vontade" tone="resource"
+      current={form.fv_current} max={forcaMax} roll={form.fv_roll}
+      pct={forcaMax ? Math.max(0, Math.min(100, (form.fv_current / forcaMax) * 100)) : 0}
+      onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
+      disabled={saving}
+    />
+  )
+  const cardsWidget = usesCards(raiz) && (
+    <div className="alth-vital-widget alth-vital-widget--resource">
+      <div className="alth-vital-widget__top">
+        <span className="alth-vital-widget__sigla">Cartas</span>
+        <span className="alth-vital-widget__values">
+          <input
+            type="number" className="alth-vital-widget__value-input" min={0}
+            value={form.cards_current}
+            onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
+            disabled={saving} aria-label="Cartas atuais"
+          />
+          <span className="alth-vital-widget__max">{` / ${cartasMax ?? '—'}`}</span>
+        </span>
+      </div>
+      <div className="alth-vital-widget__bar">
+        <div
+          className="alth-vital-widget__bar-fill"
+          style={{ width: `${cartasMax ? Math.max(0, Math.min(100, (form.cards_current / cartasMax) * 100)) : 0}%` }}
+        />
+      </div>
+      <span className="alth-vital-widget__note">13 × nível</span>
+    </div>
+  )
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (form.character_name.trim().length > 80) {
@@ -486,15 +521,7 @@ export function AltheriumSheetForm({
             {(usesFv(raiz) || usesPr(raiz) || usesCards(raiz)) && (
               <>
                 <div className="alth-vitals-strip">
-                  {usesFv(raiz) && (
-                    <VitalWidget
-                      sigla="FV" label="Força de Vontade" tone="resource"
-                      current={form.fv_current} max={forcaMax} roll={form.fv_roll}
-                      pct={forcaMax ? Math.max(0, Math.min(100, (form.fv_current / forcaMax) * 100)) : 0}
-                      onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
-                      disabled={saving}
-                    />
-                  )}
+                  {fvWidget}
                   {usesPr(raiz) && (
                     <VitalWidget
                       sigla="PR" label="Pontos Rúnicos" tone="mystic"
@@ -504,23 +531,7 @@ export function AltheriumSheetForm({
                       disabled={saving}
                     />
                   )}
-                  {usesCards(raiz) && (
-                    <div className="alth-vital-widget alth-vital-widget--resource">
-                      <div className="alth-vital-widget__top">
-                        <span className="alth-vital-widget__sigla">Cartas</span>
-                        <span className="alth-vital-widget__values">
-                          <input
-                            type="number" className="alth-vital-widget__value-input" min={0}
-                            value={form.cards_current}
-                            onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
-                            disabled={saving} aria-label="Cartas atuais"
-                          />
-                          <span className="alth-vital-widget__max">{` / ${cartasMax ?? '—'}`}</span>
-                        </span>
-                      </div>
-                      <span className="alth-vital-widget__note">13 × nível</span>
-                    </div>
-                  )}
+                  {cardsWidget}
                 </div>
                 <p className="alth-hint">
                   O campo <strong>d10</strong> é o resultado rolado uma vez na criação — o máximo sai dele
@@ -731,6 +742,12 @@ export function AltheriumSheetForm({
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
         {activeTab === 'triunfos' && (
           <div className="alth-tab-panel animate-fade-up">
+            {(fvWidget || cardsWidget) && (
+              <div className="alth-vitals-strip">
+                {fvWidget}
+                {cardsWidget}
+              </div>
+            )}
             <AltheriumTriumphsPanel
               raiz={raiz}
               triumphIds={form.berserker_triumphs}
