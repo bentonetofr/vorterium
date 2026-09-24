@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════
+   Livro de regras — aba "Livro" da Mesa da Sessão
+   ═══════════════════════════════════════════════════════ */
+
+.rulebook {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.rulebook__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-dim);
+}
+.rulebook__icon { font-size: var(--text-2xl); line-height: 1; }
+.rulebook__titles { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.rulebook__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--accent-bright);
+}
+.rulebook__subtitle {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.rulebook__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.rulebook__btn { padding: var(--space-2) var(--space-4); font-size: var(--text-xs); }
+
+/* Leitor ocupa quase a tela toda — dá pra ler sem abrir outra aba. */
+.rulebook__viewer {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 560px;
+  border: 0;
+  background: var(--bg-void);
+}
+
+/* Celular (sem leitor embutido): botão grande pra abrir no leitor do aparelho. */
+.rulebook__mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+.rulebook__mobile-icon { font-size: 3rem; line-height: 1; }
+.rulebook__mobile .btn { width: 100%; max-width: 280px; min-height: 44px; }

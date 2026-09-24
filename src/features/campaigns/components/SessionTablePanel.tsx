@@ -4,6 +4,7 @@ import { CampaignChatPanel } from '../../chat/components/CampaignChatPanel'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
 import { CampaignActivityPanel } from '../../activity/components/CampaignActivityPanel'
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
+import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
@@ -19,7 +20,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['ficha', 'chat', 'atividade', 'iniciativa']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['ficha', 'chat', 'atividade', 'iniciativa', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -43,6 +44,8 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
     { id: 'chat',       label: 'Chat' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
+    // Livro de regras — só nos sistemas que têm um (hoje, Altherium).
+    ...(hasRulebook(campaign.system) ? [{ id: 'livro' as const, label: 'Livro' }] : []),
   ]
 
   return (
@@ -121,6 +124,15 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             campaignSystem={campaign.system}
           />
         )}
+      </div>
+
+      <div
+        id="session-subtabpanel-livro"
+        role="tabpanel"
+        hidden={activeSubTab !== 'livro'}
+        className="anim-tab-panel"
+      >
+        {activeSubTab === 'livro' && <RulebookPanel system={campaign.system} />}
       </div>
       </div>
     </div>
