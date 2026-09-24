@@ -146,11 +146,10 @@
 .alth-hero__tags {
   display: flex;
   gap: var(--space-2);
-  flex-wrap: wrap;
 }
 .alth-hero__select {
-  width: auto;
-  min-width: 140px;
+  flex: 1 1 100px;
+  min-width: 0;
   font-family: var(--font-label);
   font-size: var(--text-xs);
   letter-spacing: 0.04em;
