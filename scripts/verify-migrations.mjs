@@ -47,6 +47,7 @@ const expectedMigrations = [
   '20240143000000_altherium_wound_tracking.sql',
   '20240144000000_altherium_berserker_triumphs.sql',
   '20240145000000_altherium_runaskin_runes.sql',
+  '20240146000000_altherium_fv_pr_max.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

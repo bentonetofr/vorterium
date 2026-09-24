@@ -14,9 +14,7 @@ import {
   berserkerTriumphLimit,
   cardsMax,
   domainSlotsTotal,
-  fvMax,
   movementMeters,
-  prMax,
   runaskinUsesPerScene,
   usesCards,
   usesFv,
@@ -79,10 +77,10 @@ type FormData = {
   vitality_max:       number
   equilibrio_current: number
   equilibrio_max:     number
-  fv_roll:            number | null
   fv_current:         number
-  pr_roll:            number | null
+  fv_max:             number
   pr_current:         number
+  pr_max:             number
   cards_current:      number
   hacksilvers:        number
   db_pernas:          number
@@ -115,10 +113,10 @@ function sheetToForm(s: AltheriumSheet): FormData {
     vitality_max:       s.vitality_max,
     equilibrio_current: s.equilibrio_current,
     equilibrio_max:     s.equilibrio_max,
-    fv_roll:            s.fv_roll,
     fv_current:         s.fv_current,
-    pr_roll:            s.pr_roll,
+    fv_max:             s.fv_max ?? 10,
     pr_current:         s.pr_current,
+    pr_max:             s.pr_max ?? 10,
     cards_current:      s.cards_current,
     hacksilvers:        s.hacksilvers,
     db_pernas:          s.db_pernas,
@@ -150,8 +148,6 @@ function formToSheet(sheet: AltheriumSheet, f: FormData): AltheriumSheet {
     attr_runico:     f.attr_runico,
     vitality_max:    f.vitality_max,
     equilibrio_max:  f.equilibrio_max,
-    fv_roll:         f.fv_roll,
-    pr_roll:         f.pr_roll,
   }
 }
 
@@ -159,11 +155,6 @@ function clamp(value: string, min: number, max: number): number {
   const n = parseInt(value, 10)
   if (isNaN(n)) return min
   return Math.max(min, Math.min(max, n))
-}
-
-function clampOrNull(value: string, min: number, max: number): number | null {
-  if (value.trim() === '') return null
-  return clamp(value, min, max)
 }
 
 function normalize(s: string): string {
@@ -279,13 +270,11 @@ export function AltheriumSheetForm({
     }
   }
 
-  // Estado projetado: os máximos de FV/PR/Cartas acompanham o que está
-  // sendo editado agora. PV/PE não são mais derivados — são campos
-  // diretos do form, lidos direto (form.vitality_max/equilibrio_max).
+  // Estado projetado: o máximo de Cartas (do nível) e os domínios acompanham
+  // o que está sendo editado agora. PV/PE/FV/PR não são derivados — o
+  // máximo de cada um é campo direto do form.
   const projected  = formToSheet(sheet, form)
   const raiz       = form.raiz === '' ? null : form.raiz
-  const forcaMax   = fvMax(projected)
-  const runicoMax  = prMax(projected)
   const cartasMax  = cardsMax(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
@@ -302,16 +291,16 @@ export function AltheriumSheetForm({
   const prWidget = usesPr(raiz) && (
     <VitalWidget
       sigla="PR" label="Pontos Rúnicos" tone="mystic"
-      current={form.pr_current} max={runicoMax} roll={form.pr_roll}
-      onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
+      current={form.pr_current} max={form.pr_max}
+      onCurrent={(v) => set('pr_current', v)} onMax={(v) => set('pr_max', v)}
       disabled={saving}
     />
   )
   const fvWidget = usesFv(raiz) && (
     <VitalWidget
       sigla="FV" label="Força de Vontade" tone="resource"
-      current={form.fv_current} max={forcaMax} roll={form.fv_roll}
-      onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
+      current={form.fv_current} max={form.fv_max}
+      onCurrent={(v) => set('fv_current', v)} onMax={(v) => set('fv_max', v)}
       disabled={saving}
     />
   )
@@ -365,10 +354,10 @@ export function AltheriumSheetForm({
       vitality_max:       form.vitality_max,
       equilibrio_current: form.equilibrio_current,
       equilibrio_max:     form.equilibrio_max,
-      fv_roll:            form.fv_roll,
       fv_current:         form.fv_current,
-      pr_roll:            form.pr_roll,
+      fv_max:             form.fv_max,
       pr_current:         form.pr_current,
+      pr_max:             form.pr_max,
       cards_current:      form.cards_current,
       hacksilvers:        form.hacksilvers,
       db_pernas:          form.db_pernas,
@@ -542,17 +531,11 @@ export function AltheriumSheetForm({
         {activeTab === 'visao-geral' && (
           <div className="alth-tab-panel animate-fade-up">
             {(usesFv(raiz) || usesPr(raiz) || usesCards(raiz)) && (
-              <>
-                <div className="alth-vitals-strip">
-                  {fvWidget}
-                  {prWidget}
-                  {cardsWidget}
-                </div>
-                <p className="alth-hint">
-                  O campo <strong>d10</strong> é o resultado rolado uma vez na criação — o máximo sai dele
-                  somado à base da raiz e ao atributo, então acompanha mudanças de atributo sozinho.
-                </p>
-              </>
+              <div className="alth-vitals-strip">
+                {fvWidget}
+                {prWidget}
+                {cardsWidget}
+              </div>
             )}
 
             <section className="alth-card">
@@ -770,7 +753,7 @@ export function AltheriumSheetForm({
                   trail={form.runaskin_trail === '' ? null : form.runaskin_trail}
                   onTrailChange={(t) => set('runaskin_trail', t ?? '')}
                   sceneUses={form.runaskin_scene_uses}
-                  usesLimit={runaskinUsesPerScene(runicoMax, form.level)}
+                  usesLimit={runaskinUsesPerScene(form.pr_max, form.level)}
                   onNewScene={() => set('runaskin_scene_uses', 0)}
                   prCurrent={form.pr_current}
                   onUse={(cost) => setForm((prev) => ({
@@ -817,19 +800,21 @@ export function AltheriumSheetForm({
 
 // ────────────────────────────────────────────────────────
 
+// FV/PR — atual e máximo são dois campos diretos (como PV/PE), editáveis
+// no próprio "atual / máximo" da barra.
+
 interface VitalWidgetProps {
   sigla:     string
   label:     string
   tone:      'vitality' | 'mystic' | 'resource'
   current:   number
-  max:       number | null
-  roll:      number | null
+  max:       number
   onCurrent: (value: number) => void
-  onRoll:    (value: number | null) => void
+  onMax:     (value: number) => void
   disabled:  boolean
 }
 
-function VitalWidget({ sigla, label, tone, current, max, roll, onCurrent, onRoll, disabled }: VitalWidgetProps) {
+function VitalWidget({ sigla, label, tone, current, max, onCurrent, onMax, disabled }: VitalWidgetProps) {
   return (
     <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
       <div className="alth-vital-widget__top">
@@ -842,7 +827,14 @@ function VitalWidget({ sigla, label, tone, current, max, roll, onCurrent, onRoll
             disabled={disabled}
             aria-label={`${label} atual`}
           />
-          <span className="alth-vital-widget__max">{` / ${max ?? '—'}`}</span>
+          <span className="alth-vital-widget__sep">/</span>
+          <input
+            type="number" className="alth-vital-widget__value-input alth-vital-widget__max-input" min={1}
+            value={max}
+            onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
+            disabled={disabled}
+            aria-label={`${label} máximo`}
+          />
         </span>
       </div>
       <AltheriumDragBar
@@ -851,16 +843,6 @@ function VitalWidget({ sigla, label, tone, current, max, roll, onCurrent, onRoll
         disabled={disabled} label={label}
         trackClassName="alth-vital-widget__bar" fillClassName="alth-vital-widget__bar-fill"
       />
-      <label className="alth-vital-widget__roll">
-        <span className="alth-vital-widget__note">d10 na criação</span>
-        <input
-          type="number" className="input" min={1} max={10}
-          value={roll ?? ''}
-          onChange={(e) => onRoll(clampOrNull(e.target.value, 1, 10))}
-          disabled={disabled}
-          aria-label={`d10 rolado de ${label}`}
-        />
-      </label>
     </div>
   )
 }

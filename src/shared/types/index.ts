@@ -199,10 +199,14 @@ export interface AltheriumSheet {
   equilibrio_roll:    number | null
   equilibrio_current: number
   equilibrio_max:     number
+  /** d10 da criação — não usado mais pela interface (máximo virou fv_max). */
   fv_roll:            number | null
   fv_current:         number
+  fv_max:             number
+  /** d10 da criação — não usado mais pela interface (máximo virou pr_max). */
   pr_roll:            number | null
   pr_current:         number
+  pr_max:             number
   cards_current:      number
   hacksilvers:        number
   db_pernas:          number

@@ -10,29 +10,11 @@ import type { AltheriumSheet } from '../../../../shared/types'
 // ────────────────────────────────────────────────────────
 // Máximos derivados
 //
-// Vitalidade e Equilíbrio NÃO são mais calculados aqui — viraram campos
-// diretos (`vitality_max`/`equilibrio_max`) editáveis na ficha. FV e PR
-// continuam pela fórmula antiga: o "+1d10" do livro é rolado uma única
-// vez na criação, a ficha guarda o resultado (`*_roll`) e o máximo é
-// recalculado aqui, então acompanha mudanças de atributo sem precisar
-// rolar de novo.
+// Vitalidade, Equilíbrio, Força de Vontade e Pontos Rúnicos NÃO são mais
+// calculados aqui — o máximo de cada um é campo direto (`vitality_max`,
+// `equilibrio_max`, `fv_max`, `pr_max`), editável na barra da ficha.
+// Só as Cartas do Pilar continuam derivadas (do nível).
 // ────────────────────────────────────────────────────────
-
-/** Força de Vontade máxima (só Berserker): 14 + d10 rolado + Impulso. */
-export function fvMax(sheet: AltheriumSheet): number | null {
-  if (!sheet.raiz || sheet.fv_roll == null) return null
-  const base = getRaiz(sheet.raiz).fvBase
-  if (base == null) return null
-  return base + sheet.fv_roll + sheet.attr_impulso
-}
-
-/** Pontos Rúnicos máximos (só Runaskin): 20 + d10 rolado + Rúnico. */
-export function prMax(sheet: AltheriumSheet): number | null {
-  if (!sheet.raiz || sheet.pr_roll == null) return null
-  const base = getRaiz(sheet.raiz).prBase
-  if (base == null) return null
-  return base + sheet.pr_roll + sheet.attr_runico
-}
 
 /** Cartas máximas (só Pilar): 13 por nível — 13/26/39/52/65. */
 export function cardsMax(sheet: AltheriumSheet): number | null {

@@ -102,7 +102,6 @@ export function AltheriumRunaskinTriumphs({
 
       <p className="alth-hint">
         NR = 15% do PR máximo (pra cima) no nível 1, dobrando a cada nível.
-        {usesLimit == null && ' Preencha o d10 do PR na Visão Geral pra calcular.'}
       </p>
 
       {trailDef && (
