@@ -1,4 +1,5 @@
-﻿import { useEffect, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import {
   RUNASKIN_TRAILS,
   RUNASKIN_TRIUMPHS,
@@ -135,43 +136,32 @@ export function AltheriumRunaskinTriumphs({
 
       <div className="alth-runes__discovered-head">
         <h5 className="alth-triumphs__group">Runas descobertas</h5>
-        {editing === null && (
-          <button
-            type="button" className="alth-triumph__btn alth-triumph__btn--add"
-            onClick={() => setEditing('new')} disabled={disabled}
-          >
-            + Nova runa
-          </button>
-        )}
+        <button
+          type="button" className="alth-triumph__btn alth-triumph__btn--add"
+          onClick={() => setEditing('new')} disabled={disabled}
+        >
+          + Nova runa
+        </button>
       </div>
 
-      {editing === 'new' && (
-        <RuneEditor
+      {editing !== null && (
+        <RuneEditorModal
+          key={editing === 'new' ? 'new' : editing.id}
+          initial={editing === 'new' ? undefined : editing}
           onCancel={() => setEditing(null)}
           onSubmit={async (input, image) => {
-            await onRuneCreate(input, image ?? null)
+            if (editing === 'new') await onRuneCreate(input, image ?? null)
+            else await onRuneUpdate(editing, input, image)
             setEditing(null)
           }}
         />
       )}
 
-      {runes.length === 0 && editing !== 'new'
+      {runes.length === 0
         ? <p className="alth-triumphs__empty">Nenhuma runa descoberta ainda — explore Altherium.</p>
         : (
           <div className="alth-triumphs__grid">
-            {runes.map((r) => (editing !== 'new' && editing?.id === r.id
-              ? (
-                <RuneEditor
-                  key={r.id}
-                  initial={r}
-                  onCancel={() => setEditing(null)}
-                  onSubmit={async (input, image) => {
-                    await onRuneUpdate(r, input, image)
-                    setEditing(null)
-                  }}
-                />
-              )
-              : (
+            {runes.map((r) => (
                 <RuneCard
                   key={r.id}
                   trailClass="descoberta"
@@ -207,7 +197,7 @@ export function AltheriumRunaskinTriumphs({
                         </button>
                         <button
                           type="button" className="alth-triumph__btn"
-                          onClick={() => setEditing(r)} disabled={disabled || editing !== null}
+                          onClick={() => setEditing(r)} disabled={disabled}
                         >
                           Editar
                         </button>
@@ -215,7 +205,7 @@ export function AltheriumRunaskinTriumphs({
                       </>
                     )}
                 </RuneCard>
-              )))}
+            ))}
           </div>
         )}
     </section>
@@ -260,8 +250,10 @@ function RuneCard({ trailClass, media, name, cost, test, description, chips, chi
 }
 
 // ────────────────────────────────────────────────────────
-// Editor de runa — não é um <form> (já estamos dentro do form da ficha);
-// Enter nos campos de uma linha é barrado pra não salvar a ficha inteira.
+// Editor de runa — janela modal no centro da tela, com o fundo embaçado.
+// Vai por portal pro <body>, fora do <form> da ficha, então Enter nos
+// campos não salva a ficha (e é barrado de qualquer forma). Esc ou clique
+// fora fecham (menos enquanto salva); a página atrás não rola.
 // ────────────────────────────────────────────────────────
 
 interface RuneEditorProps {
@@ -270,7 +262,7 @@ interface RuneEditorProps {
   onCancel: () => void
 }
 
-function RuneEditor({ initial, onSubmit, onCancel }: RuneEditorProps) {
+function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
   const [name, setName]               = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [cost, setCost]               = useState(initial?.pr_cost ?? 1)
@@ -281,12 +273,29 @@ function RuneEditor({ initial, onSubmit, onCancel }: RuneEditorProps) {
   const [busy, setBusy]               = useState(false)
   const [error, setError]             = useState<string | null>(null)
 
+  const nameRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (!(image instanceof File)) return
     const url = URL.createObjectURL(image)
     setPreview(url)
     return () => URL.revokeObjectURL(url)
   }, [image])
+
+  useEffect(() => {
+    nameRef.current?.focus()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [])
+
+  useEffect(() => {
+    function onKey(e: globalThis.KeyboardEvent) {
+      if (e.key === 'Escape' && !busy) onCancel()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [busy, onCancel])
 
   function handlePick(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -331,60 +340,79 @@ function RuneEditor({ initial, onSubmit, onCancel }: RuneEditorProps) {
     }
   }
 
-  return (
-    <div className="alth-rune alth-rune--descoberta alth-rune--editing" onKeyDown={blockEnter}>
-      <label className="alth-rune__media alth-rune__media--pick">
-        {preview
-          ? <img src={preview} alt="" />
-          : <span className="alth-rune__pick-hint">+ Foto</span>}
-        <input
-          type="file" hidden accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
-          onChange={handlePick} disabled={busy} aria-label="Foto da runa"
-        />
-      </label>
-      <div className="alth-rune__body">
-        {preview && (
-          <button type="button" className="alth-rune__remove-img" onClick={handleRemoveImage} disabled={busy}>
-            Remover foto
+  return createPortal(
+    <div
+      className="alth-modal"
+      onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onCancel() }}
+    >
+      <div
+        className="alth-modal__window alth-rune alth-rune--descoberta alth-rune--editing"
+        role="dialog" aria-modal="true" aria-labelledby="alth-rune-editor-title"
+        onKeyDown={blockEnter}
+      >
+        <header className="alth-modal__header">
+          <h4 id="alth-rune-editor-title" className="alth-modal__title">
+            {initial ? 'Editar runa' : 'Nova runa'}
+          </h4>
+          <button type="button" className="alth-modal__close" onClick={onCancel} disabled={busy} aria-label="Fechar">
+            ×
           </button>
-        )}
-        <input
-          type="text" className="input" placeholder="Nome da runa" maxLength={80}
-          value={name} onChange={(e) => setName(e.target.value)} disabled={busy} aria-label="Nome da runa"
-        />
-        <div className="alth-rune__editor-row">
-          <label className="alth-rune__editor-cost">
-            <span className="label">PR</span>
-            <input
-              type="number" className="input" min={0} max={99}
-              value={cost}
-              onChange={(e) => setCost(Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0)))}
-              disabled={busy}
-            />
-          </label>
-          <label className="alth-rune__editor-test">
-            <span className="label">Teste</span>
-            <input
-              type="text" className="input" placeholder="Ex.: Luta com Rúnico" maxLength={80}
-              value={test} onChange={(e) => setTest(e.target.value)} disabled={busy}
-            />
-          </label>
-        </div>
-        <textarea
-          className="input" rows={3} placeholder="Descrição" maxLength={1000}
-          value={description} onChange={(e) => setDescription(e.target.value)} disabled={busy}
-          aria-label="Descrição da runa"
-        />
-        {error && <p className="alth-triumphs__warn" role="alert">{error}</p>}
-        <div className="alth-triumph__actions">
-          <button type="button" className="alth-triumph__btn" onClick={onCancel} disabled={busy}>
-            Cancelar
-          </button>
-          <button type="button" className="alth-triumph__btn alth-triumph__btn--add" onClick={() => void handleSave()} disabled={busy}>
-            {busy ? 'Salvando...' : 'Salvar runa'}
-          </button>
+        </header>
+        <label className="alth-rune__media alth-rune__media--pick">
+          {preview
+            ? <img src={preview} alt="" />
+            : <span className="alth-rune__pick-hint">+ Foto</span>}
+          <input
+            type="file" hidden accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
+            onChange={handlePick} disabled={busy} aria-label="Foto da runa"
+          />
+        </label>
+        <div className="alth-rune__body">
+          {preview && (
+            <button type="button" className="alth-rune__remove-img" onClick={handleRemoveImage} disabled={busy}>
+              Remover foto
+            </button>
+          )}
+          <input
+            ref={nameRef}
+            type="text" className="input" placeholder="Nome da runa" maxLength={80}
+            value={name} onChange={(e) => setName(e.target.value)} disabled={busy} aria-label="Nome da runa"
+          />
+          <div className="alth-rune__editor-row">
+            <label className="alth-rune__editor-cost">
+              <span className="label">PR</span>
+              <input
+                type="number" className="input" min={0} max={99}
+                value={cost}
+                onChange={(e) => setCost(Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0)))}
+                disabled={busy}
+              />
+            </label>
+            <label className="alth-rune__editor-test">
+              <span className="label">Teste</span>
+              <input
+                type="text" className="input" placeholder="Ex.: Luta com Rúnico" maxLength={80}
+                value={test} onChange={(e) => setTest(e.target.value)} disabled={busy}
+              />
+            </label>
+          </div>
+          <textarea
+            className="input" rows={3} placeholder="Descrição" maxLength={1000}
+            value={description} onChange={(e) => setDescription(e.target.value)} disabled={busy}
+            aria-label="Descrição da runa"
+          />
+          {error && <p className="alth-triumphs__warn" role="alert">{error}</p>}
+          <div className="alth-triumph__actions">
+            <button type="button" className="alth-triumph__btn" onClick={onCancel} disabled={busy}>
+              Cancelar
+            </button>
+            <button type="button" className="alth-triumph__btn alth-triumph__btn--add" onClick={() => void handleSave()} disabled={busy}>
+              {busy ? 'Salvando...' : 'Salvar runa'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
