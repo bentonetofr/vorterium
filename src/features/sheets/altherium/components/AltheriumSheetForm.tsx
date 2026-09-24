@@ -289,7 +289,7 @@ export function AltheriumSheetForm({
   // FV, PR e Cartas vivem na aba Triunfos, onde são gastos.
   const prWidget = usesPr(raiz) && (
     <VitalWidget
-      sigla="PR" label="Pontos Rúnicos" tone="mystic"
+      sigla="PR" label="Pontos Rúnicos" tone="resource"
       current={form.pr_current} max={form.pr_max}
       onCurrent={(v) => set('pr_current', v)} onMax={(v) => set('pr_max', v)}
       disabled={saving}

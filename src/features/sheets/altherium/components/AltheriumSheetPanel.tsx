@@ -371,7 +371,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
                   <SummaryBar sigla="FV" tone="resource" current={s.fv_current} max={s.fv_max} />
                 )}
                 {s.raiz === 'runaskin' && (
-                  <SummaryBar sigla="PR" tone="mystic" current={s.pr_current} max={s.pr_max} />
+                  <SummaryBar sigla="PR" tone="resource" current={s.pr_current} max={s.pr_max} />
                 )}
                 {s.raiz === 'pilar' && (
                   <SummaryBar sigla="Cartas" tone="resource" current={s.cards_current} max={cardsMax(s)} />
