@@ -24,6 +24,7 @@ import {
   usesRunico,
 } from '../utils/altheriumCalculations'
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
+import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
 import { AltheriumInventoryCard } from './AltheriumInventoryCard'
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
 import { AltheriumDragBar } from './AltheriumDragBar'
@@ -662,6 +663,22 @@ export function AltheriumSheetForm({
                   )
                 })}
               </div>
+            </section>
+
+            <section className="alth-card alth-radar-card">
+              <div className="alth-card__header">
+                <h4 className="alth-card__title">Perfil</h4>
+              </div>
+              <AltheriumAttributeRadar
+                axes={ATTRIBUTES
+                  .filter((attr) => !(attr.id === 'runico' && raiz !== null && !usesRunico(raiz)))
+                  .map((attr) => ({
+                    id:          attr.id,
+                    label:       attr.label,
+                    value:       form[`attr_${attr.id}` as keyof FormData] as number,
+                    description: attr.description,
+                  }))}
+              />
             </section>
           </div>
         )}

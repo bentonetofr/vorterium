@@ -1459,3 +1459,82 @@
 @media (hover: hover) {
   .alth-hero__portrait:hover img { transform: scale(1.06); }
 }
+
+/* ── Radar dos atributos (aba Atributos) ── */
+@keyframes alth-radar-in {
+  from { opacity: 0; transform: scale(0.6) rotate(-12deg); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes alth-radar-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.35)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.6)); }
+}
+.alth-radar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+.alth-radar__svg {
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  overflow: visible;
+  animation: alth-radar-in 600ms var(--ease-spring) backwards;
+  transform-origin: center;
+}
+.alth-radar__ring {
+  fill: none;
+  stroke: var(--border-base);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.8;
+}
+.alth-radar__ring--outer {
+  stroke: var(--gilded);
+  stroke-dasharray: none;
+  fill: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+}
+.alth-radar__axis { stroke: var(--border-base); stroke-width: 1; opacity: 0.7; }
+.alth-radar__tick {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--text-muted);
+  opacity: 0.8;
+}
+.alth-radar__shape {
+  stroke: var(--gilded-bright);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  animation: alth-radar-glow 3.2s ease-in-out infinite;
+}
+.alth-radar__dot {
+  fill: var(--accent-bright);
+  stroke: var(--bg-surface);
+  stroke-width: 1.5;
+}
+.alth-radar__dot--top { fill: var(--gilded-bright); filter: drop-shadow(0 0 5px var(--gilded-bright)); }
+.alth-radar__label-name {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--text-secondary);
+}
+.alth-radar__label-value {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+.alth-radar__label--top .alth-radar__label-name,
+.alth-radar__label--top .alth-radar__label-value { fill: var(--accent-bright); }
+.alth-radar__caption {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.alth-radar__caption strong { color: var(--accent-bright); }
