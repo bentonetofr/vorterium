@@ -612,7 +612,6 @@ export function AltheriumSheetForm({
                         />
                       </label>
                       <label className="alth-anatomy__field-input alth-anatomy__field-input--wound">
-                        <span className="alth-anatomy__field-input-tag">Dano</span>
                         <input
                           ref={woundInputRefs[woundField]}
                           type="number" className="input" min={0}
@@ -621,6 +620,7 @@ export function AltheriumSheetForm({
                           disabled={saving}
                           aria-label={`Dano em ${part.label}`}
                         />
+                        <span className="alth-anatomy__field-input-tag">Dano</span>
                       </label>
                     </div>
                   </div>

@@ -691,10 +691,13 @@
 .alth-anatomy__field:last-child { border-bottom: none; }
 .alth-anatomy__field .label { margin-bottom: 0; }
 
+/* DB [caixa] [caixa] DANO — as etiquetas ficam por fora e têm a mesma
+   largura (DB alinhado à direita, Dano à esquerda), então as duas caixas
+   ficam simétricas em torno do centro, embaixo do nome da zona. */
 .alth-anatomy__field-inputs {
   display: flex;
   justify-content: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 .alth-anatomy__field-input {
   display: flex;
@@ -703,14 +706,16 @@
 }
 .alth-anatomy__field-input .input { width: 56px; text-align: center; }
 .alth-anatomy__field-input-tag {
+  width: 36px;
   font-family: var(--font-label);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
+  text-align: right;
 }
-.alth-anatomy__field-input--wound .alth-anatomy__field-input-tag { color: var(--danger); }
+.alth-anatomy__field-input--wound .alth-anatomy__field-input-tag { color: var(--danger); text-align: left; }
 
 /* ── Domínios ── */
 .alth-domains__search { margin-bottom: var(--space-1); }
