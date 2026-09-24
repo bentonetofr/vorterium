@@ -376,22 +376,28 @@ export function AltheriumSheetForm({
               aria-label="Nome do personagem"
             />
             <div className="alth-hero__tags">
-              <select
-                className="input alth-hero__select" value={form.raiz}
-                onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
-                disabled={saving} aria-label="Raiz"
-              >
-                <option value="">Raiz —</option>
-                {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-              </select>
-              <select
-                className="input alth-hero__select" value={form.genesis}
-                onChange={(e) => set('genesis', e.target.value)}
-                disabled={saving} aria-label="Gênesis"
-              >
-                <option value="">Gênesis —</option>
-                {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-              </select>
+              <label className="alth-hero__field alth-hero__field--raiz">
+                <span className="alth-hero__field-label">Raiz</span>
+                <select
+                  className="input alth-hero__select" value={form.raiz}
+                  onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
+                  disabled={saving}
+                >
+                  <option value="">—</option>
+                  {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+                </select>
+              </label>
+              <label className="alth-hero__field alth-hero__field--genesis">
+                <span className="alth-hero__field-label">Gênesis</span>
+                <select
+                  className="input alth-hero__select" value={form.genesis}
+                  onChange={(e) => set('genesis', e.target.value)}
+                  disabled={saving}
+                >
+                  <option value="">—</option>
+                  {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+                </select>
+              </label>
             </div>
           </div>
         </div>

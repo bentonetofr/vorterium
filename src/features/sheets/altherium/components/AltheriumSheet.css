@@ -20,19 +20,22 @@
 }
 
 /* ── Cabeçalho (nome, raiz, gênesis, nível, hacksilvers) ──
-   Grid de 4 colunas × 2 linhas: retrato (ocupa as 2 linhas) | nome/tags |
-   PV/PE | nível/hacksilvers — assim a linha 1 (nome, PV, nível) e a
-   linha 2 (tags, PE, hacksilvers) ficam sempre alinhadas horizontalmente
-   entre as colunas, em vez de cada bloco flutuar com sua própria altura.
-   Os wrappers antigos (__identity, __identity-main, __vitals, __stats)
-   viram `display: contents` pra seus filhos entrarem direto no grid,
-   sem precisar mudar a estrutura do JSX. */
+   Nome numa faixa própria no topo; embaixo, grid de 4 colunas × 2 linhas:
+   retrato (ocupa as 2 linhas) | Raiz/Gênesis | PV/PE | nível/hacksilvers.
+   Cada célula tem a mesma estrutura — uma linha de rótulo e uma linha de
+   controle, com alturas fixas (--alth-hero-label-h / --alth-hero-control-h)
+   — pra que rótulos, selects, barras e inputs fiquem alinhados entre as
+   colunas. Os wrappers antigos (__identity, __identity-main, __tags,
+   __vitals, __stats) viram `display: contents` pra seus filhos entrarem
+   direto no grid, sem precisar mudar a estrutura do JSX. */
 .alth-hero {
+  --alth-hero-label-h:   26px;
+  --alth-hero-control-h: 44px;
   display: grid;
-  grid-template-columns: auto minmax(210px, 1fr) minmax(240px, 1.4fr) auto;
+  grid-template-columns: auto minmax(200px, 1fr) minmax(240px, 1.5fr) 150px;
   align-items: start;
-  column-gap: var(--space-6);
-  row-gap: var(--space-3);
+  column-gap: var(--space-8);
+  row-gap: var(--space-4);
   padding: var(--space-5);
   background: var(--bg-surface);
   border: 1px solid var(--border-dim);
@@ -41,6 +44,7 @@
 
 .alth-hero__identity,
 .alth-hero__identity-main,
+.alth-hero__tags,
 .alth-hero__vitals,
 .alth-hero__stats {
   display: contents;
@@ -48,7 +52,7 @@
 
 .alth-hero__portrait-wrap {
   grid-column: 1;
-  grid-row: 1 / 3;
+  grid-row: 2 / 4;
   align-self: center;
   position: relative;
 }
@@ -57,10 +61,10 @@
   display: grid;
   place-items: center;
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
-  border: 2px solid var(--gilded);
+  border: 2px solid var(--border-bright);
   background: var(--bg-elevated);
   overflow: hidden;
   cursor: pointer;
@@ -97,17 +101,17 @@
 
 .alth-hero__portrait-remove {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 20px;
-  height: 20px;
+  top: -1px;
+  right: -6px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 1px solid var(--border-dim);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
+  border: 1px solid var(--border-bright);
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-size: var(--text-md);
   line-height: 1;
   cursor: pointer;
 }
@@ -129,7 +133,7 @@
 }
 
 .alth-hero__name {
-  grid-column: 2;
+  grid-column: 1 / -1;
   grid-row: 1;
   width: 100%;
   background: transparent;
@@ -145,38 +149,63 @@
 .alth-hero__name::placeholder { color: var(--text-muted); font-weight: 400; }
 .alth-hero__name:focus { outline: none; border-bottom-color: var(--gilded); }
 
-.alth-hero__tags {
-  grid-column: 2;
-  grid-row: 2;
-  display: flex;
-  gap: var(--space-2);
+/* Célula padrão do grid: rótulo em cima, controle embaixo, alturas fixas. */
+.alth-hero__field,
+.alth-hero__vitals .alth-vital-bar,
+.alth-hero__level,
+.alth-hero__coins {
+  display: grid;
+  grid-template-rows: var(--alth-hero-label-h) var(--alth-hero-control-h);
+  align-items: center;
+  row-gap: var(--space-2);
+  min-width: 0;
+}
+
+.alth-hero__field--raiz    { grid-column: 2; grid-row: 2; }
+.alth-hero__field--genesis { grid-column: 2; grid-row: 3; }
+.alth-hero__field-label {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-bright);
 }
 .alth-hero__select {
-  flex: 1 1 100px;
+  height: var(--alth-hero-control-h);
   min-width: 0;
-  font-family: var(--font-label);
-  font-size: var(--text-xs);
-  letter-spacing: 0.04em;
-  padding: var(--space-2) var(--space-3);
+  padding: 0 var(--space-4);
+  font-size: var(--text-md);
 }
 
 /* PV e PE — moram dentro do próprio box do herói, entre a identidade e
    os stats, como duas barras (sem moldura própria, ver .alth-vital-bar).
    O resto dos vitais (FV/PR/Cartas, dependem da raiz) continua na faixa
    abaixo. */
-.alth-hero__vitals .alth-vital-bar--vitality { grid-column: 3; grid-row: 1; }
-.alth-hero__vitals .alth-vital-bar--mystic   { grid-column: 3; grid-row: 2; }
+.alth-hero__vitals .alth-vital-bar--vitality { grid-column: 3; grid-row: 2; }
+.alth-hero__vitals .alth-vital-bar--mystic   { grid-column: 3; grid-row: 3; }
 
-.alth-hero__level  { grid-column: 4; grid-row: 1; }
-.alth-hero__coins  { grid-column: 4; grid-row: 2; }
-.alth-hero__level, .alth-hero__coins {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  width: 140px;
+.alth-hero__level  { grid-column: 4; grid-row: 2; }
+.alth-hero__coins  { grid-column: 4; grid-row: 3; }
+.alth-hero__level .label,
+.alth-hero__coins .label { margin: 0; }
+.alth-hero__level .input,
+.alth-hero__coins .input {
+  height: var(--alth-hero-control-h);
+  padding: 0 var(--space-3);
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  -moz-appearance: textfield;
 }
-.alth-hero__level .input { text-align: center; font-family: var(--font-display); font-weight: 700; }
-.alth-hero__coins .input { text-align: right; font-family: var(--font-display); color: var(--accent-bright); }
+.alth-hero__level .input::-webkit-inner-spin-button,
+.alth-hero__level .input::-webkit-outer-spin-button,
+.alth-hero__coins .input::-webkit-inner-spin-button,
+.alth-hero__coins .input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.alth-hero__coins .input { color: var(--accent-bright); }
 
 /* ── Faixa de vitais ── */
 .alth-vitals-strip {
@@ -294,9 +323,10 @@
 }
 .alth-vital-bar__sigla {
   font-family: var(--font-label);
-  font-size: var(--text-sm);
+  font-size: var(--text-xl);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  line-height: 1;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .alth-vital-bar--vitality .alth-vital-bar__sigla { color: var(--danger); }
@@ -329,20 +359,19 @@
   outline: none;
   color: var(--accent-bright);
 }
-.alth-vital-bar__max-input { width: 2em; text-align: left; color: var(--text-muted); font-weight: 500; }
-.alth-vital-bar__sep { color: var(--text-muted); font-size: var(--text-sm); font-weight: 300; }
+.alth-vital-bar__values .alth-vital-bar__max-input { width: 2em; text-align: left; }
+.alth-vital-bar__sep { color: var(--text-secondary); font-size: var(--text-sm); padding: 0 2px; }
 
 .alth-vital-bar__bar {
   width: 100%;
-  height: 12px;
-  border-radius: var(--radius-sm);
+  height: 9px;
+  border-radius: 999px;
   background: var(--bg-void);
-  border: 1px solid var(--border-dim);
   overflow: hidden;
 }
 .alth-vital-bar__bar-fill {
   height: 100%;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   transition: width var(--transition-base);
 }
 .alth-vital-bar--vitality .alth-vital-bar__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
@@ -857,14 +886,16 @@
   .alth-hero { grid-template-columns: 1fr; }
   .alth-hero__portrait-wrap,
   .alth-hero__name,
-  .alth-hero__tags,
+  .alth-hero__field--raiz,
+  .alth-hero__field--genesis,
   .alth-hero__vitals .alth-vital-bar--vitality,
   .alth-hero__vitals .alth-vital-bar--mystic {
     grid-column: 1;
     grid-row: auto;
   }
-  .alth-hero__stats { display: flex; grid-column: 1; flex-direction: row; width: 100%; }
-  .alth-hero__level, .alth-hero__coins { flex: 1; width: auto; }
+  .alth-hero__portrait-wrap { justify-self: center; }
+  .alth-hero__stats { display: flex; grid-column: 1; gap: var(--space-3); }
+  .alth-hero__level, .alth-hero__coins { flex: 1; }
   .alth-domains__head,
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
   .alth-domains__attr { display: none; }
