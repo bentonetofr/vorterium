@@ -160,7 +160,6 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
               id="session-title"
               type="text"
               className={`input${titleOver ? ' input--error' : ''}`}
-              placeholder="Ex.: Sessão 1 — Introdução da campanha"
               value={title}
               onChange={(e) => { setTitle(e.target.value); setError(null) }}
               disabled={saving}

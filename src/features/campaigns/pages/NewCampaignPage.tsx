@@ -94,7 +94,6 @@ export function NewCampaignPage() {
               <input
                 id="campaign-name" type="text"
                 className={`input${nameOver ? ' input--error' : ''}`}
-                placeholder="Ex: A Queda de Ironpeak"
                 autoComplete="off"
                 value={name}
                 onChange={(e) => { setName(e.target.value); setError(null) }}

@@ -78,7 +78,7 @@ export function AltheriumInventoryCard({
       <input
         type="text"
         className="input alth-inventory__search"
-        placeholder="Buscar no catálogo (ex: Adaga, Cota de Malha, Elixir)..."
+        placeholder="Buscar no catálogo..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />

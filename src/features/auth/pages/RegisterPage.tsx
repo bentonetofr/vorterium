@@ -85,7 +85,6 @@ export function RegisterPage() {
               <div className="auth-input-wrap">
                 <span className="auth-input-icon" aria-hidden="true">✉</span>
                 <input id="email" type="email" className="input"
-                  placeholder="seu@email.com"
                   autoComplete="email"
                   value={email} onChange={(e) => setEmail(e.target.value)}
                   disabled={busy} required />

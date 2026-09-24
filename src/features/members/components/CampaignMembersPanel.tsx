@@ -506,7 +506,6 @@ function AddPlayerForm({
             id="add-player-email"
             type="email"
             className="input add-player-form__input"
-            placeholder="jogador@exemplo.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)

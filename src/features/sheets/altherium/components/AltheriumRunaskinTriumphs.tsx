@@ -385,7 +385,7 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
             <label className="alth-rune__editor-test">
               <span className="label">Teste</span>
               <input
-                type="text" className="input" placeholder="Ex.: Luta com Rúnico" maxLength={80}
+                type="text" className="input" maxLength={80}
                 value={test} onChange={(e) => setTest(e.target.value)} disabled={busy}
               />
             </label>

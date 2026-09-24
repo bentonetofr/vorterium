@@ -200,7 +200,7 @@ function AttacksEditor({ sheetId, details, onDetailsChange }: DetailsProps) {
           className="dnd-edit-input" plain onChange={selectWeapon} aria-label="Arma do catálogo"
           options={[{ value: '', label: 'Escolher arma do catálogo' }, ...catalog.map((entry) => ({ value: entry.entry_key, label: entry.name }))]}
         />
-        <input className="dnd-edit-input" placeholder="Nome (ex.: Espada longa)" value={newAttack.name} onChange={(e) => setNewAttack({ ...newAttack, name: e.target.value })} />
+        <input className="dnd-edit-input" placeholder="Nome" value={newAttack.name} onChange={(e) => setNewAttack({ ...newAttack, name: e.target.value })} />
         <input className="dnd-edit-input" placeholder="Bônus" value={newAttack.attack_bonus} onChange={(e) => setNewAttack({ ...newAttack, attack_bonus: e.target.value })} />
         <input className="dnd-edit-input" placeholder="Dano" value={newAttack.damage} onChange={(e) => setNewAttack({ ...newAttack, damage: e.target.value })} />
         <input className="dnd-edit-input" placeholder="Tipo" value={newAttack.damage_type} onChange={(e) => setNewAttack({ ...newAttack, damage_type: e.target.value })} />

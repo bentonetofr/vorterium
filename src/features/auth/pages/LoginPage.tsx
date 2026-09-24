@@ -66,7 +66,6 @@ export function LoginPage() {
             <span className="auth-input-icon" aria-hidden="true">✉</span>
             <input
               id="email" type="email" className="input"
-              placeholder="seu@email.com"
               autoComplete="email"
               value={email} onChange={(e) => setEmail(e.target.value)}
               disabled={busy} required

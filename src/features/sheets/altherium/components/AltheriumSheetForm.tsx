@@ -764,7 +764,7 @@ export function AltheriumSheetForm({
         <input
           type="text"
           className="input alth-domains__search"
-          placeholder="Buscar domínio (ex: Brutalidade, Luta, Resiliência)..."
+          placeholder="Buscar domínio..."
           value={domainFilter}
           onChange={(e) => setDomainFilter(e.target.value)}
         />
@@ -887,7 +887,6 @@ export function AltheriumSheetForm({
               </div>
               <textarea
                 className="input alth-notes" rows={16} maxLength={NOTES_MAX}
-                placeholder="Histórico, NPCs, pistas..."
                 value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
                 aria-label="Anotações"

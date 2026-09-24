@@ -197,7 +197,6 @@ export function SimpleSheetForm({
               id="char-archetype"
               type="text"
               className="input"
-              placeholder="ex: Guerreiro, Ladino..."
               value={formData.archetype}
               onChange={(e) => set('archetype', e.target.value)}
               disabled={saving}
@@ -296,7 +295,6 @@ export function SimpleSheetForm({
         </div>
         <textarea
           className="input sheet-notes"
-          placeholder="Histórico, equipamentos, anotações de sessão..."
           value={formData.notes}
           onChange={(e) => set('notes', e.target.value)}
           disabled={saving}
