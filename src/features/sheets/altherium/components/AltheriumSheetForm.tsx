@@ -176,8 +176,8 @@ interface AltheriumFormTab {
 }
 
 const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
-  { id: 'visao-geral', label: 'Visão Geral' },
-  { id: 'combate',     label: 'Combate' },
+  { id: 'visao-geral', label: 'Atributos' },
+  { id: 'combate',     label: 'Inventário' },
   { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
 ]
@@ -525,7 +525,7 @@ export function AltheriumSheetForm({
         ))}
       </nav>
 
-      {/* ── Visão Geral: atributos, anotações ── */}
+      {/* ── Atributos: atributos, anotações ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
           <div className="alth-tab-panel animate-fade-up">
@@ -571,7 +571,7 @@ export function AltheriumSheetForm({
         )}
       </div>
 
-      {/* ── Combate: anatomia/armadura (armas chegam numa próxima atualização) ── */}
+      {/* ── Inventário: anatomia/armadura e itens ── */}
       <div id="alth-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>
         {activeTab === 'combate' && (
           <div className="alth-tab-panel animate-fade-up">

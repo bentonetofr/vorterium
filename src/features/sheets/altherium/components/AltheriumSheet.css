@@ -504,7 +504,7 @@
 }
 .alth-hint--center { text-align: center; }
 
-/* ── Abas da ficha (Visão Geral | Combate | Domínios | Triunfos) —
+/* ── Abas da ficha (Atributos | Inventário | Domínios | Triunfos) —
    reaproveita .campaign-tabs/.campaign-tab (mesmo visual das sub-abas
    da Mesa da Sessão), sem CSS de tamanho próprio. ── */
 .alth-sheet-tabs {
