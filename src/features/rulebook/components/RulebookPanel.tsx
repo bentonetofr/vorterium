@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CampaignSystem } from '../../../shared/constants/systems'
+import { RulebookSlot } from '../RulebookHost'
 import './RulebookPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -8,7 +9,9 @@ import './RulebookPanel.css'
 // abre no leitor de PDF do próprio navegador. No celular, onde o leitor
 // embutido não funciona bem (Android não mostra; iOS só a 1ª página), a
 // aba mostra um botão de abrir no lugar do leitor — e o <iframe> nem é
-// criado, pra não baixar o PDF (~37 MB) à toa.
+// criado, pra não baixar o PDF (~37 MB) à toa. O leitor em si mora no
+// RulebookHost (layout privado), pra continuar na mesma página quando a
+// pessoa troca de aba e volta.
 // ────────────────────────────────────────────────────────
 
 interface Rulebook {
@@ -52,7 +55,6 @@ export function RulebookPanel({ system }: { system: CampaignSystem }) {
   return (
     <section className="rulebook">
       <header className="rulebook__header">
-        <span className="rulebook__icon" aria-hidden="true">📖</span>
         <div className="rulebook__titles">
           <h4 className="rulebook__title">{book.title}</h4>
           <span className="rulebook__subtitle">{book.subtitle}</span>
@@ -70,10 +72,9 @@ export function RulebookPanel({ system }: { system: CampaignSystem }) {
       </header>
 
       {canEmbed ? (
-        <iframe className="rulebook__viewer" src={`${book.url}#navpanes=0&view=FitH`} title={`${book.title} — ${book.subtitle}`} />
+        <RulebookSlot className="rulebook__viewer" url={book.url} title={`${book.title} — ${book.subtitle}`} />
       ) : (
         <div className="rulebook__mobile">
-          <span className="rulebook__mobile-icon" aria-hidden="true">📖</span>
           <p>No celular, o livro abre no leitor de PDF do aparelho.</p>
           <a className="btn btn-primary" href={book.url} target="_blank" rel="noopener noreferrer">
             Abrir o livro
