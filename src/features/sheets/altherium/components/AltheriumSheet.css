@@ -673,6 +673,58 @@
   transition: fill var(--transition-base);
 }
 
+/* Físico por raiz (prop `build` do AltheriumBodyDiagram). Os enfeites
+   não recebem clique — o clique passa pro membro embaixo. */
+
+/* Berserker: linhas de peitoral/abdômen por cima do tronco. */
+.alth-body__muscles path {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.4);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+/* Runaskin: runas brilhando em verde-água, pulsando devagar. */
+.alth-body__rune {
+  fill: #5eead4;
+  font-family: 'Segoe UI Historic', 'Segoe UI Symbol', 'Noto Sans Runic', serif;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 0 2px rgba(94, 234, 212, 0.9));
+  animation: altheriumRunePulse 2.6s ease-in-out infinite;
+}
+@keyframes altheriumRunePulse {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+
+/* Pilar: tranças — gomos na cor da zona da cabeça, laço dourado na ponta
+   e uma área de pegada invisível maior pra arrastar. */
+.alth-body__braid-knot {
+  fill: var(--zone-color);
+  stroke: var(--bg-void);
+  stroke-width: 1.2;
+  pointer-events: none;
+  transition: fill var(--transition-base);
+}
+.alth-body__braid-tie {
+  fill: var(--gilded-bright);
+  stroke: var(--bg-void);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.alth-body__braid-grip {
+  fill: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alth-body__rune { animation: none; opacity: 1; }
+}
+
 .alth-anatomy__fields {
   display: flex;
   flex-direction: column;

@@ -584,6 +584,7 @@ export function AltheriumSheetForm({
           <div className="alth-anatomy">
             <AltheriumBodyDiagram
               variant="protecao"
+              build={raiz}
               values={{
                 db_cabeca: form.db_cabeca,
                 db_bracos: form.db_bracos,
@@ -630,6 +631,7 @@ export function AltheriumSheetForm({
 
             <AltheriumBodyDiagram
               variant="dano"
+              build={raiz}
               visualMax={form.vitality_max}
               values={{
                 db_cabeca: form.dano_cabeca,
