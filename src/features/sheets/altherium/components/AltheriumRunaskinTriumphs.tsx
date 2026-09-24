@@ -19,7 +19,7 @@ import type { AltheriumRune } from '../../../../shared/types'
 // Triunfos do Runaskin — trilha (3 iniciais do livro) + runas
 // descobertas (criadas na ficha, com foto). Cada "Usar" desconta o PR e
 // conta um uso na cena, até o NR; "Nova cena" zera o contador. PR e
-// contador persistem com "Salvar ficha"; runas salvam na hora.
+// contador vão pelo salvamento automático da ficha; runas salvam na hora.
 // ────────────────────────────────────────────────────────
 
 interface AltheriumRunaskinTriumphsProps {
@@ -29,17 +29,17 @@ interface AltheriumRunaskinTriumphsProps {
   usesLimit:     number | null
   onNewScene:    () => void
   prCurrent:     number
-  onUse:         (cost: number) => void
+  onUse:         (cost: number, triumphName: string) => void
   runes:         AltheriumRune[]
   onRuneCreate:  (input: AltheriumRuneInput, image: File | null) => Promise<void>
   onRuneUpdate:  (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
   onRuneDelete:  (rune: AltheriumRune) => Promise<void>
-  disabled:      boolean
+  disabled?:     boolean
 }
 
 export function AltheriumRunaskinTriumphs({
   trail, onTrailChange, sceneUses, usesLimit, onNewScene, prCurrent, onUse,
-  runes, onRuneCreate, onRuneUpdate, onRuneDelete, disabled,
+  runes, onRuneCreate, onRuneUpdate, onRuneDelete, disabled = false,
 }: AltheriumRunaskinTriumphsProps) {
   const [editing, setEditing]           = useState<AltheriumRune | 'new' | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
@@ -57,8 +57,8 @@ export function AltheriumRunaskinTriumphs({
         disabled={disabled || noPr || limitHit}
         title={limitHit ? 'Limite de usos da cena (NR) atingido' : noPr ? 'PR insuficiente' : undefined}
         onClick={() => {
-          onUse(cost)
-          setLastUsed(`${name} usado — −${cost} PR. Salve a ficha para registrar.`)
+          onUse(cost, name)
+          setLastUsed(`${name} usado — −${cost} PR.`)
         }}
       >
         Usar

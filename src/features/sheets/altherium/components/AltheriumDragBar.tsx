@@ -12,7 +12,7 @@ interface AltheriumDragBarProps {
   value:          number
   max:            number | null
   onChange:       (value: number) => void
-  disabled:       boolean
+  disabled?:      boolean
   label:          string
   /** Classes da trilha e do preenchimento — cada barra mantém seu visual. */
   trackClassName: string
@@ -20,7 +20,7 @@ interface AltheriumDragBarProps {
 }
 
 export function AltheriumDragBar({
-  value, max, onChange, disabled, label, trackClassName, fillClassName,
+  value, max, onChange, disabled = false, label, trackClassName, fillClassName,
 }: AltheriumDragBarProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const lastEmitted = useRef<number | null>(null)

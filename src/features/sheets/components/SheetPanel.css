@@ -338,6 +338,28 @@
 
 .sheets-list__form { padding-top: var(--space-4); border-top: 1px solid var(--border-dim); }
 
+/* Aviso no editor do mestre: o jogador salvou a ficha que está aberta. */
+.sheet-outdated {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+  border: 1px solid var(--gilded-bright);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--text-sm);
+  color: var(--accent-bright);
+  animation: fadeUp 0.2s ease-out;
+}
+.sheet-outdated__btn { padding: var(--space-2) var(--space-4); font-size: var(--text-xs); }
+
 @media (max-width: 640px) {
   /* Celular: menos folga lateral — a ficha já fica dentro da página e do
      próprio card, cada um com sua borda. */

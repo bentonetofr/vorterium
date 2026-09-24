@@ -858,10 +858,30 @@
 
 .alth-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--space-3);
+  min-height: 44px;
   padding-top: var(--space-2);
   border-top: 1px solid var(--border-dim);
 }
+
+/* Indicador do salvamento automático. */
+.alth-save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.alth-save-status--saved   { color: #6fcf8e; }
+.alth-save-status--pending { color: var(--text-secondary); }
+.alth-save-status--saving  { color: var(--accent-bright); }
+.alth-save-status--error   { color: var(--danger-bright); }
 
 /* ── Inventário (armas, armaduras, itens) ── */
 .alth-inventory__search { margin-bottom: var(--space-1); }

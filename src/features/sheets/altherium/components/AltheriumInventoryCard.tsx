@@ -24,7 +24,7 @@ interface AltheriumInventoryCardProps {
   onUpdateQuantity: (id: string, quantity: number) => Promise<void>
   onRemove:         (id: string) => Promise<void>
   onToggleEquip:    (item: AltheriumInventoryItem, action: 'equip' | 'unequip', zone?: BodyZone) => void
-  disabled:         boolean
+  disabled?:        boolean
 }
 
 const WEAPON_CATEGORIES: WeaponCategory[] = ['pesada', 'leve', 'arremesso', 'alcance']
@@ -52,7 +52,7 @@ function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
 }
 
 export function AltheriumInventoryCard({
-  inventory, onAdd, onUpdateQuantity, onRemove, onToggleEquip, disabled,
+  inventory, onAdd, onUpdateQuantity, onRemove, onToggleEquip, disabled = false,
 }: AltheriumInventoryCardProps) {
   const [filter, setFilter] = useState('')
   const [pendingZoneFor, setPendingZoneFor] = useState<string | null>(null)

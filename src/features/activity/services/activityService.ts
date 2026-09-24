@@ -23,6 +23,7 @@ export type ActivityType =
   | 'session_created'    | 'session_updated'    | 'session_deleted'
   | 'sheet_updated'      | 'dice_rolled'
   | 'note_created'       | 'note_updated'       | 'note_deleted'
+  | 'triumph_used'
 
 /** Ícone para cada tipo de evento. */
 export const ACTIVITY_ICONS: Record<string, string> = {
@@ -41,6 +42,7 @@ export const ACTIVITY_ICONS: Record<string, string> = {
   note_created:       '◇',
   note_updated:       '◇',
   note_deleted:       '◇',
+  triumph_used:       '⚜',
 }
 
 // ────────────────────────────────────────────────────────

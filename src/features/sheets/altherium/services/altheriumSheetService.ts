@@ -1,5 +1,6 @@
 import { supabase } from '../../../../shared/lib/supabase'
 import { logActivity } from '../../../activity/services/activityService'
+import { sendMessage } from '../../../chat/services/chatService'
 import type {
   AltheriumSheet,
   AltheriumDomainPoints,
@@ -90,6 +91,16 @@ export async function updateAltheriumSheet(
     charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.',
   )
   return sheet
+}
+
+/**
+ * Anuncia pra mesa que um triunfo foi usado — ex.: "Galaxy usou Fôlego
+ * Extra (−4 FV)" — na Atividade da campanha e no chat da mesa. Fire-and-
+ * forget: falhar aqui nunca desfaz o gasto de FV/PR/Cartas na ficha.
+ */
+export function announceTriumphUse(campaignId: string, message: string): void {
+  logActivity(campaignId, 'triumph_used', message)
+  void sendMessage(campaignId, `⚜ ${message}`).catch(() => { /* só não aparece no chat */ })
 }
 
 /** Envia o retrato do personagem e atualiza a URL pública da ficha. */

@@ -10,8 +10,9 @@ import {
 
 // ────────────────────────────────────────────────────────
 // Aba Triunfos — Berserker escolhe da lista (até o limite) e paga em FV;
-// Pilar tem todos e paga em cartas (Runaskin: AltheriumRunaskinTriumphs). "Usar" só
-// desconta do recurso no formulário (persiste com "Salvar ficha").
+// Pilar tem todos e paga em cartas (Runaskin: AltheriumRunaskinTriumphs). "Usar"
+// desconta do recurso no formulário (o salvamento automático persiste) e a
+// ficha anuncia o uso no chat e na Atividade da campanha.
 // ────────────────────────────────────────────────────────
 
 interface AltheriumTriumphsPanelProps {
@@ -22,14 +23,14 @@ interface AltheriumTriumphsPanelProps {
   fvCurrent:      number
   cardsCurrent:   number
   onChange:       (ids: string[]) => void
-  onSpendFv:      (cost: number) => void
-  onSpendCards:   (cost: number) => void
-  disabled:       boolean
+  onSpendFv:      (cost: number, triumphName: string) => void
+  onSpendCards:   (cost: number, triumphName: string) => void
+  disabled?:      boolean
 }
 
 export function AltheriumTriumphsPanel({
   raiz, triumphIds, limit, fvCurrent, cardsCurrent,
-  onChange, onSpendFv, onSpendCards, disabled,
+  onChange, onSpendFv, onSpendCards, disabled = false,
 }: AltheriumTriumphsPanelProps) {
   const [lastUsed, setLastUsed] = useState<string | null>(null)
 
@@ -66,8 +67,8 @@ export function AltheriumTriumphsPanel({
                   disabled={disabled || cardsCurrent < t.cost}
                   title={cardsCurrent < t.cost ? 'Cartas insuficientes' : undefined}
                   onClick={() => {
-                    onSpendCards(t.cost)
-                    setLastUsed(`${t.name} usado — −${t.cost} ${t.cost === 1 ? 'carta' : 'cartas'}. Salve a ficha para registrar.`)
+                    onSpendCards(t.cost, t.name)
+                    setLastUsed(`${t.name} usado — −${t.cost} ${t.cost === 1 ? 'carta' : 'cartas'}.`)
                   }}
                 >
                   Usar
@@ -116,8 +117,8 @@ export function AltheriumTriumphsPanel({
                   disabled={disabled || fvCurrent < t.cost}
                   title={fvCurrent < t.cost ? 'FV insuficiente' : undefined}
                   onClick={() => {
-                    onSpendFv(t.cost)
-                    setLastUsed(`${t.name} usado — −${t.cost} FV. Salve a ficha para registrar.`)
+                    onSpendFv(t.cost, t.name)
+                    setLastUsed(`${t.name} usado — −${t.cost} FV.`)
                   }}
                 >
                   Usar

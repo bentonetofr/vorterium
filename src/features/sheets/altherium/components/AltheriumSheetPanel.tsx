@@ -72,9 +72,7 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   const [domains, setDomains]         = useState<AltheriumDomainPoints[]>([])
   const [inventory, setInventory]     = useState<AltheriumInventoryItem[]>([])
   const [runes, setRunes]             = useState<AltheriumRune[]>([])
-  const [saving, setSaving]           = useState(false)
   const [saveError, setSaveError]     = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [portraitBusy, setPortraitBusy] = useState(false)
 
   const loadDomains = useCallback(() => {
@@ -93,19 +91,15 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   useEffect(() => { loadInventory() }, [loadInventory])
   useEffect(() => { loadRunes() }, [loadRunes])
 
+  // Salvamento automático do formulário: não trava a ficha enquanto salva
+  // e relança o erro pro formulário marcar "Erro ao salvar".
   async function handleSave(data: AltheriumSheetUpdate) {
-    setSaving(true)
     setSaveError(null)
-    setSaveSuccess(false)
     try {
-      const updated = await updateAltheriumSheet(sheet.id, data)
-      onSheetUpdated(updated)
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      onSheetUpdated(await updateAltheriumSheet(sheet.id, data))
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Não foi possível salvar a ficha.')
-    } finally {
-      setSaving(false)
+      throw err
     }
   }
 
@@ -225,9 +219,7 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
       onRuneCreate={handleRuneCreate}
       onRuneUpdate={handleRuneUpdate}
       onRuneDelete={handleRuneDelete}
-      saving={saving}
       saveError={saveError}
-      saveSuccess={saveSuccess}
     />
   )
 }
@@ -284,8 +276,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
   // A ficha aberta no editor é uma cópia tirada ao selecionar: os cards
-  // acompanham o Realtime, mas o editor só muda com o próprio "Salvar" do
-  // mestre — assim um save do jogador não apaga edições não salvas aqui.
+  // acompanham o Realtime, mas o editor só muda com os saves do próprio
+  // mestre. Se o jogador salvar nesse meio tempo, aparece um aviso pra
+  // recarregar em vez de trocar a ficha por baixo das edições do mestre.
   const [editing, setEditing]   = useState<AltheriumSheetWithProfile | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -339,6 +332,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
 
   const selectedId = editing?.id ?? null
   const selected = editing
+  // Versão mais nova da ficha aberta (chegou pelo Realtime, salva por outra pessoa).
+  const latest = editing ? sheets.find((s) => s.id === editing.id) ?? null : null
+  const outdated = !!(latest && editing && Date.parse(latest.updated_at) > Date.parse(editing.updated_at))
 
   return (
     <div className="sheets-list-wrapper">
@@ -392,6 +388,14 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
 
       {selected ? (
         <div className="sheets-list__form" ref={formRef}>
+          {outdated && latest && (
+            <div className="sheet-outdated" role="status">
+              <span>O jogador atualizou a ficha — recarregar?</span>
+              <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => setEditing(latest)}>
+                Recarregar
+              </button>
+            </div>
+          )}
           <SheetEditor
             key={selected.id}
             sheet={selected}

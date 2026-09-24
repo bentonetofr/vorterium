@@ -32,6 +32,7 @@ import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, Alt
 import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
+  announceTriumphUse,
   type AltheriumRuneInput,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
@@ -44,6 +45,7 @@ interface AltheriumSheetFormProps {
   domains:                  AltheriumDomainPoints[]
   inventory:                AltheriumInventoryItem[]
   ownerName?:               string
+  /** Chamado pelo salvamento automático — deve lançar erro se falhar. */
   onSave:                   (data: AltheriumSheetUpdate) => Promise<void>
   onDomainChange:           (domain: string, points: number) => Promise<void>
   onPortraitChange:         (file: File) => Promise<void>
@@ -57,9 +59,7 @@ interface AltheriumSheetFormProps {
   onRuneCreate:             (input: AltheriumRuneInput, image: File | null) => Promise<void>
   onRuneUpdate:             (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
   onRuneDelete:             (rune: AltheriumRune) => Promise<void>
-  saving:                   boolean
   saveError:                string | null
-  saveSuccess:              boolean
 }
 
 type FormData = {
@@ -134,6 +134,60 @@ function sheetToForm(s: AltheriumSheet): FormData {
   }
 }
 
+/** O que vai pro banco a partir do formulário (também serve pra comparar
+ *  "o que está na tela" com "o que já foi salvo"). */
+function formToPayload(f: FormData): AltheriumSheetUpdate {
+  return {
+    character_name:      f.character_name.trim() || null,
+    level:               f.level,
+    raiz:                f.raiz === '' ? null : f.raiz,
+    genesis:             f.genesis === '' ? null : f.genesis,
+    attr_furia:          f.attr_furia,
+    attr_destino:        f.attr_destino,
+    attr_espirito:       f.attr_espirito,
+    attr_impulso:        f.attr_impulso,
+    attr_estrategia:     f.attr_estrategia,
+    attr_runico:         f.attr_runico,
+    vitality_current:    f.vitality_current,
+    vitality_max:        f.vitality_max,
+    equilibrio_current:  f.equilibrio_current,
+    equilibrio_max:      f.equilibrio_max,
+    fv_current:          f.fv_current,
+    fv_max:              f.fv_max,
+    pr_current:          f.pr_current,
+    pr_max:              f.pr_max,
+    cards_current:       f.cards_current,
+    hacksilvers:         f.hacksilvers,
+    db_pernas:           f.db_pernas,
+    db_bracos:           f.db_bracos,
+    db_tronco:           f.db_tronco,
+    db_cabeca:           f.db_cabeca,
+    dano_pernas:         f.dano_pernas,
+    dano_bracos:         f.dano_bracos,
+    dano_tronco:         f.dano_tronco,
+    dano_cabeca:         f.dano_cabeca,
+    berserker_triumphs:  f.berserker_triumphs,
+    runaskin_trail:      f.runaskin_trail === '' ? null : f.runaskin_trail,
+    runaskin_scene_uses: f.runaskin_scene_uses,
+    notes:               f.notes.trim() || null,
+  }
+}
+
+function payloadKey(f: FormData): string {
+  return JSON.stringify(formToPayload(f))
+}
+
+function validateForm(f: FormData): string | null {
+  if (f.character_name.trim().length > 80) return 'O nome do personagem deve ter no máximo 80 caracteres.'
+  if (f.notes.length > NOTES_MAX) return `As anotações devem ter no máximo ${NOTES_MAX} caracteres.`
+  return null
+}
+
+/** Atraso do salvamento automático depois da última mudança. */
+const AUTOSAVE_DELAY_MS = 800
+
+type SaveState = 'saved' | 'pending' | 'saving' | 'error'
+
 /** Projeção do formulário sobre a ficha, para os cálculos derivados verem o estado em edição. */
 function formToSheet(sheet: AltheriumSheet, f: FormData): AltheriumSheet {
   return {
@@ -187,7 +241,7 @@ export function AltheriumSheetForm({
   onPortraitChange, onPortraitRemove, portraitBusy,
   onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
   runes, onRuneCreate, onRuneUpdate, onRuneDelete,
-  saving, saveError, saveSuccess,
+  saveError,
 }: AltheriumSheetFormProps) {
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
@@ -209,7 +263,94 @@ export function AltheriumSheetForm({
     dano_pernas: useRef<HTMLInputElement>(null),
   }
 
-  useEffect(() => { setForm(sheetToForm(sheet)) }, [sheet])
+  // ── Salvamento automático ──────────────────────────────
+  // `lastSaved` = o que o banco tem (em forma de payload). Qualquer
+  // diferença entre ele e o formulário é "pendente" e vai pro banco
+  // AUTOSAVE_DELAY_MS depois da última mudança. Só um save por vez; se
+  // mudar algo durante o envio, o próximo pega. lastSaved é atualizado
+  // ANTES de enviar, pra quando a ficha salva voltar pelo `sheet` (eco do
+  // próprio save) ela ser reconhecida e não sobrescrever o que foi
+  // digitado nesse meio tempo.
+  const [saveState, setSaveState] = useState<SaveState>('saved')
+  const formRef   = useRef(form)
+  const onSaveRef = useRef(onSave)
+  const lastSaved = useRef(payloadKey(sheetToForm(sheet)))
+  const inFlight  = useRef(false)
+  const queued    = useRef(false)
+  formRef.current   = form
+  onSaveRef.current = onSave
+
+  // Ficha nova vinda de fora (outra pessoa salvou, mestre recarregou) —
+  // o eco do próprio save tem o mesmo payload e é ignorado.
+  useEffect(() => {
+    const incoming = payloadKey(sheetToForm(sheet))
+    if (incoming === lastSaved.current) return
+    lastSaved.current = incoming
+    setForm(sheetToForm(sheet))
+    setSaveState('saved')
+  }, [sheet])
+
+  async function flush(): Promise<void> {
+    if (inFlight.current) { queued.current = true; return }
+    const current = formRef.current
+    const invalid = validateForm(current)
+    if (invalid) { setError(invalid); setSaveState('error'); return }
+    const key = payloadKey(current)
+    if (key === lastSaved.current) { setSaveState('saved'); return }
+
+    const previous = lastSaved.current
+    lastSaved.current = key
+    inFlight.current = true
+    setSaveState('saving')
+    try {
+      await onSaveRef.current(formToPayload(current))
+      setSaveState(payloadKey(formRef.current) === lastSaved.current ? 'saved' : 'pending')
+    } catch {
+      lastSaved.current = previous
+      setSaveState('error')
+    } finally {
+      inFlight.current = false
+      if (queued.current) { queued.current = false; void flush() }
+    }
+  }
+
+  useEffect(() => {
+    if (payloadKey(form) === lastSaved.current) {
+      if (!inFlight.current) setSaveState('saved')
+      return
+    }
+    setSaveState('pending')
+    const timer = setTimeout(() => { void flush() }, AUTOSAVE_DELAY_MS)
+    return () => clearTimeout(timer)
+    // flush só lê refs; o timer reinicia a cada mudança do formulário.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form])
+
+  // Sair da página com algo não salvo → o navegador pergunta. Trocar de
+  // ficha (o editor desmonta) → o que estiver pendente é salvo na hora.
+  useEffect(() => {
+    const isDirty = () => inFlight.current || payloadKey(formRef.current) !== lastSaved.current
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      if (!isDirty()) return
+      void flush()
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      if (payloadKey(formRef.current) !== lastSaved.current && !validateForm(formRef.current)) {
+        void onSaveRef.current(formToPayload(formRef.current)).catch(() => {})
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** Anuncia pra mesa (chat + Atividade) que um triunfo foi usado. */
+  function announceTriumph(what: string) {
+    const who = form.character_name.trim() || ownerName || 'Um personagem'
+    announceTriumphUse(sheet.campaign_id, `${who} usou ${what}`)
+  }
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -292,7 +433,6 @@ export function AltheriumSheetForm({
       sigla="PR" label="Pontos Rúnicos" tone="resource"
       current={form.pr_current} max={form.pr_max}
       onCurrent={(v) => set('pr_current', v)} onMax={(v) => set('pr_max', v)}
-      disabled={saving}
     />
   )
   const fvWidget = usesFv(raiz) && (
@@ -300,7 +440,6 @@ export function AltheriumSheetForm({
       sigla="FV" label="Força de Vontade" tone="resource"
       current={form.fv_current} max={form.fv_max}
       onCurrent={(v) => set('fv_current', v)} onMax={(v) => set('fv_max', v)}
-      disabled={saving}
     />
   )
   const cardsWidget = usesCards(raiz) && (
@@ -312,7 +451,7 @@ export function AltheriumSheetForm({
             type="number" className="alth-vital-widget__value-input" min={0}
             value={form.cards_current}
             onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
-            disabled={saving} aria-label="Cartas atuais"
+            aria-label="Cartas atuais"
           />
           <span className="alth-vital-widget__max">{` / ${cartasMax ?? '—'}`}</span>
         </span>
@@ -320,58 +459,17 @@ export function AltheriumSheetForm({
       <AltheriumDragBar
         value={form.cards_current} max={cartasMax}
         onChange={(v) => set('cards_current', v)}
-        disabled={saving} label="Cartas"
+        label="Cartas"
         trackClassName="alth-vital-widget__bar" fillClassName="alth-vital-widget__bar-fill"
       />
       <span className="alth-vital-widget__note">13 × nível</span>
     </div>
   )
 
-  async function handleSubmit(e: FormEvent) {
+  // Enter num campo (ou "Salvar agora") salva na hora, sem esperar o atraso.
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (form.character_name.trim().length > 80) {
-      setError('O nome do personagem deve ter no máximo 80 caracteres.')
-      return
-    }
-    if (form.notes.length > NOTES_MAX) {
-      setError(`As anotações devem ter no máximo ${NOTES_MAX} caracteres.`)
-      return
-    }
-
-    await onSave({
-      character_name:     form.character_name.trim() || null,
-      level:              form.level,
-      raiz:               form.raiz === '' ? null : form.raiz,
-      genesis:            form.genesis === '' ? null : form.genesis,
-      attr_furia:         form.attr_furia,
-      attr_destino:       form.attr_destino,
-      attr_espirito:      form.attr_espirito,
-      attr_impulso:       form.attr_impulso,
-      attr_estrategia:    form.attr_estrategia,
-      attr_runico:        form.attr_runico,
-      vitality_current:   form.vitality_current,
-      vitality_max:       form.vitality_max,
-      equilibrio_current: form.equilibrio_current,
-      equilibrio_max:     form.equilibrio_max,
-      fv_current:         form.fv_current,
-      fv_max:             form.fv_max,
-      pr_current:         form.pr_current,
-      pr_max:             form.pr_max,
-      cards_current:      form.cards_current,
-      hacksilvers:        form.hacksilvers,
-      db_pernas:          form.db_pernas,
-      db_bracos:          form.db_bracos,
-      db_tronco:          form.db_tronco,
-      db_cabeca:          form.db_cabeca,
-      dano_pernas:        form.dano_pernas,
-      dano_bracos:        form.dano_bracos,
-      dano_tronco:        form.dano_tronco,
-      dano_cabeca:        form.dano_cabeca,
-      berserker_triumphs: form.berserker_triumphs,
-      runaskin_trail:     form.runaskin_trail === '' ? null : form.runaskin_trail,
-      runaskin_scene_uses: form.runaskin_scene_uses,
-      notes:              form.notes.trim() || null,
-    })
+    void flush()
   }
 
   return (
@@ -423,7 +521,6 @@ export function AltheriumSheetForm({
               maxLength={80}
               value={form.character_name}
               onChange={(e) => set('character_name', e.target.value)}
-              disabled={saving}
               aria-label="Nome do personagem"
             />
             <div className="alth-hero__tags">
@@ -432,7 +529,6 @@ export function AltheriumSheetForm({
                 <select
                   className="input alth-hero__select" value={form.raiz}
                   onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
-                  disabled={saving}
                 >
                   <option value="">—</option>
                   {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
@@ -443,7 +539,6 @@ export function AltheriumSheetForm({
                 <select
                   className="input alth-hero__select" value={form.genesis}
                   onChange={(e) => set('genesis', e.target.value)}
-                  disabled={saving}
                 >
                   <option value="">—</option>
                   {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
@@ -458,13 +553,11 @@ export function AltheriumSheetForm({
             sigla="PV" label="Vitalidade" tone="vitality"
             current={form.vitality_current} max={form.vitality_max}
             onCurrent={(v) => set('vitality_current', v)} onMax={(v) => set('vitality_max', v)}
-            disabled={saving}
           />
           <VitalBar
             sigla="PE" label="Equilíbrio" tone="mystic"
             current={form.equilibrio_current} max={form.equilibrio_max}
             onCurrent={(v) => set('equilibrio_current', v)} onMax={(v) => set('equilibrio_max', v)}
-            disabled={saving}
           />
         </div>
 
@@ -475,7 +568,6 @@ export function AltheriumSheetForm({
               type="number" className="input" min={1} max={5}
               value={form.level}
               onChange={(e) => set('level', clamp(e.target.value, 1, 5))}
-              disabled={saving}
             />
           </label>
           <label className="alth-hero__coins">
@@ -484,7 +576,6 @@ export function AltheriumSheetForm({
               type="number" className="input" min={0}
               value={form.hacksilvers}
               onChange={(e) => set('hacksilvers', clamp(e.target.value, 0, 9_999_999))}
-              disabled={saving}
             />
           </label>
         </div>
@@ -548,7 +639,6 @@ export function AltheriumSheetForm({
                         min={0} max={ATTRIBUTE_HARD_MAX}
                         value={value}
                         onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
-                        disabled={saving}
                         aria-label={attr.label}
                       />
                     </div>
@@ -564,7 +654,6 @@ export function AltheriumSheetForm({
                 placeholder="Histórico, NPCs, pistas..."
                 value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
-                disabled={saving}
               />
             </section>
           </div>
@@ -608,7 +697,6 @@ export function AltheriumSheetForm({
                           type="number" className="input" min={0}
                           value={form[part.id] as number}
                           onChange={(e) => set(part.id, clamp(e.target.value, 0, 999) as never)}
-                          disabled={saving}
                           aria-label={`DB em ${part.label}`}
                         />
                       </label>
@@ -618,7 +706,6 @@ export function AltheriumSheetForm({
                           type="number" className="input" min={0}
                           value={form[woundField]}
                           onChange={(e) => set(woundField, clamp(e.target.value, 0, 999))}
-                          disabled={saving}
                           aria-label={`Dano em ${part.label}`}
                         />
                         <span className="alth-anatomy__field-input-tag">Dano</span>
@@ -650,7 +737,6 @@ export function AltheriumSheetForm({
               onUpdateQuantity={onInventoryUpdateQuantity}
               onRemove={onInventoryRemove}
               onToggleEquip={handleToggleEquip}
-              disabled={saving}
             />
           </div>
         )}
@@ -703,7 +789,6 @@ export function AltheriumSheetForm({
                       type="button"
                       className={`alth-domains__pt${points === n ? ' alth-domains__pt--active' : ''}`}
                       onClick={() => onDomainChange(d.id, n)}
-                      disabled={saving}
                       aria-label={`${n} ponto(s) em ${d.label}`}
                       aria-pressed={points === n}
                     >
@@ -743,16 +828,18 @@ export function AltheriumSheetForm({
                   usesLimit={runaskinUsesPerScene(form.pr_max, form.level)}
                   onNewScene={() => set('runaskin_scene_uses', 0)}
                   prCurrent={form.pr_current}
-                  onUse={(cost) => setForm((prev) => ({
-                    ...prev,
-                    pr_current:          Math.max(0, prev.pr_current - cost),
-                    runaskin_scene_uses: prev.runaskin_scene_uses + 1,
-                  }))}
+                  onUse={(cost, name) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      pr_current:          Math.max(0, prev.pr_current - cost),
+                      runaskin_scene_uses: prev.runaskin_scene_uses + 1,
+                    }))
+                    announceTriumph(`${name} (−${cost} PR)`)
+                  }}
                   runes={runes}
                   onRuneCreate={onRuneCreate}
                   onRuneUpdate={onRuneUpdate}
                   onRuneDelete={onRuneDelete}
-                  disabled={saving}
                 />
               )
               : (
@@ -763,9 +850,14 @@ export function AltheriumSheetForm({
                   fvCurrent={form.fv_current}
                   cardsCurrent={form.cards_current}
                   onChange={(ids) => set('berserker_triumphs', ids)}
-                  onSpendFv={(cost) => set('fv_current', Math.max(0, form.fv_current - cost))}
-                  onSpendCards={(cost) => set('cards_current', Math.max(0, form.cards_current - cost))}
-                  disabled={saving}
+                  onSpendFv={(cost, name) => {
+                    set('fv_current', Math.max(0, form.fv_current - cost))
+                    announceTriumph(`${name} (−${cost} FV)`)
+                  }}
+                  onSpendCards={(cost, name) => {
+                    set('cards_current', Math.max(0, form.cards_current - cost))
+                    announceTriumph(`${name} (−${cost} ${cost === 1 ? 'carta' : 'cartas'})`)
+                  }}
                 />
               )}
           </div>
@@ -774,12 +866,21 @@ export function AltheriumSheetForm({
 
       {error && <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>}
       {saveError && <div className="sheet-feedback sheet-feedback--error" role="alert">{saveError}</div>}
-      {saveSuccess && <div className="sheet-feedback sheet-feedback--success" role="status">Ficha salva.</div>}
 
+      {/* Salvamento automático — o botão só aparece quando há algo pra salvar
+          (atalho pra não esperar o atraso, ou tentar de novo após erro). */}
       <div className="alth-actions">
-        <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? <><span className="spinner spinner--sm" /> Salvando...</> : 'Salvar ficha'}
-        </button>
+        <span className={`alth-save-status alth-save-status--${saveState}`} role="status" aria-live="polite">
+          {saveState === 'saved'   && '✓ Tudo salvo'}
+          {saveState === 'pending' && 'Alterações pendentes…'}
+          {saveState === 'saving'  && <><span className="spinner spinner--sm" /> Salvando…</>}
+          {saveState === 'error'   && 'Erro ao salvar'}
+        </span>
+        {(saveState === 'pending' || saveState === 'error') && (
+          <button type="submit" className="btn btn-ghost">
+            {saveState === 'error' ? 'Tentar de novo' : 'Salvar agora'}
+          </button>
+        )}
       </div>
     </form>
   )
@@ -798,10 +899,10 @@ interface VitalWidgetProps {
   max:       number
   onCurrent: (value: number) => void
   onMax:     (value: number) => void
-  disabled:  boolean
+  disabled?: boolean
 }
 
-function VitalWidget({ sigla, label, tone, current, max, onCurrent, onMax, disabled }: VitalWidgetProps) {
+function VitalWidget({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false }: VitalWidgetProps) {
   return (
     <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
       <div className="alth-vital-widget__top">
@@ -848,10 +949,10 @@ interface VitalBarProps {
   max:       number
   onCurrent: (value: number) => void
   onMax:     (value: number) => void
-  disabled:  boolean
+  disabled?: boolean
 }
 
-function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled }: VitalBarProps) {
+function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false }: VitalBarProps) {
   return (
     <div className={`alth-vital-bar alth-vital-bar--${tone}`}>
       <div className="alth-vital-bar__top">
