@@ -22,7 +22,9 @@ import {
   usesRunico,
 } from '../utils/altheriumCalculations'
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
-import type { AltheriumSheet, AltheriumDomainPoints } from '../../../../shared/types'
+import { AltheriumInventoryCard } from './AltheriumInventoryCard'
+import { findArmor } from '../constants/altheriumItems'
+import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem } from '../../../../shared/types'
 import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
@@ -33,17 +35,22 @@ import './AltheriumSheet.css'
 const NOTES_MAX = 2000
 
 interface AltheriumSheetFormProps {
-  sheet:            AltheriumSheet
-  domains:          AltheriumDomainPoints[]
-  ownerName?:       string
-  onSave:           (data: AltheriumSheetUpdate) => Promise<void>
-  onDomainChange:   (domain: string, points: number) => Promise<void>
-  onPortraitChange: (file: File) => Promise<void>
-  onPortraitRemove: () => Promise<void>
-  portraitBusy:     boolean
-  saving:           boolean
-  saveError:        string | null
-  saveSuccess:      boolean
+  sheet:                    AltheriumSheet
+  domains:                  AltheriumDomainPoints[]
+  inventory:                AltheriumInventoryItem[]
+  ownerName?:               string
+  onSave:                   (data: AltheriumSheetUpdate) => Promise<void>
+  onDomainChange:           (domain: string, points: number) => Promise<void>
+  onPortraitChange:         (file: File) => Promise<void>
+  onPortraitRemove:         () => Promise<void>
+  portraitBusy:             boolean
+  onInventoryAdd:           (itemType: AltheriumInventoryItem['item_type'], itemId: string) => Promise<void>
+  onInventoryUpdateQuantity: (id: string, quantity: number) => Promise<void>
+  onInventoryRemove:        (id: string) => Promise<void>
+  onInventoryEquip:         (id: string, equipped: boolean, zone: BodyZone | null) => Promise<void>
+  saving:                   boolean
+  saveError:                string | null
+  saveSuccess:              boolean
 }
 
 type FormData = {
@@ -160,8 +167,9 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
 ]
 
 export function AltheriumSheetForm({
-  sheet, domains, ownerName, onSave, onDomainChange,
+  sheet, domains, inventory, ownerName, onSave, onDomainChange,
   onPortraitChange, onPortraitRemove, portraitBusy,
+  onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
   saving, saveError, saveSuccess,
 }: AltheriumSheetFormProps) {
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
@@ -211,6 +219,25 @@ export function AltheriumSheetForm({
   async function handlePortraitSave(file: File) {
     await onPortraitChange(file)
     setPortraitDraft(null)
+  }
+
+  function handleToggleEquip(item: AltheriumInventoryItem, action: 'equip' | 'unequip', zone?: BodyZone) {
+    if (action === 'unequip') {
+      void onInventoryEquip(item.id, false, null)
+      return
+    }
+    const armor = findArmor(item.item_id)
+    if (!armor) return
+
+    if (armor.coverage === 'todas') {
+      (['db_cabeca', 'db_bracos', 'db_tronco', 'db_pernas'] as const).forEach((z) => {
+        set(z, Math.min(999, form[z] + armor.db))
+      })
+      void onInventoryEquip(item.id, true, null)
+    } else if (zone) {
+      set(zone, Math.min(999, form[zone] + armor.db))
+      void onInventoryEquip(item.id, true, zone)
+    }
   }
 
   // Estado projetado: os máximos de FV/PR/Cartas acompanham o que está
@@ -551,9 +578,13 @@ export function AltheriumSheetForm({
           </p>
         </section>
 
-            <AltheriumComingSoon
-              title="Armas e armaduras"
-              message="O catálogo de armas e armaduras com estatísticas chega numa próxima atualização."
+            <AltheriumInventoryCard
+              inventory={inventory}
+              onAdd={onInventoryAdd}
+              onUpdateQuantity={onInventoryUpdateQuantity}
+              onRemove={onInventoryRemove}
+              onToggleEquip={handleToggleEquip}
+              disabled={saving}
             />
           </div>
         )}

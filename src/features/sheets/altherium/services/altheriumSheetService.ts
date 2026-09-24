@@ -3,6 +3,7 @@ import { logActivity } from '../../../activity/services/activityService'
 import type {
   AltheriumSheet,
   AltheriumDomainPoints,
+  AltheriumInventoryItem,
   AltheriumSheetWithProfile,
   ProfilePublic,
 } from '../../../../shared/types'
@@ -177,4 +178,80 @@ export async function setAltheriumDomainPoints(
     .upsert({ sheet_id: sheetId, domain, points }, { onConflict: 'sheet_id,domain' })
 
   if (error) throw new Error('Não foi possível salvar o domínio.')
+}
+
+// ────────────────────────────────────────────────────────
+// Inventário
+// ────────────────────────────────────────────────────────
+
+/** Itens do inventário da ficha — arma, armadura, escudo, consumível ou utilitário. */
+export async function getAltheriumInventory(sheetId: string): Promise<AltheriumInventoryItem[]> {
+  const { data, error } = await supabase
+    .from('altherium_character_inventory')
+    .select('*')
+    .eq('sheet_id', sheetId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw new Error('Não foi possível carregar o inventário.')
+  return (data ?? []) as AltheriumInventoryItem[]
+}
+
+/**
+ * Adiciona um item do catálogo ao inventário. Se o personagem já tiver
+ * esse item (mesmo item_type + item_id), soma 1 à quantidade existente
+ * em vez de criar uma linha duplicada — `unique (sheet_id, item_type, item_id)`.
+ */
+export async function addAltheriumInventoryItem(
+  sheetId: string,
+  itemType: AltheriumInventoryItem['item_type'],
+  itemId: string,
+): Promise<AltheriumInventoryItem> {
+  const { data: existing, error: findError } = await supabase
+    .from('altherium_character_inventory')
+    .select('*')
+    .eq('sheet_id', sheetId)
+    .eq('item_type', itemType)
+    .eq('item_id', itemId)
+    .maybeSingle()
+
+  if (findError) throw new Error('Não foi possível verificar o inventário.')
+
+  if (existing) {
+    return updateAltheriumInventoryItem(existing.id, { quantity: existing.quantity + 1 })
+  }
+
+  const { data, error } = await supabase
+    .from('altherium_character_inventory')
+    .insert({ sheet_id: sheetId, item_type: itemType, item_id: itemId })
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível adicionar o item.')
+  return data as AltheriumInventoryItem
+}
+
+/** Atualiza quantidade e/ou estado de equipado de um item do inventário. */
+export async function updateAltheriumInventoryItem(
+  id: string,
+  data: Partial<Pick<AltheriumInventoryItem, 'quantity' | 'equipped' | 'equipped_zone'>>,
+): Promise<AltheriumInventoryItem> {
+  const { data: updated, error } = await supabase
+    .from('altherium_character_inventory')
+    .update(data)
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível atualizar o item.')
+  return updated as AltheriumInventoryItem
+}
+
+/** Remove um item do inventário. */
+export async function removeAltheriumInventoryItem(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('altherium_character_inventory')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error('Não foi possível remover o item.')
 }

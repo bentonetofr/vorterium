@@ -647,6 +647,171 @@
   border-top: 1px solid var(--border-dim);
 }
 
+/* ── Inventário (armas, armaduras, itens) ── */
+.alth-inventory__search { margin-bottom: var(--space-1); }
+
+.alth-inventory__grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.alth-inventory__catalog,
+.alth-inventory__owned {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.alth-inventory__group { display: flex; flex-direction: column; gap: var(--space-1); }
+.alth-inventory__group-title {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.alth-inventory__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.alth-inventory__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.alth-inventory__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.alth-inventory__tag {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--danger-bright);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+.alth-inventory__detail {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.alth-inventory__price {
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  color: var(--accent-dim);
+  white-space: nowrap;
+}
+
+.alth-inventory__add,
+.alth-inventory__remove {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  font-size: var(--text-md);
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.alth-inventory__add {
+  border: 1px solid var(--gilded);
+  color: var(--accent-bright);
+}
+.alth-inventory__add:hover:not(:disabled) { background: var(--accent-glow); border-color: var(--gilded-bright); }
+.alth-inventory__remove {
+  border: 1px solid var(--border-dim);
+  color: var(--text-muted);
+}
+.alth-inventory__remove:hover:not(:disabled) { color: var(--danger-bright); border-color: var(--danger); }
+.alth-inventory__add:disabled, .alth-inventory__remove:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.alth-inventory__empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.alth-inventory__qty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.alth-inventory__qty-btn {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-base);
+  background: var(--bg-void);
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+}
+.alth-inventory__qty-btn:hover:not(:disabled) { border-color: var(--gilded); color: var(--accent-bright); }
+.alth-inventory__qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.alth-inventory__qty-value { min-width: 1.5em; text-align: center; font-size: var(--text-sm); color: var(--text-primary); }
+
+.alth-inventory__equip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.alth-inventory__equip input { accent-color: var(--accent-bright); }
+
+.alth-inventory__zone-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+.alth-inventory__zone-hint { font-size: var(--text-xs); color: var(--text-muted); }
+.alth-inventory__zone-btn,
+.alth-inventory__zone-cancel {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-base);
+  background: var(--bg-void);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.alth-inventory__zone-btn:hover { border-color: var(--gilded); color: var(--accent-bright); }
+.alth-inventory__zone-cancel:hover { border-color: var(--danger); color: var(--danger-bright); }
+
 @media (max-width: 640px) {
   .alth-hero { flex-direction: column; }
   .alth-hero__vitals { max-width: none; width: 100%; }
@@ -657,4 +822,6 @@
   .alth-domains__attr { display: none; }
   .alth-anatomy { flex-direction: column; }
   .alth-body { width: min(280px, 80vw); margin: 0 auto; }
+  .alth-inventory__grid { grid-template-columns: 1fr; }
+  .alth-inventory__catalog, .alth-inventory__owned { max-height: 320px; }
 }

@@ -7,13 +7,19 @@ import {
   updateAltheriumSheet,
   uploadAltheriumPortrait,
   removeAltheriumPortrait,
+  getAltheriumInventory,
+  addAltheriumInventoryItem,
+  updateAltheriumInventoryItem,
+  removeAltheriumInventoryItem,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
 import { RAIZES } from '../constants/altherium'
+import type { BodyZone } from './AltheriumBodyDiagram'
 import type {
   AltheriumSheet,
   AltheriumDomainPoints,
+  AltheriumInventoryItem,
   AltheriumSheetWithProfile,
 } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
@@ -56,6 +62,7 @@ interface SheetEditorProps {
 
 function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   const [domains, setDomains]         = useState<AltheriumDomainPoints[]>([])
+  const [inventory, setInventory]     = useState<AltheriumInventoryItem[]>([])
   const [saving, setSaving]           = useState(false)
   const [saveError, setSaveError]     = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
@@ -65,7 +72,12 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     getAltheriumDomains(sheet.id).then(setDomains).catch(() => { /* domínios só não aparecem */ })
   }, [sheet.id])
 
+  const loadInventory = useCallback(() => {
+    getAltheriumInventory(sheet.id).then(setInventory).catch(() => { /* inventário só não aparece */ })
+  }, [sheet.id])
+
   useEffect(() => { loadDomains() }, [loadDomains])
+  useEffect(() => { loadInventory() }, [loadInventory])
 
   async function handleSave(data: AltheriumSheetUpdate) {
     setSaving(true)
@@ -117,17 +129,62 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     }
   }
 
+  async function handleInventoryAdd(itemType: AltheriumInventoryItem['item_type'], itemId: string) {
+    setSaveError(null)
+    try {
+      await addAltheriumInventoryItem(sheet.id, itemType, itemId)
+      loadInventory()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível adicionar o item.')
+    }
+  }
+
+  async function handleInventoryUpdateQuantity(id: string, quantity: number) {
+    setSaveError(null)
+    try {
+      await updateAltheriumInventoryItem(id, { quantity })
+      loadInventory()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível atualizar o item.')
+    }
+  }
+
+  async function handleInventoryRemove(id: string) {
+    setSaveError(null)
+    try {
+      await removeAltheriumInventoryItem(id)
+      loadInventory()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível remover o item.')
+    }
+  }
+
+  async function handleInventoryEquip(id: string, equipped: boolean, zone: BodyZone | null) {
+    setSaveError(null)
+    try {
+      await updateAltheriumInventoryItem(id, { equipped, equipped_zone: zone })
+      loadInventory()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível atualizar o equipamento.')
+    }
+  }
+
   return (
     <AltheriumSheetForm
       key={sheet.id}
       sheet={sheet}
       domains={domains}
+      inventory={inventory}
       ownerName={ownerName}
       onSave={handleSave}
       onDomainChange={handleDomainChange}
       onPortraitChange={handlePortraitChange}
       onPortraitRemove={handlePortraitRemove}
       portraitBusy={portraitBusy}
+      onInventoryAdd={handleInventoryAdd}
+      onInventoryUpdateQuantity={handleInventoryUpdateQuantity}
+      onInventoryRemove={handleInventoryRemove}
+      onInventoryEquip={handleInventoryEquip}
       saving={saving}
       saveError={saveError}
       saveSuccess={saveSuccess}

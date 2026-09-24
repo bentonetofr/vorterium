@@ -222,6 +222,20 @@ export interface AltheriumDomainPoints {
   points:   number
 }
 
+/** Item do inventário de uma ficha Altherium — referencia o catálogo fixo
+ *  (altheriumItems.ts) pelo item_id. equipped_zone só é usado por
+ *  armadura ('escolhida'); escudo cobre as 4 zonas de uma vez e usa null. */
+export interface AltheriumInventoryItem {
+  id:            string
+  sheet_id:      string
+  item_type:     'arma' | 'armadura' | 'escudo' | 'consumivel' | 'utilitario'
+  item_id:       string
+  quantity:      number
+  equipped:      boolean
+  equipped_zone: 'db_cabeca' | 'db_bracos' | 'db_tronco' | 'db_pernas' | null
+  created_at:    string
+}
+
 /** Ficha Altherium enriquecida com o perfil do dono — usada na visão do mestre.
  *  `profile` é null quando o dono não é mais membro da campanha. */
 export interface AltheriumSheetWithProfile extends AltheriumSheet {
