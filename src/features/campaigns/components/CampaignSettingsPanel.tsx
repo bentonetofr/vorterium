@@ -10,6 +10,7 @@ import {
   leaveCampaign,
 } from '../services/campaignService'
 import { CampaignCoverCropEditor } from './CampaignCoverCropEditor'
+import { Collapse } from '../../../shared/components/Collapse'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignSettingsPanel.css'
@@ -367,7 +368,8 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
 
             {campaign.cover_url ? (
               <div
-                className="campaign-cover-preview"
+                key={campaign.cover_url}
+                className="campaign-cover-preview anim-img-swap"
                 style={{ backgroundImage: `url(${campaign.cover_url})` }}
                 role="img"
                 aria-label={`Capa da campanha ${campaign.name}`}
@@ -414,14 +416,16 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
               )}
             </div>
 
-            {coverDraft && (
-              <CampaignCoverCropEditor
-                file={coverDraft}
-                saving={coverBusy}
-                onCancel={() => setCoverDraft(null)}
-                onSave={handleCoverSave}
-              />
-            )}
+            <Collapse open={!!coverDraft}>
+              {() => coverDraft && (
+                <CampaignCoverCropEditor
+                  file={coverDraft}
+                  saving={coverBusy}
+                  onCancel={() => setCoverDraft(null)}
+                  onSave={handleCoverSave}
+                />
+              )}
+            </Collapse>
           </div>
         )}
 

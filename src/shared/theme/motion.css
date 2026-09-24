@@ -1,0 +1,307 @@
+/* ═══════════════════════════════════════════════════════════
+   VORTERIUM — Movimento
+   Tokens, keyframes e classes de animação do site inteiro. Componentes
+   usam as classes .anim-* (entrada) + data-state="closing" (saída, via
+   <Presence>/<Collapse>). Quem prefere menos movimento (sistema
+   operacional) ganha tudo instantâneo — ver o fim do arquivo.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);      /* desacelera macio */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);   /* passa um pouco e volta */
+  --ease-in:     cubic-bezier(0.55, 0, 1, 0.45);      /* saída rápida */
+  --motion-fast: 160ms;
+  --motion-base: 280ms;
+  --motion-slow: 440ms;
+}
+
+/* ── Keyframes ───────────────────────────────────────────── */
+
+@keyframes m-pop-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-pop-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(8px) scale(0.94); }
+}
+@keyframes m-drop-in {
+  from { opacity: 0; transform: translateY(-10px) scaleY(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-drop-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(-8px) scaleY(0.96); }
+}
+@keyframes m-overlay-in {
+  from { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  to   { opacity: 1; }
+}
+@keyframes m-overlay-out {
+  to { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+}
+@keyframes m-modal-in {
+  from { opacity: 0; transform: translateY(28px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-modal-out {
+  to { opacity: 0; transform: translateY(16px) scale(0.95); }
+}
+@keyframes m-collapse-open {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to   { grid-template-rows: 1fr; opacity: 1; }
+}
+@keyframes m-collapse-close {
+  from { grid-template-rows: 1fr; opacity: 1; }
+  to   { grid-template-rows: 0fr; opacity: 0; }
+}
+@keyframes m-page-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-tab-in {
+  from { opacity: 0; transform: translateX(calc(var(--tab-dir, 1) * 32px)); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-item-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-form-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-img-reveal {
+  from { opacity: 0; transform: scale(1.18); filter: blur(8px) saturate(0.4); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+@keyframes m-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.65); }
+  100% { box-shadow: 0 0 0 14px rgba(212, 175, 55, 0); }
+}
+@keyframes m-alert-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes m-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(2px); }
+}
+@keyframes m-bump {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes m-bell-ring {
+  0%, 60%, 100% { transform: rotate(0); }
+  8%  { transform: rotate(16deg); }
+  16% { transform: rotate(-14deg); }
+  24% { transform: rotate(10deg); }
+  32% { transform: rotate(-8deg); }
+  40% { transform: rotate(4deg); }
+  48% { transform: rotate(-2deg); }
+}
+@keyframes m-glint {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to   { transform: translateX(220%) skewX(-20deg); }
+}
+
+/* ── Classes de entrada/saída ────────────────────────────── */
+
+/* Painel flutuante (dado, notificações): cresce a partir do botão. */
+.anim-pop {
+  transform-origin: var(--anim-origin, bottom right);
+  animation: m-pop-in var(--motion-base) var(--ease-spring) both;
+}
+.anim-pop[data-state="closing"] {
+  animation: m-pop-out 180ms var(--ease-in) both;
+  pointer-events: none;
+}
+
+/* Menu suspenso: desce a partir de cima. */
+.anim-drop {
+  transform-origin: top center;
+  animation: m-drop-in var(--motion-base) var(--ease-out) both;
+}
+.anim-drop[data-state="closing"] {
+  animation: m-drop-out 180ms var(--ease-in) both;
+  pointer-events: none;
+}
+
+/* Bloco que abre/fecha a altura (<Collapse>). O inner tem margem/padding
+   que se anulam pra sombra e anel de foco não serem cortados. */
+.anim-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: m-collapse-open 320ms var(--ease-out) both;
+}
+.anim-collapse[data-state="closing"] {
+  animation: m-collapse-close 240ms var(--ease-in) both;
+  pointer-events: none;
+}
+.anim-collapse__inner {
+  min-height: 0;
+  overflow: hidden;
+  margin: -4px;
+  padding: 4px;
+}
+
+/* Troca de página/seção. fill "backwards": depois de terminar não sobra
+   transform — senão o wrapper vira bloco de contenção de position:fixed. */
+.anim-page { animation: m-page-in var(--motion-slow) var(--ease-out) backwards; }
+
+/* Painel de aba — entra do lado pra onde a aba foi (--tab-dir: 1 | -1). */
+.anim-tab-panel { animation: m-tab-in 360ms var(--ease-out) backwards; }
+
+/* Imagem trocada (avatar, retrato, capa) — usar com key={url}. */
+.anim-img-swap { animation: m-img-reveal 620ms var(--ease-out) backwards; }
+
+/* Anel dourado que pulsa uma vez (ex.: avatar recém-trocado). */
+.anim-ring { animation: m-ring 900ms var(--ease-out) 1; }
+
+/* Número/selo que mudou — usar com key={valor}. */
+.anim-bump { display: inline-block; animation: m-bump 360ms var(--ease-spring) backwards; }
+
+/* Lista em cascata: cada filho entra um pouco depois do anterior. */
+.anim-stagger > * { animation: m-item-in 420ms var(--ease-out) backwards; }
+.anim-stagger > :nth-child(2)  { animation-delay: 40ms; }
+.anim-stagger > :nth-child(3)  { animation-delay: 80ms; }
+.anim-stagger > :nth-child(4)  { animation-delay: 120ms; }
+.anim-stagger > :nth-child(5)  { animation-delay: 160ms; }
+.anim-stagger > :nth-child(6)  { animation-delay: 200ms; }
+.anim-stagger > :nth-child(7)  { animation-delay: 240ms; }
+.anim-stagger > :nth-child(8)  { animation-delay: 280ms; }
+.anim-stagger > :nth-child(9)  { animation-delay: 320ms; }
+.anim-stagger > :nth-child(10) { animation-delay: 360ms; }
+.anim-stagger > :nth-child(n + 11) { animation-delay: 400ms; }
+
+/* ── Janela modal (ModalOverlay) ─────────────────────────── */
+
+.modal-overlay { animation: m-overlay-in var(--motion-base) var(--ease-out) both; }
+.modal-overlay > * { animation: m-modal-in 380ms var(--ease-spring) both; }
+.modal-overlay[data-state="closing"] {
+  animation: m-overlay-out 220ms var(--ease-in) both;
+  pointer-events: none;
+}
+.modal-overlay[data-state="closing"] > * { animation: m-modal-out 200ms var(--ease-in) both; }
+
+/* ── Barras de abas com destaque deslizante (<TabIndicator>) ── */
+
+.campaign-tabs { position: relative; }
+.campaign-tabs > .campaign-tab { position: relative; z-index: 1; }
+.campaign-tabs:has(> .tab-indicator) > .campaign-tab--active {
+  background: transparent;
+  box-shadow: none;
+}
+.tab-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+}
+/* Fio dourado embaixo da aba ativa. */
+.tab-indicator::after {
+  content: '';
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--gilded-bright), transparent);
+  opacity: 0.8;
+}
+.tab-indicator--ready {
+  transition:
+    transform 420ms var(--ease-spring),
+    width 420ms var(--ease-out),
+    height 420ms var(--ease-out),
+    opacity var(--motion-fast) ease;
+}
+.campaign-tab { transition: color var(--motion-base) ease, background var(--motion-fast) ease; }
+.campaign-tab:active { transform: scale(0.96); }
+
+/* ── Micro-interações globais ────────────────────────────── */
+
+.btn { transition: all var(--transition-base), transform 180ms var(--ease-spring); }
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled) { transform: scale(0.96); transition-duration: 60ms; }
+
+/* Brilho que atravessa o botão principal ao passar o mouse. */
+.btn-primary { position: relative; overflow: hidden; }
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .btn-primary:hover:not(:disabled)::after { animation: m-glint 700ms var(--ease-out); }
+}
+
+.input { transition: border-color var(--motion-fast) ease, box-shadow var(--motion-base) var(--ease-out), background var(--motion-fast) ease; }
+.input:focus { box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18); }
+
+/* Avisos aparecem descendo; erros ainda dão uma sacudida. :where() = sem
+   especificidade — qualquer animação própria do componente ganha. */
+:where([role="alert"]) { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+:where([role="alert"][class*="error"]) {
+  animation:
+    m-alert-in var(--motion-base) var(--ease-out) backwards,
+    m-shake 420ms var(--ease-out) 120ms;
+}
+:where([role="status"][class*="feedback"], [role="status"][class*="success"]) {
+  animation: m-alert-in var(--motion-base) var(--ease-out) backwards;
+}
+
+/* Cards que levantam de leve ao passar o mouse. */
+@media (hover: hover) {
+  :where(.campaign-card-row, .session-card, .note-card, .member-card, .sheet-card,
+         .act-feed-card, .act-presence-card, .ov-stat, .ov-notes-card, .campaign-card) {
+    transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out),
+                border-color var(--motion-fast) ease, background var(--motion-fast) ease;
+  }
+  :where(.campaign-card-row, .session-card, .note-card, .member-card, .sheet-card, .campaign-card, .ov-stat, .ov-notes-card):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  }
+}
+:where(.sheet-card):active { transform: scale(0.98); }
+
+/* Confirmações inline ("Remover jogador?", "Excluir?") surgem com um pop. */
+:where(.member-card__confirm, .session-card__confirm, .note-card__confirm, .chat-message__confirm) {
+  transform-origin: right center;
+  animation: m-pop-in 260ms var(--ease-spring) backwards;
+}
+
+/* Formulários que abrem no lugar (nova sessão, nota, edição). */
+:where(.session-form, .note-form, .settings-panel__edit-form, .initiative-add-npc) {
+  animation: m-form-in 340ms var(--ease-out) backwards;
+}
+
+/* Spinners entram suaves em vez de piscar. */
+.spinner { animation: spin 0.7s linear infinite, m-bump 260ms var(--ease-out) backwards; }
+
+/* ── Menos movimento ─────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .spinner { animation: spin 1.2s linear infinite !important; }
+}

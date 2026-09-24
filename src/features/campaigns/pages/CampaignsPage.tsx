@@ -79,7 +79,7 @@ export function CampaignsPage() {
                 <span className="campaigns-section__title-icon">◈</span>
                 Campanhas como mestre
               </h3>
-              <div className="campaign-cards">
+              <div className="campaign-cards anim-stagger">
                 {asMaster.map((c) => <CampaignCard key={c.id} campaign={c} />)}
               </div>
             </section>
@@ -91,7 +91,7 @@ export function CampaignsPage() {
                 <span className="campaigns-section__title-icon">◈</span>
                 Campanhas como jogador
               </h3>
-              <div className="campaign-cards">
+              <div className="campaign-cards anim-stagger">
                 {asPlayer.map((c) => <CampaignCard key={c.id} campaign={c} />)}
               </div>
             </section>

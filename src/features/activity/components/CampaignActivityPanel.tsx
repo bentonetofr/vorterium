@@ -133,7 +133,7 @@ export function CampaignActivityPanel({ campaignId }: CampaignActivityPanelProps
             <h4 className="act-card__title">Histórico recente</h4>
 
             {activities.length > 0 ? (
-              <ul className="act-feed" role="list">
+              <ul className="act-feed anim-stagger" role="list">
                 {activities.map((item) => (
                   <li key={item.id} className="act-item">
                     <span className="act-item__icon" aria-hidden="true">
@@ -165,7 +165,7 @@ export function CampaignActivityPanel({ campaignId }: CampaignActivityPanelProps
             </h4>
 
             {presenceList.length > 0 ? (
-              <ul className="act-presence-list" role="list">
+              <ul className="act-presence-list anim-stagger" role="list">
                 {presenceList.map(({ member, lastSeenAt, online }) => (
                   <li key={member.user_id} className="presence-item">
                     <span

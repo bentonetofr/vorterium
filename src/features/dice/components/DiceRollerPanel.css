@@ -333,3 +333,25 @@
   .quick-roll-btn  { padding: var(--space-2) var(--space-3); }
   .dice-custom__input-row { flex-direction: column; }
 }
+
+/* ═══ Movimento ═══ */
+/* Botões de dado: pulam no hover e "chacoalham" no clique. */
+@keyframes quick-roll-jiggle {
+  0%   { transform: scale(0.9) rotate(0); }
+  35%  { transform: scale(1.06) rotate(-8deg); }
+  65%  { transform: scale(1.02) rotate(6deg); }
+  100% { transform: none; }
+}
+.quick-roll-btn { transition: all var(--transition-base), transform 200ms var(--ease-spring); }
+.quick-roll-btn:hover:not(:disabled) { transform: translateY(-2px); }
+.quick-roll-btn:active:not(:disabled) { animation: quick-roll-jiggle 380ms var(--ease-out); }
+.quick-roll-btns > * { animation: m-item-in 360ms var(--ease-out) backwards; }
+.quick-roll-btns > :nth-child(2) { animation-delay: 30ms; }
+.quick-roll-btns > :nth-child(3) { animation-delay: 60ms; }
+.quick-roll-btns > :nth-child(4) { animation-delay: 90ms; }
+.quick-roll-btns > :nth-child(5) { animation-delay: 120ms; }
+.quick-roll-btns > :nth-child(6) { animation-delay: 150ms; }
+.quick-roll-btns > :nth-child(n + 7) { animation-delay: 180ms; }
+.dice-custom__example-chip { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
+.dice-custom__example-chip:active { transform: scale(0.92); }
+.dice-history__result { display: inline-block; animation: m-bump 420ms var(--ease-spring) backwards; }

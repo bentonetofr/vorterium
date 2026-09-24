@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import {
@@ -99,8 +99,9 @@ export function InvitePage() {
 
   return (
     <div className="invite-page animate-fade-in">
-      <div className="invite-page__card">
+      <div className="invite-page__card anim-pop" style={{ '--anim-origin': 'center' } as CSSProperties}>
         <span className="invite-page__icon" aria-hidden="true">◈</span>
+        <div key={status} className="invite-page__state">
 
         {status === 'loading' && (
           <>
@@ -186,6 +187,7 @@ export function InvitePage() {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   )

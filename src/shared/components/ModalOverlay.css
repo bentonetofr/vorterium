@@ -9,7 +9,6 @@
   background: rgba(4, 7, 16, 0.55);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  animation: fadeIn 0.15s ease-out;
 }
 
 /* Botão × redondo do canto da janela. */

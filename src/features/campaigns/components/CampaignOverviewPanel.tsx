@@ -15,6 +15,7 @@ import {
 import { useCurrentCampaign } from '../CurrentCampaignContext'
 import type { CampaignWithRole, InitiativeParticipant, InitiativeState } from '../../../shared/types'
 import type { TabId, SessionSubTabId } from '../campaignSections'
+import { AnimatedNumber } from '../../../shared/components/AnimatedNumber'
 import './CampaignOverviewPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -282,7 +283,7 @@ function MasterDashboard({
     <div className="ov-dashboard">
 
       {/* ── Linha 1: cards de resumo ── */}
-      <div className="ov-stats">
+      <div className="ov-stats anim-stagger">
 
         <SessionTableCard campaign={campaign} onNavigate={onNavigate} />
 
@@ -291,7 +292,7 @@ function MasterDashboard({
           title="Membros"
           action={{ label: 'Gerenciar membros', onClick: () => onNavigate('membros') }}
         >
-          <div className="ov-stat__num">{data.members.length}</div>
+          <div className="ov-stat__num"><AnimatedNumber value={data.members.length} /></div>
           <div className="ov-stat__details">
             <span>{players.length} jogador{players.length !== 1 ? 'es' : ''}</span>
             {master && <span>Mestre: {master.profile.display_name}</span>}
@@ -306,7 +307,7 @@ function MasterDashboard({
           title="Sessões"
           action={{ label: 'Ver sessões', onClick: () => onNavigate('sessoes') }}
         >
-          <div className="ov-stat__num">{data.sessionsTotal}</div>
+          <div className="ov-stat__num"><AnimatedNumber value={data.sessionsTotal} /></div>
           <div className="ov-stat__details">
             {data.sessionsTotal === 0 ? (
               <span>nenhuma registrada</span>
@@ -377,7 +378,7 @@ function PlayerDashboard({
     <div className="ov-dashboard">
 
       {/* ── Linha 1: cards de resumo ── */}
-      <div className="ov-stats">
+      <div className="ov-stats anim-stagger">
 
         <SessionTableCard campaign={campaign} onNavigate={onNavigate} />
 
@@ -386,7 +387,7 @@ function PlayerDashboard({
           title="Membros"
           action={{ label: 'Ver membros', onClick: () => onNavigate('membros') }}
         >
-          <div className="ov-stat__num">{data.members.length}</div>
+          <div className="ov-stat__num"><AnimatedNumber value={data.members.length} /></div>
           <div className="ov-stat__details">
             <span>na campanha</span>
             {masterMember && <span>Mestre: {masterMember.profile.display_name}</span>}
@@ -401,7 +402,7 @@ function PlayerDashboard({
           title="Sessões"
           action={{ label: 'Ver sessões', onClick: () => onNavigate('sessoes') }}
         >
-          <div className="ov-stat__num">{data.sessionsTotal}</div>
+          <div className="ov-stat__num"><AnimatedNumber value={data.sessionsTotal} /></div>
           <div className="ov-stat__details">
             {data.sessionsTotal === 0 ? (
               <span>nenhuma registrada</span>

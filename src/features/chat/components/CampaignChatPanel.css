@@ -338,3 +338,21 @@
   .chat-composer__row { gap: var(--space-2); }
   .chat-composer__send { padding: var(--space-2) var(--space-4); }
 }
+
+/* ═══ Movimento ═══ */
+/* Mensagem nova entra deslizando do lado de quem mandou. */
+@keyframes chat-msg-in {
+  from { opacity: 0; transform: translateX(-14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes chat-msg-in-own {
+  from { opacity: 0; transform: translateX(14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+.chat-message { animation: chat-msg-in 320ms var(--ease-out) backwards; }
+.chat-message--own { animation-name: chat-msg-in-own; }
+.chat-thread-banner { animation: m-drop-in 300ms var(--ease-out) backwards; }
+.chat-sidebar__item { transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform 180ms var(--ease-spring), box-shadow var(--motion-base) ease; }
+.chat-sidebar__item:active { transform: scale(0.96); }
+.chat-sidebar__item--active { box-shadow: inset 2px 0 0 var(--gilded-bright); }
+.chat-sidebar__badge { animation: m-bump 360ms var(--ease-spring) backwards; }

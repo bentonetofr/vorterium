@@ -461,7 +461,7 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
 
       <div className="chat-panel__main">
         {activeThread.type === 'private' && (
-          <div className="chat-thread-banner">🔒 Conversa privada com {activeThread.name}</div>
+          <div key={activeThread.userId} className="chat-thread-banner">🔒 Conversa privada com {activeThread.name}</div>
         )}
 
         <div className="chat-panel__list" ref={listRef} onScroll={handleScroll}>

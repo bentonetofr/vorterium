@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useLocation } from 'react-router-dom'
 import { CampaignChatPanel } from '../../chat/components/CampaignChatPanel'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
@@ -6,6 +6,7 @@ import { CampaignActivityPanel } from '../../activity/components/CampaignActivit
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
+import { TabIndicator, useTabDirection } from '../../../shared/components/TabIndicator'
 import './SessionTablePanel.css'
 
 interface SessionTablePanelProps {
@@ -17,6 +18,8 @@ interface SubTab {
   id:    SessionSubTabId
   label: string
 }
+
+const SUB_TAB_ORDER: SessionSubTabId[] = ['ficha', 'chat', 'atividade', 'iniciativa']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -30,6 +33,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   const location = useLocation()
   const initialSubTab = (location.state as NavigationState | null)?.initialSessionSubTab ?? 'ficha'
   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(initialSubTab)
+  const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
 
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.
@@ -41,7 +45,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   ]
 
   return (
-    <div className="session-table">
+    <div className="session-table" style={{ '--tab-dir': tabDir } as CSSProperties}>
       <nav className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Mesa da sessão">
         {subTabs.map((tab) => (
           <button
@@ -55,13 +59,14 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             <span className="campaign-tab__label">{tab.label}</span>
           </button>
         ))}
+        <TabIndicator activeKey={activeSubTab} />
       </nav>
 
       <div
         id="session-subtabpanel-chat"
         role="tabpanel"
         hidden={activeSubTab !== 'chat'}
-        className="animate-fade-up"
+        className="anim-tab-panel"
       >
         {activeSubTab === 'chat' && (
           <CampaignChatPanel
@@ -76,7 +81,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         id="session-subtabpanel-ficha"
         role="tabpanel"
         hidden={activeSubTab !== 'ficha'}
-        className="animate-fade-up"
+        className="anim-tab-panel"
       >
         {activeSubTab === 'ficha' && (
           <CampaignSheetPanel
@@ -90,7 +95,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         id="session-subtabpanel-atividade"
         role="tabpanel"
         hidden={activeSubTab !== 'atividade'}
-        className="animate-fade-up"
+        className="anim-tab-panel"
       >
         {activeSubTab === 'atividade' && (
           <CampaignActivityPanel
@@ -104,7 +109,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         id="session-subtabpanel-iniciativa"
         role="tabpanel"
         hidden={activeSubTab !== 'iniciativa'}
-        className="animate-fade-up"
+        className="anim-tab-panel"
       >
         {activeSubTab === 'iniciativa' && (
           <InitiativeTrackerPanel

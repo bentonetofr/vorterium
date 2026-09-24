@@ -17,6 +17,7 @@ import {
 import { getCampaignPresence, isUserOnline, formatPresenceTime } from '../../activity/services/activityService'
 import type { CampaignMemberWithProfile } from '../../../shared/types'
 import { formatRole } from '../../../shared/utils/campaign'
+import { Collapse } from '../../../shared/components/Collapse'
 import './CampaignMembersPanel.css'
 
 interface MemberPresence {
@@ -194,7 +195,7 @@ function MemberSection({
       {members.length === 0 ? (
         <p className="members-section__empty">{emptyMessage ?? 'Nenhum membro.'}</p>
       ) : (
-        <div className="members-section__list">
+        <div className="members-section__list anim-stagger">
           {members.map((m) => {
             const sheetStatus = ('sheetStatus' in m)
               ? (m as CampaignMemberWithSheetStatus).sheetStatus
@@ -372,7 +373,10 @@ function InviteCard({ campaignId }: { campaignId: string }) {
           </p>
         </div>
         {!initLoading && (
-          <span className={`invite-status-badge invite-status-badge--${inviteUrl ? 'active' : 'inactive'}`}>
+          <span
+            key={inviteUrl ? 'active' : 'inactive'}
+            className={`invite-status-badge anim-bump invite-status-badge--${inviteUrl ? 'active' : 'inactive'}`}
+          >
             {inviteUrl ? 'Convite ativo' : 'Sem convite'}
           </span>
         )}
@@ -401,27 +405,29 @@ function InviteCard({ campaignId }: { campaignId: string }) {
           }
         </button>
       ) : (
-        <>
+        <div key={inviteUrl} className="invite-active">
           <div className="invite-link-row">
             <span className="invite-link-url" title={inviteUrl}>{inviteUrl}</span>
             <button
-              className="btn btn-primary invite-link-copy"
+              className={`btn btn-primary invite-link-copy${copied ? ' invite-link-copy--done' : ''}`}
               onClick={handleCopy}
               disabled={copied}
             >
-              {copied ? '✓ Copiado' : 'Copiar link'}
+              <span key={copied ? 'ok' : 'copy'} className="anim-bump">
+                {copied ? '✓ Copiado' : 'Copiar link'}
+              </span>
             </button>
           </div>
-          {copied && (
+          <Collapse open={copied}>
             <span className="invite-copied-msg">Link copiado para a área de transferência!</span>
-          )}
+          </Collapse>
           <button
             className="btn btn-ghost invite-deactivate-btn"
             onClick={handleDeactivate}
           >
             Desativar convite
           </button>
-        </>
+        </div>
       )}
     </div>
   )

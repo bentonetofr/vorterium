@@ -246,7 +246,7 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
       {participants.length === 0 ? (
         <p className="initiative-empty__text">Nenhum participante — adicione um NPC abaixo ou espere os jogadores entrarem.</p>
       ) : (
-        <ul className="initiative-list" aria-label="Ordem de iniciativa">
+        <ul className="initiative-list anim-stagger" aria-label="Ordem de iniciativa">
           {participants.map((p) => {
             const isCurrentTurn = state.current_turn_participant_id === p.id
             const canEdit = isMaster || p.user_id === currentUserId

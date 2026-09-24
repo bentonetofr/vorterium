@@ -12,7 +12,7 @@ interface CampaignSidebarSubmenuProps {
 /** Lista de seções da campanha — reaproveitada no acordeão da barra lateral (desktop) e no menu suspenso da barra de topo (mobile). */
 export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, onNavigate }: CampaignSidebarSubmenuProps) {
   return (
-    <div className="campaign-submenu">
+    <div className="campaign-submenu anim-stagger">
       {CAMPAIGN_SECTIONS.map((section) => (
         <NavLink
           key={section.id}

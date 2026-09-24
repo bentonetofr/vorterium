@@ -224,3 +224,20 @@
   border-top: 1px solid var(--border-dim);
 }
 .initiative-add-npc .input { flex: 1; }
+
+/* ═══ Movimento ═══ */
+/* Turno atual: a linha acende com um brilho que pulsa devagar e a
+   marcação na barra de valores desliza até a nova posição. */
+@keyframes initiative-turn-glow {
+  0%, 100% { box-shadow: inset 3px 0 0 var(--gilded-bright), 0 0 0 0 rgba(212, 175, 55, 0); }
+  50%      { box-shadow: inset 3px 0 0 var(--gilded-bright), 0 0 14px 0 rgba(212, 175, 55, 0.22); }
+}
+.initiative-row { transition: border-color var(--motion-base) ease, background var(--motion-base) ease; }
+/* Seletor mais forte que o .anim-stagger > * da lista (motion.css). */
+.initiative-list > .initiative-row--current {
+  animation: initiative-turn-glow 2.4s ease-in-out infinite;
+}
+.initiative-value-bar__marker {
+  transition: left 500ms var(--ease-out), width var(--motion-base) var(--ease-spring),
+              height var(--motion-base) var(--ease-spring), background var(--motion-base) ease;
+}

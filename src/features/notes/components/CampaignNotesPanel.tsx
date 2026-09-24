@@ -7,6 +7,7 @@ import {
   type NoteFormData,
 } from '../services/noteService'
 import type { CampaignNote } from '../../../shared/types'
+import { Collapse } from '../../../shared/components/Collapse'
 import './CampaignNotesPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -321,13 +322,13 @@ export function CampaignNotesPanel({
       )}
 
       {/* ── Formulário de criação ── */}
-      {showCreateForm && (
+      <Collapse open={showCreateForm}>
         <NoteForm
           saving={saving}
           onSave={handleCreate}
           onCancel={() => setShowCreateForm(false)}
         />
-      )}
+      </Collapse>
 
       {/* ── Feedback ── */}
       {feedback && (
@@ -361,7 +362,7 @@ export function CampaignNotesPanel({
 
       {/* ── Lista de notas ── */}
       {!loading && !error && notes.length > 0 && (
-        <div className="notes-list">
+        <div className="notes-list anim-stagger">
           {notes.map((note) =>
             editingNoteId === note.id ? (
               <NoteForm

@@ -7,6 +7,7 @@ import {
   markActivitySeen,
   type LiveNotification,
 } from '../services/activityService'
+import { Presence } from '../../../shared/components/Presence'
 import './NotificationBell.css'
 
 // Cadência do selo — mais devagar que o pop-up ao vivo, é só o "de fundo".
@@ -70,8 +71,9 @@ export function NotificationBell() {
 
   return (
     <>
-      {isOpen && (
-        <div className="notification-bell__popover" role="dialog" aria-label="Notificações">
+      <Presence show={isOpen} exitMs={180}>
+        {(state) => (
+        <div className="notification-bell__popover anim-pop" data-state={state} role="dialog" aria-label="Notificações">
           <div className="notification-bell__popover-header">
             <svg
               width="16" height="16" viewBox="0 0 24 24"
@@ -106,7 +108,7 @@ export function NotificationBell() {
             )}
 
             {!loading && items.length > 0 && (
-              <ul className="notification-bell__items">
+              <ul className="notification-bell__items anim-stagger">
                 {items.map((item) => (
                   <li key={item.id} className="notification-bell__item">
                     <p className="notification-bell__item-message">{item.message}</p>
@@ -120,11 +122,12 @@ export function NotificationBell() {
             )}
           </div>
         </div>
-      )}
+        )}
+      </Presence>
 
       <button
         type="button"
-        className="notification-bell"
+        className={`notification-bell${count > 0 ? ' notification-bell--unread' : ''}${isOpen ? ' notification-bell--open' : ''}`}
         onClick={handleToggle}
         aria-label={count > 0 ? `${count} notificações novas` : 'Notificações'}
         aria-expanded={isOpen}
@@ -139,7 +142,7 @@ export function NotificationBell() {
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
         {count > 0 && (
-          <span className="notification-bell__badge">{count > 99 ? '99+' : count}</span>
+          <span key={count} className="notification-bell__badge anim-bump">{count > 99 ? '99+' : count}</span>
         )}
       </button>
     </>

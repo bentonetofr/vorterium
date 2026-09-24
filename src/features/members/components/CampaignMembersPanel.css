@@ -260,6 +260,37 @@
   background: rgba(255, 180, 171, 0.07);
 }
 
+/* ── Movimento do convite ── */
+/* Link recém-gerado: o bloco entra e um brilho dourado atravessa a URL. */
+.invite-active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: m-form-in 380ms var(--ease-out) backwards;
+}
+.invite-link-url { position: relative; }
+.invite-link-url::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.35), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  animation: m-glint 1.1s var(--ease-out) 250ms;
+  pointer-events: none;
+}
+.invite-link-copy--done {
+  background: var(--success);
+  border-color: rgba(110, 201, 154, 0.6);
+  color: #fff;
+  opacity: 1 !important;
+  box-shadow: 0 0 0 4px rgba(77, 158, 120, 0.2);
+}
+/* A mensagem "copiado" abre deslizando — a margem negativa anula o gap
+   do flex enquanto ela está fechada, sem pulo. */
+.invite-active > .anim-collapse { margin-top: calc(-1 * var(--space-4)); }
+.invite-copied-msg { display: block; padding-top: var(--space-4); }
+
 /* ── Formulário de adicionar jogador ── */
 .add-player-form {
   display: flex;

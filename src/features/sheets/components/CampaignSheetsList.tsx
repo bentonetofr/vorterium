@@ -100,7 +100,7 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
   return (
     <div className="sheets-list-wrapper">
       {/* ── Cards de resumo, um por jogador ── */}
-      <div className="sheets-cards">
+      <div className="sheets-cards anim-stagger">
         {sheets.map((sheet) => {
           const isSelected = selected?.id === sheet.id
           const filled     = isSheetFilled(sheet)

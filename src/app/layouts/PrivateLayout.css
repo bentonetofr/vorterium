@@ -236,6 +236,9 @@
   font-size: var(--text-xs);
   flex-shrink: 0;
 }
+/* Seta gira em vez de trocar de caractere. */
+.topbar__campaign-chevron { transition: transform var(--motion-base) var(--ease-spring); }
+.topbar__campaign-toggle[aria-expanded="true"] .topbar__campaign-chevron { transform: rotate(180deg); }
 .topbar__campaign-menu {
   position: absolute;
   top: 100%;
@@ -304,6 +307,13 @@
   display: flex;
   flex-direction: column;
 }
+/* Envolve cada página pra animar a troca (motion.css: .anim-page). */
+.private-layout__page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
 /* ── Barra de navegação inferior — mobile ── */
 .bottom-nav {
@@ -344,17 +354,6 @@
   text-transform: uppercase;
 }
 .bottom-nav__link--active { color: var(--accent-bright); }
-.bottom-nav__link--active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 28%;
-  right: 28%;
-  height: 2px;
-  border-radius: 0 0 2px 2px;
-  background: var(--gilded-bright);
-  box-shadow: 0 0 8px var(--gilded);
-}
 
 /* ── Responsivo ── */
 @media (max-width: 768px) {
@@ -402,3 +401,69 @@
   transition: color var(--transition-fast);
 }
 .sidebar__legal-link:hover { color: var(--accent-bright); }
+
+/* ═══ Movimento — navegação ═══ */
+
+/* Barra lateral: fio dourado que cresce à esquerda do link ativo e ícone
+   que dá um pulinho no hover. */
+.sidebar__link { position: relative; }
+.sidebar__link::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 22%;
+  bottom: 22%;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--gilded-bright);
+  box-shadow: 0 0 8px var(--gilded);
+  transform: scaleY(0);
+  transition: transform var(--motion-base) var(--ease-spring);
+}
+.sidebar__link--active::before { transform: scaleY(1); }
+.sidebar__link-icon { display: inline-block; transition: transform var(--motion-base) var(--ease-spring); }
+.sidebar__link:hover .sidebar__link-icon { transform: translateX(2px) scale(1.15); }
+.sidebar__link--active .sidebar__link-icon { transform: scale(1.1); }
+.sidebar__avatar { transition: transform var(--motion-base) var(--ease-spring); }
+.sidebar__user--link:hover .sidebar__avatar { transform: scale(1.06) rotate(-3deg); }
+
+/* Submenu da campanha: linha do item ativo. */
+.campaign-submenu__item { position: relative; }
+.campaign-submenu__item--active { box-shadow: inset 2px 0 0 var(--gilded-bright); }
+.campaign-submenu__badge { animation: m-bump 360ms var(--ease-spring) backwards; }
+
+/* Barra inferior (mobile): o fio do ativo abre do centro e o ícone pula. */
+.bottom-nav__link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 28%;
+  right: 28%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--gilded-bright);
+  box-shadow: 0 0 8px var(--gilded);
+  transform: scaleX(0);
+  transition: transform 360ms var(--ease-spring);
+}
+.bottom-nav__link--active::before { transform: scaleX(1); }
+.bottom-nav__icon { transition: transform 360ms var(--ease-spring); }
+.bottom-nav__link--active .bottom-nav__icon { transform: translateY(-2px) scale(1.18); }
+.bottom-nav__link:active .bottom-nav__icon { transform: scale(0.85); transition-duration: 80ms; }
+
+/* Botão de dados aberto: fica "aceso" com um anel. */
+.dice-fab--open {
+  background: var(--accent-bright);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.dice-fab:active:not(:disabled) { transform: scale(0.9); transition-duration: 80ms; }
+
+/* Sino: balança de vez em quando enquanto houver notificação não lida. */
+.notification-bell svg { transform-origin: 50% 10%; }
+.notification-bell--unread svg { animation: m-bell-ring 3.2s var(--ease-out) 1s infinite; }
+.notification-bell--open {
+  border-color: var(--gilded-bright);
+  color: var(--accent-bright);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.18), 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+.notification-bell:active { transform: scale(0.9); transition-duration: 80ms; }

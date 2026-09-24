@@ -10,6 +10,7 @@ import {
   uploadCurrentAvatar,
 } from '../services/profileService'
 import { AvatarCropEditor } from '../components/AvatarCropEditor'
+import { Presence } from '../../../shared/components/Presence'
 import type { Profile } from '../../../shared/types'
 import { useTheme } from '../../../shared/theme/ThemeProvider'
 import '../../../features/campaigns/pages/CampaignPages.css'
@@ -196,9 +197,13 @@ export function ProfilePage() {
           <h3 className="profile-card__title">Identidade visual</h3>
 
           <div className="profile-avatar-editor">
-            <div className="profile-avatar" aria-hidden={profile.avatar_url ? undefined : true}>
+            <div
+              key={profile.avatar_url ?? 'sem-avatar'}
+              className="profile-avatar anim-ring"
+              aria-hidden={profile.avatar_url ? undefined : true}
+            >
               {profile.avatar_url
-                ? <img src={profile.avatar_url} alt="" />
+                ? <img src={profile.avatar_url} alt="" className="anim-img-swap" />
                 : profile.display_name.trim().charAt(0).toUpperCase()
               }
             </div>
@@ -230,14 +235,16 @@ export function ProfilePage() {
             </div>
           </div>
 
-          {avatarDraft && (
-            <AvatarCropEditor
-              file={avatarDraft}
-              saving={avatarBusy}
-              onCancel={() => setAvatarDraft(null)}
-              onSave={handleAvatarSave}
-            />
-          )}
+          <Presence show={!!avatarDraft} exitMs={220}>
+            {() => avatarDraft && (
+              <AvatarCropEditor
+                file={avatarDraft}
+                saving={avatarBusy}
+                onCancel={() => setAvatarDraft(null)}
+                onSave={handleAvatarSave}
+              />
+            )}
+          </Presence>
 
           {avatarError && (
             <p className="profile-msg profile-msg--error" role="alert">{avatarError}</p>

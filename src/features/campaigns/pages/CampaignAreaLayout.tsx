@@ -30,6 +30,8 @@ export function CampaignAreaLayout() {
   const [error, setError]     = useState<string | null>(null)
 
   const onMesaSessao = location.pathname.endsWith('/mesa-sessao')
+  // Seção atual (visao-geral, membros...) — a troca de seção anima.
+  const section = location.pathname.split('/')[3] ?? ''
 
   useEffect(() => {
     if (!campaignId || !user) return
@@ -136,7 +138,8 @@ export function CampaignAreaLayout() {
       {/* ── Cabeçalho ── */}
       <header className="page__header campaign-area__page-header animate-fade-up">
         <div
-          className={`campaign-area__cover${campaign.cover_url ? '' : ' campaign-area__cover--empty'}`}
+          key={campaign.cover_url ?? 'sem-capa'}
+          className={`campaign-area__cover anim-img-swap${campaign.cover_url ? '' : ' campaign-area__cover--empty'}`}
           style={campaign.cover_url ? { backgroundImage: `url(${campaign.cover_url})` } : undefined}
           aria-hidden="true"
         >
@@ -171,7 +174,7 @@ export function CampaignAreaLayout() {
         </div>
       </header>
 
-      <div className="animate-fade-up">
+      <div key={section} className="anim-page">
         <Routes>
           <Route index element={<Navigate to="visao-geral" replace />} />
           <Route

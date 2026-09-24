@@ -76,3 +76,13 @@
   justify-content: center;
   margin-top: var(--space-2);
 }
+
+/* Cada estado (carregando, válido, aceito...) entra suave ao trocar. */
+.invite-page__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  animation: m-form-in 380ms var(--ease-out) backwards;
+}
+.invite-page__success { animation: m-bump 520ms var(--ease-spring) backwards; }

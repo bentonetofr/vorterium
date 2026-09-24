@@ -297,7 +297,7 @@
   height: 100%;
   border-radius: 999px;
   background: var(--border-base);
-  transition: width var(--transition-base);
+  transition: width 480ms var(--ease-out);
 }
 .alth-vital-widget--vitality .alth-vital-widget__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
 .alth-vital-widget--mystic   .alth-vital-widget__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
@@ -380,7 +380,7 @@
 .alth-vital-bar__bar-fill {
   height: 100%;
   border-radius: 999px;
-  transition: width var(--transition-base);
+  transition: width 480ms var(--ease-out);
 }
 .alth-vital-bar--vitality .alth-vital-bar__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
 .alth-vital-bar--mystic   .alth-vital-bar__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
@@ -429,7 +429,7 @@
   border-radius: 999px;
   background: var(--bar-color);
   box-shadow: 0 0 6px var(--bar-glow);
-  transition: width 0.4s ease;
+  transition: width 600ms var(--ease-out);
 }
 
 /* ── Barra arrastável (AltheriumDragBar) — envolve a trilha de cada barra
@@ -517,6 +517,10 @@
   font-size: var(--text-sm);
 }
 .alth-sheet-tabs .campaign-tab--active {
+  box-shadow: 0 0 0 1px var(--gilded-bright), var(--shadow-glow);
+}
+/* Com o destaque deslizante, o contorno dourado vai junto com ele. */
+.alth-sheet-tabs > .tab-indicator {
   box-shadow: 0 0 0 1px var(--gilded-bright), var(--shadow-glow);
 }
 
@@ -1408,4 +1412,35 @@
 
   .alth-inventory__grid { grid-template-columns: 1fr; }
   .alth-inventory__catalog, .alth-inventory__owned { max-height: 320px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Movimento da ficha
+   ═══════════════════════════════════════════════════════ */
+
+/* Cards de triunfo/runa entram em cascata ao abrir a aba ou a lista. */
+.alth-triumphs__grid > * { animation: m-item-in 420ms var(--ease-out) backwards; }
+.alth-triumphs__grid > :nth-child(2) { animation-delay: 35ms; }
+.alth-triumphs__grid > :nth-child(3) { animation-delay: 70ms; }
+.alth-triumphs__grid > :nth-child(4) { animation-delay: 105ms; }
+.alth-triumphs__grid > :nth-child(5) { animation-delay: 140ms; }
+.alth-triumphs__grid > :nth-child(6) { animation-delay: 175ms; }
+.alth-triumphs__grid > :nth-child(n + 7) { animation-delay: 210ms; }
+@media (hover: hover) {
+  .alth-triumph { transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease; }
+  .alth-triumph:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28); }
+}
+
+/* "Usar": afunda no clique; a mensagem de uso entra com um pulo. */
+.alth-triumph__btn { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
+.alth-triumph__btn:active:not(:disabled) { transform: scale(0.92); }
+.alth-triumphs__used { animation: m-bump 420ms var(--ease-spring) backwards; transform-origin: left center; }
+
+/* Item novo no inventário desliza pra dentro. */
+.alth-inventory__row--owned { animation: m-item-in 380ms var(--ease-out) backwards; }
+
+/* Retrato: zoom leve ao passar o mouse. */
+.alth-hero__portrait img { transition: transform 500ms var(--ease-out); }
+@media (hover: hover) {
+  .alth-hero__portrait:hover img { transform: scale(1.06); }
 }

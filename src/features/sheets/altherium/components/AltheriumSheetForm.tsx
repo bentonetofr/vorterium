@@ -1,5 +1,7 @@
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
+import { Presence } from '../../../../shared/components/Presence'
+import { TabIndicator, useTabDirection } from '../../../../shared/components/TabIndicator'
 import {
   ATTRIBUTES,
   ATTRIBUTE_HARD_MAX,
@@ -235,6 +237,7 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
 ]
+const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
 
 export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,
@@ -247,6 +250,7 @@ export function AltheriumSheetForm({
   const [error, setError] = useState<string | null>(null)
   const [domainFilter, setDomainFilter] = useState('')
   const [activeTab, setActiveTab] = useState<AltheriumFormTabId>('visao-geral')
+  const tabDir = useTabDirection(ALTHERIUM_FORM_TAB_IDS, activeTab)
   const [portraitDraft, setPortraitDraft] = useState<File | null>(null)
   const [portraitPickError, setPortraitPickError] = useState<string | null>(null)
 
@@ -473,7 +477,12 @@ export function AltheriumSheetForm({
   }
 
   return (
-    <form className="alth-sheet" onSubmit={handleSubmit} noValidate>
+    <form
+      className="alth-sheet"
+      onSubmit={handleSubmit}
+      noValidate
+      style={{ '--tab-dir': tabDir } as CSSProperties}
+    >
       {ownerName && (
         <p className="alth-sheet__owner">Ficha de <strong>{ownerName}</strong></p>
       )}
@@ -484,7 +493,7 @@ export function AltheriumSheetForm({
           <div className="alth-hero__portrait-wrap">
             <label className="alth-hero__portrait">
               {sheet.portrait_url
-                ? <img src={sheet.portrait_url} alt="" />
+                ? <img key={sheet.portrait_url} src={sheet.portrait_url} alt="" className="anim-img-swap" />
                 : <span className="alth-hero__portrait-placeholder" aria-hidden="true">✦</span>
               }
               <span className="alth-hero__portrait-overlay">Trocar</span>
@@ -581,17 +590,19 @@ export function AltheriumSheetForm({
         </div>
       </header>
 
-      {portraitDraft && (
-        <AvatarCropEditor
-          file={portraitDraft}
-          saving={portraitBusy}
-          onCancel={() => setPortraitDraft(null)}
-          onSave={handlePortraitSave}
-          title="Ajustar retrato"
-          description="Escolha o enquadramento que será exibido no cabeçalho da ficha."
-          confirmLabel="Usar este retrato"
-        />
-      )}
+      <Presence show={!!portraitDraft} exitMs={220}>
+        {() => portraitDraft && (
+          <AvatarCropEditor
+            file={portraitDraft}
+            saving={portraitBusy}
+            onCancel={() => setPortraitDraft(null)}
+            onSave={handlePortraitSave}
+            title="Ajustar retrato"
+            description="Escolha o enquadramento que será exibido no cabeçalho da ficha."
+            confirmLabel="Usar este retrato"
+          />
+        )}
+      </Presence>
 
       {form.genesis && (
         <p className="alth-hint alth-hint--center">
@@ -614,12 +625,13 @@ export function AltheriumSheetForm({
             <span className="campaign-tab__label">{tab.label}</span>
           </button>
         ))}
+        <TabIndicator activeKey={activeTab} />
       </nav>
 
       {/* ── Atributos: atributos, anotações ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
-          <div className="alth-tab-panel animate-fade-up">
+          <div className="alth-tab-panel anim-tab-panel">
             <section className="alth-card">
               <div className="alth-card__header">
                 <h4 className="alth-card__title">Atributos</h4>
@@ -663,7 +675,7 @@ export function AltheriumSheetForm({
       {/* ── Inventário: anatomia/armadura e itens ── */}
       <div id="alth-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>
         {activeTab === 'combate' && (
-          <div className="alth-tab-panel animate-fade-up">
+          <div className="alth-tab-panel anim-tab-panel">
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Anatomia &amp; Armadura</h4>
@@ -745,7 +757,7 @@ export function AltheriumSheetForm({
       {/* ── Domínios ── */}
       <div id="alth-tabpanel-dominios" role="tabpanel" hidden={activeTab !== 'dominios'}>
         {activeTab === 'dominios' && (
-          <div className="alth-tab-panel animate-fade-up">
+          <div className="alth-tab-panel anim-tab-panel">
       <section className="alth-section">
         <div className="alth-section__header">
           <h4 className="alth-section__title">Domínios</h4>
@@ -811,7 +823,7 @@ export function AltheriumSheetForm({
       {/* ── Triunfos: Berserker escolhe (paga FV), Pilar tem todos (paga cartas) ── */}
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
         {activeTab === 'triunfos' && (
-          <div className="alth-tab-panel animate-fade-up">
+          <div className="alth-tab-panel anim-tab-panel">
             {(fvWidget || prWidget || cardsWidget) && (
               <div className="alth-vitals-strip">
                 {fvWidget}

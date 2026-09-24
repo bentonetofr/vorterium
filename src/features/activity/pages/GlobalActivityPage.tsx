@@ -114,7 +114,7 @@ export function GlobalActivityPage() {
 
       {/* ── Lista ── */}
       {!loading && !error && filtered.length > 0 && (
-        <ul className="gact-list" role="list">
+        <ul className="gact-list anim-stagger" role="list">
           {filtered.map((item) => (
             <li key={item.id} className="gact-item">
               <div className="gact-item__icon" aria-hidden="true">

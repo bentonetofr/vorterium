@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import { useDiceRoller } from '../DiceRollerProvider'
 import { DiceRollerPanel } from './DiceRollerPanel'
+import { Presence } from '../../../shared/components/Presence'
 import type { DiceRoll, RollBreakdownItem } from '../../../shared/types'
 import './DiceFab.css'
 
@@ -259,8 +260,9 @@ export function DiceFab() {
         </div>
       )}
 
-      {isOpen && (
-        <div className="dice-fab__popover" role="dialog" aria-label="Rolagem de dados">
+      <Presence show={isOpen} exitMs={180}>
+        {(state) => (
+        <div className="dice-fab__popover anim-pop" data-state={state} role="dialog" aria-label="Rolagem de dados">
           <div className="dice-fab__popover-header">
             <span className="dice-fab__popover-icon" aria-hidden="true">⚄</span>
             <span className="dice-fab__popover-title">Rolagem de dados</span>
@@ -275,11 +277,12 @@ export function DiceFab() {
           </div>
           <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />
         </div>
-      )}
+        )}
+      </Presence>
 
       <button
         type="button"
-        className="dice-fab"
+        className={`dice-fab${isOpen ? ' dice-fab--open' : ''}`}
         onClick={handleToggle}
         aria-label={isOpen ? 'Fechar rolagem de dados' : 'Abrir rolagem de dados'}
         aria-expanded={isOpen}

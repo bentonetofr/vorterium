@@ -83,7 +83,9 @@ export function DndCharacterSheetPreview() {
             ))}
           </nav>
 
-          {renderTabContent()}
+          <div key={tab} className="anim-tab-panel">
+            {renderTabContent()}
+          </div>
         </div>
       </div>
     </div>

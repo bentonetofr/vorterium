@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
+import { Presence } from '../../../../shared/components/Presence'
 import {
   RUNASKIN_TRAILS,
   RUNASKIN_TRIUMPHS,
@@ -111,7 +112,7 @@ export function AltheriumRunaskinTriumphs({
           <strong>{trailDef.label}:</strong> {trailDef.rule}
         </p>
       )}
-      {lastUsed && <p className="alth-triumphs__used" role="status">{lastUsed}</p>}
+      {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
 
       <h5 className="alth-triumphs__group">Triunfos da trilha</h5>
       {trailDef
@@ -145,18 +146,20 @@ export function AltheriumRunaskinTriumphs({
         </button>
       </div>
 
-      {editing !== null && (
-        <RuneEditorModal
-          key={editing === 'new' ? 'new' : editing.id}
-          initial={editing === 'new' ? undefined : editing}
-          onCancel={() => setEditing(null)}
-          onSubmit={async (input, image) => {
-            if (editing === 'new') await onRuneCreate(input, image ?? null)
-            else await onRuneUpdate(editing, input, image)
-            setEditing(null)
-          }}
-        />
-      )}
+      <Presence show={editing !== null} exitMs={220}>
+        {() => editing !== null && (
+          <RuneEditorModal
+            key={editing === 'new' ? 'new' : editing.id}
+            initial={editing === 'new' ? undefined : editing}
+            onCancel={() => setEditing(null)}
+            onSubmit={async (input, image) => {
+              if (editing === 'new') await onRuneCreate(input, image ?? null)
+              else await onRuneUpdate(editing, input, image)
+              setEditing(null)
+            }}
+          />
+        )}
+      </Presence>
 
       {runes.length === 0
         ? <p className="alth-triumphs__empty">Nenhuma runa descoberta ainda — explore Altherium.</p>

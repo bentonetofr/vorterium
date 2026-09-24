@@ -111,7 +111,7 @@ export function MySheetsPage() {
       )}
 
       {!loading && !error && sheets.length > 0 && (
-        <div className="my-sheets-grid">
+        <div className="my-sheets-grid anim-stagger">
           {sheets.map((sheet) => (
             <SheetCard
               key={sheet.id}

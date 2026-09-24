@@ -49,7 +49,7 @@ export function AltheriumTriumphsPanel({
           <li><strong>Ases:</strong> se forem do seu naipe, valem 2 cartas.</li>
           <li><strong>Ás de espadas:</strong> sucesso instantâneo.</li>
         </ul>
-        {lastUsed && <p className="alth-triumphs__used" role="status">{lastUsed}</p>}
+        {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
         <div className="alth-triumphs__grid">
           {PILAR_TRIUMPHS.map((t) => (
             <article key={t.id} className="alth-triumph">
@@ -103,7 +103,7 @@ export function AltheriumTriumphsPanel({
           Você tem mais triunfos do que o limite atual — remova algum ou ganhe domínios.
         </p>
       )}
-      {lastUsed && <p className="alth-triumphs__used" role="status">{lastUsed}</p>}
+      {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
 
       <h5 className="alth-triumphs__group">Seus triunfos</h5>
       {owned.length === 0

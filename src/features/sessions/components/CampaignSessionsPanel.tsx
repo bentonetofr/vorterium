@@ -9,6 +9,7 @@ import {
   type SessionStatus,
 } from '../services/sessionService'
 import type { CampaignSession } from '../../../shared/types'
+import { Collapse } from '../../../shared/components/Collapse'
 import './CampaignSessionsPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -423,18 +424,24 @@ export function CampaignSessionsPanel({
 
       {/* ── Formulário (mestre) ou botão nova sessão ── */}
       {isMaster && (
-        showForm ? (
-          <SessionForm
-            initial={editingSession ?? undefined}
-            campaignId={campaignId}
-            onSaved={handleSaved}
-            onCancel={handleCancel}
-          />
-        ) : (
-          <button className="btn btn-primary sessions-panel__new-btn" onClick={openCreate}>
-            + Nova sessão
-          </button>
-        )
+        <>
+          <Collapse open={showForm}>
+            {() => (
+              <SessionForm
+                key={editingSession?.id ?? 'nova'}
+                initial={editingSession ?? undefined}
+                campaignId={campaignId}
+                onSaved={handleSaved}
+                onCancel={handleCancel}
+              />
+            )}
+          </Collapse>
+          {!showForm && (
+            <button className="btn btn-primary sessions-panel__new-btn anim-bump" onClick={openCreate}>
+              + Nova sessão
+            </button>
+          )}
+        </>
       )}
 
       {/* ── Mensagens de feedback ── */}
@@ -494,7 +501,7 @@ export function CampaignSessionsPanel({
               }
             </p>
           ) : (
-            <div className="sessions-list">
+            <div key={statusFilter} className="sessions-list anim-stagger">
               {filteredSessions.map((s) => (
                 <SessionCard
                   key={s.id}

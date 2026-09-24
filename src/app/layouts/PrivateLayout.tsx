@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { ThemeToggle } from '../../shared/components/ThemeToggle'
 import { AppLogo }     from '../../shared/components/AppLogo'
@@ -10,6 +10,8 @@ import { NotificationPopup }  from '../../features/activity/components/Notificat
 import { ActiveChatProvider }  from '../../features/chat/ActiveChatContext'
 import { CurrentCampaignProvider, useCurrentCampaign } from '../../features/campaigns/CurrentCampaignContext'
 import { CampaignSidebarSubmenu } from '../../features/campaigns/components/CampaignSidebarSubmenu'
+import { Presence } from '../../shared/components/Presence'
+import { Collapse } from '../../shared/components/Collapse'
 import './PrivateLayout.css'
 
 export function PrivateLayout() {
@@ -40,6 +42,14 @@ function PrivateLayoutContent() {
   const navigate = useNavigate()
   const { campaign, chatUnread, privateUnread } = useCurrentCampaign()
   const [mobileCampaignMenuOpen, setMobileCampaignMenuOpen] = useState(false)
+  const location = useLocation()
+  // Chave da animação de troca de página: só as duas primeiras partes do
+  // caminho — dentro de uma campanha (/campanhas/:id/...) quem anima a
+  // troca de seção é o próprio CampaignAreaLayout.
+  const pageKey = location.pathname.split('/').slice(0, 3).join('/')
+
+  // Menu da campanha (mobile) fecha sozinho ao sair da campanha.
+  useEffect(() => { if (!campaign) setMobileCampaignMenuOpen(false) }, [campaign])
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ??
@@ -65,7 +75,7 @@ function PrivateLayoutContent() {
         {user && (
           <Link to="/perfil" className="sidebar__user sidebar__user--link">
             <div className="sidebar__avatar" aria-hidden={avatarUrl ? undefined : true}>
-              {avatarUrl ? <img src={avatarUrl} alt="" /> : initial}
+              {avatarUrl ? <img key={avatarUrl} src={avatarUrl} alt="" className="anim-img-swap" /> : initial}
             </div>
             <div className="sidebar__user-info">
               <span className="sidebar__user-name">{displayName}</span>
@@ -86,15 +96,17 @@ function PrivateLayoutContent() {
             <span className="sidebar__link-icon">◈</span>
             Campanhas
           </NavLink>
-          {campaign && (
-            <div className="sidebar__campaign-submenu">
-              <CampaignSidebarSubmenu
-                campaignId={campaign.id}
-                chatUnread={chatUnread}
-                privateUnread={privateUnread}
-              />
-            </div>
-          )}
+          <Collapse open={!!campaign}>
+            {() => campaign && (
+              <div className="sidebar__campaign-submenu">
+                <CampaignSidebarSubmenu
+                  campaignId={campaign.id}
+                  chatUnread={chatUnread}
+                  privateUnread={privateUnread}
+                />
+              </div>
+            )}
+          </Collapse>
           <NavLink
             to="/minhas-fichas"
             className={({ isActive }) =>
@@ -167,26 +179,28 @@ function PrivateLayoutContent() {
               aria-expanded={mobileCampaignMenuOpen}
             >
               <span className="topbar__campaign-name">{campaign.name}</span>
-              <span className="topbar__campaign-chevron" aria-hidden="true">
-                {mobileCampaignMenuOpen ? '▲' : '▼'}
-              </span>
+              <span className="topbar__campaign-chevron" aria-hidden="true">▼</span>
             </button>
-            {mobileCampaignMenuOpen && (
-              <div className="topbar__campaign-menu">
-                <CampaignSidebarSubmenu
-                  campaignId={campaign.id}
-                  chatUnread={chatUnread}
-                  privateUnread={privateUnread}
-                  onNavigate={() => setMobileCampaignMenuOpen(false)}
-                />
-              </div>
-            )}
+            <Presence show={mobileCampaignMenuOpen} exitMs={180}>
+              {(state) => (
+                <div className="topbar__campaign-menu anim-drop" data-state={state}>
+                  <CampaignSidebarSubmenu
+                    campaignId={campaign.id}
+                    chatUnread={chatUnread}
+                    privateUnread={privateUnread}
+                    onNavigate={() => setMobileCampaignMenuOpen(false)}
+                  />
+                </div>
+              )}
+            </Presence>
           </div>
         )}
       </header>
 
       <main className="private-layout__main">
-        <Outlet />
+        <div key={pageKey} className="private-layout__page anim-page">
+          <Outlet />
+        </div>
       </main>
 
       {/* ── Barra de navegação inferior (mobile) — mesmas seções da barra

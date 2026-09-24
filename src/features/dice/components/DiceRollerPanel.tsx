@@ -317,7 +317,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
 
         {!histLoading && history.length > 0 && (
           <>
-            <ul className="dice-history__list" aria-label="Histórico de rolagens">
+            <ul className="dice-history__list anim-stagger" aria-label="Histórico de rolagens">
               {history.map((roll) => {
                 const isOwn = roll.user_id === currentUserId
                 const diceTerms = roll.roll_breakdown?.filter((b) => b.type !== 'modifier') ?? []
