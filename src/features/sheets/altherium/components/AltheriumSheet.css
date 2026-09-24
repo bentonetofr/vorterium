@@ -1610,3 +1610,85 @@
   color: var(--text-muted);
 }
 .alth-radar__caption strong { color: var(--accent-bright); }
+
+/* ═══════════════════════════════════════════════════════
+   Manequim sem pernas (easter egg "Gutris") — as pernas somem num puf,
+   o corpo dá um pulinho, despenca com gravidade, quica no chão e
+   levanta poeira. Coordenadas em unidades do viewBox (200×268).
+   ═══════════════════════════════════════════════════════ */
+.alth-body__upper,
+.alth-body__legs {
+  transform-box: view-box;
+  transform-origin: 100px 126px; /* quadril */
+}
+.alth-body__upper { transform-origin: 100px 190px; }
+
+@keyframes alth-legs-vanish {
+  0%   { opacity: 1; transform: none; filter: none; }
+  35%  { opacity: 1; filter: brightness(2.4); }
+  100% { opacity: 0; transform: translateY(10px) scaleY(0.4); filter: brightness(2.4); }
+}
+@keyframes alth-legs-return {
+  from { opacity: 0; transform: scaleY(0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes alth-body-fall {
+  0%   { transform: none;                                   animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1); }
+  18%  { transform: translateY(-8px) rotate(-2deg);         animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  62%  { transform: translateY(108px) rotate(5deg);         animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1); }
+  74%  { transform: translateY(97px) rotate(2deg);          animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  84%  { transform: translateY(108px) rotate(-3deg);        animation-timing-function: ease-out; }
+  92%  { transform: translateY(105px) rotate(-1deg); }
+  100% { transform: translateY(108px) rotate(-2deg); }
+}
+@keyframes alth-body-rise {
+  from { transform: translateY(108px) rotate(-2deg); }
+  to   { transform: none; }
+}
+@keyframes alth-body-poof {
+  0%   { opacity: 0.9; transform: scale(0.2); }
+  100% { opacity: 0;   transform: scale(2.2); }
+}
+@keyframes alth-body-dust-l {
+  0%   { opacity: 0;   transform: none; }
+  15%  { opacity: 0.8; }
+  100% { opacity: 0;   transform: translate(-22px, -14px) scale(2); }
+}
+@keyframes alth-body-dust-r {
+  0%   { opacity: 0;   transform: none; }
+  15%  { opacity: 0.8; }
+  100% { opacity: 0;   transform: translate(22px, -14px) scale(2); }
+}
+@keyframes alth-body-floor {
+  0%, 55% { opacity: 0; transform: scaleX(0.3); }
+  100%    { opacity: 1; transform: none; }
+}
+
+.alth-body--legless .alth-body__legs {
+  pointer-events: none;
+  animation: alth-legs-vanish 280ms var(--ease-in, ease-in) both;
+}
+.alth-body--legless .alth-body__upper { animation: alth-body-fall 900ms both; }
+.alth-body--rising .alth-body__upper { animation: alth-body-rise 650ms var(--ease-spring, ease-out) both; }
+.alth-body--rising .alth-body__legs  { animation: alth-legs-return 420ms var(--ease-spring, ease-out) 200ms both; }
+
+.alth-body__fall-fx { pointer-events: none; }
+.alth-body__fall-fx * { transform-box: fill-box; transform-origin: center; }
+.alth-body__floor {
+  fill: rgba(0, 0, 0, 0.35);
+  animation: alth-body-floor 900ms ease-out both;
+}
+.alth-body__poof {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+  opacity: 0;
+  animation: alth-body-poof 420ms ease-out 40ms both;
+}
+.alth-body__dust {
+  fill: var(--text-muted);
+  opacity: 0;
+}
+.alth-body__dust--l1, .alth-body__dust--l2 { animation: alth-body-dust-l 650ms ease-out 540ms both; }
+.alth-body__dust--r1, .alth-body__dust--r2 { animation: alth-body-dust-r 650ms ease-out 540ms both; }
+.alth-body__dust--l2, .alth-body__dust--r2 { animation-delay: 600ms; }

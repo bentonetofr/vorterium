@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 
 export type BodyZone = 'db_cabeca' | 'db_bracos' | 'db_tronco' | 'db_pernas'
@@ -16,6 +16,9 @@ interface AltheriumBodyDiagramProps {
    *  ficha, passada pelo chamador. */
   visualMax?:  number
   build?:      BodyBuild
+  /** Sem pernas: elas somem e o manequim despenca no chão (easter egg do
+   *  nome "Gutris" — ver AltheriumSheetForm). Voltando a false, ele levanta. */
+  legless?:    boolean
 }
 
 const ZONE_LABELS: Record<BodyZone, string> = {
@@ -218,7 +221,31 @@ function useJointRig() {
     if (rafId.current != null) cancelAnimationFrame(rafId.current)
   }, [])
 
-  return { angles, dragging, beginDrag }
+  /** Leva as juntas até uma pose pela mesma mola de quando se solta um membro. */
+  function pose(next: Partial<Record<JointId, number>>) {
+    (Object.keys(next) as JointId[]).forEach((id) => {
+      targets.current[id] = clampToRange(id, next[id]!)
+      startSettle(id)
+    })
+  }
+
+  return { angles, dragging, beginDrag, pose }
+}
+
+// ────────────────────────────────────────────────────────
+// Queda sem pernas — tempos batem com @keyframes alth-body-fall
+// (AltheriumSheet.css): os braços sobem quando ele começa a cair e se
+// apoiam no chão no impacto.
+// ────────────────────────────────────────────────────────
+
+const FALL_ARMS_UP_MS = 160
+const FALL_IMPACT_MS  = 560
+const POSE_FLAILING: Partial<Record<JointId, number>> = { shoulderL: 135, shoulderR: -135, elbowL: 45, elbowR: -45, neck: -8 }
+const POSE_ON_FLOOR: Partial<Record<JointId, number>> = { shoulderL: 30, shoulderR: -30, elbowL: 10, elbowR: -10, neck: 10 }
+const POSE_REST:     Partial<Record<JointId, number>> = { shoulderL: 0, shoulderR: 0, elbowL: 0, elbowR: 0, neck: 0 }
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 }
 
 // ────────────────────────────────────────────────────────
@@ -418,11 +445,32 @@ function Rune({ x, y, glyph, size = 10 }: { x: number; y: number; glyph: string;
 
 interface ZoneStyle extends CSSProperties { '--zone-color'?: string }
 
-export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao', visualMax, build = null }: AltheriumBodyDiagramProps) {
+export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao', visualMax, build = null, legless = false }: AltheriumBodyDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const rig = useJointRig()
   const braids = useBraids(build === 'pilar', () => rig.angles.current.neck)
   const shape = build === 'berserker' ? MUSCULAR_BUILD : NEUTRAL_BUILD
+
+  // Levantando de volta (deixou de ser sem pernas) — anima só nessa troca.
+  const [rising, setRising] = useState(false)
+  const wasLegless = useRef(legless)
+  useEffect(() => {
+    const before = wasLegless.current
+    wasLegless.current = legless
+    if (legless) {
+      setRising(false)
+      if (prefersReducedMotion()) { rig.pose(POSE_ON_FLOOR); return }
+      const up    = window.setTimeout(() => rig.pose(POSE_FLAILING), FALL_ARMS_UP_MS)
+      const floor = window.setTimeout(() => rig.pose(POSE_ON_FLOOR), FALL_IMPACT_MS)
+      return () => { window.clearTimeout(up); window.clearTimeout(floor) }
+    }
+    if (before) {
+      setRising(true)
+      rig.pose(POSE_REST)
+    }
+    // rig muda de identidade a cada render, mas só guarda refs — basta reagir a `legless`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [legless])
 
   const targetRgb = variant === 'dano' ? WOUND_RGB : PROTECTION_RGB
   const max = visualMax || (variant === 'dano' ? 1 : PROTECTION_VISUAL_MAX)
@@ -504,7 +552,13 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
   return (
     <svg
       ref={svgRef}
-      className={`alth-body${build ? ` alth-body--${build}` : ''}${rig.dragging.current || braids.draggingTip.current != null ? ' alth-body--dragging' : ''}`}
+      className={[
+        'alth-body',
+        build ? `alth-body--${build}` : '',
+        legless ? 'alth-body--legless' : '',
+        rising ? 'alth-body--rising' : '',
+        rig.dragging.current || braids.draggingTip.current != null ? 'alth-body--dragging' : '',
+      ].filter(Boolean).join(' ')}
       viewBox="0 0 200 268"
       xmlns="http://www.w3.org/2000/svg"
       aria-label={`Manequim articulado — arraste as mãos, pés ou a cabeça pra posar, clique nos membros pra editar ${variant === 'dano' ? 'o dano' : 'a proteção'}`}
@@ -512,6 +566,20 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
       {/* Pernas: cadeia quadril → joelho. A alça do quadril fica no joelho
           (gira a perna toda) e a do joelho fica no pé (dobra só a canela) —
           cada uma na ponta do osso que ela controla, não no próprio dobradiço. */}
+      {/* Chão e poeira da queda — só existem sem pernas. */}
+      {legless && (
+        <g className="alth-body__fall-fx" aria-hidden="true">
+          <ellipse className="alth-body__floor" cx={100} cy={246} rx={58} ry={5} />
+          <circle className="alth-body__dust alth-body__dust--l1" cx={78}  cy={242} r={6} />
+          <circle className="alth-body__dust alth-body__dust--l2" cx={66}  cy={244} r={4} />
+          <circle className="alth-body__dust alth-body__dust--r1" cx={122} cy={242} r={6} />
+          <circle className="alth-body__dust alth-body__dust--r2" cx={134} cy={244} r={4} />
+          <circle className="alth-body__poof" cx={HIP.x}         cy={HIP.y + 20} r={10} />
+          <circle className="alth-body__poof" cx={mirror(HIP.x)} cy={HIP.y + 20} r={10} />
+        </g>
+      )}
+
+      <g className="alth-body__legs" aria-hidden={legless || undefined}>
       {(['L', 'R'] as const).map((side) => {
         const hipId = `hip${side}` as JointId
         const kneeId = `knee${side}` as JointId
@@ -544,6 +612,10 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
           </g>
         )
       })}
+      </g>
+
+      {/* Da cintura pra cima — é esse grupo que despenca quando fica sem pernas. */}
+      <g className="alth-body__upper">
 
       {/* Braços: cadeia ombro → cotovelo. Alça do ombro no cotovelo (gira o
           braço todo), alça do cotovelo na mão (dobra só o antebraço). */}
@@ -640,6 +712,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
         </g>
         {build === 'runaskin' && <Rune x={HEAD.x} y={HEAD.y - 10} glyph="ᛉ" size={8} />}
         <JointHandle id="neck" x={HEAD.x} y={HEAD.y} r={6} />
+      </g>
       </g>
     </svg>
   )

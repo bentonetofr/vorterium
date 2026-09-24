@@ -43,6 +43,8 @@ import { Select } from '../../../../shared/components/Select'
 import './AltheriumSheet.css'
 
 const NOTES_MAX = 2000
+/** Nomes que deixam o manequim sem pernas (comparados em minúsculas). */
+const LEGLESS_NAMES = new Set(['gutris', 'gustris'])
 
 interface AltheriumSheetFormProps {
   sheet:                    AltheriumSheet
@@ -430,6 +432,8 @@ export function AltheriumSheetForm({
   // máximo de cada um é campo direto do form.
   const projected  = formToSheet(sheet, form)
   const raiz       = form.raiz === '' ? null : form.raiz
+  // Easter egg: o personagem chamado Gutris (ou Gustris) não tem pernas.
+  const legless    = LEGLESS_NAMES.has(form.character_name.trim().toLowerCase())
   const cartasMax  = cardsMax(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
@@ -701,6 +705,7 @@ export function AltheriumSheetForm({
             <AltheriumBodyDiagram
               variant="protecao"
               build={raiz}
+              legless={legless}
               values={{
                 db_cabeca: form.db_cabeca,
                 db_bracos: form.db_bracos,
@@ -746,6 +751,7 @@ export function AltheriumSheetForm({
             <AltheriumBodyDiagram
               variant="dano"
               build={raiz}
+              legless={legless}
               visualMax={form.vitality_max}
               values={{
                 db_cabeca: form.dano_cabeca,
