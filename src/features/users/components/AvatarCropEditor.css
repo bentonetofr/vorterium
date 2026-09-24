@@ -68,7 +68,7 @@
   font-size: var(--text-sm);
 }
 
-.avatar-crop-editor__controls input { width: 100%; accent-color: var(--accent-bright); }
+.avatar-crop-editor__controls input { width: 100%; }
 
 .avatar-crop-editor__actions {
   display: flex;

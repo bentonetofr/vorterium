@@ -72,7 +72,7 @@
   font-size: var(--text-sm);
 }
 
-.campaign-cover-crop-editor__controls input { width: 100%; accent-color: var(--accent-bright); }
+.campaign-cover-crop-editor__controls input { width: 100%; }
 
 .campaign-cover-crop-editor__actions {
   display: flex;
