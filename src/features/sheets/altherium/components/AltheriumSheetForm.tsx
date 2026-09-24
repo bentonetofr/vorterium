@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
 import {
   ATTRIBUTES,
   ATTRIBUTE_HARD_MAX,
@@ -22,20 +23,27 @@ import {
 } from '../utils/altheriumCalculations'
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import type { AltheriumSheet, AltheriumDomainPoints } from '../../../../shared/types'
-import type { AltheriumSheetUpdate } from '../services/altheriumSheetService'
+import {
+  ALTHERIUM_PORTRAIT_MAX_BYTES,
+  ALTHERIUM_PORTRAIT_TYPES,
+  type AltheriumSheetUpdate,
+} from '../services/altheriumSheetService'
 import './AltheriumSheet.css'
 
 const NOTES_MAX = 2000
 
 interface AltheriumSheetFormProps {
-  sheet:          AltheriumSheet
-  domains:        AltheriumDomainPoints[]
-  ownerName?:     string
-  onSave:         (data: AltheriumSheetUpdate) => Promise<void>
-  onDomainChange: (domain: string, points: number) => Promise<void>
-  saving:         boolean
-  saveError:      string | null
-  saveSuccess:    boolean
+  sheet:            AltheriumSheet
+  domains:          AltheriumDomainPoints[]
+  ownerName?:       string
+  onSave:           (data: AltheriumSheetUpdate) => Promise<void>
+  onDomainChange:   (domain: string, points: number) => Promise<void>
+  onPortraitChange: (file: File) => Promise<void>
+  onPortraitRemove: () => Promise<void>
+  portraitBusy:     boolean
+  saving:           boolean
+  saveError:        string | null
+  saveSuccess:      boolean
 }
 
 type FormData = {
@@ -152,12 +160,16 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
 ]
 
 export function AltheriumSheetForm({
-  sheet, domains, ownerName, onSave, onDomainChange, saving, saveError, saveSuccess,
+  sheet, domains, ownerName, onSave, onDomainChange,
+  onPortraitChange, onPortraitRemove, portraitBusy,
+  saving, saveError, saveSuccess,
 }: AltheriumSheetFormProps) {
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
   const [domainFilter, setDomainFilter] = useState('')
   const [activeTab, setActiveTab] = useState<AltheriumFormTabId>('visao-geral')
+  const [portraitDraft, setPortraitDraft] = useState<File | null>(null)
+  const [portraitPickError, setPortraitPickError] = useState<string | null>(null)
 
   const dbInputRefs = {
     db_cabeca: useRef<HTMLInputElement>(null),
@@ -177,6 +189,28 @@ export function AltheriumSheetForm({
     const input = dbInputRefs[zone].current
     input?.focus()
     input?.select()
+  }
+
+  function handlePortraitPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setPortraitPickError(null)
+    if (!ALTHERIUM_PORTRAIT_TYPES.includes(file.type as (typeof ALTHERIUM_PORTRAIT_TYPES)[number])) {
+      setPortraitPickError('Escolha uma imagem JPG, PNG ou WebP.')
+      return
+    }
+    if (file.size > ALTHERIUM_PORTRAIT_MAX_BYTES) {
+      setPortraitPickError('O retrato deve ter no máximo 2 MB.')
+      return
+    }
+    setPortraitDraft(file)
+  }
+
+  async function handlePortraitSave(file: File) {
+    await onPortraitChange(file)
+    setPortraitDraft(null)
   }
 
   // Estado projetado: os máximos de FV/PR/Cartas acompanham o que está
@@ -246,33 +280,67 @@ export function AltheriumSheetForm({
       {/* ── Cabeçalho ── */}
       <header className="alth-hero">
         <div className="alth-hero__identity">
-          <input
-            type="text"
-            className="alth-hero__name"
-            placeholder="Nome do personagem"
-            maxLength={80}
-            value={form.character_name}
-            onChange={(e) => set('character_name', e.target.value)}
-            disabled={saving}
-            aria-label="Nome do personagem"
-          />
-          <div className="alth-hero__tags">
-            <select
-              className="input alth-hero__select" value={form.raiz}
-              onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
-              disabled={saving} aria-label="Raiz"
-            >
-              <option value="">Raiz —</option>
-              {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-            </select>
-            <select
-              className="input alth-hero__select" value={form.genesis}
-              onChange={(e) => set('genesis', e.target.value)}
-              disabled={saving} aria-label="Gênesis"
-            >
-              <option value="">Gênesis —</option>
-              {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-            </select>
+          <div className="alth-hero__portrait-wrap">
+            <label className="alth-hero__portrait">
+              {sheet.portrait_url
+                ? <img src={sheet.portrait_url} alt="" />
+                : <span className="alth-hero__portrait-placeholder" aria-hidden="true">✦</span>
+              }
+              <span className="alth-hero__portrait-overlay">Trocar</span>
+              <input
+                type="file"
+                accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
+                hidden
+                disabled={portraitBusy}
+                onChange={handlePortraitPick}
+                aria-label="Retrato do personagem"
+              />
+            </label>
+            {sheet.portrait_url && (
+              <button
+                type="button"
+                className="alth-hero__portrait-remove"
+                onClick={() => void onPortraitRemove()}
+                disabled={portraitBusy}
+                aria-label="Remover retrato"
+              >
+                ×
+              </button>
+            )}
+            {portraitPickError && (
+              <p className="alth-hero__portrait-error" role="alert">{portraitPickError}</p>
+            )}
+          </div>
+
+          <div className="alth-hero__identity-main">
+            <input
+              type="text"
+              className="alth-hero__name"
+              placeholder="Nome do personagem"
+              maxLength={80}
+              value={form.character_name}
+              onChange={(e) => set('character_name', e.target.value)}
+              disabled={saving}
+              aria-label="Nome do personagem"
+            />
+            <div className="alth-hero__tags">
+              <select
+                className="input alth-hero__select" value={form.raiz}
+                onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
+                disabled={saving} aria-label="Raiz"
+              >
+                <option value="">Raiz —</option>
+                {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+              </select>
+              <select
+                className="input alth-hero__select" value={form.genesis}
+                onChange={(e) => set('genesis', e.target.value)}
+                disabled={saving} aria-label="Gênesis"
+              >
+                <option value="">Gênesis —</option>
+                {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -312,6 +380,18 @@ export function AltheriumSheetForm({
           </label>
         </div>
       </header>
+
+      {portraitDraft && (
+        <AvatarCropEditor
+          file={portraitDraft}
+          saving={portraitBusy}
+          onCancel={() => setPortraitDraft(null)}
+          onSave={handlePortraitSave}
+          title="Ajustar retrato"
+          description="Escolha o enquadramento que será exibido no cabeçalho da ficha."
+          confirmLabel="Usar este retrato"
+        />
+      )}
 
       {form.genesis && (
         <p className="alth-hint alth-hint--center">

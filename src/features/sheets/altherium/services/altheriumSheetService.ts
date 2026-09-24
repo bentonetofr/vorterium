@@ -22,6 +22,9 @@ interface RawSheetWithProfile extends AltheriumSheet {
 
 const SHEET_COLUMNS = '*'
 
+export const ALTHERIUM_PORTRAIT_MAX_BYTES = 2 * 1024 * 1024
+export const ALTHERIUM_PORTRAIT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+
 // ────────────────────────────────────────────────────────
 // Ficha
 // ────────────────────────────────────────────────────────
@@ -85,6 +88,47 @@ export async function updateAltheriumSheet(
     charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.',
   )
   return sheet
+}
+
+/** Envia o retrato do personagem e atualiza a URL pública da ficha. */
+export async function uploadAltheriumPortrait(sheetId: string, file: File): Promise<AltheriumSheet> {
+  if (!ALTHERIUM_PORTRAIT_TYPES.includes(file.type as (typeof ALTHERIUM_PORTRAIT_TYPES)[number])) {
+    throw new Error('Escolha uma imagem JPG, PNG ou WebP.')
+  }
+  if (file.size > ALTHERIUM_PORTRAIT_MAX_BYTES) {
+    throw new Error('O retrato deve ter no máximo 2 MB.')
+  }
+
+  const path = `${sheetId}/portrait`
+  const { error: uploadError } = await supabase.storage
+    .from('altherium-portraits')
+    .upload(path, file, {
+      upsert: true,
+      cacheControl: '3600',
+      contentType: file.type,
+    })
+
+  if (uploadError) {
+    console.error('Erro do Storage ao enviar retrato:', uploadError)
+    throw new Error(`Não foi possível enviar o retrato: ${uploadError.message}`)
+  }
+
+  const { data: publicData } = supabase.storage.from('altherium-portraits').getPublicUrl(path)
+  const portraitUrl = `${publicData.publicUrl}?v=${Date.now()}`
+  return updateAltheriumSheet(sheetId, { portrait_url: portraitUrl })
+}
+
+/** Remove o retrato armazenado e limpa a URL da ficha. */
+export async function removeAltheriumPortrait(sheetId: string): Promise<AltheriumSheet> {
+  const { error: removeError } = await supabase.storage
+    .from('altherium-portraits')
+    .remove([`${sheetId}/portrait`])
+  if (removeError) {
+    console.error('Erro do Storage ao remover retrato:', removeError)
+    throw new Error(`Não foi possível remover o retrato: ${removeError.message}`)
+  }
+
+  return updateAltheriumSheet(sheetId, { portrait_url: null })
 }
 
 /** Todas as fichas Altherium da campanha com o perfil do dono (visão do mestre). */

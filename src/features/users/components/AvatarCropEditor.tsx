@@ -9,9 +9,17 @@ interface AvatarCropEditorProps {
   saving: boolean
   onCancel: () => void
   onSave: (file: File) => Promise<void>
+  title?: string
+  description?: string
+  confirmLabel?: string
 }
 
-export function AvatarCropEditor({ file, saving, onCancel, onSave }: AvatarCropEditorProps) {
+export function AvatarCropEditor({
+  file, saving, onCancel, onSave,
+  title = 'Ajustar avatar',
+  description = 'Escolha o enquadramento que será exibido no seu perfil.',
+  confirmLabel = 'Usar este avatar',
+}: AvatarCropEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [image, setImage] = useState<HTMLImageElement | null>(null)
   const [zoom, setZoom] = useState(1)
@@ -124,8 +132,8 @@ export function AvatarCropEditor({ file, saving, onCancel, onSave }: AvatarCropE
     <div className="avatar-crop-editor" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
       <div className="avatar-crop-editor__header">
         <div>
-          <h3 id="avatar-crop-title">Ajustar avatar</h3>
-          <p>Escolha o enquadramento que será exibido no seu perfil.</p>
+          <h3 id="avatar-crop-title">{title}</h3>
+          <p>{description}</p>
         </div>
         <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
           Fechar
@@ -192,7 +200,7 @@ export function AvatarCropEditor({ file, saving, onCancel, onSave }: AvatarCropE
             Cancelar
           </button>
           <button type="button" className="btn btn-primary" onClick={() => void handleSave()} disabled={!image || loading || saving}>
-            {saving ? <><span className="spinner spinner--sm" /> Salvando...</> : 'Usar este avatar'}
+            {saving ? <><span className="spinner spinner--sm" /> Salvando...</> : confirmLabel}
           </button>
         </div>
       </div>

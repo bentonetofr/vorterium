@@ -183,6 +183,7 @@ export interface AltheriumSheet {
   campaign_id:        string
   user_id:            string
   character_name:     string | null
+  portrait_url:       string | null
   level:              number
   raiz:               'berserker' | 'runaskin' | 'pilar' | null
   genesis:            string | null

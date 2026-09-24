@@ -5,6 +5,8 @@ import {
   getAltheriumDomains,
   setAltheriumDomainPoints,
   updateAltheriumSheet,
+  uploadAltheriumPortrait,
+  removeAltheriumPortrait,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
@@ -57,6 +59,7 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   const [saving, setSaving]           = useState(false)
   const [saveError, setSaveError]     = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [portraitBusy, setPortraitBusy] = useState(false)
 
   const loadDomains = useCallback(() => {
     getAltheriumDomains(sheet.id).then(setDomains).catch(() => { /* domínios só não aparecem */ })
@@ -90,6 +93,30 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     }
   }
 
+  async function handlePortraitChange(file: File) {
+    setSaveError(null)
+    setPortraitBusy(true)
+    try {
+      onSheetUpdated(await uploadAltheriumPortrait(sheet.id, file))
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível atualizar o retrato.')
+    } finally {
+      setPortraitBusy(false)
+    }
+  }
+
+  async function handlePortraitRemove() {
+    setSaveError(null)
+    setPortraitBusy(true)
+    try {
+      onSheetUpdated(await removeAltheriumPortrait(sheet.id))
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível remover o retrato.')
+    } finally {
+      setPortraitBusy(false)
+    }
+  }
+
   return (
     <AltheriumSheetForm
       key={sheet.id}
@@ -98,6 +125,9 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
       ownerName={ownerName}
       onSave={handleSave}
       onDomainChange={handleDomainChange}
+      onPortraitChange={handlePortraitChange}
+      onPortraitRemove={handlePortraitRemove}
+      portraitBusy={portraitBusy}
       saving={saving}
       saveError={saveError}
       saveSuccess={saveSuccess}
