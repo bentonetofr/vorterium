@@ -755,7 +755,7 @@ function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled
         <span className="alth-vital-bar__sigla" title={label}>{sigla}</span>
         <span className="alth-vital-bar__values">
           <input
-            type="number" className="input" min={0}
+            type="number" className="alth-vital-bar__value-input" min={0}
             value={current}
             onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
             disabled={disabled}
@@ -763,7 +763,7 @@ function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled
           />
           <span className="alth-vital-bar__sep">/</span>
           <input
-            type="number" className="input alth-vital-bar__max-input" min={1}
+            type="number" className="alth-vital-bar__value-input alth-vital-bar__max-input" min={1}
             value={max}
             onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
             disabled={disabled}

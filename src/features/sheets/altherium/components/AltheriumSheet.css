@@ -283,9 +283,10 @@
 }
 .alth-vital-bar__top {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--space-2);
 }
 .alth-vital-bar__sigla {
   font-family: var(--font-label);
@@ -299,19 +300,33 @@
 
 .alth-vital-bar__values {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  align-items: baseline;
+  gap: 2px;
 }
-.alth-vital-bar__values .input {
-  width: 68px;
-  text-align: center;
-  padding: var(--space-2);
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
+.alth-vital-bar__values .alth-vital-bar__value-input {
+  width: 2.4em;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: right;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+  -moz-appearance: textfield;
 }
-.alth-vital-bar__max-input { color: var(--text-muted); font-size: var(--text-lg); }
-.alth-vital-bar__sep { color: var(--text-muted); font-size: var(--text-lg); font-weight: 300; }
+.alth-vital-bar__values .alth-vital-bar__value-input::-webkit-inner-spin-button,
+.alth-vital-bar__values .alth-vital-bar__value-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.alth-vital-bar__values .alth-vital-bar__value-input:focus {
+  outline: none;
+  color: var(--accent-bright);
+}
+.alth-vital-bar__max-input { width: 2em; text-align: left; color: var(--text-muted); font-weight: 500; }
+.alth-vital-bar__sep { color: var(--text-muted); font-size: var(--text-sm); font-weight: 300; }
 
 .alth-vital-bar__bar {
   width: 100%;
