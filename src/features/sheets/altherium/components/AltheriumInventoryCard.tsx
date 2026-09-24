@@ -12,11 +12,14 @@ import {
   findWeapon,
   findItem,
   type ArmorCoverage,
+  type DamageType,
+  type WeaponAttribute,
   type WeaponCategory,
+  type WeaponRange,
 } from '../constants/altheriumItems'
 import { BODY_PARTS } from '../constants/altherium'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
-import type { AltheriumCustomItemInput } from '../services/altheriumSheetService'
+import { DAMAGE_DICE_PATTERN, type AltheriumCustomItemInput } from '../services/altheriumSheetService'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
 import { Select } from '../../../../shared/components/Select'
@@ -46,6 +49,12 @@ const ITEM_TYPE_LABELS: Record<AltheriumInventoryItem['item_type'], string> = {
 const ITEM_TYPE_OPTIONS = (Object.keys(ITEM_TYPE_LABELS) as AltheriumInventoryItem['item_type'][])
   .map((t) => ({ value: t, label: ITEM_TYPE_LABELS[t] }))
 
+const optionsOf = <K extends string>(labels: Record<K, string>) =>
+  (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }))
+const DAMAGE_TYPE_OPTIONS      = optionsOf(DAMAGE_TYPE_LABELS)
+const WEAPON_ATTRIBUTE_OPTIONS = optionsOf(WEAPON_ATTRIBUTE_LABELS)
+const WEAPON_RANGE_OPTIONS     = optionsOf(WEAPON_RANGE_LABELS)
+
 function normalize(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 }
@@ -71,7 +80,15 @@ interface ItemInfo { name: string; detail: string }
 function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
   if (isCustom(inv)) {
     const armor = inventoryArmor(inv)
-    const parts = [ITEM_TYPE_LABELS[inv.item_type], armor ? `${armor.db} DB` : null, inv.custom_detail]
+    // Arma: mesmo resumo das armas do catálogo — dano, atributo de acerto, alcance.
+    const weapon = inv.item_type === 'arma' && inv.custom_damage_dice
+      ? [
+          `${inv.custom_damage_dice}${inv.custom_damage_type ? ` ${DAMAGE_TYPE_LABELS[inv.custom_damage_type]}` : ''}`,
+          inv.custom_attribute ? WEAPON_ATTRIBUTE_LABELS[inv.custom_attribute] : null,
+          inv.custom_range ? WEAPON_RANGE_LABELS[inv.custom_range] : null,
+        ]
+      : [ITEM_TYPE_LABELS[inv.item_type]]
+    const parts = [...weapon, armor ? `${armor.db} DB` : null, inv.custom_detail]
     return { name: inv.custom_name!, detail: parts.filter(Boolean).join(' · ') }
   }
   if (inv.item_type === 'arma') {
@@ -337,19 +354,29 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
   const [itemType, setItemType] = useState<AltheriumInventoryItem['item_type']>(initial?.item_type ?? 'utilitario')
   const [detail, setDetail]     = useState(initial?.custom_detail ?? '')
   const [db, setDb]             = useState(initial?.custom_db ?? 1)
+  const [damageDice, setDamageDice] = useState(initial?.custom_damage_dice ?? '')
+  const [damageType, setDamageType] = useState<DamageType>(initial?.custom_damage_type ?? 'corte')
+  const [attribute, setAttribute]   = useState<WeaponAttribute>(initial?.custom_attribute ?? 'furia')
+  const [range, setRange]           = useState<WeaponRange>(initial?.custom_range ?? 'toque')
   const [busy, setBusy]         = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const nameRef = useRef<HTMLInputElement>(null)
-  const isArmor = itemType === 'armadura' || itemType === 'escudo'
+  const isArmor  = itemType === 'armadura' || itemType === 'escudo'
+  const isWeapon = itemType === 'arma'
 
   useEffect(() => { nameRef.current?.focus() }, [])
 
   async function handleSave() {
     if (!name.trim()) { setError('Dê um nome ao item.'); return }
+    const dice = damageDice.replace(/\s+/g, '').toLowerCase()
+    if (isWeapon && !DAMAGE_DICE_PATTERN.test(dice)) {
+      setError('Dado de dano inválido — use o formato 1d8 ou 2d6+1.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
-      await onSubmit({ item_type: itemType, name, detail, db })
+      await onSubmit({ item_type: itemType, name, detail, db, damageDice: dice, damageType, attribute, range })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível salvar o item.')
       setBusy(false)
@@ -409,6 +436,43 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
               </label>
             )}
           </div>
+
+          {isWeapon && (
+            <>
+              <div className="alth-rune__editor-row">
+                <label className="alth-custom-item__field alth-custom-item__dice">
+                  <span className="label">Dado de dano</span>
+                  <input
+                    type="text" className="input" maxLength={12}
+                    value={damageDice} onChange={(e) => setDamageDice(e.target.value)} disabled={busy}
+                  />
+                </label>
+                <label className="alth-custom-item__field alth-rune__editor-half">
+                  <span className="label">Tipo de dano</span>
+                  <Select
+                    value={damageType} onChange={(v) => setDamageType(v as DamageType)}
+                    disabled={busy} aria-label="Tipo de dano" options={DAMAGE_TYPE_OPTIONS}
+                  />
+                </label>
+              </div>
+              <div className="alth-rune__editor-row">
+                <label className="alth-custom-item__field alth-rune__editor-half">
+                  <span className="label">Atributo de acerto</span>
+                  <Select
+                    value={attribute} onChange={(v) => setAttribute(v as WeaponAttribute)}
+                    disabled={busy} aria-label="Atributo do teste de acerto" options={WEAPON_ATTRIBUTE_OPTIONS}
+                  />
+                </label>
+                <label className="alth-custom-item__field alth-rune__editor-half">
+                  <span className="label">Alcance</span>
+                  <Select
+                    value={range} onChange={(v) => setRange(v as WeaponRange)}
+                    disabled={busy} aria-label="Alcance" options={WEAPON_RANGE_OPTIONS}
+                  />
+                </label>
+              </div>
+            </>
+          )}
 
           <label className="alth-custom-item__field">
             <span className="label">Descrição / efeito</span>

@@ -282,15 +282,28 @@ export interface AltheriumCustomItemInput {
   detail:    string
   /** Só vale pra armadura/escudo; ignorado nos outros tipos. */
   db:        number
+  /** Só valem pra arma; ignorados nos outros tipos. */
+  damageDice: string
+  damageType: NonNullable<AltheriumInventoryItem['custom_damage_type']>
+  attribute:  NonNullable<AltheriumInventoryItem['custom_attribute']>
+  range:      NonNullable<AltheriumInventoryItem['custom_range']>
 }
 
+/** Dado de dano no formato das armas do catálogo: 1d8, d6, 2d6+1, 1d12-2. */
+export const DAMAGE_DICE_PATTERN = /^[0-9]{0,2}d[0-9]{1,3}([+-][0-9]{1,3})?$/
+
 function customItemColumns(input: AltheriumCustomItemInput) {
-  const isArmor = input.item_type === 'armadura' || input.item_type === 'escudo'
+  const isArmor  = input.item_type === 'armadura' || input.item_type === 'escudo'
+  const isWeapon = input.item_type === 'arma'
   return {
-    item_type:     input.item_type,
-    custom_name:   input.name.trim(),
-    custom_detail: input.detail.trim() || null,
-    custom_db:     isArmor ? Math.max(0, Math.min(99, Math.round(input.db))) : null,
+    item_type:          input.item_type,
+    custom_name:        input.name.trim(),
+    custom_detail:      input.detail.trim() || null,
+    custom_db:          isArmor ? Math.max(0, Math.min(99, Math.round(input.db))) : null,
+    custom_damage_dice: isWeapon ? input.damageDice.replace(/\s+/g, '').toLowerCase() : null,
+    custom_damage_type: isWeapon ? input.damageType : null,
+    custom_attribute:   isWeapon ? input.attribute : null,
+    custom_range:       isWeapon ? input.range : null,
   }
 }
 
@@ -328,7 +341,8 @@ export async function updateAltheriumCustomInventoryItem(
 export async function updateAltheriumInventoryItem(
   id: string,
   data: Partial<Pick<AltheriumInventoryItem,
-    'quantity' | 'equipped' | 'equipped_zone' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'>>,
+    'quantity' | 'equipped' | 'equipped_zone' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'
+    | 'custom_damage_dice' | 'custom_damage_type' | 'custom_attribute' | 'custom_range'>>,
 ): Promise<AltheriumInventoryItem> {
   const { data: updated, error } = await supabase
     .from('altherium_character_inventory')

@@ -1070,6 +1070,7 @@
 .alth-custom-item__field { display: flex; flex-direction: column; }
 .alth-custom-item__field .label { margin-bottom: var(--space-1); }
 .alth-custom-item textarea { resize: vertical; }
+.alth-custom-item__dice { width: 120px; flex-shrink: 0; }
 
 .alth-inventory__empty {
   padding: var(--space-4);

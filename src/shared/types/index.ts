@@ -252,6 +252,11 @@ export interface AltheriumInventoryItem {
   custom_detail: string | null
   /** DB da peça personalizada (armadura/escudo) — somado ao equipar. */
   custom_db:     number | null
+  /** Arma personalizada — mesmos valores de altheriumItems.ts (DamageType etc.). */
+  custom_damage_dice: string | null
+  custom_damage_type: 'corte' | 'impacto' | 'perfurante' | null
+  custom_attribute:   'furia' | 'impulso' | 'furia_impulso' | null
+  custom_range:       'toque' | 'toque_curto' | 'curto' | 'curto_medio' | 'medio' | 'longo' | null
   created_at:    string
 }
 
