@@ -640,12 +640,6 @@ export function AltheriumSheetForm({
               onZoneClick={handleWoundZoneClick}
             />
           </div>
-          <p className="alth-hint">
-            DB = dano bloqueado. O inimigo rola 1d10 pra saber onde acerta; a zona armada
-            (destacada no diagrama dourado) reduz o dano recebido ali. O manequim vermelho
-            mostra o dano já sofrido em cada zona, relativo à Vitalidade máxima. Clique numa
-            zona pra editar o campo correspondente.
-          </p>
         </section>
 
             <AltheriumInventoryCard
