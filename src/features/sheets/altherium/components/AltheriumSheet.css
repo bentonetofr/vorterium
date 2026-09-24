@@ -1295,26 +1295,77 @@
 }
 .alth-rune__remove-img:hover { color: var(--danger-bright); }
 
+/* Toque (sem hover): "Trocar" do retrato fica sempre visível, como uma
+   faixa na base do círculo, já que não dá pra "passar o mouse". */
+@media (hover: none) {
+  .alth-hero__portrait-overlay {
+    inset: auto 0 0 0;
+    height: 30%;
+    opacity: 1;
+    font-size: 9px;
+  }
+}
+
 @media (max-width: 640px) {
-  .alth-hero { grid-template-columns: 1fr; }
-  .alth-hero__portrait-wrap,
-  .alth-hero__name,
+  /* Cabeçalho compacto: retrato + nome na mesma linha; Raiz/Gênesis lado
+     a lado; PV/PE na largura toda; Nível/Hacksilvers lado a lado. Os
+     wrappers que no desktop são `display: contents` voltam a ser caixas
+     próprias aqui, cada uma ocupando a linha inteira do grid. */
+  .alth-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-4);
+    padding: var(--space-4);
+  }
+  .alth-hero__portrait-wrap { grid-column: 1; grid-row: 1; align-self: center; }
+  .alth-hero__portrait { width: 64px; height: 64px; }
+  .alth-hero__name { grid-column: 2; grid-row: 1; align-self: center; font-size: var(--text-xl); }
+  .alth-hero__tags,
+  .alth-hero__stats {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  .alth-hero__vitals {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1 / -1;
+    gap: var(--space-2);
+  }
   .alth-hero__field--raiz,
   .alth-hero__field--genesis,
   .alth-hero__vitals .alth-vital-bar--vitality,
-  .alth-hero__vitals .alth-vital-bar--mystic {
-    grid-column: 1;
+  .alth-hero__vitals .alth-vital-bar--mystic,
+  .alth-hero__level,
+  .alth-hero__coins {
+    grid-column: auto;
     grid-row: auto;
   }
-  .alth-hero__portrait-wrap { justify-self: center; }
-  .alth-hero__stats { display: flex; grid-column: 1; gap: var(--space-3); }
-  .alth-hero__level, .alth-hero__coins { flex: 1; }
+  .alth-hero__field-label { font-size: var(--text-lg); }
+
+  /* Abas da ficha em 2×2, sem cortar "Triunfos". */
+  .alth-sheet-tabs {
+    align-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .alth-sheet-tabs .campaign-tab {
+    justify-content: center;
+    min-height: 40px;
+    padding: var(--space-2) var(--space-3);
+  }
+
   .alth-domains__head,
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
   .alth-domains__attr { display: none; }
-  .alth-anatomy { justify-content: center; }
-  .alth-body { width: min(150px, 40vw); }
-  .alth-anatomy__fields { width: 100%; min-width: 0; }
+
+  /* Manequins lado a lado em cima, campos de zona embaixo (no HTML os
+     campos ficam entre os dois; `order` só muda a ordem visual). */
+  .alth-anatomy { justify-content: center; gap: var(--space-3); }
+  .alth-body { width: min(150px, 42vw); }
+  .alth-anatomy__fields { width: 100%; min-width: 0; order: 3; }
+
   .alth-inventory__grid { grid-template-columns: 1fr; }
   .alth-inventory__catalog, .alth-inventory__owned { max-height: 320px; }
 }

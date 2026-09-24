@@ -206,6 +206,10 @@
 }
 .chat-message:hover .chat-message__delete { opacity: 1; }
 .chat-message__delete:hover { color: var(--danger); }
+/* Toque (sem hover): o ✕ fica sempre visível, discreto, com área maior. */
+@media (hover: none) {
+  .chat-message__delete { opacity: 0.55; min-width: 36px; min-height: 36px; }
+}
 
 /* ── Confirmação inline de exclusão ── */
 .chat-message__confirm {

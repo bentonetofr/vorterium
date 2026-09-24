@@ -24,6 +24,13 @@ export function PrivateLayout() {
   )
 }
 
+const BOTTOM_NAV_ITEMS = [
+  { to: '/campanhas',     icon: '◈', label: 'Campanhas' },
+  { to: '/minhas-fichas', icon: '◎', label: 'Fichas' },
+  { to: '/atividade',     icon: '◉', label: 'Atividade' },
+  { to: '/perfil',        icon: '○', label: 'Perfil' },
+] as const
+
 // Precisa ser um componente separado de PrivateLayout: a barra lateral e
 // a barra de topo mobile leem a campanha atual do contexto, e um
 // componente não consegue consumir o Provider que ele mesmo cria no
@@ -181,6 +188,21 @@ function PrivateLayoutContent() {
       <main className="private-layout__main">
         <Outlet />
       </main>
+
+      {/* ── Barra de navegação inferior (mobile) — mesmas seções da barra
+          lateral, fixas no rodapé ao alcance do polegar. ── */}
+      <nav className="bottom-nav" aria-label="Navegação principal">
+        {BOTTOM_NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) => `bottom-nav__link${isActive ? ' bottom-nav__link--active' : ''}`}
+          >
+            <span className="bottom-nav__icon" aria-hidden="true">{item.icon}</span>
+            <span className="bottom-nav__label">{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
     <div className="dice-fab-wrapper">
       <NotificationPopup />

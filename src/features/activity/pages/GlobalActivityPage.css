@@ -243,7 +243,7 @@
   }
 
   .gact-item__btn {
-    width: 100%;
+    width: calc(100% - 44px);
     margin-left: 44px;
     justify-content: center;
   }

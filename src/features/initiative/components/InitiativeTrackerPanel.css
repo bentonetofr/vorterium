@@ -52,6 +52,7 @@
 }
 .initiative-panel__header-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
 }
 
@@ -156,6 +157,13 @@
   transition: color var(--transition-fast);
 }
 .initiative-row__remove:hover { color: var(--danger); }
+
+@media (max-width: 640px) {
+  .initiative-panel__header-actions { width: 100%; }
+  .initiative-panel__header-actions .btn { flex: 1 1 auto; }
+  .initiative-row__remove { min-width: 36px; min-height: 36px; }
+  .initiative-row__value { min-height: 36px; }
+}
 
 /* ── Linha de valores ── */
 .initiative-value-bar {

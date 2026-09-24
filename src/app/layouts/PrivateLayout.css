@@ -180,7 +180,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11, 19, 38, 0.85);
+  background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-dim);
 }
@@ -305,11 +305,72 @@
   flex-direction: column;
 }
 
+/* ── Barra de navegação inferior — mobile ── */
+.bottom-nav {
+  --bottom-nav-h: 60px;
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 400;
+  height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-dim);
+}
+.bottom-nav__link {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav__icon { font-size: 1.25rem; line-height: 1; }
+.bottom-nav__label {
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bottom-nav__link--active { color: var(--accent-bright); }
+.bottom-nav__link--active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 28%;
+  right: 28%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--gilded-bright);
+  box-shadow: 0 0 8px var(--gilded);
+}
+
 /* ── Responsivo ── */
 @media (max-width: 768px) {
+  /* Coluna: barra de topo em cima, conteúdo embaixo (em linha, a barra
+     de topo virava uma coluna ao lado e dobrava a largura da página). */
+  .private-layout   { flex-direction: column; }
   .sidebar          { display: none; }
   .topbar           { display: flex; }
-  .private-layout__main { margin-left: 0; }
+  .bottom-nav       { display: flex; }
+  .private-layout__main {
+    margin-left: 0;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Sino e dado sobem pra ficar acima da barra inferior. */
+  .dice-fab-wrapper { bottom: calc(60px + var(--space-4) + env(safe-area-inset-bottom, 0px)); }
+  .topbar__btn { min-width: 40px; min-height: 40px; }
 }
 
 /* ── Ações do rodapé (tema + sair) ── */
