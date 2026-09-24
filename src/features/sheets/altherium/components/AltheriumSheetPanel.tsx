@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   getOrCreateMyAltheriumSheet,
   getCampaignAltheriumSheets,
+  subscribeToCampaignAltheriumSheets,
   getAltheriumDomains,
   setAltheriumDomainPoints,
   updateAltheriumSheet,
@@ -20,6 +21,7 @@ import {
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
 import { RAIZES } from '../constants/altherium'
+import { cardsMax } from '../utils/altheriumCalculations'
 import type { BodyZone } from './AltheriumBodyDiagram'
 import type {
   AltheriumSheet,
@@ -281,25 +283,35 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
   const [sheets, setSheets]     = useState<AltheriumSheetWithProfile[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  // A ficha aberta no editor é uma cópia tirada ao selecionar: os cards
+  // acompanham o Realtime, mas o editor só muda com o próprio "Salvar" do
+  // mestre — assim um save do jogador não apaga edições não salvas aqui.
+  const [editing, setEditing]   = useState<AltheriumSheetWithProfile | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const data = await getCampaignAltheriumSheets(campaignId)
       setSheets(data)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível carregar as fichas.')
+      if (!silent) setError(err instanceof Error ? err.message : 'Não foi possível carregar as fichas.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [campaignId])
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => subscribeToCampaignAltheriumSheets(
+    campaignId,
+    (updated) => setSheets((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))),
+    () => { void load(true) },
+  ), [campaignId, load])
+
   function handleSheetUpdated(updated: AltheriumSheet) {
     setSheets((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)))
+    setEditing((prev) => (prev && prev.id === updated.id ? { ...prev, ...updated } : prev))
   }
 
   if (loading) {
@@ -317,7 +329,8 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
     return <p className="sheet-empty">Nenhum jogador criou ficha de Altherium ainda.</p>
   }
 
-  const selected = sheets.find((s) => s.id === selectedId) ?? null
+  const selectedId = editing?.id ?? null
+  const selected = editing
 
   return (
     <div className="sheets-list-wrapper">
@@ -331,7 +344,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
             <button
               key={s.id}
               className={`sheet-card ${selectedId === s.id ? 'sheet-card--active' : ''}`}
-              onClick={() => setSelectedId(s.id)}
+              onClick={() => setEditing(s)}
               aria-pressed={selectedId === s.id}
             >
               <div className="sheet-card__top">
@@ -346,23 +359,23 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
 
               <span className="sheet-card__char">
                 {s.character_name
-                  ? <><strong>{s.character_name}</strong>{` · ${raizLabel}`}</>
-                  : `Sem nome · ${raizLabel}`
+                  ? <><strong>{s.character_name}</strong>{` · ${raizLabel} · Nv ${s.level}`}</>
+                  : `Sem nome · ${raizLabel} · Nv ${s.level}`
                 }
               </span>
 
-              <div className="sheet-card__meta">
-                <span className="sheet-card__level">Nv {s.level}</span>
-                <span>
-                  {s.vitality_current}<span className="text-muted">/{s.vitality_max} PV</span>
-                </span>
-              </div>
-
-              <div className="sheet-card__meta">
-                <span className="sheet-card__level">Equilíbrio</span>
-                <span>
-                  {s.equilibrio_current}<span className="text-muted">/{s.equilibrio_max}</span>
-                </span>
+              <div className="sheet-card__bars">
+                <SummaryBar sigla="PV" tone="vitality" current={s.vitality_current} max={s.vitality_max} />
+                <SummaryBar sigla="PE" tone="mystic" current={s.equilibrio_current} max={s.equilibrio_max} />
+                {s.raiz === 'berserker' && (
+                  <SummaryBar sigla="FV" tone="resource" current={s.fv_current} max={s.fv_max} />
+                )}
+                {s.raiz === 'runaskin' && (
+                  <SummaryBar sigla="PR" tone="mystic" current={s.pr_current} max={s.pr_max} />
+                )}
+                {s.raiz === 'pilar' && (
+                  <SummaryBar sigla="Cartas" tone="resource" current={s.cards_current} max={cardsMax(s)} />
+                )}
               </div>
             </button>
           )
@@ -372,6 +385,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
       {selected ? (
         <div className="sheets-list__form">
           <SheetEditor
+            key={selected.id}
             sheet={selected}
             ownerName={selected.profile?.display_name ?? 'Jogador removido'}
             onSheetUpdated={handleSheetUpdated}
@@ -382,6 +396,32 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
           Selecione um jogador acima para ver e editar a ficha.
         </p>
       )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// Barrinha dos cards de resumo — só leitura, acompanha o Realtime.
+// ────────────────────────────────────────────────────────
+
+interface SummaryBarProps {
+  sigla:   string
+  tone:    'vitality' | 'mystic' | 'resource'
+  current: number
+  max:     number | null
+}
+
+function SummaryBar({ sigla, tone, current, max }: SummaryBarProps) {
+  const pct = max && max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0
+  return (
+    <div className={`sheet-card__bar sheet-card__bar--${tone}`}>
+      <div className="sheet-card__bar-top">
+        <span className="sheet-card__bar-sigla">{sigla}</span>
+        <span className="sheet-card__bar-values">{current} / {max ?? '—'}</span>
+      </div>
+      <div className="sheet-card__bar-track">
+        <div className="sheet-card__bar-fill" style={{ width: `${pct}%` }} />
+      </div>
     </div>
   )
 }

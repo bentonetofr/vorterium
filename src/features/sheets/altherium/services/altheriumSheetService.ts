@@ -150,6 +150,39 @@ export async function getCampaignAltheriumSheets(campaignId: string): Promise<Al
   }))
 }
 
+/**
+ * Assina mudanças nas fichas Altherium da campanha (Realtime, respeita a
+ * RLS). UPDATE traz a linha nova inteira — mas sem o join de perfil, então
+ * quem chama mescla por cima do que já tem. INSERT/DELETE (ficha nova ou
+ * removida) pedem recarregar a lista, já que aí o perfil importa.
+ */
+export function subscribeToCampaignAltheriumSheets(
+  campaignId: string,
+  onSheetUpdate: (sheet: AltheriumSheet) => void,
+  onListChange: () => void,
+): () => void {
+  const channel = supabase
+    .channel(`altherium_sheets:${campaignId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'altherium_character_sheets', filter: `campaign_id=eq.${campaignId}` },
+      (payload) => onSheetUpdate(payload.new as AltheriumSheet),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'altherium_character_sheets', filter: `campaign_id=eq.${campaignId}` },
+      () => onListChange(),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'altherium_character_sheets' },
+      () => onListChange(),
+    )
+    .subscribe()
+
+  return () => { supabase.removeChannel(channel) }
+}
+
 // ────────────────────────────────────────────────────────
 // Domínios
 // ────────────────────────────────────────────────────────
