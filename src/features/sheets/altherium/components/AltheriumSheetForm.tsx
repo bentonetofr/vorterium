@@ -78,6 +78,10 @@ type FormData = {
   db_bracos:          number
   db_tronco:          number
   db_cabeca:          number
+  dano_pernas:        number
+  dano_bracos:        number
+  dano_tronco:        number
+  dano_cabeca:        number
   notes:              string
 }
 
@@ -107,6 +111,10 @@ function sheetToForm(s: AltheriumSheet): FormData {
     db_bracos:          s.db_bracos,
     db_tronco:          s.db_tronco,
     db_cabeca:          s.db_cabeca,
+    dano_pernas:        s.dano_pernas,
+    dano_bracos:        s.dano_bracos,
+    dano_tronco:        s.dano_tronco,
+    dano_cabeca:        s.dano_cabeca,
     notes:              s.notes ?? '',
   }
 }
@@ -185,6 +193,12 @@ export function AltheriumSheetForm({
     db_tronco: useRef<HTMLInputElement>(null),
     db_pernas: useRef<HTMLInputElement>(null),
   }
+  const woundInputRefs = {
+    dano_cabeca: useRef<HTMLInputElement>(null),
+    dano_bracos: useRef<HTMLInputElement>(null),
+    dano_tronco: useRef<HTMLInputElement>(null),
+    dano_pernas: useRef<HTMLInputElement>(null),
+  }
 
   useEffect(() => { setForm(sheetToForm(sheet)) }, [sheet])
 
@@ -195,6 +209,13 @@ export function AltheriumSheetForm({
 
   function handleZoneClick(zone: BodyZone) {
     const input = dbInputRefs[zone].current
+    input?.focus()
+    input?.select()
+  }
+
+  function handleWoundZoneClick(zone: BodyZone) {
+    const woundField = (`dano_${zone.slice(3)}` as const) as keyof typeof woundInputRefs
+    const input = woundInputRefs[woundField].current
     input?.focus()
     input?.select()
   }
@@ -294,6 +315,10 @@ export function AltheriumSheetForm({
       db_bracos:          form.db_bracos,
       db_tronco:          form.db_tronco,
       db_cabeca:          form.db_cabeca,
+      dano_pernas:        form.dano_pernas,
+      dano_bracos:        form.dano_bracos,
+      dano_tronco:        form.dano_tronco,
+      dano_cabeca:        form.dano_cabeca,
       notes:              form.notes.trim() || null,
     })
   }
@@ -547,6 +572,7 @@ export function AltheriumSheetForm({
 
           <div className="alth-anatomy">
             <AltheriumBodyDiagram
+              variant="protecao"
               values={{
                 db_cabeca: form.db_cabeca,
                 db_bracos: form.db_bracos,
@@ -556,25 +582,58 @@ export function AltheriumSheetForm({
               onZoneClick={handleZoneClick}
             />
 
+            <AltheriumBodyDiagram
+              variant="dano"
+              visualMax={form.vitality_max}
+              values={{
+                db_cabeca: form.dano_cabeca,
+                db_bracos: form.dano_bracos,
+                db_tronco: form.dano_tronco,
+                db_pernas: form.dano_pernas,
+              }}
+              onZoneClick={handleWoundZoneClick}
+            />
+
             <div className="alth-anatomy__fields">
-              {BODY_PARTS.map((part) => (
-                <label key={part.id} className="alth-anatomy__field">
-                  <span className="label">{part.label} <span className="alth-table__range">({part.range})</span></span>
-                  <input
-                    ref={dbInputRefs[part.id]}
-                    type="number" className="input" min={0}
-                    value={form[part.id] as number}
-                    onChange={(e) => set(part.id, clamp(e.target.value, 0, 999) as never)}
-                    disabled={saving}
-                    aria-label={`DB em ${part.label}`}
-                  />
-                </label>
-              ))}
+              {BODY_PARTS.map((part) => {
+                const woundField = (`dano_${part.id.slice(3)}` as const) as keyof typeof woundInputRefs
+                return (
+                  <div key={part.id} className="alth-anatomy__field">
+                    <span className="label">{part.label} <span className="alth-table__range">({part.range})</span></span>
+                    <div className="alth-anatomy__field-inputs">
+                      <label className="alth-anatomy__field-input">
+                        <span className="alth-anatomy__field-input-tag">DB</span>
+                        <input
+                          ref={dbInputRefs[part.id]}
+                          type="number" className="input" min={0}
+                          value={form[part.id] as number}
+                          onChange={(e) => set(part.id, clamp(e.target.value, 0, 999) as never)}
+                          disabled={saving}
+                          aria-label={`DB em ${part.label}`}
+                        />
+                      </label>
+                      <label className="alth-anatomy__field-input alth-anatomy__field-input--wound">
+                        <span className="alth-anatomy__field-input-tag">Dano</span>
+                        <input
+                          ref={woundInputRefs[woundField]}
+                          type="number" className="input" min={0}
+                          value={form[woundField]}
+                          onChange={(e) => set(woundField, clamp(e.target.value, 0, 999))}
+                          disabled={saving}
+                          aria-label={`Dano em ${part.label}`}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
           <p className="alth-hint">
             DB = dano bloqueado. O inimigo rola 1d10 pra saber onde acerta; a zona armada
-            (destacada no diagrama) reduz o dano recebido ali. Clique numa zona pra editar.
+            (destacada no diagrama dourado) reduz o dano recebido ali. O manequim vermelho
+            mostra o dano já sofrido em cada zona, relativo à Vitalidade máxima. Clique numa
+            zona pra editar o campo correspondente.
           </p>
         </section>
 

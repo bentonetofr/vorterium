@@ -2,10 +2,16 @@ import { useEffect, useReducer, useRef } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 
 export type BodyZone = 'db_cabeca' | 'db_bracos' | 'db_tronco' | 'db_pernas'
+export type BodyDiagramVariant = 'protecao' | 'dano'
 
 interface AltheriumBodyDiagramProps {
-  values: Record<BodyZone, number>
+  values:      Record<BodyZone, number>
   onZoneClick?: (zone: BodyZone) => void
+  variant?:     BodyDiagramVariant
+  /** Teto do gradiente ("100% da cor de destino"). Protecao usa o maior DB
+   *  de armadura única do catálogo (16); dano usa a Vitalidade máxima da
+   *  ficha, passada pelo chamador. */
+  visualMax?:  number
 }
 
 const ZONE_LABELS: Record<BodyZone, string> = {
@@ -16,18 +22,20 @@ const ZONE_LABELS: Record<BodyZone, string> = {
 }
 
 // Maior DB de armadura única no catálogo do livro (Armadura do Guardião
-// de Eryndor, 16DB) — referência pra "totalmente dourado" no gradiente.
-const DB_VISUAL_MAX = 16
-const BARE_RGB:    [number, number, number] = [34, 42, 61]
-const ARMORED_RGB: [number, number, number] = [212, 175, 55]
+// de Eryndor, 16DB) — referência pra "totalmente dourado" no gradiente
+// da variante de proteção.
+const PROTECTION_VISUAL_MAX = 16
+const NEUTRAL_RGB:    [number, number, number] = [34, 42, 61]
+const PROTECTION_RGB: [number, number, number] = [212, 175, 55]
+// --danger-bright (rgba(255, 180, 171, 1)) — mesmo tom de "perigo" já
+// usado no resto do app, pra manter a paleta consistente.
+const WOUND_RGB:      [number, number, number] = [255, 180, 171]
 
-function lerpColor(ratio: number): string {
+function lerpColor(ratio: number, targetRgb: [number, number, number]): string {
   const t = Math.max(0, Math.min(1, ratio))
-  const [r, g, b] = BARE_RGB.map((c, i) => Math.round(c + (ARMORED_RGB[i] - c) * t))
+  const [r, g, b] = NEUTRAL_RGB.map((c, i) => Math.round(c + (targetRgb[i] - c) * t))
   return `rgb(${r}, ${g}, ${b})`
 }
-function limbColor(db: number): string { return lerpColor(db / DB_VISUAL_MAX) }
-function jointColor(db: number): string { return lerpColor(1 - db / DB_VISUAL_MAX) }
 
 // Pontos do lado esquerdo; o direito é o espelho em x=100. Coordenadas
 // proporcionais à referência do usuário (imagem 1086×1448 → viewBox 200×268).
@@ -215,20 +223,26 @@ function useJointRig() {
 
 interface ZoneStyle extends CSSProperties { '--zone-color'?: string }
 
-export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagramProps) {
+export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao', visualMax }: AltheriumBodyDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const rig = useJointRig()
 
-  function limbClickProps(zone: BodyZone, shapeClass: 'alth-body__limb' | 'alth-body__mass', colorFn: (db: number) => string) {
-    const db = values[zone]
-    const style: ZoneStyle = { '--zone-color': colorFn(db) }
+  const targetRgb = variant === 'dano' ? WOUND_RGB : PROTECTION_RGB
+  const max = visualMax || (variant === 'dano' ? 1 : PROTECTION_VISUAL_MAX)
+  function limbColor(value: number): string { return lerpColor(value / max, targetRgb) }
+  function jointColor(value: number): string { return lerpColor(1 - value / max, targetRgb) }
+
+  function limbClickProps(zone: BodyZone, shapeClass: 'alth-body__limb' | 'alth-body__mass') {
+    const value = values[zone]
+    const style: ZoneStyle = { '--zone-color': limbColor(value) }
+    const unit = variant === 'dano' ? 'de dano' : 'de proteção'
     return {
       className: `alth-body__zone ${shapeClass}`,
       style,
       onClick: onZoneClick ? () => onZoneClick(zone) : undefined,
       role: onZoneClick ? 'button' : undefined,
       tabIndex: onZoneClick ? 0 : undefined,
-      'aria-label': `${ZONE_LABELS[zone]}: ${db > 0 ? `${db} de proteção` : 'sem armadura'}`,
+      'aria-label': `${ZONE_LABELS[zone]}: ${value > 0 ? `${value} ${unit}` : variant === 'dano' ? 'sem dano' : 'sem armadura'}`,
       onKeyDown: onZoneClick
         ? (e: KeyboardEvent<SVGElement>) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onZoneClick(zone) }
@@ -275,7 +289,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
       className={`alth-body${rig.dragging.current ? ' alth-body--dragging' : ''}`}
       viewBox="0 0 200 268"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Manequim articulado — arraste as mãos, pés ou a cabeça pra posar, clique nos membros pra editar a proteção"
+      aria-label={`Manequim articulado — arraste as mãos, pés ou a cabeça pra posar, clique nos membros pra editar ${variant === 'dano' ? 'o dano' : 'a proteção'}`}
     >
       {/* Pernas: cadeia quadril → joelho. A alça do quadril fica no joelho
           (gira a perna toda) e a do joelho fica no pé (dobra só a canela) —
@@ -289,14 +303,14 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
         const footX = side === 'L' ? ANKLE.x - 4 : mirror(ANKLE.x - 4)
         return (
           <g key={hipId} transform={rotate(hipId)}>
-            <g {...limbClickProps('db_pernas', 'alth-body__limb', limbColor)}>
+            <g {...limbClickProps('db_pernas', 'alth-body__limb')}>
               <line x1={hipX} y1={HIP.y} x2={kneeX} y2={KNEE.y} strokeWidth={15} />
             </g>
             <g transform={rotate(kneeId)}>
-              <g {...limbClickProps('db_pernas', 'alth-body__limb', limbColor)}>
+              <g {...limbClickProps('db_pernas', 'alth-body__limb')}>
                 <line x1={kneeX} y1={KNEE.y} x2={ankleX} y2={ANKLE.y} strokeWidth={12} />
               </g>
-              <g {...limbClickProps('db_pernas', 'alth-body__mass', limbColor)}>
+              <g {...limbClickProps('db_pernas', 'alth-body__mass')}>
                 <ellipse cx={footX} cy={ANKLE.y + 10} rx={11} ry={7} />
               </g>
               <JointHandle id={kneeId} x={ankleX} y={ANKLE.y + 10} />
@@ -317,14 +331,14 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
         const wristX = side === 'L' ? WRIST.x : mirror(WRIST.x)
         return (
           <g key={shoulderId} transform={rotate(shoulderId)}>
-            <g {...limbClickProps('db_bracos', 'alth-body__limb', limbColor)}>
+            <g {...limbClickProps('db_bracos', 'alth-body__limb')}>
               <line x1={shoulderX} y1={SHOULDER.y} x2={elbowX} y2={ELBOW.y} strokeWidth={14} />
             </g>
             <g transform={rotate(elbowId)}>
-              <g {...limbClickProps('db_bracos', 'alth-body__limb', limbColor)}>
+              <g {...limbClickProps('db_bracos', 'alth-body__limb')}>
                 <line x1={elbowX} y1={ELBOW.y} x2={wristX} y2={WRIST.y} strokeWidth={12} />
               </g>
-              <g {...limbClickProps('db_bracos', 'alth-body__mass', limbColor)}>
+              <g {...limbClickProps('db_bracos', 'alth-body__mass')}>
                 <ellipse cx={wristX} cy={WRIST.y + 3} rx={7} ry={6} />
               </g>
               <JointHandle id={elbowId} x={wristX} y={WRIST.y + 3} />
@@ -335,7 +349,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
       })}
 
       {/* Tronco: raiz da cadeia, não gira */}
-      <g {...limbClickProps('db_tronco', 'alth-body__mass', limbColor)}>
+      <g {...limbClickProps('db_tronco', 'alth-body__mass')}>
         <path d="M 82 66 Q 79 68 79 80 Q 78 96 84 108 Q 87 112 92 112 L 108 112 Q 113 112 116 108 Q 122 96 121 80 Q 121 68 118 66 Q 109 62 100 62 Q 91 62 82 66 Z" />
         <path d="M 86 110 L 114 110 L 120 122 Q 100 140 80 122 Z" />
       </g>
@@ -343,7 +357,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick }: AltheriumBodyDiagr
       {/* Cabeça: gira em torno da base do pescoço; a alça fica na própria
           cabeça, bem mais longe do pivô do que o pescocinho fino. */}
       <g transform={rotate('neck')}>
-        <g {...limbClickProps('db_cabeca', 'alth-body__mass', limbColor)}>
+        <g {...limbClickProps('db_cabeca', 'alth-body__mass')}>
           <rect x={94} y={56} width={12} height={10} rx={3} />
           <circle cx={HEAD.x} cy={HEAD.y} r={17} />
         </g>

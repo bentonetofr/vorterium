@@ -569,17 +569,37 @@
   flex-direction: column;
   gap: var(--space-2);
   flex: 1;
-  min-width: 160px;
+  min-width: 200px;
 }
 .alth-anatomy__field {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-1) 0;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-dim);
 }
+.alth-anatomy__field:last-child { border-bottom: none; }
 .alth-anatomy__field .label { margin-bottom: 0; }
-.alth-anatomy__field .input { width: 68px; text-align: center; }
+
+.alth-anatomy__field-inputs {
+  display: flex;
+  gap: var(--space-4);
+}
+.alth-anatomy__field-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.alth-anatomy__field-input .input { width: 56px; text-align: center; }
+.alth-anatomy__field-input-tag {
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.alth-anatomy__field-input--wound .alth-anatomy__field-input-tag { color: var(--danger); }
 
 /* ── Domínios ── */
 .alth-domains__search { margin-bottom: var(--space-1); }
@@ -848,8 +868,9 @@
   .alth-domains__head,
   .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
   .alth-domains__attr { display: none; }
-  .alth-anatomy { flex-direction: column; }
-  .alth-body { width: min(280px, 80vw); margin: 0 auto; }
+  .alth-anatomy { justify-content: center; }
+  .alth-body { width: min(150px, 40vw); }
+  .alth-anatomy__fields { width: 100%; min-width: 0; }
   .alth-inventory__grid { grid-template-columns: 1fr; }
   .alth-inventory__catalog, .alth-inventory__owned { max-height: 320px; }
 }

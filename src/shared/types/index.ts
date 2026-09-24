@@ -209,6 +209,10 @@ export interface AltheriumSheet {
   db_bracos:          number
   db_tronco:          number
   db_cabeca:          number
+  dano_pernas:        number
+  dano_bracos:        number
+  dano_tronco:        number
+  dano_cabeca:        number
   notes:              string | null
   created_at:         string
   updated_at:         string
