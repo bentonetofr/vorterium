@@ -68,6 +68,15 @@ export function domainSlotsTotal(sheet: AltheriumSheet): number | null {
   return getRaiz(sheet.raiz).domainBase + sheet.attr_estrategia
 }
 
+/**
+ * Triunfos que o Berserker pode ter: ⌊(2 + domínios com ponto) ÷ 2⌋.
+ * Conta domínios com pelo menos 1 ponto, não a soma dos pontos.
+ */
+export function berserkerTriumphLimit(domains: { points: number }[]): number {
+  const withPoints = domains.filter((d) => d.points > 0).length
+  return Math.floor((2 + withPoints) / 2)
+}
+
 // ────────────────────────────────────────────────────────
 // Combate / deslocamento
 // ────────────────────────────────────────────────────────

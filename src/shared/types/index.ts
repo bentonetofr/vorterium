@@ -213,6 +213,8 @@ export interface AltheriumSheet {
   dano_bracos:        number
   dano_tronco:        number
   dano_cabeca:        number
+  /** Ids dos triunfos escolhidos (só Berserker — catálogo em altheriumTriumphs.ts). */
+  berserker_triumphs: string[]
   notes:              string | null
   created_at:         string
   updated_at:         string

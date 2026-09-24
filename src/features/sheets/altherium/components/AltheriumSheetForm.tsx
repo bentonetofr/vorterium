@@ -11,6 +11,7 @@ import {
   type AltheriumRaiz,
 } from '../constants/altherium'
 import {
+  berserkerTriumphLimit,
   cardsMax,
   domainSlotsTotal,
   fvMax,
@@ -23,6 +24,7 @@ import {
 } from '../utils/altheriumCalculations'
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import { AltheriumInventoryCard } from './AltheriumInventoryCard'
+import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
 import { findArmor } from '../constants/altheriumItems'
 import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem } from '../../../../shared/types'
 import {
@@ -82,6 +84,7 @@ type FormData = {
   dano_bracos:        number
   dano_tronco:        number
   dano_cabeca:        number
+  berserker_triumphs: string[]
   notes:              string
 }
 
@@ -115,6 +118,7 @@ function sheetToForm(s: AltheriumSheet): FormData {
     dano_bracos:        s.dano_bracos,
     dano_tronco:        s.dano_tronco,
     dano_cabeca:        s.dano_cabeca,
+    berserker_triumphs: s.berserker_triumphs ?? [],
     notes:              s.notes ?? '',
   }
 }
@@ -319,6 +323,7 @@ export function AltheriumSheetForm({
       dano_bracos:        form.dano_bracos,
       dano_tronco:        form.dano_tronco,
       dano_cabeca:        form.dano_cabeca,
+      berserker_triumphs: form.berserker_triumphs,
       notes:              form.notes.trim() || null,
     })
   }
@@ -722,13 +727,20 @@ export function AltheriumSheetForm({
         )}
       </div>
 
-      {/* ── Triunfos: fase futura ── */}
+      {/* ── Triunfos: Berserker escolhe (paga FV), Pilar tem todos (paga cartas) ── */}
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
         {activeTab === 'triunfos' && (
           <div className="alth-tab-panel animate-fade-up">
-            <AltheriumComingSoon
-              title="Triunfos"
-              message="Trilhas, naipes e habilidades especiais por raiz chegam numa próxima atualização."
+            <AltheriumTriumphsPanel
+              raiz={raiz}
+              triumphIds={form.berserker_triumphs}
+              limit={berserkerTriumphLimit(domains)}
+              fvCurrent={form.fv_current}
+              cardsCurrent={form.cards_current}
+              onChange={(ids) => set('berserker_triumphs', ids)}
+              onSpendFv={(cost) => set('fv_current', Math.max(0, form.fv_current - cost))}
+              onSpendCards={(cost) => set('cards_current', Math.max(0, form.cards_current - cost))}
+              disabled={saving}
             />
           </div>
         )}
@@ -839,26 +851,6 @@ function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled
       <div className="alth-vital-bar__bar">
         <div className="alth-vital-bar__bar-fill" style={{ width: `${pct}%` }} />
       </div>
-    </div>
-  )
-}
-
-// ────────────────────────────────────────────────────────
-// Placeholder pras abas/seções que ainda não existem (Fase 2 e 3 —
-// catálogo de armas/armaduras e Triunfos, ver spec).
-// ────────────────────────────────────────────────────────
-
-interface AltheriumComingSoonProps {
-  title:   string
-  message: string
-}
-
-function AltheriumComingSoon({ title, message }: AltheriumComingSoonProps) {
-  return (
-    <div className="alth-coming-soon">
-      <span className="alth-coming-soon__icon" aria-hidden="true">✦</span>
-      <h4 className="alth-coming-soon__title">{title}</h4>
-      <p className="alth-coming-soon__message">{message}</p>
     </div>
   )
 }
