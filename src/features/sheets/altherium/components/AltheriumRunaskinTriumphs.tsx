@@ -4,6 +4,8 @@ import {
   RUNASKIN_TRAILS,
   RUNASKIN_TRIUMPHS,
   TRIUMPH_ACTION_LABELS,
+  TRIUMPH_RANGES,
+  type TriumphAction,
   type RunaskinTrail,
 } from '../constants/altheriumTriumphs'
 import {
@@ -170,6 +172,7 @@ export function AltheriumRunaskinTriumphs({
                   name={r.name}
                   cost={r.pr_cost}
                   test={r.test}
+                  chips={[r.action ? TRIUMPH_ACTION_LABELS[r.action] : null, r.range].filter((c): c is string => !!c)}
                   description={r.description}
                 >
                   {confirmDelete === r.id
@@ -266,6 +269,8 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
   const [description, setDescription] = useState(initial?.description ?? '')
   const [cost, setCost]               = useState(initial?.pr_cost ?? 1)
   const [test, setTest]               = useState(initial?.test ?? '')
+  const [action, setAction]           = useState<TriumphAction | ''>(initial?.action ?? '')
+  const [range, setRange]             = useState(initial?.range ?? '')
   // undefined = mantém a foto atual; null = sem foto; File = nova foto
   const [image, setImage]             = useState<File | null | undefined>(undefined)
   const [preview, setPreview]         = useState<string | null>(initial?.image_url ?? null)
@@ -317,7 +322,10 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
     setError(null)
     try {
       await onSubmit(
-        { name: name.trim(), description: description.trim(), pr_cost: cost, test: test.trim() || null },
+        {
+          name: name.trim(), description: description.trim(), pr_cost: cost, test: test.trim() || null,
+          action: action || null, range: range || null,
+        },
         image,
       )
     } catch (err) {
@@ -377,6 +385,29 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
                 type="text" className="input" placeholder="Ex.: Luta com Rúnico" maxLength={80}
                 value={test} onChange={(e) => setTest(e.target.value)} disabled={busy}
               />
+            </label>
+          </div>
+          <div className="alth-rune__editor-row">
+            <label className="alth-rune__editor-half">
+              <span className="label">Tipo de ação</span>
+              <select
+                className="input" value={action}
+                onChange={(e) => setAction(e.target.value as TriumphAction | '')} disabled={busy}
+              >
+                <option value="">—</option>
+                {(Object.keys(TRIUMPH_ACTION_LABELS) as TriumphAction[]).map((a) => (
+                  <option key={a} value={a}>{TRIUMPH_ACTION_LABELS[a]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="alth-rune__editor-half">
+              <span className="label">Distância</span>
+              <select className="input" value={range} onChange={(e) => setRange(e.target.value)} disabled={busy}>
+                <option value="">—</option>
+                {/* Mantém uma distância antiga fora da lista, se houver. */}
+                {range && !(TRIUMPH_RANGES as readonly string[]).includes(range) && <option value={range}>{range}</option>}
+                {TRIUMPH_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
             </label>
           </div>
           <textarea

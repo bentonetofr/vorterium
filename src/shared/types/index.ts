@@ -259,6 +259,10 @@ export interface AltheriumRune {
   description: string
   pr_cost:     number
   test:        string | null
+  /** Tipo de ação — mesmos ids de TriumphAction (altheriumTriumphs.ts). */
+  action:      'padrao' | 'bonus' | 'livre' | 'reacao' | null
+  /** Distância/alcance (Toque, Curto, ...). */
+  range:       string | null
   image_url:   string | null
   created_at:  string
 }

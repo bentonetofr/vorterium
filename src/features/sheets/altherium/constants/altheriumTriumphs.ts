@@ -13,6 +13,10 @@ export const TRIUMPH_ACTION_LABELS: Record<TriumphAction, string> = {
   reacao: 'Reação',
 }
 
+/** Distâncias oferecidas ao criar uma runa — as que o livro usa nos
+ *  triunfos, mais Médio e Longo. */
+export const TRIUMPH_RANGES = ['Toque', 'Toque/curto', 'Curto', 'Médio', 'Longo', 'Qualquer'] as const
+
 export interface BerserkerTriumphDef {
   id:          string
   name:        string

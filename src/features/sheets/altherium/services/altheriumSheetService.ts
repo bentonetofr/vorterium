@@ -294,7 +294,7 @@ export async function removeAltheriumInventoryItem(id: string): Promise<void> {
 // Runas descobertas (Runaskin)
 // ────────────────────────────────────────────────────────
 
-export type AltheriumRuneInput = Pick<AltheriumRune, 'name' | 'description' | 'pr_cost' | 'test'>
+export type AltheriumRuneInput = Pick<AltheriumRune, 'name' | 'description' | 'pr_cost' | 'test' | 'action' | 'range'>
 
 const RUNES_BUCKET = 'altherium-runes'
 

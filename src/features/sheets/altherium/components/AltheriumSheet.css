@@ -1281,6 +1281,7 @@
 .alth-rune__editor-row { display: flex; gap: var(--space-3); }
 .alth-rune__editor-cost { width: 80px; flex-shrink: 0; }
 .alth-rune__editor-test { flex: 1; min-width: 0; }
+.alth-rune__editor-half { flex: 1; min-width: 0; }
 .alth-rune__editor-row .label { margin-bottom: var(--space-1); }
 .alth-rune__remove-img {
   align-self: flex-start;
