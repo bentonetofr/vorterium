@@ -6,7 +6,7 @@ import { CampaignActivityPanel } from '../../activity/components/CampaignActivit
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
-import { TabIndicator, useTabDirection } from '../../../shared/components/TabIndicator'
+import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
 import './SessionTablePanel.css'
 
 interface SessionTablePanelProps {
@@ -34,6 +34,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   const initialSubTab = (location.state as NavigationState | null)?.initialSessionSubTab ?? 'ficha'
   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(initialSubTab)
   const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
+  const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveSubTab)
 
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.
@@ -46,7 +47,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
 
   return (
     <div className="session-table" style={{ '--tab-dir': tabDir } as CSSProperties}>
-      <nav className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Mesa da sessão">
+      <nav ref={tabsRef} className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Mesa da sessão">
         {subTabs.map((tab) => (
           <button
             key={tab.id}
@@ -54,7 +55,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             aria-selected={activeSubTab === tab.id}
             aria-controls={`session-subtabpanel-${tab.id}`}
             className={`campaign-tab ${activeSubTab === tab.id ? 'campaign-tab--active' : ''}`}
-            onClick={() => setActiveSubTab(tab.id)}
+            onClick={() => selectTab(tab.id)}
           >
             <span className="campaign-tab__label">{tab.label}</span>
           </button>
@@ -62,6 +63,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         <TabIndicator activeKey={activeSubTab} />
       </nav>
 
+      <div style={panelsStyle}>
       <div
         id="session-subtabpanel-chat"
         role="tabpanel"
@@ -119,6 +121,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             campaignSystem={campaign.system}
           />
         )}
+      </div>
       </div>
     </div>
   )

@@ -73,3 +73,29 @@ export function useTabDirection<T>(tabs: readonly T[], active: T): 1 | -1 {
   }
   return seen.direction
 }
+
+/**
+ * Mantém a barra de abas parada na tela ao trocar de aba. Sem isso, sair
+ * de uma aba comprida (Inventário) pra uma curta (Atributos) encolhe a
+ * página, o navegador puxa a rolagem pra cima e a barra "desce".
+ *
+ * `selectTab` mede quanto espaço há da barra até o fim da tela e reserva
+ * essa altura mínima pros painéis (`panelsStyle`) — a página nunca fica
+ * mais curta que isso, então a rolagem não muda. A altura é recalculada a
+ * cada troca, então sobra só o necessário.
+ */
+export function useStableTabPanels<T>(setActive: (tab: T) => void) {
+  const tabsRef = useRef<HTMLElement>(null)
+  const [minHeight, setMinHeight] = useState<number | undefined>(undefined)
+
+  function selectTab(tab: T) {
+    const tabs = tabsRef.current
+    if (tabs) {
+      const { bottom } = tabs.getBoundingClientRect()
+      setMinHeight(Math.max(0, Math.ceil(window.innerHeight - bottom)))
+    }
+    setActive(tab)
+  }
+
+  return { tabsRef, selectTab, panelsStyle: { minHeight } }
+}

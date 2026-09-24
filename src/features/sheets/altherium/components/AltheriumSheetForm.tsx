@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
 import { Presence } from '../../../../shared/components/Presence'
-import { TabIndicator, useTabDirection } from '../../../../shared/components/TabIndicator'
+import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../shared/components/TabIndicator'
 import {
   ATTRIBUTES,
   ATTRIBUTE_HARD_MAX,
@@ -252,6 +252,7 @@ export function AltheriumSheetForm({
   const [domainFilter, setDomainFilter] = useState('')
   const [activeTab, setActiveTab] = useState<AltheriumFormTabId>('visao-geral')
   const tabDir = useTabDirection(ALTHERIUM_FORM_TAB_IDS, activeTab)
+  const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveTab)
   const [portraitDraft, setPortraitDraft] = useState<File | null>(null)
   const [portraitPickError, setPortraitPickError] = useState<string | null>(null)
 
@@ -612,7 +613,7 @@ export function AltheriumSheetForm({
       )}
 
       {/* ── Abas ── */}
-      <nav className="campaign-tabs alth-sheet-tabs" role="tablist" aria-label="Seções da ficha">
+      <nav ref={tabsRef} className="campaign-tabs alth-sheet-tabs" role="tablist" aria-label="Seções da ficha">
         {ALTHERIUM_FORM_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -621,7 +622,7 @@ export function AltheriumSheetForm({
             aria-selected={activeTab === tab.id}
             aria-controls={`alth-tabpanel-${tab.id}`}
             className={`campaign-tab ${activeTab === tab.id ? 'campaign-tab--active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => selectTab(tab.id)}
           >
             <span className="campaign-tab__label">{tab.label}</span>
           </button>
@@ -629,6 +630,7 @@ export function AltheriumSheetForm({
         <TabIndicator activeKey={activeTab} />
       </nav>
 
+      <div className="alth-tab-panels" style={panelsStyle}>
       {/* ── Atributos ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
@@ -891,6 +893,8 @@ export function AltheriumSheetForm({
             </section>
           </div>
         )}
+      </div>
+
       </div>
 
       {error && <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>}
