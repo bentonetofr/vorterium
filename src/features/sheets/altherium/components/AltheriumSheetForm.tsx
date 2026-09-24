@@ -336,7 +336,7 @@ export function AltheriumSheetForm({
         ))}
       </nav>
 
-      {/* ── Visão Geral: recursos que dependem da raiz, atributos, crônicas ── */}
+      {/* ── Visão Geral: recursos que dependem da raiz, atributos, anotações ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
           <div className="alth-tab-panel animate-fade-up">
@@ -415,7 +415,7 @@ export function AltheriumSheetForm({
             </section>
 
             <section className="alth-section alth-journal">
-              <h4 className="alth-section__title">Crônicas</h4>
+              <h4 className="alth-section__title">Anotações</h4>
               <textarea
                 className="input alth-notes" rows={6} maxLength={NOTES_MAX}
                 placeholder="Histórico, NPCs, pistas..."
