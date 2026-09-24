@@ -26,6 +26,7 @@ import {
 import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
 import { AltheriumInventoryCard } from './AltheriumInventoryCard'
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
+import { AltheriumDragBar } from './AltheriumDragBar'
 import { AltheriumRunaskinTriumphs } from './AltheriumRunaskinTriumphs'
 import type { RunaskinTrail } from '../constants/altheriumTriumphs'
 import { findArmor } from '../constants/altheriumItems'
@@ -302,7 +303,6 @@ export function AltheriumSheetForm({
     <VitalWidget
       sigla="PR" label="Pontos Rúnicos" tone="mystic"
       current={form.pr_current} max={runicoMax} roll={form.pr_roll}
-      pct={runicoMax ? Math.max(0, Math.min(100, (form.pr_current / runicoMax) * 100)) : 0}
       onCurrent={(v) => set('pr_current', v)} onRoll={(v) => set('pr_roll', v)}
       disabled={saving}
     />
@@ -311,7 +311,6 @@ export function AltheriumSheetForm({
     <VitalWidget
       sigla="FV" label="Força de Vontade" tone="resource"
       current={form.fv_current} max={forcaMax} roll={form.fv_roll}
-      pct={forcaMax ? Math.max(0, Math.min(100, (form.fv_current / forcaMax) * 100)) : 0}
       onCurrent={(v) => set('fv_current', v)} onRoll={(v) => set('fv_roll', v)}
       disabled={saving}
     />
@@ -330,12 +329,12 @@ export function AltheriumSheetForm({
           <span className="alth-vital-widget__max">{` / ${cartasMax ?? '—'}`}</span>
         </span>
       </div>
-      <div className="alth-vital-widget__bar">
-        <div
-          className="alth-vital-widget__bar-fill"
-          style={{ width: `${cartasMax ? Math.max(0, Math.min(100, (form.cards_current / cartasMax) * 100)) : 0}%` }}
-        />
-      </div>
+      <AltheriumDragBar
+        value={form.cards_current} max={cartasMax}
+        onChange={(v) => set('cards_current', v)}
+        disabled={saving} label="Cartas"
+        trackClassName="alth-vital-widget__bar" fillClassName="alth-vital-widget__bar-fill"
+      />
       <span className="alth-vital-widget__note">13 × nível</span>
     </div>
   )
@@ -825,13 +824,12 @@ interface VitalWidgetProps {
   current:   number
   max:       number | null
   roll:      number | null
-  pct:       number
   onCurrent: (value: number) => void
   onRoll:    (value: number | null) => void
   disabled:  boolean
 }
 
-function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, onRoll, disabled }: VitalWidgetProps) {
+function VitalWidget({ sigla, label, tone, current, max, roll, onCurrent, onRoll, disabled }: VitalWidgetProps) {
   return (
     <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
       <div className="alth-vital-widget__top">
@@ -847,9 +845,12 @@ function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, o
           <span className="alth-vital-widget__max">{` / ${max ?? '—'}`}</span>
         </span>
       </div>
-      <div className="alth-vital-widget__bar">
-        <div className="alth-vital-widget__bar-fill" style={{ width: `${pct}%` }} />
-      </div>
+      <AltheriumDragBar
+        value={current} max={max}
+        onChange={onCurrent}
+        disabled={disabled} label={label}
+        trackClassName="alth-vital-widget__bar" fillClassName="alth-vital-widget__bar-fill"
+      />
       <label className="alth-vital-widget__roll">
         <span className="alth-vital-widget__note">d10 na criação</span>
         <input
@@ -867,7 +868,7 @@ function VitalWidget({ sigla, label, tone, current, max, roll, pct, onCurrent, o
 // ────────────────────────────────────────────────────────
 // PV/PE — vivem no cabeçalho (compactas, sem moldura própria) e não têm
 // mais d10-na-criação: atual e máximo são dois campos diretos, e a
-// barra acompanha os dois em tempo real (recalculada a cada render).
+// barra acompanha os dois em tempo real — e é arrastável (AltheriumDragBar).
 // ────────────────────────────────────────────────────────
 
 interface VitalBarProps {
@@ -882,7 +883,6 @@ interface VitalBarProps {
 }
 
 function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled }: VitalBarProps) {
-  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0
   return (
     <div className={`alth-vital-bar alth-vital-bar--${tone}`}>
       <div className="alth-vital-bar__top">
@@ -905,9 +905,12 @@ function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled
           />
         </span>
       </div>
-      <div className="alth-vital-bar__bar">
-        <div className="alth-vital-bar__bar-fill" style={{ width: `${pct}%` }} />
-      </div>
+      <AltheriumDragBar
+        value={current} max={max}
+        onChange={onCurrent}
+        disabled={disabled} label={label}
+        trackClassName="alth-vital-bar__bar" fillClassName="alth-vital-bar__bar-fill"
+      />
     </div>
   )
 }

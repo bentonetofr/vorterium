@@ -386,6 +386,40 @@
 .alth-vital-bar--vitality .alth-vital-bar__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
 .alth-vital-bar--mystic   .alth-vital-bar__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
 
+/* ── Barra arrastável (AltheriumDragBar) — envolve a trilha de cada barra
+   (PV/PE/FV/PR/Cartas) com uma área de toque maior e uma linha branca no
+   valor atual. Durante o arraste o preenchimento não anima, pra não
+   ficar atrás do ponteiro. ── */
+.alth-drag-bar {
+  position: relative;
+  width: 100%;
+  padding: 7px 0;
+  cursor: ew-resize;
+  touch-action: none;
+  user-select: none;
+  border-radius: var(--radius-sm);
+}
+.alth-drag-bar--static { cursor: default; }
+.alth-drag-bar:focus { outline: none; }
+.alth-drag-bar:focus-visible { box-shadow: 0 0 0 1px var(--gilded-bright); }
+.alth-drag-bar--dragging .alth-vital-bar__bar-fill,
+.alth-drag-bar--dragging .alth-vital-widget__bar-fill { transition: none; }
+
+.alth-drag-bar__handle {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 6px rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  transition: height var(--transition-fast), width var(--transition-fast);
+}
+.alth-drag-bar:not(.alth-drag-bar--static):hover .alth-drag-bar__handle,
+.alth-drag-bar--dragging .alth-drag-bar__handle { width: 4px; height: 24px; }
+
 /* ── Seções genéricas ── */
 .alth-section {
   display: flex;
