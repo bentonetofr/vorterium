@@ -286,8 +286,7 @@ export function AltheriumSheetForm({
     return DOMAINS.filter((d) => normalize(d.label).includes(q))
   }, [domainFilter])
 
-  // FV, PR e Cartas aparecem na Visão Geral e também na aba Triunfos (onde
-  // são gastos) — mesmo elemento nas duas, só uma aba renderiza por vez.
+  // FV, PR e Cartas vivem na aba Triunfos, onde são gastos.
   const prWidget = usesPr(raiz) && (
     <VitalWidget
       sigla="PR" label="Pontos Rúnicos" tone="mystic"
@@ -526,18 +525,10 @@ export function AltheriumSheetForm({
         ))}
       </nav>
 
-      {/* ── Visão Geral: recursos que dependem da raiz, atributos, anotações ── */}
+      {/* ── Visão Geral: atributos, anotações ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
           <div className="alth-tab-panel animate-fade-up">
-            {(usesFv(raiz) || usesPr(raiz) || usesCards(raiz)) && (
-              <div className="alth-vitals-strip">
-                {fvWidget}
-                {prWidget}
-                {cardsWidget}
-              </div>
-            )}
-
             <section className="alth-card">
               <div className="alth-card__header">
                 <h4 className="alth-card__title">Atributos</h4>
