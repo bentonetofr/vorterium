@@ -9,11 +9,21 @@
 }
 
 /* Reaproveita o visual de .campaign-tabs/.campaign-tab (barra principal),
-   só um pouco mais compacta pra marcar que é um nível abaixo. */
+   em tamanho maior — é o menu principal da mesa, um nível acima das abas
+   da ficha (Visão Geral / Combate / ...). */
 .session-table__subtabs {
   align-self: flex-start;
+  padding: 6px;
 }
 .session-table__subtabs.campaign-tabs .campaign-tab {
-  padding: var(--space-1) var(--space-4);
-  font-size: 0.7rem;
+  padding: var(--space-3) var(--space-8);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 640px) {
+  .session-table__subtabs.campaign-tabs .campaign-tab {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+  }
 }
