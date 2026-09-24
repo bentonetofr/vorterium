@@ -859,6 +859,18 @@
   font-family: var(--font-body);
   font-size: var(--text-sm);
 }
+/* Aba Anotações: campo grande, confortável pra texto longo. */
+.alth-journal .alth-notes {
+  min-height: 320px;
+  line-height: 1.65;
+}
+.alth-notes-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.alth-notes-count--full { color: var(--danger); }
 
 .alth-actions {
   display: flex;
@@ -1384,12 +1396,15 @@
   .alth-hero__field-label { font-size: var(--text-lg); }
   .alth-hero__select { padding: 0 var(--space-2); font-size: var(--text-sm); }
 
-  /* Abas da ficha em 2×2, sem cortar "Triunfos". */
+  /* Abas da ficha em duas linhas (3 em cima, 2 embaixo), sem cortar
+     nenhum nome: grade de 6 colunas, cada aba ocupa 2 ou 3. */
   .alth-sheet-tabs {
     align-self: stretch;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
+  .alth-sheet-tabs .campaign-tab { grid-column: span 3; }
+  .alth-sheet-tabs .campaign-tab:nth-of-type(-n + 3) { grid-column: span 2; }
   .alth-sheet-tabs .campaign-tab {
     justify-content: center;
     min-height: 40px;

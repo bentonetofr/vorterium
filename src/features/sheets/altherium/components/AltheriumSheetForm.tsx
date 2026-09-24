@@ -224,7 +224,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'combate' | 'dominios' | 'triunfos'
+type AltheriumFormTabId = 'visao-geral' | 'combate' | 'dominios' | 'triunfos' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -236,6 +236,7 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'combate',     label: 'Inventário' },
   { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
+  { id: 'anotacoes',   label: 'Anotações' },
 ]
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
 
@@ -628,7 +629,7 @@ export function AltheriumSheetForm({
         <TabIndicator activeKey={activeTab} />
       </nav>
 
-      {/* ── Atributos: atributos, anotações ── */}
+      {/* ── Atributos ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
           <div className="alth-tab-panel anim-tab-panel">
@@ -657,16 +658,6 @@ export function AltheriumSheetForm({
                   )
                 })}
               </div>
-            </section>
-
-            <section className="alth-section alth-journal">
-              <h4 className="alth-section__title">Anotações</h4>
-              <textarea
-                className="input alth-notes" rows={6} maxLength={NOTES_MAX}
-                placeholder="Histórico, NPCs, pistas..."
-                value={form.notes}
-                onChange={(e) => set('notes', e.target.value)}
-              />
             </section>
           </div>
         )}
@@ -872,6 +863,32 @@ export function AltheriumSheetForm({
                   }}
                 />
               )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Anotações: histórico, NPCs, pistas ── */}
+      <div id="alth-tabpanel-anotacoes" role="tabpanel" hidden={activeTab !== 'anotacoes'}>
+        {activeTab === 'anotacoes' && (
+          <div className="alth-tab-panel anim-tab-panel">
+            <section className="alth-card alth-journal">
+              <div className="alth-card__header">
+                <h4 className="alth-card__title">Anotações</h4>
+                <span
+                  className={`alth-notes-count${form.notes.length >= NOTES_MAX ? ' alth-notes-count--full' : ''}`}
+                  aria-live="polite"
+                >
+                  {form.notes.length} / {NOTES_MAX}
+                </span>
+              </div>
+              <textarea
+                className="input alth-notes" rows={16} maxLength={NOTES_MAX}
+                placeholder="Histórico, NPCs, pistas..."
+                value={form.notes}
+                onChange={(e) => set('notes', e.target.value)}
+                aria-label="Anotações"
+              />
+            </section>
           </div>
         )}
       </div>
