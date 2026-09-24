@@ -9,22 +9,26 @@ import './RulebookPanel.css'
 // abre no leitor de PDF do próprio navegador. No celular, onde o leitor
 // embutido não funciona bem (Android não mostra; iOS só a 1ª página), a
 // aba mostra um botão de abrir no lugar do leitor — e o <iframe> nem é
-// criado, pra não baixar o PDF (~37 MB) à toa. O leitor em si mora no
+// criado, pra não baixar o PDF à toa. O leitor em si mora no
 // RulebookHost (layout privado), pra continuar na mesma página quando a
 // pessoa troca de aba e volta.
 // ────────────────────────────────────────────────────────
 
 interface Rulebook {
-  title:    string
-  subtitle: string
-  url:      string
+  title:     string
+  subtitle:  string
+  /** Versão otimizada pra ler na tela (imagens em JPEG, ~8 MB) — rola lisa. */
+  viewerUrl: string
+  /** Arquivo original, qualidade total (~37 MB) — pro "Baixar PDF". */
+  url:       string
 }
 
 const RULEBOOKS: Partial<Record<CampaignSystem, Rulebook>> = {
   altherium: {
     title:    'Livro de regras básicas',
-    subtitle: 'Altherium · versão 1.0',
-    url:      '/livros/altherium-livro-de-regras-1.0.pdf',
+    subtitle:  'Altherium · versão 1.0',
+    viewerUrl: '/livros/altherium-livro-de-regras-1.0-leitor.pdf',
+    url:       '/livros/altherium-livro-de-regras-1.0.pdf',
   },
 }
 
@@ -61,7 +65,7 @@ export function RulebookPanel({ system }: { system: CampaignSystem }) {
         </div>
         {canEmbed && (
           <div className="rulebook__actions">
-            <a className="btn btn-ghost rulebook__btn" href={book.url} target="_blank" rel="noopener noreferrer">
+            <a className="btn btn-ghost rulebook__btn" href={book.viewerUrl} target="_blank" rel="noopener noreferrer">
               Abrir em nova aba
             </a>
             <a className="btn btn-ghost rulebook__btn" href={book.url} download>
@@ -72,11 +76,11 @@ export function RulebookPanel({ system }: { system: CampaignSystem }) {
       </header>
 
       {canEmbed ? (
-        <RulebookSlot className="rulebook__viewer" url={book.url} title={`${book.title} — ${book.subtitle}`} />
+        <RulebookSlot className="rulebook__viewer" url={book.viewerUrl} title={`${book.title} — ${book.subtitle}`} />
       ) : (
         <div className="rulebook__mobile">
           <p>No celular, o livro abre no leitor de PDF do aparelho.</p>
-          <a className="btn btn-primary" href={book.url} target="_blank" rel="noopener noreferrer">
+          <a className="btn btn-primary" href={book.viewerUrl} target="_blank" rel="noopener noreferrer">
             Abrir o livro
           </a>
         </div>

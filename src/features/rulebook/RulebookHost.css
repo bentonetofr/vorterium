@@ -1,6 +1,11 @@
 /* Leitor persistente do livro — posicionado por JS sobre o espaço da aba
    "Livro" (RulebookSlot). Abaixo do cabeçalho mobile, barras, botões
-   flutuantes e janelas modais; invisível (mas vivo) fora da aba. */
+   flutuantes e janelas modais; invisível (mas vivo) fora da aba.
+
+   Visível: position absolute em coordenadas da página, então rola junto
+   com o site sem nenhum JS durante a rolagem. Escondido: position fixed,
+   que não conta na altura da página (senão esticaria páginas curtas) —
+   mesmo tamanho, pra não perder página nem zoom. */
 .rulebook-host {
   position: fixed;
   top: 0;
@@ -11,9 +16,9 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 220ms ease, visibility 0s linear 220ms;
 }
 .rulebook-host--visible {
+  position: absolute;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;

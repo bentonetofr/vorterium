@@ -37,24 +37,47 @@ export function RulebookHostProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Enquanto visível, cola o leitor no espaço reservado a cada quadro —
-  // acompanha rolagem, redimensionamento e as animações de troca de aba.
+  // Cola o leitor no espaço reservado, em coordenadas da PÁGINA (position:
+  // absolute) — ele rola junto com o site sozinho, sem código rodando
+  // durante a rolagem (nem a do site, nem a de dentro do livro). Só
+  // reposiciona quando algo muda de tamanho e, por um instante, durante a
+  // animação de entrada da aba. E só escreve no estilo se a posição mudou:
+  // redimensionar o leitor à toa faz o PDF se recalcular inteiro.
   useEffect(() => {
     if (!visible) return
+    let last = ''
     let frame = 0
-    function sync() {
+    function place() {
       const slot = slotRef.current
       const iframe = frameRef.current
-      if (slot && iframe) {
-        const r = slot.getBoundingClientRect()
-        iframe.style.transform = `translate(${Math.round(r.left)}px, ${Math.round(r.top)}px)`
-        iframe.style.width  = `${Math.round(r.width)}px`
-        iframe.style.height = `${Math.round(r.height)}px`
-      }
-      frame = requestAnimationFrame(sync)
+      if (!slot || !iframe) return
+      const r = slot.getBoundingClientRect()
+      const left = Math.round(r.left + window.scrollX)
+      const top  = Math.round(r.top + window.scrollY)
+      const next = `${left},${top},${Math.round(r.width)},${Math.round(r.height)}`
+      if (next === last) return
+      last = next
+      iframe.style.transform = `translate(${left}px, ${top}px)`
+      iframe.style.width  = `${Math.round(r.width)}px`
+      iframe.style.height = `${Math.round(r.height)}px`
     }
-    sync()
-    return () => cancelAnimationFrame(frame)
+    // Acompanha a animação de entrada da aba (~0,5 s) quadro a quadro.
+    const followUntil = performance.now() + 700
+    function follow() {
+      place()
+      if (performance.now() < followUntil) frame = requestAnimationFrame(follow)
+    }
+    follow()
+
+    const observer = new ResizeObserver(place)
+    if (slotRef.current) observer.observe(slotRef.current)
+    observer.observe(document.body)
+    window.addEventListener('resize', place)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('resize', place)
+    }
   }, [visible, book])
 
   return (
