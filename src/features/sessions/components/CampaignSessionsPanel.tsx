@@ -10,6 +10,7 @@ import {
 } from '../services/sessionService'
 import type { CampaignSession } from '../../../shared/types'
 import { Collapse } from '../../../shared/components/Collapse'
+import { Select } from '../../../shared/components/Select'
 import './CampaignSessionsPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -190,17 +191,18 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
             <label className="session-form__label" htmlFor="session-status">
               Status
             </label>
-            <select
+            <Select
               id="session-status"
-              className="input session-form__select"
+              className="session-form__select"
               value={status}
-              onChange={(e) => { setStatus(e.target.value as SessionStatus); setError(null) }}
+              onChange={(v) => { setStatus(v as SessionStatus); setError(null) }}
               disabled={saving}
-            >
-              <option value="planned">Planejada</option>
-              <option value="completed">Concluída</option>
-              <option value="canceled">Cancelada</option>
-            </select>
+              options={[
+                { value: 'planned',   label: 'Planejada' },
+                { value: 'completed', label: 'Concluída' },
+                { value: 'canceled',  label: 'Cancelada' },
+              ]}
+            />
           </div>
 
           {/* Resumo */}

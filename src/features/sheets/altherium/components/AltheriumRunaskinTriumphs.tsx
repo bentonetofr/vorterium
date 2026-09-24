@@ -15,6 +15,7 @@ import {
   type AltheriumRuneInput,
 } from '../services/altheriumSheetService'
 import type { AltheriumRune } from '../../../../shared/types'
+import { Select } from '../../../../shared/components/Select'
 
 // ────────────────────────────────────────────────────────
 // Triunfos do Runaskin — trilha (3 iniciais do livro) + runas
@@ -76,14 +77,13 @@ export function AltheriumRunaskinTriumphs({
       <div className="alth-runes__top">
         <label className="alth-runes__trail">
           <span className="label">Trilha</span>
-          <select
-            className="input" value={trail ?? ''}
-            onChange={(e) => onTrailChange((e.target.value || null) as RunaskinTrail | null)}
+          <Select
+            value={trail ?? ''}
+            onChange={(v) => onTrailChange((v || null) as RunaskinTrail | null)}
             disabled={disabled}
-          >
-            <option value="">—</option>
-            {RUNASKIN_TRAILS.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
+            aria-label="Trilha"
+            options={[{ value: '', label: '—' }, ...RUNASKIN_TRAILS.map((t) => ({ value: t.id, label: t.label }))]}
+          />
         </label>
 
         <div className="alth-runes__nr">
@@ -393,24 +393,28 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
           <div className="alth-rune__editor-row">
             <label className="alth-rune__editor-half">
               <span className="label">Tipo de ação</span>
-              <select
-                className="input" value={action}
-                onChange={(e) => setAction(e.target.value as TriumphAction | '')} disabled={busy}
-              >
-                <option value="">—</option>
-                {(Object.keys(TRIUMPH_ACTION_LABELS) as TriumphAction[]).map((a) => (
-                  <option key={a} value={a}>{TRIUMPH_ACTION_LABELS[a]}</option>
-                ))}
-              </select>
+              <Select
+                value={action}
+                onChange={(v) => setAction(v as TriumphAction | '')} disabled={busy}
+                aria-label="Tipo de ação"
+                options={[
+                  { value: '', label: '—' },
+                  ...(Object.keys(TRIUMPH_ACTION_LABELS) as TriumphAction[]).map((a) => ({ value: a, label: TRIUMPH_ACTION_LABELS[a] })),
+                ]}
+              />
             </label>
             <label className="alth-rune__editor-half">
               <span className="label">Distância</span>
-              <select className="input" value={range} onChange={(e) => setRange(e.target.value)} disabled={busy}>
-                <option value="">—</option>
-                {/* Mantém uma distância antiga fora da lista, se houver. */}
-                {range && !(TRIUMPH_RANGES as readonly string[]).includes(range) && <option value={range}>{range}</option>}
-                {TRIUMPH_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <Select
+                value={range} onChange={setRange} disabled={busy}
+                aria-label="Distância"
+                options={[
+                  { value: '', label: '—' },
+                  // Mantém uma distância antiga fora da lista, se houver.
+                  ...(range && !(TRIUMPH_RANGES as readonly string[]).includes(range) ? [{ value: range, label: range }] : []),
+                  ...TRIUMPH_RANGES.map((r) => ({ value: r, label: r })),
+                ]}
+              />
             </label>
           </div>
           <textarea

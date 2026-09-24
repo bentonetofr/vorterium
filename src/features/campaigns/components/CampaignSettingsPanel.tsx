@@ -13,6 +13,7 @@ import { CampaignCoverCropEditor } from './CampaignCoverCropEditor'
 import { Collapse } from '../../../shared/components/Collapse'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
+import { Select } from '../../../shared/components/Select'
 import './CampaignSettingsPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -314,20 +315,16 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
                   <label className="label" htmlFor="settings-campaign-status">
                     Status
                   </label>
-                  <select
+                  <Select
                     id="settings-campaign-status"
-                    className="input"
                     value={editStatus}
-                    onChange={(e) => {
-                      setEditStatus(e.target.value as CampaignWithRole['status'])
+                    onChange={(v) => {
+                      setEditStatus(v as CampaignWithRole['status'])
                       setEditError(null)
                     }}
                     disabled={editSaving}
-                  >
-                    {STATUS_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
+                    options={STATUS_OPTIONS}
+                  />
                 </div>
 
                 {editError && (

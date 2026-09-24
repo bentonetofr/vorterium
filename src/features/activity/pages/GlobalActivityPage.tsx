@@ -6,6 +6,7 @@ import {
   ACTIVITY_ICONS,
   type ActivityWithCampaign,
 } from '../services/activityService'
+import { Select } from '../../../shared/components/Select'
 import './GlobalActivityPage.css'
 
 export function GlobalActivityPage() {
@@ -74,17 +75,17 @@ export function GlobalActivityPage() {
       {/* ── Filtro por campanha (só aparece quando há > 1 campanha) ── */}
       {!loading && !error && campaigns.length > 1 && (
         <div className="gact-toolbar">
-          <select
+          <Select
             className="gact-filter"
+            plain
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={setFilter}
             aria-label="Filtrar por campanha"
-          >
-            <option value="all">Todas as campanhas</option>
-            {campaigns.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            options={[
+              { value: 'all', label: 'Todas as campanhas' },
+              ...campaigns.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+          />
         </div>
       )}
 

@@ -38,6 +38,7 @@ import {
   type AltheriumRuneInput,
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
+import { Select } from '../../../../shared/components/Select'
 import './AltheriumSheet.css'
 
 const NOTES_MAX = 2000
@@ -239,6 +240,9 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'anotacoes',   label: 'Anotações' },
 ]
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
+
+const RAIZ_OPTIONS    = [{ value: '', label: '—' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label }))]
+const GENESIS_OPTIONS = [{ value: '', label: '—' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
 
 export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,
@@ -537,23 +541,21 @@ export function AltheriumSheetForm({
             <div className="alth-hero__tags">
               <label className="alth-hero__field alth-hero__field--raiz">
                 <span className="alth-hero__field-label">Raiz</span>
-                <select
-                  className="input alth-hero__select" value={form.raiz}
-                  onChange={(e) => set('raiz', e.target.value as AltheriumRaiz | '')}
-                >
-                  <option value="">—</option>
-                  {RAIZES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
-                </select>
+                <Select
+                  className="alth-hero__select" value={form.raiz}
+                  onChange={(v) => set('raiz', v as AltheriumRaiz | '')}
+                  aria-label="Raiz"
+                  options={RAIZ_OPTIONS}
+                />
               </label>
               <label className="alth-hero__field alth-hero__field--genesis">
                 <span className="alth-hero__field-label">Gênesis</span>
-                <select
-                  className="input alth-hero__select" value={form.genesis}
-                  onChange={(e) => set('genesis', e.target.value)}
-                >
-                  <option value="">—</option>
-                  {GENESIS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-                </select>
+                <Select
+                  className="alth-hero__select" value={form.genesis}
+                  onChange={(v) => set('genesis', v)}
+                  aria-label="Gênesis"
+                  options={GENESIS_OPTIONS}
+                />
               </label>
             </div>
           </div>

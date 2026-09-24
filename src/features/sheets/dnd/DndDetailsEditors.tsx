@@ -25,6 +25,12 @@ import {
   upsertDndSkill,
 } from './services/dndSheetService'
 import { formatModifier, getAbilityModifier } from './utils/dndCalculations'
+import { Select } from '../../../shared/components/Select'
+
+const SPELL_LEVEL_OPTIONS = Array.from({ length: 10 }, (_, level) => ({
+  value: String(level),
+  label: level === 0 ? 'Truque' : `Nível ${level}`,
+}))
 
 interface DetailsProps {
   sheetId: string
@@ -190,10 +196,10 @@ function AttacksEditor({ sheetId, details, onDetailsChange }: DetailsProps) {
       <p className="dnd-section-title">Ataques</p>
       <DetailMessage error={error} />
       <div className="dnd-detail-form dnd-detail-form--attack">
-        <select className="dnd-edit-input" defaultValue="" onChange={(e) => selectWeapon(e.target.value)}>
-          <option value="">Escolher arma do catálogo</option>
-          {catalog.map((entry) => <option key={entry.entry_key} value={entry.entry_key}>{entry.name}</option>)}
-        </select>
+        <Select
+          className="dnd-edit-input" plain onChange={selectWeapon} aria-label="Arma do catálogo"
+          options={[{ value: '', label: 'Escolher arma do catálogo' }, ...catalog.map((entry) => ({ value: entry.entry_key, label: entry.name }))]}
+        />
         <input className="dnd-edit-input" placeholder="Nome (ex.: Espada longa)" value={newAttack.name} onChange={(e) => setNewAttack({ ...newAttack, name: e.target.value })} />
         <input className="dnd-edit-input" placeholder="Bônus" value={newAttack.attack_bonus} onChange={(e) => setNewAttack({ ...newAttack, attack_bonus: e.target.value })} />
         <input className="dnd-edit-input" placeholder="Dano" value={newAttack.damage} onChange={(e) => setNewAttack({ ...newAttack, damage: e.target.value })} />
@@ -292,10 +298,10 @@ function InventoryEditor({ sheetId, details, onDetailsChange }: DetailsProps) {
       <p className="dnd-section-title">Inventário</p>
       <DetailMessage error={error} />
       <div className="dnd-detail-form dnd-detail-form--inventory">
-        <select className="dnd-edit-input" defaultValue="" onChange={(e) => selectInventoryEntry(e.target.value)}>
-          <option value="">Escolher item do catálogo</option>
-          {catalog.map((entry) => <option key={entry.entry_key} value={entry.entry_key}>{entry.name}</option>)}
-        </select>
+        <Select
+          className="dnd-edit-input" plain onChange={selectInventoryEntry} aria-label="Item do catálogo"
+          options={[{ value: '', label: 'Escolher item do catálogo' }, ...catalog.map((entry) => ({ value: entry.entry_key, label: entry.name }))]}
+        />
         <input className="dnd-edit-input" placeholder="Nome do item" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
         <input className="dnd-edit-input" type="number" min="1" placeholder="Qtd." value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} />
         <input className="dnd-edit-input" type="number" min="0" step="0.1" placeholder="Peso" value={newItem.weight} onChange={(e) => setNewItem({ ...newItem, weight: Number(e.target.value) })} />
@@ -372,9 +378,11 @@ function SpellsEditor({ sheetId, details, onDetailsChange }: DetailsProps) {
       <DetailMessage error={error} />
       <div className="dnd-detail-form dnd-detail-form--spell">
         <input className="dnd-edit-input" placeholder="Nome da magia" value={newSpell.name} onChange={(e) => setNewSpell({ ...newSpell, name: e.target.value })} />
-        <select className="dnd-edit-input" value={newSpell.spell_level} onChange={(e) => setNewSpell({ ...newSpell, spell_level: Number(e.target.value) })}>
-          {Array.from({ length: 10 }, (_, level) => <option key={level} value={level}>{level === 0 ? 'Truque' : `Nível ${level}`}</option>)}
-        </select>
+        <Select
+          className="dnd-edit-input" plain value={String(newSpell.spell_level)} aria-label="Nível da magia"
+          onChange={(v) => setNewSpell({ ...newSpell, spell_level: Number(v) })}
+          options={SPELL_LEVEL_OPTIONS}
+        />
         <input className="dnd-edit-input" placeholder="Escola" value={newSpell.school} onChange={(e) => setNewSpell({ ...newSpell, school: e.target.value })} />
         <input className="dnd-edit-input" placeholder="Tempo / alcance" value={newSpell.casting_time} onChange={(e) => setNewSpell({ ...newSpell, casting_time: e.target.value })} />
         <button type="button" className="btn btn-primary" onClick={() => void addSpell()} disabled={busy !== null}>Adicionar</button>
@@ -391,9 +399,11 @@ function SpellsEditor({ sheetId, details, onDetailsChange }: DetailsProps) {
               </div>
               <div className="dnd-detail-card__grid dnd-detail-card__grid--spell">
                 <input className="dnd-edit-input" value={String(value('name'))} onChange={(e) => setEdits({ ...edits, [spell.id]: { ...edits[spell.id], name: e.target.value } })} />
-                <select className="dnd-edit-input" value={String(value('spell_level'))} onChange={(e) => setEdits({ ...edits, [spell.id]: { ...edits[spell.id], spell_level: Number(e.target.value) } })}>
-                  {Array.from({ length: 10 }, (_, level) => <option key={level} value={level}>{level === 0 ? 'Truque' : `Nível ${level}`}</option>)}
-                </select>
+                <Select
+                  className="dnd-edit-input" plain value={String(value('spell_level'))} aria-label="Nível da magia"
+                  onChange={(v) => setEdits({ ...edits, [spell.id]: { ...edits[spell.id], spell_level: Number(v) } })}
+                  options={SPELL_LEVEL_OPTIONS}
+                />
                 <input className="dnd-edit-input" placeholder="Escola" value={String(value('school'))} onChange={(e) => setEdits({ ...edits, [spell.id]: { ...edits[spell.id], school: e.target.value } })} />
                 <input className="dnd-edit-input" placeholder="Tempo / alcance" value={String(value('casting_time'))} onChange={(e) => setEdits({ ...edits, [spell.id]: { ...edits[spell.id], casting_time: e.target.value } })} />
                 <label className="dnd-detail-check"><input type="checkbox" checked={Boolean(value('prepared'))} onChange={(e) => setEdits({ ...edits, [spell.id]: { ...edits[spell.id], prepared: e.target.checked } })} /> Preparada</label>

@@ -1,0 +1,90 @@
+/* ═══════════════════════════════════════════════════════
+   Lista de escolha (Select) — botão + painel no visual do site
+   ═══════════════════════════════════════════════════════ */
+
+/* O botão herda .input (fundo, borda, fonte, altura) de quem usa. */
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  text-align: left;
+  cursor: pointer;
+}
+.select-trigger:disabled { cursor: not-allowed; opacity: 0.6; }
+.select-trigger:hover:not(:disabled) { border-color: var(--border-bright); }
+.select-trigger:focus-visible,
+.select-trigger--open {
+  border-color: var(--gilded-bright);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+}
+
+.select-trigger__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-trigger__value--empty { color: var(--text-muted); }
+
+/* Seta branca que gira ao abrir. */
+.select-trigger__chevron {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  transition: transform var(--motion-base, 280ms) var(--ease-spring, ease);
+}
+.select-trigger--open .select-trigger__chevron { transform: rotate(180deg); }
+
+/* ── Painel ── */
+.select-list {
+  position: fixed;
+  z-index: 1100; /* acima das janelas modais (1000) */
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  animation: m-drop-in 220ms var(--ease-out) both;
+}
+.select-list[data-state="closing"] {
+  animation: m-drop-out 150ms var(--ease-in) both;
+  pointer-events: none;
+}
+
+.select-list__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), padding-left 160ms var(--ease-out);
+}
+.select-list__option--empty { color: var(--text-muted); }
+.select-list__option--active {
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  padding-left: calc(var(--space-3) + 3px);
+  box-shadow: inset 2px 0 0 var(--gilded-bright);
+}
+.select-list__option--selected { color: var(--accent-bright); font-weight: 600; }
+
+.select-list__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-list__check { color: var(--accent-bright); font-size: var(--text-xs); }
+
+@media (pointer: coarse) {
+  .select-list__option { min-height: 40px; }
+}
