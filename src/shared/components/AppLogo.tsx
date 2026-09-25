@@ -10,10 +10,19 @@ export interface AppLogoProps {
   className?: string
 }
 
-const SIZE_PX: Record<NonNullable<AppLogoProps['size']>, number> = {
-  sm: 36,
-  md: 80,
-  lg: 128,
+const SIZE_PX: Record<NonNullable<AppLogoProps['size']>, { width: number; height: number }> = {
+  sm: { width: 40, height: 52 },
+  md: { width: 80, height: 80 },
+  lg: { width: 128, height: 128 },
+}
+
+// A arte original tem muita margem transparente — no tamanho pequeno
+// (barra lateral e topo do celular) o cavaleiro sumia. Ali usamos uma
+// versão recortada rente ao desenho.
+const SRC: Record<NonNullable<AppLogoProps['size']>, string> = {
+  sm: '/assets/logo-campaign-lab-mark.png',
+  md: '/assets/logo-campaign-lab.png',
+  lg: '/assets/logo-campaign-lab.png',
 }
 
 // ────────────────────────────────────────────────────────
@@ -25,16 +34,16 @@ export function AppLogo({
   showText = false,
   className = '',
 }: AppLogoProps) {
-  const px = SIZE_PX[size]
+  const { width, height } = SIZE_PX[size]
 
   return (
     <div className={`app-logo app-logo--${size} ${className}`}>
       <img
-        src="/assets/logo-campaign-lab.png"
+        src={SRC[size]}
         alt="Logo do Vorterium"
         className="app-logo__img"
-        width={px}
-        height={px}
+        width={width}
+        height={height}
         draggable={false}
       />
 
