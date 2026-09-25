@@ -55,7 +55,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
 
   return (
     <div className="session-table" style={{ '--tab-dir': tabDir } as CSSProperties}>
-      <nav ref={tabsRef} className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Mesa da sessão">
+      <nav ref={tabsRef} className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Sessão">
         {subTabs.map((tab) => (
           <button
             key={tab.id}

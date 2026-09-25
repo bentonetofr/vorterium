@@ -128,8 +128,8 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
   return (
     <StatCard
       icon="⚜"
-      title="Mesa da Sessão"
-      action={{ label: 'Abrir mesa', onClick: () => onNavigate('mesa-sessao') }}
+      title="Sessão"
+      action={{ label: 'Abrir sessão', onClick: () => onNavigate('mesa-sessao') }}
     >
       <div className="ov-stat__num ov-stat__num--sm">
         <span className={`ov-table-badge ${combat ? 'ov-table-badge--combat' : 'ov-table-badge--idle'}`}>
