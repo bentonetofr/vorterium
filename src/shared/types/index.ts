@@ -283,6 +283,23 @@ export interface AltheriumSheetWithProfile extends AltheriumSheet {
   profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
+/** Inimigo do bestiário do mestre (campanhas Altherium). HP e dano são o
+ *  valor final; rounds/danger_pct/party_* guardam como ele foi calculado. */
+export interface AltheriumCreature {
+  id:           string
+  campaign_id:  string
+  name:         string
+  hp:           number
+  damage_dice:  string
+  rounds:       number
+  danger_pct:   number
+  party_damage: number | null
+  party_avg_hp: number | null
+  notes:        string | null
+  created_at:   string
+  updated_at:   string
+}
+
 /** Participante do combate atual — membro (user_id preenchido) ou NPC/monstro (user_id nulo). */
 export interface InitiativeParticipant {
   id:               string

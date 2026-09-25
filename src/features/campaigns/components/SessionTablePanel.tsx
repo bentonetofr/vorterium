@@ -5,6 +5,7 @@ import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
 import { CampaignActivityPanel } from '../../activity/components/CampaignActivityPanel'
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPanel'
+import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
@@ -20,7 +21,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['ficha', 'chat', 'atividade', 'iniciativa', 'livro']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['ficha', 'chat', 'atividade', 'iniciativa', 'bestiario', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -37,6 +38,8 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveSubTab)
 
+  const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
+
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.
   const subTabs: SubTab[] = [
@@ -44,6 +47,8 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
     { id: 'chat',       label: 'Chat' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
+    // Bestiário — só o mestre, e só em Altherium (as contas usam as fichas).
+    ...(showBestiary ? [{ id: 'bestiario' as const, label: 'Bestiário' }] : []),
     // Livro de regras — só nos sistemas que têm um (hoje, Altherium).
     ...(hasRulebook(campaign.system) ? [{ id: 'livro' as const, label: 'Livro' }] : []),
   ]
@@ -125,6 +130,17 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
           />
         )}
       </div>
+
+      {showBestiary && (
+        <div
+          id="session-subtabpanel-bestiario"
+          role="tabpanel"
+          hidden={activeSubTab !== 'bestiario'}
+          className="anim-tab-panel"
+        >
+          {activeSubTab === 'bestiario' && <BestiaryPanel campaign={campaign} />}
+        </div>
+      )}
 
       <div
         id="session-subtabpanel-livro"

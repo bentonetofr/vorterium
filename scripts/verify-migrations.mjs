@@ -53,6 +53,7 @@ const expectedMigrations = [
   '20240149000000_triumph_used_activity.sql',
   '20240150000000_altherium_custom_inventory_items.sql',
   '20240151000000_altherium_custom_weapon_stats.sql',
+  '20240152000000_altherium_bestiary.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)
