@@ -223,6 +223,10 @@ export interface AltheriumSheet {
   runaskin_trail:     'regente' | 'sentinela' | 'carniceiro' | null
   /** Triunfos usados na cena atual (limitado pelo NR, zera em "Nova cena"). */
   runaskin_scene_uses: number
+  /** Pilar: vira cartas na tela ('virtual') ou usa baralho de verdade ('fisico'). */
+  pilar_card_mode:    'virtual' | 'fisico'
+  /** Pilar: o que resta do baralho virtual embaralhado (null = baralho novo). */
+  pilar_deck:         string[] | null
   notes:              string | null
   created_at:         string
   updated_at:         string

@@ -29,6 +29,8 @@ import { AltheriumInventoryCard, inventoryArmor } from './AltheriumInventoryCard
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
 import { AltheriumDragBar } from './AltheriumDragBar'
 import { AltheriumRunaskinTriumphs } from './AltheriumRunaskinTriumphs'
+import { AltheriumPilarTriumphs, type PilarCardMode } from './AltheriumPilarTriumphs'
+import { suitInfo } from '../utils/pilarCards'
 import type { RunaskinTrail } from '../constants/altheriumTriumphs'
 import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune } from '../../../../shared/types'
 import {
@@ -102,6 +104,8 @@ type FormData = {
   berserker_triumphs: string[]
   runaskin_trail:     RunaskinTrail | ''
   runaskin_scene_uses: number
+  pilar_card_mode:    PilarCardMode
+  pilar_deck:         string[] | null
   notes:              string
 }
 
@@ -138,6 +142,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     berserker_triumphs: s.berserker_triumphs ?? [],
     runaskin_trail:     s.runaskin_trail ?? '',
     runaskin_scene_uses: s.runaskin_scene_uses ?? 0,
+    pilar_card_mode:    s.pilar_card_mode ?? 'virtual',
+    pilar_deck:         s.pilar_deck ?? null,
     notes:              s.notes ?? '',
   }
 }
@@ -178,6 +184,8 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     runaskin_trail:      f.runaskin_trail === '' ? null : f.runaskin_trail,
     runaskin_scene_uses: f.runaskin_scene_uses,
     notes:               f.notes.trim() || null,
+    // Cartas do Pilar só vão nas fichas de Pilar.
+    ...(f.raiz === 'pilar' ? { pilar_card_mode: f.pilar_card_mode, pilar_deck: f.pilar_deck } : {}),
   }
 }
 
@@ -362,10 +370,10 @@ export function AltheriumSheetForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /** Anuncia pra mesa (chat + Atividade) que um triunfo foi usado. */
-  function announceTriumph(what: string) {
+  /** Anuncia pra mesa (chat + Atividade) que um triunfo foi usado (ou tentado). */
+  function announceTriumph(what: string, verb = 'usou') {
     const who = form.character_name.trim() || ownerName || 'Um personagem'
-    announceTriumphUse(sheet.campaign_id, `${who} usou ${what}`)
+    announceTriumphUse(sheet.campaign_id, `${who} ${verb} ${what}`)
   }
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
@@ -877,21 +885,46 @@ export function AltheriumSheetForm({
                   onRuneDelete={onRuneDelete}
                 />
               )
+              : raiz === 'pilar'
+              ? (
+                <AltheriumPilarTriumphs
+                  campaignId={sheet.campaign_id}
+                  cardsCurrent={form.cards_current}
+                  cardsMax={cartasMax}
+                  mode={form.pilar_card_mode}
+                  deck={form.pilar_deck}
+                  onModeChange={(m) => set('pilar_card_mode', m)}
+                  onDeckReset={() => set('pilar_deck', null)}
+                  onResolve={(r) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      cards_current: Math.max(0, prev.cards_current - r.spent),
+                      ...(r.deck ? { pilar_deck: r.deck } : {}),
+                    }))
+                    const s = suitInfo(r.suit)
+                    const detail = `${r.instant ? 'Ás de espadas' : `${s.symbol} ${s.label.toLowerCase()}`} · ${r.spent} ${r.spent === 1 ? 'carta' : 'cartas'}`
+                    if (r.success) announceTriumph(`${r.triumph.name} (${detail})`)
+                    else announceTriumph(`${r.triumph.name} e não conseguiu a combinação (${detail})`, 'tentou')
+                  }}
+                  onRecover={(n) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      cards_current: Math.min(cartasMax ?? prev.cards_current + n, prev.cards_current + n),
+                    }))
+                    announceTriumph(`${n} ${n === 1 ? 'carta' : 'cartas'} com Retorno do Baralho`, 'recuperou')
+                  }}
+                />
+              )
               : (
                 <AltheriumTriumphsPanel
                   raiz={raiz}
                   triumphIds={form.berserker_triumphs}
                   limit={berserkerTriumphLimit(domains)}
                   fvCurrent={form.fv_current}
-                  cardsCurrent={form.cards_current}
                   onChange={(ids) => set('berserker_triumphs', ids)}
                   onSpendFv={(cost, name) => {
                     set('fv_current', Math.max(0, form.fv_current - cost))
                     announceTriumph(`${name} (−${cost} FV)`)
-                  }}
-                  onSpendCards={(cost, name) => {
-                    set('cards_current', Math.max(0, form.cards_current - cost))
-                    announceTriumph(`${name} (−${cost} ${cost === 1 ? 'carta' : 'cartas'})`)
                   }}
                 />
               )}

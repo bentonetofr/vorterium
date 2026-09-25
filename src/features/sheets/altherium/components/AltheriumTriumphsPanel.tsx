@@ -2,83 +2,37 @@ import { useState, type ReactNode } from 'react'
 import type { AltheriumRaiz } from '../constants/altherium'
 import {
   BERSERKER_TRIUMPHS,
-  PILAR_TRIUMPHS,
   TRIUMPH_ACTION_LABELS,
   findBerserkerTriumph,
   type BerserkerTriumphDef,
 } from '../constants/altheriumTriumphs'
 
 // ────────────────────────────────────────────────────────
-// Aba Triunfos — Berserker escolhe da lista (até o limite) e paga em FV;
-// Pilar tem todos e paga em cartas (Runaskin: AltheriumRunaskinTriumphs). "Usar"
+// Aba Triunfos do Berserker — escolhe da lista (até o limite) e paga em FV
+// (Pilar: AltheriumPilarTriumphs; Runaskin: AltheriumRunaskinTriumphs). "Usar"
 // desconta do recurso no formulário (o salvamento automático persiste) e a
 // ficha anuncia o uso no chat e na Atividade da campanha.
 // ────────────────────────────────────────────────────────
 
 interface AltheriumTriumphsPanelProps {
-  /** Runaskin tem painel próprio (AltheriumRunaskinTriumphs). */
-  raiz:           Exclude<AltheriumRaiz, 'runaskin'> | null
+  /** Pilar e Runaskin têm painel próprio. */
+  raiz:           Exclude<AltheriumRaiz, 'runaskin' | 'pilar'> | null
   triumphIds:     string[]
   limit:          number
   fvCurrent:      number
-  cardsCurrent:   number
   onChange:       (ids: string[]) => void
   onSpendFv:      (cost: number, triumphName: string) => void
-  onSpendCards:   (cost: number, triumphName: string) => void
   disabled?:      boolean
 }
 
 export function AltheriumTriumphsPanel({
-  raiz, triumphIds, limit, fvCurrent, cardsCurrent,
-  onChange, onSpendFv, onSpendCards, disabled = false,
+  raiz, triumphIds, limit, fvCurrent,
+  onChange, onSpendFv, disabled = false,
 }: AltheriumTriumphsPanelProps) {
   const [lastUsed, setLastUsed] = useState<string | null>(null)
 
   if (raiz === null) {
     return <TriumphsNotice title="Triunfos" message="Escolha uma raiz no cabeçalho para ver os triunfos do personagem." />
-  }
-
-  if (raiz === 'pilar') {
-    return (
-      <section className="alth-card alth-triumphs">
-        <div className="alth-card__header">
-          <h4 className="alth-card__title">Triunfos do Pilar</h4>
-        </div>
-        <ul className="alth-triumphs__rules">
-          <li><strong>Coringa:</strong> vale como qualquer carta.</li>
-          <li><strong>Ases:</strong> se forem do seu naipe, valem 2 cartas.</li>
-          <li><strong>Ás de espadas:</strong> sucesso instantâneo.</li>
-        </ul>
-        {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
-        <div className="alth-triumphs__grid">
-          {PILAR_TRIUMPHS.map((t) => (
-            <article key={t.id} className="alth-triumph">
-              <header className="alth-triumph__head">
-                <h5 className="alth-triumph__name">{t.name}</h5>
-                <span className="alth-triumph__cost alth-triumph__cost--cards">{t.cost} {t.cost === 1 ? 'carta' : 'cartas'}</span>
-              </header>
-              <p className="alth-triumph__desc">{t.description}</p>
-              <div className="alth-triumph__chips">
-                <span className="alth-triumph__chip">{TRIUMPH_ACTION_LABELS.bonus}</span>
-              </div>
-              <div className="alth-triumph__actions">
-                <button
-                  type="button" className="alth-triumph__btn alth-triumph__btn--use"
-                  disabled={disabled || cardsCurrent < t.cost}
-                  title={cardsCurrent < t.cost ? 'Cartas insuficientes' : undefined}
-                  onClick={() => {
-                    onSpendCards(t.cost, t.name)
-                    setLastUsed(`${t.name} usado — −${t.cost} ${t.cost === 1 ? 'carta' : 'cartas'}.`)
-                  }}
-                >
-                  Usar
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    )
   }
 
   // Berserker
