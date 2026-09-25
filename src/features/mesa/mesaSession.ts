@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../shared/lib/supabase'
-import { captureScreen, capVideoBitrate, iceServers, withStereoOpus } from './mesaRtc'
+import { captureScreen, iceServers, tuneVideoSender, withStereoOpus, withVideoStartBitrate } from './mesaRtc'
 
 // ────────────────────────────────────────────────────────
 // Transmissão de tela da Mesa: o mestre manda a tela (com som) direto pra
@@ -224,6 +224,8 @@ export class MesaSession {
     const pc = new RTCPeerConnection({ iceServers: iceServers() })
     this.peers.set(viewerId, { pc, name: name.slice(0, 60), pending: [] })
     for (const track of stream.getTracks()) pc.addTrack(track, stream)
+    await tuneVideoSender(pc)
+    if (this.peers.get(viewerId)?.pc !== pc) return
 
     pc.onicecandidate = (e) => {
       if (e.candidate) this.send('ice', { to: viewerId, candidate: e.candidate.toJSON() })
@@ -241,7 +243,7 @@ export class MesaSession {
           if (this.peers.get(viewerId)?.pc === pc && pc.connectionState === 'disconnected') this.closePeer(viewerId)
         }, DISCONNECT_GRACE_MS)
       }
-      if (pc.connectionState === 'connected') void capVideoBitrate(pc)
+      if (pc.connectionState === 'connected') void tuneVideoSender(pc)
       this.publishViewers()
     }
 
@@ -261,7 +263,7 @@ export class MesaSession {
     const peer = this.peers.get(from)
     if (!peer || !sdp) return
     try {
-      await peer.pc.setRemoteDescription({ type: 'answer', sdp })
+      await peer.pc.setRemoteDescription({ type: 'answer', sdp: withVideoStartBitrate(sdp) })
       const pending = peer.pending.splice(0)
       for (const c of pending) await peer.pc.addIceCandidate(c).catch(() => {})
     } catch (err) {
