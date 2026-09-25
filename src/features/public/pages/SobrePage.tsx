@@ -22,10 +22,12 @@ export function SobrePage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">Funcionalidades atuais</h2>
         <ul className="public-page__list">
-          <li><strong>Campanhas:</strong> crie e gerencie campanhas de RPG com sistema Genérico.</li>
-          <li><strong>Membros:</strong> adicione jogadores por e-mail e controle quem é mestre ou jogador.</li>
-          <li><strong>Ficha simples:</strong> cada jogador pode preencher uma ficha básica com atributos, pontos de vida e anotações.</li>
-          <li><strong>Rolagem de dados:</strong> role d4, d6, d8, d10, d12, d20 ou d100 diretamente no sistema, com histórico por campanha.</li>
+          <li><strong>Campanhas:</strong> crie e gerencie campanhas nos sistemas Genérico e Altherium, com capa, descrição e status.</li>
+          <li><strong>Membros e convites:</strong> adicione jogadores por e-mail ou por link de convite e controle quem é mestre ou jogador.</li>
+          <li><strong>Fichas:</strong> ficha completa de Altherium (atributos, domínios, inventário, triunfos, retrato) ou ficha simples no sistema Genérico.</li>
+          <li><strong>Mesa ao vivo:</strong> o mestre transmite a tela com som, mostra imagens da galeria, aponta lugares e pausa a cena.</li>
+          <li><strong>Dados, chat e iniciativa:</strong> rolagens com histórico, chat da mesa com mensagens privadas e ordem de combate.</li>
+          <li><strong>Ferramentas do mestre:</strong> bestiário com inimigos calculados pelas fichas do grupo, sessões, notas e o livro de regras de Altherium.</li>
           <li><strong>Autenticação:</strong> login com e-mail e senha ou via conta Google.</li>
         </ul>
       </section>
@@ -33,18 +35,16 @@ export function SobrePage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">Status do projeto</h2>
         <p className="public-page__text">
-          O Vorterium está em desenvolvimento ativo. A versão atual é um MVP
-          (Minimum Viable Product) — uma primeira versão funcional com as
-          funcionalidades essenciais.
+          O Vorterium está em desenvolvimento ativo, e novas funcionalidades chegam
+          a cada versão.
         </p>
         <p className="public-page__text">
-          Funcionalidades como chat entre membros, suporte a sistemas específicos de
-          regras, upload de imagens, notificações e outras melhorias podem ser
-          adicionadas em versões futuras.
+          A ficha de D&amp;D 5e está em desenvolvimento, e outros sistemas de regras e
+          melhorias podem ser adicionados em versões futuras.
         </p>
         <div className="public-page__note">
           Este projeto não é afiliado a nenhuma editora ou sistema de RPG específico.
-          O sistema Genérico disponível pode ser usado com qualquer conjunto de regras.
+          O sistema Genérico pode ser usado com qualquer conjunto de regras.
         </div>
       </section>
 

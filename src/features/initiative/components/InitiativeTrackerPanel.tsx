@@ -150,7 +150,7 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
     setRollingIds((prev) => new Set(prev).add(participantId))
     setActionError(null)
     try {
-      await rollInitiative(campaignId, participantId)
+      await rollInitiative(campaignId, participantId, campaignSystem)
       refreshParticipants()
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Não foi possível rolar iniciativa.')

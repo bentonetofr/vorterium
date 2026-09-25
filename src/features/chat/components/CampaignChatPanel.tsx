@@ -141,6 +141,16 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
     return () => setActiveChatCampaignId(null)
   }, [campaignId, setActiveChatCampaignId])
 
+  // O que chegou com a conversa aberta já foi visto: marca como lida
+  // também ao sair dela (outra conversa, outra aba) — senão essas
+  // mensagens voltavam como "não lidas" no selo do menu.
+  useEffect(() => {
+    return () => {
+      if (threadWith) markPrivateThreadRead(campaignId, threadWith).catch(() => { /* silencioso */ })
+      else markChatRead(campaignId).catch(() => { /* silencioso */ })
+    }
+  }, [campaignId, threadWith])
+
   const scrollToBottom = useCallback(() => {
     const el = listRef.current
     if (el) el.scrollTop = el.scrollHeight

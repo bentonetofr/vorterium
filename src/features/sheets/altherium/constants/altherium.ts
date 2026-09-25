@@ -103,7 +103,7 @@ export const GENESIS: { id: AltheriumGenesis; label: string; effect: string }[] 
   { id: 'curandeiro',        label: 'Curandeiro',        effect: '+1d10 na cura. (+1d10 Medicina)' },
   { id: 'determinado',       label: 'Determinado',       effect: '+1d10 em Equilíbrio. (+1d10 Determinação)' },
   { id: 'devoto',            label: 'Devoto',            effect: 'Pode usar Religião no lugar de qualquer teste social.' },
-  { id: 'filho_de_mercante', label: 'Filho de mercante', effect: '₴800 adicionais na criação. (+1d10 Persuasão)' },
+  { id: 'filho_de_mercante', label: 'Filho de mercante', effect: '¤800 adicionais na criação. (+1d10 Persuasão)' },
   { id: 'guerreiro',         label: 'Guerreiro',         effect: '+1d4 no acerto em armas corpo a corpo. (+1d10 Intimidação)' },
   { id: 'guia_espiritual',   label: 'Guia espiritual',   effect: '+1d10 na cura do Equilíbrio. (+1d10 Pressentimento)' },
   { id: 'corredor',          label: 'Corredor',          effect: '+5m de movimento no deslocamento. (+1d10 Leveza)' },

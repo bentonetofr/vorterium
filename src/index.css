@@ -35,6 +35,7 @@
 
   /* Status */
   --danger:   #ffb4ab;   /* error */
+  --danger-bright: #ff8a7d;
   --warning:  #f0c84f;   /* tertiary */
   --success:  #4d9e78;
 
@@ -177,6 +178,7 @@ a:hover { color: var(--text-primary); }
   text-decoration: none;
 }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-sm { padding: var(--space-2) var(--space-4); font-size: var(--text-xs); }
 
 /* Primário — dourado */
 .btn-primary, .primary-button {
@@ -463,6 +465,7 @@ input[type="range"]:disabled::-moz-range-thumb { box-shadow: none; }
 
   /* Status */
   --danger:   #c03030;
+  --danger-bright: #a01818;
   --warning:  #9a6000;
   --success:  #2a7050;
 }

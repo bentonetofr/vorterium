@@ -139,6 +139,21 @@
   color: var(--text-secondary);
 }
 
+.ov-stat__detail--live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ff8a93;
+  font-weight: 600;
+}
+.ov-stat__detail--live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e0323f;
+  box-shadow: 0 0 6px rgba(224, 50, 63, 0.7);
+}
 .ov-stat__detail--warn {
   color: #e6b86e;
   font-size: var(--text-xs);

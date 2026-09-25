@@ -25,7 +25,7 @@ import { InvitePage } from '../../features/invites/pages/InvitePage'
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         {/* ── Rotas públicas (sem autenticação obrigatória) ── */}
         <Route element={<PublicLayout />}>

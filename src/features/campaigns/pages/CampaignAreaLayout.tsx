@@ -7,6 +7,7 @@ import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../.
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
 import { useCurrentCampaign } from '../CurrentCampaignContext'
+import { useActiveChat } from '../../chat/ActiveChatContext'
 import type { TabId, SessionSubTabId } from '../campaignSections'
 import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
@@ -29,7 +30,9 @@ export function CampaignAreaLayout() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
 
-  const onMesaSessao = location.pathname.endsWith('/mesa-sessao')
+  // Chat desta campanha aberto agora (sub-aba Chat da Sessão).
+  const { activeChatCampaignId } = useActiveChat()
+  const chatOpen = campaign != null && activeChatCampaignId === campaign.id
   // Seção atual (visao-geral, membros...) — a troca de seção anima.
   const section = location.pathname.split('/')[3] ?? ''
 
@@ -65,11 +68,11 @@ export function CampaignAreaLayout() {
     return () => clearInterval(interval)
   }, [campaign?.id])
 
-  // ── Selo de chat não lido — só enquanto a Mesa da Sessão não está ativa
-  // (a sub-aba padrão dela já é o Chat). O próprio CampaignChatPanel marca
-  // como lida quando monta — aqui é só o selo visual do submenu lateral. ──
+  // ── Selo de chat não lido — some só com o chat aberto de fato. O
+  // CampaignChatPanel marca como lida ao abrir e ao sair; aqui é só o
+  // selo visual do submenu lateral. ──
   useEffect(() => {
-    if (!campaign?.id || onMesaSessao) { setChatUnread(0); return }
+    if (!campaign?.id || chatOpen) { setChatUnread(0); return }
     let cancelled = false
     async function refresh() {
       try {
@@ -77,13 +80,14 @@ export function CampaignAreaLayout() {
         if (!cancelled) setChatUnread(count)
       } catch { /* selo só deixa de atualizar, não quebra a tela */ }
     }
-    refresh()
+    // Pequena espera: ao fechar o chat, a marcação de "lida" ainda está a caminho.
+    const first = setTimeout(refresh, 1500)
     const interval = setInterval(refresh, 60_000)
-    return () => { cancelled = true; clearInterval(interval) }
-  }, [campaign?.id, onMesaSessao, setChatUnread])
+    return () => { cancelled = true; clearTimeout(first); clearInterval(interval) }
+  }, [campaign?.id, chatOpen, setChatUnread])
 
   // ── Selo de mensagem privada não lida — selo separado do selo da mesa
-  // acima; não zera ao simplesmente abrir a Mesa da Sessão, só quando o
+  // acima; não zera ao simplesmente abrir a Sessão, só quando o
   // usuário entra em cada conversa privada específica dentro do chat ──
   useEffect(() => {
     if (!campaign?.id) { setPrivateUnread(0); return }
@@ -100,7 +104,7 @@ export function CampaignAreaLayout() {
   }, [campaign?.id, setPrivateUnread])
 
   // Passado pro CampaignOverviewPanel — os atalhos de lá que hoje pedem
-  // "ficha" precisam também escolher a sub-aba dentro da Mesa da Sessão,
+  // "ficha" precisam também escolher a sub-aba dentro da Sessão,
   // que não vive na URL — vai como state da navegação.
   function handleNavigate(tab: TabId, sessionSubTab?: SessionSubTabId) {
     navigate(
@@ -176,7 +180,7 @@ export function CampaignAreaLayout() {
 
       <div key={section} className="anim-page">
         <Routes>
-          <Route index element={<Navigate to="visao-geral" replace />} />
+          <Route index element={<Navigate to={`/campanhas/${campaignId}/visao-geral`} replace />} />
           <Route
             path="visao-geral"
             element={<CampaignOverviewPanel campaign={campaign} onNavigate={handleNavigate} />}
@@ -208,7 +212,7 @@ export function CampaignAreaLayout() {
               />
             }
           />
-          <Route path="*" element={<Navigate to="visao-geral" replace />} />
+          <Route path="*" element={<Navigate to={`/campanhas/${campaignId}/visao-geral`} replace />} />
         </Routes>
       </div>
     </div>

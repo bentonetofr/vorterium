@@ -592,7 +592,7 @@ export function AltheriumSheetForm({
             />
           </label>
           <label className="alth-hero__coins">
-            <span className="label">Hacksilvers (₴)</span>
+            <span className="label">Hacksilvers (¤)</span>
             <input
               type="number" className="input" min={0}
               value={form.hacksilvers}

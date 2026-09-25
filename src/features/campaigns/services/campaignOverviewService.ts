@@ -42,7 +42,10 @@ export interface OverviewPlayerData {
  * Sessions chegam ordenadas por session_date desc, created_at desc.
  */
 function findNextPlannedSession(sessions: CampaignSession[]): CampaignSession | null {
-  const today = new Date().toISOString().split('T')[0]
+  // Data de HOJE no fuso da pessoa (toISOString é UTC: no Brasil, depois
+  // das 21h já seria "amanhã" e a sessão de hoje sumia da visão geral).
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const planned = sessions.filter((s) => s.status === 'planned')
 
   // Preferir sessões planejadas com data >= hoje, ordenar por data asc (mais próxima primeiro)
@@ -59,7 +62,7 @@ function findNextPlannedSession(sessions: CampaignSession[]): CampaignSession | 
 
 /**
  * Carrega os dados da visão geral para o mestre.
- * Membros, sessões, presença e notas em paralelo (as fichas ficam no card da Mesa da Sessão).
+ * Membros, sessões, presença e notas em paralelo (as fichas ficam no card da Sessão).
  */
 export async function getMasterOverview(
   campaignId: string
@@ -87,7 +90,7 @@ export async function getMasterOverview(
 
 /**
  * Carrega os dados da visão geral para o jogador.
- * Membros, sessões, presença e notas em paralelo (a ficha fica no card da Mesa da Sessão).
+ * Membros, sessões, presença e notas em paralelo (a ficha fica no card da Sessão).
  */
 export async function getPlayerOverview(
   campaignId: string

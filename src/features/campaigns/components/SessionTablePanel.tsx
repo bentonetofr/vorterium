@@ -36,10 +36,18 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // renderização.
   const location = useLocation()
   const mesa = useMesaStream()
+  const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
+  // Abas que essa pessoa tem nessa campanha — pedido de outra (ex.:
+  // Bestiário pra jogador) cai na Ficha em vez de abrir um painel vazio.
+  const available = (tab: SessionSubTabId | undefined): tab is SessionSubTabId =>
+    tab != null &&
+    (tab !== 'bestiario' || showBestiary) &&
+    (tab !== 'livro' || hasRulebook(campaign.system))
   // Com transmissão rolando, a Sessão já abre na Mesa.
-  const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(
-    () => (location.state as NavigationState | null)?.initialSessionSubTab ?? (mesa.live ? 'mesa' : 'ficha'),
-  )
+  const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(() => {
+    const wanted = (location.state as NavigationState | null)?.initialSessionSubTab
+    return available(wanted) ? wanted : mesa.live ? 'mesa' : 'ficha'
+  })
   const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveSubTab)
 
@@ -50,10 +58,8 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
     if (location.key === handledLocationKey.current) return
     handledLocationKey.current = location.key
     const wanted = (location.state as NavigationState | null)?.initialSessionSubTab
-    if (wanted) selectTab(wanted)
+    if (available(wanted)) selectTab(wanted)
   }, [location.key, location.state, selectTab])
-
-  const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
 
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.

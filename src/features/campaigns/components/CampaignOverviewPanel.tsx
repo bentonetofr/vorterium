@@ -17,6 +17,7 @@ import type { CampaignWithRole, InitiativeParticipant, InitiativeState } from '.
 import type { TabId, SessionSubTabId } from '../campaignSections'
 import { AnimatedNumber } from '../../../shared/components/AnimatedNumber'
 import './CampaignOverviewPanel.css'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -78,8 +79,8 @@ function StatCard({ icon, title, action, children }: StatCardProps) {
 }
 
 // ────────────────────────────────────────────────────────
-// SessionTableCard — resumo da Mesa da Sessão: combate (ao vivo, pelo
-// Realtime da iniciativa), fichas na mesa e mensagens novas no chat.
+// SessionTableCard — resumo da Sessão: transmissão da Mesa, combate (ao
+// vivo, pelo Realtime da iniciativa), fichas na mesa e mensagens novas.
 // ────────────────────────────────────────────────────────
 
 interface SessionTableCardProps {
@@ -105,6 +106,7 @@ async function loadSheetsSummary(campaign: CampaignWithRole): Promise<SheetsSumm
 
 function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
   const { chatUnread } = useCurrentCampaign()
+  const mesa = useMesaStream()
   const [combat, setCombat]             = useState<InitiativeState | null>(null)
   const [participants, setParticipants] = useState<InitiativeParticipant[]>([])
   const [sheets, setSheets]             = useState<SheetsSummary | null>(null)
@@ -129,7 +131,9 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
     <StatCard
       icon="⚜"
       title="Sessão"
-      action={{ label: 'Abrir sessão', onClick: () => onNavigate('mesa-sessao') }}
+      action={mesa.live
+        ? { label: 'Abrir a Mesa', onClick: () => onNavigate('mesa-sessao', 'mesa') }
+        : { label: 'Abrir sessão', onClick: () => onNavigate('mesa-sessao') }}
     >
       <div className="ov-stat__num ov-stat__num--sm">
         <span className={`ov-table-badge ${combat ? 'ov-table-badge--combat' : 'ov-table-badge--idle'}`}>
@@ -137,6 +141,11 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
         </span>
       </div>
       <div className="ov-stat__details">
+        {mesa.live && (
+          <span className="ov-stat__detail--live">
+            {mesa.stage.screenId ? 'Transmissão ao vivo na Mesa' : 'Imagem na Mesa'}
+          </span>
+        )}
         {combat && (
           <span>
             Rodada {combat.round_number}

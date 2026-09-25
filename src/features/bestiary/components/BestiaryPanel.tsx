@@ -379,9 +379,11 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
     try {
       const members = await getPartyMembers(campaign.id)
       setParty(members)
+      // Fora da conta por padrão: a ficha do próprio mestre e a de quem
+      // saiu da campanha (sem perfil visível) — dá pra marcar de volta.
       setExcluded((prev) => {
         const next = new Set(prev)
-        for (const m of members) if (m.userId === campaign.master_id) next.add(m.sheetId)
+        for (const m of members) if (m.userId === campaign.master_id || m.player == null) next.add(m.sheetId)
         return next
       })
     } catch (err) {
@@ -494,7 +496,7 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
                     <input type="checkbox" checked={included} onChange={() => toggleMember(m.sheetId)} />
                     <span className="bestiary-member__name">
                       {m.character}
-                      {m.player && <span className="bestiary-member__player">{m.player}</span>}
+                      <span className="bestiary-member__player">{m.player ?? 'Jogador removido'}</span>
                     </span>
                   </label>
                   <span className="bestiary-member__hp">Vida {m.hp}</span>

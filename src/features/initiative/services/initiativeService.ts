@@ -1,6 +1,7 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { rollDice } from '../../dice/services/diceService'
 import type { InitiativeParticipant, InitiativeState } from '../../../shared/types'
+import type { CampaignSystem } from '../../../shared/constants/systems'
 
 // ────────────────────────────────────────────────────────
 // Leitura
@@ -85,14 +86,15 @@ export async function removeInitiativeParticipant(participantId: string): Promis
 }
 
 /**
- * Rola 1d20 usando o rolador de dados já existente — grava normalmente em
- * dice_rolls, aparece no histórico e na notificação como qualquer outra
- * rolagem — e grava o resultado no valor de iniciativa. Sem modificador
- * automático (a ficha D&D ainda não está conectada); quem quiser somar um
- * bônus pode clicar no valor depois de rolar e ajustar à mão.
+ * Rola a iniciativa usando o rolador de dados já existente — grava
+ * normalmente em dice_rolls, aparece no histórico e na notificação como
+ * qualquer outra rolagem — e grava o resultado no valor de iniciativa.
+ * O dado segue o sistema: d10 em Altherium (o dado de teste do livro),
+ * d20 nos demais. Sem modificador automático; quem quiser somar um bônus
+ * pode clicar no valor depois de rolar e ajustar à mão.
  */
-export async function rollInitiative(campaignId: string, participantId: string): Promise<void> {
-  const roll = await rollDice(campaignId, '1d20')
+export async function rollInitiative(campaignId: string, participantId: string, system: CampaignSystem): Promise<void> {
+  const roll = await rollDice(campaignId, system === 'altherium' ? '1d10' : '1d20')
   await setInitiativeValue(participantId, roll.result)
 }
 

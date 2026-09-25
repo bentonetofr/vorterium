@@ -147,7 +147,7 @@ export async function getActiveCampaignInvite(
  * Salva token de convite pendente para processar após login.
  */
 export function savePendingInvite(token: string): void {
-  sessionStorage.setItem(PENDING_INVITE_KEY, token)
+  try { sessionStorage.setItem(PENDING_INVITE_KEY, token) } catch { /* sem armazenamento: o convite é aberto de novo pelo link */ }
 }
 
 /**
@@ -157,11 +157,15 @@ export function savePendingInvite(token: string): void {
  * Não lança exceção — falha silenciosamente para não bloquear o login.
  */
 export async function processPendingInvite(): Promise<string | null> {
-  const token = sessionStorage.getItem(PENDING_INVITE_KEY)
+  let token: string | null = null
+  try {
+    token = sessionStorage.getItem(PENDING_INVITE_KEY)
+    // Remove antes de processar para evitar loops em caso de erro
+    if (token) sessionStorage.removeItem(PENDING_INVITE_KEY)
+  } catch {
+    return null
+  }
   if (!token) return null
-
-  // Remove antes de processar para evitar loops em caso de erro
-  sessionStorage.removeItem(PENDING_INVITE_KEY)
 
   try {
     const campaignId = await acceptCampaignInviteWithProfile(token)

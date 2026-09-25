@@ -82,7 +82,7 @@ export const WEAPONS: WeaponDef[] = [
   // Armas leves
   { id: 'adaga_serrilhada',            name: 'Adaga serrilhada',           category: 'leve', damageDice: '1d10', damageType: 'corte',      attribute: 'impulso',       range: 'toque', price: 400 },
   { id: 'espada_curta_reta',           name: 'Espada curta reta',          category: 'leve', damageDice: '1d12', damageType: 'corte',      attribute: 'furia',         range: 'toque', price: 600 },
-  { id: 'adaga_gancho',                name: 'Adaga de Gancho',            category: 'leve', damageDice: '1d6',  damageType: 'perfurante', attribute: 'impulso',       range: 'toque', price: 400 },
+  { id: 'adaga_gancho',                name: 'Adaga de Gancho',            category: 'leve', damageDice: '1d6',  damageType: 'corte',      attribute: 'impulso',       range: 'toque', price: 400 },
   { id: 'clava_espinosa',              name: 'Clava espinosa',             category: 'leve', damageDice: '1d10', damageType: 'impacto',    attribute: 'furia',         range: 'toque', price: 400 },
   { id: 'porrete_pedra',               name: 'Porrete de pedra',           category: 'leve', damageDice: '1d10', damageType: 'impacto',    attribute: 'furia_impulso', range: 'toque', price: 400 },
   { id: 'laminas_gemeas',              name: 'Lâminas Gêmeas',             category: 'leve', damageDice: '1d10', damageType: 'corte',      attribute: 'impulso',       range: 'toque', price: 400 },
@@ -94,7 +94,7 @@ export const WEAPONS: WeaponDef[] = [
   { id: 'faca_arremesso',              name: 'Faca de Arremesso',          category: 'arremesso', damageDice: '1d10', damageType: 'perfurante', attribute: 'impulso', range: 'toque_curto', price: 400 },
   { id: 'machado_arremesso',           name: 'Machado de Arremesso',       category: 'arremesso', damageDice: '1d12', damageType: 'perfurante', attribute: 'furia',   range: 'toque_curto', price: 600 },
   { id: 'bola_ferro_corrente',         name: 'Bola de Ferro com corrente', category: 'arremesso', damageDice: '1d8',  damageType: 'impacto',    attribute: 'impulso', range: 'toque_curto', price: 200 },
-  { id: 'boomerangue_aflado',          name: 'Boomerangue aflado',         category: 'arremesso', damageDice: '1d8',  damageType: 'corte',      attribute: 'impulso', range: 'curto',       price: 200 },
+  { id: 'boomerangue_aflado',          name: 'Boomerangue afiado',         category: 'arremesso', damageDice: '1d8',  damageType: 'corte',      attribute: 'impulso', range: 'curto',       price: 200 },
 
   // Armas de alcance
   { id: 'arco_curto',                  name: 'Arco Curto',                 category: 'alcance', damageDice: '1d10',   damageType: 'perfurante', attribute: 'impulso', range: 'medio',       price: 400 },
@@ -117,7 +117,7 @@ export const CONSUMABLES: ItemDef[] = [
   { id: 'elixir_eir',       name: 'Elixir de Eir',      effect: 'Cura 1d8 de vida do usuário',       price: 100, notes: 'Básica, mas essencial.',           kind: 'consumivel' },
   { id: 'soro_idunn',       name: 'Soro de Idunn',      effect: 'Cura 1d8 de Equilíbrio',             price: 300, notes: 'Para emergências graves.',         kind: 'consumivel' },
   { id: 'cogumelo_berserkr', name: 'Cogumelo Berserkr', effect: '+2 de Fúria por 1 cena',             price: 150, notes: 'Exclusivo para Berserkers.',       kind: 'consumivel' },
-  { id: 'tinta_isafis',     name: 'Tinta de Isafis',    effect: 'Recupera 1d4 de PR',                 price: 200, notes: 'Para Runaskins.',                  kind: 'consumivel' },
+  { id: 'tinta_isafis',     name: 'Tinta de Isatis',    effect: 'Recupera 1d4 de PR',                 price: 200, notes: 'Para Runaskins.',                  kind: 'consumivel' },
 ]
 
 export const UTILITIES: ItemDef[] = [

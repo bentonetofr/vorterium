@@ -155,7 +155,7 @@ export function AltheriumInventoryCard({
                         {w.damageDice} {DAMAGE_TYPE_LABELS[w.damageType]} · {WEAPON_ATTRIBUTE_LABELS[w.attribute]} · {WEAPON_RANGE_LABELS[w.range]}
                       </span>
                     </div>
-                    <span className="alth-inventory__price">₴{w.price}</span>
+                    <span className="alth-inventory__price">¤{w.price}</span>
                     <button type="button" className="alth-inventory__add" disabled={disabled}
                       onClick={() => void onAdd('arma', w.id)} aria-label={`Adicionar ${w.name}`}>+</button>
                   </div>
@@ -173,7 +173,7 @@ export function AltheriumInventoryCard({
                     <span className="alth-inventory__name">{a.name}</span>
                     <span className="alth-inventory__detail">{a.description} · {a.db} DB</span>
                   </div>
-                  <span className="alth-inventory__price">₴{a.price}</span>
+                  <span className="alth-inventory__price">¤{a.price}</span>
                   <button type="button" className="alth-inventory__add" disabled={disabled}
                     onClick={() => void onAdd(a.kind, a.id)} aria-label={`Adicionar ${a.name}`}>+</button>
                 </div>
@@ -190,7 +190,7 @@ export function AltheriumInventoryCard({
                     <span className="alth-inventory__name">{i.name}</span>
                     <span className="alth-inventory__detail">{i.effect}</span>
                   </div>
-                  <span className="alth-inventory__price">₴{i.price}</span>
+                  <span className="alth-inventory__price">¤{i.price}</span>
                   <button type="button" className="alth-inventory__add" disabled={disabled}
                     onClick={() => void onAdd('consumivel', i.id)} aria-label={`Adicionar ${i.name}`}>+</button>
                 </div>
@@ -207,7 +207,7 @@ export function AltheriumInventoryCard({
                     <span className="alth-inventory__name">{i.name}</span>
                     <span className="alth-inventory__detail">{i.effect}</span>
                   </div>
-                  <span className="alth-inventory__price">₴{i.price}</span>
+                  <span className="alth-inventory__price">¤{i.price}</span>
                   <button type="button" className="alth-inventory__add" disabled={disabled}
                     onClick={() => void onAdd('utilitario', i.id)} aria-label={`Adicionar ${i.name}`}>+</button>
                 </div>

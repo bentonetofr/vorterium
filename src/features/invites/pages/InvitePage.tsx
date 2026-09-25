@@ -87,6 +87,16 @@ export function InvitePage() {
       })
   }, [loading, user, token, navigate])
 
+  // Saída dos estados de erro: logado vai pras campanhas; sem login, entrar.
+  const fallbackActions = user ? (
+    <Link to="/campanhas" className="btn btn-primary">Minhas campanhas</Link>
+  ) : (
+    <>
+      <Link to="/" className="btn btn-ghost">Página inicial</Link>
+      <Link to="/login" className="btn btn-primary">Entrar</Link>
+    </>
+  )
+
   function handleLoginRedirect() {
     if (token) savePendingInvite(token)
     navigate('/login', { replace: true })
@@ -148,10 +158,7 @@ export function InvitePage() {
             {inviteInfo && (
               <p className="invite-page__hint">Campanha: {inviteInfo.campaign_name}</p>
             )}
-            <div className="invite-page__actions">
-              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
-              <Link to="/login" className="btn btn-primary">Entrar</Link>
-            </div>
+            <div className="invite-page__actions">{fallbackActions}</div>
           </>
         )}
 
@@ -161,30 +168,21 @@ export function InvitePage() {
             {inviteInfo && (
               <p className="invite-page__hint">Campanha: {inviteInfo.campaign_name}</p>
             )}
-            <div className="invite-page__actions">
-              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
-              <Link to="/login" className="btn btn-primary">Entrar</Link>
-            </div>
+            <div className="invite-page__actions">{fallbackActions}</div>
           </>
         )}
 
         {status === 'invalid' && (
           <>
             <p className="invite-page__error">Convite inválido ou não encontrado.</p>
-            <div className="invite-page__actions">
-              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
-              <Link to="/login" className="btn btn-primary">Entrar</Link>
-            </div>
+            <div className="invite-page__actions">{fallbackActions}</div>
           </>
         )}
 
         {status === 'error' && (
           <>
             <p className="invite-page__error">{errorMsg}</p>
-            <div className="invite-page__actions">
-              <Link to="/campanhas" className="btn btn-ghost">Minhas campanhas</Link>
-              <Link to="/login" className="btn btn-primary">Entrar</Link>
-            </div>
+            <div className="invite-page__actions">{fallbackActions}</div>
           </>
         )}
         </div>

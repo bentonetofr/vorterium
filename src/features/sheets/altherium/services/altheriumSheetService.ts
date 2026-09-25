@@ -144,6 +144,23 @@ export async function removeAltheriumPortrait(sheetId: string): Promise<Altheriu
   return updateAltheriumSheet(sheetId, { portrait_url: null })
 }
 
+/** Fichas Altherium do usuário atual em todas as campanhas (página "Minhas fichas"). */
+export async function getMyAltheriumSheetsEverywhere(): Promise<(AltheriumSheet & { campaign_name: string })[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuário não autenticado.')
+
+  const { data, error } = await supabase
+    .from('altherium_character_sheets')
+    .select('*, campaigns(id, name)')
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false })
+
+  if (error) throw new Error('Não foi possível carregar suas fichas.')
+  return ((data ?? []) as unknown as (AltheriumSheet & { campaigns: { id: string; name: string } | null })[])
+    .filter((row) => row.campaigns != null)
+    .map(({ campaigns, ...sheet }) => ({ ...sheet, campaign_name: campaigns!.name }))
+}
+
 /** Todas as fichas Altherium da campanha com o perfil do dono (visão do mestre). */
 export async function getCampaignAltheriumSheets(campaignId: string): Promise<AltheriumSheetWithProfile[]> {
   const { data, error } = await supabase

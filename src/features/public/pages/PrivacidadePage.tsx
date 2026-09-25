@@ -25,8 +25,12 @@ export function PrivacidadePage() {
           <li><strong>Conta:</strong> e-mail e nome público informados no cadastro ou fornecidos pelo login com Google.</li>
           <li><strong>Campanhas:</strong> nome e configurações das campanhas criadas.</li>
           <li><strong>Membros:</strong> e-mails e papéis (mestre/jogador) vinculados às campanhas.</li>
-          <li><strong>Fichas:</strong> dados inseridos nas fichas de personagem (nome, atributos, pontos de vida, anotações).</li>
+          <li><strong>Fichas:</strong> dados inseridos nas fichas de personagem (nome, atributos, inventário, anotações e demais campos).</li>
+          <li><strong>Conteúdo da campanha:</strong> sessões, notas, criaturas do bestiário, ordem de iniciativa e o registro de atividades.</li>
+          <li><strong>Mensagens:</strong> mensagens do chat da mesa e mensagens privadas entre membros.</li>
+          <li><strong>Imagens:</strong> foto de perfil, capa da campanha, retratos e imagens de runas das fichas e imagens da galeria da Mesa.</li>
           <li><strong>Rolagens:</strong> resultados de rolagens de dados registrados no sistema.</li>
+          <li><strong>Presença:</strong> o horário em que você esteve ativo por último em cada campanha.</li>
         </ul>
       </section>
 
@@ -34,8 +38,8 @@ export function PrivacidadePage() {
         <h2 className="public-page__section-title">2. Uso dos dados</h2>
         <p className="public-page__text">
           Os dados coletados são usados exclusivamente para o funcionamento do
-          Vorterium: autenticar usuários, exibir campanhas e fichas, registrar
-          rolagens e associar membros às campanhas.
+          Vorterium: autenticar usuários, exibir campanhas, fichas e mensagens,
+          registrar rolagens e atividades e associar membros às campanhas.
         </p>
         <p className="public-page__text">
           Não vendemos, alugamos nem compartilhamos dados pessoais com terceiros
@@ -47,8 +51,8 @@ export function PrivacidadePage() {
         <h2 className="public-page__section-title">3. Infraestrutura</h2>
         <p className="public-page__text">
           O Vorterium utiliza o <strong>Supabase</strong> como plataforma de
-          autenticação e banco de dados. Os dados são armazenados nos servidores do
-          Supabase. Consulte a{' '}
+          autenticação, banco de dados e armazenamento de imagens. Os dados são
+          armazenados nos servidores do Supabase. Consulte a{' '}
           <a
             href="https://supabase.com/privacy"
             target="_blank"
@@ -61,7 +65,22 @@ export function PrivacidadePage() {
       </section>
 
       <section className="public-page__section">
-        <h2 className="public-page__section-title">4. Login com Google</h2>
+        <h2 className="public-page__section-title">4. Transmissão da Mesa</h2>
+        <p className="public-page__text">
+          A transmissão de tela da Mesa vai direto do navegador do mestre para o de
+          cada jogador (WebRTC) e <strong>não é gravada nem armazenada</strong> pelo
+          Vorterium. Para abrir essa conexão direta, os navegadores dos participantes
+          trocam entre si informações de rede, como o endereço IP, e podem consultar
+          servidores públicos de conexão (STUN), como os do Google.
+        </p>
+        <p className="public-page__text">
+          O navegador também guarda localmente algumas preferências, como o tema
+          escolhido e o volume da transmissão.
+        </p>
+      </section>
+
+      <section className="public-page__section">
+        <h2 className="public-page__section-title">5. Login com Google</h2>
         <p className="public-page__text">
           Se você optar pelo login com Google, o Vorterium recebe da Google os
           dados básicos da sua conta, como e-mail e nome. Esses dados são usados
@@ -70,7 +89,7 @@ export function PrivacidadePage() {
       </section>
 
       <section className="public-page__section">
-        <h2 className="public-page__section-title">5. Solicitação de remoção de dados</h2>
+        <h2 className="public-page__section-title">6. Solicitação de remoção de dados</h2>
         <p className="public-page__text">
           Você pode solicitar a exclusão dos seus dados a qualquer momento. Para
           isso, entre em contato pelo canal oficial:
@@ -85,7 +104,7 @@ export function PrivacidadePage() {
       </section>
 
       <section className="public-page__section">
-        <h2 className="public-page__section-title">6. Alterações nesta política</h2>
+        <h2 className="public-page__section-title">7. Alterações nesta política</h2>
         <p className="public-page__text">
           Esta política pode ser atualizada conforme o projeto evolui. Mudanças
           relevantes serão comunicadas na plataforma quando possível.

@@ -1,8 +1,28 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getMySheets, isSheetFilled, type SheetWithCampaign } from '../services/sheetService'
-import { getSystemLabel } from '../../../shared/constants/systems'
+import { getMySheets, isSheetFilled } from '../services/sheetService'
+import { getMyAltheriumSheetsEverywhere } from '../altherium/services/altheriumSheetService'
+import { RAIZES } from '../altherium/constants/altherium'
+import { getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import './MySheetsPage.css'
+
+// ────────────────────────────────────────────────────────
+// Minhas fichas — os personagens da pessoa em todas as campanhas, de
+// todos os sistemas (ficha simples do Genérico e ficha de Altherium,
+// que vivem em tabelas diferentes). "Abrir ficha" leva direto pra
+// sub-aba Ficha da Sessão daquela campanha.
+// ────────────────────────────────────────────────────────
+
+interface MySheetItem {
+  id:            string
+  campaignId:    string
+  campaignName:  string
+  system:        CampaignSystem
+  characterName: string | null
+  filled:        boolean
+  stats:         string[]
+  updatedAt:     string
+}
 
 function formatRelativeTime(iso: string): string {
   const diff    = Date.now() - new Date(iso).getTime()
@@ -16,51 +36,73 @@ function formatRelativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
-interface SheetCardProps {
-  sheet:      SheetWithCampaign
-  onNavigate: (campaignId: string) => void
+async function loadAllSheets(): Promise<MySheetItem[]> {
+  const [simple, altherium] = await Promise.all([getMySheets(), getMyAltheriumSheetsEverywhere()])
+
+  const items: MySheetItem[] = [
+    ...simple.map((s) => ({
+      id:            s.id,
+      campaignId:    s.campaign_id,
+      campaignName:  s.campaign_name,
+      system:        s.campaign_system,
+      characterName: s.character_name,
+      filled:        isSheetFilled(s),
+      stats:         [
+        ...(s.archetype ? [s.archetype] : []),
+        `Nível ${s.level}`,
+        `PV ${s.hp_current}/${s.hp_max}`,
+      ],
+      updatedAt:     s.updated_at,
+    })),
+    ...altherium.map((s) => ({
+      id:            s.id,
+      campaignId:    s.campaign_id,
+      campaignName:  s.campaign_name,
+      system:        'altherium' as const,
+      characterName: s.character_name,
+      filled:        Boolean(s.character_name?.trim()) && s.raiz != null,
+      stats:         [
+        ...(s.raiz ? [RAIZES.find((r) => r.id === s.raiz)?.label ?? s.raiz] : []),
+        `Nível ${s.level}`,
+        `Vitalidade ${s.vitality_current}/${s.vitality_max}`,
+      ],
+      updatedAt:     s.updated_at,
+    })),
+  ]
+  return items.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
-function SheetCard({ sheet, onNavigate }: SheetCardProps) {
-  const filled = isSheetFilled(sheet)
-
+function SheetCard({ sheet, onOpen }: { sheet: MySheetItem; onOpen: () => void }) {
   return (
     <div className="my-sheet-card">
       <div className="my-sheet-card__header">
         <div className="my-sheet-card__identity">
           <h3 className="my-sheet-card__char-name">
-            {sheet.character_name?.trim()
-              ? sheet.character_name.trim()
+            {sheet.characterName?.trim()
+              ? sheet.characterName.trim()
               : <span className="my-sheet-card__unnamed">Sem nome</span>
             }
           </h3>
           <p className="my-sheet-card__campaign">
-            {sheet.campaign_name}
-            {sheet.campaign_system && (
-              <span className="my-sheet-card__system"> · {getSystemLabel(sheet.campaign_system)}</span>
-            )}
+            {sheet.campaignName}
+            <span className="my-sheet-card__system"> · {getSystemLabel(sheet.system)}</span>
           </p>
         </div>
-        <span className={`my-sheet-badge ${filled ? 'my-sheet-badge--filled' : 'my-sheet-badge--empty'}`}>
-          {filled ? 'Preenchida' : 'Incompleta'}
+        <span className={`my-sheet-badge ${sheet.filled ? 'my-sheet-badge--filled' : 'my-sheet-badge--empty'}`}>
+          {sheet.filled ? 'Preenchida' : 'Incompleta'}
         </span>
       </div>
 
       <div className="my-sheet-card__stats">
-        {sheet.archetype && <span>{sheet.archetype}</span>}
-        <span>Nível {sheet.level}</span>
-        <span>PV {sheet.hp_current}/{sheet.hp_max}</span>
+        {sheet.stats.map((stat) => <span key={stat}>{stat}</span>)}
       </div>
 
       <div className="my-sheet-card__footer">
         <span className="my-sheet-card__updated">
-          Atualizada {formatRelativeTime(sheet.updated_at)}
+          Atualizada {formatRelativeTime(sheet.updatedAt)}
         </span>
-        <button
-          className="btn btn-ghost my-sheet-card__btn"
-          onClick={() => onNavigate(sheet.campaign_id)}
-        >
-          Abrir campanha →
+        <button type="button" className="btn btn-ghost my-sheet-card__btn" onClick={onOpen}>
+          Abrir ficha →
         </button>
       </div>
     </div>
@@ -69,12 +111,12 @@ function SheetCard({ sheet, onNavigate }: SheetCardProps) {
 
 export function MySheetsPage() {
   const navigate = useNavigate()
-  const [sheets,  setSheets]  = useState<SheetWithCampaign[]>([])
+  const [sheets,  setSheets]  = useState<MySheetItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
-    getMySheets()
+    loadAllSheets()
       .then(setSheets)
       .catch((err) => setError(
         err instanceof Error ? err.message : 'Não foi possível carregar suas fichas.'
@@ -114,9 +156,9 @@ export function MySheetsPage() {
         <div className="my-sheets-grid anim-stagger">
           {sheets.map((sheet) => (
             <SheetCard
-              key={sheet.id}
+              key={`${sheet.system}-${sheet.id}`}
               sheet={sheet}
-              onNavigate={(id) => navigate(`/campanhas/${id}`)}
+              onOpen={() => navigate(`/campanhas/${sheet.campaignId}/mesa-sessao`, { state: { initialSessionSubTab: 'ficha' } })}
             />
           ))}
         </div>

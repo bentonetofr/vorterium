@@ -3,11 +3,12 @@ import { AppLogo } from '../../../shared/components/AppLogo'
 import './PublicPages.css'
 
 const FEATURES = [
-  { title: 'Campanhas',         desc: 'Crie campanhas e organize suas mesas em um painel central.' },
-  { title: 'Membros',           desc: 'Adicione jogadores por e-mail ou envie convites por link.' },
-  { title: 'Ficha simples',     desc: 'Registre informações básicas dos personagens sem complexidade.' },
-  { title: 'Rolagem de dados',  desc: 'Role dados comuns de RPG e acompanhe o histórico da campanha.' },
-  { title: 'Convites por link', desc: 'Compartilhe um link para que jogadores entrem na campanha com facilidade.' },
+  { title: 'Campanhas',             desc: 'Crie campanhas no sistema Genérico ou em Altherium e organize tudo em um painel central.' },
+  { title: 'Membros e convites',    desc: 'Adicione jogadores por e-mail ou compartilhe um link de convite.' },
+  { title: 'Fichas',                desc: 'Ficha completa de Altherium, com atributos, domínios, inventário e triunfos, ou ficha simples no Genérico.' },
+  { title: 'Mesa ao vivo',          desc: 'Transmita a tela com som, mostre mapas e imagens e aponte lugares para todos verem.' },
+  { title: 'Dados, chat e combate', desc: 'Role dados com histórico, converse no chat da mesa e conduza a ordem de iniciativa.' },
+  { title: 'Ferramentas do mestre', desc: 'Bestiário com inimigos calculados pelas fichas do grupo, notas e o livro de regras à mão.' },
 ]
 
 export function LandingPage() {
@@ -22,8 +23,8 @@ export function LandingPage() {
           Organize suas campanhas de RPG em um só lugar.
         </p>
         <p className="landing__subtitle">
-          Gerencie campanhas, membros, fichas simples, rolagens de dados e convites
-          por link com uma interface prática e centralizada.
+          Campanhas, fichas, dados, chat e uma mesa ao vivo com transmissão de tela:
+          tudo o que a sessão precisa, em um só lugar.
         </p>
         <div className="landing__actions">
           <Link to="/login"    className="btn btn-primary landing__btn-main">Entrar</Link>
@@ -57,17 +58,17 @@ export function LandingPage() {
             <div className="landing__role-block">
               <h3 className="landing__role-title">Para mestres</h3>
               <p className="landing__role-desc">
-                O Vorterium centraliza a organização da campanha, os participantes
-                e os recursos básicos da mesa. Crie uma campanha, adicione jogadores,
-                acompanhe membros, visualize fichas e gerencie a mesa em um único painel.
+                Crie a campanha, convide jogadores, transmita a tela na Mesa, monte
+                inimigos no bestiário e acompanhe fichas, iniciativa e sessões em um
+                único painel.
               </p>
             </div>
             <div className="landing__role-block">
               <h3 className="landing__role-title">Para jogadores</h3>
               <p className="landing__role-desc">
-                Entre na campanha pelo link de convite, acesse sua ficha simples,
-                registre informações do personagem e acompanhe o histórico de rolagens
-                durante a sessão — tudo sem sair da plataforma.
+                Entre na campanha pelo link de convite, preencha sua ficha, role dados,
+                converse no chat e assista à Mesa do mestre durante a sessão, tudo sem
+                sair da plataforma.
               </p>
             </div>
           </div>
@@ -103,9 +104,9 @@ export function LandingPage() {
             <li className="landing__step">
               <span className="landing__step-num" aria-hidden="true">4</span>
               <div className="landing__step-body">
-                <strong className="landing__step-label">Use ficha simples e rolagens</strong>
+                <strong className="landing__step-label">Jogue a sessão</strong>
                 <p className="landing__step-desc">
-                  Cada jogador gerencia sua própria ficha e rola dados na sessão.
+                  Fichas, dados, chat e a Mesa ao vivo ficam na aba Sessão da campanha.
                 </p>
               </div>
             </li>
