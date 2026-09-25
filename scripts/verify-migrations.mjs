@@ -57,6 +57,7 @@ const expectedMigrations = [
   '20240153000000_mesa_screen_share_realtime.sql',
   '20240154000000_mesa_live_notice_and_gallery.sql',
   '20240155000000_altherium_pilar_cards.sql',
+  '20240156000000_altherium_runaskin_trail_overrides.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

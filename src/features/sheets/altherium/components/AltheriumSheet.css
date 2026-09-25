@@ -2020,3 +2020,16 @@
 @media (prefers-reduced-motion: reduce) {
   .alth-pcard, .alth-pcard--instant { animation: none; }
 }
+
+/* Editor do triunfo da trilha — link "Restaurar o original do livro" */
+.alth-rune__restore {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent-bright);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.alth-rune__restore:disabled { opacity: 0.5; cursor: default; }

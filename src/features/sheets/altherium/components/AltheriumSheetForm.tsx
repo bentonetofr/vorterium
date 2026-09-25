@@ -32,7 +32,7 @@ import { AltheriumRunaskinTriumphs } from './AltheriumRunaskinTriumphs'
 import { AltheriumPilarTriumphs, type PilarCardMode } from './AltheriumPilarTriumphs'
 import { suitInfo } from '../utils/pilarCards'
 import type { RunaskinTrail } from '../constants/altheriumTriumphs'
-import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune } from '../../../../shared/types'
+import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune, RunaskinTriumphOverride } from '../../../../shared/types'
 import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
@@ -104,6 +104,7 @@ type FormData = {
   berserker_triumphs: string[]
   runaskin_trail:     RunaskinTrail | ''
   runaskin_scene_uses: number
+  runaskin_trail_overrides: Record<string, RunaskinTriumphOverride>
   pilar_card_mode:    PilarCardMode
   pilar_deck:         string[] | null
   notes:              string
@@ -142,6 +143,7 @@ function sheetToForm(s: AltheriumSheet): FormData {
     berserker_triumphs: s.berserker_triumphs ?? [],
     runaskin_trail:     s.runaskin_trail ?? '',
     runaskin_scene_uses: s.runaskin_scene_uses ?? 0,
+    runaskin_trail_overrides: s.runaskin_trail_overrides ?? {},
     pilar_card_mode:    s.pilar_card_mode ?? 'virtual',
     pilar_deck:         s.pilar_deck ?? null,
     notes:              s.notes ?? '',
@@ -184,8 +186,9 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     runaskin_trail:      f.runaskin_trail === '' ? null : f.runaskin_trail,
     runaskin_scene_uses: f.runaskin_scene_uses,
     notes:               f.notes.trim() || null,
-    // Cartas do Pilar só vão nas fichas de Pilar.
+    // Campos próprios de cada raiz só vão nas fichas daquela raiz.
     ...(f.raiz === 'pilar' ? { pilar_card_mode: f.pilar_card_mode, pilar_deck: f.pilar_deck } : {}),
+    ...(f.raiz === 'runaskin' ? { runaskin_trail_overrides: f.runaskin_trail_overrides } : {}),
   }
 }
 
@@ -883,6 +886,15 @@ export function AltheriumSheetForm({
                   onRuneCreate={onRuneCreate}
                   onRuneUpdate={onRuneUpdate}
                   onRuneDelete={onRuneDelete}
+                  trailOverrides={form.runaskin_trail_overrides}
+                  onTrailOverride={(id, override) => {
+                    setForm((prev) => {
+                      const next = { ...prev.runaskin_trail_overrides }
+                      if (override) next[id] = override
+                      else delete next[id]
+                      return { ...prev, runaskin_trail_overrides: next }
+                    })
+                  }}
                 />
               )
               : raiz === 'pilar'

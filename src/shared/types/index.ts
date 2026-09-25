@@ -223,6 +223,8 @@ export interface AltheriumSheet {
   runaskin_trail:     'regente' | 'sentinela' | 'carniceiro' | null
   /** Triunfos usados na cena atual (limitado pelo NR, zera em "Nova cena"). */
   runaskin_scene_uses: number
+  /** Runaskin: ajustes da ficha nos 3 triunfos iniciais da trilha, por id do triunfo. */
+  runaskin_trail_overrides: Record<string, RunaskinTriumphOverride>
   /** Pilar: vira cartas na tela ('virtual') ou usa baralho de verdade ('fisico'). */
   pilar_card_mode:    'virtual' | 'fisico'
   /** Pilar: o que resta do baralho virtual embaralhado (null = baralho novo). */
@@ -230,6 +232,18 @@ export interface AltheriumSheet {
   notes:              string | null
   created_at:         string
   updated_at:         string
+}
+
+/** Versão editada na ficha de um triunfo inicial de trilha do Runaskin. */
+export interface RunaskinTriumphOverride {
+  name:        string
+  description: string
+  /** Custo em PR. */
+  cost:        number
+  test:        string | null
+  /** Mesmos ids de TriumphAction (altheriumTriumphs.ts). */
+  action:      'padrao' | 'bonus' | 'livre' | 'reacao' | null
+  range:       string | null
 }
 
 /** Pontos de um domínio numa ficha Altherium (0 a 2). */

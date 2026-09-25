@@ -14,14 +14,15 @@ import {
   ALTHERIUM_PORTRAIT_TYPES,
   type AltheriumRuneInput,
 } from '../services/altheriumSheetService'
-import type { AltheriumRune } from '../../../../shared/types'
+import type { AltheriumRune, RunaskinTriumphOverride } from '../../../../shared/types'
 import { Select } from '../../../../shared/components/Select'
 
 // ────────────────────────────────────────────────────────
-// Triunfos do Runaskin — trilha (3 iniciais do livro) + runas
-// descobertas (criadas na ficha, com foto). Cada "Usar" desconta o PR e
-// conta um uso na cena, até o NR; "Nova cena" zera o contador. PR e
-// contador vão pelo salvamento automático da ficha; runas salvam na hora.
+// Triunfos do Runaskin — trilha (3 iniciais do livro, editáveis na ficha)
+// + runas descobertas (criadas na ficha, com foto). Cada "Usar" desconta
+// o PR e conta um uso na cena, até o NR; "Nova cena" zera o contador. PR,
+// contador e edições da trilha vão pelo salvamento automático da ficha;
+// runas salvam na hora.
 // ────────────────────────────────────────────────────────
 
 interface AltheriumRunaskinTriumphsProps {
@@ -36,19 +37,50 @@ interface AltheriumRunaskinTriumphsProps {
   onRuneCreate:  (input: AltheriumRuneInput, image: File | null) => Promise<void>
   onRuneUpdate:  (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
   onRuneDelete:  (rune: AltheriumRune) => Promise<void>
+  /** Ajustes da ficha nos triunfos iniciais da trilha (por id). */
+  trailOverrides:   Record<string, RunaskinTriumphOverride>
+  /** Salva a versão editada; null restaura a do livro. */
+  onTrailOverride:  (triumphId: string, override: RunaskinTriumphOverride | null) => void
   disabled?:     boolean
+}
+
+/** Um triunfo inicial com a edição da ficha aplicada por cima do livro. */
+interface TrailTriumph {
+  id:          string
+  trail:       RunaskinTrail
+  name:        string
+  description: string
+  cost:        number
+  test:        string | null
+  action:      TriumphAction | null
+  range:       string | null
+  edited:      boolean
+}
+
+/** O editor de runa trabalha com AltheriumRune — adapta o triunfo da trilha. */
+function trailTriumphAsRune(t: TrailTriumph): AltheriumRune {
+  return {
+    id: t.id, sheet_id: '', name: t.name, description: t.description, pr_cost: t.cost,
+    test: t.test, action: t.action, range: t.range, image_url: null, created_at: '',
+  }
 }
 
 export function AltheriumRunaskinTriumphs({
   trail, onTrailChange, sceneUses, usesLimit, onNewScene, prCurrent, onUse,
-  runes, onRuneCreate, onRuneUpdate, onRuneDelete, disabled = false,
+  runes, onRuneCreate, onRuneUpdate, onRuneDelete, trailOverrides, onTrailOverride, disabled = false,
 }: AltheriumRunaskinTriumphsProps) {
   const [editing, setEditing]           = useState<AltheriumRune | 'new' | null>(null)
+  const [editingTrail, setEditingTrail] = useState<TrailTriumph | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [lastUsed, setLastUsed]         = useState<string | null>(null)
 
   const trailDef   = RUNASKIN_TRAILS.find((t) => t.id === trail) ?? null
-  const initial    = RUNASKIN_TRIUMPHS.filter((t) => t.trail === trail)
+  const initial: TrailTriumph[] = RUNASKIN_TRIUMPHS.filter((t) => t.trail === trail).map((t) => {
+    const o = trailOverrides[t.id]
+    return o
+      ? { id: t.id, trail: t.trail, name: o.name, description: o.description, cost: o.cost, test: o.test, action: o.action, range: o.range, edited: true }
+      : { id: t.id, trail: t.trail, name: t.name, description: t.description, cost: t.cost, test: t.test, action: t.action, range: t.range, edited: false }
+  })
   const limitHit   = usesLimit != null && sceneUses >= usesLimit
 
   function renderUseButton(name: string, cost: number) {
@@ -127,14 +159,46 @@ export function AltheriumRunaskinTriumphs({
                 cost={t.cost}
                 test={t.test}
                 description={t.description}
-                chips={[TRIUMPH_ACTION_LABELS[t.action], t.range]}
+                chips={[
+                  t.action ? TRIUMPH_ACTION_LABELS[t.action] : null,
+                  t.range,
+                  t.edited ? 'Editado' : null,
+                ].filter((c): c is string => !!c)}
               >
+                <button
+                  type="button" className="alth-triumph__btn"
+                  onClick={() => setEditingTrail(t)} disabled={disabled}
+                >
+                  Editar
+                </button>
                 {renderUseButton(t.name, t.cost)}
               </RuneCard>
             ))}
           </div>
         )
         : <p className="alth-triumphs__empty">Escolha a trilha para ver os 3 triunfos iniciais.</p>}
+
+      <Presence show={editingTrail !== null} exitMs={220}>
+        {() => editingTrail && trailDef && (
+          <RuneEditorModal
+            key={editingTrail.id}
+            initial={trailTriumphAsRune(editingTrail)}
+            trail={{ glyph: trailDef.glyph, trailClass: editingTrail.trail, edited: editingTrail.edited }}
+            onCancel={() => setEditingTrail(null)}
+            onRestore={() => {
+              onTrailOverride(editingTrail.id, null)
+              setEditingTrail(null)
+            }}
+            onSubmit={async (input) => {
+              onTrailOverride(editingTrail.id, {
+                name: input.name, description: input.description, cost: input.pr_cost,
+                test: input.test, action: input.action, range: input.range,
+              })
+              setEditingTrail(null)
+            }}
+          />
+        )}
+      </Presence>
 
       <div className="alth-runes__discovered-head">
         <h5 className="alth-triumphs__group">Runas descobertas</h5>
@@ -263,11 +327,15 @@ function RuneCard({ trailClass, media, name, cost, test, description, chips, chi
 
 interface RuneEditorProps {
   initial?: AltheriumRune
+  /** Editando um triunfo inicial da trilha: sem foto (usa a runa da trilha). */
+  trail?:     { glyph: string; trailClass: RunaskinTrail; edited: boolean }
   onSubmit: (input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
   onCancel: () => void
+  /** Só na trilha: volta pra versão do livro. */
+  onRestore?: () => void
 }
 
-function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
+function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: RuneEditorProps) {
   const [name, setName]               = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [cost, setCost]               = useState(initial?.pr_cost ?? 1)
@@ -318,7 +386,7 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
 
   async function handleSave() {
     if (!name.trim()) {
-      setError('Dê um nome à runa.')
+      setError(trail ? 'Dê um nome ao triunfo.' : 'Dê um nome à runa.')
       return
     }
     setBusy(true)
@@ -340,37 +408,43 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
   return (
     <ModalOverlay onClose={onCancel} closeDisabled={busy}>
       <div
-        className="alth-modal__window alth-rune alth-rune--descoberta alth-rune--editing"
+        className={`alth-modal__window alth-rune alth-rune--${trail ? trail.trailClass : 'descoberta'} alth-rune--editing`}
         role="dialog" aria-modal="true" aria-labelledby="alth-rune-editor-title"
         onKeyDown={blockEnter}
       >
         <header className="alth-modal__header">
           <h4 id="alth-rune-editor-title" className="alth-modal__title">
-            {initial ? 'Editar runa' : 'Nova runa'}
+            {trail ? 'Editar triunfo da trilha' : initial ? 'Editar runa' : 'Nova runa'}
           </h4>
           <button type="button" className="modal-close" onClick={onCancel} disabled={busy} aria-label="Fechar">
             ×
           </button>
         </header>
-        <label className="alth-rune__media alth-rune__media--pick">
-          {preview
-            ? <img src={preview} alt="" />
-            : <span className="alth-rune__pick-hint">+ Foto</span>}
-          <input
-            type="file" hidden accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
-            onChange={handlePick} disabled={busy} aria-label="Foto da runa"
-          />
-        </label>
+        {trail ? (
+          <div className="alth-rune__media">
+            <span className="alth-rune__glyph" aria-hidden="true">{trail.glyph}</span>
+          </div>
+        ) : (
+          <label className="alth-rune__media alth-rune__media--pick">
+            {preview
+              ? <img src={preview} alt="" />
+              : <span className="alth-rune__pick-hint">+ Foto</span>}
+            <input
+              type="file" hidden accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
+              onChange={handlePick} disabled={busy} aria-label="Foto da runa"
+            />
+          </label>
+        )}
         <div className="alth-rune__body">
-          {preview && (
+          {!trail && preview && (
             <button type="button" className="alth-rune__remove-img" onClick={handleRemoveImage} disabled={busy}>
               Remover foto
             </button>
           )}
           <input
             ref={nameRef}
-            type="text" className="input" placeholder="Nome da runa" maxLength={80}
-            value={name} onChange={(e) => setName(e.target.value)} disabled={busy} aria-label="Nome da runa"
+            type="text" className="input" placeholder={trail ? 'Nome do triunfo' : 'Nome da runa'} maxLength={80}
+            value={name} onChange={(e) => setName(e.target.value)} disabled={busy} aria-label={trail ? 'Nome do triunfo' : 'Nome da runa'}
           />
           <div className="alth-rune__editor-row">
             <label className="alth-rune__editor-cost">
@@ -420,15 +494,28 @@ function RuneEditorModal({ initial, onSubmit, onCancel }: RuneEditorProps) {
           <textarea
             className="input" rows={3} placeholder="Descrição" maxLength={1000}
             value={description} onChange={(e) => setDescription(e.target.value)} disabled={busy}
-            aria-label="Descrição da runa"
+            aria-label={trail ? 'Descrição do triunfo' : 'Descrição da runa'}
           />
+          {trail && (
+            <p className="alth-hint">
+              A edição vale só para esta ficha.
+              {trail.edited && onRestore && (
+                <>
+                  {' '}
+                  <button type="button" className="alth-rune__restore" onClick={onRestore} disabled={busy}>
+                    Restaurar o original do livro
+                  </button>
+                </>
+              )}
+            </p>
+          )}
           {error && <p className="alth-triumphs__warn" role="alert">{error}</p>}
           <div className="alth-triumph__actions">
             <button type="button" className="alth-triumph__btn" onClick={onCancel} disabled={busy}>
               Cancelar
             </button>
             <button type="button" className="alth-triumph__btn alth-triumph__btn--add" onClick={() => void handleSave()} disabled={busy}>
-              {busy ? 'Salvando...' : 'Salvar runa'}
+              {busy ? 'Salvando...' : trail ? 'Salvar triunfo' : 'Salvar runa'}
             </button>
           </div>
         </div>
