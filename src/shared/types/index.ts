@@ -88,7 +88,7 @@ export interface SheetWithProfile extends CharacterSheet {
 }
 
 export type DieType  = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'
-export type RollMode = 'sum' | 'keep_highest' | 'keep_lowest'
+export type RollMode = 'sum' | 'keep_highest' | 'keep_lowest' | 'evens'
 
 export type RollBreakdownItem =
   | {
@@ -115,6 +115,18 @@ export type RollBreakdownItem =
       sides: number
       results: number[]
       kept: number
+      subtotal: number
+    }
+  | {
+      /** Teste de pares (Terra Devastada): conta os pares; todo 6 rola de novo. */
+      type: 'evens'
+      notation: string
+      quantity: number
+      sides: 6
+      results: number[]
+      /** Rolagens extras do Golpe de Sorte, em ordem. */
+      bonus: number[]
+      /** Quantidade de pares (desempenho). */
       subtotal: number
     }
   | {
@@ -298,6 +310,62 @@ export interface AltheriumRune {
 /** Ficha Altherium enriquecida com o perfil do dono — usada na visão do mestre.
  *  `profile` é null quando o dono não é mais membro da campanha. */
 export interface AltheriumSheetWithProfile extends AltheriumSheet {
+  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
+}
+
+// ── Terra Devastada ─────────────────────────────────────
+
+/** Característica fixa. `tag` marca as que mexem no Horror inicial. */
+export interface TdTrait {
+  id:   string
+  name: string
+  tag:  'motiva' | 'desmotiva' | null
+}
+
+export type TdConditionDuration = 'curta' | 'media' | 'longa' | 'indeterminada'
+
+export interface TdCondition {
+  id:       string
+  name:     string
+  duration: TdConditionDuration
+}
+
+export interface TdTrunfo {
+  id:          string
+  name:        string
+  description: string
+}
+
+export interface TdInventoryItem {
+  id:    string
+  name:  string
+  qty:   number
+  /** Arma (letalidade) ou proteção; `level` é o bônus em dados (0 a 3). */
+  kind:  'item' | 'arma' | 'protecao'
+  level: number
+}
+
+export interface TdSheet {
+  id:             string
+  campaign_id:    string
+  user_id:        string
+  character_name: string | null
+  concept:        string | null
+  description:    string | null
+  background:     string | null
+  traits:         TdTrait[]
+  conditions:     TdCondition[]
+  trunfos:        TdTrunfo[]
+  inventory:      TdInventoryItem[]
+  horror:         number
+  conviction:     number
+  notes:          string | null
+  created_at:     string
+  updated_at:     string
+}
+
+/** Ficha Terra Devastada com o perfil do dono — visão do mestre. */
+export interface TdSheetWithProfile extends TdSheet {
   profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 

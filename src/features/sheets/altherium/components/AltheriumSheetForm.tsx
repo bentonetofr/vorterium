@@ -188,8 +188,19 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     notes:               f.notes.trim() || null,
     // Campos próprios de cada raiz só vão nas fichas daquela raiz.
     ...(f.raiz === 'pilar' ? { pilar_card_mode: f.pilar_card_mode, pilar_deck: f.pilar_deck } : {}),
-    ...(f.raiz === 'runaskin' ? { runaskin_trail_overrides: f.runaskin_trail_overrides } : {}),
+    ...(f.raiz === 'runaskin' ? { runaskin_trail_overrides: normalizeOverrides(f.runaskin_trail_overrides) } : {}),
   }
+}
+
+/** Mesma ordem de chaves sempre: o jsonb devolve o objeto reordenado, e o
+ *  eco do próprio save precisa bater com o que foi enviado. */
+function normalizeOverrides(o: Record<string, RunaskinTriumphOverride>): Record<string, RunaskinTriumphOverride> {
+  const out: Record<string, RunaskinTriumphOverride> = {}
+  for (const id of Object.keys(o).sort()) {
+    const v = o[id]
+    out[id] = { name: v.name, description: v.description, cost: v.cost, test: v.test, action: v.action, range: v.range }
+  }
+  return out
 }
 
 function payloadKey(f: FormData): string {

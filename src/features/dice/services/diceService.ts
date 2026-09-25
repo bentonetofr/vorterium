@@ -324,6 +324,98 @@ export async function rollDice(
   return roll
 }
 
+// ────────────────────────────────────────────────────────
+// Teste de pares (Terra Devastada)
+//
+// A parada vai de 1 a 6 d6 (1 dado natural + bônus). Cada PAR é um ponto
+// de desempenho; todo 6, além de contar, rola de novo (Golpe de Sorte) até
+// sair outra coisa. A Convicção compra pontos de desempenho garantidos,
+// que entram como modificador. O desempenho pode ser 0.
+// ────────────────────────────────────────────────────────
+
+export const EVENS_MAX_DICE = 6
+
+export interface EvensRollResult {
+  results:  number[]
+  bonus:    number[]
+  evens:    number
+}
+
+/** Rola a parada (só a sorte — não grava nada). */
+export function rollEvensPool(dice: number): EvensRollResult {
+  const qty = Math.max(1, Math.min(EVENS_MAX_DICE, Math.floor(dice)))
+  const results = Array.from({ length: qty }, () => randomInt(1, 6))
+  const bonus: number[] = []
+  let pending = results.filter((r) => r === 6).length
+  // Teto de segurança: a chance de 100 seis seguidos é nula, mas o banco
+  // recusa mais que isso.
+  while (pending > 0 && bonus.length < 100) {
+    const r = randomInt(1, 6)
+    bonus.push(r)
+    pending -= 1
+    if (r === 6) pending += 1
+  }
+  const evens = [...results, ...bonus].filter((r) => r % 2 === 0).length
+  return { results, bonus, evens }
+}
+
+export interface EvensTestOptions {
+  /** Pontos de desempenho comprados com Convicção antes de rolar (0 a 10). */
+  conviction?: number
+  isPrivate?:  boolean
+}
+
+/**
+ * Faz um teste de pares e grava em dice_rolls — aparece no histórico de
+ * dados como qualquer rolagem. `result` = pares + Convicção.
+ */
+export async function rollEvensTest(
+  campaignId: string,
+  dice: number,
+  { conviction = 0, isPrivate = false }: EvensTestOptions = {},
+): Promise<DiceRoll> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuário não autenticado.')
+
+  const boost = Math.max(0, Math.min(10, Math.floor(conviction)))
+  const pool = rollEvensPool(dice)
+  const qty = pool.results.length
+  const breakdown: RollBreakdownItem[] = [{
+    type: 'evens', notation: `${qty}d6`, quantity: qty, sides: 6,
+    results: pool.results, bonus: pool.bonus, subtotal: pool.evens,
+  }]
+  if (boost > 0) breakdown.push({ type: 'modifier', value: boost })
+  const total = pool.evens + boost
+  const formula = `${qty}d6 pares${boost > 0 ? ` +${boost}` : ''}`
+
+  const { data, error } = await supabase
+    .from('dice_rolls')
+    .insert({
+      campaign_id:        campaignId,
+      user_id:            user.id,
+      die_type:           'd6',
+      result:             total,
+      quantity:           qty,
+      modifier:           boost,
+      individual_results: null,
+      total_result:       total,
+      roll_mode:          'evens',
+      kept_result:        null,
+      formula,
+      roll_breakdown:     breakdown,
+      is_private:         isPrivate,
+    })
+    .select('*')
+    .single()
+
+  if (error) throw new Error('Não foi possível registrar a rolagem.')
+  const roll = data as DiceRoll
+  if (!isPrivate) {
+    logActivity(campaignId, 'dice_rolled', `Teste de pares (${qty}d6): desempenho ${total}.`)
+  }
+  return roll
+}
+
 /**
  * Retorna as últimas rolagens da campanha com o nome do autor.
  */

@@ -3,9 +3,9 @@ import { AppLogo } from '../../../shared/components/AppLogo'
 import './PublicPages.css'
 
 const FEATURES = [
-  { title: 'Campanhas',             desc: 'Crie campanhas no sistema Genérico ou em Altherium e organize tudo em um painel central.' },
+  { title: 'Campanhas',             desc: 'Crie campanhas no Genérico, em Altherium ou em Terra Devastada e organize tudo em um painel central.' },
   { title: 'Membros e convites',    desc: 'Adicione jogadores por e-mail ou compartilhe um link de convite.' },
-  { title: 'Fichas',                desc: 'Ficha completa de Altherium, com atributos, domínios, inventário e triunfos, ou ficha simples no Genérico.' },
+  { title: 'Fichas',                desc: 'Fichas completas de Altherium e de Terra Devastada (com testes de pares, Horror e Convicção), ou ficha simples no Genérico.' },
   { title: 'Mesa ao vivo',          desc: 'Transmita a tela com som, mostre mapas e imagens e aponte lugares para todos verem.' },
   { title: 'Dados, chat e combate', desc: 'Role dados com histórico, converse no chat da mesa e conduza a ordem de iniciativa.' },
   { title: 'Ferramentas do mestre', desc: 'Bestiário com inimigos calculados pelas fichas do grupo, notas e o livro de regras à mão.' },

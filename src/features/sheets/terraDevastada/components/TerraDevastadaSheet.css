@@ -1,0 +1,605 @@
+/* ═══════════════════════════════════════════════════════
+   Ficha Terra Devastada — paleta Vorterium com ferrugem e sangue
+   (o horror sobe do âmbar pro vermelho; a Convicção é o verde da fé).
+   ═══════════════════════════════════════════════════════ */
+
+.td-sheet,
+.td-modal,
+.td-card-conditions {
+  --td-blood:        #e0533d;
+  --td-blood-dim:    rgba(224, 83, 61, 0.14);
+  --td-blood-glow:   rgba(224, 83, 61, 0.35);
+  --td-rust:         #c9803a;
+  --td-faith:        #7fd39b;
+  --td-faith-dim:    rgba(127, 211, 155, 0.14);
+  --td-faith-glow:   rgba(127, 211, 155, 0.3);
+  --td-paper:        var(--bg-surface);
+}
+[data-theme="light"] .td-sheet,
+[data-theme="light"] .td-modal,
+[data-theme="light"] .td-card-conditions {
+  --td-blood:      #a3261a;
+  --td-blood-dim:  rgba(163, 38, 26, 0.1);
+  --td-blood-glow: rgba(163, 38, 26, 0.25);
+  --td-rust:       #8a4b12;
+  --td-faith:      #2f7a4a;
+  --td-faith-dim:  rgba(47, 122, 74, 0.12);
+  --td-faith-glow: rgba(47, 122, 74, 0.25);
+}
+
+.td-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.td-sheet__owner { font-size: var(--text-sm); color: var(--text-muted); }
+
+.td-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.td-hint {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.td-hint--center { text-align: center; }
+.td-warn {
+  font-size: var(--text-sm);
+  color: var(--danger-bright);
+}
+.td-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.td-textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+.td-textarea--tall { min-height: 220px; }
+
+/* ── Cabeçalho ── */
+.td-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: var(--space-6);
+  padding: var(--space-5);
+  background:
+    linear-gradient(180deg, var(--td-blood-dim), transparent 45%),
+    var(--td-paper);
+  border: 1px solid var(--border-dim);
+  border-top: 3px solid var(--td-blood);
+  border-radius: var(--radius-lg);
+}
+.td-hero__identity { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.td-hero__name {
+  width: 100%;
+  padding: var(--space-1) 0;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border-base);
+  outline: none;
+}
+.td-hero__name:focus { border-bottom-color: var(--td-blood); }
+.td-hero__name::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+.td-hero__meters { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.td-hero__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2);
+}
+.td-hero__actions .td-btn { text-align: center; line-height: 1.3; }
+
+/* ── Medidores (Horror, Convicção) ── */
+.td-meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.td-meter__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.td-meter__title {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.td-meter--horror .td-meter__title { color: var(--td-blood); }
+.td-meter--conviction .td-meter__title { color: var(--td-faith); }
+.td-meter__value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+  min-width: 3.2ch;
+  text-align: center;
+}
+.td-meter__value small { font-size: var(--text-sm); color: var(--text-muted); font-weight: 500; }
+.td-meter__controls { display: flex; align-items: center; gap: var(--space-2); }
+.td-meter__band { font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }
+.td-meter__band strong { color: var(--text-secondary); }
+.td-meter--band-10 .td-meter__band strong,
+.td-meter--band-7 .td-meter__band strong { color: var(--td-blood); }
+
+/* Trilha de caixinhas. As do Horror mudam de cor por faixa (1–3, 4–6...). */
+/* 12 colunas: o Horror cabe numa linha (grupos de 3), a Convicção em duas. */
+.td-track {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 34px));
+  gap: 4px;
+}
+.td-track__box {
+  min-width: 0;
+  height: 26px;
+  padding: 0;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.td-track__box:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.td-track__box:active { transform: scale(0.9); }
+.td-track__box--gap { margin-right: 6px; }
+.td-meter--horror .td-track__box--on { color: var(--text-inverse); border-color: transparent; }
+.td-meter--horror .td-track__box--on[data-band="1"] { background: var(--accent-dim); }
+.td-meter--horror .td-track__box--on[data-band="2"] { background: var(--td-rust); }
+.td-meter--horror .td-track__box--on[data-band="3"] { background: var(--td-blood); }
+.td-meter--horror .td-track__box--on[data-band="4"] { background: var(--td-blood); box-shadow: 0 0 8px var(--td-blood-glow); }
+.td-meter--conviction .td-track__box { height: 20px; font-size: 9px; }
+.td-meter--conviction .td-track__box--on {
+  color: var(--text-inverse);
+  background: var(--td-faith);
+  border-color: transparent;
+}
+.td-meter--conviction .td-track { gap: 3px; }
+
+/* ── Botões ── */
+.td-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.td-btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
+.td-btn:active:not(:disabled) { transform: scale(0.95); }
+.td-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.td-btn--primary { color: var(--accent-bright); border-color: var(--gilded); }
+.td-btn--primary:hover:not(:disabled) { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--gilded-bright); }
+.td-btn--danger { color: var(--td-blood); border-color: var(--td-blood-glow); }
+.td-btn--danger:hover:not(:disabled) { color: var(--td-blood); background: var(--td-blood-dim); border-color: var(--td-blood); }
+.td-btn--big { padding: var(--space-3); font-size: var(--text-sm); }
+
+.td-stepper { display: inline-flex; align-items: center; gap: var(--space-2); }
+.td-stepper__btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: var(--text-md);
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-stepper__btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
+.td-stepper__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.td-stepper__value {
+  min-width: 3ch;
+  text-align: center;
+  font-family: var(--font-label);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.td-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.td-actions--center { justify-content: center; }
+.td-actions--start { justify-content: flex-start; }
+
+/* ── Abas ── */
+.td-sheet-tabs {
+  align-self: flex-start;
+  max-width: 100%;
+  border-color: var(--td-blood-glow);
+  box-shadow: var(--shadow-md);
+}
+.td-sheet-tabs .campaign-tab { padding: var(--space-2) var(--space-6); font-size: var(--text-sm); }
+.td-tab-panel { display: flex; flex-direction: column; gap: var(--space-6); }
+.td-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+
+/* ── Cards ── */
+.td-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--td-paper);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+}
+.td-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-dim);
+}
+.td-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.td-card__subtitle {
+  margin-left: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-muted);
+}
+.td-counter {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.td-counter--info { color: var(--td-rust); }
+
+/* ── Listas editáveis ── */
+.td-list { display: flex; flex-direction: column; gap: var(--space-2); list-style: none; }
+.td-list:empty { display: none; }
+.td-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* `.input` traz width: 100% — aqui quem manda é o flex da linha. */
+.td-row .td-row__name { flex: 1 1 0; width: auto; min-width: 0; }
+.td-row .td-row__qty { flex: 0 0 72px; width: 72px; text-align: center; }
+.td-row .td-row__select { flex: 0 0 168px; width: 168px; }
+.td-row__remove {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  font-size: var(--text-lg);
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-row__remove:hover { color: var(--danger-bright); border-color: var(--danger); }
+.td-add-row { display: flex; gap: var(--space-2); }
+.td-add-row .input { flex: 1; min-width: 0; }
+.td-trunfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--td-rust);
+  border-radius: var(--radius-md);
+}
+.td-initial-horror {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-dim);
+}
+
+.td-sheet__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* ── Janelas (teste, cena de horror) ── */
+.td-modal { width: min(560px, 100%); }
+.td-modal__title { color: var(--text-primary); }
+.td-horror .td-modal__title { color: var(--td-blood); }
+.td-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.td-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.td-segmented__btn {
+  flex: 1;
+  padding: var(--space-2);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+}
+.td-segmented__btn:hover { color: var(--text-primary); }
+.td-segmented__btn--active { color: var(--accent-bright); background: var(--bg-elevated); box-shadow: var(--shadow-sm); }
+
+.td-picker { display: flex; flex-direction: column; gap: var(--space-3); }
+.td-picker__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.td-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px var(--space-3) 5px var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-void);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.td-chip:active:not(:disabled) { transform: scale(0.94); }
+.td-chip__sign {
+  min-width: 22px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-muted);
+}
+.td-chip--plus { color: var(--text-primary); background: var(--td-faith-dim); border-color: var(--td-faith); }
+.td-chip--plus .td-chip__sign { color: var(--td-faith); }
+.td-chip--minus { color: var(--text-primary); background: var(--td-blood-dim); border-color: var(--td-blood); }
+.td-chip--minus .td-chip__sign { color: var(--td-blood); }
+.td-picker__situation { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.td-picker__situation .td-label { margin: 0; }
+
+.td-pool {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-void);
+  border: 1px dashed var(--gilded);
+  border-radius: var(--radius-md);
+}
+.td-pool__dice {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-bright);
+}
+.td-pool__detail { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.4; }
+
+.td-meta { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.td-meta__btn {
+  min-width: 36px;
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-meta__btn:hover { color: var(--text-primary); }
+.td-meta__btn--active { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--accent-glow); }
+
+.td-boost { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.td-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Dados rolados: pares acendem, 6 brilha, extras do Golpe de Sorte com ↻. */
+.td-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  list-style: none;
+  padding: var(--space-2) 0;
+}
+.td-die {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  animation: tdDieIn 0.35s var(--ease-spring) both;
+}
+.td-die svg { display: block; width: 100%; height: 100%; }
+.td-die__body { fill: var(--bg-void); stroke: currentColor; stroke-width: 2.5; }
+.td-die__pip { fill: currentColor; }
+.td-tray--shaking .td-die { opacity: 0.8; animation: tdDieShake 0.18s ease-in-out infinite alternate; }
+.td-die--even { color: var(--accent-bright); opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+.td-die--even .td-die__body { fill: var(--accent-glow); }
+.td-die--six { color: var(--td-blood); filter: drop-shadow(0 0 8px var(--td-blood-glow)); }
+.td-die--six .td-die__body { fill: var(--td-blood-dim); }
+.td-die--extra::after {
+  content: '↻';
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--td-blood);
+}
+@keyframes tdDieIn {
+  from { transform: translateY(-10px) rotate(-20deg) scale(0.6); opacity: 0; }
+}
+@keyframes tdDieShake {
+  from { transform: rotate(-12deg) translateY(-2px); }
+  to   { transform: rotate(12deg) translateY(2px); }
+}
+
+.td-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  text-align: center;
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  animation: fadeUp 0.25s ease-out;
+}
+.td-result__number {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-bright);
+}
+.td-result__label { font-size: var(--text-sm); color: var(--text-secondary); }
+.td-result__outcome { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-primary); }
+.td-result--sucesso { border-color: var(--td-faith); }
+.td-result--sucesso .td-result__number { color: var(--td-faith); }
+.td-result--parcial { border-color: var(--gilded-bright); }
+.td-result--falha { border-color: var(--td-blood); }
+.td-result--falha .td-result__number { color: var(--td-blood); }
+
+/* Cena de horror: listas de opções com pontos. */
+.td-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.td-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-option:hover { background: var(--bg-void); }
+.td-option input { accent-color: var(--td-blood); flex-shrink: 0; }
+.td-option__label { flex: 1; line-height: 1.4; }
+.td-option__points {
+  font-family: var(--font-label);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.td-option--active { color: var(--text-primary); background: var(--td-blood-dim); border-color: var(--td-blood-glow); }
+.td-option--active .td-option__points { color: var(--td-blood); }
+.td-horror__sum {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-void);
+  border-left: 3px solid var(--td-blood);
+  border-radius: var(--radius-sm);
+}
+.td-horror__sum strong { color: var(--td-blood); }
+.td-horror__relevar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-dim);
+}
+
+/* Condições nos cards de resumo do mestre. */
+.td-card-conditions {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--td-rust);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Celular ── */
+@media (max-width: 900px) {
+  .td-hero { grid-template-columns: minmax(0, 1fr); }
+  .td-columns { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .td-hero { padding: var(--space-4); }
+  .td-hero__name { font-size: var(--text-2xl); }
+  .td-hero__actions .td-btn { padding: var(--space-2); }
+  .td-sheet-tabs .campaign-tab { padding: var(--space-2) var(--space-3); }
+  .td-row { flex-wrap: wrap; }
+  .td-row .td-row__name { flex-basis: calc(100% - 38px); }
+  .td-row .td-row__select { flex: 1 1 0; width: auto; }
+  .td-row--item .td-row__name { flex-basis: calc(100% - 80px - 38px); }
+  .td-track { gap: 3px; }
+  .td-track__box--gap { margin-right: 4px; }
+  .td-die { width: 42px; height: 42px; }
+  .td-modal__body { padding: var(--space-3); }
+  .td-meta__btn { min-width: 30px; padding: var(--space-1) 6px; }
+}

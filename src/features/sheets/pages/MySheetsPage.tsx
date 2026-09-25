@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { getMySheets, isSheetFilled } from '../services/sheetService'
 import { getMyAltheriumSheetsEverywhere } from '../altherium/services/altheriumSheetService'
 import { RAIZES } from '../altherium/constants/altherium'
+import { getMyTdSheetsEverywhere } from '../terraDevastada/services/tdSheetService'
 import { getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import './MySheetsPage.css'
 
 // ────────────────────────────────────────────────────────
 // Minhas fichas — os personagens da pessoa em todas as campanhas, de
-// todos os sistemas (ficha simples do Genérico e ficha de Altherium,
-// que vivem em tabelas diferentes). "Abrir ficha" leva direto pra
+// todos os sistemas (ficha simples do Genérico, de Altherium e de Terra
+// Devastada, que vivem em tabelas diferentes). "Abrir ficha" leva direto pra
 // sub-aba Ficha da Sessão daquela campanha.
 // ────────────────────────────────────────────────────────
 
@@ -37,7 +38,9 @@ function formatRelativeTime(iso: string): string {
 }
 
 async function loadAllSheets(): Promise<MySheetItem[]> {
-  const [simple, altherium] = await Promise.all([getMySheets(), getMyAltheriumSheetsEverywhere()])
+  const [simple, altherium, td] = await Promise.all([
+    getMySheets(), getMyAltheriumSheetsEverywhere(), getMyTdSheetsEverywhere(),
+  ])
 
   const items: MySheetItem[] = [
     ...simple.map((s) => ({
@@ -65,6 +68,20 @@ async function loadAllSheets(): Promise<MySheetItem[]> {
         ...(s.raiz ? [RAIZES.find((r) => r.id === s.raiz)?.label ?? s.raiz] : []),
         `Nível ${s.level}`,
         `Vitalidade ${s.vitality_current}/${s.vitality_max}`,
+      ],
+      updatedAt:     s.updated_at,
+    })),
+    ...td.map((s) => ({
+      id:            s.id,
+      campaignId:    s.campaign_id,
+      campaignName:  s.campaign_name,
+      system:        'terra_devastada' as const,
+      characterName: s.character_name,
+      filled:        Boolean(s.character_name?.trim()) && s.traits.length > 0,
+      stats:         [
+        ...(s.concept ? [s.concept] : []),
+        `Horror ${s.horror}/12`,
+        `Convicção ${s.conviction}/24`,
       ],
       updatedAt:     s.updated_at,
     })),

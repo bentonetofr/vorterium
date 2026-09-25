@@ -7,6 +7,7 @@ import {
 } from '../services/campaignOverviewService'
 import { getCampaignSheets, getMySheet } from '../../sheets/services/sheetService'
 import { getCampaignAltheriumSheets } from '../../sheets/altherium/services/altheriumSheetService'
+import { getCampaignTdSheets } from '../../sheets/terraDevastada/services/tdSheetService'
 import {
   getInitiativeParticipants,
   getInitiativeState,
@@ -95,6 +96,12 @@ async function loadSheetsSummary(campaign: CampaignWithRole): Promise<SheetsSumm
   if (campaign.system === 'altherium') {
     // RLS: o mestre recebe todas as fichas da campanha; o jogador só a dele.
     const sheets = await getCampaignAltheriumSheets(campaign.id)
+    return isMaster
+      ? { kind: 'master', count: sheets.length }
+      : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }
+  }
+  if (campaign.system === 'terra_devastada') {
+    const sheets = await getCampaignTdSheets(campaign.id)
     return isMaster
       ? { kind: 'master', count: sheets.length }
       : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }

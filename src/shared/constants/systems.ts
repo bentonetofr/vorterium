@@ -5,7 +5,7 @@
 // Usuários NÃO criam sistemas personalizados.
 // ────────────────────────────────────────────────────────
 
-export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium'
+export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada'
 
 export type SystemStatus = 'available' | 'preview' | 'coming-soon'
 
@@ -39,6 +39,13 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Sistema próprio do universo de Altherium: raízes, atributos, domínios e recursos do Livro de Regras 1.0.',
     status:      'available',
     icon:        '✦',
+  },
+  {
+    id:          'terra_devastada',
+    label:       'Terra Devastada',
+    description: 'Horror de sobrevivência num apocalipse zumbi: características livres, testes de pares em d6, Horror e Convicção.',
+    status:      'available',
+    icon:        '☣',
   },
 ]
 

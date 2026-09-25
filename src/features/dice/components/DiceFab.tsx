@@ -81,6 +81,13 @@ function totalClass(roll: DiceRoll): string {
   if (!breakdown) return 'dice-toast__total'
   // crit: apenas 1 termo de dado com qty=1, sem modifier, resultado = sides
   const diceTerms = breakdown.filter((b) => b.type !== 'modifier')
+  // Teste de pares: nenhum par é a falha; Golpe de Sorte (algum 6) brilha.
+  const evens = diceTerms.find((b) => b.type === 'evens')
+  if (evens && evens.type === 'evens') {
+    if (roll.result === 0) return 'dice-toast__total dice-toast__total--min'
+    if (evens.bonus.length > 0) return 'dice-toast__total dice-toast__total--max'
+    return 'dice-toast__total'
+  }
   if (diceTerms.length === 1) {
     const t = diceTerms[0]
     if ('sides' in t) {
@@ -101,6 +108,7 @@ function ToastBreakdown({ breakdown }: { breakdown: RollBreakdownItem[] }) {
   const modTerm   = breakdown.find(
     (b): b is Extract<RollBreakdownItem, { type: 'modifier' }> => b.type === 'modifier'
   )
+  const isEvens = diceTerms.some((b) => b.type === 'evens')
 
   return (
     <dl className="dice-breakdown">
@@ -114,6 +122,18 @@ function ToastBreakdown({ breakdown }: { breakdown: RollBreakdownItem[] }) {
                 {item.quantity > 1 && (
                   <span className="dice-breakdown__sub"> = {item.subtotal}</span>
                 )}
+              </dd>
+            </div>
+          )
+        }
+        if (item.type === 'evens') {
+          return (
+            <div key={idx} className="dice-breakdown__row">
+              <dt className="dice-breakdown__label">{item.notation}</dt>
+              <dd className="dice-breakdown__value">
+                {item.results.join(', ')}
+                {item.bonus.length > 0 && <> · 6 de novo: {item.bonus.join(', ')}</>}
+                <span className="dice-breakdown__sub"> → {item.subtotal} {item.subtotal === 1 ? 'par' : 'pares'}</span>
               </dd>
             </div>
           )
@@ -134,7 +154,7 @@ function ToastBreakdown({ breakdown }: { breakdown: RollBreakdownItem[] }) {
       })}
       {modTerm && (
         <div className="dice-breakdown__row">
-          <dt className="dice-breakdown__label">Modificador</dt>
+          <dt className="dice-breakdown__label">{isEvens ? 'Convicção' : 'Modificador'}</dt>
           <dd className="dice-breakdown__value">{signStr(modTerm.value)}</dd>
         </div>
       )}

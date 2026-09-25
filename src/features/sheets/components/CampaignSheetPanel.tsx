@@ -1,6 +1,7 @@
 import { SimpleSheetPanel }           from './SimpleSheetPanel'
 import { DndComingSoon }             from '../dnd/DndComingSoon'
 import { AltheriumSheetPanel }       from '../altherium/components/AltheriumSheetPanel'
+import { TdSheetPanel }              from '../terraDevastada/components/TdSheetPanel'
 import type { CampaignWithRole }     from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -24,6 +25,14 @@ export function CampaignSheetPanel({ campaign }: CampaignSheetPanelProps) {
     case 'altherium':
       return (
         <AltheriumSheetPanel
+          campaignId={campaign.id}
+          userRole={campaign.role}
+        />
+      )
+
+    case 'terra_devastada':
+      return (
+        <TdSheetPanel
           campaignId={campaign.id}
           userRole={campaign.role}
         />

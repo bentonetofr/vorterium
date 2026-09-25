@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  EVENS_MAX_DICE,
   QUICK_FORMULAS,
   getCampaignRolls,
   parseDiceFormula,
   rollDice,
+  rollEvensTest,
   subscribeToRolls,
 } from '../services/diceService'
 import { getCampaignMembers } from '../../members/services/memberService'
+import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import type { DiceRoll, DiceRollWithProfile } from '../../../shared/types'
 import './DiceRollerPanel.css'
 
@@ -51,7 +54,13 @@ function signStr(n: number): string {
 
 const EXAMPLE_FORMULAS = ['2d6+3', '2#d20', '2@d20', '1#d3+4']
 
+const EVENS_POOLS = Array.from({ length: EVENS_MAX_DICE }, (_, i) => i + 1)
+
 export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRollerPanelProps) {
+  // Terra Devastada rola testes de pares — atalho de 1d a 6d no topo.
+  const { campaign } = useCurrentCampaign()
+  const isTerraDevastada = campaign?.id === campaignId && campaign.system === 'terra_devastada'
+
   // ── Rolagem ──
   const [rolling, setRolling]     = useState(false)
   const [rollError, setRollError] = useState<string | null>(null)
@@ -130,12 +139,14 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
   }, [campaignId, currentUserId])
 
   // ── Executar rolagem ──
-  async function executeRoll(formula: string) {
+  async function executeRoll(formula: string, evensPool?: number) {
     setRollError(null)
     setFormulaError(null)
     setRolling(true)
     try {
-      const roll = await rollDice(campaignId, formula, isPrivate)
+      const roll = evensPool != null
+        ? await rollEvensTest(campaignId, evensPool, { isPrivate })
+        : await rollDice(campaignId, formula, isPrivate)
       onRoll(roll)
       await loadHistory(true)
     } catch (err) {
@@ -198,6 +209,27 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
         </svg>
         Rolagem privada
       </label>
+
+      {/* ── Teste de pares (Terra Devastada) ── */}
+      {isTerraDevastada && (
+        <div className="dice-section">
+          <h4 className="dice-section__title">Teste de pares</h4>
+          <div className="quick-roll-btns" role="group" aria-label="Teste de pares">
+            {EVENS_POOLS.map((n) => (
+              <button
+                key={n}
+                className="quick-roll-btn"
+                onClick={() => executeRoll('', n)}
+                disabled={rolling}
+                aria-label={`Teste de pares com ${n}d6`}
+              >
+                {n}d
+              </button>
+            ))}
+          </div>
+          <p className="dice-custom__examples-label">Conta os pares; todo 6 rola de novo.</p>
+        </div>
+      )}
 
       {/* ── Rolagem rápida ── */}
       <div className="dice-section">
@@ -358,6 +390,15 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
                               </span>
                             )
                           }
+                          if (t.type === 'evens') {
+                            return (
+                              <span key={idx}>
+                                {t.notation}: {t.results.join(', ')}
+                                {t.bonus.length > 0 && <> · 6 de novo: {t.bonus.join(', ')}</>}
+                                {' → '}{t.subtotal} {t.subtotal === 1 ? 'par' : 'pares'}
+                              </span>
+                            )
+                          }
                           if (t.type === 'keep_highest' || t.type === 'keep_lowest') {
                             return (
                               <span key={idx}>
@@ -370,7 +411,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
                         })}
                         {roll.roll_breakdown?.find((b) => b.type === 'modifier') && (
                           <span>
-                            {' · '}mod{signStr((roll.roll_breakdown.find((b) => b.type === 'modifier') as Extract<typeof roll.roll_breakdown[0], { type: 'modifier' }>).value)}
+                            {' · '}{roll.roll_mode === 'evens' ? 'Convicção ' : 'mod'}{signStr((roll.roll_breakdown.find((b) => b.type === 'modifier') as Extract<typeof roll.roll_breakdown[0], { type: 'modifier' }>).value)}
                           </span>
                         )}
                       </div>
