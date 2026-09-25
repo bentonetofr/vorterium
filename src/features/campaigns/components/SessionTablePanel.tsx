@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useLocation } from 'react-router-dom'
 import { CampaignChatPanel } from '../../chat/components/CampaignChatPanel'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
@@ -42,6 +42,16 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   )
   const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveSubTab)
+
+  // Já na Sessão e chegou um novo pedido de sub-aba (ex.: "Assistir" do
+  // aviso de transmissão): troca sem remontar a página.
+  const handledLocationKey = useRef(location.key)
+  useEffect(() => {
+    if (location.key === handledLocationKey.current) return
+    handledLocationKey.current = location.key
+    const wanted = (location.state as NavigationState | null)?.initialSessionSubTab
+    if (wanted) selectTab(wanted)
+  }, [location.key, location.state, selectTab])
 
   const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
 
@@ -87,7 +97,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         hidden={activeSubTab !== 'mesa'}
         className="anim-tab-panel"
       >
-        {activeSubTab === 'mesa' && <MesaPanel />}
+        {activeSubTab === 'mesa' && <MesaPanel campaignId={campaign.id} />}
       </div>
 
       <div

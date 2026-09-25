@@ -1,0 +1,81 @@
+/* Aviso "o mestre está transmitindo" — fica na pilha do canto (junto do sino e do dado). */
+.mesa-notice {
+  position: relative;
+  overflow: hidden;
+  width: min(320px, calc(100vw - var(--space-8)));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(190, 30, 45, 0.18), transparent 60%),
+    var(--bg-elevated);
+  border: 1px solid rgba(224, 65, 79, 0.55);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 24px rgba(190, 30, 45, 0.2);
+  animation: mesa-notice-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes mesa-notice-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+}
+
+.mesa-notice__live {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(190, 30, 45, 0.92);
+  color: #fff;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.mesa-notice__live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: mesa-notice-pulse 1.6s ease-in-out infinite;
+}
+@keyframes mesa-notice-pulse { 50% { opacity: 0.25; } }
+
+.mesa-notice__message { margin: 0; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.4; }
+.mesa-notice__message strong { color: var(--accent-bright); }
+.mesa-notice__campaign {
+  margin: 2px 0 0;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.mesa-notice__actions { display: flex; align-items: center; gap: var(--space-2); }
+.mesa-notice__watch { flex: 1; padding: var(--space-2) var(--space-4); }
+.mesa-notice__close {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-dim);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.mesa-notice__close:hover { color: var(--text-primary); border-color: var(--border-bright); }
+
+.mesa-notice__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: rgba(224, 65, 79, 0.8);
+  transform-origin: left;
+  animation: mesa-notice-progress linear forwards;
+}
+@keyframes mesa-notice-progress { to { transform: scaleX(0); } }

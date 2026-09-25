@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { captureErrorMessage } from './mesaRtc'
 import { EMPTY_SNAPSHOT, MesaSession, type MesaSnapshot } from './mesaSession'
+import { getMesaImageShowUrl } from './services/mesaImagesService'
 
 // ────────────────────────────────────────────────────────
 // Transmissão da Mesa no nível do layout: a conexão vive enquanto a pessoa
@@ -15,11 +16,21 @@ import { EMPTY_SNAPSHOT, MesaSession, type MesaSnapshot } from './mesaSession'
 interface MesaStreamValue extends MesaSnapshot {
   enabled:      boolean
   isMaster:     boolean
+  /** A aba Mesa está aberta agora (o aviso de "ao vivo" não aparece por cima dela). */
+  viewing:      boolean
+  setViewing:   (v: boolean) => void
   // Mestre
   starting:     boolean
   shareError:   string | null
   startShare:   () => Promise<void>
+  switchScreen: () => Promise<void>
   stopShare:    () => void
+  setPaused:    (paused: boolean) => void
+  /** Coloca uma imagem da galeria na mesa (gera o link pros jogadores). */
+  showImage:    (image: { id: string; path: string; name: string }) => Promise<void>
+  hideImage:    () => void
+  /** Ponteiro: x/y de 0 a 1 dentro da imagem. */
+  ping:         (x: number, y: number) => void
   // Jogador
   volume:       number
   setVolume:    (v: number) => void
@@ -58,6 +69,7 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
   const [snap, setSnap]             = useState<MesaSnapshot>(EMPTY_SNAPSHOT)
   const [starting, setStarting]     = useState(false)
   const [shareError, setShareError] = useState<string | null>(null)
+  const [viewing, setViewing]       = useState(false)
 
   useEffect(() => {
     if (!campaignId || !userId) return
@@ -96,7 +108,31 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const switchScreen = useCallback(async () => {
+    const session = sessionRef.current
+    if (!session) return
+    setShareError(null)
+    setStarting(true)
+    try {
+      await session.switchScreen()
+    } catch (err) {
+      setShareError(captureErrorMessage(err))
+    } finally {
+      setStarting(false)
+    }
+  }, [])
+
+  const showImage = useCallback(async (image: { id: string; path: string; name: string }) => {
+    const session = sessionRef.current
+    if (!session) return
+    const url = await getMesaImageShowUrl(image.path)
+    session.showImage({ id: image.id, url, name: image.name })
+  }, [])
+
   const stopShare = useCallback(() => sessionRef.current?.stopShare(), [])
+  const setPaused = useCallback((paused: boolean) => { void sessionRef.current?.setPaused(paused) }, [])
+  const hideImage = useCallback(() => sessionRef.current?.hideImage(), [])
+  const ping      = useCallback((x: number, y: number) => sessionRef.current?.ping(x, y), [])
   const retry     = useCallback(() => sessionRef.current?.retry(), [])
 
   // ── Som do jogador ─────────────────────────────────────
@@ -136,10 +172,17 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     ...snap,
     enabled: Boolean(campaignId && userId),
     isMaster,
+    viewing,
+    setViewing,
     starting,
     shareError,
     startShare,
+    switchScreen,
     stopShare,
+    setPaused,
+    showImage,
+    hideImage,
+    ping,
     volume,
     setVolume,
     muted,

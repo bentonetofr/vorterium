@@ -12,6 +12,7 @@ import { CurrentCampaignProvider, useCurrentCampaign } from '../../features/camp
 import { CampaignSidebarSubmenu } from '../../features/campaigns/components/CampaignSidebarSubmenu'
 import { RulebookHostProvider } from '../../features/rulebook/RulebookHost'
 import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
+import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { Presence } from '../../shared/components/Presence'
 import { Collapse } from '../../shared/components/Collapse'
 import './PrivateLayout.css'
@@ -225,6 +226,7 @@ function PrivateLayoutContent() {
       </nav>
     </div>
     <div className="dice-fab-wrapper">
+      <MesaLiveNotice />
       <NotificationPopup />
       <NotificationBell />
       <DiceFab />
