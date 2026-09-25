@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { CAMPAIGN_SECTIONS } from '../campaignSections'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 
 interface CampaignSidebarSubmenuProps {
   campaignId: string
@@ -11,6 +12,7 @@ interface CampaignSidebarSubmenuProps {
 
 /** Lista de seções da campanha — reaproveitada no acordeão da barra lateral (desktop) e no menu suspenso da barra de topo (mobile). */
 export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, onNavigate }: CampaignSidebarSubmenuProps) {
+  const { live } = useMesaStream()
   return (
     <div className="campaign-submenu anim-stagger">
       {CAMPAIGN_SECTIONS.map((section) => (
@@ -23,6 +25,9 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
           onClick={onNavigate}
         >
           <span className="campaign-submenu__label">{section.label}</span>
+          {section.id === 'mesa-sessao' && live && (
+            <span className="campaign-submenu__live" title="Transmissão ao vivo na Mesa">ao vivo</span>
+          )}
           {section.id === 'mesa-sessao' && chatUnread > 0 && (
             <span className="campaign-submenu__badge">{chatUnread > 99 ? '99+' : chatUnread}</span>
           )}

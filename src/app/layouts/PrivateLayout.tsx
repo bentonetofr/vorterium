@@ -11,6 +11,7 @@ import { ActiveChatProvider }  from '../../features/chat/ActiveChatContext'
 import { CurrentCampaignProvider, useCurrentCampaign } from '../../features/campaigns/CurrentCampaignContext'
 import { CampaignSidebarSubmenu } from '../../features/campaigns/components/CampaignSidebarSubmenu'
 import { RulebookHostProvider } from '../../features/rulebook/RulebookHost'
+import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
 import { Presence } from '../../shared/components/Presence'
 import { Collapse } from '../../shared/components/Collapse'
 import './PrivateLayout.css'
@@ -20,9 +21,11 @@ export function PrivateLayout() {
     <ActiveChatProvider>
     <DiceRollerProvider>
     <CurrentCampaignProvider>
+    <MesaStreamProvider>
     <RulebookHostProvider>
       <PrivateLayoutContent />
     </RulebookHostProvider>
+    </MesaStreamProvider>
     </CurrentCampaignProvider>
     </DiceRollerProvider>
     </ActiveChatProvider>

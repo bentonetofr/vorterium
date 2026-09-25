@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   Mesa da sessão — sub-abas (Chat / Ficha / Atividade / Iniciativa)
+   Sessão — sub-abas (Mesa / Ficha / Chat / Atividade / Iniciativa / ...)
    ═══════════════════════════════════════════════════════ */
 
 .session-table {
@@ -20,8 +20,12 @@
   font-size: var(--text-sm);
   letter-spacing: 0.1em;
 }
+/* 6+ abas (Mesa, Bestiário, Livro...): menos folga pra caberem numa linha. */
+.session-table__subtabs:has(> .campaign-tab:nth-of-type(6)) .campaign-tab {
+  padding: var(--space-3) var(--space-5);
+}
 
-/* Celular: as abas (4, ou 5 com o Livro) dividem a largura toda, sem
+/* Celular: as abas (até 5) dividem a largura toda, sem
    rolar pro lado — uma coluna por aba, quantas houver. */
 @media (max-width: 640px) {
   .session-table__subtabs {
@@ -37,5 +41,13 @@
     padding: var(--space-2) 2px;
     font-size: 10px;
     letter-spacing: 0.02em;
+  }
+  /* 6+ abas não cabem numa linha de celular: duas linhas de 4. */
+  .session-table__subtabs:has(> .campaign-tab:nth-of-type(6)) {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .session-table__subtabs:has(> .campaign-tab:nth-of-type(6)) .campaign-tab {
+    padding: var(--space-2) 2px;
   }
 }

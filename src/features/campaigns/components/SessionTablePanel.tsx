@@ -6,6 +6,8 @@ import { CampaignActivityPanel } from '../../activity/components/CampaignActivit
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPanel'
 import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
+import { MesaPanel } from '../../mesa/components/MesaPanel'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
@@ -21,7 +23,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['ficha', 'chat', 'atividade', 'iniciativa', 'bestiario', 'livro']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'chat', 'atividade', 'iniciativa', 'bestiario', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -33,8 +35,11 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // navegação (CampaignAreaLayout.handleNavigate), lido só na primeira
   // renderização.
   const location = useLocation()
-  const initialSubTab = (location.state as NavigationState | null)?.initialSessionSubTab ?? 'ficha'
-  const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(initialSubTab)
+  const mesa = useMesaStream()
+  // Com transmissão rolando, a Sessão já abre na Mesa.
+  const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(
+    () => (location.state as NavigationState | null)?.initialSessionSubTab ?? (mesa.live ? 'mesa' : 'ficha'),
+  )
   const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveSubTab)
 
@@ -43,6 +48,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // Mestre vê a ficha de vários jogadores nessa aba — plural só faz
   // sentido na visão dele; jogador só tem a própria ficha.
   const subTabs: SubTab[] = [
+    { id: 'mesa',       label: 'Mesa' },
     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
     { id: 'chat',       label: 'Chat' },
     { id: 'atividade',  label: 'Atividade' },
@@ -65,13 +71,25 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             className={`campaign-tab ${activeSubTab === tab.id ? 'campaign-tab--active' : ''}`}
             onClick={() => selectTab(tab.id)}
           >
-            <span className="campaign-tab__label">{tab.label}</span>
+            <span className="campaign-tab__label">
+              {tab.label}
+              {tab.id === 'mesa' && mesa.live && <span className="campaign-tab__live" aria-label="ao vivo" />}
+            </span>
           </button>
         ))}
         <TabIndicator activeKey={activeSubTab} />
       </nav>
 
       <div style={panelsStyle}>
+      <div
+        id="session-subtabpanel-mesa"
+        role="tabpanel"
+        hidden={activeSubTab !== 'mesa'}
+        className="anim-tab-panel"
+      >
+        {activeSubTab === 'mesa' && <MesaPanel />}
+      </div>
+
       <div
         id="session-subtabpanel-chat"
         role="tabpanel"

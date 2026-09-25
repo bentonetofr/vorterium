@@ -1,0 +1,232 @@
+/* ═══════════════════════════════════════════════════════
+   Mesa — transmissão de tela do mestre
+   ═══════════════════════════════════════════════════════ */
+
+.mesa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Palco 16:9 — vídeo inteiro (contain), fundo preto nas sobras. */
+.mesa-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #05070c;
+  border: 1px solid var(--border-dim);
+}
+.mesa-stage:fullscreen { border: 0; border-radius: 0; aspect-ratio: auto; }
+
+.mesa-stage__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.mesa-stage--live { border-color: var(--gilded); box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.12), 0 8px 30px rgba(0, 0, 0, 0.35); }
+
+.mesa-stage--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  text-align: center;
+  background:
+    radial-gradient(ellipse at center, rgba(212, 175, 55, 0.07), transparent 65%),
+    var(--bg-surface);
+}
+.mesa-icon { width: 56px; height: 56px; color: var(--accent-bright); opacity: 0.85; }
+.mesa-stage__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+.mesa-stage__text { margin: 0; max-width: 460px; font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.6; }
+.mesa-stage__cta { margin-top: var(--space-2); min-width: 200px; }
+
+/* Selo "Ao vivo" */
+.mesa-live-badge {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(190, 30, 45, 0.92);
+  color: #fff;
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.mesa-live-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  animation: mesa-pulse 1.6s ease-in-out infinite;
+}
+@keyframes mesa-pulse { 50% { opacity: 0.25; } }
+
+/* Controles sobre o vídeo — aparecem ao passar o mouse (sempre no toque). */
+.mesa-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-3) var(--space-3);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+.mesa-controls--corner {
+  left: auto;
+  top: var(--space-3);
+  right: var(--space-3);
+  bottom: auto;
+  padding: 0;
+  background: none;
+}
+.mesa-stage:hover .mesa-controls,
+.mesa-stage:focus-within .mesa-controls { opacity: 1; }
+@media (hover: none) { .mesa-controls { opacity: 1; } }
+
+.mesa-ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.mesa-ctrl:hover { background: rgba(0, 0, 0, 0.8); border-color: var(--gilded); }
+.mesa-volume { width: 120px; }
+.mesa-controls__spacer { flex: 1; }
+.mesa-controls__note { font-size: var(--text-xs); color: rgba(255, 255, 255, 0.75); }
+
+/* "Ativar som" quando o navegador barrou o autoplay com som. */
+.mesa-unlock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: 999px;
+  border: 1px solid var(--gilded);
+  background: rgba(10, 12, 20, 0.88);
+  color: var(--accent-bright);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+.mesa-unlock:hover { background: rgba(10, 12, 20, 0.97); }
+
+/* Barra do mestre */
+.mesa-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+}
+.mesa-bar__info { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.mesa-bar__count { font-size: var(--text-sm); color: var(--text-secondary); }
+.mesa-audio-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 158, 120, 0.5);
+  background: rgba(77, 158, 120, 0.1);
+  color: #6ec99a;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.mesa-audio-tag--off { border-color: rgba(255, 180, 171, 0.4); background: rgba(255, 180, 171, 0.07); color: var(--danger); }
+
+.mesa-viewers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.mesa-viewer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  font-size: var(--text-xs);
+}
+.mesa-viewer__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.mesa-viewer--connected .mesa-viewer__dot { background: #4dc98a; box-shadow: 0 0 6px rgba(77, 201, 138, 0.6); }
+.mesa-viewer--disconnected .mesa-viewer__dot { background: #e0b04d; }
+.mesa-viewer__name { color: var(--text-primary); font-weight: 600; }
+.mesa-viewer__state { color: var(--text-muted); }
+
+.mesa-hint { margin: 0; font-size: var(--text-xs); color: var(--text-muted); line-height: 1.6; }
+.mesa-hint strong { color: var(--text-secondary); }
+
+.mesa-msg {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+.mesa-msg--error {
+  background: rgba(255, 180, 171, 0.07);
+  border: 1px solid rgba(255, 180, 171, 0.4);
+  color: #ffb4ab;
+}
+
+@media (max-width: 640px) {
+  .mesa-stage--empty { aspect-ratio: auto; min-height: 260px; }
+  .mesa-volume { width: 90px; }
+  .mesa-bar .btn { width: 100%; }
+}
+
+/* Selo "ao vivo" na aba Mesa */
+.campaign-tab__live {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #e0323f;
+  box-shadow: 0 0 6px rgba(224, 50, 63, 0.7);
+  vertical-align: middle;
+  animation: mesa-pulse 1.6s ease-in-out infinite;
+}

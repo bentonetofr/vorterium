@@ -297,6 +297,19 @@
   justify-content: center;
   margin-left: auto;
 }
+.campaign-submenu__live {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(190, 30, 45, 0.9);
+  color: #fff;
+  font-family: var(--font-label);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.campaign-submenu__live + .campaign-submenu__badge { margin-left: var(--space-1); }
 .campaign-submenu__badge--private { background: var(--gilded-bright); color: var(--bg-base); }
 
 /* ── Conteúdo principal ── */
