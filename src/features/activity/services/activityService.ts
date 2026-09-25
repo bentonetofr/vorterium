@@ -23,7 +23,7 @@ export type ActivityType =
   | 'session_created'    | 'session_updated'    | 'session_deleted'
   | 'sheet_updated'      | 'dice_rolled'
   | 'note_created'       | 'note_updated'       | 'note_deleted'
-  | 'triumph_used'
+  | 'triumph_used'       | 'sheet_changed'
 
 /** Ícone para cada tipo de evento. */
 export const ACTIVITY_ICONS: Record<string, string> = {
@@ -43,27 +43,70 @@ export const ACTIVITY_ICONS: Record<string, string> = {
   note_updated:       '◇',
   note_deleted:       '◇',
   triumph_used:       '⚜',
+  sheet_changed:      '✎',
 }
 
 // ────────────────────────────────────────────────────────
 // Activity
 // ────────────────────────────────────────────────────────
 
+/** Atividades por página na aba Atividade. */
+export const ACTIVITY_PAGE_SIZE = 40
+
 /**
- * Busca as últimas 20 atividades da campanha, ordenadas por created_at desc.
+ * Atividades da campanha, mais novas primeiro. `before` pagina ("carregar
+ * mais"): só as anteriores a esse instante. A RLS esconde do jogador as
+ * entradas que são só do mestre (ex.: mudanças detalhadas de ficha).
  */
 export async function getCampaignActivity(
-  campaignId: string
+  campaignId: string,
+  { before, limit = ACTIVITY_PAGE_SIZE }: { before?: string; limit?: number } = {},
 ): Promise<CampaignActivity[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('campaign_activity')
     .select('id, campaign_id, actor_id, type, message, metadata, created_at')
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(limit)
+  if (before) query = query.lt('created_at', before)
 
+  const { data, error } = await query
   if (error) throw new Error('Não foi possível carregar as atividades.')
   return (data ?? []) as CampaignActivity[]
+}
+
+/**
+ * Atividade da campanha ao vivo (Realtime, respeita a RLS). Entradas de
+ * ficha são atualizadas no lugar enquanto a pessoa continua mexendo
+ * (UPDATE) e somem se tudo voltar ao que era (DELETE).
+ */
+export function subscribeToCampaignActivity(
+  campaignId: string,
+  handlers: {
+    onUpsert: (row: CampaignActivity) => void
+    onDelete: (id: string) => void
+  },
+): () => void {
+  const channel = supabase
+    .channel(`campaign_activity:${campaignId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'campaign_activity', filter: `campaign_id=eq.${campaignId}` },
+      (payload) => handlers.onUpsert(payload.new as CampaignActivity),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'campaign_activity', filter: `campaign_id=eq.${campaignId}` },
+      (payload) => handlers.onUpsert(payload.new as CampaignActivity),
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'campaign_activity' },
+      (payload) => { const id = (payload.old as { id?: string }).id; if (id) handlers.onDelete(id) },
+    )
+    .subscribe()
+
+  return () => { supabase.removeChannel(channel) }
 }
 
 /**
@@ -175,6 +218,8 @@ export async function getMyRecentActivity(): Promise<ActivityWithCampaign[]> {
     .from('campaign_activity')
     .select('*, campaigns(id, name)')
     .in('campaign_id', campaignIds)
+    // Mudanças detalhadas de ficha ficam só na aba Atividade da campanha.
+    .neq('type', 'sheet_changed')
     .order('created_at', { ascending: false })
     .limit(50)
 

@@ -83,14 +83,9 @@ export async function updateAltheriumSheet(
 
   if (error) throw new Error('Não foi possível salvar a ficha.')
 
-  const sheet = updated as AltheriumSheet
-  const charName = sheet.character_name?.trim()
-  logActivity(
-    sheet.campaign_id,
-    'sheet_updated',
-    charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.',
-  )
-  return sheet
+  // A atividade detalhada (o que mudou, de quanto pra quanto) é registrada
+  // pelo próprio banco — ver migration 20240158.
+  return updated as AltheriumSheet
 }
 
 /**

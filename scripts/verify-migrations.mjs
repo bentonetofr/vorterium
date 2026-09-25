@@ -59,6 +59,7 @@ const expectedMigrations = [
   '20240155000000_altherium_pilar_cards.sql',
   '20240156000000_altherium_runaskin_trail_overrides.sql',
   '20240157000000_terra_devastada.sql',
+  '20240158000000_altherium_detailed_activity.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

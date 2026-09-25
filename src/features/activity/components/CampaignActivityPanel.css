@@ -254,3 +254,137 @@
   font-size: var(--text-xs);
   color: var(--text-muted);
 }
+
+/* ── Filtros (tipo e membro) ── */
+.act-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+.act-filters__chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.act-filter {
+  padding: 4px var(--space-3);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.act-filter:hover { color: var(--text-primary); border-color: var(--border-bright); }
+.act-filter--active { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--accent-glow); }
+.act-filters .act-filters__player { width: 220px; max-width: 100%; }
+
+/* ── Dias ── */
+.act-days { display: flex; flex-direction: column; gap: var(--space-4); }
+.act-day { display: flex; flex-direction: column; gap: var(--space-2); }
+.act-day__label {
+  margin: 0;
+  padding-bottom: var(--space-1);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-dim);
+  border-bottom: 1px solid var(--border-dim);
+}
+.act-day__label::first-letter { text-transform: uppercase; }
+.act-item__body { flex: 1; }
+.act-more { align-self: center; }
+
+/* ── Mudança de ficha (só o mestre vê) ── */
+.act-sheet { display: flex; flex-direction: column; gap: var(--space-2); }
+.act-sheet__owner { color: var(--text-muted); }
+.act-sheet__editor { color: var(--warning); }
+
+.act-changes {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-left: 2px solid var(--gilded);
+  border-radius: var(--radius-md);
+}
+.act-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px var(--space-2);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+.act-change__label { color: var(--text-secondary); font-weight: 600; }
+.act-change__values {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-label);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  word-break: break-word;
+}
+.act-change__from { color: var(--text-muted); text-decoration: line-through; text-decoration-color: rgba(160, 142, 122, 0.5); }
+.act-change__arrow { color: var(--text-muted); }
+.act-change__to { color: var(--text-primary); font-weight: 700; }
+.act-change__delta {
+  padding: 0 6px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  border-radius: 999px;
+}
+.act-change--up .act-change__delta   { color: #6fcf8e; background: rgba(111, 207, 142, 0.12); }
+.act-change--down .act-change__delta { color: var(--danger-bright); background: rgba(255, 138, 125, 0.12); }
+.act-change__note { font-style: italic; color: var(--text-muted); }
+.act-change--added .act-change__note   { color: #6fcf8e; font-style: normal; font-weight: 600; }
+.act-change--removed .act-change__note { color: var(--danger-bright); font-style: normal; font-weight: 600; }
+.act-change__details {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.act-change__long { flex-basis: 100%; font-size: var(--text-xs); }
+.act-change__long summary { cursor: pointer; color: var(--accent-bright); }
+.act-change__long-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.act-change__long-grid span {
+  display: block;
+  font-family: var(--font-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.act-change__long-grid p {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+[data-theme="light"] .act-change--up .act-change__delta,
+[data-theme="light"] .act-change--added .act-change__note { color: #2a7050; }
+
+@media (max-width: 560px) {
+  .act-change__long-grid { grid-template-columns: 1fr; }
+  .act-filters .act-filters__player { width: 100%; }
+}
