@@ -144,7 +144,7 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
       return
     }
     if (file.size > CAMPAIGN_COVER_MAX_BYTES) {
-      setCoverError('A capa deve ter no máximo 5 MB.')
+      setCoverError('A capa deve ter no máximo 10 MB.')
       return
     }
 
@@ -378,7 +378,7 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
             )}
 
             <p className="settings-panel__hint">
-              JPG, PNG ou WebP. Tamanho máximo de 5 MB.
+              JPG, PNG ou WebP. Tamanho máximo de 10 MB.
             </p>
 
             {coverError && (

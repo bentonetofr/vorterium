@@ -4,7 +4,7 @@ import { logActivity } from '../../activity/services/activityService'
 import { isSupportedSystem } from '../../../shared/constants/systems'
 import type { Campaign, CampaignMember, CampaignWithRole, CampaignSystem } from '../../../shared/types'
 
-export const CAMPAIGN_COVER_MAX_BYTES = 5 * 1024 * 1024
+export const CAMPAIGN_COVER_MAX_BYTES = 10 * 1024 * 1024
 export const CAMPAIGN_COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 
 // ────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ export async function uploadCampaignCover(campaignId: string, file: File): Promi
     throw new Error('Escolha uma imagem JPG, PNG ou WebP.')
   }
   if (file.size > CAMPAIGN_COVER_MAX_BYTES) {
-    throw new Error('A capa deve ter no máximo 5 MB.')
+    throw new Error('A capa deve ter no máximo 10 MB.')
   }
 
   const path = `${campaignId}/cover`
