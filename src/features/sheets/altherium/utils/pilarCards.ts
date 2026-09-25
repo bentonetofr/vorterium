@@ -3,9 +3,9 @@
 //
 // O número de um triunfo é quantas COMBINAÇÕES DE NAIPE ele exige. O
 // jogador escolhe um naipe e vira cartas do baralho até juntar essa
-// quantidade — toda carta virada gasta 1 das cartas do Pilar (13 × nível,
-// só voltam no descanso). Se as cartas acabarem antes, o triunfo falha e
-// as viradas se perdem.
+// quantidade — toda carta puxada gasta 1 das cartas do Pilar (13 × nível,
+// só voltam no descanso). Ele puxa uma por vez e pode desistir; se
+// desistir ou as cartas acabarem, o triunfo falha e as puxadas se perdem.
 //
 //   carta do naipe escolhido → 1 combinação
 //   Ás do naipe escolhido    → 2 combinações
@@ -73,69 +73,20 @@ export function cardValue(code: string, suit: Suit): { combos: number; instant: 
   return { combos: card.rank === 'A' ? 2 : 1, instant: false }
 }
 
-export interface PilarDraw {
-  /** Cartas viradas, na ordem. */
-  drawn:      string[]
-  /** Combinações a cada carta (pra animação mostrar o progresso). */
-  progress:   number[]
-  combos:     number
-  success:    boolean
-  /** Saiu o Ás de espadas. */
-  instant:    boolean
-  /** Cartas gastas (= drawn.length). */
-  spent:      number
-  /** O que sobrou do baralho depois de virar. */
-  deck:       string[]
-  /** O baralho acabou no meio e foi reembaralhado. */
-  reshuffled: boolean
-}
-
-/**
- * Vira cartas até juntar `needed` combinações do naipe `suit`, gastando no
- * máximo `budget` cartas. O baralho que acabar no meio é reembaralhado
- * inteiro (as viradas voltam pro monte).
- */
-export function drawForTriumph(deck: string[] | null, suit: Suit, needed: number, budget: number): PilarDraw {
-  let pile = deck && deck.length > 0 ? [...deck] : shuffle(fullDeck())
-  const drawn: string[] = []
-  const progress: number[] = []
-  let combos = 0
-  let instant = false
-  let reshuffled = false
-
-  while (drawn.length < budget) {
-    if (pile.length === 0) {
-      pile = shuffle(fullDeck())
-      reshuffled = true
-    }
-    const card = pile.shift()!
-    drawn.push(card)
-    const value = cardValue(card, suit)
-    if (value.instant) {
-      instant = true
-      progress.push(combos)
-      break
-    }
-    combos += value.combos
-    progress.push(combos)
-    if (combos >= needed) break
-  }
-
-  return {
-    drawn,
-    progress,
-    combos,
-    success: instant || combos >= needed,
-    instant,
-    spent: drawn.length,
-    deck: pile,
-    reshuffled,
-  }
-}
-
 export function cardLabel(code: string): string {
   const card = parseCard(code)
   if (card.joker) return 'Coringa'
   const names: Record<string, string> = { A: 'Ás', J: 'Valete', Q: 'Dama', K: 'Rei' }
   return `${names[card.rank!] ?? card.rank} de ${suitInfo(card.suit!).label.toLowerCase()}`
+}
+
+/**
+ * Puxa UMA carta do topo do baralho (modo "puxar e decidir"). Baralho
+ * vazio ou null começa/reembaralha um novo.
+ */
+export function drawOne(deck: string[] | null): { card: string; deck: string[]; reshuffled: boolean } {
+  const pile = deck && deck.length > 0 ? [...deck] : shuffle(fullDeck())
+  const reshuffled = deck != null && deck.length === 0
+  const card = pile.shift()!
+  return { card, deck: pile, reshuffled }
 }

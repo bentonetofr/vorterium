@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
 import { rollDice } from '../../../dice/services/diceService'
@@ -8,10 +8,9 @@ import {
   SUITS,
   cardLabel,
   cardValue,
-  drawForTriumph,
+  drawOne,
   parseCard,
   suitInfo,
-  type PilarDraw,
   type Suit,
 } from '../utils/pilarCards'
 
@@ -35,8 +34,8 @@ export interface PilarUseResult {
   spent:   number
   success: boolean
   instant: boolean
-  /** Baralho virtual depois de virar (só no modo virtual). */
-  deck?:   string[]
+  /** Parou de puxar antes de fechar a combinação. */
+  gaveUp:  boolean
 }
 
 interface AltheriumPilarTriumphsProps {
@@ -48,13 +47,15 @@ interface AltheriumPilarTriumphsProps {
   disabled?:    boolean
   onModeChange: (mode: PilarCardMode) => void
   onDeckReset:  () => void
+  /** Gasta cartas (e, no virtual, guarda o baralho depois da carta puxada). */
+  onSpend:      (cards: number, deck?: string[]) => void
+  /** Fim da jogada — anuncia pra mesa. */
   onResolve:    (result: PilarUseResult) => void
   /** "Retorno do Baralho": soma as cartas recuperadas (a ficha limita ao máximo). */
   onRecover:    (cards: number) => void
 }
 
 const RECOVER_TRIUMPH_ID = 'retorno-do-baralho'
-const REVEAL_MS = 320
 
 function plural(n: number, one: string, many: string) {
   return `${n} ${n === 1 ? one : many}`
@@ -62,7 +63,7 @@ function plural(n: number, one: string, many: string) {
 
 export function AltheriumPilarTriumphs({
   campaignId, cardsCurrent, cardsMax, mode, deck, disabled = false,
-  onModeChange, onDeckReset, onResolve, onRecover,
+  onModeChange, onDeckReset, onSpend, onResolve, onRecover,
 }: AltheriumPilarTriumphsProps) {
   const [using, setUsing] = useState<PilarTriumphDef | null>(null)
   const [lastUsed, setLastUsed] = useState<string | null>(null)
@@ -71,7 +72,7 @@ export function AltheriumPilarTriumphs({
   function handleResolve(result: PilarUseResult) {
     onResolve(result)
     const what = `${result.triumph.name}: ${plural(result.spent, 'carta gasta', 'cartas gastas')}`
-    setLastUsed(result.success ? `${what}, combinação feita.` : `${what}, não conseguiu a combinação.`)
+    setLastUsed(result.success ? `${what}, combinação feita.` : result.gaveUp ? `${what}, desistiu.` : `${what}, não conseguiu a combinação.`)
   }
 
   return (
@@ -97,11 +98,11 @@ export function AltheriumPilarTriumphs({
       <ul className="alth-triumphs__rules">
         <li>
           O número de cada triunfo é quantas <strong>combinações de naipe</strong> ele precisa. Escolha um naipe e
-          vire cartas até juntar essa quantidade. <strong>Toda carta virada gasta 1 carta.</strong>
+          puxe cartas uma a uma até juntar essa quantidade. <strong>Toda carta puxada gasta 1 carta.</strong>
         </li>
         <li><strong>Carta do naipe:</strong> 1 combinação. <strong>Ás do naipe:</strong> 2.</li>
         <li><strong>Coringa:</strong> vale como qualquer carta. <strong>Ás de espadas:</strong> sucesso instantâneo.</li>
-        <li>Se as cartas acabarem antes, o triunfo falha e as cartas viradas se perdem.</li>
+        <li>Dá pra desistir a qualquer momento; se desistir ou as cartas acabarem, o triunfo falha e as cartas puxadas se perdem.</li>
       </ul>
 
       {mode === 'virtual' && (
@@ -155,6 +156,7 @@ export function AltheriumPilarTriumphs({
             deck={deck}
             cardsCurrent={cardsCurrent}
             cardsMax={cardsMax}
+            onSpend={onSpend}
             onResolve={handleResolve}
             onRecover={onRecover}
             onClose={() => setUsing(null)}
@@ -167,6 +169,8 @@ export function AltheriumPilarTriumphs({
 
 // ── Janela de uso ────────────────────────────────────────
 
+type Outcome = 'success' | 'fail' | 'gaveup'
+
 interface PilarUseModalProps {
   campaignId:   string
   triumph:      PilarTriumphDef
@@ -174,56 +178,83 @@ interface PilarUseModalProps {
   deck:         string[] | null
   cardsCurrent: number
   cardsMax:     number | null
+  onSpend:      (cards: number, deck?: string[]) => void
   onResolve:    (result: PilarUseResult) => void
   onRecover:    (cards: number) => void
   onClose:      () => void
 }
 
-function PilarUseModal({ campaignId, triumph, mode, deck, cardsCurrent, cardsMax, onResolve, onRecover, onClose }: PilarUseModalProps) {
-  // Cartas na hora de abrir — a ficha desconta assim que o resultado sai.
+function PilarUseModal({
+  campaignId, triumph, mode, deck, cardsCurrent, cardsMax, onSpend, onResolve, onRecover, onClose,
+}: PilarUseModalProps) {
+  // Cartas na hora de abrir — a ficha desconta a cada carta puxada.
   const [startCards] = useState(cardsCurrent)
   const [suit, setSuit] = useState<Suit | null>(null)
-  // Virtual: o resultado já decidido (e aplicado) — a animação só revela.
-  const [draw, setDraw] = useState<PilarDraw | null>(null)
-  const [revealed, setRevealed] = useState(0)
+  // Virtual: cartas puxadas até agora (uma por clique).
+  const [drawn, setDrawn] = useState<string[]>([])
+  const [combos, setCombos] = useState(0)
+  const [instant, setInstant] = useState(false)
+  const [reshuffled, setReshuffled] = useState(false)
+  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  // Baralho "vivo" durante a jogada — o da ficha só chega depois do render.
+  const deckRef = useRef<string[] | null>(deck)
   // Físico: quantas cartas o jogador virou na mesa.
   const [spentText, setSpentText] = useState('')
-  const [physicalDone, setPhysicalDone] = useState<boolean | null>(null)
   // Retorno do Baralho
   const [recovering, setRecovering] = useState(false)
   const [recovered, setRecovered] = useState<number | null>(null)
   const [recoverError, setRecoverError] = useState<string | null>(null)
 
-  const reduceMotion = useMemo(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    [],
-  )
-
-  useEffect(() => {
-    if (!draw || revealed >= draw.drawn.length) return
-    const timer = window.setTimeout(() => setRevealed((n) => n + 1), revealed === 0 ? 120 : REVEAL_MS)
-    return () => window.clearTimeout(timer)
-  }, [draw, revealed])
-
-  const revealing = draw != null && revealed < draw.drawn.length
-  const finished = (draw != null && !revealing) || physicalDone != null
-  const succeeded = draw ? draw.success : physicalDone === true
   const spentNumber = Number(spentText)
   const spentValid = Number.isInteger(spentNumber) && spentNumber >= 1 && spentNumber <= startCards
+  const spent = mode === 'virtual' ? drawn.length : outcome ? spentNumber : 0
+  const cardsLeft = startCards - spent
+  const playing = mode === 'virtual' && suit != null && drawn.length > 0 && outcome == null
 
-  function flip() {
+  function finish(result: Outcome, spentCards: number, wasInstant = false) {
     if (!suit) return
-    const result = drawForTriumph(deck, suit, triumph.cost, startCards)
-    setDraw(result)
-    setRevealed(reduceMotion ? result.drawn.length : 0)
-    onResolve({ triumph, suit, spent: result.spent, success: result.success, instant: result.instant, deck: result.deck })
+    setOutcome(result)
+    onResolve({
+      triumph, suit, spent: spentCards,
+      success: result === 'success', instant: wasInstant, gaveUp: result === 'gaveup',
+    })
+  }
+
+  /** Virtual: puxa uma carta, gasta 1 e vê se fechou a combinação. */
+  function drawCard() {
+    if (!suit || outcome || drawn.length >= startCards) return
+    const pulled = drawOne(deckRef.current)
+    deckRef.current = pulled.deck
+    if (pulled.reshuffled) setReshuffled(true)
+    const nextDrawn = [...drawn, pulled.card]
+    setDrawn(nextDrawn)
+    onSpend(1, pulled.deck)
+
+    const value = cardValue(pulled.card, suit)
+    if (value.instant) {
+      setInstant(true)
+      finish('success', nextDrawn.length, true)
+      return
+    }
+    const nextCombos = combos + value.combos
+    setCombos(nextCombos)
+    if (nextCombos >= triumph.cost) finish('success', nextDrawn.length)
+    else if (nextDrawn.length >= startCards) finish('fail', nextDrawn.length)
+  }
+
+  function giveUp() {
+    if (!playing) return
+    finish('gaveup', drawn.length)
   }
 
   function confirmPhysical(success: boolean) {
     if (!suit || !spentValid) return
-    setPhysicalDone(success)
-    onResolve({ triumph, suit, spent: spentNumber, success, instant: false })
+    onSpend(spentNumber)
+    finish(success ? 'success' : 'fail', spentNumber)
   }
+
+  // No meio da jogada, só "Desistir" encerra — clique fora ou Esc não.
+  const lockClose = recovering || playing
 
   async function recover() {
     setRecovering(true)
@@ -239,26 +270,28 @@ function PilarUseModal({ campaignId, triumph, mode, deck, cardsCurrent, cardsMax
     }
   }
 
-  const combosNow = draw ? (revealed > 0 ? draw.progress[revealed - 1] : 0) : 0
-  const canClose = !recovering
+  const resultTitle =
+    outcome === 'success' ? (instant ? 'Ás de espadas! Sucesso instantâneo.' : 'Combinação feita, o triunfo acontece.')
+      : outcome === 'fail' ? 'As cartas acabaram. O triunfo falhou.'
+      : 'Você desistiu. O triunfo não acontece.'
 
   return (
-    <ModalOverlay onClose={onClose} closeDisabled={!canClose}>
+    <ModalOverlay onClose={onClose} closeDisabled={lockClose}>
       <div className="alth-modal__window alth-pilar-use" role="dialog" aria-modal="true" aria-labelledby="alth-pilar-use-title">
         <header className="alth-modal__header">
           <h4 id="alth-pilar-use-title" className="alth-modal__title">{triumph.name}</h4>
-          <button type="button" className="modal-close" onClick={onClose} disabled={!canClose} aria-label="Fechar">×</button>
+          <button type="button" className="modal-close" onClick={onClose} disabled={lockClose} aria-label="Fechar">×</button>
         </header>
 
         <div className="alth-pilar-use__body">
           <p className="alth-pilar-use__need">
             Precisa de <strong>{plural(triumph.cost, 'combinação', 'combinações')}</strong> de naipe.
-            Você tem <strong>{plural(startCards, 'carta', 'cartas')}</strong>
+            Você tem <strong>{plural(cardsLeft, 'carta', 'cartas')}</strong>
             {cardsMax != null && <> de {cardsMax}</>}.
           </p>
 
-          {/* 1. Naipe */}
-          {!draw && physicalDone == null && (
+          {/* 1. Naipe (trava depois da primeira carta) */}
+          {drawn.length === 0 && outcome == null && (
             <>
               <span className="label">Escolha o naipe</span>
               <div className="alth-pilar-suits" role="radiogroup" aria-label="Naipe">
@@ -279,36 +312,45 @@ function PilarUseModal({ campaignId, triumph, mode, deck, cardsCurrent, cardsMax
             </>
           )}
 
-          {/* 2a. Virtual: virar */}
-          {mode === 'virtual' && !draw && (
-            <div className="alth-triumph__actions">
-              <button type="button" className="alth-triumph__btn" onClick={onClose}>Cancelar</button>
-              <button type="button" className="alth-triumph__btn alth-triumph__btn--use" onClick={flip} disabled={!suit}>
-                Virar cartas
-              </button>
-            </div>
-          )}
-
-          {draw && suit && (
+          {/* 2a. Virtual: puxar uma a uma */}
+          {mode === 'virtual' && suit && drawn.length > 0 && (
             <>
               <div className="alth-pilar-progress" aria-live="polite">
                 <span>Naipe: <strong className={suitInfo(suit).red ? 'alth-pilar-red' : undefined}>{suitInfo(suit).symbol} {suitInfo(suit).label}</strong></span>
-                <span>Combinações: <strong>{Math.min(combosNow, triumph.cost)}/{triumph.cost}</strong></span>
-                <span>Cartas gastas: <strong>{revealed}</strong></span>
+                <span>Combinações: <strong>{Math.min(combos, triumph.cost)}/{triumph.cost}</strong></span>
+                <span>Cartas gastas: <strong>{drawn.length}</strong></span>
               </div>
-              <ol className="alth-pilar-table" aria-label="Cartas viradas">
-                {draw.drawn.slice(0, revealed).map((code, i) => (
+              <ol className="alth-pilar-table" aria-label="Cartas puxadas">
+                {drawn.map((code, i) => (
                   <PlayingCard key={`${i}-${code}`} code={code} suit={suit} />
                 ))}
               </ol>
-              {draw.reshuffled && revealed === draw.drawn.length && (
-                <p className="alth-hint">O baralho acabou no meio e foi reembaralhado.</p>
-              )}
+              {reshuffled && <p className="alth-hint">O baralho acabou e foi reembaralhado.</p>}
             </>
           )}
 
+          {mode === 'virtual' && outcome == null && (
+            <div className="alth-triumph__actions">
+              {playing ? (
+                <button type="button" className="alth-triumph__btn" onClick={giveUp}>
+                  Desistir
+                </button>
+              ) : (
+                <button type="button" className="alth-triumph__btn" onClick={onClose}>Cancelar</button>
+              )}
+              <button type="button" className="alth-triumph__btn alth-triumph__btn--use alth-pilar-draw" onClick={drawCard} disabled={!suit}>
+                {drawn.length === 0 ? 'Puxar a primeira carta' : 'Puxar outra carta'}
+              </button>
+            </div>
+          )}
+          {playing && (
+            <p className="alth-hint">
+              Cada carta puxada gasta 1. Se desistir agora, as {plural(drawn.length, 'carta puxada se perde', 'cartas puxadas se perdem')}.
+            </p>
+          )}
+
           {/* 2b. Físico: informar */}
-          {mode === 'fisico' && physicalDone == null && (
+          {mode === 'fisico' && outcome == null && (
             <>
               <label className="alth-pilar-spent">
                 <span className="label">Quantas cartas você virou?</span>
@@ -332,18 +374,14 @@ function PilarUseModal({ campaignId, triumph, mode, deck, cardsCurrent, cardsMax
           )}
 
           {/* 3. Resultado */}
-          {finished && (
-            <div className={`alth-pilar-result${succeeded ? ' alth-pilar-result--ok' : ' alth-pilar-result--fail'}`} role="status">
-              <strong>
-                {draw?.instant ? 'Ás de espadas! Sucesso instantâneo.' : succeeded ? 'Combinação feita, o triunfo acontece.' : 'As cartas acabaram. O triunfo falhou.'}
-              </strong>
-              <span>
-                {plural(draw?.spent ?? spentNumber, 'carta gasta', 'cartas gastas')} · restam {plural(startCards - (draw?.spent ?? spentNumber), 'carta', 'cartas')}
-              </span>
+          {outcome && (
+            <div className={`alth-pilar-result${outcome === 'success' ? ' alth-pilar-result--ok' : ' alth-pilar-result--fail'}`} role="status">
+              <strong>{resultTitle}</strong>
+              <span>{plural(spent, 'carta gasta', 'cartas gastas')} · restam {plural(cardsLeft, 'carta', 'cartas')}</span>
             </div>
           )}
 
-          {finished && succeeded && triumph.id === RECOVER_TRIUMPH_ID && (
+          {outcome === 'success' && triumph.id === RECOVER_TRIUMPH_ID && (
             <div className="alth-pilar-recover">
               {recovered == null ? (
                 <button type="button" className="alth-triumph__btn alth-triumph__btn--use" onClick={() => void recover()} disabled={recovering}>
@@ -356,9 +394,9 @@ function PilarUseModal({ campaignId, triumph, mode, deck, cardsCurrent, cardsMax
             </div>
           )}
 
-          {finished && (
+          {outcome && (
             <div className="alth-triumph__actions">
-              <button type="button" className="alth-triumph__btn alth-triumph__btn--use" onClick={onClose} disabled={!canClose}>
+              <button type="button" className="alth-triumph__btn alth-triumph__btn--use" onClick={onClose} disabled={recovering}>
                 Fechar
               </button>
             </div>

@@ -895,15 +895,18 @@ export function AltheriumSheetForm({
                   deck={form.pilar_deck}
                   onModeChange={(m) => set('pilar_card_mode', m)}
                   onDeckReset={() => set('pilar_deck', null)}
-                  onResolve={(r) => {
+                  onSpend={(n, deck) => {
                     setForm((prev) => ({
                       ...prev,
-                      cards_current: Math.max(0, prev.cards_current - r.spent),
-                      ...(r.deck ? { pilar_deck: r.deck } : {}),
+                      cards_current: Math.max(0, prev.cards_current - n),
+                      ...(deck ? { pilar_deck: deck } : {}),
                     }))
+                  }}
+                  onResolve={(r) => {
                     const s = suitInfo(r.suit)
                     const detail = `${r.instant ? 'Ás de espadas' : `${s.symbol} ${s.label.toLowerCase()}`} · ${r.spent} ${r.spent === 1 ? 'carta' : 'cartas'}`
                     if (r.success) announceTriumph(`${r.triumph.name} (${detail})`)
+                    else if (r.gaveUp) announceTriumph(`de ${r.triumph.name} (${detail})`, 'desistiu')
                     else announceTriumph(`${r.triumph.name} e não conseguiu a combinação (${detail})`, 'tentou')
                   }}
                   onRecover={(n) => {
