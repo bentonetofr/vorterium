@@ -1986,3 +1986,11 @@
   cursor: pointer;
 }
 .alth-rune__restore:disabled { opacity: 0.5; cursor: default; }
+
+/* Editor do triunfo da trilha sem foto: a runa da trilha com o convite pra trocar. */
+.alth-rune__pick-trail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}

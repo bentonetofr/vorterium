@@ -420,6 +420,19 @@ async function uploadRuneImage(sheetId: string, runeId: string, file: File): Pro
   return `${data.publicUrl}?v=${Date.now()}`
 }
 
+/**
+ * Foto de um triunfo inicial da trilha, trocada na ficha. Vai pro mesmo
+ * bucket das runas, em <sheet_id>/trail-<triunfo> — a regra de acesso do
+ * bucket já vale pra qualquer arquivo na pasta da ficha.
+ */
+export function uploadTrailTriumphImage(sheetId: string, triumphId: string, file: File): Promise<string> {
+  return uploadRuneImage(sheetId, `trail-${triumphId}`, file)
+}
+
+export function removeTrailTriumphImage(sheetId: string, triumphId: string): Promise<void> {
+  return removeRuneImage(sheetId, `trail-${triumphId}`)
+}
+
 async function removeRuneImage(sheetId: string, runeId: string): Promise<void> {
   const { error } = await supabase.storage.from(RUNES_BUCKET).remove([`${sheetId}/${runeId}`])
   if (error) console.error('Erro do Storage ao remover imagem da runa:', error)

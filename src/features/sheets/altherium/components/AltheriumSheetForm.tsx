@@ -37,6 +37,8 @@ import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
   announceTriumphUse,
+  removeTrailTriumphImage,
+  uploadTrailTriumphImage,
   type AltheriumCustomItemInput,
   type AltheriumRuneInput,
   type AltheriumSheetUpdate,
@@ -198,7 +200,7 @@ function normalizeOverrides(o: Record<string, RunaskinTriumphOverride>): Record<
   const out: Record<string, RunaskinTriumphOverride> = {}
   for (const id of Object.keys(o).sort()) {
     const v = o[id]
-    out[id] = { name: v.name, description: v.description, cost: v.cost, test: v.test, action: v.action, range: v.range }
+    out[id] = { name: v.name, description: v.description, cost: v.cost, test: v.test, action: v.action, range: v.range, image_url: v.image_url ?? null }
   }
   return out
 }
@@ -898,6 +900,8 @@ export function AltheriumSheetForm({
                   onRuneUpdate={onRuneUpdate}
                   onRuneDelete={onRuneDelete}
                   trailOverrides={form.runaskin_trail_overrides}
+                  onTrailImageUpload={(id, file) => uploadTrailTriumphImage(sheet.id, id, file)}
+                  onTrailImageRemove={(id) => removeTrailTriumphImage(sheet.id, id)}
                   onTrailOverride={(id, override) => {
                     setForm((prev) => {
                       const next = { ...prev.runaskin_trail_overrides }

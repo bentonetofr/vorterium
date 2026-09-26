@@ -114,6 +114,7 @@ function objectDiff(from: unknown, to: unknown, labels: Record<string, string>):
       const s = String(v)
       return s.length > 60 ? `${s.slice(0, 59)}…` : s
     }
+    if (key === 'imagem') { out.push(`${labels[key]}: ${!va ? 'colocada' : !vb ? 'removida' : 'trocada'}`); continue }
     out.push(`${labels[key]}: ${fmt(va)} → ${fmt(vb)}`)
   }
   return out
@@ -232,6 +233,7 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
         }
         const toFields = (o: Record<string, unknown> | undefined) => o && ({
           nome: o.name, custo: o.cost, teste: o.test, acao: o.action, alcance: o.range, descricao: o.description,
+          imagem: o.image_url ?? false,
         })
         const base = RUNASKIN_TRIUMPHS.find((t) => t.id === id)
         const before = a[id] ? toFields(a[id]) : base && toFields({ ...base } as unknown as Record<string, unknown>)

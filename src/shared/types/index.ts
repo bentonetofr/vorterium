@@ -256,6 +256,8 @@ export interface RunaskinTriumphOverride {
   /** Mesmos ids de TriumphAction (altheriumTriumphs.ts). */
   action:      'padrao' | 'bonus' | 'livre' | 'reacao' | null
   range:       string | null
+  /** Foto escolhida na ficha (no lugar da runa da trilha). Ausente = sem foto. */
+  image_url?:  string | null
 }
 
 /** Pontos de um domínio numa ficha Altherium (0 a 2). */

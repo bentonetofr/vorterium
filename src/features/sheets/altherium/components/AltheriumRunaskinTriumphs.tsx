@@ -41,6 +41,9 @@ interface AltheriumRunaskinTriumphsProps {
   trailOverrides:   Record<string, RunaskinTriumphOverride>
   /** Salva a versão editada; null restaura a do livro. */
   onTrailOverride:  (triumphId: string, override: RunaskinTriumphOverride | null) => void
+  /** Envia a foto de um triunfo da trilha e devolve a URL. */
+  onTrailImageUpload: (triumphId: string, file: File) => Promise<string>
+  onTrailImageRemove: (triumphId: string) => Promise<void>
   disabled?:     boolean
 }
 
@@ -54,6 +57,7 @@ interface TrailTriumph {
   test:        string | null
   action:      TriumphAction | null
   range:       string | null
+  image_url:   string | null
   edited:      boolean
 }
 
@@ -61,13 +65,14 @@ interface TrailTriumph {
 function trailTriumphAsRune(t: TrailTriumph): AltheriumRune {
   return {
     id: t.id, sheet_id: '', name: t.name, description: t.description, pr_cost: t.cost,
-    test: t.test, action: t.action, range: t.range, image_url: null, created_at: '',
+    test: t.test, action: t.action, range: t.range, image_url: t.image_url, created_at: '',
   }
 }
 
 export function AltheriumRunaskinTriumphs({
   trail, onTrailChange, sceneUses, usesLimit, onNewScene, prCurrent, onUse,
-  runes, onRuneCreate, onRuneUpdate, onRuneDelete, trailOverrides, onTrailOverride, disabled = false,
+  runes, onRuneCreate, onRuneUpdate, onRuneDelete, trailOverrides, onTrailOverride,
+  onTrailImageUpload, onTrailImageRemove, disabled = false,
 }: AltheriumRunaskinTriumphsProps) {
   const [editing, setEditing]           = useState<AltheriumRune | 'new' | null>(null)
   const [editingTrail, setEditingTrail] = useState<TrailTriumph | null>(null)
@@ -78,8 +83,8 @@ export function AltheriumRunaskinTriumphs({
   const initial: TrailTriumph[] = RUNASKIN_TRIUMPHS.filter((t) => t.trail === trail).map((t) => {
     const o = trailOverrides[t.id]
     return o
-      ? { id: t.id, trail: t.trail, name: o.name, description: o.description, cost: o.cost, test: o.test, action: o.action, range: o.range, edited: true }
-      : { id: t.id, trail: t.trail, name: t.name, description: t.description, cost: t.cost, test: t.test, action: t.action, range: t.range, edited: false }
+      ? { id: t.id, trail: t.trail, name: o.name, description: o.description, cost: o.cost, test: o.test, action: o.action, range: o.range, image_url: o.image_url ?? null, edited: true }
+      : { id: t.id, trail: t.trail, name: t.name, description: t.description, cost: t.cost, test: t.test, action: t.action, range: t.range, image_url: null, edited: false }
   })
   const limitHit   = usesLimit != null && sceneUses >= usesLimit
 
@@ -154,7 +159,9 @@ export function AltheriumRunaskinTriumphs({
               <RuneCard
                 key={t.id}
                 trailClass={t.trail}
-                media={<span className="alth-rune__glyph" aria-hidden="true">{trailDef.glyph}</span>}
+                media={t.image_url
+                  ? <img src={t.image_url} alt="" loading="lazy" />
+                  : <span className="alth-rune__glyph" aria-hidden="true">{trailDef.glyph}</span>}
                 name={t.name}
                 cost={t.cost}
                 test={t.test}
@@ -186,13 +193,28 @@ export function AltheriumRunaskinTriumphs({
             trail={{ glyph: trailDef.glyph, edited: editingTrail.edited }}
             onCancel={() => setEditingTrail(null)}
             onRestore={() => {
+              // A foto sai junto; se o Storage falhar, só sobra o arquivo.
+              if (editingTrail.image_url) void onTrailImageRemove(editingTrail.id).catch(() => {})
               onTrailOverride(editingTrail.id, null)
               setEditingTrail(null)
             }}
-            onSubmit={async (input) => {
-              onTrailOverride(editingTrail.id, {
+            onSubmit={async (input, image) => {
+              // undefined = mantém a foto; File = nova; null = tirou.
+              let imageUrl = editingTrail.image_url
+              if (image instanceof File) {
+                imageUrl = await onTrailImageUpload(editingTrail.id, image)
+              } else if (image === null && imageUrl) {
+                await onTrailImageRemove(editingTrail.id)
+                imageUrl = null
+              }
+              // Igual ao livro e sem foto? Não é edição — volta a ser o original.
+              const book = RUNASKIN_TRIUMPHS.find((t) => t.id === editingTrail.id)
+              const sameAsBook = !!book && !imageUrl
+                && book.name === input.name && book.description === input.description && book.cost === input.pr_cost
+                && (book.test ?? null) === input.test && (book.action ?? null) === input.action && (book.range ?? null) === input.range
+              onTrailOverride(editingTrail.id, sameAsBook ? null : {
                 name: input.name, description: input.description, cost: input.pr_cost,
-                test: input.test, action: input.action, range: input.range,
+                test: input.test, action: input.action, range: input.range, image_url: imageUrl,
               })
               setEditingTrail(null)
             }}
@@ -327,7 +349,7 @@ function RuneCard({ trailClass, media, name, cost, test, description, chips, chi
 
 interface RuneEditorProps {
   initial?: AltheriumRune
-  /** Editando um triunfo inicial da trilha: sem foto (usa a runa da trilha). */
+  /** Editando um triunfo inicial da trilha: sem foto, mostra a runa da trilha. */
   trail?:     { glyph: string; edited: boolean }
   onSubmit: (input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
   onCancel: () => void
@@ -420,23 +442,24 @@ function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: Rune
             ×
           </button>
         </header>
-        {trail ? (
-          <div className="alth-rune__media">
-            <span className="alth-rune__glyph" aria-hidden="true">{trail.glyph}</span>
-          </div>
-        ) : (
-          <label className="alth-rune__media alth-rune__media--pick">
-            {preview
-              ? <img src={preview} alt="" />
+        <label className="alth-rune__media alth-rune__media--pick">
+          {preview
+            ? <img src={preview} alt="" />
+            : trail
+              ? (
+                <span className="alth-rune__pick-trail">
+                  <span className="alth-rune__glyph" aria-hidden="true">{trail.glyph}</span>
+                  <span className="alth-rune__pick-hint">+ Foto</span>
+                </span>
+              )
               : <span className="alth-rune__pick-hint">+ Foto</span>}
-            <input
-              type="file" hidden accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
-              onChange={handlePick} disabled={busy} aria-label="Foto da runa"
-            />
-          </label>
-        )}
+          <input
+            type="file" hidden accept={ALTHERIUM_PORTRAIT_TYPES.join(',')}
+            onChange={handlePick} disabled={busy} aria-label={trail ? 'Foto do triunfo' : 'Foto da runa'}
+          />
+        </label>
         <div className="alth-rune__body">
-          {!trail && preview && (
+          {preview && (
             <button type="button" className="alth-rune__remove-img" onClick={handleRemoveImage} disabled={busy}>
               Remover foto
             </button>
