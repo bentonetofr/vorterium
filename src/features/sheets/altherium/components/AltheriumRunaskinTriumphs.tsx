@@ -183,7 +183,7 @@ export function AltheriumRunaskinTriumphs({
           <RuneEditorModal
             key={editingTrail.id}
             initial={trailTriumphAsRune(editingTrail)}
-            trail={{ glyph: trailDef.glyph, trailClass: editingTrail.trail, edited: editingTrail.edited }}
+            trail={{ glyph: trailDef.glyph, edited: editingTrail.edited }}
             onCancel={() => setEditingTrail(null)}
             onRestore={() => {
               onTrailOverride(editingTrail.id, null)
@@ -328,7 +328,7 @@ function RuneCard({ trailClass, media, name, cost, test, description, chips, chi
 interface RuneEditorProps {
   initial?: AltheriumRune
   /** Editando um triunfo inicial da trilha: sem foto (usa a runa da trilha). */
-  trail?:     { glyph: string; trailClass: RunaskinTrail; edited: boolean }
+  trail?:     { glyph: string; edited: boolean }
   onSubmit: (input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
   onCancel: () => void
   /** Só na trilha: volta pra versão do livro. */
@@ -408,7 +408,7 @@ function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: Rune
   return (
     <ModalOverlay onClose={onCancel} closeDisabled={busy}>
       <div
-        className={`alth-modal__window alth-rune alth-rune--${trail ? trail.trailClass : 'descoberta'} alth-rune--editing`}
+        className="alth-modal__window alth-rune alth-rune--descoberta alth-rune--editing"
         role="dialog" aria-modal="true" aria-labelledby="alth-rune-editor-title"
         onKeyDown={blockEnter}
       >
