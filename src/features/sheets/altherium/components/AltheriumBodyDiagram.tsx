@@ -101,12 +101,16 @@ const JOINT_IDS = Object.keys(JOINT_PIVOT) as JointId[]
 // por cima do tronco). O lado direito é a referência; a esquerda usa o
 // intervalo espelhado (min/max trocados e invertidos) pra flexionar pro
 // mesmo lado relativo ao corpo — pra fora, longe do tronco e da outra perna.
+//
+// O joelho dobra ao contrário do cotovelo: com a coxa levantada pro lado,
+// a canela pende pra baixo (e não sobe como um antebraço). Por isso a
+// faixa dele é a do cotovelo invertida.
 const JOINT_RANGE: Record<JointId, readonly [number, number]> = {
   neck: [-35, 35],
   shoulderR: [-190, 60], shoulderL: [-60, 190],
   elbowR: [-140, 10],    elbowL: [-10, 140],
   hipR: [-110, 40],      hipL: [-40, 110],
-  kneeR: [-140, 5],      kneeL: [-5, 140],
+  kneeR: [-5, 140],      kneeL: [-140, 5],
 }
 function clampToRange(id: JointId, angle: number): number {
   const [min, max] = JOINT_RANGE[id]

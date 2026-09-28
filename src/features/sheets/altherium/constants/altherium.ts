@@ -53,8 +53,10 @@ export interface RaizEntry {
   /** Recurso próprio da raiz — Pilar usa cartas (13 × nível), sem base fixa. */
   fvBase:  number | null
   prBase:  number | null
-  /** Domínios disponíveis = base + pontos de Estratégia. */
+  /** Domínios disponíveis = base + pontos de Estratégia (+ os do nível). */
   domainBase: number
+  /** Domínios ganhos a cada nível depois do 1º (livro, "Subindo de nível"). */
+  domainsPerLevel: number
 }
 
 export const RAIZES: RaizEntry[] = [
@@ -67,6 +69,7 @@ export const RAIZES: RaizEntry[] = [
     fvBase: 14,
     prBase: null,
     domainBase: 4,
+    domainsPerLevel: 1,
   },
   {
     id: 'runaskin',
@@ -77,6 +80,7 @@ export const RAIZES: RaizEntry[] = [
     fvBase: null,
     prBase: 20,
     domainBase: 6,
+    domainsPerLevel: 2,
   },
   {
     id: 'pilar',
@@ -87,6 +91,7 @@ export const RAIZES: RaizEntry[] = [
     fvBase: null,
     prBase: null,
     domainBase: 8,
+    domainsPerLevel: 3,
   },
 ]
 
@@ -114,6 +119,21 @@ export const GENESIS: { id: AltheriumGenesis; label: string; effect: string }[] 
 ]
 
 // ── Domínios ─────────────────────────────────────────────
+
+/** Domínio em que cada gênesis dá +1d10 (o "(+1d10 ...)" do livro). O
+ *  Rastreador ganha também em Investigação, pelo efeito principal. */
+export const GENESIS_DOMAIN_BONUS: Partial<Record<AltheriumGenesis, AltheriumDomain[]>> = {
+  cacador:           ['furtividade'],
+  curandeiro:        ['medicina'],
+  determinado:       ['determinacao'],
+  filho_de_mercante: ['persuasao'],
+  guerreiro:         ['intimidacao'],
+  guia_espiritual:   ['pressentimento'],
+  corredor:          ['leveza'],
+  peregrino:         ['sobrevivencia'],
+  rastreador:        ['percepcao', 'investigacao'],
+  robusto:           ['resiliencia'],
+}
 
 export const DOMAINS: { id: AltheriumDomain; label: string; attribute: AltheriumAttribute }[] = [
   { id: 'brutalidade',    label: 'Brutalidade',    attribute: 'furia' },

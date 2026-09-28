@@ -3,6 +3,9 @@ import {
   ATTRIBUTE_POINTS_AT_CREATION,
   PILAR_CARDS_PER_LEVEL,
   RUNASKIN_FREE_RUNICO,
+  GENESIS_DOMAIN_BONUS,
+  type AltheriumDomain,
+  type AltheriumGenesis,
   type AltheriumRaiz,
 } from '../constants/altherium'
 import type { AltheriumSheet } from '../../../../shared/types'
@@ -44,10 +47,14 @@ export function attributePointsRemaining(sheet: AltheriumSheet): number {
   return ATTRIBUTE_POINTS_AT_CREATION - attributePointsUsed(sheet)
 }
 
-/** Domínios disponíveis: base da raiz + pontos de Estratégia. */
+/**
+ * Domínios disponíveis: base da raiz + pontos de Estratégia + os ganhos ao
+ * subir de nível (Berserker +1, Runaskin +2, Pilar +3 por nível depois do 1º).
+ */
 export function domainSlotsTotal(sheet: AltheriumSheet): number | null {
   if (!sheet.raiz) return null
-  return getRaiz(sheet.raiz).domainBase + sheet.attr_estrategia
+  const raiz = getRaiz(sheet.raiz)
+  return raiz.domainBase + sheet.attr_estrategia + raiz.domainsPerLevel * (Math.max(1, sheet.level) - 1)
 }
 
 /**
@@ -80,11 +87,18 @@ export function movementMeters(impulso: number): number {
 }
 
 /**
- * Dados de um teste de domínio: 1d10 padrão + 1d10 por ponto no domínio.
- * Atributo 0 impõe 1d de desvantagem (sinalizado à parte pela interface).
+ * Dados de um teste de domínio: 1d10 padrão + 1d10 por ponto no domínio
+ * + 1d10 se o gênesis dá bônus nesse domínio. Atributo 0 impõe 1d de
+ * desvantagem (sinalizado à parte pela interface).
  */
-export function domainTestDice(domainPoints: number): number {
-  return 1 + domainPoints
+export function domainTestDice(domainPoints: number, genesisBonus = false): number {
+  return 1 + domainPoints + (genesisBonus ? 1 : 0)
+}
+
+/** O gênesis dá +1d10 nesse domínio? */
+export function genesisBonusFor(genesis: string | null | undefined, domain: string): boolean {
+  if (!genesis) return false
+  return (GENESIS_DOMAIN_BONUS[genesis as AltheriumGenesis] ?? []).includes(domain as AltheriumDomain)
 }
 
 /** Raízes que usam cada recurso — a interface esconde o que não se aplica. */

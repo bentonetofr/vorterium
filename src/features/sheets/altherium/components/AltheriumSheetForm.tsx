@@ -9,6 +9,7 @@ import {
   DOMAINS,
   DOMAIN_MAX_POINTS,
   GENESIS,
+  GENESIS_DOMAIN_BONUS,
   RAIZES,
   type AltheriumRaiz,
 } from '../constants/altherium'
@@ -16,6 +17,8 @@ import {
   berserkerTriumphLimit,
   cardsMax,
   domainSlotsTotal,
+  domainTestDice,
+  genesisBonusFor,
   movementMeters,
   runaskinUsesPerScene,
   usesCards,
@@ -461,6 +464,9 @@ export function AltheriumSheetForm({
   const cartasMax  = cardsMax(projected)
   const slotsTotal = domainSlotsTotal(projected)
 
+  const genesisLabel   = GENESIS.find((g) => g.id === form.genesis)?.label ?? ''
+  const genesisDomains = (form.genesis ? GENESIS_DOMAIN_BONUS[form.genesis as keyof typeof GENESIS_DOMAIN_BONUS] ?? [] : [])
+    .map((id) => DOMAINS.find((d) => d.id === id)?.label ?? id)
   const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
   const domainsUsed  = domains.reduce((sum, d) => sum + d.points, 0)
   const filteredDomains = useMemo(() => {
@@ -468,45 +474,6 @@ export function AltheriumSheetForm({
     if (!q) return DOMAINS
     return DOMAINS.filter((d) => normalize(d.label).includes(q))
   }, [domainFilter])
-
-  // FV, PR e Cartas vivem na aba Triunfos, onde são gastos.
-  const prWidget = usesPr(raiz) && (
-    <VitalWidget
-      sigla="PR" label="Pontos Rúnicos" tone="resource"
-      current={form.pr_current} max={form.pr_max}
-      onCurrent={(v) => set('pr_current', v)} onMax={(v) => set('pr_max', v)}
-    />
-  )
-  const fvWidget = usesFv(raiz) && (
-    <VitalWidget
-      sigla="FV" label="Força de Vontade" tone="resource"
-      current={form.fv_current} max={form.fv_max}
-      onCurrent={(v) => set('fv_current', v)} onMax={(v) => set('fv_max', v)}
-    />
-  )
-  const cardsWidget = usesCards(raiz) && (
-    <div className="alth-vital-widget alth-vital-widget--resource">
-      <div className="alth-vital-widget__top">
-        <span className="alth-vital-widget__sigla">Cartas</span>
-        <span className="alth-vital-widget__values">
-          <input
-            type="number" className="alth-vital-widget__value-input" min={0}
-            value={form.cards_current}
-            onChange={(e) => set('cards_current', clamp(e.target.value, 0, 999))}
-            aria-label="Cartas atuais"
-          />
-          <span className="alth-vital-widget__max">{` / ${cartasMax ?? '—'}`}</span>
-        </span>
-      </div>
-      <AltheriumDragBar
-        value={form.cards_current} max={cartasMax}
-        onChange={(v) => set('cards_current', v)}
-        label="Cartas"
-        trackClassName="alth-vital-widget__bar" fillClassName="alth-vital-widget__bar-fill"
-      />
-      <span className="alth-vital-widget__note">13 × nível</span>
-    </div>
-  )
 
   // Enter num campo (ou "Salvar agora") salva na hora, sem esperar o atraso.
   function handleSubmit(e: FormEvent) {
@@ -604,6 +571,28 @@ export function AltheriumSheetForm({
             current={form.equilibrio_current} max={form.equilibrio_max}
             onCurrent={(v) => set('equilibrio_current', v)} onMax={(v) => set('equilibrio_max', v)}
           />
+          {/* Recurso da raiz também aqui, pra não precisar abrir a aba Triunfos. */}
+          {usesPr(raiz) && (
+            <VitalBar
+              sigla="PR" label="Pontos Rúnicos" tone="resource"
+              current={form.pr_current} max={form.pr_max}
+              onCurrent={(v) => set('pr_current', v)} onMax={(v) => set('pr_max', v)}
+            />
+          )}
+          {usesFv(raiz) && (
+            <VitalBar
+              sigla="FV" label="Força de Vontade" tone="resource"
+              current={form.fv_current} max={form.fv_max}
+              onCurrent={(v) => set('fv_current', v)} onMax={(v) => set('fv_max', v)}
+            />
+          )}
+          {usesCards(raiz) && cartasMax != null && (
+            <VitalBar
+              sigla="Cartas" label="Cartas" tone="resource"
+              current={form.cards_current} max={cartasMax}
+              onCurrent={(v) => set('cards_current', v)}
+            />
+          )}
         </div>
 
         <div className="alth-hero__stats">
@@ -836,11 +825,18 @@ export function AltheriumSheetForm({
           {filteredDomains.map((d) => {
             const points    = domainMap.get(d.id) ?? 0
             const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
+            const fromGenesis = genesisBonusFor(form.genesis, d.id)
             return (
-              <div key={d.id} className={`alth-domains__row${points > 0 ? ' alth-domains__row--active' : ''}`} role="row">
+              <div key={d.id} className={`alth-domains__row${points > 0 || fromGenesis ? ' alth-domains__row--active' : ''}`} role="row">
                 <span className="alth-domains__name" role="cell">{d.label}</span>
                 <span className="alth-domains__attr" role="cell">{attrLabel}</span>
-                <span className="alth-domains__dice" role="cell">{1 + points}d10</span>
+                <span
+                  className="alth-domains__dice" role="cell"
+                  title={fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : undefined}
+                >
+                  {domainTestDice(points, fromGenesis)}d10
+                  {fromGenesis && <span className="alth-domains__genesis" aria-label={`com +1d10 do gênesis ${genesisLabel}`}>✦</span>}
+                </span>
                 <span className="alth-domains__points" role="cell">
                   {Array.from({ length: DOMAIN_MAX_POINTS + 1 }, (_, n) => (
                     <button
@@ -861,6 +857,9 @@ export function AltheriumSheetForm({
         </div>
         <p className="alth-hint">
           Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}). Alterações aqui salvam na hora.
+          {genesisDomains.length > 0 && (
+            <> ✦ Gênesis {genesisLabel}: +1d10 em {genesisDomains.join(' e ')} (já somado nos dados).</>
+          )}
         </p>
       </section>
           </div>
@@ -871,13 +870,6 @@ export function AltheriumSheetForm({
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
         {activeTab === 'triunfos' && (
           <div className="alth-tab-panel anim-tab-panel">
-            {(fvWidget || prWidget || cardsWidget) && (
-              <div className="alth-vitals-strip">
-                {fvWidget}
-                {prWidget}
-                {cardsWidget}
-              </div>
-            )}
             {raiz === 'runaskin'
               ? (
                 <AltheriumRunaskinTriumphs
@@ -1012,68 +1004,21 @@ export function AltheriumSheetForm({
 }
 
 // ────────────────────────────────────────────────────────
+// PV/PE e o recurso da raiz (FV/PR/Cartas) — vivem só no cabeçalho
+// (compactas, sem moldura própria) e não têm mais d10-na-criação: atual e
+// máximo são dois campos diretos, e a barra acompanha os dois em tempo
+// real — e é arrastável (AltheriumDragBar).
+// ────────────────────────────────────────────────────────
 
-// FV/PR — atual e máximo são dois campos diretos (como PV/PE), editáveis
-// no próprio "atual / máximo" da barra.
-
-interface VitalWidgetProps {
+interface VitalBarProps {
   sigla:     string
   label:     string
   tone:      'vitality' | 'mystic' | 'resource'
   current:   number
   max:       number
   onCurrent: (value: number) => void
-  onMax:     (value: number) => void
-  disabled?: boolean
-}
-
-function VitalWidget({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false }: VitalWidgetProps) {
-  return (
-    <div className={`alth-vital-widget alth-vital-widget--${tone}`}>
-      <div className="alth-vital-widget__top">
-        <span className="alth-vital-widget__sigla" title={label}>{sigla}</span>
-        <span className="alth-vital-widget__values">
-          <input
-            type="number" className="alth-vital-widget__value-input" min={0}
-            value={current}
-            onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
-            disabled={disabled}
-            aria-label={`${label} atual`}
-          />
-          <span className="alth-vital-widget__sep">/</span>
-          <input
-            type="number" className="alth-vital-widget__value-input alth-vital-widget__max-input" min={1}
-            value={max}
-            onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
-            disabled={disabled}
-            aria-label={`${label} máximo`}
-          />
-        </span>
-      </div>
-      <AltheriumDragBar
-        value={current} max={max}
-        onChange={onCurrent}
-        disabled={disabled} label={label}
-        trackClassName="alth-vital-widget__bar" fillClassName="alth-vital-widget__bar-fill"
-      />
-    </div>
-  )
-}
-
-// ────────────────────────────────────────────────────────
-// PV/PE — vivem no cabeçalho (compactas, sem moldura própria) e não têm
-// mais d10-na-criação: atual e máximo são dois campos diretos, e a
-// barra acompanha os dois em tempo real — e é arrastável (AltheriumDragBar).
-// ────────────────────────────────────────────────────────
-
-interface VitalBarProps {
-  sigla:     string
-  label:     string
-  tone:      'vitality' | 'mystic'
-  current:   number
-  max:       number
-  onCurrent: (value: number) => void
-  onMax:     (value: number) => void
+  /** Sem onMax o máximo é só leitura (ex.: Cartas = 13 × nível). */
+  onMax?:    (value: number) => void
   disabled?: boolean
 }
 
@@ -1091,13 +1036,17 @@ function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled
             aria-label={`${label} atual`}
           />
           <span className="alth-vital-bar__sep">/</span>
-          <input
-            type="number" className="alth-vital-bar__value-input alth-vital-bar__max-input" min={1}
-            value={max}
-            onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
-            disabled={disabled}
-            aria-label={`${label} máximo`}
-          />
+          {onMax ? (
+            <input
+              type="number" className="alth-vital-bar__value-input alth-vital-bar__max-input" min={1}
+              value={max}
+              onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
+              disabled={disabled}
+              aria-label={`${label} máximo`}
+            />
+          ) : (
+            <span className="alth-vital-bar__max-fixed" title="Calculado pelo nível">{max}</span>
+          )}
         </span>
       </div>
       <AltheriumDragBar

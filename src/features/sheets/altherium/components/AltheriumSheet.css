@@ -186,6 +186,9 @@
    abaixo. */
 .alth-hero__vitals .alth-vital-bar--vitality { grid-column: 3; grid-row: 2; }
 .alth-hero__vitals .alth-vital-bar--mystic   { grid-column: 3; grid-row: 3; }
+/* Recurso da raiz (PR/FV/Cartas) embaixo do PE; o retrato desce junto. */
+.alth-hero__vitals .alth-vital-bar--resource { grid-column: 3; grid-row: 4; }
+.alth-hero:has(.alth-vital-bar--resource) .alth-hero__portrait-wrap { grid-row: 2 / 5; }
 
 .alth-hero__level  { grid-column: 4; grid-row: 2; }
 .alth-hero__coins  { grid-column: 4; grid-row: 3; }
@@ -209,107 +212,6 @@
   margin: 0;
 }
 .alth-hero__coins .input { color: var(--accent-bright); }
-
-/* ── Faixa de vitais ── */
-.alth-vitals-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--space-3);
-}
-
-.alth-vital-widget {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--radius-md);
-  border-top: 2px solid var(--border-base);
-}
-.alth-vital-widget--vitality { border-top-color: var(--danger); }
-.alth-vital-widget--mystic   { border-top-color: var(--alth-mystic); }
-/* "resource" = recurso dos triunfos (FV, PR, Cartas) — sempre verde (--alth-resource). */
-.alth-vital-widget--resource { border-top-color: var(--alth-resource); }
-
-/* Título, números e barra no mesmo estilo das barras de PV/PE do
-   cabeçalho (.alth-vital-bar): sigla grande na cor do recurso, "atual /
-   máximo" discreto à direita e barra fina arredondada com brilho. */
-.alth-vital-widget__top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-.alth-vital-widget__sigla {
-  font-family: var(--font-label);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-.alth-vital-widget--vitality .alth-vital-widget__sigla { color: var(--danger); }
-.alth-vital-widget--mystic   .alth-vital-widget__sigla { color: var(--alth-mystic); }
-.alth-vital-widget--resource .alth-vital-widget__sigla { color: var(--alth-resource); }
-.alth-vital-widget__values {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-.alth-vital-widget__values .alth-vital-widget__value-input {
-  width: 2.4em;
-  border: none;
-  background: transparent;
-  padding: 0;
-  text-align: right;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: color var(--transition-fast);
-  -moz-appearance: textfield;
-}
-.alth-vital-widget__values .alth-vital-widget__value-input::-webkit-inner-spin-button,
-.alth-vital-widget__values .alth-vital-widget__value-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.alth-vital-widget__values .alth-vital-widget__value-input:focus {
-  outline: none;
-  color: var(--accent-bright);
-}
-.alth-vital-widget__max {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: pre;
-}
-
-.alth-vital-widget__bar {
-  height: 9px;
-  border-radius: 999px;
-  background: var(--bg-void);
-  overflow: hidden;
-}
-.alth-vital-widget__bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--border-base);
-  transition: width 480ms var(--ease-out);
-}
-.alth-vital-widget--vitality .alth-vital-widget__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
-.alth-vital-widget--mystic   .alth-vital-widget__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
-.alth-vital-widget--resource .alth-vital-widget__bar-fill { background: var(--alth-resource); box-shadow: 0 0 8px var(--alth-resource-glow); }
-
-.alth-vital-widget__values .alth-vital-widget__max-input { width: 2em; text-align: left; }
-.alth-vital-widget__sep { color: var(--text-secondary); font-size: var(--text-sm); padding: 0 2px; }
-.alth-vital-widget__note {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-muted);
-}
 
 /* ── PV/PE — barras no cabeçalho, sem moldura própria (já estão dentro
    do box do herói) e com dois campos editáveis (atual e máximo) em vez
@@ -339,6 +241,12 @@
 }
 .alth-vital-bar--vitality .alth-vital-bar__sigla { color: var(--danger); }
 .alth-vital-bar--mystic   .alth-vital-bar__sigla { color: var(--alth-mystic); }
+.alth-vital-bar--resource .alth-vital-bar__sigla { color: var(--alth-resource); }
+.alth-vital-bar__max-fixed {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
 
 .alth-vital-bar__values {
   display: flex;
@@ -384,6 +292,7 @@
 }
 .alth-vital-bar--vitality .alth-vital-bar__bar-fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
 .alth-vital-bar--mystic   .alth-vital-bar__bar-fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
+.alth-vital-bar--resource .alth-vital-bar__bar-fill { background: var(--alth-resource); box-shadow: 0 0 8px var(--alth-resource-glow); }
 
 /* ── Barra arrastável (AltheriumDragBar) — envolve a trilha de cada barra
    (PV/PE/FV/PR/Cartas) com uma área de toque maior e uma linha branca no
@@ -402,7 +311,6 @@
 .alth-drag-bar:focus { outline: none; }
 .alth-drag-bar:focus-visible { box-shadow: 0 0 0 1px var(--gilded-bright); }
 .alth-drag-bar--dragging .alth-vital-bar__bar-fill,
-.alth-drag-bar--dragging .alth-vital-widget__bar-fill { transition: none; }
 
 .alth-drag-bar__handle {
   position: absolute;
@@ -781,6 +689,12 @@
   text-align: right;
 }
 .alth-domains__row--active .alth-domains__dice { color: var(--alth-mystic); font-weight: 700; }
+.alth-domains__genesis {
+  margin-left: 3px;
+  font-size: 0.7em;
+  vertical-align: super;
+  color: var(--accent-bright);
+}
 
 .alth-domains__points { display: flex; gap: 2px; justify-content: flex-end; }
 .alth-domains__pt {
@@ -1368,8 +1282,7 @@
   .alth-inventory__edit { width: 34px; height: 34px; }
   .alth-inventory__custom-btn { min-height: 34px; }
   .alth-triumph__btn { min-height: 36px; padding: var(--space-2) var(--space-4); }
-  .alth-vital-bar__values .alth-vital-bar__value-input,
-  .alth-vital-widget__values .alth-vital-widget__value-input { min-height: 30px; }
+  .alth-vital-bar__values .alth-vital-bar__value-input { min-height: 30px; }
 }
 
 /* Toque (sem hover): "Trocar" do retrato fica sempre visível, como uma
@@ -1414,6 +1327,7 @@
   .alth-hero__field--genesis,
   .alth-hero__vitals .alth-vital-bar--vitality,
   .alth-hero__vitals .alth-vital-bar--mystic,
+  .alth-hero__vitals .alth-vital-bar--resource,
   .alth-hero__level,
   .alth-hero__coins {
     grid-column: auto;
