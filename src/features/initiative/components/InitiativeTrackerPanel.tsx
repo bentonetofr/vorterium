@@ -6,13 +6,17 @@ import {
   advanceInitiativeTurn,
   endInitiativeEncounter,
   addInitiativeParticipant,
+  addCreatureToInitiative,
+  MAX_CREATURE_COPIES,
   setInitiativeValue,
   removeInitiativeParticipant,
   rollInitiative,
   subscribeToInitiative,
 } from '../services/initiativeService'
 import { getCampaignAltheriumSheets } from '../../sheets/altherium/services/altheriumSheetService'
-import type { InitiativeParticipant, InitiativeState } from '../../../shared/types'
+import { getBestiary } from '../../bestiary/services/bestiaryService'
+import { Select } from '../../../shared/components/Select'
+import type { AltheriumCreature, InitiativeParticipant, InitiativeState } from '../../../shared/types'
 import type { CampaignSystem } from '../../../shared/constants/systems'
 import './InitiativeTrackerPanel.css'
 
@@ -39,6 +43,12 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
 
   const [newNpcName, setNewNpcName]   = useState('')
   const [addingNpc, setAddingNpc]     = useState(false)
+
+  // Bestiário (mestre, Altherium): escolher uma criatura e quantas.
+  const [creatures, setCreatures]         = useState<AltheriumCreature[]>([])
+  const [creatureId, setCreatureId]       = useState('')
+  const [creatureQty, setCreatureQty]     = useState(1)
+  const [addingCreature, setAddingCreature] = useState(false)
 
   const [editingValueId, setEditingValueId]       = useState<string | null>(null)
   const [editingValueDraft, setEditingValueDraft] = useState('')
@@ -87,6 +97,15 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
       .catch(() => { /* retrato só não aparece */ })
     return () => { cancelled = true }
   }, [campaignId, campaignSystem])
+
+  useEffect(() => {
+    if (!isMaster || campaignSystem !== 'altherium') return
+    let cancelled = false
+    getBestiary(campaignId)
+      .then((list) => { if (!cancelled) setCreatures(list) })
+      .catch(() => { /* sem bestiário, o seletor só não aparece */ })
+    return () => { cancelled = true }
+  }, [campaignId, campaignSystem, isMaster])
 
   useEffect(() => {
     const unsubscribe = subscribeToInitiative(campaignId, refreshParticipants, setState)
@@ -143,6 +162,23 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
       setActionError(err instanceof Error ? err.message : 'Não foi possível adicionar o participante.')
     } finally {
       setAddingNpc(false)
+    }
+  }
+
+  async function handleAddCreature(e: React.FormEvent) {
+    e.preventDefault()
+    const creature = creatures.find((c) => c.id === creatureId)
+    if (!creature) return
+    setAddingCreature(true)
+    setActionError(null)
+    try {
+      await addCreatureToInitiative(campaignId, creature.name, creatureQty)
+      setCreatureQty(1)
+      refreshParticipants()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Não foi possível pôr a criatura na iniciativa.')
+    } finally {
+      setAddingCreature(false)
     }
   }
 
@@ -363,6 +399,32 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
           />
           <button type="submit" className="btn btn-ghost btn-sm" disabled={addingNpc || !newNpcName.trim()}>
             {addingNpc ? <span className="spinner spinner--sm" /> : 'Adicionar NPC'}
+          </button>
+        </form>
+      )}
+
+      {isMaster && creatures.length > 0 && (
+        <form className="initiative-add-npc initiative-add-creature" onSubmit={handleAddCreature}>
+          <Select
+            className="initiative-add-creature__select"
+            value={creatureId}
+            onChange={setCreatureId}
+            aria-label="Criatura do bestiário"
+            options={[
+              { value: '', label: 'Do bestiário…' },
+              ...creatures.map((c) => ({ value: c.id, label: `${c.name} · ${c.hp} PV · ${c.damage_dice}` })),
+            ]}
+          />
+          <input
+            type="number" className="input initiative-add-creature__qty" min={1} max={MAX_CREATURE_COPIES}
+            value={creatureQty}
+            onChange={(e) => setCreatureQty(Math.max(1, Math.min(MAX_CREATURE_COPIES, parseInt(e.target.value, 10) || 1)))}
+            disabled={addingCreature}
+            aria-label="Quantidade"
+            title="Quantas cópias (numeradas)"
+          />
+          <button type="submit" className="btn btn-ghost btn-sm" disabled={addingCreature || !creatureId}>
+            {addingCreature ? <span className="spinner spinner--sm" /> : 'Pôr no combate'}
           </button>
         </form>
       )}

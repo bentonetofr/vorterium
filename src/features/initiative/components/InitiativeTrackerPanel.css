@@ -224,6 +224,10 @@
   border-top: 1px solid var(--border-dim);
 }
 .initiative-add-npc .input { flex: 1; }
+/* Seletor do bestiário: logo abaixo do "Adicionar NPC", sem outra linha divisória. */
+.initiative-add-creature { padding-top: 0; border-top: none; }
+.initiative-add-creature .initiative-add-creature__select { flex: 1; min-width: 0; }
+.initiative-add-creature .initiative-add-creature__qty { flex: 0 0 64px; width: 64px; text-align: center; }
 
 /* ═══ Movimento ═══ */
 /* Turno atual: a linha acende com um brilho que pulsa devagar e a

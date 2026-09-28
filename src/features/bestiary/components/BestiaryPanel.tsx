@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Collapse } from '../../../shared/components/Collapse'
 import { DAMAGE_DICE_PATTERN } from '../../sheets/altherium/services/altheriumSheetService'
+import { addCreatureToInitiative, MAX_CREATURE_COPIES } from '../../initiative/services/initiativeService'
 import {
   createCreature,
   deleteCreature,
@@ -296,10 +297,26 @@ interface CreatureCardProps {
   onDelete:        () => void
   onConfirmDelete: () => void
   onCancelDelete:  () => void
+  /** Põe N cópias no combate; lança erro se falhar. */
+  onAddToInitiative: (quantity: number) => Promise<void>
 }
 
-function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConfirmDelete, onCancelDelete }: CreatureCardProps) {
+function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConfirmDelete, onCancelDelete, onAddToInitiative }: CreatureCardProps) {
   const average = diceAverage(creature.damage_dice)
+  const [picking, setPicking] = useState(false)
+  const [quantity, setQuantity] = useState(1)
+  const [adding, setAdding] = useState(false)
+
+  async function addToInitiative() {
+    setAdding(true)
+    try {
+      await onAddToInitiative(quantity)
+      setPicking(false)
+      setQuantity(1)
+    } finally {
+      setAdding(false)
+    }
+  }
 
   return (
     <article className="creature-card">
@@ -321,12 +338,45 @@ function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConf
             </>
           ) : (
             <>
+              <button
+                type="button" className="btn btn-ghost creature-card__btn creature-card__btn--initiative"
+                onClick={() => setPicking((v) => !v)} aria-expanded={picking}
+              >
+                Iniciativa
+              </button>
               <button type="button" className="btn btn-ghost creature-card__btn" onClick={onEdit}>Editar</button>
               <button type="button" className="btn btn-ghost creature-card__btn" onClick={onDelete}>Excluir</button>
             </>
           )}
         </div>
       </header>
+
+      {picking && !confirming && (
+        <div className="creature-initiative" role="group" aria-label={`Pôr ${creature.name} na iniciativa`}>
+          <span className="creature-initiative__label">Quantos no combate?</span>
+          <div className="creature-initiative__stepper">
+            <button
+              type="button" className="btn btn-ghost creature-card__btn" aria-label="Menos um"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={adding || quantity <= 1}
+            >
+              −
+            </button>
+            <span className="creature-initiative__qty" aria-live="polite">{quantity}</span>
+            <button
+              type="button" className="btn btn-ghost creature-card__btn" aria-label="Mais um"
+              onClick={() => setQuantity((q) => Math.min(MAX_CREATURE_COPIES, q + 1))} disabled={adding || quantity >= MAX_CREATURE_COPIES}
+            >
+              +
+            </button>
+          </div>
+          <button type="button" className="btn btn-primary creature-card__btn" onClick={() => void addToInitiative()} disabled={adding}>
+            {adding ? 'Adicionando…' : 'Pôr no combate'}
+          </button>
+          <button type="button" className="btn btn-ghost creature-card__btn" onClick={() => setPicking(false)} disabled={adding}>
+            Cancelar
+          </button>
+        </div>
+      )}
 
       <div className="creature-card__stats">
         <div className="creature-stat">
@@ -446,6 +496,16 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
       flash('Criatura atualizada.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleAddToInitiative(creature: AltheriumCreature, quantity: number) {
+    try {
+      const { names, started } = await addCreatureToInitiative(campaign.id, creature.name, quantity)
+      const who = names.length === 1 ? names[0] : `${names.length}× ${creature.name}`
+      flash(`${who} ${names.length === 1 ? 'entrou' : 'entraram'} na iniciativa${started ? ' (combate iniciado)' : ''}.`)
+    } catch (err) {
+      flash(err instanceof Error ? err.message : 'Não foi possível pôr a criatura na iniciativa.')
     }
   }
 
@@ -575,6 +635,7 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
                 onDelete={() => setDeletingId(creature.id)}
                 onConfirmDelete={() => void handleDelete(creature.id)}
                 onCancelDelete={() => setDeletingId(null)}
+                onAddToInitiative={(quantity) => handleAddToInitiative(creature, quantity)}
               />
             ),
           )}

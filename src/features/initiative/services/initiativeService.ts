@@ -66,6 +66,56 @@ export async function addInitiativeParticipant(campaignId: string, name: string)
   if (error) throw new Error('Não foi possível adicionar o participante.')
 }
 
+/** Máximo de cópias de uma criatura de uma vez (ex.: 6 lobos). */
+export const MAX_CREATURE_COPIES = 12
+
+/**
+ * Nomes pra N cópias de uma criatura, sem repetir quem já está no combate:
+ * 1 cópia sem ninguém com o nome → "Lobo"; senão numera a partir do
+ * próximo livre → "Lobo 2", "Lobo 3"…
+ */
+export function creatureCopyNames(base: string, quantity: number, existing: string[]): string[] {
+  const name = base.trim().slice(0, 74)
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = new RegExp(`^${escaped}(?: (\\d+))?$`, 'i')
+  let highest = 0
+  let plainTaken = false
+  for (const n of existing) {
+    const m = n.trim().match(pattern)
+    if (!m) continue
+    if (m[1]) highest = Math.max(highest, Number(m[1]))
+    else plainTaken = true
+  }
+  if (quantity === 1 && !plainTaken && highest === 0) return [name]
+  const start = Math.max(highest, plainTaken ? 1 : 0) + 1
+  return Array.from({ length: quantity }, (_, i) => `${name} ${start + i}`)
+}
+
+/**
+ * Põe uma criatura do bestiário no combate (N cópias numeradas). Sem
+ * combate ativo, inicia um antes — senão a aba Iniciativa não mostraria
+ * ninguém. Devolve os nomes adicionados e se o combate foi iniciado agora.
+ */
+export async function addCreatureToInitiative(
+  campaignId: string,
+  creatureName: string,
+  quantity: number,
+): Promise<{ names: string[]; started: boolean }> {
+  const qty = Math.max(1, Math.min(MAX_CREATURE_COPIES, Math.floor(quantity)))
+  const state = await getInitiativeState(campaignId)
+  if (!state) await startInitiativeEncounter(campaignId)
+
+  const current = await getInitiativeParticipants(campaignId)
+  const names = creatureCopyNames(creatureName, qty, current.map((p) => p.name))
+
+  const { error } = await supabase
+    .from('campaign_initiative_participants')
+    .insert(names.map((name) => ({ campaign_id: campaignId, name, user_id: null })))
+
+  if (error) throw new Error('Não foi possível pôr a criatura na iniciativa.')
+  return { names, started: !state }
+}
+
 /** Define o valor de iniciativa diretamente — RLS decide quem pode (dono da linha ou mestre). */
 export async function setInitiativeValue(participantId: string, value: number): Promise<void> {
   const { error } = await supabase

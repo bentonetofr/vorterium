@@ -362,3 +362,25 @@
   .bestiary-member__weapon { grid-column: 1 / -1; text-align: left; padding-left: 24px; }
   .bestiary-total__value { font-size: var(--text-lg); }
 }
+
+/* ── Pôr no combate (aba Iniciativa) ── */
+.creature-card__btn--initiative { color: var(--accent-bright); border-color: var(--gilded); }
+.creature-initiative {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-void);
+  border: 1px dashed var(--gilded);
+  border-radius: var(--radius-md);
+}
+.creature-initiative__label { font-size: var(--text-sm); color: var(--text-secondary); }
+.creature-initiative__stepper { display: inline-flex; align-items: center; gap: var(--space-2); }
+.creature-initiative__qty {
+  min-width: 2ch;
+  text-align: center;
+  font-family: var(--font-label);
+  font-weight: 700;
+  color: var(--text-primary);
+}
