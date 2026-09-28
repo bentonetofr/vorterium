@@ -1,6 +1,7 @@
 import { ThemeProvider } from '../../shared/theme/ThemeProvider'
 import { AuthProvider } from '../../features/auth/AuthProvider'
 import { AppRouter } from '../router'
+import { ClickEffects } from '../../shared/components/ClickEffects'
 
 /**
  * Composição de todos os providers globais da aplicação.
@@ -10,6 +11,7 @@ import { AppRouter } from '../router'
 export function AppProviders() {
   return (
     <ThemeProvider>
+      <ClickEffects />
       <AuthProvider>
         <AppRouter />
       </AuthProvider>

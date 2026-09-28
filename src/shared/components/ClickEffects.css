@@ -1,0 +1,61 @@
+/* Camada do efeito de clique — por cima de tudo, sem pegar clique. */
+.click-fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.click-fx {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.click-fx__ring {
+  position: absolute;
+  left: -13px;
+  top: -13px;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #f5c542;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(245, 197, 66, 0.55), inset 0 0 6px rgba(255, 255, 255, 0.35);
+  animation: click-fx-ring 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.click-fx__spark {
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  background: #f5c542;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(245, 197, 66, 0.9);
+  animation: click-fx-spark 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.click-fx__spark--white {
+  width: 3px;
+  height: 3px;
+  left: -1.5px;
+  top: -1.5px;
+  background: #fff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.9);
+}
+
+@keyframes click-fx-ring {
+  from { transform: scale(0.25); opacity: 1; }
+  to   { transform: scale(1.15); opacity: 0; border-width: 0.5px; }
+}
+
+@keyframes click-fx-spark {
+  0%   { transform: rotate(var(--angle)) translateX(3px) scale(1); opacity: 1; }
+  70%  { opacity: 0.9; }
+  100% { transform: rotate(var(--angle)) translateX(var(--dist)) scale(0.2); opacity: 0; }
+}
+
+[data-theme="light"] .click-fx__ring { border-color: #c9981f; box-shadow: 0 0 8px rgba(201, 152, 31, 0.45); }
+[data-theme="light"] .click-fx__spark { background: #c9981f; }
+[data-theme="light"] .click-fx__spark--white { background: #fff; box-shadow: 0 0 4px rgba(120, 88, 18, 0.6); }
