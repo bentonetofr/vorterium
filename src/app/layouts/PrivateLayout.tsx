@@ -15,6 +15,8 @@ import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
 import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { Presence } from '../../shared/components/Presence'
 import { Collapse } from '../../shared/components/Collapse'
+import { useUnseenChangelog } from '../../shared/constants/changelog'
+import { SITE_NAV, TOOL_NAV, pageLabel, type NavItem } from '../navigation'
 import './PrivateLayout.css'
 
 export function PrivateLayout() {
@@ -38,7 +40,12 @@ const BOTTOM_NAV_ITEMS = [
   { to: '/minhas-fichas', icon: '◎', label: 'Fichas' },
   { to: '/atividade',     icon: '◉', label: 'Atividade' },
   { to: '/perfil',        icon: '○', label: 'Perfil' },
+  // Biblioteca, Meu bestiário, Galeria, Novidades, Ajuda e Feedback.
+  { to: '/mais',          icon: '☰', label: 'Mais' },
 ] as const
+
+/** Páginas que moram dentro do "Mais" no celular (acendem o botão dele). */
+const MORE_PATHS = ['/mais', ...TOOL_NAV.map((i) => i.to), ...SITE_NAV.map((i) => i.to)]
 
 // Precisa ser um componente separado de PrivateLayout: a barra lateral e
 // a barra de topo mobile leem a campanha atual do contexto, e um
@@ -50,6 +57,25 @@ function PrivateLayoutContent() {
   const { campaign, chatUnread, privateUnread } = useCurrentCampaign()
   const [mobileCampaignMenuOpen, setMobileCampaignMenuOpen] = useState(false)
   const location = useLocation()
+  const unseenNews = useUnseenChangelog()
+  const inMore = MORE_PATHS.some((p) => location.pathname.startsWith(p))
+
+  // Links extras da barra lateral. O de feedback leva junto a página de
+  // onde a pessoa veio, pra dizer onde o problema aconteceu.
+  function renderNavItem(item: NavItem) {
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        state={item.to === '/feedback' ? { from: pageLabel(location.pathname, campaign?.name) } : undefined}
+        className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
+      >
+        <span className="sidebar__link-icon">{item.icon}</span>
+        {item.label}
+        {item.to === '/novidades' && unseenNews && <span className="sidebar__dot" aria-label="novidade" />}
+      </NavLink>
+    )
+  }
   // Chave da animação de troca de página: só as duas primeiras partes do
   // caminho — dentro de uma campanha (/campanhas/:id/...) quem anima a
   // troca de seção é o próprio CampaignAreaLayout.
@@ -141,6 +167,12 @@ function PrivateLayoutContent() {
             <span className="sidebar__link-icon">○</span>
             Perfil
           </NavLink>
+
+          <span className="sidebar__group">Ferramentas</span>
+          {TOOL_NAV.map(renderNavItem)}
+
+          <span className="sidebar__group">Vorterium</span>
+          {SITE_NAV.map(renderNavItem)}
         </nav>
 
         <div className="sidebar__footer">
@@ -217,9 +249,14 @@ function PrivateLayoutContent() {
           <NavLink
             key={item.to}
             to={item.to}
-            className={({ isActive }) => `bottom-nav__link${isActive ? ' bottom-nav__link--active' : ''}`}
+            state={item.to === '/mais' ? { from: pageLabel(location.pathname, campaign?.name) } : undefined}
+            className={({ isActive }) =>
+              `bottom-nav__link${isActive || (item.to === '/mais' && inMore) ? ' bottom-nav__link--active' : ''}`}
           >
-            <span className="bottom-nav__icon" aria-hidden="true">{item.icon}</span>
+            <span className="bottom-nav__icon" aria-hidden="true">
+              {item.icon}
+              {item.to === '/mais' && unseenNews && <span className="bottom-nav__dot" aria-label="novidade" />}
+            </span>
             <span className="bottom-nav__label">{item.label}</span>
           </NavLink>
         ))}

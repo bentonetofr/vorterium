@@ -46,6 +46,12 @@ function useCanEmbedPdf(): boolean {
   return canEmbed
 }
 
+/** Sistemas com livro de regras (Biblioteca do menu). */
+export function rulebookSystems(): { system: CampaignSystem; title: string; subtitle: string }[] {
+  return (Object.entries(RULEBOOKS) as [CampaignSystem, Rulebook][])
+    .map(([system, book]) => ({ system, title: book.title, subtitle: book.subtitle }))
+}
+
 /** O sistema tem livro de regras pra mostrar na Mesa da Sessão? */
 export function hasRulebook(system: CampaignSystem): boolean {
   return system in RULEBOOKS

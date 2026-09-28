@@ -108,3 +108,58 @@ export async function getMesaImageShowUrl(path: string): Promise<string> {
   if (error || !data?.signedUrl) throw new Error('Não foi possível abrir a imagem.')
   return data.signedUrl
 }
+
+// ────────────────────────────────────────────────────────
+// Galeria do menu — as imagens de TODAS as campanhas em que a pessoa é
+// mestre (a RLS da tabela já só devolve essas), pra rever e reaproveitar.
+// ────────────────────────────────────────────────────────
+
+export interface GalleryImageWithCampaign extends MesaGalleryImage {
+  campaign_name: string
+}
+
+export async function listAllMyMesaImages(): Promise<GalleryImageWithCampaign[]> {
+  const { data, error } = await supabase
+    .from('campaign_mesa_images')
+    .select('*, campaigns(id, name)')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error('Não foi possível carregar a galeria.')
+  type Row = Omit<MesaGalleryImage, 'url'> & { campaigns: { id: string; name: string } | null }
+  const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.campaigns != null)
+  if (rows.length === 0) return []
+
+  const { data: signed } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrls(rows.map((r) => r.path), THUMB_URL_SECONDS)
+  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
+
+  return rows.map(({ campaigns, ...r }) => ({ ...r, campaign_name: campaigns!.name, url: urlByPath.get(r.path) ?? null }))
+}
+
+/** Copia a imagem pra galeria de outra campanha (a pessoa é mestre das duas). */
+export async function copyMesaImageToCampaign(image: MesaGalleryImage, campaignId: string): Promise<void> {
+  const ext = image.path.split('.').pop() ?? 'img'
+  const path = `${campaignId}/${crypto.randomUUID()}.${ext}`
+  const { error: copyError } = await supabase.storage.from(BUCKET).copy(image.path, path)
+  if (copyError) {
+    console.error('Erro do Storage ao copiar imagem da Mesa:', copyError)
+    throw new Error('Não foi possível copiar a imagem.')
+  }
+
+  const { error } = await supabase
+    .from('campaign_mesa_images')
+    .insert({ campaign_id: campaignId, name: image.name, path })
+
+  if (error) {
+    await supabase.storage.from(BUCKET).remove([path])
+    throw new Error('Não foi possível salvar a cópia na galeria.')
+  }
+}
+
+/** Link temporário pra abrir a imagem em tamanho real numa aba nova. */
+export async function getMesaImageViewUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, THUMB_URL_SECONDS)
+  if (error || !data?.signedUrl) throw new Error('Não foi possível abrir a imagem.')
+  return data.signedUrl
+}

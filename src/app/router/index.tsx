@@ -15,6 +15,13 @@ import { CampaignAreaLayout } from '../../features/campaigns/pages/CampaignAreaL
 import { ProfilePage }     from '../../features/users/pages/ProfilePage'
 import { MySheetsPage }        from '../../features/sheets/pages/MySheetsPage'
 import { GlobalActivityPage } from '../../features/activity/pages/GlobalActivityPage'
+import { LibraryPage }        from '../../features/library/pages/LibraryPage'
+import { MyBestiaryPage }     from '../../features/bestiary/pages/MyBestiaryPage'
+import { GalleryPage }        from '../../features/mesa/pages/GalleryPage'
+import { NewsPage }           from '../../features/news/pages/NewsPage'
+import { HelpPage }           from '../../features/help/pages/HelpPage'
+import { FeedbackPage }       from '../../features/feedback/pages/FeedbackPage'
+import { MorePage }           from '../../features/more/pages/MorePage'
 
 import { LandingPage }     from '../../features/public/pages/LandingPage'
 import { SobrePage }       from '../../features/public/pages/SobrePage'
@@ -52,6 +59,13 @@ export function AppRouter() {
           <Route path="/minhas-fichas"         element={<MySheetsPage />} />
           <Route path="/atividade"            element={<GlobalActivityPage />} />
           <Route path="/perfil"               element={<ProfilePage />} />
+          <Route path="/biblioteca"           element={<LibraryPage />} />
+          <Route path="/meu-bestiario"        element={<MyBestiaryPage />} />
+          <Route path="/galeria"              element={<GalleryPage />} />
+          <Route path="/novidades"            element={<NewsPage />} />
+          <Route path="/ajuda"                element={<HelpPage />} />
+          <Route path="/feedback"             element={<FeedbackPage />} />
+          <Route path="/mais"                 element={<MorePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

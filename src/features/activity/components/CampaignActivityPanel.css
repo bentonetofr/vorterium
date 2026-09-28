@@ -274,7 +274,7 @@
   background: transparent;
   border: 1px solid var(--border-base);
   border-radius: 999px;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: all var(--transition-fast);
 }
 .act-filter:hover { color: var(--text-primary); border-color: var(--border-bright); }
@@ -357,7 +357,7 @@
   color: var(--text-secondary);
 }
 .act-change__long { flex-basis: 100%; font-size: var(--text-xs); }
-.act-change__long summary { cursor: pointer; color: var(--accent-bright); }
+.act-change__long summary { cursor: var(--cursor-hand); color: var(--accent-bright); }
 .act-change__long-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

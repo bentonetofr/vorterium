@@ -317,7 +317,7 @@
   background: var(--bg-elevated);
   border: 1.5px solid var(--border-dim);
   border-radius: var(--radius-lg);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: border-color var(--transition-fast), background var(--transition-fast);
   text-align: left;
   width: 100%;
@@ -334,7 +334,7 @@
 }
 
 .system-option--disabled {
-  cursor: default;
+  cursor: var(--cursor-arrow);
   opacity: 0.7;
 }
 
@@ -492,7 +492,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   white-space: nowrap;
   transition: all var(--transition-fast);
   flex-shrink: 0;

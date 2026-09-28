@@ -20,7 +20,7 @@
   font-size: var(--text-xs);
   letter-spacing: 0.06em;
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   align-self: flex-start;
 }
 .dice-private-toggle input[type="checkbox"] {
@@ -33,7 +33,7 @@
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   position: relative;
   transition: all var(--transition-fast);
 }
@@ -99,7 +99,7 @@
   font-size: var(--text-md);
   font-weight: 600;
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   position: relative;
   overflow: hidden;
   transition: all var(--transition-fast);
@@ -171,7 +171,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--accent-dim);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: all var(--transition-fast);
 }
 .dice-custom__example-chip:hover:not(:disabled) {

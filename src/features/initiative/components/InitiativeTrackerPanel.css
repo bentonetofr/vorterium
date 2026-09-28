@@ -132,9 +132,9 @@
   font-family: var(--font-display);
   font-size: var(--text-sm);
   padding: var(--space-1) var(--space-2);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
-.initiative-row__value:disabled { cursor: default; opacity: 0.7; }
+.initiative-row__value:disabled { cursor: var(--cursor-arrow); opacity: 0.7; }
 .initiative-row__value:not(:disabled):hover { border-color: var(--gilded); }
 
 .initiative-row__value-input {
@@ -151,7 +151,7 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   font-size: var(--text-sm);
   padding: var(--space-1);
   transition: color var(--transition-fast);

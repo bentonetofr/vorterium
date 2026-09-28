@@ -64,7 +64,7 @@
   border: 1px solid var(--border-dim);
   background: transparent;
   color: var(--text-muted);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .mesa-notice__close:hover { color: var(--text-primary); border-color: var(--border-bright); }
 

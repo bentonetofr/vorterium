@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { Collapse } from '../../../shared/components/Collapse'
 import { DAMAGE_DICE_PATTERN } from '../../sheets/altherium/services/altheriumSheetService'
 import { addCreatureToInitiative, MAX_CREATURE_COPIES } from '../../initiative/services/initiativeService'
+import { saveCampaignCreatureToMine } from '../services/personalBestiaryService'
 import {
   createCreature,
   deleteCreature,
@@ -299,10 +300,13 @@ interface CreatureCardProps {
   onCancelDelete:  () => void
   /** Põe N cópias no combate; lança erro se falhar. */
   onAddToInitiative: (quantity: number) => Promise<void>
+  /** Leva uma cópia pro Meu bestiário. */
+  onSaveToMine:    () => Promise<void>
 }
 
-function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConfirmDelete, onCancelDelete, onAddToInitiative }: CreatureCardProps) {
+function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConfirmDelete, onCancelDelete, onAddToInitiative, onSaveToMine }: CreatureCardProps) {
   const average = diceAverage(creature.damage_dice)
+  const [savingToMine, setSavingToMine] = useState(false)
   const [picking, setPicking] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
@@ -343,6 +347,14 @@ function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConf
                 onClick={() => setPicking((v) => !v)} aria-expanded={picking}
               >
                 Iniciativa
+              </button>
+              <button
+                type="button" className="btn btn-ghost creature-card__btn"
+                title="Guardar uma cópia no Meu bestiário, pra usar em outras campanhas"
+                disabled={savingToMine}
+                onClick={() => { setSavingToMine(true); void onSaveToMine().finally(() => setSavingToMine(false)) }}
+              >
+                {savingToMine ? 'Guardando…' : 'Guardar'}
               </button>
               <button type="button" className="btn btn-ghost creature-card__btn" onClick={onEdit}>Editar</button>
               <button type="button" className="btn btn-ghost creature-card__btn" onClick={onDelete}>Excluir</button>
@@ -509,6 +521,15 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
     }
   }
 
+  async function handleSaveToMine(creature: AltheriumCreature) {
+    try {
+      await saveCampaignCreatureToMine(creature)
+      flash(`${creature.name} foi guardada no Meu bestiário.`)
+    } catch (err) {
+      flash(err instanceof Error ? err.message : 'Não foi possível guardar a criatura.')
+    }
+  }
+
   async function handleDelete(id: string) {
     setDeleting(true)
     try {
@@ -636,6 +657,7 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
                 onConfirmDelete={() => void handleDelete(creature.id)}
                 onCancelDelete={() => setDeletingId(null)}
                 onAddToInitiative={(quantity) => handleAddToInitiative(creature, quantity)}
+                onSaveToMine={() => handleSaveToMine(creature)}
               />
             ),
           )}

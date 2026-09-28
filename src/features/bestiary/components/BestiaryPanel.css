@@ -104,7 +104,7 @@
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .bestiary-member__check input { accent-color: var(--accent-bright); flex-shrink: 0; }
 .bestiary-member__name {
@@ -205,7 +205,7 @@
   color: var(--accent-bright);
   text-decoration: underline;
   text-underline-offset: 2px;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .creature-form__reset:disabled { opacity: 0.5; cursor: not-allowed; }
 .creature-form__notes { resize: vertical; min-height: 90px; line-height: 1.6; }
@@ -226,7 +226,7 @@
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
 .creature-tier:hover:not(:disabled):not(.creature-tier--active) { border-color: var(--gilded); color: var(--text-primary); }

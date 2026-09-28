@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
   transition: all var(--transition-base);
 }
@@ -77,7 +77,7 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   font-size: var(--text-md);
   line-height: 1;
   padding: var(--space-1);

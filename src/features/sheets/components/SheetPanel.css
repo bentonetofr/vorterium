@@ -280,7 +280,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-dim);
   border-radius: var(--radius-lg);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   text-align: left;
   transition: all var(--transition-fast);
 }

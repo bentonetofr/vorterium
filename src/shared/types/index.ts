@@ -388,6 +388,23 @@ export interface AltheriumCreature {
   updated_at:   string
 }
 
+/** Criatura do "Meu bestiário" — da pessoa, fora de qualquer campanha. Rodadas
+ *  e perigo só existem quando ela veio calculada do bestiário de uma campanha. */
+export interface PersonalCreature {
+  id:           string
+  owner_id:     string
+  name:         string
+  hp:           number
+  damage_dice:  string
+  rounds:       number | null
+  danger_pct:   number | null
+  party_damage: number | null
+  party_avg_hp: number | null
+  notes:        string | null
+  created_at:   string
+  updated_at:   string
+}
+
 /** Participante do combate atual — membro (user_id preenchido) ou NPC/monstro (user_id nulo). */
 export interface InitiativeParticipant {
   id:               string

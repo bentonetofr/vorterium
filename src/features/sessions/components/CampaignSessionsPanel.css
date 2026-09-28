@@ -143,7 +143,7 @@
 }
 
 .session-form__select {
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   color-scheme: dark;
 }
 
@@ -343,7 +343,7 @@
   border: 1px solid var(--border-dim);
   background: transparent;
   color: var(--text-muted);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
 

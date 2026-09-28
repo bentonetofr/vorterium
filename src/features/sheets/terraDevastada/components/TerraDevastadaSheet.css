@@ -156,7 +156,7 @@
   background: transparent;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: background var(--transition-fast), border-color var(--transition-fast), transform 160ms var(--ease-spring);
 }
 .td-track__box:hover { border-color: var(--border-bright); color: var(--text-primary); }
@@ -191,7 +191,7 @@
   background: transparent;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: all var(--transition-fast), transform 160ms var(--ease-spring);
 }
 .td-btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
@@ -214,7 +214,7 @@
   background: transparent;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .td-stepper__btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
 .td-stepper__btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -310,7 +310,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .td-row__remove:hover { color: var(--danger-bright); border-color: var(--danger); }
 .td-add-row { display: flex; gap: var(--space-2); }
@@ -372,7 +372,7 @@
   background: transparent;
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .td-segmented__btn:hover { color: var(--text-primary); }
 .td-segmented__btn--active { color: var(--accent-bright); background: var(--bg-elevated); box-shadow: var(--shadow-sm); }
@@ -389,7 +389,7 @@
   background: var(--bg-void);
   border: 1px solid var(--border-base);
   border-radius: 999px;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   transition: all var(--transition-fast), transform 160ms var(--ease-spring);
 }
 .td-chip:active:not(:disabled) { transform: scale(0.94); }
@@ -437,7 +437,7 @@
   background: transparent;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .td-meta__btn:hover { color: var(--text-primary); }
 .td-meta__btn--active { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--accent-glow); }
@@ -449,7 +449,7 @@
   gap: var(--space-2);
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 
 /* Dados rolados: pares acendem, 6 brilha, extras do Golpe de Sorte com ↻. */
@@ -539,7 +539,7 @@
   color: var(--text-secondary);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .td-option:hover { background: var(--bg-void); }
 .td-option input { accent-color: var(--td-blood); flex-shrink: 0; }
