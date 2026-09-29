@@ -30,6 +30,14 @@ import { PrivacidadePage } from '../../features/public/pages/PrivacidadePage'
 
 import { InvitePage } from '../../features/invites/pages/InvitePage'
 
+import { DevRoute }         from '../../features/dev/DevRoute'
+import { DevLayout }        from '../../features/dev/DevLayout'
+import { DevLoginPage }     from '../../features/dev/pages/DevLoginPage'
+import { DevOverviewPage }  from '../../features/dev/pages/DevOverviewPage'
+import { DevFeedbackPage }  from '../../features/dev/pages/DevFeedbackPage'
+import { DevUsersPage, DevUserPage } from '../../features/dev/pages/DevUsersPage'
+import { DevCampaignsPage, DevCampaignPage } from '../../features/dev/pages/DevCampaignsPage'
+
 export function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -49,6 +57,17 @@ export function AppRouter() {
           <Route path="/cadastro" element={<GuestRoute><RegisterPage /></GuestRoute>} />
 
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        </Route>
+
+        {/* ── Desenvolvedor: login próprio (sem link no site) e painel ── */}
+        <Route path="/dev/entrar" element={<DevLoginPage />} />
+        <Route element={<DevRoute><DevLayout /></DevRoute>}>
+          <Route path="/dev"                       element={<DevOverviewPage />} />
+          <Route path="/dev/feedback"              element={<DevFeedbackPage />} />
+          <Route path="/dev/usuarios"              element={<DevUsersPage />} />
+          <Route path="/dev/usuarios/:userId"      element={<DevUserPage />} />
+          <Route path="/dev/campanhas"             element={<DevCampaignsPage />} />
+          <Route path="/dev/campanhas/:campaignId" element={<DevCampaignPage />} />
         </Route>
 
         {/* ── Rotas privadas (requerem autenticação) ── */}

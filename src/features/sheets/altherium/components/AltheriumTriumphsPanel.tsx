@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import type { AltheriumRaiz } from '../constants/altherium'
 import {
   BERSERKER_TRIUMPHS,
+  byName,
   TRIUMPH_ACTION_LABELS,
   findBerserkerTriumph,
   type BerserkerTriumphDef,
@@ -36,7 +37,7 @@ export function AltheriumTriumphsPanel({
   }
 
   // Berserker
-  const owned     = triumphIds.map(findBerserkerTriumph).filter((t): t is BerserkerTriumphDef => !!t)
+  const owned     = triumphIds.map(findBerserkerTriumph).filter((t): t is BerserkerTriumphDef => !!t).sort(byName)
   const available = BERSERKER_TRIUMPHS.filter((t) => !triumphIds.includes(t.id))
   const full      = owned.length >= limit
   const over      = owned.length > limit

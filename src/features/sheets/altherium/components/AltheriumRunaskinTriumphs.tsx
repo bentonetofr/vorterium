@@ -4,6 +4,7 @@ import { Presence } from '../../../../shared/components/Presence'
 import {
   RUNASKIN_TRAILS,
   RUNASKIN_TRIUMPHS,
+  byName,
   TRIUMPH_ACTION_LABELS,
   TRIUMPH_RANGES,
   type TriumphAction,
@@ -85,7 +86,8 @@ export function AltheriumRunaskinTriumphs({
     return o
       ? { id: t.id, trail: t.trail, name: o.name, description: o.description, cost: o.cost, test: o.test, action: o.action, range: o.range, image_url: o.image_url ?? null, edited: true }
       : { id: t.id, trail: t.trail, name: t.name, description: t.description, cost: t.cost, test: t.test, action: t.action, range: t.range, image_url: null, edited: false }
-  })
+  }).sort(byName) // pelo nome que aparece (o editado, se houver)
+  const runesSorted = [...runes].sort(byName)
   const limitHit   = usesLimit != null && sceneUses >= usesLimit
 
   function renderUseButton(name: string, cost: number) {
@@ -251,7 +253,7 @@ export function AltheriumRunaskinTriumphs({
         ? <p className="alth-triumphs__empty">Nenhuma runa descoberta ainda — explore Altherium.</p>
         : (
           <div className="alth-triumphs__grid">
-            {runes.map((r) => (
+            {runesSorted.map((r) => (
                 <RuneCard
                   key={r.id}
                   trailClass="descoberta"

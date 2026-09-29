@@ -68,6 +68,17 @@ export function PrivacidadePage() {
       </section>
 
       <section className="public-page__section">
+        <h2 className="public-page__section-title">3.1. Acesso do desenvolvedor</h2>
+        <p className="public-page__text">
+          Quem desenvolve o Vorterium tem uma conta interna que pode <strong>consultar</strong> os
+          dados guardados no site — campanhas, fichas, mensagens (inclusive privadas), rolagens
+          (inclusive ocultas), anotações, documentos e imagens. Esse acesso é só de leitura e serve
+          pra suporte, investigar problemas relatados e manter o site funcionando. Essa conta não
+          altera o que você e sua mesa criaram, e os dados não são vendidos nem repassados a ninguém.
+        </p>
+      </section>
+
+      <section className="public-page__section">
         <h2 className="public-page__section-title">4. Transmissão da Mesa</h2>
         <p className="public-page__text">
           A transmissão de tela da Mesa vai direto do navegador do mestre para o de

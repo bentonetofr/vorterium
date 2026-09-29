@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.8',
+    date:    '2026-09-29',
+    title:   'Triunfos em ordem e painel interno de suporte',
+    items: [
+      'Altherium: triunfos do Pilar agora aparecem por número de combinações, de 1 a 4 (e em ordem alfabética dentro de cada uma); os do Berserker e do Runaskin (trilha e runas descobertas) ficam em ordem alfabética.',
+      'Quem desenvolve o Vorterium ganhou um painel interno pra investigar problemas relatados e acompanhar o feedback enviado. O acesso é só de leitura; os detalhes estão na página de Privacidade.',
+    ],
+  },
+  {
     version: '1.7',
     date:    '2026-09-28',
     title:   'Chat flutuante, biblioteca de estantes e galeria de lembranças',

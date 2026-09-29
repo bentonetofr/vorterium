@@ -37,7 +37,14 @@ export interface PilarTriumphDef {
   cost:        number
 }
 
-export const BERSERKER_TRIUMPHS: BerserkerTriumphDef[] = [
+/** Ordem alfabética em português (acentos contam como a letra base). */
+export function byName<T extends { name: string }>(a: T, b: T): number {
+  return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+}
+
+// Listas em ordem alfabética (Pilar: por combinações de 1 a 4, e
+// alfabética dentro de cada custo) — ver os .sort() no fim de cada lista.
+export const BERSERKER_TRIUMPHS: BerserkerTriumphDef[] = ([
   { id: 'briga-de-bar',        name: 'Briga de Bar',        description: 'Usa qualquer objeto como arma (1d8).',                                                                         action: 'padrao', cost: 4, range: 'Toque/curto', test: 'Luta com Fúria' },
   { id: 'critico-selvagem',    name: 'Crítico Selvagem',    description: 'Acertos críticos maximizam 1 dado do dano.',                                                                   action: 'bonus',  cost: 2, range: 'Qualquer',    test: null },
   { id: 'corrente-predadora',  name: 'Corrente Predadora',  description: 'Coloca corrente em uma arma pesada ou leve, puxa o inimigo em sua direção e o deixa perto ao acertar.',        action: 'bonus',  cost: 2, range: 'Curto',       test: 'Luta com Impulso' },
@@ -62,9 +69,9 @@ export const BERSERKER_TRIUMPHS: BerserkerTriumphDef[] = [
   { id: 'ferro-temperado',     name: 'Ferro Temperado',     description: 'Empunhando uma arma pesada, seus críticos causam +1 dado do dano ou ignoram 5 pontos de armadura.',           action: 'bonus',  cost: 6, range: 'Qualquer',    test: null },
   { id: 'ultimo-grito',        name: 'Último Grito',        description: 'Ganha 5 de resistência a um tipo de dano (à sua escolha) por 1d4 turno.',                                      action: 'bonus',  cost: 4, range: 'Qualquer',    test: 'Resiliência com Espírito' },
   { id: 'cadeia-de-sangue',    name: 'Cadeia de Sangue',    description: 'Ao acertar um inimigo, você pode gastar 1 FV para saltar para outro inimigo a curto alcance e atacá-lo com -2 na rolagem.', action: 'bonus', cost: 1, range: 'Curto', test: null },
-]
+] satisfies BerserkerTriumphDef[]).sort(byName)
 
-export const PILAR_TRIUMPHS: PilarTriumphDef[] = [
+export const PILAR_TRIUMPHS: PilarTriumphDef[] = ([
   { id: 'bencao-de-hamingja',     name: 'Bênção de Hamingja',     cost: 3, description: 'Quando fizer um teste importante, você pode rerrolar os dados e escolher o resultado melhor.' },
   { id: 'chama-inspiradora',      name: 'Chama Inspiradora',      cost: 3, description: 'Escolha um aliado, ele adiciona +2 a um atributo para um teste específico (aplica-se a um único teste).' },
   { id: 'conselho-dos-cacadores', name: 'Conselho dos Caçadores', cost: 3, description: 'Enquanto você coordena uma investigação em grupo, todos ganham +4 em testes de Investigação nessa cena.' },
@@ -91,7 +98,7 @@ export const PILAR_TRIUMPHS: PilarTriumphDef[] = [
   { id: 'sombra-antecipada',      name: 'Sombra Antecipada',      cost: 3, description: 'Escolha um inimigo visível. Você recebe uma visão lúgubre do próximo ato dele: ele deve declarar se irá atacar, recuar ou usar habilidade especial.' },
   { id: 'olhos-do-augurio',       name: 'Olhos do Augúrio',       cost: 2, description: 'Marque um alvo por até a cena inteira. Enquanto marcado, você recebe +1d10 na próxima ação direta.' },
   { id: 'trilha-do-pressagio',    name: 'Trilha do Presságio',    cost: 3, description: 'Até o fim do turno, seu deslocamento dobra.' },
-]
+] satisfies PilarTriumphDef[]).sort((a, b) => a.cost - b.cost || byName(a, b))
 
 // ── Runaskin ─────────────────────────────────────────────
 // Três trilhas, cada uma com 3 triunfos iniciais (custo 1 PR). Os
@@ -140,7 +147,7 @@ export interface RunaskinTriumphDef {
   test:        string
 }
 
-export const RUNASKIN_TRIUMPHS: RunaskinTriumphDef[] = [
+export const RUNASKIN_TRIUMPHS: RunaskinTriumphDef[] = ([
   { id: 'raiz-vital',           trail: 'regente',    name: 'Raiz Vital',           action: 'bonus',  cost: 1, range: 'Curto', test: 'Medicina com Rúnico',    description: 'Manipulação da essência natural para curar (+1d10+Rúnico). Raízes emergem do solo e envolvem o alvo, restaurando sua vitalidade.' },
   { id: 'casca-protetora',      trail: 'regente',    name: 'Casca Protetora',      action: 'bonus',  cost: 1, range: 'Toque', test: 'Resiliência com Rúnico', description: 'Manipulação da seiva ancestral para defender (+2 DB para 1 aliado ou você). Uma camada de madeira viva endurece a pele do alvo.' },
   { id: 'esporos-espinhosos',   trail: 'regente',    name: 'Esporos Espinhosos',   action: 'padrao', cost: 1, range: 'Curto', test: 'Luta com Rúnico',        description: 'Manipulação de esporos naturais para atacar (+1d6+Rúnico). Esporos cortantes se espalham em linha reta causando ferimentos leves.' },
@@ -150,7 +157,7 @@ export const RUNASKIN_TRIUMPHS: RunaskinTriumphDef[] = [
   { id: 'sangue-cortante',      trail: 'carniceiro', name: 'Sangue Cortante',      action: 'padrao', cost: 1, range: 'Toque', test: 'Luta com Rúnico',        description: 'Manipulação do sangue dos mortos para atacar (+1d10+Rúnico). Cria uma lâmina de sangue afiada o suficiente para causar um grande ferimento; ao usar 1 vez a lâmina se desfaz.' },
   { id: 'batismo-rubro',        trail: 'carniceiro', name: 'Batismo Rubro',        action: 'bonus',  cost: 1, range: 'Toque', test: 'Resiliência com Rúnico', description: 'Manipulação do sangue dos mortos para defender (+1 DB/corpo todo seu e de +2 aliados). Cria uma camada de armadura de sangue envolta dos alvos, criando proteção.' },
   { id: 'uncao-escarlate',      trail: 'carniceiro', name: 'Unção Escarlate',      action: 'bonus',  cost: 1, range: 'Curto', test: 'Medicina com Rúnico',    description: 'Manipulação do sangue dos mortos para curar (+1d4 de PV para 1 aliado). Cria um fio de sangue que se conecta no alvo e o recupera.' },
-]
+] satisfies RunaskinTriumphDef[]).sort(byName)
 
 const _berserkerById = new Map(BERSERKER_TRIUMPHS.map((t) => [t.id, t]))
 
