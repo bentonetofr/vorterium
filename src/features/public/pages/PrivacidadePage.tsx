@@ -31,6 +31,7 @@ export function PrivacidadePage() {
           <li><strong>Feedback:</strong> o que você escreve na página Enviar feedback, a página indicada, a versão do site, o navegador usado e o print, se você anexar um. Só você e quem administra o site veem.</li>
           <li><strong>Mensagens:</strong> mensagens do chat da mesa e mensagens privadas entre membros.</li>
           <li><strong>Imagens:</strong> foto de perfil, capa da campanha, retratos e imagens de runas das fichas e imagens da galeria da Mesa.</li>
+          <li><strong>Documentos da campanha:</strong> os arquivos (PDF, imagem ou texto) que o mestre guarda na Biblioteca. Só os membros da campanha leem, e os que o mestre esconder, só ele.</li>
           <li><strong>Rolagens:</strong> resultados de rolagens de dados registrados no sistema.</li>
           <li><strong>Presença:</strong> o horário em que você esteve ativo por último em cada campanha.</li>
         </ul>

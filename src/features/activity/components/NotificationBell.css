@@ -43,17 +43,7 @@
 }
 
 /* ── Painel de notificações ── */
-.notification-bell__popover {
-  width: min(300px, calc(100vw - var(--space-8)));
-  max-height: min(360px, calc(100vh - 200px));
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-base);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-}
+/* Posição e tamanho: .fab-panel (PrivateLayout.css), igual ao chat e aos dados. */
 
 .notification-bell__popover-header {
   display: flex;

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useLocation } from 'react-router-dom'
-import { CampaignChatPanel } from '../../chat/components/CampaignChatPanel'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
 import { CampaignActivityPanel } from '../../activity/components/CampaignActivityPanel'
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
@@ -23,7 +22,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'chat', 'atividade', 'iniciativa', 'bestiario', 'livro']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -66,7 +65,6 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   const subTabs: SubTab[] = [
     { id: 'mesa',       label: 'Mesa' },
     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
-    { id: 'chat',       label: 'Chat' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
     // Bestiário — só o mestre, e só em Altherium (as contas usam as fichas).
@@ -104,21 +102,6 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         className="anim-tab-panel"
       >
         {activeSubTab === 'mesa' && <MesaPanel campaignId={campaign.id} />}
-      </div>
-
-      <div
-        id="session-subtabpanel-chat"
-        role="tabpanel"
-        hidden={activeSubTab !== 'chat'}
-        className="anim-tab-panel"
-      >
-        {activeSubTab === 'chat' && (
-          <CampaignChatPanel
-            campaignId={campaign.id}
-            currentUserId={currentUserId}
-            userRole={campaign.role}
-          />
-        )}
       </div>
 
       <div

@@ -7,6 +7,8 @@ import {
   markChatRead,
   getPrivateUnreadCounts,
   markPrivateThreadRead,
+  getCharacterFaces,
+  type CharacterFace,
   type ChatMessage,
   type TypingPayload,
 } from '../services/chatService'
@@ -23,6 +25,10 @@ interface CampaignChatPanelProps {
   campaignId:    string
   currentUserId: string
   userRole:      'master' | 'player'
+  /** Versão de janela pequena (botão flutuante): conversas em faixa no topo. */
+  compact?:      boolean
+  /** Avisa com quem é a conversa aberta (nome do personagem, ou "Mestre"); null na Mesa. */
+  onThreadChange?: (name: string | null) => void
 }
 
 /** Mesa (pública) ou uma conversa privada com um usuário específico. */
@@ -87,7 +93,7 @@ function formatMessageTime(iso: string): string {
 // Componente
 // ────────────────────────────────────────────────────────
 
-export function CampaignChatPanel({ campaignId, currentUserId, userRole }: CampaignChatPanelProps) {
+export function CampaignChatPanel({ campaignId, currentUserId, userRole, compact = false, onThreadChange }: CampaignChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading,  setLoading]  = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -106,6 +112,7 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
   const [members, setMembers] = useState<CampaignMemberWithProfile[]>([])
   const [activeThread, setActiveThread] = useState<ActiveThread>({ type: 'public' })
   const [privateUnread, setPrivateUnread] = useState<Map<string, number>>(new Map())
+  const [faces, setFaces] = useState<Map<string, CharacterFace>>(new Map())
 
   const listRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -131,6 +138,10 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
   useEffect(() => {
     activeThreadRef.current = activeThread
   }, [activeThread])
+
+  useEffect(() => {
+    onThreadChange?.(activeThread.type === 'private' ? activeThread.name : null)
+  }, [activeThread, onThreadChange])
 
   // Avisa globalmente "estou vendo o chat desta campanha" — o pop-up de
   // notificação usa isso pra não interromper com uma mensagem que o
@@ -176,6 +187,17 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
     loadMembers()
     return () => { cancelled = true }
   }, [campaignId])
+
+  // ── Retrato/nome do personagem de cada jogador — só o mestre tem
+  // conversas com jogadores; o jogador só fala em privado com o mestre. ──
+  useEffect(() => {
+    if (userRole !== 'master') return
+    let cancelled = false
+    getCharacterFaces(campaignId)
+      .then((map) => { if (!cancelled) setFaces(map) })
+      .catch(() => { /* sem retrato, fica a inicial */ })
+    return () => { cancelled = true }
+  }, [campaignId, userRole])
 
   // ── Mensagens da conversa ativa (mesa ou privada) — recarrega ao trocar ──
   useEffect(() => {
@@ -441,28 +463,45 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
 
   // ────────────────────────────────────────────────────
   return (
-    <section className="chat-panel">
+    <section className={`chat-panel${compact ? ' chat-panel--compact' : ''}`}>
       <aside className="chat-sidebar">
         <button
           type="button"
           className={`chat-sidebar__item${activeThread.type === 'public' ? ' chat-sidebar__item--active' : ''}`}
           onClick={() => setActiveThread({ type: 'public' })}
+          title="Mesa — todos"
+          aria-label="Mesa (conversa com todos)"
         >
-          <span className="chat-sidebar__name">Mesa</span>
+          <svg className="chat-sidebar__glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><circle cx="17" cy="9" r="2.6" /><path d="M16 14.2a5 5 0 0 1 5.5 5" />
+          </svg>
         </button>
 
         {otherPartyList.map((m) => {
           const unread = privateUnread.get(m.user_id) ?? 0
           const isActive = activeThread.type === 'private' && activeThread.userId === m.user_id
-          const label = userRole === 'master' ? m.profile.display_name : 'Mestre'
+          const face = faces.get(m.user_id)
+          // Nome do personagem (o jogador, se a ficha não tem nome); pro jogador, "Mestre".
+          const name = userRole === 'master' ? face?.name ?? m.profile.display_name : 'Mestre'
+          const label = userRole === 'master' && face?.name ? `${face.name} (${m.profile.display_name})` : name
           return (
             <button
               key={m.user_id}
               type="button"
               className={`chat-sidebar__item${isActive ? ' chat-sidebar__item--active' : ''}`}
-              onClick={() => setActiveThread({ type: 'private', userId: m.user_id, name: label })}
+              onClick={() => setActiveThread({ type: 'private', userId: m.user_id, name })}
+              title={`Conversa privada com ${label}`}
+              aria-label={`Conversa privada com ${label}`}
             >
-              <span className="chat-sidebar__name">{label}</span>
+              {userRole !== 'master' ? (
+                <span className="chat-sidebar__glyph chat-sidebar__glyph--crown" aria-hidden="true">♛</span>
+              ) : face?.portrait ? (
+                <img className="chat-sidebar__face" src={face.portrait} alt="" loading="lazy" />
+              ) : (
+                <span className="chat-sidebar__initial" aria-hidden="true">
+                  {(face?.name ?? m.profile.display_name ?? '?').charAt(0).toUpperCase()}
+                </span>
+              )}
               {unread > 0 && <span className="chat-sidebar__badge">{unread > 99 ? '99+' : unread}</span>}
             </button>
           )
@@ -470,9 +509,6 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
       </aside>
 
       <div className="chat-panel__main">
-        {activeThread.type === 'private' && (
-          <div key={activeThread.userId} className="chat-thread-banner">🔒 Conversa privada com {activeThread.name}</div>
-        )}
 
         <div className="chat-panel__list" ref={listRef} onScroll={handleScroll}>
           {loadingMore && (
@@ -590,7 +626,7 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole }: Campa
             <textarea
               ref={textareaRef}
               className="input chat-composer__input"
-              placeholder={activeThread.type === 'private' ? 'Escreva uma mensagem privada...' : 'Escreva uma mensagem...'}
+              placeholder={activeThread.type === 'private' ? 'Mensagem privada...' : 'Mensagem pra mesa...'}
               value={draft}
               onChange={(e) => handleDraftChange(e.target.value)}
               onKeyDown={handleKeyDown}

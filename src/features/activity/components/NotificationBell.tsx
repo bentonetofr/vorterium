@@ -8,6 +8,7 @@ import {
   type LiveNotification,
 } from '../services/activityService'
 import { Presence } from '../../../shared/components/Presence'
+import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
 import './NotificationBell.css'
 
 // Cadência do selo — mais devagar que o pop-up ao vivo, é só o "de fundo".
@@ -49,6 +50,9 @@ export function NotificationBell() {
     return () => clearInterval(interval)
   }, [user, refreshCount])
 
+  const close = useCallback(() => setIsOpen(false), [])
+  const { instant } = useFloatingPanel('bell', isOpen, close)
+
   async function handleToggle() {
     const opening = !isOpen
     setIsOpen(opening)
@@ -71,9 +75,10 @@ export function NotificationBell() {
 
   return (
     <>
+      {(isOpen || !instant) && (
       <Presence show={isOpen} exitMs={180}>
         {(state) => (
-        <div className="notification-bell__popover anim-pop" data-state={state} role="dialog" aria-label="Notificações">
+        <div className="notification-bell__popover fab-panel fab-panel--fit anim-pop" data-state={state} data-fab-panel="bell" role="dialog" aria-label="Notificações">
           <div className="notification-bell__popover-header">
             <svg
               width="16" height="16" viewBox="0 0 24 24"
@@ -124,6 +129,7 @@ export function NotificationBell() {
         </div>
         )}
       </Presence>
+      )}
 
       <button
         type="button"

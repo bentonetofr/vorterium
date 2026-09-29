@@ -42,17 +42,7 @@
   to   { transform: rotate(360deg); }
 }
 
-.dice-fab__popover {
-  width: min(320px, calc(100vw - var(--space-8)));
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-base);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-}
-
+/* A janela em si (posição e tamanho) é a .fab-panel — PrivateLayout.css. */
 .dice-fab__popover-header {
   display: flex;
   align-items: center;

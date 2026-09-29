@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { createPortal, flushSync } from 'react-dom'
+import { Link } from 'react-router-dom'
 import {
   copyMesaImageToCampaign,
   deleteMesaImage,
@@ -10,199 +12,389 @@ import {
   type GalleryImageWithCampaign,
 } from '../services/mesaImagesService'
 import { getMyCampaigns } from '../../campaigns/services/campaignService'
-import { Select } from '../../../shared/components/Select'
+import { getSystemLabel } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
 import '../../../shared/theme/toolPage.css'
 import './GalleryPage.css'
 
 // ────────────────────────────────────────────────────────
-// Galeria — as imagens da Mesa de todas as campanhas em que a pessoa é
-// mestre, num lugar só: filtrar por campanha, abrir em tamanho real,
-// copiar pra outra campanha, enviar nova ou excluir. As imagens continuam
-// privadas: só o mestre da campanha vê.
+// Galeria — um mural com um card por campanha (pilha de polaroides que se
+// abre em leque). Clicar abre o álbum de lembranças da campanha: fotos
+// em polaroide presas com fita, agrupadas por dia, com legenda à mão.
+// Clicar numa foto abre ela grande. As imagens continuam privadas: é a
+// galeria da Mesa, só o mestre da campanha vê.
 // ────────────────────────────────────────────────────────
 
+type Image = GalleryImageWithCampaign
+
+/** Inclinação fixa por foto (a mesma a cada visita), de -4° a 4°. */
+function tiltOf(id: string, range = 4): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+  return ((Math.abs(h) % 1000) / 1000) * range * 2 - range
+}
+
+function dayKey(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function monthYear(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '')
+}
+
+/** Troca de tela com a transição nativa do navegador, quando existe. */
+function withTransition(update: () => void) {
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown }
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (doc.startViewTransition && !reduce) doc.startViewTransition(() => flushSync(update))
+  else update()
+}
+
 export function GalleryPage() {
-  const [images, setImages]       = useState<GalleryImageWithCampaign[]>([])
+  const [images, setImages]       = useState<Image[]>([])
   const [campaigns, setCampaigns] = useState<CampaignWithRole[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
-  const [notice, setNotice]       = useState<string | null>(null)
-  const [filter, setFilter]       = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [uploadTarget, setUploadTarget] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [openId, setOpenId]       = useState<string | null>(null)
 
-  async function load() {
+  const load = useCallback(async () => {
     const [list, camps] = await Promise.all([listAllMyMesaImages(), getMyCampaigns()])
     setImages(list)
     setCampaigns(camps.filter((c) => c.role === 'master'))
-  }
+  }, [])
 
   useEffect(() => {
     load()
       .catch((err) => setError(err instanceof Error ? err.message : 'Não foi possível carregar a galeria.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [load])
 
-  function flash(message: string) {
-    setNotice(message)
-    window.setTimeout(() => setNotice((cur) => (cur === message ? null : cur)), 3500)
-  }
-
-  const visible = useMemo(() => (filter ? images.filter((i) => i.campaign_id === filter) : images), [images, filter])
-  const selected = images.find((i) => i.id === selectedId) ?? null
-  const campaignOptions = campaigns.map((c) => ({ value: c.id, label: c.name }))
-
-  async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    e.target.value = ''
-    const target = uploadTarget || filter
-    if (!target || files.length === 0) return
-    const problem = files.map(validateMesaImage).find(Boolean)
-    if (problem) { flash(problem); return }
-    setUploading(true)
-    try {
-      for (const file of files) await uploadMesaImage(target, file)
-      await load()
-      flash(files.length === 1 ? 'Imagem enviada.' : `${files.length} imagens enviadas.`)
-    } catch (err) {
-      flash(err instanceof Error ? err.message : 'Não foi possível enviar a imagem.')
-    } finally {
-      setUploading(false)
+  const byCampaign = useMemo(() => {
+    const map = new Map<string, Image[]>()
+    for (const img of images) {
+      const list = map.get(img.campaign_id) ?? []
+      list.push(img)
+      map.set(img.campaign_id, list)
     }
-  }
+    return map
+  }, [images])
+
+  // Campanhas com mais lembranças (e mais recentes) primeiro.
+  const ordered = useMemo(() => [...campaigns].sort((a, b) => {
+    const la = byCampaign.get(a.id) ?? []
+    const lb = byCampaign.get(b.id) ?? []
+    if (!!lb.length !== !!la.length) return lb.length ? 1 : -1
+    return (lb[0]?.created_at ?? b.created_at).localeCompare(la[0]?.created_at ?? a.created_at)
+  }), [campaigns, byCampaign])
+
+  const open = campaigns.find((c) => c.id === openId) ?? null
 
   return (
     <div className="tool-page gallery-page">
       <div className="tool-page__header">
         <div className="tool-page__titles">
           <h1 className="tool-page__title">Galeria</h1>
-          <p className="tool-page__sub">As imagens e mapas da Mesa de todas as campanhas em que você é mestre.</p>
+          <p className="tool-page__sub">As lembranças das suas campanhas — tudo o que já passou pela Mesa.</p>
         </div>
       </div>
 
-      {notice && <p className="tool-page__notice" role="status">{notice}</p>}
-
       {loading ? (
-        <div className="tool-page__state"><div className="spinner spinner--sm" /> Carregando imagens…</div>
+        <div className="tool-page__state"><div className="spinner spinner--sm" /> Abrindo os álbuns…</div>
       ) : error ? (
         <p className="tool-page__error" role="alert">{error}</p>
       ) : campaigns.length === 0 ? (
         <div className="tool-page__empty">
           <p className="tool-page__empty-icon">▣</p>
           <p className="tool-page__empty-title">A galeria é do mestre.</p>
-          <p className="tool-page__empty-text">Quando você for mestre de uma campanha, as imagens que mostrar na Mesa aparecem aqui.</p>
+          <p className="tool-page__empty-text">
+            Quando você for mestre de uma campanha, as imagens que mostrar na Mesa viram lembranças aqui.
+            {' '}<Link to="/campanhas/nova">Criar uma campanha</Link>
+          </p>
         </div>
       ) : (
-        <>
-          <div className="gallery-toolbar">
-            <Select
-              className="gallery-toolbar__filter" value={filter} onChange={setFilter} aria-label="Filtrar por campanha"
-              options={[{ value: '', label: `Todas as campanhas (${images.length})` }, ...campaigns.map((c) => ({
-                value: c.id, label: `${c.name} (${images.filter((i) => i.campaign_id === c.id).length})`,
-              }))]}
+        <div className="gallery-wall">
+          {ordered.map((c, i) => (
+            <CampaignCard
+              key={c.id}
+              campaign={c}
+              images={byCampaign.get(c.id) ?? []}
+              index={i}
+              hidden={openId === c.id}
+              onOpen={() => withTransition(() => setOpenId(c.id))}
             />
-            <div className="gallery-toolbar__upload">
-              {!filter && (
-                <Select
-                  value={uploadTarget} onChange={setUploadTarget} aria-label="Enviar pra campanha"
-                  options={[{ value: '', label: 'Enviar pra…' }, ...campaignOptions]}
-                />
-              )}
-              <button
-                type="button" className="btn btn-primary btn-sm"
-                disabled={uploading || !(uploadTarget || filter)}
-                onClick={() => fileRef.current?.click()}
-              >
-                {uploading ? 'Enviando…' : '+ Enviar imagens'}
-              </button>
-              <input ref={fileRef} type="file" hidden multiple accept={MESA_IMAGE_TYPES.join(',')} onChange={(e) => void handleUpload(e)} />
-            </div>
-          </div>
+          ))}
+        </div>
+      )}
 
-          {visible.length === 0 ? (
-            <div className="tool-page__empty">
-              <p className="tool-page__empty-icon">▣</p>
-              <p className="tool-page__empty-title">Nenhuma imagem {filter ? 'nessa campanha' : 'ainda'}.</p>
-              <p className="tool-page__empty-text">Envie por aqui ou pela seção "Imagens da mesa" na aba Mesa da campanha.</p>
-            </div>
-          ) : (
-            <div className="gallery-grid anim-stagger">
-              {visible.map((img) => (
-                <button
-                  key={img.id} type="button"
-                  className={`gallery-thumb${selectedId === img.id ? ' gallery-thumb--selected' : ''}`}
-                  onClick={() => setSelectedId((cur) => (cur === img.id ? null : img.id))}
-                  aria-pressed={selectedId === img.id}
-                >
-                  {img.url ? <img src={img.url} alt="" loading="lazy" /> : <span className="gallery-thumb__missing">sem prévia</span>}
-                  <span className="gallery-thumb__caption">
-                    <span className="gallery-thumb__name">{img.name}</span>
-                    {!filter && <span className="gallery-thumb__campaign">{img.campaign_name}</span>}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {selected && (
-            <ImageActions
-              key={selected.id}
-              image={selected}
-              campaigns={campaigns.filter((c) => c.id !== selected.campaign_id)}
-              onClose={() => setSelectedId(null)}
-              onCopied={(name) => { void load(); flash(`Imagem copiada pra ${name}.`) }}
-              onDeleted={() => { setImages((list) => list.filter((i) => i.id !== selected.id)); setSelectedId(null); flash('Imagem excluída.') }}
-              onError={flash}
-            />
-          )}
-        </>
+      {open && (
+        <Album
+          campaign={open}
+          images={byCampaign.get(open.id) ?? []}
+          otherCampaigns={campaigns.filter((c) => c.id !== open.id)}
+          onClose={() => withTransition(() => setOpenId(null))}
+          onChanged={load}
+        />
       )}
     </div>
   )
 }
 
-// ── Ações da imagem escolhida ───────────────────────────
+// ── Card da campanha (pilha de polaroides) ──────────────
 
-interface ImageActionsProps {
-  image:     GalleryImageWithCampaign
-  campaigns: CampaignWithRole[]
-  onClose:   () => void
-  onCopied:  (campaignName: string) => void
-  onDeleted: () => void
-  onError:   (message: string) => void
+interface CampaignCardProps {
+  campaign: CampaignWithRole
+  images:   Image[]
+  index:    number
+  hidden:   boolean
+  onOpen:   () => void
 }
 
-function ImageActions({ image, campaigns, onClose, onCopied, onDeleted, onError }: ImageActionsProps) {
-  const [target, setTarget] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
+function CampaignCard({ campaign, images, index, hidden, onOpen }: CampaignCardProps) {
+  // As 3 lembranças mais novas; sem nenhuma, a capa da campanha.
+  const photos = images.slice(0, 3).map((i) => i.url).filter((u): u is string => !!u)
+  const stack = photos.length > 0 ? photos : campaign.cover_url ? [campaign.cover_url] : []
+  const since = images.length ? monthYear(images[images.length - 1].created_at) : null
 
-  async function open() {
-    // A aba abre antes do await pra o navegador não bloquear como pop-up.
+  return (
+    <button
+      type="button"
+      className="album-card"
+      onClick={onOpen}
+      style={{ '--i': index, '--sway-delay': `${-(index * 1.3) % 6}s` } as CSSProperties}
+      aria-label={`Abrir o álbum de ${campaign.name}`}
+    >
+      <span
+        className="album-card__stack"
+        style={{ viewTransitionName: hidden ? undefined : `album-${campaign.id}` } as CSSProperties}
+      >
+        {stack.length === 0 ? (
+          <span className="album-card__polaroid album-card__polaroid--empty">
+            <span className="album-card__glyph" aria-hidden="true">❦</span>
+          </span>
+        ) : (
+          stack.map((src, n) => (
+            <span key={src} className={`album-card__polaroid album-card__polaroid--${n}`}>
+              <img src={src} alt="" loading="lazy" />
+            </span>
+          ))
+        )}
+      </span>
+      <span className="album-card__info">
+        <span className="album-card__name">{campaign.name}</span>
+        <span className="album-card__meta">
+          {images.length === 0
+            ? 'Nenhuma lembrança ainda'
+            : `${images.length} ${images.length === 1 ? 'lembrança' : 'lembranças'} · desde ${since}`}
+        </span>
+        <span className="album-card__system">{getSystemLabel(campaign.system)}</span>
+      </span>
+    </button>
+  )
+}
+
+// ── Álbum de lembranças ─────────────────────────────────
+
+interface AlbumProps {
+  campaign:       CampaignWithRole
+  images:         Image[]
+  otherCampaigns: CampaignWithRole[]
+  onClose:        () => void
+  onChanged:      () => Promise<void>
+}
+
+function Album({ campaign, images, otherCampaigns, onClose, onChanged }: AlbumProps) {
+  const [viewing, setViewing] = useState<number | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // Mais antigas primeiro: o álbum conta a história da campanha.
+  const chronological = useMemo(() => [...images].reverse(), [images])
+  const days = useMemo(() => {
+    const groups: { day: string; items: { img: Image; index: number }[] }[] = []
+    chronological.forEach((img, index) => {
+      const day = dayKey(img.created_at)
+      const last = groups[groups.length - 1]
+      if (last && last.day === day) last.items.push({ img, index })
+      else groups.push({ day, items: [{ img, index }] })
+    })
+    return groups
+  }, [chronological])
+
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [])
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && viewing == null) onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, viewing])
+
+  function flash(message: string) {
+    setNotice(message)
+    window.setTimeout(() => setNotice((cur) => (cur === message ? null : cur)), 3500)
+  }
+
+  async function handleFiles(files: File[]) {
+    if (files.length === 0) return
+    const problem = files.map(validateMesaImage).find(Boolean)
+    if (problem) { flash(problem); return }
+    setUploading(true)
+    try {
+      for (const f of files) await uploadMesaImage(campaign.id, f)
+      await onChanged()
+      flash(files.length === 1 ? 'Lembrança guardada.' : `${files.length} lembranças guardadas.`)
+    } catch (err) {
+      flash(err instanceof Error ? err.message : 'Não foi possível guardar a imagem.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const backdrop = campaign.cover_url ?? chronological[chronological.length - 1]?.url ?? null
+
+  return createPortal(
+    <div className="album" role="dialog" aria-modal="true" aria-label={`Álbum de ${campaign.name}`}>
+      <div className="album__backdrop" aria-hidden="true">
+        {backdrop && <img src={backdrop} alt="" />}
+      </div>
+      <div className="album__grain" aria-hidden="true" />
+
+      <div className="album__scroll">
+        <header className="album__header">
+          <button type="button" className="album__close" onClick={onClose} aria-label="Fechar álbum">×</button>
+          <span
+            className="album__cover"
+            style={{ viewTransitionName: `album-${campaign.id}` } as CSSProperties}
+            aria-hidden="true"
+          >
+            {backdrop ? <img src={backdrop} alt="" /> : <span className="album-card__glyph">❦</span>}
+          </span>
+          <p className="album__kicker">lembranças de mesa</p>
+          <h2 className="album__title">{campaign.name}</h2>
+          <p className="album__count">
+            {images.length === 0
+              ? 'Ainda não há lembranças por aqui.'
+              : `${images.length} ${images.length === 1 ? 'lembrança' : 'lembranças'} desde ${dayKey(chronological[0].created_at)}`}
+          </p>
+          <button type="button" className="album__add" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            {uploading ? 'Guardando…' : '+ Adicionar lembranças'}
+          </button>
+          <input
+            ref={fileRef} type="file" hidden multiple accept={MESA_IMAGE_TYPES.join(',')}
+            onChange={(e) => { const files = Array.from(e.target.files ?? []); e.target.value = ''; void handleFiles(files) }}
+          />
+          {notice && <p className="album__notice" role="status">{notice}</p>}
+        </header>
+
+        {images.length === 0 ? (
+          <p className="album__empty">
+            Mostre mapas, retratos e cenas na aba Mesa da campanha — ou adicione aqui — e eles ficam guardados neste álbum.
+          </p>
+        ) : (
+          days.map((group) => (
+            <section key={group.day} className="album__day">
+              <h3 className="album__day-title"><span>{group.day}</span></h3>
+              <div className="album__photos">
+                {group.items.map(({ img, index }, n) => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    className="polaroid"
+                    style={{ '--tilt': `${tiltOf(img.id)}deg`, '--tape': `${tiltOf(img.id + 't', 8)}deg`, '--n': n } as CSSProperties}
+                    onClick={() => setViewing(index)}
+                    aria-label={`Ver ${img.name}`}
+                  >
+                    <span className="polaroid__tape" aria-hidden="true" />
+                    <span className="polaroid__photo">
+                      {img.url ? <img src={img.url} alt="" loading="lazy" /> : <span className="polaroid__missing">sem prévia</span>}
+                    </span>
+                    <span className="polaroid__caption">{img.name}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))
+        )}
+
+        <p className="album__footer">❦</p>
+      </div>
+
+      {viewing != null && chronological[viewing] && (
+        <Lightbox
+          images={chronological}
+          index={viewing}
+          otherCampaigns={otherCampaigns}
+          onIndex={setViewing}
+          onClose={() => setViewing(null)}
+          onChanged={onChanged}
+          onNotice={flash}
+        />
+      )}
+    </div>,
+    document.body,
+  )
+}
+
+// ── Foto grande ─────────────────────────────────────────
+
+interface LightboxProps {
+  images:         Image[]
+  index:          number
+  otherCampaigns: CampaignWithRole[]
+  onIndex:        (i: number) => void
+  onClose:        () => void
+  onChanged:      () => Promise<void>
+  onNotice:       (message: string) => void
+}
+
+function Lightbox({ images, index, otherCampaigns, onIndex, onClose, onChanged, onNotice }: LightboxProps) {
+  const img = images[index]
+  const [copyOpen, setCopyOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const prev = index > 0 ? () => onIndex(index - 1) : null
+  const next = index < images.length - 1 ? () => onIndex(index + 1) : null
+
+  useEffect(() => { setCopyOpen(false); setConfirmDelete(false) }, [index])
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+      else if (e.key === 'ArrowLeft' && prev) prev()
+      else if (e.key === 'ArrowRight' && next) next()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, prev, next])
+
+  async function openOriginal() {
     const tab = window.open('', '_blank')
     try {
-      const url = await getMesaImageViewUrl(image.path)
+      const url = await getMesaImageViewUrl(img.path)
       if (tab) tab.location.href = url
       else window.open(url, '_blank', 'noopener')
     } catch (err) {
       tab?.close()
-      onError(err instanceof Error ? err.message : 'Não foi possível abrir a imagem.')
+      onNotice(err instanceof Error ? err.message : 'Não foi possível abrir a imagem.')
     }
   }
 
-  async function copy() {
-    const campaign = campaigns.find((c) => c.id === target)
-    if (!campaign) return
+  async function copyTo(campaign: CampaignWithRole) {
     setBusy(true)
     try {
-      await copyMesaImageToCampaign(image, campaign.id)
-      setTarget('')
-      onCopied(campaign.name)
+      await copyMesaImageToCampaign(img, campaign.id)
+      await onChanged()
+      setCopyOpen(false)
+      onNotice(`Copiada pro álbum de ${campaign.name}.`)
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Não foi possível copiar a imagem.')
+      onNotice(err instanceof Error ? err.message : 'Não foi possível copiar a imagem.')
     } finally {
       setBusy(false)
     }
@@ -211,59 +403,59 @@ function ImageActions({ image, campaigns, onClose, onCopied, onDeleted, onError 
   async function remove() {
     setBusy(true)
     try {
-      await deleteMesaImage(image)
-      onDeleted()
+      await deleteMesaImage(img)
+      onClose()
+      await onChanged()
+      onNotice('Lembrança excluída.')
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Não foi possível excluir a imagem.')
+      onNotice(err instanceof Error ? err.message : 'Não foi possível excluir.')
       setBusy(false)
     }
   }
 
   return (
-    <section className="tool-card gallery-actions" aria-label={`Imagem ${image.name}`}>
-      <div className="gallery-actions__head">
-        <div>
-          <h2 className="tool-card__title">{image.name}</h2>
-          <span className="tool-card__meta">
-            {image.campaign_name} · enviada em {new Date(image.created_at).toLocaleDateString('pt-BR')}
-          </span>
-        </div>
-        <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
-      </div>
+    <div className="lightbox" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <button type="button" className="lightbox__close" onClick={onClose} aria-label="Fechar">×</button>
+      {prev && <button type="button" className="lightbox__nav lightbox__nav--prev" onClick={prev} aria-label="Anterior">‹</button>}
+      {next && <button type="button" className="lightbox__nav lightbox__nav--next" onClick={next} aria-label="Próxima">›</button>}
 
-      <div className="gallery-actions__row">
-        <button type="button" className="btn btn-ghost btn-sm" onClick={() => void open()}>Abrir em tamanho real</button>
-      </div>
+      <figure key={img.id} className="lightbox__figure">
+        {img.url ? <img src={img.url} alt={img.name} /> : <span className="polaroid__missing">sem prévia</span>}
+        <figcaption className="lightbox__caption">
+          <span className="lightbox__name">{img.name}</span>
+          <span className="lightbox__date">{dayKey(img.created_at)} · {index + 1} de {images.length}</span>
+        </figcaption>
+      </figure>
 
-      <div className="gallery-actions__row">
-        {campaigns.length === 0 ? (
-          <p className="tool-hint">Você não é mestre de outra campanha pra copiar essa imagem.</p>
-        ) : (
-          <>
-            <Select
-              value={target} onChange={setTarget} aria-label="Copiar pra campanha"
-              options={[{ value: '', label: 'Copiar pra outra campanha…' }, ...campaigns.map((c) => ({ value: c.id, label: c.name }))]}
-            />
-            <button type="button" className="btn btn-primary btn-sm" onClick={() => void copy()} disabled={!target || busy}>
-              {busy && target ? 'Copiando…' : 'Copiar'}
-            </button>
-          </>
+      <div className="lightbox__actions">
+        <button type="button" className="lightbox__btn" onClick={() => void openOriginal()}>Abrir original</button>
+        {otherCampaigns.length > 0 && (
+          <button type="button" className="lightbox__btn" onClick={() => setCopyOpen((v) => !v)} aria-expanded={copyOpen}>
+            Levar pra outra campanha
+          </button>
         )}
-      </div>
-
-      <div className="gallery-actions__row">
         {confirmDelete ? (
           <>
-            <span className="tool-hint">Excluir da galeria de {image.campaign_name}? Não dá pra desfazer.</span>
-            <button type="button" className="btn btn-ghost btn-sm gallery-actions__danger" onClick={() => void remove()} disabled={busy}>
+            <span className="lightbox__ask">Excluir esta lembrança?</span>
+            <button type="button" className="lightbox__btn lightbox__btn--danger" onClick={() => void remove()} disabled={busy}>
               {busy ? 'Excluindo…' : 'Excluir'}
             </button>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmDelete(false)} disabled={busy}>Cancelar</button>
+            <button type="button" className="lightbox__btn" onClick={() => setConfirmDelete(false)} disabled={busy}>Cancelar</button>
           </>
         ) : (
-          <button type="button" className="btn btn-ghost btn-sm gallery-actions__danger" onClick={() => setConfirmDelete(true)}>Excluir</button>
+          <button type="button" className="lightbox__btn lightbox__btn--danger" onClick={() => setConfirmDelete(true)}>Excluir</button>
         )}
       </div>
-    </section>
+
+      {copyOpen && (
+        <div className="lightbox__copy" role="group" aria-label="Levar pra qual campanha">
+          {otherCampaigns.map((c) => (
+            <button key={c.id} type="button" className="lightbox__chip" onClick={() => void copyTo(c)} disabled={busy}>
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

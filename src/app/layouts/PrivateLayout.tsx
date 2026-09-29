@@ -6,6 +6,8 @@ import { AppLogo }     from '../../shared/components/AppLogo'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
+import { ChatFab }            from '../../features/chat/components/ChatFab'
+import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
 import { ActiveChatProvider }  from '../../features/chat/ActiveChatContext'
 import { CurrentCampaignProvider, useCurrentCampaign } from '../../features/campaigns/CurrentCampaignContext'
@@ -14,6 +16,7 @@ import { RulebookHostProvider } from '../../features/rulebook/RulebookHost'
 import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
 import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { Presence } from '../../shared/components/Presence'
+import { FabToasts } from '../../shared/components/FabToasts'
 import { Collapse } from '../../shared/components/Collapse'
 import { useUnseenChangelog } from '../../shared/constants/changelog'
 import { SITE_NAV, TOOL_NAV, pageLabel, type NavItem } from '../navigation'
@@ -263,10 +266,14 @@ function PrivateLayoutContent() {
       </nav>
     </div>
     <div className="dice-fab-wrapper">
-      <MesaLiveNotice />
-      <NotificationPopup />
+      <FabToasts>
+        <MesaLiveNotice />
+        <NotificationPopup />
+      </FabToasts>
       <NotificationBell />
       <DiceFab />
+      <ChatFab />
+      <ChatMessagePopup />
     </div>
     </>
   )

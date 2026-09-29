@@ -5,15 +5,14 @@ import './ClickEffects.css'
 // Efeito do clique do mouse no site todo:
 //  • enquanto o botão está apertado, <html> ganha a classe cursor-pressed
 //    (o ponteiro encolhe e inclina — ver index.css);
-//  • no ponto do clique, um anel dourado se abre e umas faíscas saem.
+//  • no ponto do clique, um anel dourado se abre e some.
 // É DOM puro numa camada por cima de tudo (sem estado do React, sem
 // pegar clique). Toque e caneta ficam de fora; com "reduzir movimento"
-// no sistema, sai só o anel.
+// no sistema, o anel não aparece.
 // ────────────────────────────────────────────────────────
 
-const SPARKS = 6
 const MAX_ALIVE = 12
-const LIFETIME_MS = 650
+const LIFETIME_MS = 450
 
 export function ClickEffects() {
   useEffect(() => {
@@ -26,6 +25,7 @@ export function ClickEffects() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
     function burst(x: number, y: number) {
+      if (reduceMotion.matches) return
       const fx = document.createElement('span')
       fx.className = 'click-fx'
       fx.style.left = `${x}px`
@@ -34,17 +34,6 @@ export function ClickEffects() {
       const ring = document.createElement('span')
       ring.className = 'click-fx__ring'
       fx.append(ring)
-
-      if (!reduceMotion.matches) {
-        const turn = Math.random() * 60
-        for (let i = 0; i < SPARKS; i++) {
-          const spark = document.createElement('span')
-          spark.className = `click-fx__spark${i % 2 ? ' click-fx__spark--white' : ''}`
-          spark.style.setProperty('--angle', `${turn + (360 / SPARKS) * i + (Math.random() * 16 - 8)}deg`)
-          spark.style.setProperty('--dist', `${12 + Math.random() * 9}px`)
-          fx.append(spark)
-        }
-      }
 
       layer.append(fx)
       window.setTimeout(() => fx.remove(), LIFETIME_MS)

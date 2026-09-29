@@ -20,8 +20,58 @@
   gap: var(--space-3);
 }
 
+/* Janela do canto (chat, dados, notificações) — as três no mesmo lugar e
+   do mesmo tamanho: acima do botão do chat, alinhadas pela direita dele.
+   Ficam fora do fluxo da coluna, então o sino e o dado não se mexem. */
+.fab-panel {
+  position: absolute;
+  right: calc(56px + var(--space-3));
+  bottom: calc(6px + 44px + var(--space-3));
+  width: min(380px, calc(100vw - 56px - var(--space-3) - 2 * var(--space-6)));
+  /* --fab-toasts-space: lugar que a janela abre em cima pros avisos (FabToasts). */
+  height: max(240px, min(500px, calc(100dvh - 130px - var(--fab-toasts-space, 0px))));
+  transition: height 220ms var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  transform-origin: bottom right;
+}
+/* Notificações: pouca coisa — a janela cresce só até o necessário. */
+.fab-panel--fit { height: auto; max-height: max(160px, min(500px, calc(100dvh - 130px - var(--fab-toasts-space, 0px)))); }
+
+/* Avisos do canto: acima do sino, ou logo acima da janela aberta
+   (posição calculada em FabToasts). */
+.fab-toasts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.fab-toasts:empty { display: none; }
+.fab-toasts--over > * { width: 100%; max-width: none; }
+
+/* Sino centralizado em cima do dado: (56 − 44) / 2 = 6px de recuo. */
+.dice-fab-wrapper > .notification-bell { margin-right: 6px; }
+
 @media (max-width: 480px) {
   .dice-fab-wrapper { right: var(--space-4); bottom: var(--space-4); }
+  /* No celular o dado tem 48px e o sino 38px: (48 − 38) / 2 = 5px. */
+  .dice-fab-wrapper > .notification-bell { margin-right: 5px; }
+  /* Janela do canto no celular: largura da tela (com margem), sempre
+     acima dos botões e da barra de baixo. */
+  .fab-panel {
+    position: fixed;
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: calc(60px + var(--space-4) + 48px + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    height: max(200px, min(460px, calc(100dvh - 60px - 48px - 140px - var(--fab-toasts-space, 0px))));
+  }
+  .fab-panel--fit { height: auto; max-height: max(140px, min(460px, calc(100dvh - 60px - 48px - 140px - var(--fab-toasts-space, 0px)))); }
 }
 
 /* ── Sidebar — desktop ── */

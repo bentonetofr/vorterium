@@ -35,7 +35,8 @@ const RULEBOOKS: Partial<Record<CampaignSystem, Rulebook>> = {
 // Tela onde o leitor de PDF embutido funciona: larga e com mouse.
 const EMBED_QUERY = '(min-width: 769px) and (pointer: fine)'
 
-function useCanEmbedPdf(): boolean {
+/** A tela aguenta o leitor de PDF embutido? (No celular, abre no leitor do aparelho.) */
+export function useCanEmbedPdf(): boolean {
   const [canEmbed, setCanEmbed] = useState(() => window.matchMedia(EMBED_QUERY).matches)
   useEffect(() => {
     const media = window.matchMedia(EMBED_QUERY)

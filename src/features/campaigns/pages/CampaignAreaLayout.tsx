@@ -8,6 +8,7 @@ import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/
 import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
 import { useCurrentCampaign } from '../CurrentCampaignContext'
 import { useActiveChat } from '../../chat/ActiveChatContext'
+import { CHAT_MESSAGE_EVENT } from '../../chat/components/ChatMessagePopup'
 import type { TabId, SessionSubTabId } from '../campaignSections'
 import { CampaignOverviewPanel }  from '../components/CampaignOverviewPanel'
 import { CampaignMembersPanel }   from '../../members/components/CampaignMembersPanel'
@@ -30,7 +31,7 @@ export function CampaignAreaLayout() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
 
-  // Chat desta campanha aberto agora (sub-aba Chat da Sessão).
+  // Chat desta campanha aberto agora (janela do botão flutuante).
   const { activeChatCampaignId } = useActiveChat()
   const chatOpen = campaign != null && activeChatCampaignId === campaign.id
   // Seção atual (visao-geral, membros...) — a troca de seção anima.
@@ -83,7 +84,15 @@ export function CampaignAreaLayout() {
     // Pequena espera: ao fechar o chat, a marcação de "lida" ainda está a caminho.
     const first = setTimeout(refresh, 1500)
     const interval = setInterval(refresh, 60_000)
-    return () => { cancelled = true; clearTimeout(first); clearInterval(interval) }
+    // Mensagem nova nesta campanha: o selo do botão do chat sobe na hora.
+    const onMessage = (e: Event) => { if ((e as CustomEvent<string>).detail === campaign!.id) void refresh() }
+    window.addEventListener(CHAT_MESSAGE_EVENT, onMessage)
+    return () => {
+      cancelled = true
+      clearTimeout(first)
+      clearInterval(interval)
+      window.removeEventListener(CHAT_MESSAGE_EVENT, onMessage)
+    }
   }, [campaign?.id, chatOpen, setChatUnread])
 
   // ── Selo de mensagem privada não lida — selo separado do selo da mesa
@@ -100,7 +109,13 @@ export function CampaignAreaLayout() {
     }
     refresh()
     const interval = setInterval(refresh, 60_000)
-    return () => { cancelled = true; clearInterval(interval) }
+    const onMessage = (e: Event) => { if ((e as CustomEvent<string>).detail === campaign!.id) void refresh() }
+    window.addEventListener(CHAT_MESSAGE_EVENT, onMessage)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+      window.removeEventListener(CHAT_MESSAGE_EVENT, onMessage)
+    }
   }, [campaign?.id, setPrivateUnread])
 
   // Passado pro CampaignOverviewPanel — os atalhos de lá que hoje pedem

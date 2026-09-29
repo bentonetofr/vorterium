@@ -1,0 +1,101 @@
+/* ═══════════════════════════════════════════════════════
+   Botão flutuante do chat — à esquerda do dado, na mesma linha
+   (posição absoluta dentro da .dice-fab-wrapper, que é fixa).
+   ═══════════════════════════════════════════════════════ */
+
+.chat-fab {
+  position: absolute;
+  right: calc(56px + var(--space-3));
+  bottom: 6px; /* centraliza os 44px do botão com os 56px do dado */
+}
+
+.chat-fab__button {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f5f2ea;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  color: #1a1712;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+}
+.chat-fab__button:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--gilded);
+}
+.chat-fab__button--open { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 0 2px var(--gilded-bright); }
+
+.chat-fab__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: var(--text-inverse);
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 1px solid var(--bg-base);
+}
+
+/* A janela em si (posição e tamanho) é a .fab-panel — PrivateLayout.css. */
+.chat-fab__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+.chat-fab__header-icon { display: flex; color: var(--accent-dim); }
+.chat-fab__titles { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.chat-fab__title {
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+.chat-fab__campaign {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.chat-fab__close {
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  line-height: 1;
+}
+.chat-fab__close:hover { color: var(--text-primary); }
+
+/* Aviso de mensagem nova: logo acima do botão do chat, alinhado pela
+   direita dele (com uma janela do canto aberta, vai pra cima dela). */
+.chat-message-popup__anchor {
+  position: absolute;
+  right: calc(56px + var(--space-3));
+  bottom: calc(6px + 44px + var(--space-3));
+}
+
+/* Celular: o dado encolhe pra 48px. */
+@media (max-width: 480px) {
+  /* Mesmo tamanho do sino no celular (38px), centralizado com o dado de 48px. */
+  .chat-fab { right: calc(48px + var(--space-3)); bottom: 5px; }
+  .chat-fab__button { width: 38px; height: 38px; }
+  .chat-message-popup__anchor { right: calc(48px + var(--space-3)); bottom: calc(5px + 38px + var(--space-3)); }
+}

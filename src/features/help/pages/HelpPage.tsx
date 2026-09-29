@@ -27,7 +27,7 @@ const TOPICS: Topic[] = [
   {
     id: 'sessao', icon: '✦', title: 'A aba Sessão',
     steps: [
-      'É onde o jogo acontece. Sub-abas: Mesa, Ficha (Fichas, pro mestre), Chat, Atividade e Iniciativa.',
+      'É onde o jogo acontece. Sub-abas: Mesa, Ficha (Fichas, pro mestre), Atividade e Iniciativa. O chat fica no botão branco de mensagem, ao lado do dado, em qualquer tela da campanha.',
       'Em Altherium, o mestre também tem Bestiário, e todos têm o Livro de regras.',
       'Sessões marcadas ficam na aba Sessões da campanha. Notas guarda anotações do grupo: todos os membros veem e escrevem.',
     ],
@@ -72,10 +72,10 @@ const TOPICS: Topic[] = [
   {
     id: 'ferramentas', icon: '❧', title: 'Ferramentas do menu',
     steps: [
-      'Biblioteca: os livros de regras, sem precisar entrar numa campanha.',
+      'Biblioteca: uma estante com os livros de regras e uma por campanha, com os documentos que o mestre guardou (PDF, imagem ou texto). Clique num arquivo pra ler no próprio site. O mestre adiciona arrastando arquivos pra estante e pode esconder um arquivo dos jogadores.',
       'Meu bestiário: criaturas suas pra qualquer campanha. No bestiário de uma campanha, "Guardar" manda a criatura pra cá; daqui, "Copiar pra campanha" leva de volta.',
-      'Galeria: as imagens que você já mostrou na Mesa, de todas as campanhas em que é mestre, pra abrir ou copiar pra outra campanha.',
-      'O sino mostra as notificações; Atividade junta o que aconteceu nas suas campanhas.',
+      'Galeria: um álbum de lembranças por campanha em que você é mestre, com as imagens que já passaram pela Mesa. Clique numa foto pra ver grande ou levar pra outra campanha.',
+      'O sino mostra as notificações (rolagens, sessões, membros); as mensagens do chat avisam só no botão de mensagem. Atividade junta o que aconteceu nas suas campanhas.',
     ],
   },
 ]

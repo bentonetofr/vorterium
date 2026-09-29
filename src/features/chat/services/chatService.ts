@@ -234,3 +234,36 @@ export async function markPrivateThreadRead(campaignId: string, otherUserId: str
   })
   if (error) throw new Error(error.message)
 }
+
+// ────────────────────────────────────────────────────────
+// Rostos dos personagens — a barra de conversas mostra o retrato do
+// PERSONAGEM (não a foto do jogador). Procura nas fichas de todos os
+// sistemas (a RLS devolve só o que a pessoa pode ver); só Altherium tem
+// retrato, os outros ficam com o nome pra inicial.
+// ────────────────────────────────────────────────────────
+
+export interface CharacterFace {
+  name:     string | null
+  portrait: string | null
+}
+
+export async function getCharacterFaces(campaignId: string): Promise<Map<string, CharacterFace>> {
+  type Row = { user_id: string; character_name: string | null; portrait_url?: string | null }
+  const [alth, td, generic] = await Promise.all([
+    supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId),
+    supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId),
+    supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId),
+  ])
+
+  const faces = new Map<string, CharacterFace>()
+  for (const res of [alth, td, generic]) {
+    for (const row of (res.data ?? []) as Row[]) {
+      const current = faces.get(row.user_id)
+      const name = row.character_name?.trim() || null
+      const portrait = row.portrait_url ?? null
+      // Junta as fichas: vale o primeiro retrato e o primeiro nome achados.
+      faces.set(row.user_id, { name: current?.name ?? name, portrait: current?.portrait ?? portrait })
+    }
+  }
+  return faces
+}

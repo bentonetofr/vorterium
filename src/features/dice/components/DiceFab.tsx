@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { useDiceRoller } from '../DiceRollerProvider'
 import { DiceRollerPanel } from './DiceRollerPanel'
 import { Presence } from '../../../shared/components/Presence'
+import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
+import { useFabToastSlot } from '../../../shared/components/FabToasts'
 import type { DiceRoll, RollBreakdownItem } from '../../../shared/types'
 import './DiceFab.css'
 
@@ -162,6 +165,11 @@ function ToastBreakdown({ breakdown }: { breakdown: RollBreakdownItem[] }) {
   )
 }
 
+/** Com uma janela do canto aberta, o aviso vai pro topo dela; senão fica aqui. */
+function portalTo(slot: HTMLElement | null, node: ReactNode) {
+  return slot ? createPortal(node, slot) : node
+}
+
 export function DiceFab() {
   const { user } = useAuth()
   const { campaignId, isOpen, open, close } = useDiceRoller()
@@ -176,6 +184,10 @@ export function DiceFab() {
 
   // ── Giro do ícone ao clicar ──
   const [spinKey, setSpinKey] = useState(0)
+
+  const { instant } = useFloatingPanel('dice', isOpen, close)
+  // Com uma janela do canto aberta, o resultado aparece no topo dela.
+  const toastSlot = useFabToastSlot()
 
   function handleToggle() {
     setSpinKey((k) => k + 1)
@@ -238,7 +250,7 @@ export function DiceFab() {
 
   return (
     <>
-      {(activeRoll || displayRoll !== null) && (
+      {(activeRoll || displayRoll !== null) && portalTo(toastSlot,
         <div key={toastKey} className="dice-toast" role="status" aria-live="polite">
           <div className="dice-toast__header">
             <span className="dice-toast__label">
@@ -277,12 +289,13 @@ export function DiceFab() {
           {displayRoll === null && activeRoll?.roll_breakdown && activeRoll.roll_breakdown.length > 0 && (
             <ToastBreakdown breakdown={activeRoll.roll_breakdown} />
           )}
-        </div>
+        </div>,
       )}
 
+      {(isOpen || !instant) && (
       <Presence show={isOpen} exitMs={180}>
         {(state) => (
-        <div className="dice-fab__popover anim-pop" data-state={state} role="dialog" aria-label="Rolagem de dados">
+        <div className="dice-fab__popover fab-panel anim-pop" data-state={state} data-fab-panel="dice" role="dialog" aria-label="Rolagem de dados">
           <div className="dice-fab__popover-header">
             <span className="dice-fab__popover-icon" aria-hidden="true">⚄</span>
             <span className="dice-fab__popover-title">Rolagem de dados</span>
@@ -299,6 +312,7 @@ export function DiceFab() {
         </div>
         )}
       </Presence>
+      )}
 
       <button
         type="button"

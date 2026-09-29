@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
-import { useActiveChat } from '../../chat/ActiveChatContext'
 import {
   getLiveNotifications,
-  getMessageNotification,
-  subscribeToNewMessagesGlobally,
   getDiceRollNotification,
   subscribeToNewRollsGlobally,
   type LiveNotification,
@@ -36,16 +33,9 @@ function playNotifySound() {
 
 export function NotificationPopup() {
   const { user } = useAuth()
-  const { activeChatCampaignId } = useActiveChat()
   const [queue, setQueue]     = useState<LiveNotification[]>([])
   const [current, setCurrent] = useState<LiveNotification | null>(null)
   const [leaving, setLeaving] = useState(false)
-
-  // Ref porque a assinatura Realtime abaixo é montada uma vez só — não
-  // queremos recriar o canal toda vez que o usuário troca de aba/campanha,
-  // só ler o valor mais atual no momento em que um evento chega.
-  const activeChatCampaignIdRef = useRef(activeChatCampaignId)
-  useEffect(() => { activeChatCampaignIdRef.current = activeChatCampaignId }, [activeChatCampaignId])
 
   // IDs já mostrados — só em memória, sempre existe (nunca null: os
   // handlers de Realtime abaixo já podem gravar nele antes da primeira
@@ -83,28 +73,9 @@ export function NotificationPopup() {
     return () => clearInterval(interval)
   }, [user, poll])
 
-  // ── Mensagem de chat é Realtime de verdade, não polling — dispara o
-  // pop-up na hora, em vez de esperar até 20s pelo próximo ciclo acima. ──
-  useEffect(() => {
-    if (!user) return
-
-    const unsubscribe = subscribeToNewMessagesGlobally(user.id, async (messageId, campaignId) => {
-      // usuário já está vendo esse chat ao vivo — não interrompe com pop-up
-      if (campaignId === activeChatCampaignIdRef.current) return
-
-      const id = `message-${messageId}`
-      if (seenIdsRef.current.has(id)) return
-      seenIdsRef.current.add(id)
-
-      const notif = await getMessageNotification(messageId)
-      if (notif) setQueue((q) => [...q, notif])
-    })
-
-    return unsubscribe
-  }, [user])
-
-  // ── Rolagem de dado também é Realtime de verdade, pelo mesmo motivo do
-  // chat acima — sem isso, o pop-up esperava até 20s pelo próximo poll. ──
+  // ── Mensagem de chat NÃO passa por aqui: quem avisa é o botão do chat
+  // (ChatMessagePopup). Rolagem de dado é Realtime de verdade — sem isso,
+  // o pop-up esperava até 20s pelo próximo poll. ──
   useEffect(() => {
     if (!user) return
 
