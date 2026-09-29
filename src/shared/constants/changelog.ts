@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.9',
+    date:    '2026-09-29',
+    title:   'Triunfos do Pilar separados por combinações',
+    items: [
+      'Os triunfos do Pilar agora ficam em grupos de 1, 2, 3 e 4 combinações, cada um com um cabeçalho de cartinhas em leque (uma por combinação) e uma cor própria: aço, verde, ouro e rubi. Os cards do grupo levam a mesma cor na borda.',
+    ],
+  },
+  {
     version: '1.8',
     date:    '2026-09-29',
     title:   'Triunfos em ordem e painel interno de suporte',

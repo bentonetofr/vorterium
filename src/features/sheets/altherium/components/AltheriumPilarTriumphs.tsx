@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
 import { rollDice } from '../../../dice/services/diceService'
@@ -27,6 +27,13 @@ import {
 // ────────────────────────────────────────────────────────
 
 export type PilarCardMode = 'virtual' | 'fisico'
+
+// Triunfos agrupados pelo número de combinações (1 a 4) — cada grupo tem
+// um cabeçalho com as cartinhas em leque e uma cor própria.
+const PILAR_TIERS = [1, 2, 3, 4]
+  .map((cost) => ({ cost, list: PILAR_TRIUMPHS.filter((t) => t.cost === cost) }))
+  .filter((g) => g.list.length > 0)
+const TIER_SUITS = ['♠', '♥', '♣', '♦']
 
 export interface PilarUseResult {
   triumph: PilarTriumphDef
@@ -120,9 +127,22 @@ export function AltheriumPilarTriumphs({
       )}
       {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
 
+      {PILAR_TIERS.map(({ cost, list }) => (
+      <div key={cost} className="alth-pilar-tier" data-tier={cost}>
+        <div className="alth-pilar-tier__head">
+          <span className="alth-pilar-tier__cards" aria-hidden="true">
+            {TIER_SUITS.slice(0, cost).map((suit, i) => (
+              <span key={i} className={`alth-pilar-tier__card${suit === '♥' || suit === '♦' ? ' alth-pilar-tier__card--red' : ''}`} style={{ '--i': i, '--n': cost } as CSSProperties}>
+                {suit}
+              </span>
+            ))}
+          </span>
+          <h5 className="alth-pilar-tier__title">{plural(cost, 'combinação', 'combinações')}</h5>
+          <span className="alth-pilar-tier__count">{plural(list.length, 'triunfo', 'triunfos')}</span>
+        </div>
       <div className="alth-triumphs__grid">
-        {PILAR_TRIUMPHS.map((t) => (
-          <article key={t.id} className="alth-triumph">
+        {list.map((t) => (
+          <article key={t.id} className="alth-triumph alth-triumph--tier">
             <header className="alth-triumph__head">
               <h5 className="alth-triumph__name">{t.name}</h5>
               <span className="alth-triumph__cost alth-triumph__cost--cards" title="Combinações de naipe necessárias">
@@ -146,6 +166,8 @@ export function AltheriumPilarTriumphs({
           </article>
         ))}
       </div>
+      </div>
+      ))}
 
       <Presence show={using !== null} exitMs={220}>
         {() => using && (

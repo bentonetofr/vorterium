@@ -1908,3 +1908,58 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+/* ── Pilar: triunfos agrupados por combinações (1 a 4) ──────────────
+   Cada grupo tem uma cor (aço → verde → ouro → rubi) e um cabeçalho com
+   N cartinhas em leque; os cards do grupo levam a mesma cor na borda. */
+.alth-pilar-tier { --tier: #8fb3c9; display: flex; flex-direction: column; gap: var(--space-3); }
+.alth-pilar-tier[data-tier="2"] { --tier: #7fc49a; }
+.alth-pilar-tier[data-tier="3"] { --tier: #e0b04f; }
+.alth-pilar-tier[data-tier="4"] { --tier: #e06a55; }
+.alth-pilar-tier + .alth-pilar-tier { margin-top: var(--space-4); }
+
+.alth-pilar-tier__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--tier) 45%, transparent);
+}
+.alth-pilar-tier__cards {
+  position: relative;
+  flex: none;
+  width: 58px;
+  height: 34px;
+}
+.alth-pilar-tier__card {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--i) * 12px);
+  width: 22px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
+  color: #1c1a17;
+  background: #f5f0e4;
+  border: 1px solid color-mix(in srgb, var(--tier) 70%, #000);
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  transform-origin: bottom center;
+  transform: rotate(calc((var(--i) - (var(--n) - 1) / 2) * 9deg));
+}
+.alth-pilar-tier__card--red { color: #b3261e; }
+.alth-pilar-tier__title {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tier);
+}
+.alth-pilar-tier__count { margin-left: auto; font-size: var(--text-xs); color: var(--text-muted); }
+
+.alth-triumph--tier { border-left: 3px solid var(--tier); }
+.alth-triumph--tier .alth-triumph__cost--cards { color: var(--tier); border-color: color-mix(in srgb, var(--tier) 50%, transparent); }
