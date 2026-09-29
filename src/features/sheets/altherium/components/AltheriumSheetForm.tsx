@@ -32,10 +32,13 @@ import { AltheriumInventoryCard, inventoryArmor } from './AltheriumInventoryCard
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
 import { AltheriumDragBar } from './AltheriumDragBar'
 import { AltheriumRunaskinTriumphs } from './AltheriumRunaskinTriumphs'
+import { AltheriumGenesisCard } from './AltheriumGenesisCard'
+import { pushRecent } from './AltheriumRecentTriumphs'
+import { AltheriumInspirations } from './AltheriumInspirations'
 import { AltheriumPilarTriumphs, type PilarCardMode } from './AltheriumPilarTriumphs'
 import { suitInfo } from '../utils/pilarCards'
 import type { RunaskinTrail } from '../constants/altheriumTriumphs'
-import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune, RunaskinTriumphOverride } from '../../../../shared/types'
+import type { AltheriumSheet, AltheriumDomainPoints, AltheriumInventoryItem, AltheriumRune, RunaskinTriumphOverride, AltheriumGenesisAbility, AltheriumSkaldInspiration } from '../../../../shared/types'
 import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
@@ -112,6 +115,9 @@ type FormData = {
   runaskin_trail_overrides: Record<string, RunaskinTriumphOverride>
   pilar_card_mode:    PilarCardMode
   pilar_deck:         string[] | null
+  recent_triumphs:    string[]
+  genesis_abilities:  AltheriumGenesisAbility[]
+  skald_inspirations: AltheriumSkaldInspiration[]
   notes:              string
 }
 
@@ -151,6 +157,9 @@ function sheetToForm(s: AltheriumSheet): FormData {
     runaskin_trail_overrides: s.runaskin_trail_overrides ?? {},
     pilar_card_mode:    s.pilar_card_mode ?? 'virtual',
     pilar_deck:         s.pilar_deck ?? null,
+    recent_triumphs:    s.recent_triumphs ?? [],
+    genesis_abilities:  s.genesis_abilities ?? [],
+    skald_inspirations: s.skald_inspirations ?? [],
     notes:              s.notes ?? '',
   }
 }
@@ -191,6 +200,11 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     runaskin_trail:      f.runaskin_trail === '' ? null : f.runaskin_trail,
     runaskin_scene_uses: f.runaskin_scene_uses,
     notes:               f.notes.trim() || null,
+    recent_triumphs:     f.recent_triumphs,
+    genesis_abilities:   f.genesis_abilities.map((a) => ({ id: a.id, name: a.name, description: a.description })),
+    skald_inspirations:  f.skald_inspirations.map((i) => ({
+      id: i.id, name: i.name, description: i.description, cost: i.cost, action: i.action, range: i.range, test: i.test,
+    })),
     // Campos próprios de cada raiz só vão nas fichas daquela raiz.
     ...(f.raiz === 'pilar' ? { pilar_card_mode: f.pilar_card_mode, pilar_deck: f.pilar_deck } : {}),
     ...(f.raiz === 'runaskin' ? { runaskin_trail_overrides: normalizeOverrides(f.runaskin_trail_overrides) } : {}),
@@ -257,7 +271,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'combate' | 'dominios' | 'triunfos' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'combate' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -269,6 +283,7 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'combate',     label: 'Inventário' },
   { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
+  { id: 'inspiracoes', label: 'Inspirações' },
   { id: 'anotacoes',   label: 'Anotações' },
 ]
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
@@ -393,6 +408,11 @@ export function AltheriumSheetForm({
   function announceTriumph(what: string, verb = 'usou') {
     const who = form.character_name.trim() || ownerName || 'Um personagem'
     announceTriumphUse(sheet.campaign_id, `${who} ${verb} ${what}`)
+  }
+
+  /** Triunfo usado vai pro topo de "Recentes" (as três raízes). */
+  function markRecent(id: string) {
+    setForm((prev) => ({ ...prev, recent_triumphs: pushRecent(prev.recent_triumphs, id) }))
   }
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
@@ -700,6 +720,12 @@ export function AltheriumSheetForm({
                   }))}
               />
             </section>
+
+            <AltheriumGenesisCard
+              genesis={form.genesis}
+              abilities={form.genesis_abilities}
+              onChange={(next) => set('genesis_abilities', next)}
+            />
           </div>
         )}
       </div>
@@ -879,6 +905,8 @@ export function AltheriumSheetForm({
                   usesLimit={runaskinUsesPerScene(form.pr_max, form.level)}
                   onNewScene={() => set('runaskin_scene_uses', 0)}
                   prCurrent={form.pr_current}
+                  recent={form.recent_triumphs}
+                  onRecent={markRecent}
                   onUse={(cost, name) => {
                     setForm((prev) => ({
                       ...prev,
@@ -912,6 +940,8 @@ export function AltheriumSheetForm({
                   cardsMax={cartasMax}
                   mode={form.pilar_card_mode}
                   deck={form.pilar_deck}
+                  recent={form.recent_triumphs}
+                  onRecent={markRecent}
                   onModeChange={(m) => set('pilar_card_mode', m)}
                   onDeckReset={() => set('pilar_deck', null)}
                   onSpend={(n, deck) => {
@@ -944,12 +974,27 @@ export function AltheriumSheetForm({
                   limit={berserkerTriumphLimit(domains)}
                   fvCurrent={form.fv_current}
                   onChange={(ids) => set('berserker_triumphs', ids)}
+                  recent={form.recent_triumphs}
+                  onRecent={markRecent}
                   onSpendFv={(cost, name) => {
                     set('fv_current', Math.max(0, form.fv_current - cost))
                     announceTriumph(`${name} (−${cost} FV)`)
                   }}
                 />
               )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Inspirações Skald: criadas pelo jogador (não há no livro) ── */}
+      <div id="alth-tabpanel-inspiracoes" role="tabpanel" hidden={activeTab !== 'inspiracoes'}>
+        {activeTab === 'inspiracoes' && (
+          <div className="alth-tab-panel anim-tab-panel">
+            <AltheriumInspirations
+              inspirations={form.skald_inspirations}
+              onChange={(next) => set('skald_inspirations', next)}
+              onUse={(i) => announceTriumph(`a inspiração ${i.name}${i.cost ? ` (${i.cost})` : ''}`)}
+            />
           </div>
         )}
       </div>

@@ -17,6 +17,7 @@ import {
 } from '../services/altheriumSheetService'
 import type { AltheriumRune, RunaskinTriumphOverride } from '../../../../shared/types'
 import { Select } from '../../../../shared/components/Select'
+import { AltheriumRecentTriumphs } from './AltheriumRecentTriumphs'
 
 // ────────────────────────────────────────────────────────
 // Triunfos do Runaskin — trilha (3 iniciais do livro, editáveis na ficha)
@@ -34,6 +35,9 @@ interface AltheriumRunaskinTriumphsProps {
   onNewScene:    () => void
   prCurrent:     number
   onUse:         (cost: number, triumphName: string) => void
+  /** Ids dos últimos triunfos usados — da trilha ou runas (mais recente primeiro). */
+  recent:        string[]
+  onRecent:      (id: string) => void
   runes:         AltheriumRune[]
   onRuneCreate:  (input: AltheriumRuneInput, image: File | null) => Promise<void>
   onRuneUpdate:  (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
@@ -71,7 +75,7 @@ function trailTriumphAsRune(t: TrailTriumph): AltheriumRune {
 }
 
 export function AltheriumRunaskinTriumphs({
-  trail, onTrailChange, sceneUses, usesLimit, onNewScene, prCurrent, onUse,
+  trail, onTrailChange, sceneUses, usesLimit, onNewScene, prCurrent, onUse, recent, onRecent,
   runes, onRuneCreate, onRuneUpdate, onRuneDelete, trailOverrides, onTrailOverride,
   onTrailImageUpload, onTrailImageRemove, disabled = false,
 }: AltheriumRunaskinTriumphsProps) {
@@ -88,9 +92,17 @@ export function AltheriumRunaskinTriumphs({
       : { id: t.id, trail: t.trail, name: t.name, description: t.description, cost: t.cost, test: t.test, action: t.action, range: t.range, image_url: null, edited: false }
   }).sort(byName) // pelo nome que aparece (o editado, se houver)
   const runesSorted = [...runes].sort(byName)
+  // Recentes: triunfos da trilha atual e runas que ainda existem.
+  type RecentItem = { kind: 'trail'; t: TrailTriumph } | { kind: 'rune'; r: AltheriumRune }
+  const recentItems = recent.flatMap((id): RecentItem[] => {
+    const t = initial.find((x) => x.id === id)
+    if (t) return [{ kind: 'trail', t }]
+    const r = runes.find((x) => x.id === id)
+    return r ? [{ kind: 'rune', r }] : []
+  })
   const limitHit   = usesLimit != null && sceneUses >= usesLimit
 
-  function renderUseButton(name: string, cost: number) {
+  function renderUseButton(id: string, name: string, cost: number) {
     const noPr = prCurrent < cost
     return (
       <button
@@ -99,6 +111,7 @@ export function AltheriumRunaskinTriumphs({
         title={limitHit ? 'Limite de usos da cena (NR) atingido' : noPr ? 'PR insuficiente' : undefined}
         onClick={() => {
           onUse(cost, name)
+          onRecent(id)
           setLastUsed(`${name} usado — −${cost} PR.`)
         }}
       >
@@ -153,6 +166,36 @@ export function AltheriumRunaskinTriumphs({
       )}
       {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
 
+      <AltheriumRecentTriumphs count={recentItems.length}>
+        {recentItems.map((it) => it.kind === 'trail'
+          ? (
+            <RuneCard
+              key={`recent-${it.t.id}`}
+              trailClass={it.t.trail}
+              media={it.t.image_url
+                ? <img src={it.t.image_url} alt="" loading="lazy" />
+                : <span className="alth-rune__glyph" aria-hidden="true">{trailDef?.glyph}</span>}
+              name={it.t.name} cost={it.t.cost} test={it.t.test} description={it.t.description}
+              chips={[it.t.action ? TRIUMPH_ACTION_LABELS[it.t.action] : null, it.t.range].filter((c): c is string => !!c)}
+            >
+              {renderUseButton(it.t.id, it.t.name, it.t.cost)}
+            </RuneCard>
+          )
+          : (
+            <RuneCard
+              key={`recent-${it.r.id}`}
+              trailClass="descoberta"
+              media={it.r.image_url
+                ? <img src={it.r.image_url} alt="" loading="lazy" />
+                : <span className="alth-rune__glyph" aria-hidden="true">ᚱ</span>}
+              name={it.r.name} cost={it.r.pr_cost} test={it.r.test} description={it.r.description}
+              chips={[it.r.action ? TRIUMPH_ACTION_LABELS[it.r.action] : null, it.r.range].filter((c): c is string => !!c)}
+            >
+              {renderUseButton(it.r.id, it.r.name, it.r.pr_cost)}
+            </RuneCard>
+          ))}
+      </AltheriumRecentTriumphs>
+
       <h5 className="alth-triumphs__group">Triunfos da trilha</h5>
       {trailDef
         ? (
@@ -180,7 +223,7 @@ export function AltheriumRunaskinTriumphs({
                 >
                   Editar
                 </button>
-                {renderUseButton(t.name, t.cost)}
+                {renderUseButton(t.id, t.name, t.cost)}
               </RuneCard>
             ))}
           </div>
@@ -294,7 +337,7 @@ export function AltheriumRunaskinTriumphs({
                         >
                           Editar
                         </button>
-                        {renderUseButton(r.name, r.pr_cost)}
+                        {renderUseButton(r.id, r.name, r.pr_cost)}
                       </>
                     )}
                 </RuneCard>

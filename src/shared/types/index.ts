@@ -241,9 +241,35 @@ export interface AltheriumSheet {
   pilar_card_mode:    'virtual' | 'fisico'
   /** Pilar: o que resta do baralho virtual embaralhado (null = baralho novo). */
   pilar_deck:         string[] | null
+  /** Ids dos últimos triunfos usados (mais recente primeiro) — seção "Recentes" das três raízes. */
+  recent_triumphs:    string[]
+  /** Habilidades de gênesis que o mestre deu (texto livre). */
+  genesis_abilities:  AltheriumGenesisAbility[]
+  /** Inspirações Skald ganhas na história (não há no livro; o jogador cria). */
+  skald_inspirations: AltheriumSkaldInspiration[]
   notes:              string | null
   created_at:         string
   updated_at:         string
+}
+
+/** Habilidade de gênesis dada pelo mestre (ex.: "Sem passado"). */
+export interface AltheriumGenesisAbility {
+  id:          string
+  name:        string
+  description: string
+}
+
+/** Inspiração Skald — criada pelo jogador, no formato de um triunfo. */
+export interface AltheriumSkaldInspiration {
+  id:          string
+  name:        string
+  description: string
+  /** Custo em texto livre ("1 FV", "uma vez por sessão"…); vazio = sem custo. */
+  cost:        string
+  /** Mesmos ids de TriumphAction (altheriumTriumphs.ts). */
+  action:      'padrao' | 'bonus' | 'livre' | 'reacao' | null
+  range:       string | null
+  test:        string | null
 }
 
 /** Versão editada na ficha de um triunfo inicial de trilha do Runaskin. */

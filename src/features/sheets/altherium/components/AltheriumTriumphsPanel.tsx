@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { AltheriumRaiz } from '../constants/altherium'
+import { AltheriumRecentTriumphs } from './AltheriumRecentTriumphs'
 import {
   BERSERKER_TRIUMPHS,
   byName,
@@ -23,12 +24,15 @@ interface AltheriumTriumphsPanelProps {
   fvCurrent:      number
   onChange:       (ids: string[]) => void
   onSpendFv:      (cost: number, triumphName: string) => void
+  /** Ids dos últimos triunfos usados (mais recente primeiro). */
+  recent:         string[]
+  onRecent:       (id: string) => void
   disabled?:      boolean
 }
 
 export function AltheriumTriumphsPanel({
   raiz, triumphIds, limit, fvCurrent,
-  onChange, onSpendFv, disabled = false,
+  onChange, onSpendFv, recent, onRecent, disabled = false,
 }: AltheriumTriumphsPanelProps) {
   const [lastUsed, setLastUsed] = useState<string | null>(null)
 
@@ -41,6 +45,26 @@ export function AltheriumTriumphsPanel({
   const available = BERSERKER_TRIUMPHS.filter((t) => !triumphIds.includes(t.id))
   const full      = owned.length >= limit
   const over      = owned.length > limit
+  // Recentes: só os que o personagem ainda tem.
+  const recentOwned = recent.filter((id) => triumphIds.includes(id))
+    .map(findBerserkerTriumph).filter((t): t is BerserkerTriumphDef => !!t)
+
+  function useButton(t: BerserkerTriumphDef) {
+    return (
+      <button
+        type="button" className="alth-triumph__btn alth-triumph__btn--use"
+        disabled={disabled || fvCurrent < t.cost}
+        title={fvCurrent < t.cost ? 'FV insuficiente' : undefined}
+        onClick={() => {
+          onSpendFv(t.cost, t.name)
+          onRecent(t.id)
+          setLastUsed(`${t.name} usado — −${t.cost} FV.`)
+        }}
+      >
+        Usar
+      </button>
+    )
+  }
 
   return (
     <section className="alth-card alth-triumphs">
@@ -60,6 +84,12 @@ export function AltheriumTriumphsPanel({
       )}
       {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
 
+      <AltheriumRecentTriumphs count={recentOwned.length}>
+        {recentOwned.map((t) => (
+          <BerserkerTriumphCard key={`recent-${t.id}`} triumph={t} owned>{useButton(t)}</BerserkerTriumphCard>
+        ))}
+      </AltheriumRecentTriumphs>
+
       <h5 className="alth-triumphs__group">Seus triunfos</h5>
       {owned.length === 0
         ? <p className="alth-triumphs__empty">Nenhum triunfo escolhido ainda — adicione abaixo.</p>
@@ -67,17 +97,7 @@ export function AltheriumTriumphsPanel({
           <div className="alth-triumphs__grid">
             {owned.map((t) => (
               <BerserkerTriumphCard key={t.id} triumph={t} owned>
-                <button
-                  type="button" className="alth-triumph__btn alth-triumph__btn--use"
-                  disabled={disabled || fvCurrent < t.cost}
-                  title={fvCurrent < t.cost ? 'FV insuficiente' : undefined}
-                  onClick={() => {
-                    onSpendFv(t.cost, t.name)
-                    setLastUsed(`${t.name} usado — −${t.cost} FV.`)
-                  }}
-                >
-                  Usar
-                </button>
+                {useButton(t)}
                 <button
                   type="button" className="alth-triumph__btn alth-triumph__btn--remove"
                   disabled={disabled}

@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react'
+import { AltheriumRecentTriumphs } from './AltheriumRecentTriumphs'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
 import { rollDice } from '../../../dice/services/diceService'
@@ -29,7 +30,8 @@ import {
 export type PilarCardMode = 'virtual' | 'fisico'
 
 // Triunfos agrupados pelo número de combinações (1 a 4) — cada grupo tem
-// um cabeçalho com as cartinhas em leque e uma cor própria.
+// um cabeçalho com as cartinhas em leque. Acima de tudo, os "Recentes"
+// (os últimos usados), pra achar rápido o que a pessoa mais usa.
 const PILAR_TIERS = [1, 2, 3, 4]
   .map((cost) => ({ cost, list: PILAR_TRIUMPHS.filter((t) => t.cost === cost) }))
   .filter((g) => g.list.length > 0)
@@ -47,6 +49,10 @@ export interface PilarUseResult {
 
 interface AltheriumPilarTriumphsProps {
   campaignId:   string
+  /** Ids dos últimos triunfos usados (mais recente primeiro). */
+  recent:       string[]
+  /** Chamado ao apertar "Usar" — o triunfo vai pro topo dos recentes. */
+  onRecent:     (id: string) => void
   cardsCurrent: number
   cardsMax:     number | null
   mode:         PilarCardMode
@@ -69,11 +75,41 @@ function plural(n: number, one: string, many: string) {
 }
 
 export function AltheriumPilarTriumphs({
-  campaignId, cardsCurrent, cardsMax, mode, deck, disabled = false,
+  campaignId, recent, onRecent, cardsCurrent, cardsMax, mode, deck, disabled = false,
   onModeChange, onDeckReset, onSpend, onResolve, onRecover,
 }: AltheriumPilarTriumphsProps) {
   const [using, setUsing] = useState<PilarTriumphDef | null>(null)
   const [lastUsed, setLastUsed] = useState<string | null>(null)
+  const recentList = recent
+    .map((id) => PILAR_TRIUMPHS.find((t) => t.id === id))
+    .filter((t): t is PilarTriumphDef => !!t)
+
+  function renderTriumph(t: PilarTriumphDef, keyPrefix = '') {
+    return (
+      <article key={keyPrefix + t.id} className="alth-triumph alth-triumph--tier">
+        <header className="alth-triumph__head">
+          <h5 className="alth-triumph__name">{t.name}</h5>
+          <span className="alth-triumph__cost alth-triumph__cost--cards" title="Combinações de naipe necessárias">
+            {plural(t.cost, 'combinação', 'combinações')}
+          </span>
+        </header>
+        <p className="alth-triumph__desc">{t.description}</p>
+        <div className="alth-triumph__chips">
+          <span className="alth-triumph__chip">{TRIUMPH_ACTION_LABELS.bonus}</span>
+        </div>
+        <div className="alth-triumph__actions">
+          <button
+            type="button" className="alth-triumph__btn alth-triumph__btn--use"
+            disabled={disabled || cardsCurrent === 0}
+            title={cardsCurrent === 0 ? 'Sem cartas até o descanso' : undefined}
+            onClick={() => { onRecent(t.id); setUsing(t) }}
+          >
+            Usar
+          </button>
+        </div>
+      </article>
+    )
+  }
   const deckLeft = deck?.length ?? DECK_SIZE
 
   function handleResolve(result: PilarUseResult) {
@@ -127,6 +163,10 @@ export function AltheriumPilarTriumphs({
       )}
       {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
 
+      <AltheriumRecentTriumphs count={recentList.length}>
+        {recentList.map((t) => renderTriumph(t, 'recent'))}
+      </AltheriumRecentTriumphs>
+
       {PILAR_TIERS.map(({ cost, list }) => (
       <div key={cost} className="alth-pilar-tier" data-tier={cost}>
         <div className="alth-pilar-tier__head">
@@ -141,30 +181,7 @@ export function AltheriumPilarTriumphs({
           <span className="alth-pilar-tier__count">{plural(list.length, 'triunfo', 'triunfos')}</span>
         </div>
       <div className="alth-triumphs__grid">
-        {list.map((t) => (
-          <article key={t.id} className="alth-triumph alth-triumph--tier">
-            <header className="alth-triumph__head">
-              <h5 className="alth-triumph__name">{t.name}</h5>
-              <span className="alth-triumph__cost alth-triumph__cost--cards" title="Combinações de naipe necessárias">
-                {plural(t.cost, 'combinação', 'combinações')}
-              </span>
-            </header>
-            <p className="alth-triumph__desc">{t.description}</p>
-            <div className="alth-triumph__chips">
-              <span className="alth-triumph__chip">{TRIUMPH_ACTION_LABELS.bonus}</span>
-            </div>
-            <div className="alth-triumph__actions">
-              <button
-                type="button" className="alth-triumph__btn alth-triumph__btn--use"
-                disabled={disabled || cardsCurrent === 0}
-                title={cardsCurrent === 0 ? 'Sem cartas até o descanso' : undefined}
-                onClick={() => setUsing(t)}
-              >
-                Usar
-              </button>
-            </div>
-          </article>
-        ))}
+        {list.map((t) => renderTriumph(t))}
       </div>
       </div>
       ))}

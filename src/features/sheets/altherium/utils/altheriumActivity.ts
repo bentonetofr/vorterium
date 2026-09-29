@@ -121,6 +121,31 @@ function objectDiff(from: unknown, to: unknown, labels: Record<string, string>):
 }
 
 const RUNE_FIELDS = { nome: 'Nome', custo: 'Custo (PR)', teste: 'Teste', acao: 'Ação', alcance: 'Alcance', descricao: 'Descrição', imagem: 'Foto' }
+const GENESIS_ABILITY_FIELDS = { name: 'Nome', description: 'Descrição' }
+const INSPIRATION_FIELDS = { name: 'Nome', cost: 'Custo', test: 'Teste', action: 'Ação', range: 'Alcance', description: 'Descrição' }
+
+/** Listas de cards com id (gênesis, inspirações): criado, apagado ou editado. */
+function listDiff(
+  key: string, from: unknown, to: unknown, label: string, fields: Record<string, string>,
+): SheetChangeLine[] {
+  type Card = Record<string, unknown> & { id: string; name?: string }
+  const a = new Map(((from as Card[] | null) ?? []).map((x) => [x.id, x]))
+  const b = new Map(((to as Card[] | null) ?? []).map((x) => [x.id, x]))
+  const lines: SheetChangeLine[] = []
+  for (const [id, card] of b) {
+    const old = a.get(id)
+    const name = str(card.name) ?? label
+    if (!old) lines.push({ key: `${key}:${id}`, label: `${label} ${name}`, note: 'criada', tone: 'added' })
+    else if (JSON.stringify(old) !== JSON.stringify(card)) {
+      lines.push({ key: `${key}:${id}`, label: `${label} ${str(old.name) ?? name}`, note: 'editada', tone: 'neutral', details: objectDiff(old, card, fields) })
+    }
+  }
+  for (const [id, card] of a) {
+    if (!b.has(id)) lines.push({ key: `${key}:${id}`, label: `${label} ${str(card.name) ?? ''}`.trim(), note: 'apagada', tone: 'removed' })
+  }
+  return lines
+}
+
 const ITEM_FIELDS = { nome: 'Nome', detalhe: 'Detalhe', db: 'DB', dano: 'Dano', tipo: 'Tipo de dano', atributo: 'Atributo', alcance: 'Alcance' }
 
 // Ordem de leitura: quem é → atributos → recursos → defesa → dinheiro →
@@ -132,7 +157,8 @@ const RANK_PREFIXES: [RegExp, number][] = [
   [/^(db|dano)_/, 3],
   [/^hacksilvers$/, 4],
   [/^domain$/, 5],
-  [/^(berserker_triumphs|runaskin_|pilar_card_mode|rune)/, 6],
+  [/^(genesis_abilities)$/, 0],
+  [/^(berserker_triumphs|runaskin_|pilar_card_mode|rune|skald_inspirations)/, 6],
   [/^(item|equip|itemedit)$/, 7],
   [/^notes$/, 9],
 ]
@@ -220,6 +246,10 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
       for (const id of a) if (!b.has(id)) lines.push({ key: `${key}:${id}`, label: `Triunfo ${name(id)}`, note: 'removido', tone: 'removed' })
       return lines
     }
+    case 'genesis_abilities':
+      return listDiff(key, c.from, c.to, 'Habilidade de gênesis', GENESIS_ABILITY_FIELDS)
+    case 'skald_inspirations':
+      return listDiff(key, c.from, c.to, 'Inspiração', INSPIRATION_FIELDS)
     case 'runaskin_trail_overrides': {
       const a = (c.from ?? {}) as Record<string, Record<string, unknown>>
       const b = (c.to ?? {}) as Record<string, Record<string, unknown>>

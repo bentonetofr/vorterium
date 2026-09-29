@@ -222,7 +222,10 @@ function useJointRig() {
 
   useEffect(() => () => {
     cleanupDrag.current?.()
+    // Zera o id: no modo de desenvolvimento o React desmonta e remonta
+    // tudo uma vez; um id velho aqui impedia o laço de voltar a rodar.
     if (rafId.current != null) cancelAnimationFrame(rafId.current)
+    rafId.current = null
   }, [])
 
   /** Leva as juntas até uma pose pela mesma mola de quando se solta um membro. */
@@ -254,22 +257,51 @@ function prefersReducedMotion(): boolean {
 
 // ────────────────────────────────────────────────────────
 // Tranças do Pilar — corda Verlet (pontos + restrição de distância)
-// presa nas laterais da cabeça. A âncora gira junto com o pescoço, então
-// mexer a cabeça balança as tranças; a ponta de cada uma também pode ser
-// agarrada e arrastada, e ao soltar ela cai e balança até assentar. O
-// loop só roda enquanto algo se mexe (âncora andou ou ainda há
-// velocidade) — parado, não gasta nada.
+// presa atrás das orelhas. Colide com o corpo: não atravessa a cabeça
+// (que gira com o pescoço), apoia no ombro e escorrega pela frente do
+// peito, e é empurrada pelos braços quando eles passam por ela. Reage ao
+// corpo: balança quando a cabeça gira, quando um braço esbarra, quando o
+// boneco despenca sem pernas e quando levanta. A ponta de cada trança
+// também pode ser agarrada e arrastada. O loop só roda enquanto algo se
+// mexe — parado, não gasta nada.
 // ────────────────────────────────────────────────────────
 
 type Pt = { x: number; y: number }
 
 const BRAID_SEGMENTS = 9
 const BRAID_SEG_LEN  = 7.5
-const BRAID_ANCHORS: readonly Pt[] = [{ x: 83, y: 47 }, { x: 117, y: 47 }]
+/** Onde cada trança sai da cabeça (atrás da orelha), na pose de descanso. */
+const BRAID_ANCHORS: readonly Pt[] = [{ x: 83, y: 50 }, { x: 117, y: 50 }]
 const BRAID_GRAVITY  = 0.35
 const BRAID_DAMPING  = 0.97
 const BRAID_ITERATIONS = 10
 const BRAID_SETTLE_FRAMES = 20
+/** Metade da grossura desenhada da trança — a colisão usa a borda, não o centro. */
+const BRAID_RADIUS = 3
+const HEAD_RADIUS  = 17
+/** Topo arredondado de cada ombro (o direito é espelhado). A trança cai
+ *  por dentro do centro, então apoia e escorrega pro peito, não pro braço. */
+const SHOULDER_CAP = { x: 78, y: 76, r: 10 }
+/** O braço só colide da metade de cima pra baixo — o alto do ombro é o SHOULDER_CAP. */
+const ARM_COLLIDE_FROM = 0.35
+/** Passos simulados antes do primeiro desenho: a trança já nasce apoiada. */
+const BRAID_PRESETTLE_STEPS = 240
+
+type Circle  = { c: Pt; r: number }
+type Capsule = { a: Pt; b: Pt; r: number }
+
+/** Ângulos atuais das juntas que mexem nas tranças (graus). */
+interface BraidPose {
+  neck: number
+  shoulderL: number; elbowL: number
+  shoulderR: number; elbowR: number
+}
+
+interface BraidBody {
+  upperArm: number
+  forearm:  number
+  hand:     { rx: number; ry: number }
+}
 
 function rotateAround(p: Pt, pivot: Pt, deg: number): Pt {
   const rad = (deg * Math.PI) / 180
@@ -280,73 +312,159 @@ function rotateAround(p: Pt, pivot: Pt, deg: number): Pt {
   return { x: pivot.x + dx * cos - dy * sin, y: pivot.y + dx * sin + dy * cos }
 }
 
+function lerpPt(a: Pt, b: Pt, t: number): Pt {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
+}
+
+/** Empurra p pra fora do círculo (se estiver dentro). */
+function outOfCircle(p: Pt, { c, r }: Circle): Pt {
+  const dx = p.x - c.x
+  const dy = p.y - c.y
+  const d = Math.hypot(dx, dy)
+  if (d >= r) return p
+  if (d < 1e-4) return { x: c.x, y: c.y - r }
+  return { x: c.x + (dx / d) * r, y: c.y + (dy / d) * r }
+}
+
+/** Empurra p pra fora da cápsula (segmento com raio). */
+function outOfCapsule(p: Pt, { a, b, r }: Capsule): Pt {
+  const abx = b.x - a.x
+  const aby = b.y - a.y
+  const len2 = abx * abx + aby * aby || 1e-4
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / len2))
+  return outOfCircle(p, { c: { x: a.x + abx * t, y: a.y + aby * t }, r })
+}
+
+function braidAnchors(pose: BraidPose): Pt[] {
+  return BRAID_ANCHORS.map((a) => rotateAround(a, NECK_PIVOT, pose.neck))
+}
+
+/** Partes do corpo em que a trança bate, na pose atual. */
+function braidColliders(pose: BraidPose, body: BraidBody): { circles: Circle[]; capsules: Capsule[] } {
+  const circles: Circle[] = [
+    { c: rotateAround(HEAD, NECK_PIVOT, pose.neck), r: HEAD_RADIUS + BRAID_RADIUS },
+    { c: { x: SHOULDER_CAP.x, y: SHOULDER_CAP.y }, r: SHOULDER_CAP.r + BRAID_RADIUS },
+    { c: { x: mirror(SHOULDER_CAP.x), y: SHOULDER_CAP.y }, r: SHOULDER_CAP.r + BRAID_RADIUS },
+  ]
+  const capsules: Capsule[] = []
+  for (const side of ['L', 'R'] as const) {
+    const m = (p: Pt) => (side === 'L' ? p : { x: mirror(p.x), y: p.y })
+    const shoulderAngle = side === 'L' ? pose.shoulderL : pose.shoulderR
+    const elbowAngle    = side === 'L' ? pose.elbowL    : pose.elbowR
+    const shoulder = m(SHOULDER)
+    const elbow = rotateAround(m(ELBOW), shoulder, shoulderAngle)
+    const wrist = rotateAround(rotateAround(m(WRIST), m(ELBOW), elbowAngle), shoulder, shoulderAngle)
+    capsules.push(
+      { a: lerpPt(shoulder, elbow, ARM_COLLIDE_FROM), b: elbow, r: body.upperArm / 2 + BRAID_RADIUS },
+      { a: elbow, b: wrist, r: body.forearm / 2 + BRAID_RADIUS },
+    )
+    circles.push({ c: { x: wrist.x, y: wrist.y + 3 }, r: Math.max(body.hand.rx, body.hand.ry) + BRAID_RADIUS })
+  }
+  return { circles, capsules }
+}
+
+/** Um passo da física (Verlet + restrições + colisões). Devolve o quanto algo se mexeu. */
+function simulateBraids(
+  points: Pt[][], previous: Pt[][], anchors: Pt[], pose: BraidPose, body: BraidBody,
+  pinned: { braid: number; at: Pt } | null,
+): number {
+  const { circles, capsules } = braidColliders(pose, body)
+  let motion = 0
+
+  points.forEach((P, b) => {
+    const Q = previous[b]
+    const last = P.length - 1
+    const tipPinned = pinned?.braid === b
+    // Integra (Verlet): velocidade implícita = posição atual − anterior.
+    for (let i = 1; i < P.length; i++) {
+      const vx = (P[i].x - Q[i].x) * BRAID_DAMPING
+      const vy = (P[i].y - Q[i].y) * BRAID_DAMPING + BRAID_GRAVITY
+      Q[i] = { ...P[i] }
+      P[i] = { x: P[i].x + vx, y: P[i].y + vy }
+    }
+    P[0] = anchors[b]
+    Q[0] = anchors[b]
+    if (tipPinned) P[last] = { ...pinned!.at }
+
+    for (let k = 0; k < BRAID_ITERATIONS; k++) {
+      // Corpo — cada gomo sai de dentro da cabeça, ombros, braços e mãos.
+      // Vem antes das distâncias: se a trança ficar espremida (braço
+      // contra a cabeça), ela encosta de leve em vez de esticar.
+      for (let i = 1; i < P.length; i++) {
+        if (tipPinned && i === last) continue
+        let p = P[i]
+        for (const circle of circles) p = outOfCircle(p, circle)
+        for (const capsule of capsules) p = outOfCapsule(p, capsule)
+        P[i] = p
+      }
+      // Distância entre gomos — o topo (âncora) e a ponta agarrada não se movem.
+      for (let i = 0; i < last; i++) {
+        const a = P[i]
+        const c = P[i + 1]
+        const dx = c.x - a.x
+        const dy = c.y - a.y
+        const dist = Math.hypot(dx, dy) || 0.0001
+        const diff = (dist - BRAID_SEG_LEN) / dist
+        const aFixed = i === 0
+        const cFixed = tipPinned && i + 1 === last
+        if (aFixed && cFixed) continue
+        const wa = aFixed ? 0 : cFixed ? 1 : 0.5
+        const wc = cFixed ? 0 : aFixed ? 1 : 0.5
+        P[i]     = { x: a.x + dx * diff * wa, y: a.y + dy * diff * wa }
+        P[i + 1] = { x: c.x - dx * diff * wc, y: c.y - dy * diff * wc }
+      }
+    }
+
+    for (let i = 1; i < P.length; i++) {
+      motion = Math.max(motion, Math.hypot(P[i].x - Q[i].x, P[i].y - Q[i].y))
+    }
+  })
+  return motion
+}
+
 function hangingBraid(anchor: Pt): Pt[] {
   return Array.from({ length: BRAID_SEGMENTS + 1 }, (_, i) => ({ x: anchor.x, y: anchor.y + i * BRAID_SEG_LEN }))
 }
 
-function useBraids(enabled: boolean, getNeckAngle: () => number) {
-  const points   = useRef<Pt[][]>(BRAID_ANCHORS.map(hangingBraid))
-  const previous = useRef<Pt[][]>(BRAID_ANCHORS.map(hangingBraid))
-  const lastAnchors = useRef<Pt[] | null>(null)
+const REST_POSE: BraidPose = { neck: 0, shoulderL: 0, elbowL: 0, shoulderR: 0, elbowR: 0 }
+
+/** Tranças já assentadas (apoiadas no ombro) na pose de descanso. */
+function settledBraids(body: BraidBody): { points: Pt[][]; previous: Pt[][] } {
+  const points = BRAID_ANCHORS.map(hangingBraid)
+  const previous = BRAID_ANCHORS.map(hangingBraid)
+  const anchors = braidAnchors(REST_POSE)
+  for (let n = 0; n < BRAID_PRESETTLE_STEPS; n++) simulateBraids(points, previous, anchors, REST_POSE, body, null)
+  return { points, previous: points.map((P) => P.map((p) => ({ ...p }))) }
+}
+
+function poseKey(pose: BraidPose): string {
+  return [pose.neck, pose.shoulderL, pose.elbowL, pose.shoulderR, pose.elbowR].map((n) => n.toFixed(2)).join(',')
+}
+
+function useBraids(enabled: boolean, getPose: () => BraidPose, body: BraidBody) {
+  const initial  = useRef<ReturnType<typeof settledBraids> | null>(null)
+  if (!initial.current) initial.current = settledBraids(body)
+  const points   = useRef<Pt[][]>(initial.current.points)
+  const previous = useRef<Pt[][]>(initial.current.previous)
+  const lastPose = useRef<string | null>(null)
   const stillFrames = useRef(0)
   const rafId    = useRef<number | null>(null)
   const draggingTip = useRef<number | null>(null)
   const tipTarget   = useRef<Pt>({ x: 0, y: 0 })
   const cleanupDrag = useRef<(() => void) | null>(null)
+  const bodyRef  = useRef(body)
+  bodyRef.current = body
   const [, bump] = useReducer((n: number) => n + 1, 0)
 
-  function currentAnchors(): Pt[] {
-    return BRAID_ANCHORS.map((a) => rotateAround(a, NECK_PIVOT, getNeckAngle()))
-  }
-
   function step() {
-    const anchors = currentAnchors()
-    let motion = 0
-    if (lastAnchors.current) {
-      anchors.forEach((a, b) => {
-        motion = Math.max(motion, Math.hypot(a.x - lastAnchors.current![b].x, a.y - lastAnchors.current![b].y))
-      })
-    }
-    lastAnchors.current = anchors
+    const pose = getPose()
+    const key = poseKey(pose)
+    const poseMoved = lastPose.current !== null && lastPose.current !== key
+    lastPose.current = key
+    const pinned = draggingTip.current != null ? { braid: draggingTip.current, at: tipTarget.current } : null
+    const motion = simulateBraids(points.current, previous.current, braidAnchors(pose), pose, bodyRef.current, pinned)
 
-    points.current.forEach((P, b) => {
-      const Q = previous.current[b]
-      const tipPinned = draggingTip.current === b
-      // Integra (Verlet): velocidade implícita = posição atual − anterior.
-      for (let i = 1; i < P.length; i++) {
-        const vx = (P[i].x - Q[i].x) * BRAID_DAMPING
-        const vy = (P[i].y - Q[i].y) * BRAID_DAMPING + BRAID_GRAVITY
-        Q[i] = { ...P[i] }
-        P[i] = { x: P[i].x + vx, y: P[i].y + vy }
-        motion = Math.max(motion, Math.abs(vx), Math.abs(vy - BRAID_GRAVITY))
-      }
-      P[0] = anchors[b]
-      Q[0] = anchors[b]
-      const last = P.length - 1
-      if (tipPinned) P[last] = { ...tipTarget.current }
-
-      // Restrições de distância — o topo (âncora) e a ponta agarrada não se
-      // movem; o resto se ajusta até cada segmento voltar ao comprimento.
-      for (let k = 0; k < BRAID_ITERATIONS; k++) {
-        for (let i = 0; i < last; i++) {
-          const a = P[i]
-          const c = P[i + 1]
-          const dx = c.x - a.x
-          const dy = c.y - a.y
-          const dist = Math.hypot(dx, dy) || 0.0001
-          const diff = (dist - BRAID_SEG_LEN) / dist
-          const aFixed = i === 0
-          const cFixed = tipPinned && i + 1 === last
-          if (aFixed && cFixed) continue
-          const wa = aFixed ? 0 : cFixed ? 1 : 0.5
-          const wc = cFixed ? 0 : aFixed ? 1 : 0.5
-          P[i]     = { x: a.x + dx * diff * wa, y: a.y + dy * diff * wa }
-          P[i + 1] = { x: c.x - dx * diff * wc, y: c.y - dy * diff * wc }
-        }
-      }
-    })
-
-    stillFrames.current = motion < 0.03 && draggingTip.current == null ? stillFrames.current + 1 : 0
+    stillFrames.current = motion < 0.03 && !poseMoved && pinned == null ? stillFrames.current + 1 : 0
     bump()
     rafId.current = stillFrames.current < BRAID_SETTLE_FRAMES ? requestAnimationFrame(step) : null
   }
@@ -356,20 +474,28 @@ function useBraids(enabled: boolean, getNeckAngle: () => number) {
     if (rafId.current == null) rafId.current = requestAnimationFrame(step)
   }
 
-  // Roda depois de cada render: se o pescoço girou desde o último passo
-  // (o rig das articulações re-renderiza a cada frame enquanto anima), ou
-  // se nunca simulou, acorda o loop. Parado e sem mudança, não faz nada.
+  /** Empurrão em todos os gomos (o corpo acelerou pro lado oposto). */
+  function impulse(dx: number, dy: number) {
+    previous.current.forEach((Q) => {
+      for (let i = 1; i < Q.length; i++) Q[i] = { x: Q[i].x - dx, y: Q[i].y - dy }
+    })
+    kick()
+  }
+
+  // Roda depois de cada render: se o pescoço ou um braço mexeu desde o
+  // último passo (o rig re-renderiza a cada frame enquanto anima), acorda
+  // o loop. Parado e sem mudança, não faz nada.
   useEffect(() => {
     if (!enabled) return
-    const anchors = currentAnchors()
-    const moved = !lastAnchors.current || anchors.some((a, b) =>
-      Math.hypot(a.x - lastAnchors.current![b].x, a.y - lastAnchors.current![b].y) > 0.01)
-    if (moved && rafId.current == null) kick()
+    if (poseKey(getPose()) !== lastPose.current && rafId.current == null) kick()
   })
 
   useEffect(() => () => {
     cleanupDrag.current?.()
+    // Zera o id: no modo de desenvolvimento o React desmonta e remonta
+    // tudo uma vez; um id velho aqui impedia o laço de voltar a rodar.
     if (rafId.current != null) cancelAnimationFrame(rafId.current)
+    rafId.current = null
   }, [])
 
   function beginTipDrag(braid: number, svg: SVGSVGElement) {
@@ -400,7 +526,7 @@ function useBraids(enabled: boolean, getNeckAngle: () => number) {
     cleanupDrag.current = onUp
   }
 
-  return { points, draggingTip, beginTipDrag }
+  return { points, draggingTip, beginTipDrag, impulse }
 }
 
 // ────────────────────────────────────────────────────────
@@ -452,8 +578,11 @@ interface ZoneStyle extends CSSProperties { '--zone-color'?: string }
 export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao', visualMax, build = null, legless = false }: AltheriumBodyDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const rig = useJointRig()
-  const braids = useBraids(build === 'pilar', () => rig.angles.current.neck)
   const shape = build === 'berserker' ? MUSCULAR_BUILD : NEUTRAL_BUILD
+  const braids = useBraids(build === 'pilar', () => {
+    const a = rig.angles.current
+    return { neck: a.neck, shoulderL: a.shoulderL, elbowL: a.elbowL, shoulderR: a.shoulderR, elbowR: a.elbowR }
+  }, shape)
 
   // Levantando de volta (deixou de ser sem pernas) — anima só nessa troca.
   const [rising, setRising] = useState(false)
@@ -464,13 +593,18 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
     if (legless) {
       setRising(false)
       if (prefersReducedMotion()) { rig.pose(POSE_ON_FLOOR); return }
+      // Tranças: o corpo despenca e elas ficam pra trás (sobem); no
+      // impacto, chicoteiam pra baixo.
+      braids.impulse(0, -5)
       const up    = window.setTimeout(() => rig.pose(POSE_FLAILING), FALL_ARMS_UP_MS)
-      const floor = window.setTimeout(() => rig.pose(POSE_ON_FLOOR), FALL_IMPACT_MS)
+      const floor = window.setTimeout(() => { rig.pose(POSE_ON_FLOOR); braids.impulse(0, 7) }, FALL_IMPACT_MS)
       return () => { window.clearTimeout(up); window.clearTimeout(floor) }
     }
     if (before) {
       setRising(true)
       rig.pose(POSE_REST)
+      // Levantando: o corpo sobe e as tranças atrasam (caem um pouco).
+      if (!prefersReducedMotion()) braids.impulse(0, 4)
     }
     // rig muda de identidade a cada render, mas só guarda refs — basta reagir a `legless`.
     // eslint-disable-next-line react-hooks/exhaustive-deps

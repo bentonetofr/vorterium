@@ -18,14 +18,18 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '1.9',
     date:    '2026-09-29',
-    title:   'Triunfos do Pilar separados por combinações',
+    title:   'Inspirações Skald, habilidades de gênesis e triunfos recentes',
     items: [
-      'Os triunfos do Pilar agora ficam em grupos de 1, 2, 3 e 4 combinações, cada um com um cabeçalho de cartinhas em leque (uma por combinação) e uma cor própria: aço, verde, ouro e rubi. Os cards do grupo levam a mesma cor na borda.',
+      'Altherium: nova aba Inspirações, com cards de Inspirações Skald criados pelo jogador (nome, custo, teste, ação, distância e descrição). "Usar" avisa a mesa.',
+      'Na aba Atributos, o quadro Gênesis mostra o efeito do livro e guarda as habilidades de gênesis que o mestre der ao personagem.',
+      'Triunfos do Pilar separados em grupos de 1, 2, 3 e 4 combinações, com cartinhas em leque no cabeçalho de cada grupo.',
+      'Manequim do Pilar: as tranças ficam presas na cabeça e acompanham quando ela gira; batem na cabeça, nos ombros e nos braços em vez de atravessar, ficam apoiadas no ombro caindo pela frente, e balançam quando o boneco cai sem pernas, levanta ou quando um braço esbarra nelas.',
+      'Seção Recentes no topo dos triunfos das três raízes (Berserker, Runaskin — trilha e runas — e Pilar): os 4 últimos que você usou, pra achar rápido sem perder a lista toda.',
     ],
   },
   {
     version: '1.8',
-    date:    '2026-09-29',
+    date:    '2026-09-28',
     title:   'Triunfos em ordem e painel interno de suporte',
     items: [
       'Altherium: triunfos do Pilar agora aparecem por número de combinações, de 1 a 4 (e em ordem alfabética dentro de cada uma); os do Berserker e do Runaskin (trilha e runas descobertas) ficam em ordem alfabética.',
@@ -34,7 +38,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.7',
-    date:    '2026-09-28',
+    date:    '2026-09-25',
     title:   'Chat flutuante, biblioteca de estantes e galeria de lembranças',
     items: [
       'Galeria virou um mural de álbuns: um card por campanha, com as fotos em pilha que se abrem em leque.',
@@ -55,7 +59,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.6',
-    date:    '2026-09-28',
+    date:    '2026-09-22',
     title:   'Ferramentas no menu',
     items: [
       'Biblioteca: os livros de regras abertos direto do menu, sem entrar numa campanha.',
@@ -67,7 +71,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.5',
-    date:    '2026-09-28',
+    date:    '2026-09-18',
     title:   'Ajustes da ficha Altherium',
     items: [
       'O joelho do boneco dobra pro lado certo.',
@@ -79,7 +83,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.4',
-    date:    '2026-09-25',
+    date:    '2026-09-15',
     title:   'Terra Devastada',
     items: [
       'Novo sistema: Terra Devastada, com ficha de características, condições, trunfos e inventário.',
@@ -89,7 +93,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.3',
-    date:    '2026-09-25',
+    date:    '2026-09-11',
     title:   'Pilar e Runaskin',
     items: [
       'Pilar: triunfos pedem combinações de naipe, com baralho virtual (uma carta por vez) ou cartas físicas.',
@@ -98,7 +102,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.2',
-    date:    '2026-09-24',
+    date:    '2026-09-08',
     title:   'Mesa ao vivo',
     items: [
       'Aba Mesa: o mestre transmite a tela com som, a 30 fps.',
@@ -109,7 +113,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: '1.1',
-    date:    '2026-09-24',
+    date:    '2026-09-04',
     title:   'Ficha Altherium completa',
     items: [
       'Triunfos de Berserker, Runaskin e Pilar, inventário com itens personalizados e salvamento automático.',
