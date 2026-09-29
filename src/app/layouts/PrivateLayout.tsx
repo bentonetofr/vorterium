@@ -8,6 +8,7 @@ import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
 import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
+import { CritWolf }           from '../../features/dice/components/CritWolf'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
 import { ActiveChatProvider }  from '../../features/chat/ActiveChatContext'
 import { CurrentCampaignProvider, useCurrentCampaign } from '../../features/campaigns/CurrentCampaignContext'
@@ -265,6 +266,7 @@ function PrivateLayoutContent() {
         ))}
       </nav>
     </div>
+    <CritWolf />
     <div className="dice-fab-wrapper">
       <FabToasts>
         <MesaLiveNotice />
