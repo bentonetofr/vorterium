@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import type { CampaignSession } from '../../../shared/types'
+import { notePlainText } from '../noteHtml'
 
 // ────────────────────────────────────────────────────────
 // Caderno do jogador ("Anotações da Bruna"). Ligado por conta
@@ -256,9 +257,9 @@ export async function noteImageUrls(paths: string[]): Promise<Map<string, string
   return out
 }
 
-/** Primeira linha (pra dar nome à anotação na lista). */
+/** Primeira linha do texto, sem formatação (pra dar nome à anotação na lista). */
 export function noteHeadline(content: string): string {
-  const line = content.split('\n').map((l) => l.trim()).find(Boolean) ?? ''
+  const line = notePlainText(content).split('\n').map((l) => l.trim()).find(Boolean) ?? ''
   return line.length > 48 ? `${line.slice(0, 48)}…` : line
 }
 

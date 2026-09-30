@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import { noteImageUrls, type NoteImage } from '../services/notebookService'
 
 // ────────────────────────────────────────────────────────
-// Imagens de uma anotação (miniaturas; clique amplia) e o seletor de
-// emojis do caderno. As imagens moram num bucket privado: os links são
+// Imagens de uma anotação (miniaturas; clique amplia). As imagens moram num bucket privado: os links são
 // temporários e só abrem pra autora e pros mestres da campanha.
 // ────────────────────────────────────────────────────────
 
@@ -55,52 +54,5 @@ export function NoteImages({ images, onRemove, uploading = 0, size = 'sm' }: Not
         </ModalOverlay>
       )}
     </>
-  )
-}
-
-const EMOJIS = [
-  '😀', '😂', '😅', '😊', '😍', '🥰', '😎', '🤔', '🤨', '😏', '😬', '😱',
-  '😡', '😭', '😴', '🤫', '🙄', '😈', '👍', '👎', '👏', '🙏', '💪', '🤝',
-  '❤️', '💔', '🔥', '✨', '⭐', '💀', '👻', '🐉', '🐺', '🦅', '🐍', '🕷️',
-  '🌙', '☀️', '⚡', '❄️', '🌊', '🌲', '🏰', '⚔️', '🗡️', '🛡️', '🏹', '🪄',
-  '🧪', '📜', '🗝️', '💰', '💎', '🎲', '🗺️', '📍', '❓', '❗', '✅', '❌',
-]
-
-/** Botão 😊 que abre uma grade de emojis; escolher chama onPick. */
-export function EmojiButton({ onPick }: { onPick: (emoji: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const close = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false) } }
-    window.addEventListener('pointerdown', close, true)
-    window.addEventListener('keydown', esc, true)
-    return () => { window.removeEventListener('pointerdown', close, true); window.removeEventListener('keydown', esc, true) }
-  }, [open])
-
-  return (
-    <div className="note-emoji" ref={ref}>
-      <button
-        type="button"
-        className="note-tool"
-        // Não tira o foco da folha: o emoji entra onde está o cursor.
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-label="Emojis"
-        title="Emojis (no Windows também dá com Win + .)"
-      >
-        😊
-      </button>
-      {open && (
-        <div className="note-emoji__grid" role="listbox" aria-label="Emojis">
-          {EMOJIS.map((e) => (
-            <button key={e} type="button" className="note-emoji__item" onMouseDown={(ev) => ev.preventDefault()} onClick={() => onPick(e)}>{e}</button>
-          ))}
-        </div>
-      )}
-    </div>
   )
 }

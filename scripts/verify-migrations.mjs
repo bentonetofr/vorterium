@@ -69,6 +69,7 @@ const expectedMigrations = [
   '20240165000000_player_notes_images.sql',
   '20240166000000_board_master_shield.sql',
   '20240167000000_board_images_gallery.sql',
+  '20240168000000_player_notes_rich_text.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

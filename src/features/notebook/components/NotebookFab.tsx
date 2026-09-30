@@ -23,7 +23,9 @@ import {
   type NotebookNote,
 } from '../services/notebookService'
 import { NoteEditor, type NoteEditorHandle, type SaveStatus } from './NoteEditor'
-import { EmojiButton, NoteImages } from './NoteImages'
+import { NoteImages } from './NoteImages'
+import { EmojiPickerButton } from '../../../shared/components/EmojiPicker'
+import { NoteFormatBar } from './NoteFormatBar'
 import './Notebook.css'
 
 // ────────────────────────────────────────────────────────
@@ -89,7 +91,7 @@ export function NotebookFab() {
         setIsOpen(false)
         return
       }
-      if (target && (target.isContentEditable || target.closest('input, textarea, select, [contenteditable="true"]'))) return
+      if (target && (target.isContentEditable || target.closest('input, textarea, select, [contenteditable="true"], .emoji-pop'))) return
       if (document.querySelector('.modal-overlay, [aria-modal="true"]')) return
       e.preventDefault()
       setIsOpen((v) => !v)
@@ -356,7 +358,7 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
                 ]}
               />
             </div>
-            <EmojiButton onPick={(e) => editorRef.current?.insert(e)} />
+            <EmojiPickerButton className="note-tool" keepFocus onPick={(e) => editorRef.current?.insert(e)} />
             <button
               type="button"
               className="note-tool"
@@ -400,6 +402,8 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
               +
             </button>
           </div>
+
+          <NoteFormatBar editor={editorRef} />
 
           <NoteEditor
             key={sheetKey}

@@ -91,7 +91,17 @@
 .session-form__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
+}
+
+/* Janela no centro da tela (fundo embaçado: .modal-overlay). */
+.session-form--modal {
+  width: min(640px, calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100dvh - 2 * var(--space-4));
+  overflow-y: auto;
+  border-color: var(--gilded);
+  box-shadow: var(--shadow-lg);
 }
 
 .session-form__title {

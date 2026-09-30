@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getCampaignSessions } from '../../sessions/services/sessionService'
 import type { CampaignSession, CampaignWithRole } from '../../../shared/types'
 import {
@@ -10,7 +10,9 @@ import {
   type NotebookAuthor,
   type NotebookNote,
 } from '../services/notebookService'
-import { NoteEditor, type SaveStatus } from './NoteEditor'
+import { NoteEditor, type NoteEditorHandle, type SaveStatus } from './NoteEditor'
+import { NoteFormatBar } from './NoteFormatBar'
+import { noteToHtml, notePlainText } from '../noteHtml'
 import { QuillIcon } from './NotebookFab'
 import { NoteImages } from './NoteImages'
 import './Notebook.css'
@@ -33,6 +35,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const [status, setStatus]     = useState<SaveStatus>('idle')
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
+  const editorRef = useRef<NoteEditorHandle>(null)
 
   useEffect(() => {
     let alive = true
@@ -65,7 +68,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const groups = useMemo(() => {
     const count = new Map<string, number>()
     for (const n of notes) {
-      if (!n.content.trim() && n.images.length === 0) continue
+      if (!notePlainText(n.content).trim() && n.images.length === 0) continue
       const k = n.session_id ?? NO_SESSION
       count.set(k, (count.get(k) ?? 0) + 1)
     }
@@ -76,7 +79,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   }, [notes, sessions])
 
   const selected = picked && groups.some((g) => g.key === picked) ? picked : groups[0]?.key ?? null
-  const visible = notes.filter((n) => (n.content.trim() || n.images.length > 0) && (n.session_id ?? NO_SESSION) === selected)
+  const visible = notes.filter((n) => (notePlainText(n.content).trim() || n.images.length > 0) && (n.session_id ?? NO_SESSION) === selected)
   const author = authors.find((a) => a.userId === authorId) ?? null
   const selectedLabel = groups.find((g) => g.key === selected)?.label ?? ''
 
@@ -148,7 +151,10 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
                   </button>
                 </header>
                 {editing === n.id ? (
+                  <>
+                  <NoteFormatBar editor={editorRef} />
                   <NoteEditor
+                    ref={editorRef}
                     note={n}
                     campaignId={campaign.id}
                     sessionId={n.session_id}
@@ -157,8 +163,12 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
                     onSaved={(saved) => setNotes((prev) => prev.map((x) => (x.id === saved.id ? saved : x)))}
                     onStatus={setStatus}
                   />
+                  </>
                 ) : (
-                  n.content.trim() && <p className="player-note__text">{n.content}</p>
+                  notePlainText(n.content).trim() && (
+                    // noteToHtml já passa pelo filtro: só formatação permitida.
+                    <div className="player-note__text" dangerouslySetInnerHTML={{ __html: noteToHtml(n.content) }} />
+                  )
                 )}
                 <NoteImages images={n.images} size="lg" />
               </article>

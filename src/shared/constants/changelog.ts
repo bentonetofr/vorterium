@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.15',
+    date:    '2026-09-30',
+    title:   'Episódios em janela, caderno com formatação e emojis completos',
+    items: [
+      'Emojis completos, como no WhatsApp, no chat das campanhas (botão 😊 ao lado do campo de mensagem) e no Meu caderninho: todas as categorias, busca em português (dá pra procurar "coração", "kkk", "s2"…), tons de pele e "usados recentemente".',
+      'Meu caderninho: nova barra de formatação — negrito, itálico, sublinhado, tachado, cor da letra, marca-texto, tamanho da letra (pequeno, normal, grande, enorme), listas com marcadores e numeradas, e limpar formatação. Ctrl+B, Ctrl+I e Ctrl+U também funcionam, e o mestre vê a formatação na página de anotações.',
+      'Episódios: "Nova sessão" e "Editar" agora abrem numa janela no centro da tela, com o fundo embaçado, em vez de empurrar a lista pra baixo. Esc ou clique fora fecham se nada foi mudado; com alterações, feche pelo Cancelar ou pelo ×.',
+    ],
+  },
+  {
     version: '1.14',
     date:    '2026-09-30',
     title:   'Quadro da campanha e aba Episódios',

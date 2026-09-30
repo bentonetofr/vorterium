@@ -9,7 +9,8 @@ import {
   type SessionStatus,
 } from '../services/sessionService'
 import type { CampaignSession } from '../../../shared/types'
-import { Collapse } from '../../../shared/components/Collapse'
+import { ModalOverlay } from '../../../shared/components/ModalOverlay'
+import { Presence } from '../../../shared/components/Presence'
 import { Select } from '../../../shared/components/Select'
 import './CampaignSessionsPanel.css'
 
@@ -79,7 +80,9 @@ function StatusBadge({ status }: { status: SessionStatus }) {
 }
 
 // ────────────────────────────────────────────────────────
-// Formulário de criação / edição
+// Formulário de criação / edição — janela no centro da tela, com o fundo
+// embaçado. Esc ou clique fora fecham só se nada foi mudado (pra não
+// perder um resumo por engano); com alterações, é Cancelar ou ×.
 // ────────────────────────────────────────────────────────
 
 interface SessionFormProps {
@@ -135,13 +138,19 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
 
   const titleOver   = title.length   > TITLE_MAX
   const summaryOver = summary.length > SUMMARY_MAX
+  const dirty = title !== (initial?.title ?? '')
+    || sessionDate !== (initial?.session_date ?? '')
+    || summary !== (initial?.summary ?? '')
+    || status !== (initial?.status ?? 'planned')
 
   return (
-    <div className="session-form">
+    <ModalOverlay onClose={onCancel} closeDisabled={saving || dirty}>
+    <div className="session-form session-form--modal" role="dialog" aria-modal="true" aria-labelledby="session-form-title">
       <div className="session-form__header">
-        <h4 className="session-form__title">
+        <h4 id="session-form-title" className="session-form__title">
           {isEditing ? 'Editar sessão' : 'Nova sessão'}
         </h4>
+        <button type="button" className="modal-close" onClick={onCancel} disabled={saving} aria-label="Fechar">×</button>
       </div>
 
       {error && (
@@ -163,7 +172,7 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
               value={title}
               onChange={(e) => { setTitle(e.target.value); setError(null) }}
               disabled={saving}
-              autoFocus={!isEditing}
+              autoFocus
             />
             <span className={`session-form__counter${titleOver ? ' session-form__counter--over' : ''}`}>
               {title.length}/{TITLE_MAX}
@@ -237,6 +246,7 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
         </div>
       </form>
     </div>
+    </ModalOverlay>
   )
 }
 
@@ -423,10 +433,13 @@ export function CampaignSessionsPanel({
         </p>
       </div>
 
-      {/* ── Formulário (mestre) ou botão nova sessão ── */}
+      {/* ── Botão nova sessão (mestre); o formulário abre numa janela ── */}
       {isMaster && (
         <>
-          <Collapse open={showForm}>
+          <button className="btn btn-primary sessions-panel__new-btn anim-bump" onClick={openCreate}>
+            + Nova sessão
+          </button>
+          <Presence show={showForm} exitMs={220}>
             {() => (
               <SessionForm
                 key={editingSession?.id ?? 'nova'}
@@ -436,12 +449,7 @@ export function CampaignSessionsPanel({
                 onCancel={handleCancel}
               />
             )}
-          </Collapse>
-          {!showForm && (
-            <button className="btn btn-primary sessions-panel__new-btn anim-bump" onClick={openCreate}>
-              + Nova sessão
-            </button>
-          )}
+          </Presence>
         </>
       )}
 

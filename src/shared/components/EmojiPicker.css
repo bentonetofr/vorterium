@@ -1,0 +1,39 @@
+/* Janela de emojis (emoji-mart), por cima de tudo — até das janelas modais. */
+.emoji-pop {
+  position: fixed;
+  z-index: 1200;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.15s ease-out;
+}
+.emoji-pop__loading {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 120px;
+  font-size: var(--text-sm); color: var(--text-muted);
+  background: var(--bg-elevated); border: 1px solid var(--gilded); border-radius: 12px;
+}
+
+/* Cores do site no seletor (variáveis que o emoji-mart lê). */
+em-emoji-picker {
+  width: 100%;
+  height: 420px;
+  --rgb-background: 23, 31, 51;
+  --rgb-input: 11, 19, 38;
+  --rgb-color: 218, 226, 253;
+  --rgb-accent: 255, 193, 116;
+  --color-border: rgba(212, 175, 55, 0.22);
+  --color-border-over: rgba(212, 175, 55, 0.45);
+  --font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  --border-radius: 12px;
+  --shadow: none;
+  border: 1px solid var(--gilded);
+  border-radius: 12px;
+}
+[data-theme="light"] em-emoji-picker {
+  --rgb-background: 237, 230, 207;
+  --rgb-input: 245, 238, 216;
+  --rgb-color: 42, 23, 0;
+  --rgb-accent: 154, 104, 0;
+  --color-border: rgba(83, 68, 52, 0.25);
+  --color-border-over: rgba(83, 68, 52, 0.45);
+}

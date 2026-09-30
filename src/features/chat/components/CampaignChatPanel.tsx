@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { EmojiPickerButton } from '../../../shared/components/EmojiPicker'
 import {
   getCampaignMessages,
   sendMessage,
@@ -412,6 +413,24 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole, compact
     })
   }
 
+  // Emoji entra onde estava o cursor do campo (a busca de emojis tira o
+  // foco dele, mas o campo lembra a posição).
+  const caretAfter = useRef<number | null>(null)
+  function insertEmoji(emoji: string) {
+    const el = textareaRef.current
+    const start = el?.selectionStart ?? draft.length
+    const end = el?.selectionEnd ?? draft.length
+    const next = (draft.slice(0, start) + emoji + draft.slice(end)).slice(0, 2000)
+    caretAfter.current = Math.min(start + emoji.length, next.length)
+    handleDraftChange(next)
+  }
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el || caretAfter.current === null) return
+    el.setSelectionRange(caretAfter.current, caretAfter.current)
+    caretAfter.current = null
+  }, [draft])
+
   // ── Envio ──
   async function handleSend() {
     const trimmed = draft.trim()
@@ -623,6 +642,7 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole, compact
             <div className="chat-feedback chat-feedback--error" role="alert">{sendError}</div>
           )}
           <div className="chat-composer__row">
+            <EmojiPickerButton className="chat-composer__emoji" onPick={insertEmoji} />
             <textarea
               ref={textareaRef}
               className="input chat-composer__input"

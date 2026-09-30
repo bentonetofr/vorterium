@@ -1027,7 +1027,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       const t = e.target as HTMLElement | null
       // Campos de texto e as janelas/botões do canto (chat, dados, caderno)
       // ficam com as próprias teclas.
-      return !!t && (t.isContentEditable || !!t.closest?.('input, textarea, select, [role="combobox"], .dice-fab-wrapper, [data-fab-panel]'))
+      return !!t && (t.isContentEditable || !!t.closest?.('input, textarea, select, [role="combobox"], .dice-fab-wrapper, [data-fab-panel], .emoji-pop'))
     }
     function onKeyDown(e: KeyboardEvent) {
       if (!active.current || typing(e) || document.querySelector('.modal-overlay')) return
