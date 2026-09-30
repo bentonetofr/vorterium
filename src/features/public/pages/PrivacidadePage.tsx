@@ -75,6 +75,8 @@ export function PrivacidadePage() {
           (inclusive ocultas), anotações, documentos e imagens. Esse acesso é só de leitura e serve
           pra suporte, investigar problemas relatados e manter o site funcionando. Essa conta não
           altera o que você e sua mesa criaram, e os dados não são vendidos nem repassados a ninguém.
+          A exceção é o <strong>caderno de anotações pessoal</strong>: esse, a conta interna não lê —
+          só quem escreve e os mestres da campanha.
         </p>
       </section>
 

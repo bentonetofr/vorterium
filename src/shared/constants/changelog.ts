@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.13',
+    date:    '2026-09-30',
+    title:   'Caderno de anotações',
+    items: [
+      'Novo caderno de anotações por sessão, liberado por conta: um botão verde com uma pena ao lado do chat abre uma folha pautada já na sessão do dia, e cada anotação salva sozinha enquanto você escreve.',
+      'Dá pra ter várias anotações por sessão, trocar de sessão, voltar e editar depois, ou apagar.',
+      'Atalho: Tab abre o caderno com o cursor na folha e Tab de novo fecha (dentro de outros campos de texto, o Tab continua normal). Ao abrir, a pena rabisca como se estivesse escrevendo.',
+      'O caderno é privado: só quem escreve e os mestres da campanha leem. O mestre tem uma seção própria na barra lateral da campanha, com as anotações separadas por sessão, e também pode editá-las.',
+    ],
+  },
+  {
     version: '1.12',
     date:    '2026-09-30',
     title:   'Mesa mais estável e livro mais fluido',
