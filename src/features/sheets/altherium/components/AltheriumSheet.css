@@ -717,8 +717,13 @@
   color: var(--bg-base);
 }
 
-/* "+": dado extra (não gasta ponto) — dourado, separado dos pontos. */
-.alth-domains__pt--bonus { margin-right: 6px; font-weight: 700; color: var(--accent-bright); border-style: dashed; border-color: var(--gilded); }
+/* "+": dado extra depois do 2 (não gasta ponto) — caixinha menor, dourada. */
+.alth-domains__points { align-items: center; }
+.alth-domains__pt--bonus {
+  width: 18px; height: 18px; margin-left: 4px; padding: 0;
+  font-size: 13px; font-weight: 700; line-height: 1;
+  color: var(--accent-bright); border-style: dashed; border-color: var(--gilded);
+}
 .alth-domains__pt--bonus.alth-domains__pt--active { background: var(--accent); border-color: var(--accent); border-style: solid; color: var(--text-inverse); }
 
 /* −1: desvantagem. Marcada à mão = cheia; automática (atributo em 0) = contorno. */
@@ -1379,7 +1384,7 @@
     .alth-domains__head,
     .alth-domains__row { grid-template-columns: minmax(0, 1fr) 58px 166px; padding: var(--space-2) var(--space-3); }
     .alth-domains__pt { width: 30px; height: 30px; }
-    .alth-domains__pt--bonus { margin-right: 4px; }
+    .alth-domains__pt--bonus { width: 22px; height: 22px; }
   }
   /* Celular estreito: os botões (+, −1, 0, 1, 2) descem pra uma linha só
      deles, e o nome do domínio fica inteiro. */

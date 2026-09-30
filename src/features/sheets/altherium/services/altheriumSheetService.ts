@@ -222,30 +222,19 @@ export async function getAltheriumDomains(sheetId: string): Promise<AltheriumDom
 }
 
 /**
- * Define os pontos de um domínio. Cria a linha na primeira vez e atualiza
- * depois — `unique (sheet_id, domain)` garante uma linha por domínio.
+ * Define os pontos de um domínio (e o "+", o dado extra depois do 2). Cria a
+ * linha na primeira vez e atualiza depois — `unique (sheet_id, domain)`
+ * garante uma linha por domínio.
  */
 export async function setAltheriumDomainPoints(
   sheetId: string,
   domain: string,
   points: number,
+  bonusDie = false,
 ): Promise<void> {
   const { error } = await supabase
     .from('altherium_character_domains')
-    .upsert({ sheet_id: sheetId, domain, points }, { onConflict: 'sheet_id,domain' })
-
-  if (error) throw new Error('Não foi possível salvar o domínio.')
-}
-
-/** Liga/desliga o dado extra ("+") de um domínio (não mexe nos pontos). */
-export async function setAltheriumDomainBonus(
-  sheetId: string,
-  domain: string,
-  bonusDie: boolean,
-): Promise<void> {
-  const { error } = await supabase
-    .from('altherium_character_domains')
-    .upsert({ sheet_id: sheetId, domain, bonus_die: bonusDie }, { onConflict: 'sheet_id,domain' })
+    .upsert({ sheet_id: sheetId, domain, points, bonus_die: bonusDie }, { onConflict: 'sheet_id,domain' })
 
   if (error) throw new Error('Não foi possível salvar o domínio.')
 }

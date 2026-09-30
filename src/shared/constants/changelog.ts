@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.17',
+    date:    '2026-09-30',
+    title:   'O "+" dos domínios depois do 2',
+    items: [
+      'Altherium, domínios: o "+" agora é uma caixinha menor depois do 2. Clicar nele acende o 0, o 1 e o 2 e soma mais um dado (4d10); clicar num número volta ao normal.',
+    ],
+  },
+  {
     version: '1.16',
     date:    '2026-09-30',
     title:   'Dado extra e desvantagem nos domínios',

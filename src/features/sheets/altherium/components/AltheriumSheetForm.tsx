@@ -65,8 +65,8 @@ interface AltheriumSheetFormProps {
   ownerName?:               string
   /** Chamado pelo salvamento automático — deve lançar erro se falhar. */
   onSave:                   (data: AltheriumSheetUpdate) => Promise<void>
-  onDomainChange:           (domain: string, points: number) => Promise<void>
-  onDomainBonusChange:      (domain: string, bonusDie: boolean) => Promise<void>
+  /** bonusDie = o "+" depois do 2 (2 pontos + 1d10 extra = 4d10). */
+  onDomainChange:           (domain: string, points: number, bonusDie?: boolean) => Promise<void>
   onPortraitChange:         (file: File) => Promise<void>
   onPortraitRemove:         () => Promise<void>
   portraitBusy:             boolean
@@ -295,7 +295,7 @@ const RAIZ_OPTIONS    = [{ value: '', label: '—' }, ...RAIZES.map((r) => ({ va
 const GENESIS_OPTIONS = [{ value: '', label: '—' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
 
 export function AltheriumSheetForm({
-  sheet, domains, inventory, ownerName, onSave, onDomainChange, onDomainBonusChange,
+  sheet, domains, inventory, ownerName, onSave, onDomainChange,
   onPortraitChange, onPortraitRemove, portraitBusy,
   onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
   onInventoryAddCustom, onInventoryUpdateCustom,
@@ -889,26 +889,17 @@ export function AltheriumSheetForm({
                   {disadv && <span className="alth-domains__disadv" aria-label="com 1d de desvantagem">desv.</span>}
                 </span>
                 <span className="alth-domains__points" role="cell">
-                  <button
-                    type="button"
-                    className={`alth-domains__pt alth-domains__pt--bonus${bonusDie ? ' alth-domains__pt--active' : ''}`}
-                    onClick={() => onDomainBonusChange(d.id, !bonusDie)}
-                    aria-label={`+1d10 extra em ${d.label}`}
-                    aria-pressed={bonusDie}
-                    title="+1d10 extra (não gasta ponto)"
-                  >
-                    +
-                  </button>
                   {Array.from({ length: DOMAIN_MAX_POINTS - DOMAIN_MIN_POINTS + 1 }, (_, i) => {
                     const n = DOMAIN_MIN_POINTS + i
-                    const on = points === n
+                    // Com o "+" ligado, 0, 1 e 2 acendem junto (é o nível acima do 2).
+                    const on = bonusDie ? n >= 0 : points === n
                     const auto = n === -1 && disadv === 'atributo'
                     return (
                       <button
                         key={n}
                         type="button"
                         className={`alth-domains__pt${n < 0 ? ' alth-domains__pt--disadv' : ''}${on ? ' alth-domains__pt--active' : ''}${auto ? ' alth-domains__pt--auto' : ''}`}
-                        onClick={() => onDomainChange(d.id, n)}
+                        onClick={() => onDomainChange(d.id, n, false)}
                         aria-label={n < 0 ? `Desvantagem em ${d.label}` : `${n} ponto(s) em ${d.label}`}
                         aria-pressed={on}
                         title={n < 0 ? (auto ? `Desvantagem automática: ${attrLabel} está em 0` : 'Desvantagem (1d de desvantagem)') : undefined}
@@ -917,13 +908,23 @@ export function AltheriumSheetForm({
                       </button>
                     )
                   })}
+                  <button
+                    type="button"
+                    className={`alth-domains__pt alth-domains__pt--bonus${bonusDie ? ' alth-domains__pt--active' : ''}`}
+                    onClick={() => onDomainChange(d.id, 2, !bonusDie)}
+                    aria-label={`+1d10 extra em ${d.label} (2 pontos + 1d10 = 4d10)`}
+                    aria-pressed={bonusDie}
+                    title="+1d10 extra: acende o 0, o 1 e o 2 e soma mais um dado (4d10)"
+                  >
+                    +
+                  </button>
                 </span>
               </div>
             )
           })}
         </div>
         <p className="alth-hint">
-          Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "+" dá mais 1d10 sem gastar ponto.
+          Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "+", depois do 2, soma mais 1d10 (4d10) sem gastar ponto.
           O −1 marca desvantagem (1d de desvantagem) — e um atributo em 0 já deixa os domínios dele com desvantagem.
           Alterações aqui salvam na hora.
           {genesisDomains.length > 0 && (

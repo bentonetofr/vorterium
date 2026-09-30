@@ -5,7 +5,6 @@ import {
   subscribeToCampaignAltheriumSheets,
   getAltheriumDomains,
   setAltheriumDomainPoints,
-  setAltheriumDomainBonus,
   updateAltheriumSheet,
   uploadAltheriumPortrait,
   removeAltheriumPortrait,
@@ -107,20 +106,10 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     }
   }
 
-  async function handleDomainChange(domain: string, points: number) {
+  async function handleDomainChange(domain: string, points: number, bonusDie = false) {
     setSaveError(null)
     try {
-      await setAltheriumDomainPoints(sheet.id, domain, points)
-      loadDomains()
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Não foi possível salvar o domínio.')
-    }
-  }
-
-  async function handleDomainBonusChange(domain: string, bonusDie: boolean) {
-    setSaveError(null)
-    try {
-      await setAltheriumDomainBonus(sheet.id, domain, bonusDie)
+      await setAltheriumDomainPoints(sheet.id, domain, points, bonusDie)
       loadDomains()
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Não foi possível salvar o domínio.')
@@ -234,7 +223,6 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
       ownerName={ownerName}
       onSave={handleSave}
       onDomainChange={handleDomainChange}
-      onDomainBonusChange={handleDomainBonusChange}
       onPortraitChange={handlePortraitChange}
       onPortraitRemove={handlePortraitRemove}
       portraitBusy={portraitBusy}
