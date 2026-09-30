@@ -88,11 +88,22 @@ export function movementMeters(impulso: number): number {
 
 /**
  * Dados de um teste de domínio: 1d10 padrão + 1d10 por ponto no domínio
- * + 1d10 se o gênesis dá bônus nesse domínio. Atributo 0 impõe 1d de
- * desvantagem (sinalizado à parte pela interface).
+ * + 1d10 se o gênesis dá bônus nesse domínio + 1d10 da caixinha "+".
+ * Pontos -1 (desvantagem) contam como 0 aqui — a desvantagem é mostrada
+ * à parte (ver domainDisadvantage).
  */
-export function domainTestDice(domainPoints: number, genesisBonus = false): number {
-  return 1 + domainPoints + (genesisBonus ? 1 : 0)
+export function domainTestDice(domainPoints: number, genesisBonus = false, bonusDie = false): number {
+  return 1 + Math.max(0, domainPoints) + (genesisBonus ? 1 : 0) + (bonusDie ? 1 : 0)
+}
+
+/**
+ * Desvantagem no domínio: marcada à mão (-1) ou automática — "caso você
+ * tenha 0 em algum atributo, você jogará com 1d de desvantagem" (livro).
+ */
+export function domainDisadvantage(domainPoints: number, attributeValue: number | null | undefined): 'manual' | 'atributo' | null {
+  if (domainPoints < 0) return 'manual'
+  if (attributeValue === 0) return 'atributo'
+  return null
 }
 
 /** O gênesis dá +1d10 nesse domínio? */

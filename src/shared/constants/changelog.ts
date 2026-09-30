@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.16',
+    date:    '2026-09-30',
+    title:   'Dado extra e desvantagem nos domínios',
+    items: [
+      'Altherium, domínios: nova caixinha "+" ao lado dos pontos, que dá mais 1d10 no teste sem gastar ponto (2 pontos + "+" = 4d10).',
+      'Altherium, domínios: novo −1 antes do 0, que marca desvantagem no domínio (1d de desvantagem). Um atributo em 0 já deixa todos os domínios dele com desvantagem automaticamente (o −1 aparece contornado e o domínio fica avermelhado, com "desv." nos dados).',
+    ],
+  },
+  {
     version: '1.15',
     date:    '2026-09-30',
     title:   'Episódios em janela, caderno com formatação e emojis completos',

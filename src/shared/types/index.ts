@@ -286,12 +286,14 @@ export interface RunaskinTriumphOverride {
   image_url?:  string | null
 }
 
-/** Pontos de um domínio numa ficha Altherium (0 a 2). */
+/** Pontos de um domínio numa ficha Altherium (-1 a 2; -1 = desvantagem). */
 export interface AltheriumDomainPoints {
-  id:       string
-  sheet_id: string
-  domain:   string
-  points:   number
+  id:        string
+  sheet_id:  string
+  domain:    string
+  points:    number
+  /** Caixinha "+": um dado a mais no teste do domínio. */
+  bonus_die?: boolean
 }
 
 /** Item do inventário de uma ficha Altherium — referencia o catálogo fixo

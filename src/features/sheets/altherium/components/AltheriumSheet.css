@@ -649,7 +649,7 @@
 .alth-domains__head,
 .alth-domains__row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 64px 92px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 84px 152px;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
@@ -715,6 +715,26 @@
   background: var(--alth-mystic);
   border-color: var(--alth-mystic);
   color: var(--bg-base);
+}
+
+/* "+": dado extra (não gasta ponto) — dourado, separado dos pontos. */
+.alth-domains__pt--bonus { margin-right: 6px; font-weight: 700; color: var(--accent-bright); border-style: dashed; border-color: var(--gilded); }
+.alth-domains__pt--bonus.alth-domains__pt--active { background: var(--accent); border-color: var(--accent); border-style: solid; color: var(--text-inverse); }
+
+/* −1: desvantagem. Marcada à mão = cheia; automática (atributo em 0) = contorno. */
+.alth-domains__pt--disadv { color: var(--danger); }
+.alth-domains__pt--disadv.alth-domains__pt--active { background: var(--danger-bright); border-color: var(--danger-bright); color: var(--bg-base); }
+.alth-domains__pt--auto { border: 1px dashed var(--danger-bright); background: rgba(255, 138, 125, 0.12); }
+
+.alth-domains__row--disadv { background: rgba(255, 138, 125, 0.07); }
+.alth-domains__row--disadv .alth-domains__dice { color: var(--danger); }
+.alth-domains__disadv {
+  margin-left: 4px;
+  font-family: var(--font-label);
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--danger-bright);
 }
 
 /* ── Anotações ── */
@@ -1275,7 +1295,7 @@
 @media (pointer: coarse) {
   .alth-domains__pt { width: 34px; height: 34px; }
   .alth-domains__head,
-  .alth-domains__row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 64px 110px; }
+  .alth-domains__row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 84px 192px; }
   .alth-inventory__add,
   .alth-inventory__remove { width: 34px; height: 34px; }
   .alth-inventory__qty-btn { width: 32px; height: 32px; }
@@ -1352,11 +1372,22 @@
   }
 
   .alth-domains__head,
-  .alth-domains__row { grid-template-columns: minmax(0, 1fr) 52px 84px; }
-  .alth-domains__attr { display: none; }
+  .alth-domains__row { grid-template-columns: minmax(0, 1fr) 62px 148px; }
+  .alth-domains__attr,
+  .alth-domains__head > :nth-child(2) { display: none; }
   @media (pointer: coarse) {
     .alth-domains__head,
-    .alth-domains__row { grid-template-columns: minmax(0, 1fr) 48px 110px; padding: var(--space-2) var(--space-3); }
+    .alth-domains__row { grid-template-columns: minmax(0, 1fr) 58px 166px; padding: var(--space-2) var(--space-3); }
+    .alth-domains__pt { width: 30px; height: 30px; }
+    .alth-domains__pt--bonus { margin-right: 4px; }
+  }
+  /* Celular estreito: os botões (+, −1, 0, 1, 2) descem pra uma linha só
+     deles, e o nome do domínio fica inteiro. */
+  @media (max-width: 440px) {
+    .alth-domains__head,
+    .alth-domains__row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; }
+    .alth-domains__head > :nth-child(4) { display: none; }
+    .alth-domains__points { grid-column: 1 / -1; justify-content: flex-start; }
   }
 
   /* Manequins lado a lado em cima, campos de zona embaixo (no HTML os

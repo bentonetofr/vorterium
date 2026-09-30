@@ -8,6 +8,7 @@ import {
   BODY_PARTS,
   DOMAINS,
   DOMAIN_MAX_POINTS,
+  DOMAIN_MIN_POINTS,
   GENESIS,
   GENESIS_DOMAIN_BONUS,
   RAIZES,
@@ -17,6 +18,7 @@ import {
   berserkerTriumphLimit,
   cardsMax,
   domainSlotsTotal,
+  domainDisadvantage,
   domainTestDice,
   genesisBonusFor,
   movementMeters,
@@ -64,6 +66,7 @@ interface AltheriumSheetFormProps {
   /** Chamado pelo salvamento automático — deve lançar erro se falhar. */
   onSave:                   (data: AltheriumSheetUpdate) => Promise<void>
   onDomainChange:           (domain: string, points: number) => Promise<void>
+  onDomainBonusChange:      (domain: string, bonusDie: boolean) => Promise<void>
   onPortraitChange:         (file: File) => Promise<void>
   onPortraitRemove:         () => Promise<void>
   portraitBusy:             boolean
@@ -292,7 +295,7 @@ const RAIZ_OPTIONS    = [{ value: '', label: '—' }, ...RAIZES.map((r) => ({ va
 const GENESIS_OPTIONS = [{ value: '', label: '—' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
 
 export function AltheriumSheetForm({
-  sheet, domains, inventory, ownerName, onSave, onDomainChange,
+  sheet, domains, inventory, ownerName, onSave, onDomainChange, onDomainBonusChange,
   onPortraitChange, onPortraitRemove, portraitBusy,
   onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
   onInventoryAddCustom, onInventoryUpdateCustom,
@@ -488,7 +491,17 @@ export function AltheriumSheetForm({
   const genesisDomains = (form.genesis ? GENESIS_DOMAIN_BONUS[form.genesis as keyof typeof GENESIS_DOMAIN_BONUS] ?? [] : [])
     .map((id) => DOMAINS.find((d) => d.id === id)?.label ?? id)
   const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
-  const domainsUsed  = domains.reduce((sum, d) => sum + d.points, 0)
+  const bonusMap     = new Map(domains.map((d) => [d.domain, !!d.bonus_die]))
+  // -1 (desvantagem) e o "+" não gastam ponto de domínio.
+  const domainsUsed  = domains.reduce((sum, d) => sum + Math.max(0, d.points), 0)
+  // Atributo zerado dá desvantagem nos domínios dele — numa ficha em branco
+  // (nenhum ponto de atributo ainda) não marca tudo de vermelho; Rúnico só
+  // conta pra Runaskin.
+  const attrsStarted = ATTRIBUTES.some((a) => ((form as unknown as Record<string, number | null>)[`attr_${a.id}`] ?? 0) > 0)
+  const attrValue = (attr: string): number | null => {
+    if (!attrsStarted || (attr === 'runico' && !usesRunico(raiz))) return null
+    return (form as unknown as Record<string, number | null>)[`attr_${attr}`] ?? 0
+  }
   const filteredDomains = useMemo(() => {
     const q = normalize(domainFilter.trim())
     if (!q) return DOMAINS
@@ -852,37 +865,67 @@ export function AltheriumSheetForm({
             const points    = domainMap.get(d.id) ?? 0
             const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
             const fromGenesis = genesisBonusFor(form.genesis, d.id)
+            const bonusDie  = bonusMap.get(d.id) ?? false
+            const disadv    = domainDisadvantage(points, attrValue(d.attribute))
             return (
-              <div key={d.id} className={`alth-domains__row${points > 0 || fromGenesis ? ' alth-domains__row--active' : ''}`} role="row">
+              <div
+                key={d.id}
+                className={`alth-domains__row${points > 0 || fromGenesis || bonusDie ? ' alth-domains__row--active' : ''}${disadv ? ' alth-domains__row--disadv' : ''}`}
+                role="row"
+              >
                 <span className="alth-domains__name" role="cell">{d.label}</span>
                 <span className="alth-domains__attr" role="cell">{attrLabel}</span>
                 <span
                   className="alth-domains__dice" role="cell"
-                  title={fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : undefined}
+                  title={[
+                    fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : '',
+                    bonusDie ? 'Inclui +1d10 extra (+)' : '',
+                    disadv === 'manual' ? 'Desvantagem: joga com 1d de desvantagem' : '',
+                    disadv === 'atributo' ? `Desvantagem: ${attrLabel} está em 0 — joga com 1d de desvantagem` : '',
+                  ].filter(Boolean).join(' · ') || undefined}
                 >
-                  {domainTestDice(points, fromGenesis)}d10
+                  {domainTestDice(points, fromGenesis, bonusDie)}d10
                   {fromGenesis && <span className="alth-domains__genesis" aria-label={`com +1d10 do gênesis ${genesisLabel}`}>✦</span>}
+                  {disadv && <span className="alth-domains__disadv" aria-label="com 1d de desvantagem">desv.</span>}
                 </span>
                 <span className="alth-domains__points" role="cell">
-                  {Array.from({ length: DOMAIN_MAX_POINTS + 1 }, (_, n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`alth-domains__pt${points === n ? ' alth-domains__pt--active' : ''}`}
-                      onClick={() => onDomainChange(d.id, n)}
-                      aria-label={`${n} ponto(s) em ${d.label}`}
-                      aria-pressed={points === n}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    className={`alth-domains__pt alth-domains__pt--bonus${bonusDie ? ' alth-domains__pt--active' : ''}`}
+                    onClick={() => onDomainBonusChange(d.id, !bonusDie)}
+                    aria-label={`+1d10 extra em ${d.label}`}
+                    aria-pressed={bonusDie}
+                    title="+1d10 extra (não gasta ponto)"
+                  >
+                    +
+                  </button>
+                  {Array.from({ length: DOMAIN_MAX_POINTS - DOMAIN_MIN_POINTS + 1 }, (_, i) => {
+                    const n = DOMAIN_MIN_POINTS + i
+                    const on = points === n
+                    const auto = n === -1 && disadv === 'atributo'
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`alth-domains__pt${n < 0 ? ' alth-domains__pt--disadv' : ''}${on ? ' alth-domains__pt--active' : ''}${auto ? ' alth-domains__pt--auto' : ''}`}
+                        onClick={() => onDomainChange(d.id, n)}
+                        aria-label={n < 0 ? `Desvantagem em ${d.label}` : `${n} ponto(s) em ${d.label}`}
+                        aria-pressed={on}
+                        title={n < 0 ? (auto ? `Desvantagem automática: ${attrLabel} está em 0` : 'Desvantagem (1d de desvantagem)') : undefined}
+                      >
+                        {n < 0 ? '−1' : n}
+                      </button>
+                    )
+                  })}
                 </span>
               </div>
             )
           })}
         </div>
         <p className="alth-hint">
-          Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}). Alterações aqui salvam na hora.
+          Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "+" dá mais 1d10 sem gastar ponto.
+          O −1 marca desvantagem (1d de desvantagem) — e um atributo em 0 já deixa os domínios dele com desvantagem.
+          Alterações aqui salvam na hora.
           {genesisDomains.length > 0 && (
             <> ✦ Gênesis {genesisLabel}: +1d10 em {genesisDomains.join(' e ')} (já somado nos dados).</>
           )}

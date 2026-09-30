@@ -164,6 +164,8 @@ export const DOMAINS: { id: AltheriumDomain; label: string; attribute: Altherium
 
 /** Teto de pontos por domínio. */
 export const DOMAIN_MAX_POINTS = 2
+/** -1 = desvantagem no domínio ("1d de desvantagem"). */
+export const DOMAIN_MIN_POINTS = -1
 
 // ── Partes do corpo (defesa) ─────────────────────────────
 

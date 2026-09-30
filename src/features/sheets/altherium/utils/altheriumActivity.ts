@@ -179,6 +179,11 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
       return [numberLine(key, label, c.from, c.to)]
     }
 
+    case 'domainbonus': {
+      const label = `Domínio ${labelOf(DOMAINS, c.meta?.domain) ?? ''}`.trim()
+      return [{ key, label, note: c.to ? 'ganhou +1d10 extra' : 'perdeu o +1d10 extra', tone: c.to ? 'added' : 'removed' }]
+    }
+
     case 'item': {
       const name = itemName(c.meta)
       const a = num(c.from)
