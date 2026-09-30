@@ -16,6 +16,7 @@ import { CampaignSessionsPanel }  from '../../sessions/components/CampaignSessio
 import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
 import { CampaignNotesPanel }     from '../../notes/components/CampaignNotesPanel'
 import { SessionTablePanel }      from '../components/SessionTablePanel'
+import { PlayerNotesPanel }       from '../../notebook/components/PlayerNotesPanel'
 import './CampaignPages.css'
 
 // ────────────────────────────────────────────────────────
@@ -211,6 +212,12 @@ export function CampaignAreaLayout() {
           <Route
             path="notas"
             element={<CampaignNotesPanel campaignId={campaign.id} currentUserId={user!.id} userRole={campaign.role} />}
+          />
+          <Route
+            path="anotacoes"
+            element={campaign.role === 'master'
+              ? <PlayerNotesPanel campaign={campaign} />
+              : <Navigate to={`/campanhas/${campaignId}/visao-geral`} replace />}
           />
           <Route
             path="mesa-sessao"

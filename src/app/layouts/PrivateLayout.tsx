@@ -7,6 +7,7 @@ import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
 import { ChatFab }            from '../../features/chat/components/ChatFab'
+import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { CritWolf }           from '../../features/dice/components/CritWolf'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
@@ -275,6 +276,7 @@ function PrivateLayoutContent() {
       <NotificationBell />
       <DiceFab />
       <ChatFab />
+      <NotebookFab />
       <ChatMessagePopup />
     </div>
     </>

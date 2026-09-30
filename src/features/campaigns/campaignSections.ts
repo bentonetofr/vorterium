@@ -4,7 +4,7 @@
 // pelas rotas-filhas em CampaignAreaLayout.
 // ────────────────────────────────────────────────────────
 
-export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'mesa-sessao' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'anotacoes' | 'mesa-sessao' | 'configuracoes'
 
 /** Sub-abas dentro de "Sessão" (id mesa-sessao) — estado local (fora da URL), ver spec. */
 export type SessionSubTabId = 'mesa' | 'ficha' | 'atividade' | 'iniciativa' | 'bestiario' | 'livro'

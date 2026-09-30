@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import { CAMPAIGN_SECTIONS } from '../campaignSections'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { useCurrentCampaign } from '../CurrentCampaignContext'
+import { useCampaignNotebookAuthors } from '../../notebook/services/notebookService'
 
 interface CampaignSidebarSubmenuProps {
   campaignId: string
@@ -13,6 +15,10 @@ interface CampaignSidebarSubmenuProps {
 /** Lista de seções da campanha — reaproveitada no acordeão da barra lateral (desktop) e no menu suspenso da barra de topo (mobile). */
 export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, onNavigate }: CampaignSidebarSubmenuProps) {
   const { live } = useMesaStream()
+  const { campaign } = useCurrentCampaign()
+  // Cadernos dos jogadores (ex.: "Anotações da Bruna") — só o mestre vê.
+  const notebooks = useCampaignNotebookAuthors(campaignId, campaign?.id === campaignId && campaign.role === 'master')
+  const notebookLabel = notebooks.length === 1 ? notebooks[0].title : 'Anotações dos jogadores'
   return (
     <div className="campaign-submenu anim-stagger">
       {CAMPAIGN_SECTIONS.map((section) => (
@@ -38,6 +44,15 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
           )}
         </NavLink>
       ))}
+      {notebooks.length > 0 && (
+        <NavLink
+          to={`/campanhas/${campaignId}/anotacoes`}
+          className={({ isActive }) => `campaign-submenu__item${isActive ? ' campaign-submenu__item--active' : ''}`}
+          onClick={onNavigate}
+        >
+          <span className="campaign-submenu__label">{notebookLabel}</span>
+        </NavLink>
+      )}
     </div>
   )
 }

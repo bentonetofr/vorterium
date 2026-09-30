@@ -44,7 +44,7 @@ export function pageLabel(pathname: string, campaignName?: string | null): strin
   if (MAIN_LABELS[pathname]) return MAIN_LABELS[pathname]
   const m = pathname.match(/^\/campanhas\/[^/]+(?:\/([^/]+))?/)
   if (m) {
-    const section = CAMPAIGN_SECTIONS.find((s) => s.id === (m[1] ?? 'visao-geral'))?.label
+    const section = m[1] === 'anotacoes' ? 'Anotações dos jogadores' : CAMPAIGN_SECTIONS.find((s) => s.id === (m[1] ?? 'visao-geral'))?.label
     const campaign = campaignName ? `Campanha "${campaignName}"` : 'Campanha'
     return section ? `${campaign} › ${section}` : campaign
   }
