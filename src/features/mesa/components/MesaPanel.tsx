@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { useMesaStream } from '../MesaStreamProvider'
 import { canShareScreen } from '../mesaRtc'
-import type { MesaPing, MesaViewer, ViewerStatus } from '../mesaSession'
+import type { MesaDiag, MesaPing, MesaViewer, ViewerStatus } from '../mesaSession'
 import { MesaGallery } from './MesaGallery'
 import './MesaPanel.css'
 
@@ -408,6 +408,55 @@ function PlayerView() {
   )
 }
 
+// ── Detalhes da conexão (jogador) ────────────────────────
+// Aparece enquanto a transmissão não abre: mostra em que etapa parou,
+// pra dar pra saber se é a mensagem que não chega ou a rede que não liga.
+
+const ICE_LABEL: Record<string, string> = {
+  new: 'começando', checking: 'testando rotas', connected: 'ligada', completed: 'ligada',
+  failed: 'falhou', disconnected: 'caiu', closed: 'fechada',
+}
+
+function browserName(): string {
+  const ua = navigator.userAgent
+  const m = /(Firefox|Edg|OPR|Chrome|Safari)\/(\d+)/.exec(ua)
+  if (!m) return 'navegador desconhecido'
+  const name = { Edg: 'Edge', OPR: 'Opera' }[m[1]] ?? m[1]
+  return `${name} ${m[2]}`
+}
+
+function counts(c: MesaDiag['local']): string {
+  return `direta ${c.host} · STUN ${c.srflx + c.prflx} · TURN ${c.relay}`
+}
+
+function ConnectionDetails({ diag, status }: { diag: MesaDiag; status: ViewerStatus }) {
+  const iceFailed = diag.iceState === 'failed' || diag.connState === 'failed'
+  const noRelay = diag.local.relay === 0 && diag.remote.relay === 0
+  let hint: string | null = null
+  if (diag.offers === 0 && status !== 'connecting') hint = 'A oferta do mestre não está chegando: confira se o mestre está com a aba do Vorterium aberta.'
+  else if (iceFailed && noRelay) {
+    hint = diag.turn
+      ? 'As redes não se ligaram nem pelo servidor TURN configurado. Confira as credenciais do TURN.'
+      : 'As duas redes não conseguiram se ligar direto (firewall ou operadora). Isso se resolve com um servidor TURN.'
+  }
+  return (
+    <details className="mesa-diag">
+      <summary>Detalhes da conexão</summary>
+      <dl className="mesa-diag__list">
+        <div><dt>Navegador</dt><dd>{browserName()}</dd></div>
+        <div><dt>Oferta do mestre</dt><dd>{diag.offers > 0 ? `recebida (${diag.offers}×)` : 'não chegou'}</dd></div>
+        <div><dt>Ligação de rede</dt><dd>{diag.iceState ? ICE_LABEL[diag.iceState] ?? diag.iceState : '—'}</dd></div>
+        <div><dt>Suas rotas</dt><dd>{counts(diag.local)}</dd></div>
+        <div><dt>Rotas do mestre</dt><dd>{counts(diag.remote)}</dd></div>
+        <div><dt>Servidor TURN</dt><dd>{diag.turn ? 'configurado' : 'não configurado'}</dd></div>
+        {diag.route && <div><dt>Rota em uso</dt><dd>{diag.route}</dd></div>}
+        {diag.lastError && <div><dt>Último erro</dt><dd>{diag.lastError}</dd></div>}
+      </dl>
+      {hint && <p className="mesa-diag__hint">{hint}</p>}
+    </details>
+  )
+}
+
 // ── Painel ───────────────────────────────────────────────
 
 export function MesaPanel({ campaignId }: { campaignId: string }) {
@@ -426,6 +475,9 @@ export function MesaPanel({ campaignId }: { campaignId: string }) {
       {mesa.isMaster ? <MasterView campaignId={campaignId} /> : <PlayerView />}
       {!mesa.isMaster && mesa.stage.screenId && mesa.stage.audio && mesa.remoteStream && (
         <p className="mesa-hint">O som continua tocando enquanto você olha as outras abas.</p>
+      )}
+      {!mesa.isMaster && mesa.stage.screenId && mesa.status !== 'live' && (
+        <ConnectionDetails diag={mesa.diag} status={mesa.status} />
       )}
     </section>
   )

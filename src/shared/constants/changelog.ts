@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.12',
+    date:    '2026-09-30',
+    title:   'Transmissão da Mesa mais estável',
+    items: [
+      'Mesa: corrigida uma falha em que partes da negociação da conexão se perdiam quando chegavam antes da hora, deixando o jogador preso em "Reconectando…".',
+      'Enquanto a transmissão não abre, o jogador vê "Detalhes da conexão": se a oferta do mestre chegou, se a rede ligou e por qual rota — ajuda a descobrir o que está travando.',
+    ],
+  },
+  {
     version: '1.11',
     date:    '2026-09-30',
     title:   'Correções no Firefox',

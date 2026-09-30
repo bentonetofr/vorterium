@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../shared/lib/supabase'
-import { captureScreen, iceServers, tuneVideoSender, withStereoOpus, withVideoStartBitrate } from './mesaRtc'
+import { captureScreen, hasTurnServer, iceServers, tuneVideoSender, withStereoOpus, withVideoStartBitrate } from './mesaRtc'
 
 // ────────────────────────────────────────────────────────
 // Mesa: o mestre transmite a tela (com som) direto pra cada jogador por
@@ -69,6 +69,24 @@ export interface MesaPing {
   y:  number
 }
 
+/** Tipos de rota de rede (candidatos ICE): direta, via STUN, via TURN. */
+export interface IceCounts { host: number; srflx: number; relay: number; prflx: number }
+
+/** Diagnóstico da conexão do jogador — aparece em "Detalhes da conexão". */
+export interface MesaDiag {
+  /** Quando a última oferta do mestre chegou (ms, performance.now()). */
+  offerAt:     number | null
+  offers:      number
+  iceState:    RTCIceConnectionState | null
+  connState:   RTCPeerConnectionState | null
+  local:       IceCounts
+  remote:      IceCounts
+  /** Par de rotas em uso quando conecta (ex.: "srflx ↔ relay"). */
+  route:       string | null
+  lastError:   string | null
+  turn:        boolean
+}
+
 export interface MesaSnapshot {
   channelError: string | null
   stage:        MesaStage
@@ -81,9 +99,17 @@ export interface MesaSnapshot {
   // Jogador
   status:       ViewerStatus
   remoteStream: MediaStream | null
+  diag:         MesaDiag
 }
 
 export const EMPTY_STAGE: MesaStage = { liveId: null, screenId: null, paused: false, audio: false, image: null }
+
+const EMPTY_COUNTS: IceCounts = { host: 0, srflx: 0, relay: 0, prflx: 0 }
+
+export const EMPTY_DIAG: MesaDiag = {
+  offerAt: null, offers: 0, iceState: null, connState: null,
+  local: EMPTY_COUNTS, remote: EMPTY_COUNTS, route: null, lastError: null, turn: false,
+}
 
 export const EMPTY_SNAPSHOT: MesaSnapshot = {
   channelError: null,
@@ -94,6 +120,7 @@ export const EMPTY_SNAPSHOT: MesaSnapshot = {
   viewers:      [],
   status:       'offline',
   remoteStream: null,
+  diag:         EMPTY_DIAG,
 }
 
 interface Peer {
@@ -140,6 +167,12 @@ export function rateLink(height: number | null, rttMs: number | null, loss: numb
   return 'good'
 }
 
+/** Tipo do candidato ICE ("typ host|srflx|relay|prflx" na linha). */
+function candidateType(c: RTCIceCandidateInit | RTCIceCandidate | null | undefined): keyof IceCounts | null {
+  const m = /\btyp (host|srflx|relay|prflx)\b/.exec(c?.candidate ?? '')
+  return (m?.[1] as keyof IceCounts | undefined) ?? null
+}
+
 function isStage(value: unknown): value is MesaStage {
   return typeof value === 'object' && value !== null && 'liveId' in value && 'screenId' in value
 }
@@ -183,6 +216,18 @@ export class MesaSession {
     next.live = Boolean(next.stage.screenId || next.stage.image)
     this.snap = next
     this.opts.onChange(next)
+  }
+
+  private diag(patch: Partial<MesaDiag>) {
+    this.update({ diag: { ...this.snap.diag, ...patch } })
+  }
+
+  private countIce(side: 'local' | 'remote', c: RTCIceCandidateInit | RTCIceCandidate | null | undefined) {
+    const type = candidateType(c)
+    if (!type) return
+    const counts = { ...this.snap.diag[side] }
+    counts[type] += 1
+    this.diag({ [side]: counts } as Partial<MesaDiag>)
   }
 
   private send(event: string, payload: Payload = {}) {
@@ -547,6 +592,7 @@ export class MesaSession {
 
   private join() {
     this.lastJoinAt = performance.now()
+    if (!this.snap.diag.turn && hasTurnServer()) this.diag({ turn: true })
     this.send('viewer-join', { viewerId: this.myId, name: this.opts.name })
   }
 
@@ -565,7 +611,10 @@ export class MesaSession {
     window.clearTimeout(this.offerTimer)
     if (!this.snap.stage.screenId) return
     this.offerTimer = window.setTimeout(() => {
-      if (!this.viewerPc && this.snap.stage.screenId) this.scheduleReconnect()
+      if (!this.viewerPc && this.snap.stage.screenId) {
+        this.diag({ lastError: 'A oferta do mestre não chegou em 8 s.' })
+        this.scheduleReconnect()
+      }
     }, OFFER_TIMEOUT_MS)
   }
 
@@ -626,10 +675,19 @@ export class MesaSession {
 
   private async handleOffer(sdp: string) {
     if (!sdp) return
+    // Candidatos do mestre podem chegar antes da oferta (a ordem das
+    // mensagens não é garantida): guarda os que já chegaram pra esta oferta.
+    const early = this.viewerPending.splice(0)
     this.closeViewerPc()
+    this.viewerPending = early
     window.clearTimeout(this.reconnectTimer)
     const pc = new RTCPeerConnection({ iceServers: iceServers() })
     this.viewerPc = pc
+    this.diag({
+      offerAt: performance.now(), offers: this.snap.diag.offers + 1, iceState: 'new', connState: 'new',
+      local: EMPTY_COUNTS, remote: EMPTY_COUNTS, route: null, turn: hasTurnServer(),
+    })
+    for (const c of early) this.countIce('remote', c)
     if (this.snap.status !== 'reconnecting') this.update({ status: 'connecting' })
 
     pc.ontrack = (e) => {
@@ -640,15 +698,26 @@ export class MesaSession {
       this.update({ remoteStream: new MediaStream(stream.getTracks()) })
     }
     pc.onicecandidate = (e) => {
-      if (e.candidate) this.send('ice', { from: this.myId, candidate: e.candidate.toJSON() })
+      if (!e.candidate) return
+      this.countIce('local', e.candidate)
+      this.send('ice', { from: this.myId, candidate: e.candidate.toJSON() })
+    }
+    pc.oniceconnectionstatechange = () => {
+      if (this.viewerPc !== pc) return
+      this.diag({ iceState: pc.iceConnectionState })
+      console.info('[Mesa] ICE:', pc.iceConnectionState)
     }
     pc.onconnectionstatechange = () => {
       if (this.viewerPc !== pc) return
+      this.diag({ connState: pc.connectionState })
       window.clearTimeout(this.viewerDropTimer)
       if (pc.connectionState === 'connected') {
         this.reconnectAttempts = 0
         this.update({ status: 'live' })
+        void this.readRoute(pc)
       } else if (pc.connectionState === 'failed') {
+        console.warn('[Mesa] Conexão falhou.', this.snap.diag)
+        this.diag({ lastError: 'A ligação de rede com o mestre falhou (ICE).' })
         this.scheduleReconnect()
       } else if (pc.connectionState === 'disconnected') {
         this.viewerDropTimer = window.setTimeout(() => {
@@ -667,13 +736,34 @@ export class MesaSession {
       this.send('answer', { from: this.myId, sdp: pc.localDescription?.sdp ?? '' })
     } catch (err) {
       console.error('[Mesa] Falha ao aceitar a transmissão:', err)
+      this.diag({ lastError: `Falha ao aceitar a transmissão: ${err instanceof Error ? `${err.name} — ${err.message}` : String(err)}` })
       if (this.viewerPc === pc) this.scheduleReconnect()
     }
+  }
+
+  /** Qual par de rotas ficou em uso (ex.: "srflx ↔ relay"). */
+  private async readRoute(pc: RTCPeerConnection) {
+    try {
+      const report = await pc.getStats()
+      const byId = new Map<string, Record<string, unknown>>()
+      report.forEach((s) => byId.set(s.id, s as Record<string, unknown>))
+      let route: string | null = null
+      report.forEach((s) => {
+        const pair = s as Record<string, unknown>
+        if (s.type === 'candidate-pair' && (pair.nominated || pair.selected) && pair.state === 'succeeded') {
+          const local = byId.get(String(pair.localCandidateId))
+          const remote = byId.get(String(pair.remoteCandidateId))
+          route = `${local?.candidateType ?? '?'} ↔ ${remote?.candidateType ?? '?'}`
+        }
+      })
+      if (this.viewerPc === pc) this.diag({ route })
+    } catch { /* sem estatísticas — tudo bem */ }
   }
 
   private async handleViewerIce(candidate: RTCIceCandidateInit | undefined) {
     if (!candidate) return
     const pc = this.viewerPc
+    if (pc) this.countIce('remote', candidate)
     if (pc?.remoteDescription) await pc.addIceCandidate(candidate).catch(() => {})
     else this.viewerPending.push(candidate)
   }

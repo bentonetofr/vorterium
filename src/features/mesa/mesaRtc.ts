@@ -25,6 +25,11 @@ export function iceServers(): RTCIceServer[] {
   return servers
 }
 
+/** Há um servidor TURN configurado (VITE_TURN_URLS)? */
+export function hasTurnServer(): boolean {
+  return Boolean((import.meta.env.VITE_TURN_URLS as string | undefined)?.trim())
+}
+
 /**
  * Opus em estéreo e 128 kbps — o padrão do navegador é mono e ~32 kbps,
  * ótimo pra voz e ruim pra música de fundo. Vale nas duas pontas
