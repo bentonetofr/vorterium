@@ -892,7 +892,10 @@ export function AltheriumSheetForm({
                   {Array.from({ length: DOMAIN_MAX_POINTS - DOMAIN_MIN_POINTS + 1 }, (_, i) => {
                     const n = DOMAIN_MIN_POINTS + i
                     // Com o "+" ligado, 0, 1 e 2 acendem junto (é o nível acima do 2).
-                    const on = bonusDie ? n >= 0 : points === n
+                    // Desvantagem automática (atributo em 0) sem pontos: quem fica
+                    // marcado é o −1, não o 0.
+                    const autoAtZero = disadv === 'atributo' && points <= 0 && !bonusDie
+                    const on = bonusDie ? n >= 0 : autoAtZero ? n === -1 : points === n
                     const auto = n === -1 && disadv === 'atributo'
                     return (
                       <button

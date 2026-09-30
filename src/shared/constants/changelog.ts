@@ -21,6 +21,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:   'O "+" dos domínios depois do 2',
     items: [
       'Altherium, domínios: o "+" agora é uma caixinha menor depois do 2. Clicar nele acende o 0, o 1 e o 2 e soma mais um dado (4d10); clicar num número volta ao normal.',
+      'Altherium, domínios: com o atributo em 0 e sem pontos no domínio, o −1 é que fica marcado (não mais o 0).',
     ],
   },
   {
