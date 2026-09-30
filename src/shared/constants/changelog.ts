@@ -16,31 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '1.17',
-    date:    '2026-09-30',
-    title:   'O "+" dos domínios depois do 2',
-    items: [
-      'Altherium, domínios: o "+" agora é uma caixinha menor depois do 2. Clicar nele acende o 0, o 1 e o 2 e soma mais um dado (4d10); clicar num número volta ao normal.',
-      'Altherium, domínios: com o atributo em 0, o domínio começa com o −1 marcado (desvantagem por padrão). Clicar no 0, 1, 2 ou "+" tira a desvantagem daquele domínio e usa os dados normais do número clicado; clicar no −1 marca de novo.',
-    ],
-  },
-  {
-    version: '1.16',
-    date:    '2026-09-30',
-    title:   'Dado extra e desvantagem nos domínios',
-    items: [
-      'Altherium, domínios: nova caixinha "+" ao lado dos pontos, que dá mais 1d10 no teste sem gastar ponto (2 pontos + "+" = 4d10).',
-      'Altherium, domínios: novo −1 antes do 0, que marca desvantagem no domínio (1d de desvantagem). Um atributo em 0 já deixa todos os domínios dele com desvantagem automaticamente (o −1 aparece contornado e o domínio fica avermelhado, com "desv." nos dados).',
-    ],
-  },
-  {
     version: '1.15',
     date:    '2026-09-30',
-    title:   'Episódios em janela, caderno com formatação e emojis completos',
+    title:   'Episódios em janela, caderno com formatação, emojis e desvantagem nos domínios',
     items: [
       'Emojis completos, como no WhatsApp, no chat das campanhas (botão 😊 ao lado do campo de mensagem) e no Meu caderninho: todas as categorias, busca em português (dá pra procurar "coração", "kkk", "s2"…), tons de pele e "usados recentemente".',
       'Meu caderninho: nova barra de formatação — negrito, itálico, sublinhado, tachado, cor da letra, marca-texto, tamanho da letra (pequeno, normal, grande, enorme), listas com marcadores e numeradas, e limpar formatação. Ctrl+B, Ctrl+I e Ctrl+U também funcionam, e o mestre vê a formatação na página de anotações.',
       'Episódios: "Nova sessão" e "Editar" agora abrem numa janela no centro da tela, com o fundo embaçado, em vez de empurrar a lista pra baixo. Esc ou clique fora fecham se nada foi mudado; com alterações, feche pelo Cancelar ou pelo ×.',
+      'Altherium, domínios: os pontos agora vão de −1 a 2, e depois do 2 tem o "+", uma caixinha menor que acende o 0, o 1 e o 2 e soma mais um dado (4d10). Nem o −1 nem o "+" gastam ponto de domínio.',
+      'Altherium, domínios: o −1 marca desvantagem (1d de desvantagem, com "desv." nos dados e a linha avermelhada). Com um atributo em 0, os domínios dele começam com o −1 marcado; clicar no 0, 1, 2 ou "+" tira a desvantagem daquele domínio e usa os dados normais do número clicado.',
+      'Altherium, domínios: no celular os botões descem pra uma linha própria e o nome do domínio aparece inteiro.',
     ],
   },
   {
