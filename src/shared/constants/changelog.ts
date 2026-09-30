@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.11',
+    date:    '2026-09-30',
+    title:   'Correções no Firefox',
+    items: [
+      'Firefox: corrigido um erro no login que atrapalhava o site e a conexão da transmissão da Mesa.',
+    ],
+  },
+  {
     version: '1.9',
     date:    '2026-09-29',
     title:   'Inspirações Skald, habilidades de gênesis e triunfos recentes',
