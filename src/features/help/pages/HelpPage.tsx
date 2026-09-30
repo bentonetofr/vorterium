@@ -29,7 +29,16 @@ const TOPICS: Topic[] = [
     steps: [
       'É onde o jogo acontece. Sub-abas: Mesa, Ficha (Fichas, pro mestre), Atividade e Iniciativa. O chat fica no botão branco de mensagem, ao lado do dado, em qualquer tela da campanha.',
       'Em Altherium, o mestre também tem Bestiário, e todos têm o Livro de regras.',
-      'Sessões marcadas ficam na aba Sessões da campanha. Notas guarda anotações do grupo: todos os membros veem e escrevem.',
+      'Os episódios marcados ficam na aba Episódios da campanha. Notas guarda anotações do grupo: todos os membros veem e escrevem.',
+    ],
+  },
+  {
+    id: 'quadro', icon: '⌗', title: 'O Quadro da campanha',
+    steps: [
+      'Um quadro infinito (como o Miro) pra mesa montar junto: post-its, textos, formas, setas ligando as coisas, desenho à mão, molduras pra separar áreas e linhas do tempo. Todo mundo edita e vê o cursor dos outros em tempo real.',
+      'Arraste o quadro com Espaço + arrastar (ou a ferramenta Mão), e dê zoom com a roda do mouse. Duplo clique no vazio cria um post-it; duplo clique num item edita o texto.',
+      'Fotos arrastadas do computador (ou coladas com Ctrl+V) vão direto pra Galeria da campanha; PDFs e textos vão pra Biblioteca. O botão de Biblioteca coloca no quadro o que já está na estante.',
+      'O mestre pode trancar um item (um mapa de fundo, por exemplo): aí só ele move, edita ou apaga. O botão "?" no canto do quadro mostra todos os atalhos.',
     ],
   },
   {
@@ -72,10 +81,10 @@ const TOPICS: Topic[] = [
   {
     id: 'ferramentas', icon: '❧', title: 'Ferramentas do menu',
     steps: [
-      'Biblioteca: uma estante com os livros de regras e uma por campanha, com os documentos que o mestre guardou (PDF, imagem ou texto). Clique num arquivo pra ler no próprio site. O mestre adiciona arrastando arquivos pra estante e pode esconder um arquivo dos jogadores.',
+      'Biblioteca: uma estante com os livros de regras e uma por campanha, com os documentos que o mestre guardou (PDF, imagem ou texto) e os arquivos postos no Quadro. Clique num arquivo pra ler no próprio site. O mestre adiciona arrastando arquivos pra estante e pode esconder um arquivo dos jogadores.',
       'Meu bestiário: criaturas suas pra qualquer campanha. No bestiário de uma campanha, "Guardar" manda a criatura pra cá; daqui, "Copiar pra campanha" leva de volta.',
       'Galeria: um álbum de lembranças por campanha em que você é mestre, com as imagens que já passaram pela Mesa. Clique numa foto pra ver grande ou levar pra outra campanha.',
-      'O sino mostra as notificações (rolagens, sessões, membros); as mensagens do chat avisam só no botão de mensagem. Atividade junta o que aconteceu nas suas campanhas.',
+      'O sino mostra as notificações (rolagens, episódios, membros); as mensagens do chat avisam só no botão de mensagem. Atividade junta o que aconteceu nas suas campanhas.',
     ],
   },
 ]

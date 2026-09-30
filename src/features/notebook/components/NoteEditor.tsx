@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import { createNote, updateNote, type NotebookNote } from '../services/notebookService'
 
 // ────────────────────────────────────────────────────────
@@ -21,9 +21,19 @@ interface NoteEditorProps {
   className?:  string
   onSaved:     (note: NotebookNote) => void
   onStatus?:   (status: SaveStatus) => void
+  /** Imagens coladas (Ctrl+V) ou arrastadas pra folha. */
+  onFiles?:    (files: File[]) => void
 }
 
-export function NoteEditor({ note, campaignId, sessionId, autoFocus, placeholder, className, onSaved, onStatus }: NoteEditorProps) {
+export interface NoteEditorHandle {
+  /** Põe o texto onde está o cursor (ex.: um emoji). */
+  insert: (text: string) => void
+}
+
+export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function NoteEditor(
+  { note, campaignId, sessionId, autoFocus, placeholder, className, onSaved, onStatus, onFiles },
+  handle,
+) {
   const [text, setText] = useState(note?.content ?? '')
   const idRef      = useRef<string | null>(note?.id ?? null)
   const savedText  = useRef(note?.content ?? '')
@@ -33,6 +43,10 @@ export function NoteEditor({ note, campaignId, sessionId, autoFocus, placeholder
   const ref        = useRef<HTMLTextAreaElement>(null)
   const cb         = useRef({ onSaved, onStatus, campaignId, sessionId })
   cb.current = { onSaved, onStatus, campaignId, sessionId }
+
+  // A nota passou a existir por fora (ex.: criada ao colar uma imagem):
+  // o texto daqui em diante atualiza ela em vez de criar outra.
+  useEffect(() => { if (note?.id && !idRef.current) idRef.current = note.id }, [note?.id])
 
   // Outra pessoa (o mestre, ou a Bruna em outra aba) mudou a nota e aqui
   // não há nada por salvar: mostra a versão nova.
@@ -77,6 +91,42 @@ export function NoteEditor({ note, campaignId, sessionId, autoFocus, placeholder
   // Fechou a janela / trocou de nota: salva o que ficou pendente.
   useEffect(() => () => { if (latestText.current !== savedText.current) save() }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
+  function change(value: string) {
+    setText(value)
+    latestText.current = value
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(save, SAVE_DELAY_MS)
+    cb.current.onStatus?.('saving')
+  }
+
+  // Cursor logo depois do que foi inserido (aplicado assim que a folha atualiza).
+  const pendingCaret = useRef<number | null>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    const pos = pendingCaret.current
+    if (!el || pos === null) return
+    pendingCaret.current = null
+    el.focus()
+    el.setSelectionRange(pos, pos)
+  })
+
+  useImperativeHandle(handle, () => ({
+    insert(piece: string) {
+      const el = ref.current
+      const cur = latestText.current
+      const start = el?.selectionStart ?? cur.length
+      const end = el?.selectionEnd ?? cur.length
+      pendingCaret.current = start + piece.length
+      change(cur.slice(0, start) + piece + cur.slice(end))
+    },
+  }))
+
+  const images = (list: DataTransferItemList | null | undefined, files: FileList | null | undefined) => {
+    const out = [...(files ?? [])].filter((f) => f.type.startsWith('image/'))
+    if (out.length === 0 && list) for (const it of list) { const f = it.kind === 'file' ? it.getAsFile() : null; if (f?.type.startsWith('image/')) out.push(f) }
+    return out
+  }
+
   return (
     <textarea
       ref={ref}
@@ -85,15 +135,20 @@ export function NoteEditor({ note, campaignId, sessionId, autoFocus, placeholder
       placeholder={placeholder ?? 'Escreva aqui… salva sozinho.'}
       maxLength={20000}
       spellCheck
-      onChange={(e) => {
-        setText(e.target.value)
-        latestText.current = e.target.value
-        window.clearTimeout(timer.current)
-        timer.current = window.setTimeout(save, SAVE_DELAY_MS)
-        cb.current.onStatus?.('saving')
+      onChange={(e) => change(e.target.value)}
+      onPaste={(e) => {
+        if (!onFiles) return
+        const files = images(e.clipboardData.items, e.clipboardData.files)
+        if (files.length) { e.preventDefault(); onFiles(files) }
+      }}
+      onDragOver={(e) => { if (onFiles && e.dataTransfer.types.includes('Files')) e.preventDefault() }}
+      onDrop={(e) => {
+        if (!onFiles) return
+        const files = images(null, e.dataTransfer.files)
+        if (files.length) { e.preventDefault(); onFiles(files) }
       }}
       onBlur={save}
       aria-label="Anotação"
     />
   )
-}
+})

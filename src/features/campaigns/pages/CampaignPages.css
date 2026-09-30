@@ -463,6 +463,8 @@
 .campaign-area-page {
   gap: var(--space-5);
 }
+/* Quadro: usa a largura toda da tela. */
+.campaign-area-page--wide { max-width: none; }
 
 .campaign-tabs {
   display: flex;

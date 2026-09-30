@@ -4,7 +4,7 @@
 // pelas rotas-filhas em CampaignAreaLayout.
 // ────────────────────────────────────────────────────────
 
-export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'anotacoes' | 'mesa-sessao' | 'configuracoes'
+export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'quadro' | 'anotacoes' | 'mesa-sessao' | 'configuracoes'
 
 /** Sub-abas dentro de "Sessão" (id mesa-sessao) — estado local (fora da URL), ver spec. */
 export type SessionSubTabId = 'mesa' | 'ficha' | 'atividade' | 'iniciativa' | 'bestiario' | 'livro'
@@ -18,7 +18,8 @@ export const CAMPAIGN_SECTIONS: CampaignSection[] = [
   { id: 'visao-geral',   label: 'Visão geral' },
   { id: 'mesa-sessao',   label: 'Sessão' },
   { id: 'membros',       label: 'Membros' },
-  { id: 'sessoes',       label: 'Sessões' },
+  { id: 'sessoes',       label: 'Episódios' },
   { id: 'notas',         label: 'Notas' },
+  { id: 'quadro',        label: 'Quadro' },
   { id: 'configuracoes', label: 'Configurações' },
 ]

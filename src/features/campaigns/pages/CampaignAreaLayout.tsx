@@ -17,6 +17,7 @@ import { CampaignSettingsPanel }  from '../components/CampaignSettingsPanel'
 import { CampaignNotesPanel }     from '../../notes/components/CampaignNotesPanel'
 import { SessionTablePanel }      from '../components/SessionTablePanel'
 import { PlayerNotesPanel }       from '../../notebook/components/PlayerNotesPanel'
+import { BoardPanel }             from '../../board/components/BoardPanel'
 import './CampaignPages.css'
 
 // ────────────────────────────────────────────────────────
@@ -154,7 +155,7 @@ export function CampaignAreaLayout() {
   }
 
   return (
-    <div className="page campaign-area-page">
+    <div className={`page campaign-area-page${section === 'quadro' ? ' campaign-area-page--wide' : ''}`}>
       {/* ── Cabeçalho ── */}
       <header className="page__header campaign-area__page-header animate-fade-up">
         <div
@@ -212,6 +213,10 @@ export function CampaignAreaLayout() {
           <Route
             path="notas"
             element={<CampaignNotesPanel campaignId={campaign.id} currentUserId={user!.id} userRole={campaign.role} />}
+          />
+          <Route
+            path="quadro"
+            element={<BoardPanel campaign={campaign} />}
           />
           <Route
             path="anotacoes"

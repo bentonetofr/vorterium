@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import type { RollBreakdownItem } from '../../../shared/types'
 import { fullRollKind, type FullRollKind } from '../utils/critical'
@@ -38,7 +38,7 @@ export function CritWolf() {
   useEffect(() => {
     if (!campaignId) return
     const channel = supabase
-      .channel(`crit-wolf:${campaignId}`)
+      .channel(uniqueChannel(`crit-wolf:${campaignId}`))
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'dice_rolls', filter: `campaign_id=eq.${campaignId}` },

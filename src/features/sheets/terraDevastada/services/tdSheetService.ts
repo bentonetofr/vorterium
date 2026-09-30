@@ -1,4 +1,4 @@
-import { supabase } from '../../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
 import type { ProfilePublic, TdSheet, TdSheetWithProfile } from '../../../../shared/types'
@@ -123,7 +123,7 @@ export function subscribeToCampaignTdSheets(
   onListChange: () => void,
 ): () => void {
   const channel = supabase
-    .channel(`td_sheets:${campaignId}`)
+    .channel(uniqueChannel(`td_sheets:${campaignId}`))
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: TABLE, filter: `campaign_id=eq.${campaignId}` },

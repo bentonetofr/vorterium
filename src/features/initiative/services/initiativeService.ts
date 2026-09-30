@@ -1,4 +1,4 @@
-import { supabase } from '../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { rollDice, rollEvensTest } from '../../dice/services/diceService'
 import type { InitiativeParticipant, InitiativeState } from '../../../shared/types'
 import type { CampaignSystem } from '../../../shared/constants/systems'
@@ -170,7 +170,7 @@ export function subscribeToInitiative(
   onStateChange: (state: InitiativeState | null) => void,
 ): () => void {
   const channel = supabase
-    .channel(`campaign_initiative:${campaignId}`)
+    .channel(uniqueChannel(`campaign_initiative:${campaignId}`))
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'campaign_initiative_participants', filter: `campaign_id=eq.${campaignId}` },

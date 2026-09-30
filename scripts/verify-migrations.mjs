@@ -65,6 +65,10 @@ const expectedMigrations = [
   '20240161000000_developer_access.sql',
   '20240162000000_altherium_genesis_skald_recent.sql',
   '20240163000000_player_notebook.sql',
+  '20240164000000_campaign_board.sql',
+  '20240165000000_player_notes_images.sql',
+  '20240166000000_board_master_shield.sql',
+  '20240167000000_board_images_gallery.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

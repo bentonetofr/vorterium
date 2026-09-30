@@ -320,8 +320,8 @@ function MasterDashboard({
 
         <StatCard
           icon="✦"
-          title="Sessões"
-          action={{ label: 'Ver sessões', onClick: () => onNavigate('sessoes') }}
+          title="Episódios"
+          action={{ label: 'Ver episódios', onClick: () => onNavigate('sessoes') }}
         >
           <div className="ov-stat__num"><AnimatedNumber value={data.sessionsTotal} /></div>
           <div className="ov-stat__details">
@@ -415,8 +415,8 @@ function PlayerDashboard({
 
         <StatCard
           icon="✦"
-          title="Sessões"
-          action={{ label: 'Ver sessões', onClick: () => onNavigate('sessoes') }}
+          title="Episódios"
+          action={{ label: 'Ver episódios', onClick: () => onNavigate('sessoes') }}
         >
           <div className="ov-stat__num"><AnimatedNumber value={data.sessionsTotal} /></div>
           <div className="ov-stat__details">

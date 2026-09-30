@@ -17,3 +17,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
   },
 })
+
+let channelSeq = 0
+
+/**
+ * Nome único pra um canal que só escuta o banco (postgres_changes). Desde o
+ * supabase-js 2.117, dois `.channel()` com o mesmo nome devolvem o MESMO
+ * canal, e acrescentar `.on()` nele depois do `subscribe()` dá erro e
+ * derruba a página (ex.: a página do mestre e a janela do caderno abertas
+ * juntas). Pra esse tipo de canal o nome não importa — quem escolhe os
+ * eventos é o `filter`. NÃO usar em canal de broadcast/presence: ali o nome
+ * é a "sala" que todo mundo precisa compartilhar.
+ */
+export function uniqueChannel(base: string): string {
+  channelSeq += 1
+  return `${base}:${channelSeq}`
+}

@@ -4,7 +4,8 @@ import { supabase } from '../../../shared/lib/supabase'
 // Biblioteca da campanha — livros e documentos que o mestre guarda pra
 // mesa. Tabela campaign_documents + bucket privado "campaign-documents"
 // (pasta = campanha). O mestre envia, renomeia, esconde e exclui; os
-// jogadores leem o que está aberto pra mesa (a RLS já filtra).
+// jogadores leem o que está aberto pra mesa (a RLS já filtra) e só enviam
+// pelo Quadro (subpasta "quadro/").
 // ────────────────────────────────────────────────────────
 
 const BUCKET = 'campaign-documents'
@@ -77,12 +78,33 @@ export async function listMyDocuments(): Promise<CampaignDocument[]> {
   return (data ?? []) as CampaignDocument[]
 }
 
-export async function uploadDocument(campaignId: string, file: File): Promise<CampaignDocument> {
+/** Documentos de uma campanha (o que a pessoa pode ver). */
+export async function listCampaignDocuments(campaignId: string): Promise<CampaignDocument[]> {
+  const { data, error } = await supabase
+    .from('campaign_documents')
+    .select('id, campaign_id, name, path, mime_type, size_bytes, visibility, created_at')
+    .eq('campaign_id', campaignId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error('Não foi possível carregar a biblioteca.')
+  return (data ?? []) as CampaignDocument[]
+}
+
+/** Arquivo que veio do Quadro da campanha (pasta "<campanha>/quadro/"). */
+export function isBoardDocument(doc: Pick<CampaignDocument, 'path'>): boolean {
+  return doc.path.split('/')[1] === 'quadro'
+}
+
+/**
+ * Envia pra Biblioteca. `folder: 'quadro'` é o caminho dos arquivos postos
+ * no Quadro — o único por onde jogadores também podem enviar.
+ */
+export async function uploadDocument(campaignId: string, file: File, folder?: 'quadro', visibility: DocumentVisibility = 'all'): Promise<CampaignDocument> {
   const problem = validateDocument(file)
   if (problem) throw new Error(problem)
   const mime = mimeOf(file)!
 
-  const path = `${campaignId}/${crypto.randomUUID()}.${TYPES[mime].ext}`
+  const path = `${campaignId}/${folder ? `${folder}/` : ''}${crypto.randomUUID()}.${TYPES[mime].ext}`
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
     .upload(path, file, { contentType: mime, cacheControl: '3600' })
@@ -94,7 +116,7 @@ export async function uploadDocument(campaignId: string, file: File): Promise<Ca
 
   const { data, error } = await supabase
     .from('campaign_documents')
-    .insert({ campaign_id: campaignId, name: nameFromFile(file), path, mime_type: mime, size_bytes: file.size })
+    .insert({ campaign_id: campaignId, name: nameFromFile(file), path, mime_type: mime, size_bytes: file.size, visibility })
     .select('id, campaign_id, name, path, mime_type, size_bytes, visibility, created_at')
     .single()
 

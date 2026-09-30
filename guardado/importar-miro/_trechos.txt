@@ -1,0 +1,49 @@
+### BoardPanel.tsx — botão no cabeçalho (antes do botão de atalhos "?")
+          <button type="button" className="board-header__btn board-header__btn--text" onClick={() => setMiro(true)}>Importar do Miro</button>
+
+### BoardPanel.tsx — estado
+  const [miro, setMiro]         = useState(false)
+
+### BoardPanel.tsx — import
+import { MiroImportDialog } from './MiroImportDialog'
+
+### BoardPanel.tsx — janela (antes de {lightbox && (...)})
+      {miro && (() => {
+        // O importado entra à direita do que já existe no quadro.
+        const b = unionRect(Object.values(itemsRef.current).map((i) => itemBounds(i, itemsRef.current)))
+        return (
+          <MiroImportDialog
+            campaignId={campaign.id}
+            myId={myId}
+            at={b ? { x: b.x + b.w + 400, y: b.y } : { x: 0, y: 0 }}
+            zTop={zRange().max}
+            onClose={() => setMiro(false)}
+            onImported={(list) => {
+              const after: Changes = {}
+              const before: Changes = {}
+              for (const it of list) { after[it.id] = it; before[it.id] = null }
+              commit(after, before)
+              setSelection([])
+              const frame = list.find((i) => i.kind === 'frame')
+              if (frame) fitRect(rectOf(frame))
+            }}
+          />
+        )
+      })()}
+
+### changelog.ts — linha nas Novidades
+      'Importar do Miro: cole o link de um board e uma chave de acesso do Miro, e post-its, textos, formas, molduras, setas, cards e imagens chegam no quadro no mesmo lugar, dentro de uma moldura com o nome do board. As imagens vão pra Biblioteca. A chave é usada só na importação e não fica salva.',
+
+### HelpPage.tsx — linha na seção do Quadro
+      '"Importar do Miro" traz um board do Miro inteiro (post-its, textos, formas, molduras, setas, cards e imagens). A janela explica como pegar a chave de acesso na sua conta Miro; ela é usada só naquela importação e não fica salva.',
+
+### PrivacidadePage.tsx — seção depois de "5. Login com Google"
+      <section className="public-page__section">
+        <h2 className="public-page__section-title">5.1. Importar do Miro</h2>
+        <p className="public-page__text">
+          Ao importar um board do Miro para o Quadro, a chave de acesso que você cola é enviada
+          ao servidor do Vorterium só para ler aquele board na API do Miro, durante a importação.
+          Ela <strong>não é guardada</strong> nem registrada. O conteúdo importado passa a fazer
+          parte do quadro da campanha, e as imagens e arquivos vão para a Biblioteca dela.
+        </p>
+      </section>

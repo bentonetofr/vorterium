@@ -1,4 +1,4 @@
-import { supabase } from '../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { logActivity } from '../../activity/services/activityService'
 import type { DiceRoll, DiceRollWithProfile, DieType, RollBreakdownItem, RollMode } from '../../../shared/types'
 
@@ -465,7 +465,7 @@ export function subscribeToRolls(
   onInsert: (row: DiceRoll) => void,
 ): () => void {
   const channel = supabase
-    .channel(`dice_rolls:${campaignId}`)
+    .channel(uniqueChannel(`dice_rolls:${campaignId}`))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'dice_rolls', filter: `campaign_id=eq.${campaignId}` },

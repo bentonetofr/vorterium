@@ -11,6 +11,7 @@ import {
   formatSize,
   getDocumentUrl,
   getThumbUrls,
+  isBoardDocument,
   listMyDocuments,
   updateDocument,
   uploadDocument,
@@ -404,7 +405,7 @@ function DocCard({ item, index, thumb, onOpen }: { item: ShelfItem; index: numbe
       </span>
       <span className="doc-card__info">
         <span className="doc-card__name">{doc.name}</span>
-        <span className="doc-card__meta">{KIND_LABEL[kind]} · {formatSize(doc.size_bytes)} · {dateLabel(doc.created_at)}</span>
+        <span className="doc-card__meta">{KIND_LABEL[kind]}{isBoardDocument(doc) ? ' do Quadro' : ''} · {formatSize(doc.size_bytes)} · {dateLabel(doc.created_at)}</span>
       </span>
     </button>
   )
@@ -595,11 +596,12 @@ function DocumentBody({ doc, isMaster, onChanged, onDeleted }: DocumentBodyProps
             <h2 className="doc-viewer__title">{doc.name}</h2>
           )}
           <span className="doc-viewer__meta">
-            {KIND_LABEL[kind]} · {formatSize(doc.size_bytes)} · guardado em {dateLabel(doc.created_at)}
+            {KIND_LABEL[kind]}{isBoardDocument(doc) ? ' do Quadro' : ''} · {formatSize(doc.size_bytes)} · guardado em {dateLabel(doc.created_at)}
             {doc.visibility === 'master' && <span className="doc-viewer__secret"> · só o mestre vê</span>}
           </span>
         </div>
         <div className="doc-viewer__actions">
+          {isBoardDocument(doc) && <Link className="btn btn-ghost doc-viewer__btn" to={`/campanhas/${doc.campaign_id}/quadro`}>Ir pro Quadro</Link>}
           {url && <a className="btn btn-ghost doc-viewer__btn" href={url} target="_blank" rel="noopener noreferrer">Abrir em nova aba</a>}
           <button type="button" className="btn btn-ghost doc-viewer__btn" onClick={() => void download()}>Baixar</button>
           {isMaster && !renaming && (

@@ -3,8 +3,8 @@ import { AppLogo } from '../../../shared/components/AppLogo'
 import './PublicPages.css'
 
 const FEATURES = [
-  { title: 'Campanhas',             desc: 'Crie campanhas no Genérico, em Altherium ou em Terra Devastada e organize tudo em um painel central.' },
-  { title: 'Membros e convites',    desc: 'Adicione jogadores por e-mail ou compartilhe um link de convite.' },
+  { title: 'Campanhas e convites',  desc: 'Crie campanhas no Genérico, em Altherium ou em Terra Devastada e chame os jogadores por e-mail ou link de convite.' },
+  { title: 'Quadro da campanha',    desc: 'Um quadro infinito que a mesa monta junta, em tempo real: post-its, setas, linhas do tempo e fotos.' },
   { title: 'Fichas',                desc: 'Fichas completas de Altherium e de Terra Devastada (com testes de pares, Horror e Convicção), ou ficha simples no Genérico.' },
   { title: 'Mesa ao vivo',          desc: 'Transmita a tela com som, mostre mapas e imagens e aponte lugares para todos verem.' },
   { title: 'Dados, chat e combate', desc: 'Role dados com histórico, converse no chat da mesa e conduza a ordem de iniciativa.' },
@@ -106,7 +106,7 @@ export function LandingPage() {
               <div className="landing__step-body">
                 <strong className="landing__step-label">Jogue a sessão</strong>
                 <p className="landing__step-desc">
-                  Fichas, dados, chat e a Mesa ao vivo ficam na aba Sessão da campanha.
+                  Fichas e a Mesa ao vivo ficam na aba Sessão da campanha; dados e chat ficam nos botões do canto, em qualquer tela.
                 </p>
               </div>
             </li>

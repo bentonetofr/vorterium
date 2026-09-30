@@ -417,7 +417,7 @@ export function CampaignSessionsPanel({
 
       {/* ── Cabeçalho ── */}
       <div className="sessions-panel__intro">
-        <h4 className="sessions-panel__intro-title">Sessões da campanha</h4>
+        <h4 className="sessions-panel__intro-title">Episódios da campanha</h4>
         <p className="sessions-panel__intro-sub">
           Registre os encontros, o histórico e os acontecimentos de cada sessão.
         </p>

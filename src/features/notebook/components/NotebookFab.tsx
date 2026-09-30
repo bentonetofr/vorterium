@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { getCampaignSessions } from '../../sessions/services/sessionService'
@@ -7,6 +7,7 @@ import { Select } from '../../../shared/components/Select'
 import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
 import type { CampaignSession, CampaignWithRole } from '../../../shared/types'
 import {
+  createNote,
   currentSessionId,
   deleteNote,
   listNotes,
@@ -14,10 +15,15 @@ import {
   sessionLabel,
   subscribeNotes,
   timeLabel,
+  removeNoteImageFile,
+  updateNote,
+  uploadNoteImage,
   useMyNotebook,
+  type NoteImage,
   type NotebookNote,
 } from '../services/notebookService'
-import { NoteEditor, type SaveStatus } from './NoteEditor'
+import { NoteEditor, type NoteEditorHandle, type SaveStatus } from './NoteEditor'
+import { EmojiButton, NoteImages } from './NoteImages'
 import './Notebook.css'
 
 // ────────────────────────────────────────────────────────
@@ -43,11 +49,15 @@ export function QuillIcon({ size = 20 }: { size?: number }) {
 export function NotebookFab() {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
-  const title = useMyNotebook(user?.id)
+  // O caderno em si (null = a conta não tem). O nome no banco (ex.: "Anotações
+  // da Bruna") é o que o MESTRE vê; pra quem escreve, é sempre "Meu caderninho".
+  const notebook = useMyNotebook(user?.id)
+  const title = notebook ? OWNER_TITLE : notebook
   const [isOpen, setIsOpen] = useState(false)
   const campaignId = campaign?.id ?? null
 
   const close = useCallback(() => setIsOpen(false), [])
+  const { height, dragging, gripProps } = usePanelHeight()
   const { instant } = useFloatingPanel('notes', isOpen, close)
   useEffect(() => { setIsOpen(false) }, [campaignId])
 
@@ -95,7 +105,15 @@ export function NotebookFab() {
       {(isOpen || !instant) && (
         <Presence show={isOpen} exitMs={180}>
           {(state) => (
-            <div className="notebook-panel fab-panel anim-pop" data-state={state} data-fab-panel="notes" role="dialog" aria-label={title}>
+            <div
+              className={`notebook-panel fab-panel anim-pop${dragging ? ' notebook-panel--resizing' : ''}`}
+              data-state={state}
+              data-fab-panel="notes"
+              role="dialog"
+              aria-label={title}
+              style={height ? { height } : undefined}
+            >
+              <div className="notebook-panel__grip" {...gripProps}><span /></div>
               <NotebookPanel campaign={campaign} title={title} userId={user.id} onClose={close} />
             </div>
           )}
@@ -118,6 +136,83 @@ export function NotebookFab() {
   )
 }
 
+// ── Altura do painel: arrastando a alça do topo pra cima ──
+
+const HEIGHT_KEY = 'vorterium:caderno-altura'
+const MIN_HEIGHT = 240
+
+function readHeight(): number | null {
+  try {
+    const v = Number(localStorage.getItem(HEIGHT_KEY))
+    return Number.isFinite(v) && v >= MIN_HEIGHT ? v : null
+  } catch { return null }
+}
+
+/**
+ * Altura escolhida pela pessoa (guardada neste navegador). Sem escolha, o
+ * painel usa a altura padrão das janelas do canto. Duplo clique na alça
+ * volta ao padrão; setas ↑/↓ na alça também mudam a altura.
+ */
+function usePanelHeight() {
+  const [height, setHeight] = useState<number | null>(readHeight)
+  const [dragging, setDragging] = useState(false)
+  const drag = useRef<{ y: number; h: number; max: number; last: number } | null>(null)
+
+  const save = (h: number | null) => {
+    setHeight(h)
+    try { if (h) localStorage.setItem(HEIGHT_KEY, String(Math.round(h))); else localStorage.removeItem(HEIGHT_KEY) } catch { /* sem armazenamento */ }
+  }
+  // Até perto do topo da tela (o CSS ainda deixa lugar pros avisos do canto).
+  const maxFor = (panel: Element) => {
+    const css = parseFloat(getComputedStyle(panel).maxHeight)
+    const room = panel.getBoundingClientRect().bottom - 16
+    return Math.max(MIN_HEIGHT, Number.isFinite(css) ? Math.min(css, room) : room)
+  }
+  const clampH = (h: number, max: number) => Math.round(Math.min(max, Math.max(MIN_HEIGHT, h)))
+
+  const gripProps = {
+    role: 'separator' as const,
+    'aria-orientation': 'horizontal' as const,
+    'aria-label': 'Arraste pra cima ou pra baixo pra mudar a altura',
+    title: 'Arraste pra mudar a altura (duplo clique volta ao normal)',
+    tabIndex: 0,
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      const panel = e.currentTarget.parentElement
+      if (!panel) return
+      e.preventDefault()
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* segue sem captura */ }
+      const h = panel.getBoundingClientRect().height
+      drag.current = { y: e.clientY, h, max: maxFor(panel), last: h }
+      setDragging(true)
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = drag.current
+      if (!d) return
+      d.last = clampH(d.h + (d.y - e.clientY), d.max)
+      setHeight(d.last)
+    },
+    onPointerUp: () => {
+      const d = drag.current
+      if (!d) return
+      drag.current = null
+      setDragging(false)
+      save(d.last)
+    },
+    onDoubleClick: () => save(null),
+    onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      const panel = e.currentTarget.parentElement
+      if (!panel) return
+      e.preventDefault()
+      const cur = panel.getBoundingClientRect().height
+      save(clampH(cur + (e.key === 'ArrowUp' ? 40 : -40), maxFor(panel)))
+    },
+  }
+  return { height, dragging, gripProps }
+}
+
+const OWNER_TITLE = 'Meu caderninho'
+
 const STATUS_LABEL: Record<SaveStatus, string> = { idle: '', saving: 'salvando…', saved: 'salvo ✓', error: 'não salvou — tente de novo' }
 
 function NotebookPanel({ campaign, title, userId, onClose }: { campaign: CampaignWithRole; title: string; userId: string; onClose: () => void }) {
@@ -129,6 +224,11 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
   const [status, setStatus]     = useState<SaveStatus>('idle')
   const [loading, setLoading]   = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [uploading, setUploading] = useState(0)
+  const editorRef = useRef<NoteEditorHandle>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const notesRef = useRef(notes)
+  notesRef.current = notes
   // Muda só quando a pessoa troca de anotação/sessão — salvar a primeira vez
   // não recria a folha (o cursor não pula no meio da digitação).
   const [sheetKey, setSheetKey] = useState(0)
@@ -172,6 +272,48 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
     setActive(note.id)
   }
 
+  // Imagens coladas/arrastadas/escolhidas: vão pra anotação aberta (se a
+  // folha ainda está em branco, a anotação nasce agora).
+  async function addImages(files: File[]) {
+    const list = files.filter((f) => f.type.startsWith('image/')).slice(0, 10)
+    if (list.length === 0) return
+    setUploading((n) => n + list.length)
+    setStatus('saving')
+    try {
+      let note = current
+      if (!note) {
+        const created = await createNote(campaign.id, sessionId, '')
+        note = created
+        setNotes((prev) => [...prev, created])
+        setActive(created.id)
+      }
+      const added: NoteImage[] = []
+      for (const f of list) {
+        try { added.push(await uploadNoteImage(campaign.id, userId, f)) } catch { /* segue com as outras */ }
+        setUploading((n) => n - 1)
+      }
+      if (added.length === 0) { setStatus('error'); return }
+      const latest = notesRef.current.find((n) => n.id === note!.id) ?? note
+      const saved = await updateNote(note.id, { images: [...latest.images, ...added].slice(0, 30) })
+      setNotes((prev) => prev.map((n) => (n.id === saved.id ? saved : n)))
+      setStatus(added.length === list.length ? 'saved' : 'error')
+    } catch {
+      setUploading(0)
+      setStatus('error')
+    }
+  }
+
+  async function removeImage(img: NoteImage) {
+    if (!current) return
+    try {
+      const saved = await updateNote(current.id, { images: current.images.filter((i) => i.path !== img.path) })
+      setNotes((prev) => prev.map((n) => (n.id === saved.id ? saved : n)))
+      void removeNoteImageFile(img.path).catch(() => {})
+    } catch {
+      setStatus('error')
+    }
+  }
+
   async function remove() {
     if (!current) return
     try {
@@ -203,18 +345,40 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
       ) : (
         <>
           <div className="notebook-panel__bar">
-            <Select
-              value={sessionId ?? ''}
-              onChange={pickSession}
-              aria-label="Sessão"
-              options={[
-                ...sessions.filter((s) => s.status !== 'canceled').map((s) => ({ value: s.id, label: sessionLabel(s) })),
-                { value: '', label: 'Sem sessão definida' },
-              ]}
+            <div className="notebook-panel__session">
+              <Select
+                value={sessionId ?? ''}
+                onChange={pickSession}
+                aria-label="Episódio"
+                options={[
+                  ...sessions.filter((s) => s.status !== 'canceled').map((s) => ({ value: s.id, label: sessionLabel(s) })),
+                  { value: '', label: 'Sem episódio definido' },
+                ]}
+              />
+            </div>
+            <EmojiButton onPick={(e) => editorRef.current?.insert(e)} />
+            <button
+              type="button"
+              className="note-tool"
+              onClick={() => fileRef.current?.click()}
+              aria-label="Pôr imagem"
+              title="Pôr imagem (ou cole com Ctrl+V / arraste pra folha)"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" />
+              </svg>
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => { const f = [...(e.target.files ?? [])]; e.target.value = ''; void addImages(f) }}
             />
           </div>
 
-          <div className="notebook-panel__tabs" role="tablist" aria-label="Anotações desta sessão">
+          <div className="notebook-panel__tabs" role="tablist" aria-label="Anotações deste episódio">
             {inSession.map((n, i) => (
               <button
                 key={n.id} type="button" role="tab" aria-selected={active === n.id}
@@ -239,15 +403,19 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
 
           <NoteEditor
             key={sheetKey}
+            ref={editorRef}
             note={current}
             campaignId={campaign.id}
             sessionId={sessionId}
             autoFocus
-            placeholder="Escreva aqui… salva sozinho. Tab fecha."
+            placeholder="Escreva aqui… salva sozinho. Cole imagens com Ctrl+V. Tab fecha."
             className="note-sheet--panel"
             onSaved={onSaved}
             onStatus={setStatus}
+            onFiles={(f) => void addImages(f)}
           />
+
+          <NoteImages images={current?.images ?? []} uploading={uploading} onRemove={(img) => void removeImage(img)} />
 
           <div className="notebook-panel__foot">
             {current ? (

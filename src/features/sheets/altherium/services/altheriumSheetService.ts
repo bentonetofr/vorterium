@@ -1,4 +1,4 @@
-import { supabase } from '../../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
 import type {
@@ -185,7 +185,7 @@ export function subscribeToCampaignAltheriumSheets(
   onListChange: () => void,
 ): () => void {
   const channel = supabase
-    .channel(`altherium_sheets:${campaignId}`)
+    .channel(uniqueChannel(`altherium_sheets:${campaignId}`))
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'altherium_character_sheets', filter: `campaign_id=eq.${campaignId}` },

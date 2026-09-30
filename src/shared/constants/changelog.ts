@@ -16,6 +16,28 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.14',
+    date:    '2026-09-30',
+    title:   'Quadro da campanha e aba Episódios',
+    items: [
+      'Nova aba Quadro em cada campanha: um quadro infinito, no estilo do Miro, no fundo azul do site com textura de pontinhos. Arraste com Espaço (ou a Mão) e dê zoom com a roda do mouse ou com dois dedos.',
+      'No quadro: post-its coloridos (a letra se ajusta ao tamanho), textos, formas (retângulo, elipse, losango e triângulo), setas que ligam um item ao outro e acompanham quando eles mudam de lugar (com legenda, ponta dupla e tracejado), caneta pra desenhar à mão e molduras pra separar áreas, que levam junto tudo o que está dentro.',
+      'Linha do tempo: coloque os eventos da campanha em ordem, com "quando" livre (um ano, uma sessão…), e reorganize quando quiser.',
+      'Fotos arrastadas do computador ou coladas com Ctrl+V vão direto pra Galeria da campanha, e PDFs e textos pra Biblioteca (os jogadores também podem enviar por aqui); dá pra trazer pro quadro o que já está na estante, ampliar a imagem e abrir o arquivo na Biblioteca.',
+      'Todo mundo edita junto e em tempo real: você vê o cursor e o nome de quem está no quadro, e as mudanças dos outros aparecem na hora.',
+      'Selecione vários com Shift ou arrastando uma área; copiar, colar, duplicar, desfazer e refazer, trazer pra frente e mandar pra trás. Duplo clique no vazio cria um post-it.',
+      'O mestre pode trancar um item (um mapa de fundo, por exemplo): aí só ele mexe. Tem tela cheia, "ver tudo", atalho pras molduras e a lista de atalhos no botão "?".',
+      'Escudo do mestre: o mestre tem uma segunda aba no Quadro, em cima do quadro como uma aba de navegador. É um quadro infinito igual ao geral, mas só os mestres veem; fotos postas nele vão pra Galeria do mestre, e arquivos ficam escondidos dos jogadores na Biblioteca.',
+      'A aba Sessões da campanha agora se chama Episódios (o card da Visão geral também).',
+      'Na barra lateral da campanha, Configurações agora fica sempre por último.',
+      'Caderno de anotações: agora dá pra pôr imagens (colando com Ctrl+V, arrastando pra folha ou pelo botão de imagem) e emojis (botão 😊, que põe o emoji onde está o cursor). As imagens aparecem embaixo da anotação, ampliam com um clique e seguem privadas: só quem escreveu e os mestres da campanha veem.',
+      'Caderno de anotações: arraste a alça no topo da janela pra deixá-la mais alta (até quase o topo da tela). O tamanho fica guardado; duplo clique na alça volta ao normal.',
+      'A janela do caderno agora se chama "Meu caderninho" pra quem escreve. Pro mestre, a seção na barra lateral continua com o nome do caderno do jogador.',
+      'Corrigido: abrir o caderno (a pena) com a página de anotações dos jogadores aberta deixava a tela vazia. A mesma falha podia acontecer em outras telas que se atualizam em tempo real (dados, iniciativa, fichas, atividade) quando duas delas ficavam abertas juntas.',
+      'Textos acertados: o caderno fala em episódio ("Sem episódio definido"), e a página inicial, a Sobre, a Ajuda e a Privacidade agora mostram o Quadro e o chat no botão do canto.',
+    ],
+  },
+  {
     version: '1.13',
     date:    '2026-09-30',
     title:   'Caderno de anotações',

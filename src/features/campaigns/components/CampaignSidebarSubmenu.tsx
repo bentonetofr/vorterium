@@ -19,9 +19,7 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
   // Cadernos dos jogadores (ex.: "Anotações da Bruna") — só o mestre vê.
   const notebooks = useCampaignNotebookAuthors(campaignId, campaign?.id === campaignId && campaign.role === 'master')
   const notebookLabel = notebooks.length === 1 ? notebooks[0].title : 'Anotações dos jogadores'
-  return (
-    <div className="campaign-submenu anim-stagger">
-      {CAMPAIGN_SECTIONS.map((section) => (
+  const renderSection = (section: (typeof CAMPAIGN_SECTIONS)[number]) => (
         <NavLink
           key={section.id}
           to={`/campanhas/${campaignId}/${section.id}`}
@@ -43,7 +41,10 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
             </span>
           )}
         </NavLink>
-      ))}
+  )
+  return (
+    <div className="campaign-submenu anim-stagger">
+      {CAMPAIGN_SECTIONS.filter((s) => s.id !== 'configuracoes').map(renderSection)}
       {notebooks.length > 0 && (
         <NavLink
           to={`/campanhas/${campaignId}/anotacoes`}
@@ -53,6 +54,8 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
           <span className="campaign-submenu__label">{notebookLabel}</span>
         </NavLink>
       )}
+      {/* Configurações sempre por último, depois das anotações dos jogadores. */}
+      {CAMPAIGN_SECTIONS.filter((s) => s.id === 'configuracoes').map(renderSection)}
     </div>
   )
 }

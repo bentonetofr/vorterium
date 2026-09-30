@@ -6,7 +6,7 @@ Plataforma web para gerenciamento de campanhas de RPG de mesa.
 
 Vorterium permite que mestres criem campanhas, adicionem jogadores, gerenciem fichas simples de personagem e registrem rolagens de dados — tudo persistido em banco de dados real via Supabase.
 
-> **Nota sobre tempo real:** o MVP evita Supabase Realtime pra economizar recursos — a maioria das listas e painéis usa polling. Três exceções, onde o atraso do polling era perceptível demais: o **chat da campanha** (mensagens aparecem na hora), o **pop-up de notificação de rolagem de dado** e o **histórico "Recentes" no painel de dados** (ambos disparam na hora, sem esperar o próximo ciclo de polling).
+> **Nota sobre tempo real:** o site usa Supabase Realtime nas partes em que o atraso atrapalharia a mesa: chat, rolagens e notificações, atividade, iniciativa, fichas, Mesa ao vivo, Quadro da campanha e caderno de anotações. Canais que só escutam o banco usam `uniqueChannel()` (`src/shared/lib/supabase.ts`) pra não colidirem quando duas telas escutam a mesma coisa.
 
 ---
 

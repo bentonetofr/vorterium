@@ -26,12 +26,13 @@ export function PrivacidadePage() {
           <li><strong>Campanhas:</strong> nome e configurações das campanhas criadas.</li>
           <li><strong>Membros:</strong> e-mails e papéis (mestre/jogador) vinculados às campanhas.</li>
           <li><strong>Fichas:</strong> dados inseridos nas fichas de personagem (nome, atributos, inventário, anotações e demais campos).</li>
-          <li><strong>Conteúdo da campanha:</strong> sessões, notas, criaturas do bestiário, ordem de iniciativa e o registro de atividades.</li>
+          <li><strong>Conteúdo da campanha:</strong> episódios, notas, o quadro da campanha (as fotos postas nele ficam na Galeria da campanha, e os PDFs e textos, na Biblioteca), criaturas do bestiário, ordem de iniciativa e o registro de atividades.</li>
           <li><strong>Meu bestiário:</strong> criaturas que você guarda fora das campanhas (só você vê).</li>
           <li><strong>Feedback:</strong> o que você escreve na página Enviar feedback, a página indicada, a versão do site, o navegador usado e o print, se você anexar um. Só você e quem administra o site veem.</li>
           <li><strong>Mensagens:</strong> mensagens do chat da mesa e mensagens privadas entre membros.</li>
-          <li><strong>Imagens:</strong> foto de perfil, capa da campanha, retratos e imagens de runas das fichas e imagens da galeria da Mesa.</li>
-          <li><strong>Documentos da campanha:</strong> os arquivos (PDF, imagem ou texto) que o mestre guarda na Biblioteca. Só os membros da campanha leem, e os que o mestre esconder, só ele.</li>
+          <li><strong>Imagens:</strong> foto de perfil, capa da campanha, retratos e imagens de runas das fichas, imagens da galeria da Mesa e fotos postas no Quadro.</li>
+          <li><strong>Documentos da campanha:</strong> os arquivos (PDF, imagem ou texto) guardados na Biblioteca pelo mestre ou postos no Quadro pelos membros. Só os membros da campanha leem, e os que o mestre esconder, só ele.</li>
+          <li><strong>Caderno de anotações:</strong> pra quem tem o caderno ligado, as anotações por episódio e as imagens postas nelas. Só quem escreve e os mestres da campanha leem.</li>
           <li><strong>Rolagens:</strong> resultados de rolagens de dados registrados no sistema.</li>
           <li><strong>Presença:</strong> o horário em que você esteve ativo por último em cada campanha.</li>
         </ul>

@@ -65,7 +65,7 @@ const TABS = [
   { id: 'rolagens',   label: 'Rolagens' },
   { id: 'fichas',     label: 'Fichas' },
   { id: 'atividade',  label: 'Atividade' },
-  { id: 'sessoes',    label: 'Sessões' },
+  { id: 'sessoes',    label: 'Episódios' },
   { id: 'anotacoes',  label: 'Anotações' },
   { id: 'arquivos',   label: 'Arquivos' },
   { id: 'dados',      label: 'Dados da campanha' },

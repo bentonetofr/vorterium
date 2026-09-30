@@ -12,6 +12,7 @@ import {
 } from '../services/notebookService'
 import { NoteEditor, type SaveStatus } from './NoteEditor'
 import { QuillIcon } from './NotebookFab'
+import { NoteImages } from './NoteImages'
 import './Notebook.css'
 
 // ────────────────────────────────────────────────────────
@@ -64,18 +65,18 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const groups = useMemo(() => {
     const count = new Map<string, number>()
     for (const n of notes) {
-      if (!n.content.trim()) continue
+      if (!n.content.trim() && n.images.length === 0) continue
       const k = n.session_id ?? NO_SESSION
       count.set(k, (count.get(k) ?? 0) + 1)
     }
     const list = sessions.filter((s) => count.has(s.id)).map((s) => ({ key: s.id, label: sessionLabel(s), count: count.get(s.id)! }))
     // Sessão apagada depois: as notas ficam "sem sessão" (a coluna vira null).
-    if (count.has(NO_SESSION)) list.push({ key: NO_SESSION, label: 'Sem sessão definida', count: count.get(NO_SESSION)! })
+    if (count.has(NO_SESSION)) list.push({ key: NO_SESSION, label: 'Sem episódio definido', count: count.get(NO_SESSION)! })
     return list
   }, [notes, sessions])
 
   const selected = picked && groups.some((g) => g.key === picked) ? picked : groups[0]?.key ?? null
-  const visible = notes.filter((n) => n.content.trim() && (n.session_id ?? NO_SESSION) === selected)
+  const visible = notes.filter((n) => (n.content.trim() || n.images.length > 0) && (n.session_id ?? NO_SESSION) === selected)
   const author = authors.find((a) => a.userId === authorId) ?? null
   const selectedLabel = groups.find((g) => g.key === selected)?.label ?? ''
 
@@ -120,7 +121,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
         </div>
       ) : (
         <div className="player-notes__body">
-          <nav className="player-notes__sessions" aria-label="Sessões">
+          <nav className="player-notes__sessions" aria-label="Episódios">
             {groups.map((g) => (
               <button key={g.key} type="button"
                 className={`player-notes__session${g.key === selected ? ' player-notes__session--on' : ''}`}
@@ -157,8 +158,9 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
                     onStatus={setStatus}
                   />
                 ) : (
-                  <p className="player-note__text">{n.content}</p>
+                  n.content.trim() && <p className="player-note__text">{n.content}</p>
                 )}
+                <NoteImages images={n.images} size="lg" />
               </article>
             ))}
           </div>

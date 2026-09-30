@@ -1,4 +1,4 @@
-import { supabase } from '../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import type { CampaignActivity, CampaignPresenceRecord } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export function subscribeToCampaignActivity(
   },
 ): () => void {
   const channel = supabase
-    .channel(`campaign_activity:${campaignId}`)
+    .channel(uniqueChannel(`campaign_activity:${campaignId}`))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'campaign_activity', filter: `campaign_id=eq.${campaignId}` },
@@ -447,7 +447,7 @@ export function subscribeToNewRollsGlobally(
   onRoll: (rollId: string) => void,
 ): () => void {
   const channel = supabase
-    .channel('global-dice-notifications')
+    .channel(uniqueChannel('global-dice-notifications'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'dice_rolls' },
@@ -495,7 +495,7 @@ export function subscribeToNewMessagesGlobally(
   onMessage: (messageId: string, campaignId: string) => void,
 ): () => void {
   const channel = supabase
-    .channel('global-chat-notifications')
+    .channel(uniqueChannel('global-chat-notifications'))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'campaign_messages' },

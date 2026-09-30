@@ -27,8 +27,9 @@ export function SobrePage() {
           <li><strong>Fichas:</strong> ficha completa de Altherium (atributos, domínios, inventário, triunfos, retrato), ficha de Terra Devastada (características, condições, testes de pares, cenas de horror e Convicção) ou ficha simples no sistema Genérico.</li>
           <li><strong>Mesa ao vivo:</strong> o mestre transmite a tela com som, mostra imagens da galeria, aponta lugares e pausa a cena.</li>
           <li><strong>Dados, chat e iniciativa:</strong> rolagens com histórico, chat da mesa com mensagens privadas e ordem de combate.</li>
-          <li><strong>Ferramentas do mestre:</strong> bestiário com inimigos calculados pelas fichas do grupo, criaturas direto na iniciativa, sessões e notas.</li>
-          <li><strong>Ferramentas do menu:</strong> Biblioteca com os livros e documentos de cada campanha, Meu bestiário pra levar criaturas entre campanhas, Galeria com as imagens da Mesa, Novidades, Ajuda e Enviar feedback.</li>
+          <li><strong>Quadro da campanha:</strong> um quadro infinito que a mesa monta junta e em tempo real (post-its, formas, setas, desenho, molduras, linhas do tempo e fotos), com um Escudo só do mestre.</li>
+          <li><strong>Ferramentas do mestre:</strong> bestiário com inimigos calculados pelas fichas do grupo, criaturas direto na iniciativa, episódios e notas.</li>
+          <li><strong>Ferramentas do menu:</strong> Biblioteca com os livros e documentos de cada campanha, Meu bestiário pra levar criaturas entre campanhas, Galeria com as imagens da Mesa e as fotos do Quadro, Novidades, Ajuda e Enviar feedback.</li>
           <li><strong>Autenticação:</strong> login com e-mail e senha ou via conta Google.</li>
         </ul>
       </section>
