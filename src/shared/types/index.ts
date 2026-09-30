@@ -294,6 +294,8 @@ export interface AltheriumDomainPoints {
   points:    number
   /** Caixinha "+": um dado a mais no teste do domínio. */
   bonus_die?: boolean
+  /** O jogador escolheu um número/"+": sem a desvantagem automática do atributo em 0. */
+  no_auto_disadvantage?: boolean
 }
 
 /** Item do inventário de uma ficha Altherium — referencia o catálogo fixo

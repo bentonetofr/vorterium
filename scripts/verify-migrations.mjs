@@ -71,6 +71,7 @@ const expectedMigrations = [
   '20240167000000_board_images_gallery.sql',
   '20240168000000_player_notes_rich_text.sql',
   '20240169000000_altherium_domain_bonus_disadvantage.sql',
+  '20240170000000_altherium_domain_disadvantage_override.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

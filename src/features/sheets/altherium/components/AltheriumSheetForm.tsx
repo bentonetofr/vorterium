@@ -65,8 +65,9 @@ interface AltheriumSheetFormProps {
   ownerName?:               string
   /** Chamado pelo salvamento automático — deve lançar erro se falhar. */
   onSave:                   (data: AltheriumSheetUpdate) => Promise<void>
-  /** bonusDie = o "+" depois do 2 (2 pontos + 1d10 extra = 4d10). */
-  onDomainChange:           (domain: string, points: number, bonusDie?: boolean) => Promise<void>
+  /** bonusDie = o "+" depois do 2 (2 pontos + 1d10 extra = 4d10);
+   *  noAutoDisadvantage = o jogador escolheu: sem a desvantagem do atributo em 0. */
+  onDomainChange:           (domain: string, points: number, bonusDie?: boolean, noAutoDisadvantage?: boolean) => Promise<void>
   onPortraitChange:         (file: File) => Promise<void>
   onPortraitRemove:         () => Promise<void>
   portraitBusy:             boolean
@@ -492,6 +493,7 @@ export function AltheriumSheetForm({
     .map((id) => DOMAINS.find((d) => d.id === id)?.label ?? id)
   const domainMap    = new Map(domains.map((d) => [d.domain, d.points]))
   const bonusMap     = new Map(domains.map((d) => [d.domain, !!d.bonus_die]))
+  const chosenMap    = new Map(domains.map((d) => [d.domain, !!d.no_auto_disadvantage]))
   // -1 (desvantagem) e o "+" não gastam ponto de domínio.
   const domainsUsed  = domains.reduce((sum, d) => sum + Math.max(0, d.points), 0)
   // Atributo zerado dá desvantagem nos domínios dele — numa ficha em branco
@@ -866,7 +868,8 @@ export function AltheriumSheetForm({
             const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
             const fromGenesis = genesisBonusFor(form.genesis, d.id)
             const bonusDie  = bonusMap.get(d.id) ?? false
-            const disadv    = domainDisadvantage(points, attrValue(d.attribute))
+            // Atributo em 0 = desvantagem por padrão; clicar num número/"+" tira.
+            const disadv    = domainDisadvantage(points, chosenMap.get(d.id) ? null : attrValue(d.attribute))
             return (
               <div
                 key={d.id}
@@ -902,10 +905,10 @@ export function AltheriumSheetForm({
                         key={n}
                         type="button"
                         className={`alth-domains__pt${n < 0 ? ' alth-domains__pt--disadv' : ''}${on ? ' alth-domains__pt--active' : ''}${auto ? ' alth-domains__pt--auto' : ''}`}
-                        onClick={() => onDomainChange(d.id, n, false)}
+                        onClick={() => onDomainChange(d.id, n, false, n >= 0)}
                         aria-label={n < 0 ? `Desvantagem em ${d.label}` : `${n} ponto(s) em ${d.label}`}
                         aria-pressed={on}
-                        title={n < 0 ? (auto ? `Desvantagem automática: ${attrLabel} está em 0` : 'Desvantagem (1d de desvantagem)') : undefined}
+                        title={n < 0 ? (auto ? `Desvantagem automática: ${attrLabel} está em 0 (clique num número pra tirar)` : 'Desvantagem (1d de desvantagem)') : undefined}
                       >
                         {n < 0 ? '−1' : n}
                       </button>
@@ -914,7 +917,7 @@ export function AltheriumSheetForm({
                   <button
                     type="button"
                     className={`alth-domains__pt alth-domains__pt--bonus${bonusDie ? ' alth-domains__pt--active' : ''}`}
-                    onClick={() => onDomainChange(d.id, 2, !bonusDie)}
+                    onClick={() => onDomainChange(d.id, 2, !bonusDie, true)}
                     aria-label={`+1d10 extra em ${d.label} (2 pontos + 1d10 = 4d10)`}
                     aria-pressed={bonusDie}
                     title="+1d10 extra: acende o 0, o 1 e o 2 e soma mais um dado (4d10)"
@@ -928,7 +931,7 @@ export function AltheriumSheetForm({
         </div>
         <p className="alth-hint">
           Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "+", depois do 2, soma mais 1d10 (4d10) sem gastar ponto.
-          O −1 marca desvantagem (1d de desvantagem) — e um atributo em 0 já deixa os domínios dele com desvantagem.
+          O −1 marca desvantagem (1d de desvantagem). Um atributo em 0 deixa os domínios dele com desvantagem por padrão; clicar num número tira.
           Alterações aqui salvam na hora.
           {genesisDomains.length > 0 && (
             <> ✦ Gênesis {genesisLabel}: +1d10 em {genesisDomains.join(' e ')} (já somado nos dados).</>

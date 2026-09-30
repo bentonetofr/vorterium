@@ -106,10 +106,10 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
     }
   }
 
-  async function handleDomainChange(domain: string, points: number, bonusDie = false) {
+  async function handleDomainChange(domain: string, points: number, bonusDie = false, noAutoDisadvantage = false) {
     setSaveError(null)
     try {
-      await setAltheriumDomainPoints(sheet.id, domain, points, bonusDie)
+      await setAltheriumDomainPoints(sheet.id, domain, points, bonusDie, noAutoDisadvantage)
       loadDomains()
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Não foi possível salvar o domínio.')

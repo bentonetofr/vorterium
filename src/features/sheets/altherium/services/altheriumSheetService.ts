@@ -214,7 +214,7 @@ export function subscribeToCampaignAltheriumSheets(
 export async function getAltheriumDomains(sheetId: string): Promise<AltheriumDomainPoints[]> {
   const { data, error } = await supabase
     .from('altherium_character_domains')
-    .select('id, sheet_id, domain, points, bonus_die')
+    .select('id, sheet_id, domain, points, bonus_die, no_auto_disadvantage')
     .eq('sheet_id', sheetId)
 
   if (error) throw new Error('Não foi possível carregar os domínios.')
@@ -231,10 +231,14 @@ export async function setAltheriumDomainPoints(
   domain: string,
   points: number,
   bonusDie = false,
+  noAutoDisadvantage = false,
 ): Promise<void> {
   const { error } = await supabase
     .from('altherium_character_domains')
-    .upsert({ sheet_id: sheetId, domain, points, bonus_die: bonusDie }, { onConflict: 'sheet_id,domain' })
+    .upsert(
+      { sheet_id: sheetId, domain, points, bonus_die: bonusDie, no_auto_disadvantage: noAutoDisadvantage },
+      { onConflict: 'sheet_id,domain' },
+    )
 
   if (error) throw new Error('Não foi possível salvar o domínio.')
 }
