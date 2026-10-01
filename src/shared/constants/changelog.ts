@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.23',
+    date:    '2026-10-01',
+    title:   'Artes e referências e Documentos na Mesa',
+    items: [
+      'Mesa: a galeria virou "Artes e referências" e agora aparece pra todos da campanha — mestre e jogadores enviam imagens (retratos, mapas, artes) pra mostrar como referência, cada uma com o nome de quem enviou. Os jogadores clicam pra ver grande.',
+      'Mesa: nada entra na transmissão sozinho. Só o mestre põe uma imagem na mesa, clicando nela — inclusive as que os jogadores enviaram, que aparecem na hora pra ele com a marca "Nova". Cada um pode excluir o que enviou.',
+      'Artes e referências também vão pra Galeria da campanha, e dá pra colocá-las no Quadro: pelo botão ▦ em cada arte na aba Mesa (vai pro quadro Geral, ao lado do que já tem lá) ou pelo novo botão "Artes e referências" na barra do Quadro (tecla G), que coloca a arte no meio da tela.',
+      'Mesa (Altherium): nova seção Documentos. O mestre escreve cartas e livros em papel antigo, com letra à mão — 16 papéis (fotos reais de papel antigo e pergaminho, e papéis manchados de chá, café, mofo, cinzas, couro, sangue…), efeitos que se combinam (bordas queimadas leves ou fortes, rasgos, dobras, manchas), 7 cores de tinta e dezenas de letras manuscritas e caligráficas.',
+      'Mesa (Altherium): o livro tem capa de couro com título dourado e as páginas viram em 3D — dá pra folhear com as setas, clicando na página ou pelas teclas ← →. Cada página pode ter o seu próprio papel e a sua própria letra.',
+      'Mesa (Altherium): documentos nascem escondidos. O mestre libera quando os jogadores encontram, ou põe na transmissão — e, num livro, a página que o mestre vira, vira pra todos.',
+    ],
+  },
+  {
     version: '1.22',
     date:    '2026-10-01',
     title:   'Árvore genealógica e alinhamento de texto no Quadro',

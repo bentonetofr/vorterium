@@ -4,6 +4,7 @@ import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { captureErrorMessage } from './mesaRtc'
 import { EMPTY_SNAPSHOT, MesaSession, type MesaSnapshot } from './mesaSession'
 import { getMesaImageShowUrl } from './services/mesaImagesService'
+import { setDocumentVisible } from './documents/documentsService'
 
 // ────────────────────────────────────────────────────────
 // Transmissão da Mesa no nível do layout: a conexão vive enquanto a pessoa
@@ -29,6 +30,11 @@ interface MesaStreamValue extends MesaSnapshot {
   /** Coloca uma imagem da galeria na mesa (gera o link pros jogadores). */
   showImage:    (image: { id: string; path: string; name: string }) => Promise<void>
   hideImage:    () => void
+  /** Põe um documento na mesa (e libera pros jogadores, se ainda estava escondido). */
+  showDocument: (doc: { id: string; title: string; visible: boolean }) => Promise<void>
+  hideDocument: () => void
+  /** Livro na mesa: muda a página aberta pra todos. */
+  setDocumentPage: (page: number) => void
   /** Ponteiro: x/y de 0 a 1 dentro da imagem. */
   ping:         (x: number, y: number) => void
   // Jogador
@@ -129,6 +135,16 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     session.showImage({ id: image.id, url, name: image.name })
   }, [])
 
+  const showDocument = useCallback(async (doc: { id: string; title: string; visible: boolean }) => {
+    const session = sessionRef.current
+    if (!session) return
+    // Na mesa, todos veem: o documento é liberado antes.
+    if (!doc.visible) await setDocumentVisible(doc.id, true)
+    session.showDocument({ id: doc.id, title: doc.title, page: 0 })
+  }, [])
+  const hideDocument    = useCallback(() => sessionRef.current?.hideDocument(), [])
+  const setDocumentPage = useCallback((page: number) => sessionRef.current?.setDocumentPage(page), [])
+
   const stopShare = useCallback(() => sessionRef.current?.stopShare(), [])
   const setPaused = useCallback((paused: boolean) => { void sessionRef.current?.setPaused(paused) }, [])
   const hideImage = useCallback(() => sessionRef.current?.hideImage(), [])
@@ -182,6 +198,9 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     setPaused,
     showImage,
     hideImage,
+    showDocument,
+    hideDocument,
+    setDocumentPage,
     ping,
     volume,
     setVolume,

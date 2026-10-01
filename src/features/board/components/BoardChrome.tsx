@@ -3,6 +3,7 @@ import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import {
   documentKind, getThumbUrls, listCampaignDocuments, DOCUMENT_ACCEPT, type CampaignDocument,
 } from '../../library/services/campaignDocumentsService'
+import { listMesaArts, type MesaArt } from '../../mesa/services/mesaImagesService'
 import type { BoardItem, ShapeType, TimelineEvent } from '../services/boardService'
 import {
   INK_COLORS, NOTE_COLORS, OUTLINE, SHAPE_COLORS, SHAPE_LABEL, curvePoints, inkColor, newId,
@@ -57,6 +58,7 @@ export const Icons = {
   align_left:   <Icon size={18}><path d="M4 6h16M4 10h10M4 14h16M4 18h10" /></Icon>,
   align_center: <Icon size={18}><path d="M4 6h16M7 10h10M4 14h16M7 18h10" /></Icon>,
   align_right:  <Icon size={18}><path d="M4 6h16M10 10h10M4 14h16M10 18h10" /></Icon>,
+  arts:      <Icon><rect x="3" y="4" width="18" height="14" rx="2" /><path d="M3 14l5-5 4 4 3-3 6 6" /><circle cx="16" cy="8.5" r="1.5" /><path d="M8 21h8" /></Icon>,
   elbow:     <Icon size={18}><path d="M6 4v6h12v10" /><circle cx="6" cy="4" r="1.5" fill="currentColor" /><circle cx="18" cy="20" r="1.5" fill="currentColor" /></Icon>,
   sharp:     <Icon size={18}><path d="M4 18l6-10 5 7 5-9" /></Icon>,
   round:     <Icon size={18}><path d="M4 18c2-6 4-10 6-10s3 7 5 7 3-6 5-9" /></Icon>,
@@ -96,6 +98,8 @@ interface ToolbarProps {
   onPen:     (p: PenSettings) => void
   onUpload:  () => void
   onLibrary: () => void
+  /** Abre as artes e referências da campanha (aba Mesa). */
+  onArts:    () => void
   canUndo:   boolean
   canRedo:   boolean
   onUndo:    () => void
@@ -125,6 +129,9 @@ export function BoardToolbar(p: ToolbarProps) {
         </button>
         <button type="button" className="board-tool" onClick={p.onLibrary} title="Da Biblioteca da campanha (B)" aria-label="Da Biblioteca">
           {Icons.library}
+        </button>
+        <button type="button" className="board-tool" onClick={p.onArts} title="Artes e referências (G)" aria-label="Artes e referências">
+          {Icons.arts}
         </button>
       </div>
       <div className="board-toolbar__group">
@@ -534,6 +541,62 @@ export function LibraryPicker({ campaignId, onPick, onUpload, onClose }: Library
   )
 }
 
+// ── Escolher das Artes e referências ────────────────────
+
+interface ArtsPickerProps {
+  campaignId: string
+  onPick:     (art: MesaArt) => void
+  onClose:    () => void
+}
+
+/** As artes e referências da aba Mesa (de todos da campanha): clicar põe no quadro. */
+export function ArtsPicker({ campaignId, onPick, onClose }: ArtsPickerProps) {
+  const [arts, setArts] = useState<MesaArt[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    listMesaArts(campaignId)
+      .then((list) => { if (alive) setArts(list) })
+      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'Não foi possível carregar as artes e referências.') })
+    return () => { alive = false }
+  }, [campaignId])
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="board-modal board-modal--wide" role="dialog" aria-modal="true" aria-labelledby="board-arts-title">
+        <header className="board-modal__head">
+          <h3 id="board-arts-title" className="board-modal__title">Artes e referências</h3>
+          <button type="button" className="board-modal__close" onClick={onClose} aria-label="Fechar">✕</button>
+        </header>
+        <div className="board-modal__body">
+          {error && <p className="board-modal__error" role="alert">{error}</p>}
+          {!arts && !error && <div className="board-modal__loading"><div className="spinner spinner--sm" /></div>}
+          {arts && arts.length === 0 && (
+            <p className="board-modal__hint">Ainda não há artes nem referências. Envie imagens na aba Mesa da Sessão.</p>
+          )}
+          {arts && arts.length > 0 && (
+            <div className="board-lib-grid">
+              {arts.map((a) => (
+                <button key={a.id} type="button" className="board-lib-card" onClick={() => onPick(a)} title={a.name}>
+                  <span className="board-lib-card__thumb">
+                    {a.url ? <img src={a.url} alt="" loading="lazy" /> : <span className="board-file__icon">IMG</span>}
+                  </span>
+                  <span className="board-lib-card__name">{a.name}</span>
+                  {a.uploader_name && <span className="board-lib-card__by">por {a.uploader_name}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <footer className="board-modal__foot">
+          <span className="board-modal__hint">Clique pra colocar no quadro. As artes são enviadas na aba Mesa da Sessão.</span>
+        </footer>
+      </div>
+    </ModalOverlay>
+  )
+}
+
 // ── Imagem ampliada ─────────────────────────────────────
 
 export function ImageLightbox({ url, name, openLabel, onOpenLibrary, onClose }: { url: string; name: string; openLabel: string | null; onOpenLibrary: () => void; onClose: () => void }) {
@@ -558,7 +621,7 @@ const SHORTCUTS: [string, string][] = [
   ['Zoom', 'Roda do mouse ou pinça; Ctrl + roda no trackpad'],
   ['Selecionar vários', 'Shift + clique, ou arrastar uma área'],
   ['Editar texto', 'Duplo clique (Esc termina)'],
-  ['Ferramentas', 'V selecionar · H mão · N post-it · T texto · S forma · L seta · P caneta · F moldura · Y linha do tempo · B biblioteca'],
+  ['Ferramentas', 'V selecionar · H mão · N post-it · T texto · S forma · L seta · P caneta · F moldura · Y linha do tempo · B biblioteca · G artes e referências'],
   ['Desfazer / refazer', 'Ctrl+Z · Ctrl+Shift+Z'],
   ['Copiar, colar, duplicar', 'Ctrl+C · Ctrl+V · Ctrl+D'],
   ['Apagar', 'Delete ou Backspace'],

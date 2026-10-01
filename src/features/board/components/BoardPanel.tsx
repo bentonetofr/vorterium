@@ -6,7 +6,7 @@ import { documentKind, uploadDocument, uploadShieldFile, type CampaignDocument }
 import { signBoardPhotos, uploadBoardPhoto, type BoardPhoto } from '../../mesa/services/mesaImagesService'
 import type { CampaignWithRole } from '../../../shared/types'
 import {
-  connectBoard, deleteBoardItems, listBoardItems, peerColor, saveBoardItems, signBoardPaths,
+  connectBoard, deleteBoardItems, imageSize, listBoardItems, peerColor, saveBoardItems, signBoardPaths,
   type BoardConnection, type BoardId, type BoardItem, type BoardKind, type BoardPeer, type CursorMessage, type Endpoint, type ShapeType,
 } from '../services/boardService'
 import {
@@ -16,7 +16,7 @@ import {
 } from '../boardGeometry'
 import { BoardItemView, ConnectorLabel, ConnectorView, setEditCaret, strokePath } from './BoardItemView'
 import {
-  BOARD_ACCEPT, BoardContextBar, BoardHelp, BoardToolbar, BoardZoomBar, Icons, ImageLightbox, LibraryPicker, TimelineEditor,
+  ArtsPicker, BOARD_ACCEPT, BoardContextBar, BoardHelp, BoardToolbar, BoardZoomBar, Icons, ImageLightbox, LibraryPicker, TimelineEditor,
   type PenSettings, type Tool,
 } from './BoardChrome'
 import { BoardFontPanel } from './BoardFontPanel'
@@ -214,6 +214,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   const [panning, setPanning]   = useState(false)
   const [help, setHelp]         = useState(false)
   const [picker, setPicker]     = useState(false)
+  const [artsOpen, setArtsOpen] = useState(false)
   const [fontsOpen, setFontsOpen] = useState(false)
   const [timelineId, setTimelineId] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<{ url: string; name: string; data: BoardItem['data'] } | null>(null)
@@ -1385,6 +1386,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       const map: Record<string, Tool> = { v: 'select', h: 'hand', n: 'note', t: 'text', s: 'shape', l: 'connector', p: 'pen', f: 'frame', y: 'timeline' }
       if (map[k]) { setTool(map[k]); return }
       if (k === 'b') setPicker(true)
+      if (k === 'g') setArtsOpen(true)
     }
     function onKeyUp(e: KeyboardEvent) {
       if (e.key === ' ' && spaceDown.current) { spaceDown.current = false; redraw() }
@@ -1721,6 +1723,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
           onPen={setPen}
           onUpload={() => { uploadAt.current = null; fileRef.current?.click() }}
           onLibrary={() => setPicker(true)}
+          onArts={() => setArtsOpen(true)}
           canUndo={history.current.undo.length > 0}
           canRedo={history.current.redo.length > 0}
           onUndo={undo}
@@ -1769,6 +1772,25 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
             const it = itemsRef.current[timelineItem.id]
             if (it) commit({ [it.id]: withData(it, { events }) })
             setTimelineId(null)
+          }}
+        />
+      )}
+      {artsOpen && (
+        <ArtsPicker
+          campaignId={campaign.id}
+          onClose={() => setArtsOpen(false)}
+          onPick={(art) => {
+            setArtsOpen(false)
+            const at = viewCenter()
+            void imageSize(art.url).then((size) => {
+              if (art.url) setUrls((prev) => new Map(prev).set(art.path, art.url!))
+              const scale = Math.min(1, 480 / Math.max(size.w, size.h, 1))
+              const w = Math.round(size.w * scale), h = Math.round(size.h * scale)
+              const it = blank('image', at.x - w / 2, at.y - h / 2, w, h, { path: art.path, name: art.name, store: 'gallery' })
+              commit({ [it.id]: it }, { [it.id]: null })
+              setToolState('select')
+              setSelection([it.id])
+            })
           }}
         />
       )}

@@ -1,4 +1,4 @@
-import { supabase } from '../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 
 // ────────────────────────────────────────────────────────
 // Galeria — imagens que o mestre guarda pra mostrar à mesa (e as fotos do
@@ -245,4 +245,72 @@ export async function signBoardPhotos(paths: string[]): Promise<Map<string, stri
     }
   }
   return out
+}
+
+// ────────────────────────────────────────────────────────
+// Artes e referências (aba Mesa) — mestre e jogadores enviam imagens pra
+// mostrar como referência (pasta "<campanha>/arte/"). Todos veem; ninguém
+// vai pra transmissão sozinho: só o mestre põe uma imagem na mesa. Entram
+// também as imagens antigas da galeria da Mesa (na raiz da pasta); as fotos
+// do Quadro e do Escudo ficam de fora.
+// ────────────────────────────────────────────────────────
+
+export interface MesaArt extends MesaGalleryImage {
+  uploaded_by:   string | null
+  uploader_name: string | null
+}
+
+type ArtRow = Omit<MesaGalleryImage, 'url'> & { uploaded_by: string | null; uploader: { display_name: string | null } | null }
+
+async function withUrls(rows: ArtRow[]): Promise<MesaArt[]> {
+  if (rows.length === 0) return []
+  const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(rows.map((r) => r.path), THUMB_URL_SECONDS)
+  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
+  return rows.map(({ uploader, ...r }) => ({ ...r, uploader_name: uploader?.display_name ?? null, url: urlByPath.get(r.path) ?? null }))
+}
+
+const ART_COLUMNS = 'id, campaign_id, name, path, created_at, uploaded_by, uploader:profiles(display_name)'
+
+export async function listMesaArts(campaignId: string): Promise<MesaArt[]> {
+  const { data, error } = await supabase
+    .from('campaign_mesa_images')
+    .select(ART_COLUMNS)
+    .eq('campaign_id', campaignId)
+    .not('path', 'like', '%/quadro/%')
+    .not('path', 'like', '%/quadro-mestre/%')
+    .order('created_at', { ascending: false })
+  if (error) throw new Error('Não foi possível carregar as artes e referências.')
+  return withUrls((data ?? []) as unknown as ArtRow[])
+}
+
+export async function uploadMesaArt(campaignId: string, file: File): Promise<MesaArt> {
+  if (!file.type.startsWith('image/')) throw new Error(`"${file.name}" não é uma imagem.`)
+  if (file.size > 40 * 1024 * 1024) throw new Error(`"${file.name}" passa de 40 MB.`)
+  const img = await fitForGallery(file)
+  const path = `${campaignId}/arte/${crypto.randomUUID()}.${EXTENSIONS[img.type] ?? 'img'}`
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, img.blob, { contentType: img.type, cacheControl: '3600' })
+  if (uploadError) {
+    console.error('Erro do Storage ao enviar arte/referência:', uploadError)
+    throw new Error(`Não foi possível enviar "${file.name}".`)
+  }
+  const { data, error } = await supabase
+    .from('campaign_mesa_images')
+    .insert({ campaign_id: campaignId, name: nameFromFile(file), path })
+    .select(ART_COLUMNS)
+    .single()
+  if (error || !data) {
+    await supabase.storage.from(BUCKET).remove([path])
+    throw new Error(`Não foi possível guardar "${file.name}".`)
+  }
+  const [art] = await withUrls([data as unknown as ArtRow])
+  return art
+}
+
+/** Artes chegando/saindo em tempo real (o mestre vê na hora o que um jogador enviou). */
+export function subscribeMesaArts(campaignId: string, onChange: () => void): () => void {
+  const channel = supabase
+    .channel(uniqueChannel(`mesa-artes:${campaignId}`))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_mesa_images', filter: `campaign_id=eq.${campaignId}` }, () => onChange())
+    .subscribe()
+  return () => { void supabase.removeChannel(channel) }
 }

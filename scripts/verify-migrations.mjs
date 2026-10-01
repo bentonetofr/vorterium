@@ -74,6 +74,8 @@ const expectedMigrations = [
   '20240170000000_altherium_domain_disadvantage_override.sql',
   '20240171000000_board_shield_stays_on_board.sql',
   '20240172000000_gallery_for_everyone.sql',
+  '20240173000000_mesa_arts_and_references.sql',
+  '20240174000000_mesa_documents.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

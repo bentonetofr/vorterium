@@ -1,0 +1,15 @@
+Texturas de papel antigo — Documentos da Mesa (Vorterium)
+
+Todas vêm do Wikimedia Commons, livres pra qualquer uso. Foram reduzidas
+(900 px de largura; o pergaminho em 1024 px) e convertidas pra WebP.
+
+papel-antigo-1.webp  — "Old paper1.jpg"  — domínio público — https://commons.wikimedia.org/wiki/File:Old_paper1.jpg
+papel-antigo-2.webp  — "Old paper2.jpg"  — domínio público — https://commons.wikimedia.org/wiki/File:Old_paper2.jpg
+papel-antigo-3.webp  — "Old paper3.jpg"  — domínio público — https://commons.wikimedia.org/wiki/File:Old_paper3.jpg
+papel-antigo-4.webp  — "Old paper4.jpg"  — domínio público — https://commons.wikimedia.org/wiki/File:Old_paper4.jpg
+papel-antigo-6.webp  — "Old paper6.jpg"  — domínio público — https://commons.wikimedia.org/wiki/File:Old_paper6.jpg
+papel-antigo-7.webp  — "Old paper7.jpg"  — domínio público — https://commons.wikimedia.org/wiki/File:Old_paper7.jpg
+pergaminho-1.webp    — "Pergament.1.jpg" — CC0 (Membeth) — https://commons.wikimedia.org/wiki/File:Pergament.1.jpg
+
+As outras texturas (pergaminho, chá, café, mofo, couro…) e os efeitos
+(queimado, rasgado, dobras, manchas) são gerados pelo próprio site.

@@ -253,6 +253,43 @@ export async function signBoardPaths(paths: string[]): Promise<Map<string, strin
   return out
 }
 
+/**
+ * Põe uma imagem da Galeria (ex.: uma arte/referência da aba Mesa) no quadro
+ * Geral, de fora do Quadro: à direita do que já tem lá, por cima de tudo.
+ */
+export async function addGalleryImageToBoard(
+  campaignId: string,
+  image: { path: string; name: string },
+  size: { w: number; h: number },
+): Promise<void> {
+  const items = await listBoardItems(campaignId, 'geral')
+  const boxes = items.filter((i) => i.kind !== 'connector')
+  const scale = Math.min(1, 480 / Math.max(size.w, size.h, 1))
+  const w = Math.round(size.w * scale), h = Math.round(size.h * scale)
+  const item: BoardItem = {
+    id: crypto.randomUUID(), campaign_id: campaignId, board: 'geral', kind: 'image',
+    x: boxes.length ? Math.max(...boxes.map((i) => i.x + i.w)) + 80 : -w / 2,
+    y: boxes.length ? Math.min(...boxes.map((i) => i.y)) : -h / 2,
+    w, h, z: (items.length ? Math.max(...items.map((i) => i.z)) : 0) + 1,
+    data: { path: image.path, name: image.name, store: 'gallery' },
+    locked: false, created_by: null, updated_by: null, updated_at: new Date().toISOString(),
+  }
+  await saveBoardItems([item])
+}
+
+/** Tamanho de verdade de uma imagem (pra ela entrar no quadro sem deformar). */
+export async function imageSize(url: string | null): Promise<{ w: number; h: number }> {
+  if (!url) return { w: 400, h: 300 }
+  try {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+    return { w: img.naturalWidth || 400, h: img.naturalHeight || 300 }
+  } catch {
+    return { w: 400, h: 300 }
+  }
+}
+
 /** Cor de cada pessoa no quadro (cursor, bolinha de presença). */
 export function peerColor(userId: string): string {
   const palette = ['#f59e0b', '#38bdf8', '#f472b6', '#4ade80', '#a78bfa', '#fb7185', '#2dd4bf', '#facc15', '#60a5fa', '#fb923c']

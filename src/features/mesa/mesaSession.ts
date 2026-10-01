@@ -52,6 +52,14 @@ export interface MesaImage {
   name: string
 }
 
+/** Documento (carta ou livro) na mesa — e a página aberta, num livro. */
+export interface MesaDocRef {
+  id:    string
+  title: string
+  /** Abertura do livro (0 = capa); numa folha, sempre 0. */
+  page:  number
+}
+
 /** O que está na mesa agora — o mestre define e manda pra todos. */
 export interface MesaStage {
   /** Id da "sessão ao vivo" (tela ou imagem); null = nada na mesa. */
@@ -61,6 +69,8 @@ export interface MesaStage {
   paused:   boolean
   audio:    boolean
   image:    MesaImage | null
+  /** Documento na mesa (no lugar de imagem/tela). */
+  document: MesaDocRef | null
 }
 
 export interface MesaPing {
@@ -102,7 +112,7 @@ export interface MesaSnapshot {
   diag:         MesaDiag
 }
 
-export const EMPTY_STAGE: MesaStage = { liveId: null, screenId: null, paused: false, audio: false, image: null }
+export const EMPTY_STAGE: MesaStage = { liveId: null, screenId: null, paused: false, audio: false, image: null, document: null }
 
 const EMPTY_COUNTS: IceCounts = { host: 0, srflx: 0, relay: 0, prflx: 0 }
 
@@ -213,7 +223,7 @@ export class MesaSession {
   private update(patch: Partial<MesaSnapshot>) {
     if (this.disposed) return
     const next = { ...this.snap, ...patch }
-    next.live = Boolean(next.stage.screenId || next.stage.image)
+    next.live = Boolean(next.stage.screenId || next.stage.image || next.stage.document)
     this.snap = next
     this.opts.onChange(next)
   }
@@ -334,8 +344,8 @@ export class MesaSession {
   private setStage(patch: Partial<MesaStage>) {
     const prev = this.snap.stage
     const next: MesaStage = { ...prev, ...patch }
-    const wasLive = Boolean(prev.screenId || prev.image)
-    const isLive  = Boolean(next.screenId || next.image)
+    const wasLive = Boolean(prev.screenId || prev.image || prev.document)
+    const isLive  = Boolean(next.screenId || next.image || next.document)
     if (!wasLive && isLive) next.liveId = newId()
     if (!isLive) next.liveId = null
     this.update({ stage: next })
@@ -445,12 +455,31 @@ export class MesaSession {
 
   showImage(image: MesaImage): void {
     if (!this.opts.isMaster) return
-    this.setStage({ image })
+    this.setStage({ image, document: null })
   }
 
   hideImage(): void {
     if (!this.opts.isMaster) return
     this.setStage({ image: null })
+  }
+
+  // ── Mestre: documento ──────────────────────────────────
+
+  showDocument(doc: MesaDocRef): void {
+    if (!this.opts.isMaster) return
+    this.setStage({ document: doc, image: null })
+  }
+
+  hideDocument(): void {
+    if (!this.opts.isMaster) return
+    this.setStage({ document: null })
+  }
+
+  /** Virou a página do livro na mesa: vira pra todos. */
+  setDocumentPage(page: number): void {
+    const doc = this.snap.stage.document
+    if (!this.opts.isMaster || !doc || doc.page === page) return
+    this.setStage({ document: { ...doc, page } })
   }
 
   // ── Mestre: conexões ───────────────────────────────────
@@ -652,7 +681,9 @@ export class MesaSession {
     pc.close()
   }
 
-  private handleState(stage: MesaStage) {
+  private handleState(incoming: MesaStage) {
+    // Mestre com o site antigo não manda "document": vale como nenhum.
+    const stage: MesaStage = { ...incoming, document: incoming.document ?? null }
     const prev = this.snap.stage
     this.update({ stage })
     if (stage.screenId && stage.screenId !== prev.screenId) {

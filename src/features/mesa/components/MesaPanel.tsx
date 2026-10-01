@@ -2,7 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type Rea
 import { useMesaStream } from '../MesaStreamProvider'
 import { canShareScreen } from '../mesaRtc'
 import type { MesaDiag, MesaPing, MesaViewer, ViewerStatus } from '../mesaSession'
-import { MesaGallery } from './MesaGallery'
+import { MesaArts } from './MesaArts'
+import { DocumentStage, MesaDocuments } from '../documents/MesaDocuments'
+import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import './MesaPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -228,7 +230,8 @@ function MasterView({ campaignId }: { campaignId: string }) {
   const stream = mesa.localStream
   const { stage } = mesa
   const sharing = Boolean(stream)
-  const showing = Boolean(stage.image) || sharing
+  const showDoc = Boolean(stage.document)
+  const showing = Boolean(stage.image) || sharing || showDoc
   const canShare = canShareScreen()
   const watching = new Set(mesa.viewers.filter((v) => v.state === 'connected').map((v) => v.id.split(':')[0])).size
 
@@ -241,7 +244,20 @@ function MasterView({ campaignId }: { campaignId: string }) {
   return (
     <>
       <div ref={frameRef} className={`mesa-stage${showing ? ' mesa-stage--live' : ''}`}>
-        {showing ? (
+        {showDoc && stage.document ? (
+          <>
+            <DocumentStage campaignId={campaignId} docId={stage.document.id} page={stage.document.page} />
+            <span className="mesa-live-badge">Documento na mesa</span>
+            <div className="mesa-controls mesa-controls--corner">
+              <button type="button" className="mesa-ctrl mesa-ctrl--text" onClick={(e) => { e.stopPropagation(); mesa.hideDocument() }}>Tirar da mesa</button>
+              {fullscreen.supported && (
+                <button type="button" className="mesa-ctrl" onClick={(e) => { e.stopPropagation(); fullscreen.toggle() }} aria-label={fullscreen.active ? 'Sair da tela cheia' : 'Tela cheia'}>
+                  <IconFullscreen exit={fullscreen.active} />
+                </button>
+              )}
+            </div>
+          </>
+        ) : showing ? (
           <StageMedia stream={stage.image ? null : stream} imageUrl={stage.image?.url} pings={mesa.pings} onPoint={mesa.ping} frameRef={frameRef}>
             <span className="mesa-live-badge">{stage.image ? 'Imagem na mesa' : 'Ao vivo'}</span>
             {stage.paused && !stage.image && <span className="mesa-paused-badge">Pausada para os jogadores</span>}
@@ -257,8 +273,8 @@ function MasterView({ campaignId }: { campaignId: string }) {
           <MesaScene
             title="Transmita sua tela para os jogadores"
             text={canShare
-              ? 'Mapas, vídeos e música: o que estiver na tela escolhida aparece aqui para todos, com som. Ou mostre uma imagem da galeria abaixo.'
-              : 'Neste aparelho não dá para transmitir a tela (use o Chrome ou o Edge no computador). Você ainda pode mostrar imagens da galeria.'}
+              ? 'Mapas, vídeos e música: o que estiver na tela escolhida aparece aqui para todos, com som. Ou mostre uma das artes e referências abaixo.'
+              : 'Neste aparelho não dá para transmitir a tela (use o Chrome ou o Edge no computador). Você ainda pode mostrar as artes e referências abaixo.'}
             action={shareButton}
           />
         )}
@@ -319,92 +335,115 @@ function MasterView({ campaignId }: { campaignId: string }) {
         </ul>
       )}
 
-      <MesaGallery campaignId={campaignId} />
+      <MesaArts campaignId={campaignId} />
+      <DocumentsIfAltherium campaignId={campaignId} />
     </>
   )
 }
 
+/** Documentos em papel antigo — por enquanto só nas campanhas de Altherium. */
+function DocumentsIfAltherium({ campaignId }: { campaignId: string }) {
+  const { campaign } = useCurrentCampaign()
+  return campaign?.system === 'altherium' ? <MesaDocuments campaignId={campaignId} /> : null
+}
+
 // ── Jogador ──────────────────────────────────────────────
 
-function PlayerView() {
+function PlayerView({ campaignId }: { campaignId: string }) {
   const mesa = useMesaStream()
   const frameRef = useRef<HTMLDivElement>(null)
   const fullscreen = useFullscreen(frameRef)
   const { stage } = mesa
   const stream = mesa.remoteStream
-  const showImage = Boolean(stage.image)
-  const showVideo = !showImage && Boolean(stream) && Boolean(stage.screenId)
+  const showDoc = Boolean(stage.document)
+  const showImage = !showDoc && Boolean(stage.image)
+  const showVideo = !showDoc && !showImage && Boolean(stream) && Boolean(stage.screenId)
   const hasAudio = Boolean(stage.screenId) && stage.audio && Boolean(stream)
   const scene = SCENE_BY_STATUS[mesa.status]
 
   return (
-    <div ref={frameRef} className={`mesa-stage${showImage || showVideo ? ' mesa-stage--live' : ''}`}>
-      {showImage || showVideo ? (
-        <StageMedia stream={showVideo ? stream : null} imageUrl={showImage ? stage.image?.url : null} pings={mesa.pings} frameRef={frameRef}>
-          {showVideo && mesa.status === 'live' && !stage.paused && <span className="mesa-live-badge">Ao vivo</span>}
-
-          {showVideo && stage.paused && (
-            <div className="mesa-paused">
-              <span className="mesa-paused__sigil" aria-hidden="true">ᛉ</span>
-              <p className="mesa-paused__title">Mestre ajustando a cena…</p>
-            </div>
-          )}
-          {showVideo && mesa.status === 'reconnecting' && (
-            <div className="mesa-paused"><p className="mesa-paused__title">Reconectando…</p></div>
-          )}
-
-          {hasAudio && mesa.audioBlocked && (
-            <button type="button" className="mesa-unlock" onClick={mesa.unlockAudio}>
-              <IconSpeaker muted={false} />
-              Ativar som
-            </button>
-          )}
-
-          <div className="mesa-controls" onClick={(e) => e.stopPropagation()}>
-            {hasAudio ? (
-              <>
-                <button
-                  type="button"
-                  className="mesa-ctrl"
-                  onClick={() => mesa.setMuted(!mesa.muted)}
-                  aria-label={mesa.muted ? 'Ativar som' : 'Silenciar'}
-                  aria-pressed={mesa.muted}
-                >
-                  <IconSpeaker muted={mesa.muted || mesa.volume === 0} />
-                </button>
-                <input
-                  type="range"
-                  className="mesa-volume"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={mesa.muted ? 0 : mesa.volume}
-                  onChange={(e) => { mesa.setVolume(Number(e.target.value)); if (mesa.muted) mesa.setMuted(false) }}
-                  aria-label="Volume"
-                />
-              </>
-            ) : showVideo ? (
-              <span className="mesa-controls__note">Sem som</span>
-            ) : null}
-            <span className="mesa-controls__spacer" />
+    <>
+      <div ref={frameRef} className={`mesa-stage${showImage || showVideo || showDoc ? ' mesa-stage--live' : ''}`}>
+        {showDoc && stage.document ? (
+          <>
+            <DocumentStage campaignId={campaignId} docId={stage.document.id} page={stage.document.page} />
             {fullscreen.supported && (
-              <button type="button" className="mesa-ctrl" onClick={fullscreen.toggle} aria-label={fullscreen.active ? 'Sair da tela cheia' : 'Tela cheia'}>
-                <IconFullscreen exit={fullscreen.active} />
+              <div className="mesa-controls mesa-controls--corner">
+                <button type="button" className="mesa-ctrl" onClick={(e) => { e.stopPropagation(); fullscreen.toggle() }} aria-label={fullscreen.active ? 'Sair da tela cheia' : 'Tela cheia'}>
+                  <IconFullscreen exit={fullscreen.active} />
+                </button>
+              </div>
+            )}
+          </>
+        ) : showImage || showVideo ? (
+          <StageMedia stream={showVideo ? stream : null} imageUrl={showImage ? stage.image?.url : null} pings={mesa.pings} frameRef={frameRef}>
+            {showVideo && mesa.status === 'live' && !stage.paused && <span className="mesa-live-badge">Ao vivo</span>}
+
+            {showVideo && stage.paused && (
+              <div className="mesa-paused">
+                <span className="mesa-paused__sigil" aria-hidden="true">ᛉ</span>
+                <p className="mesa-paused__title">Mestre ajustando a cena…</p>
+              </div>
+            )}
+            {showVideo && mesa.status === 'reconnecting' && (
+              <div className="mesa-paused"><p className="mesa-paused__title">Reconectando…</p></div>
+            )}
+
+            {hasAudio && mesa.audioBlocked && (
+              <button type="button" className="mesa-unlock" onClick={mesa.unlockAudio}>
+                <IconSpeaker muted={false} />
+                Ativar som
               </button>
             )}
-          </div>
-        </StageMedia>
-      ) : (
-        <MesaScene
-          title={scene.title}
-          text={scene.text}
-          busy={scene.busy}
-          action={mesa.status === 'lost'
-            ? <button type="button" className="btn btn-primary mesa-scene__cta" onClick={mesa.retry}>Tentar de novo</button>
-            : undefined}
-        />
-      )}
-    </div>
+
+            <div className="mesa-controls" onClick={(e) => e.stopPropagation()}>
+              {hasAudio ? (
+                <>
+                  <button
+                    type="button"
+                    className="mesa-ctrl"
+                    onClick={() => mesa.setMuted(!mesa.muted)}
+                    aria-label={mesa.muted ? 'Ativar som' : 'Silenciar'}
+                    aria-pressed={mesa.muted}
+                  >
+                    <IconSpeaker muted={mesa.muted || mesa.volume === 0} />
+                  </button>
+                  <input
+                    type="range"
+                    className="mesa-volume"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={mesa.muted ? 0 : mesa.volume}
+                    onChange={(e) => { mesa.setVolume(Number(e.target.value)); if (mesa.muted) mesa.setMuted(false) }}
+                    aria-label="Volume"
+                  />
+                </>
+              ) : showVideo ? (
+                <span className="mesa-controls__note">Sem som</span>
+              ) : null}
+              <span className="mesa-controls__spacer" />
+              {fullscreen.supported && (
+                <button type="button" className="mesa-ctrl" onClick={fullscreen.toggle} aria-label={fullscreen.active ? 'Sair da tela cheia' : 'Tela cheia'}>
+                  <IconFullscreen exit={fullscreen.active} />
+                </button>
+              )}
+            </div>
+          </StageMedia>
+        ) : (
+          <MesaScene
+            title={scene.title}
+            text={scene.text}
+            busy={scene.busy}
+            action={mesa.status === 'lost'
+              ? <button type="button" className="btn btn-primary mesa-scene__cta" onClick={mesa.retry}>Tentar de novo</button>
+              : undefined}
+          />
+        )}
+      </div>
+      <MesaArts campaignId={campaignId} />
+      <DocumentsIfAltherium campaignId={campaignId} />
+    </>
   )
 }
 
@@ -472,7 +511,7 @@ export function MesaPanel({ campaignId }: { campaignId: string }) {
   return (
     <section className="mesa">
       {mesa.channelError && <p className="mesa-msg mesa-msg--error" role="alert">{mesa.channelError}</p>}
-      {mesa.isMaster ? <MasterView campaignId={campaignId} /> : <PlayerView />}
+      {mesa.isMaster ? <MasterView campaignId={campaignId} /> : <PlayerView campaignId={campaignId} />}
       {!mesa.isMaster && mesa.stage.screenId && mesa.stage.audio && mesa.remoteStream && (
         <p className="mesa-hint">O som continua tocando enquanto você olha as outras abas.</p>
       )}
