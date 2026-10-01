@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.19',
+    date:    '2026-10-01',
+    title:   'Galeria de todos',
+    items: [
+      'Galeria: agora é de todos da campanha — os jogadores também abrem os álbuns e veem as imagens da Mesa e as fotos do Quadro. Adicionar, excluir e levar pra outra campanha continua com o mestre, e as fotos do Escudo do mestre continuam só dele. Na aba Mesa, a seção de imagens passou a se chamar Galeria.',
+    ],
+  },
+  {
     version: '1.18',
     date:    '2026-10-01',
     title:   'Biblioteca de todos, Escudo fechado, setas por cima e fontes no caderninho',

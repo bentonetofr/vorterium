@@ -9,7 +9,7 @@ import {
 } from '../services/mesaImagesService'
 
 // ────────────────────────────────────────────────────────
-// Galeria da Mesa (só o mestre): envia mapas, retratos e cartas uma vez
+// Galeria da Mesa (o mestre guarda e mostra; todos veem na Galeria do menu): envia mapas, retratos e cartas uma vez
 // e mostra pra mesa com um clique — sem transmitir a tela. A imagem vai
 // em qualidade total e quase não gasta internet (cada um baixa uma vez).
 // ────────────────────────────────────────────────────────
@@ -86,8 +86,8 @@ export function MesaGallery({ campaignId }: { campaignId: string }) {
     <section className="mesa-gallery" aria-labelledby="mesa-gallery-title">
       <header className="mesa-gallery__head">
         <div>
-          <h5 id="mesa-gallery-title" className="mesa-gallery__title">Imagens da mesa</h5>
-          <p className="mesa-gallery__sub">Mapas, retratos e cartas para mostrar a todos, sem transmitir a tela. Só você vê esta galeria.</p>
+          <h5 id="mesa-gallery-title" className="mesa-gallery__title">Galeria</h5>
+          <p className="mesa-gallery__sub">Mapas, retratos e cartas para mostrar a todos, sem transmitir a tela. Os jogadores também veem estas imagens na Galeria do menu.</p>
         </div>
         <button type="button" className="btn btn-ghost mesa-gallery__add" onClick={() => inputRef.current?.click()} disabled={uploading > 0}>
           {uploading > 0 ? `Enviando${uploading > 1 ? ` (${uploading})` : ''}…` : '+ Adicionar imagens'}

@@ -21,8 +21,9 @@ import './GalleryPage.css'
 // Galeria — um mural com um card por campanha (pilha de polaroides que se
 // abre em leque). Clicar abre o álbum de lembranças da campanha: fotos
 // em polaroide presas com fita, agrupadas por dia, com legenda à mão.
-// Clicar numa foto abre ela grande. As imagens continuam privadas: é a
-// galeria da Mesa, só o mestre da campanha vê.
+// Clicar numa foto abre ela grande. Todos da campanha veem; guardar,
+// excluir e levar pra outra campanha é com o mestre. As imagens continuam
+// privadas da campanha (links temporários).
 // ────────────────────────────────────────────────────────
 
 type Image = GalleryImageWithCampaign
@@ -60,7 +61,7 @@ export function GalleryPage() {
   const load = useCallback(async () => {
     const [list, camps] = await Promise.all([listAllMyMesaImages(), getMyCampaigns()])
     setImages(list)
-    setCampaigns(camps.filter((c) => c.role === 'master'))
+    setCampaigns(camps)
   }, [])
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export function GalleryPage() {
       <div className="tool-page__header">
         <div className="tool-page__titles">
           <h1 className="tool-page__title">Galeria</h1>
-          <p className="tool-page__sub">As lembranças das suas campanhas — tudo o que já passou pela Mesa.</p>
+          <p className="tool-page__sub">As lembranças das suas campanhas — tudo o que já passou pela Mesa e pelo Quadro.</p>
         </div>
       </div>
 
@@ -105,9 +106,9 @@ export function GalleryPage() {
       ) : campaigns.length === 0 ? (
         <div className="tool-page__empty">
           <p className="tool-page__empty-icon">▣</p>
-          <p className="tool-page__empty-title">A galeria é do mestre.</p>
+          <p className="tool-page__empty-title">Nenhum álbum ainda.</p>
           <p className="tool-page__empty-text">
-            Quando você for mestre de uma campanha, as imagens que mostrar na Mesa viram lembranças aqui.
+            Quando você entrar numa campanha, as imagens da Mesa e as fotos do Quadro viram lembranças aqui.
             {' '}<Link to="/campanhas/nova">Criar uma campanha</Link>
           </p>
         </div>
@@ -130,7 +131,7 @@ export function GalleryPage() {
         <Album
           campaign={open}
           images={byCampaign.get(open.id) ?? []}
-          otherCampaigns={campaigns.filter((c) => c.id !== open.id)}
+          otherCampaigns={campaigns.filter((c) => c.id !== open.id && c.role === 'master')}
           onClose={() => withTransition(() => setOpenId(null))}
           onChanged={load}
         />
@@ -203,6 +204,8 @@ interface AlbumProps {
 }
 
 function Album({ campaign, images, otherCampaigns, onClose, onChanged }: AlbumProps) {
+  // Todos veem; guardar, excluir e copiar é com o mestre.
+  const isMaster = campaign.role === 'master'
   const [viewing, setViewing] = useState<number | null>(null)
   const [uploading, setUploading] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -282,19 +285,25 @@ function Album({ campaign, images, otherCampaigns, onClose, onChanged }: AlbumPr
               ? 'Ainda não há lembranças por aqui.'
               : `${images.length} ${images.length === 1 ? 'lembrança' : 'lembranças'} desde ${dayKey(chronological[0].created_at)}`}
           </p>
-          <button type="button" className="album__add" onClick={() => fileRef.current?.click()} disabled={uploading}>
-            {uploading ? 'Guardando…' : '+ Adicionar lembranças'}
-          </button>
-          <input
-            ref={fileRef} type="file" hidden multiple accept={MESA_IMAGE_TYPES.join(',')}
-            onChange={(e) => { const files = Array.from(e.target.files ?? []); e.target.value = ''; void handleFiles(files) }}
-          />
+          {isMaster && (
+            <>
+              <button type="button" className="album__add" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                {uploading ? 'Guardando…' : '+ Adicionar lembranças'}
+              </button>
+              <input
+                ref={fileRef} type="file" hidden multiple accept={MESA_IMAGE_TYPES.join(',')}
+                onChange={(e) => { const files = Array.from(e.target.files ?? []); e.target.value = ''; void handleFiles(files) }}
+              />
+            </>
+          )}
           {notice && <p className="album__notice" role="status">{notice}</p>}
         </header>
 
         {images.length === 0 ? (
           <p className="album__empty">
-            Mostre mapas, retratos e cenas na aba Mesa da campanha — ou adicione aqui — e eles ficam guardados neste álbum.
+            {isMaster
+              ? 'Mostre mapas, retratos e cenas na aba Mesa da campanha — ou adicione aqui — e eles ficam guardados neste álbum.'
+              : 'Quando o mestre mostrar imagens na Mesa, ou alguém puser fotos no Quadro, elas aparecem aqui.'}
           </p>
         ) : (
           days.map((group) => (
@@ -330,6 +339,7 @@ function Album({ campaign, images, otherCampaigns, onClose, onChanged }: AlbumPr
           images={chronological}
           index={viewing}
           otherCampaigns={otherCampaigns}
+          canEdit={isMaster}
           onIndex={setViewing}
           onClose={() => setViewing(null)}
           onChanged={onChanged}
@@ -347,13 +357,15 @@ interface LightboxProps {
   images:         Image[]
   index:          number
   otherCampaigns: CampaignWithRole[]
+  /** Mestre da campanha: pode excluir e levar pra outra campanha. */
+  canEdit:        boolean
   onIndex:        (i: number) => void
   onClose:        () => void
   onChanged:      () => Promise<void>
   onNotice:       (message: string) => void
 }
 
-function Lightbox({ images, index, otherCampaigns, onIndex, onClose, onChanged, onNotice }: LightboxProps) {
+function Lightbox({ images, index, otherCampaigns, canEdit, onIndex, onClose, onChanged, onNotice }: LightboxProps) {
   const img = images[index]
   const [copyOpen, setCopyOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -429,12 +441,12 @@ function Lightbox({ images, index, otherCampaigns, onIndex, onClose, onChanged, 
 
       <div className="lightbox__actions">
         <button type="button" className="lightbox__btn" onClick={() => void openOriginal()}>Abrir original</button>
-        {otherCampaigns.length > 0 && (
+        {canEdit && otherCampaigns.length > 0 && (
           <button type="button" className="lightbox__btn" onClick={() => setCopyOpen((v) => !v)} aria-expanded={copyOpen}>
             Levar pra outra campanha
           </button>
         )}
-        {confirmDelete ? (
+        {!canEdit ? null : confirmDelete ? (
           <>
             <span className="lightbox__ask">Excluir esta lembrança?</span>
             <button type="button" className="lightbox__btn lightbox__btn--danger" onClick={() => void remove()} disabled={busy}>

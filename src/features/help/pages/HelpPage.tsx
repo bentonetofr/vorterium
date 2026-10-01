@@ -83,7 +83,7 @@ const TOPICS: Topic[] = [
     steps: [
       'Biblioteca: uma estante com os livros de regras e uma por campanha, com os documentos que o mestre guardou (PDF, imagem ou texto) e os arquivos postos no Quadro. Clique num arquivo pra ler no próprio site. O mestre adiciona arrastando arquivos pra estante, e tudo que está na Biblioteca todos da campanha leem. O que é posto no Escudo do mestre fica só no Escudo.',
       'Meu bestiário: criaturas suas pra qualquer campanha. No bestiário de uma campanha, "Guardar" manda a criatura pra cá; daqui, "Copiar pra campanha" leva de volta.',
-      'Galeria: um álbum de lembranças por campanha em que você é mestre, com as imagens que já passaram pela Mesa. Clique numa foto pra ver grande ou levar pra outra campanha.',
+      'Galeria: um álbum de lembranças por campanha, com as imagens que já passaram pela Mesa e as fotos postas no Quadro. Todos da campanha veem; clique numa foto pra ver grande. O mestre adiciona, exclui e leva fotos pra outra campanha.',
       'O sino mostra as notificações (rolagens, episódios, membros); as mensagens do chat avisam só no botão de mensagem. Atividade junta o que aconteceu nas suas campanhas.',
     ],
   },

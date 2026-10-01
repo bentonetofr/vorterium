@@ -1,10 +1,10 @@
 import { supabase } from '../../../shared/lib/supabase'
 
 // ────────────────────────────────────────────────────────
-// Galeria da Mesa — imagens que o mestre guarda pra mostrar à mesa.
-// Bucket privado "mesa-images" (pasta = campanha) + tabela
-// campaign_mesa_images, as duas só do mestre. O jogador nunca lê a
-// galeria: recebe um link assinado da imagem que está na mesa.
+// Galeria — imagens que o mestre guarda pra mostrar à mesa (e as fotos do
+// Quadro). Bucket privado "mesa-images" (pasta = campanha) + tabela
+// campaign_mesa_images: todos os membros veem (menos a pasta do Escudo do
+// mestre); só o mestre guarda, exclui e copia.
 // ────────────────────────────────────────────────────────
 
 const BUCKET = 'mesa-images'
@@ -12,7 +12,7 @@ const BUCKET = 'mesa-images'
 export const MESA_IMAGE_MAX_BYTES = 10 * 1024 * 1024
 export const MESA_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
 
-/** Link das miniaturas da galeria (só o mestre vê). */
+/** Link das miniaturas da galeria. */
 const THUMB_URL_SECONDS = 60 * 60
 /** Link da imagem na mesa — cobre uma sessão longa. */
 const SHOW_URL_SECONDS = 12 * 60 * 60
@@ -110,8 +110,8 @@ export async function getMesaImageShowUrl(path: string): Promise<string> {
 }
 
 // ────────────────────────────────────────────────────────
-// Galeria do menu — as imagens de TODAS as campanhas em que a pessoa é
-// mestre (a RLS da tabela já só devolve essas), pra rever e reaproveitar.
+// Galeria do menu — as imagens de TODAS as campanhas da pessoa (a RLS da
+// tabela já só devolve essas), pra rever e reaproveitar.
 // ────────────────────────────────────────────────────────
 
 export interface GalleryImageWithCampaign extends MesaGalleryImage {
@@ -168,7 +168,7 @@ export async function getMesaImageViewUrl(path: string): Promise<string> {
 // Fotos do Quadro — imagens coladas/arrastadas no Quadro da campanha vêm
 // pra cá (não pra Biblioteca). Pastas: "<campanha>/quadro/" (quadro geral:
 // qualquer membro envia e todos os membros leem) e "<campanha>/quadro-mestre/"
-// (Escudo do mestre: só o mestre). O mestre vê todas na Galeria.
+// (Escudo do mestre: só o mestre, fora da Galeria).
 // ────────────────────────────────────────────────────────
 
 export interface BoardPhoto {

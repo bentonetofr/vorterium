@@ -694,17 +694,17 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     })
   }, [flash])
 
-  /** Onde abrir o original de uma imagem/arquivo: Galeria (só o mestre entra), Biblioteca ou o próprio arquivo (Escudo). */
+  /** Onde abrir o original de uma imagem/arquivo: Galeria, Biblioteca ou o próprio arquivo (Escudo). */
   const sourceOf = useCallback((data: BoardItem['data'] | undefined): { label: string; open: () => void } | null => {
     if (!data) return null
     if (data.store === 'shield') return { label: 'Abrir o arquivo', open: () => openShieldFile(data.path) }
     if (data.store === 'gallery') {
       // Foto do Escudo não está na Galeria.
       if (data.path?.includes('/quadro-mestre/')) return null
-      return isMaster ? { label: 'Abrir na Galeria', open: () => { void flush(); navigate('/galeria') } } : null
+      return { label: 'Abrir na Galeria', open: () => { void flush(); navigate('/galeria') } }
     }
     return data.docId ? { label: 'Abrir na Biblioteca', open: () => openInLibrary(data.docId) } : null
-  }, [flush, isMaster, navigate, openInLibrary, openShieldFile])
+  }, [flush, navigate, openInLibrary, openShieldFile])
 
   // ── Arquivos: no Geral, fotos vão pra Galeria e PDFs/textos pra Biblioteca; no Escudo, ficam só no Escudo ──
 

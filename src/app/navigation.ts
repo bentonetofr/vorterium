@@ -17,7 +17,7 @@ export interface NavItem {
 export const TOOL_NAV: NavItem[] = [
   { to: '/biblioteca',    icon: '❧', label: 'Biblioteca',    hint: 'Livros e documentos de cada campanha' },
   { to: '/meu-bestiario', icon: '☠', label: 'Meu bestiário', hint: 'Suas criaturas pra qualquer campanha' },
-  { to: '/galeria',       icon: '▣', label: 'Galeria',       hint: 'Imagens e mapas que você mostrou na Mesa' },
+  { to: '/galeria',       icon: '▣', label: 'Galeria',       hint: 'Imagens da Mesa e fotos do Quadro das suas campanhas' },
 ]
 
 export const SITE_NAV: NavItem[] = [
