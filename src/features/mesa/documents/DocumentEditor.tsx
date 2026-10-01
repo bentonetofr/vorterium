@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ModalOverlay } from '../../../shared/components/ModalOverlay'
-import { loadFontPreview } from '../../../shared/lib/googleFonts'
-import { MAX_PAGE_CHARS, MAX_PAGES, saveDocument, type MesaDocument } from './documentsService'
+import { loadBoardFont } from '../../../shared/lib/googleFonts'
+import { MAX_PAGE_CHARS, MAX_PAGES, saveDocument, type DocPage, type MesaDocument } from './documentsService'
 import { BookCover, PaperPage } from './DocViews'
+import { FontPicker } from './FontPicker'
+import { overflows, reflow, reflowAll } from './pageFlow'
 import {
-  COVERS, HAND_FONTS, INKS, PAPERS, handStack, pageSeed, pageStyle, type DocStyle,
+  COVERS, INKS, PAPERS, handStack, pageSeed, pageStyle, type DocStyle,
 } from './paperStyles'
 
 // ────────────────────────────────────────────────────────
@@ -12,21 +14,34 @@ import {
 // o estilo — textura do papel, efeitos (queimado, rasgado, dobras,
 // manchas), letra à mão, tamanho e cor da tinta. No livro, o estilo vale
 // pro livro todo ou só pra página aberta (cada página pode ter o seu).
+// O livro começa pela capa; o texto que não cabe numa página desce
+// sozinho pra seguinte (e sobe de volta quando sobra espaço).
 // ────────────────────────────────────────────────────────
 
 const clone = (d: MesaDocument): MesaDocument => ({ ...d, style: { ...d.style }, pages: d.pages.map((p) => ({ ...p, style: p.style ? { ...p.style } : undefined })) })
+const samePages = (a: DocPage[], b: DocPage[]) => a.length === b.length && a.every((p, i) => p.text === b[i].text && !!p.cont === !!b[i].cont)
+
+/** Índice da "página" da capa no editor do livro. */
+const COVER = -1
 
 export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; onClose: () => void; onSaved: (doc: MesaDocument) => void }) {
   const [draft, setDraft] = useState<MesaDocument>(() => clone(doc))
-  const [pageIdx, setPageIdx] = useState(0)
+  const [pageIdx, setPageIdx] = useState(doc.kind === 'book' ? COVER : 0)
   const [scope, setScope] = useState<'doc' | 'page'>('doc')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
+  const textRef = useRef<HTMLTextAreaElement>(null)
+  const draftRef = useRef(draft)
+  draftRef.current = draft
+  /** Onde pôr o cursor depois que o texto correu pra outra página. */
+  const caretTo = useRef<number | null>(null)
   const isBook = draft.kind === 'book'
-  const page = draft.pages[Math.min(pageIdx, draft.pages.length - 1)]
+  const onCover = isBook && pageIdx === COVER
+  const at = Math.max(0, Math.min(pageIdx, draft.pages.length - 1))
+  const page = draft.pages[at]
   const ownStyle = isBook && !!page?.style
-  const editingPage = isBook && scope === 'page'
+  const editingPage = isBook && scope === 'page' && !onCover
   const style = pageStyle(draft.style, page?.style)
 
   const change = (fn: (d: MesaDocument) => void) => {
@@ -35,7 +50,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   }
   const setStyle = (patch: Partial<DocStyle>) => change((d) => {
     if (editingPage) {
-      const p = d.pages[pageIdx]
+      const p = d.pages[at]
       p.style = { ...(p.style ?? {}), ...patch }
     } else {
       d.style = { ...d.style, ...patch }
@@ -48,18 +63,65 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
       if (kind === 'book' && d.pages.length < 2) d.pages.push({ text: '' })
     })
     if (kind === 'paper') { setPageIdx(0); setScope('doc') }
+    else setPageIdx(COVER)
   }
 
+  /** Página nova (em branco) depois do texto corrido da página aberta. */
   function addPage() {
     if (draft.pages.length >= MAX_PAGES) return
-    change((d) => { d.pages.splice(pageIdx + 1, 0, { text: '' }) })
-    setPageIdx(pageIdx + 1)
+    let end = at
+    while (end + 1 < draft.pages.length && draft.pages[end + 1].cont) end++
+    change((d) => { d.pages.splice(end + 1, 0, { text: '' }) })
+    setPageIdx(end + 1)
   }
   function removePage() {
     if (draft.pages.length <= 1) return
-    change((d) => { d.pages.splice(pageIdx, 1) })
-    setPageIdx(Math.max(0, pageIdx - 1))
+    change((d) => {
+      const [gone] = d.pages.splice(at, 1)
+      // A seguinte continuava esta: passa a continuar o que vinha antes (ou vira começo).
+      const next = d.pages[at]
+      if (next?.cont && !gone.cont) delete next.cont
+      if (d.pages[0]?.cont) delete d.pages[0].cont
+    })
+    setPageIdx(Math.max(0, at - 1))
   }
+
+  /** Escreveu na página: no livro, o que não couber desce pra seguinte. */
+  function setText(value: string, caret: number) {
+    if (!isBook) { change((d) => { d.pages[at].text = value }); return }
+    const pages = draft.pages.map((p, i) => (i === at ? { ...p, text: value } : p))
+    const flowed = reflow(pages, at, draft.style, caret)
+    change((d) => { d.pages = flowed.pages })
+    if (flowed.page !== at) setPageIdx(flowed.page)
+    caretTo.current = flowed.page !== at || flowed.pages[at]?.text !== value ? flowed.caret : null
+  }
+  useLayoutEffect(() => {
+    const el = textRef.current
+    if (caretTo.current == null || !el) return
+    el.focus()
+    el.setSelectionRange(caretTo.current, caretTo.current)
+    caretTo.current = null
+  })
+
+  // Mudou a letra, o tamanho ou o tipo: espera as fontes e redistribui o livro.
+  const layoutKey = isBook ? [draft.style.font, draft.style.size, ...draft.pages.map((p) => `${p.style?.font ?? ''}/${p.style?.size ?? ''}`)].join('|') : ''
+  useEffect(() => {
+    if (!isBook) return
+    let alive = true
+    const fonts = new Set([draft.style.font, ...draft.pages.map((p) => p.style?.font).filter((f): f is string => !!f)])
+    void Promise.all([...fonts].map((f) => loadBoardFont(f))).then(() => {
+      if (!alive) return
+      const prev = draftRef.current
+      const pages = reflowAll(prev.pages, prev.style)
+      if (samePages(pages, prev.pages)) return
+      setDraft({ ...prev, pages })
+      setDirty(true)
+    })
+    return () => { alive = false }
+  }, [layoutKey])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Folha avulsa: avisa quando o texto passa do papel.
+  const sheetOverflow = useMemo(() => !isBook && !!page && overflows(page.text, style), [isBook, page?.text, style.font, style.size])  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
     setSaving(true)
@@ -83,6 +145,16 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   })
+
+  const coverChoices = (
+    <div className="doc-editor__row">
+      {COVERS.map((c) => (
+        <button key={c.id} type="button" className={`doc-editor__chip${draft.style.cover === c.id ? ' is-on' : ''}`} onClick={() => change((d) => { d.style = { ...d.style, cover: c.id } })}>
+          {c.label}
+        </button>
+      ))}
+    </div>
+  )
 
   return (
     <ModalOverlay onClose={onClose} closeDisabled={saving || dirty}>
@@ -108,140 +180,146 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
             {!isBook && draft.pages.length > 1 && <p className="doc-editor__hint">Como folha, só a primeira página aparece.</p>}
           </div>
 
-          {isBook && (
-            <div>
-              <p className="doc-editor__label">Estilo de</p>
-              <div className="doc-editor__row">
-                <button type="button" className={`doc-editor__chip${scope === 'doc' ? ' is-on' : ''}`} onClick={() => setScope('doc')}>Livro todo</button>
-                <button type="button" className={`doc-editor__chip${scope === 'page' ? ' is-on' : ''}`} onClick={() => setScope('page')}>Só a página {pageIdx + 1}</button>
-              </div>
-              {ownStyle && (
-                <p className="doc-editor__hint">
-                  A página {pageIdx + 1} tem estilo próprio.{' '}
-                  <button type="button" className="doc-editor__chip" onClick={() => change((d) => { d.pages[pageIdx].style = undefined })}>Usar o do livro</button>
-                </p>
-              )}
-            </div>
-          )}
-
-          <div>
-            <p className="doc-editor__label">Papel</p>
-            <div className="doc-editor__textures">
-              {PAPERS.map((p, i) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`doc-editor__texture${style.texture === p.id ? ' is-on' : ''}`}
-                  onClick={() => setStyle({ texture: p.id })}
-                  title={p.label}
-                  aria-label={p.label}
-                >
-                  <PaperPage text="" style={{ ...style, texture: p.id, burn: 0, torn: false }} seed={i * 97 + 11} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="doc-editor__label">Efeitos</p>
-            <div className="doc-editor__row">
-              <span className="doc-editor__hint">Queimado:</span>
-              {(['Nada', 'Leve', 'Forte'] as const).map((l, n) => (
-                <button key={l} type="button" className={`doc-editor__chip${style.burn === n ? ' is-on' : ''}`} onClick={() => setStyle({ burn: n })}>{l}</button>
-              ))}
-            </div>
-            <div className="doc-editor__row" style={{ marginTop: 6 }}>
-              <span className="doc-editor__hint">Manchas:</span>
-              {(['Nenhuma', 'Poucas', 'Muitas'] as const).map((l, n) => (
-                <button key={l} type="button" className={`doc-editor__chip${style.stains === n ? ' is-on' : ''}`} onClick={() => setStyle({ stains: n })}>{l}</button>
-              ))}
-            </div>
-            <div className="doc-editor__row" style={{ marginTop: 6 }}>
-              <button type="button" className={`doc-editor__chip${style.torn ? ' is-on' : ''}`} onClick={() => setStyle({ torn: !style.torn })}>Rasgado</button>
-              <button type="button" className={`doc-editor__chip${style.folds ? ' is-on' : ''}`} onClick={() => setStyle({ folds: !style.folds })}>Dobrado</button>
-            </div>
-          </div>
-
-          <div>
-            <p className="doc-editor__label">Tinta</p>
-            <div className="doc-editor__inks">
-              {INKS.map((ink) => (
-                <button
-                  key={ink.id}
-                  type="button"
-                  className={`doc-editor__ink${style.ink === ink.id ? ' is-on' : ''}`}
-                  style={{ background: ink.color }}
-                  onClick={() => setStyle({ ink: ink.id })}
-                  title={ink.label}
-                  aria-label={`Tinta ${ink.label}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="doc-editor__label">Letra à mão · tamanho {style.size}</p>
-            <input
-              type="range" min={16} max={48} value={style.size}
-              onChange={(e) => setStyle({ size: Number(e.target.value) })}
-              aria-label="Tamanho da letra"
-              style={{ width: '100%' }}
-            />
-            <FontList current={style.font} onPick={(font) => setStyle({ font })} />
-          </div>
-
-          {isBook && !editingPage && (
+          {onCover ? (
             <div>
               <p className="doc-editor__label">Capa</p>
-              <div className="doc-editor__cover-mini"><BookCover title={draft.title} style={draft.style} /></div>
-              <div className="doc-editor__row">
-                {COVERS.map((c) => (
-                  <button key={c.id} type="button" className={`doc-editor__chip${draft.style.cover === c.id ? ' is-on' : ''}`} onClick={() => setStyle({ cover: c.id })}>
-                    {c.label}
-                  </button>
-                ))}
-              </div>
+              {coverChoices}
+              <p className="doc-editor__hint" style={{ marginTop: 6 }}>O título acima vai gravado na capa. Depois é só seguir pras páginas.</p>
             </div>
+          ) : (
+            <>
+              {isBook && (
+                <div>
+                  <p className="doc-editor__label">Estilo de</p>
+                  <div className="doc-editor__row">
+                    <button type="button" className={`doc-editor__chip${scope === 'doc' ? ' is-on' : ''}`} onClick={() => setScope('doc')}>Livro todo</button>
+                    <button type="button" className={`doc-editor__chip${scope === 'page' ? ' is-on' : ''}`} onClick={() => setScope('page')}>Só a página {at + 1}</button>
+                  </div>
+                  {ownStyle && (
+                    <p className="doc-editor__hint">
+                      A página {at + 1} tem estilo próprio.{' '}
+                      <button type="button" className="doc-editor__chip" onClick={() => change((d) => { d.pages[at].style = undefined })}>Usar o do livro</button>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <p className="doc-editor__label">Letra à mão · tamanho {style.size}</p>
+                <FontPicker current={style.font} onPick={(font) => setStyle({ font })} />
+                <input
+                  type="range" min={16} max={48} value={style.size}
+                  onChange={(e) => setStyle({ size: Number(e.target.value) })}
+                  aria-label="Tamanho da letra"
+                  style={{ width: '100%', marginTop: 8 }}
+                />
+              </div>
+
+              <div>
+                <p className="doc-editor__label">Papel</p>
+                <div className="doc-editor__textures">
+                  {PAPERS.map((p, i) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`doc-editor__texture${style.texture === p.id ? ' is-on' : ''}`}
+                      onClick={() => setStyle({ texture: p.id })}
+                      title={p.label}
+                      aria-label={p.label}
+                    >
+                      <PaperPage text="" style={{ ...style, texture: p.id, burn: 0, torn: false }} seed={i * 97 + 11} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="doc-editor__label">Efeitos</p>
+                <div className="doc-editor__row">
+                  <span className="doc-editor__hint">Queimado:</span>
+                  {(['Nada', 'Leve', 'Forte'] as const).map((l, n) => (
+                    <button key={l} type="button" className={`doc-editor__chip${style.burn === n ? ' is-on' : ''}`} onClick={() => setStyle({ burn: n })}>{l}</button>
+                  ))}
+                </div>
+                <div className="doc-editor__row" style={{ marginTop: 6 }}>
+                  <span className="doc-editor__hint">Manchas:</span>
+                  {(['Nenhuma', 'Poucas', 'Muitas'] as const).map((l, n) => (
+                    <button key={l} type="button" className={`doc-editor__chip${style.stains === n ? ' is-on' : ''}`} onClick={() => setStyle({ stains: n })}>{l}</button>
+                  ))}
+                </div>
+                <div className="doc-editor__row" style={{ marginTop: 6 }}>
+                  <button type="button" className={`doc-editor__chip${style.torn ? ' is-on' : ''}`} onClick={() => setStyle({ torn: !style.torn })}>Rasgado</button>
+                  <button type="button" className={`doc-editor__chip${style.folds ? ' is-on' : ''}`} onClick={() => setStyle({ folds: !style.folds })}>Dobrado</button>
+                </div>
+              </div>
+
+              <div>
+                <p className="doc-editor__label">Tinta</p>
+                <div className="doc-editor__inks">
+                  {INKS.map((ink) => (
+                    <button
+                      key={ink.id}
+                      type="button"
+                      className={`doc-editor__ink${style.ink === ink.id ? ' is-on' : ''}`}
+                      style={{ background: ink.color }}
+                      onClick={() => setStyle({ ink: ink.id })}
+                      title={ink.label}
+                      aria-label={`Tinta ${ink.label}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
 
         {/* ── Texto e prévia ── */}
         <div className="doc-editor__main">
           {isBook && (
-            <div className="doc-editor__pages" role="tablist" aria-label="Páginas">
+            <div className="doc-editor__pages" role="tablist" aria-label="Capa e páginas">
+              <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => setPageIdx(COVER)}>Capa</button>
               {draft.pages.map((p, i) => (
                 <button
                   key={i}
                   type="button"
                   role="tab"
-                  aria-selected={pageIdx === i}
-                  className={`doc-editor__chip${pageIdx === i ? ' is-on' : ''}`}
+                  aria-selected={!onCover && at === i}
+                  className={`doc-editor__chip${!onCover && at === i ? ' is-on' : ''}${p.cont ? ' doc-editor__chip--cont' : ''}`}
                   onClick={() => setPageIdx(i)}
-                  title={p.style ? 'Página com estilo próprio' : undefined}
+                  title={[p.cont ? 'Continua a página anterior' : '', p.style ? 'Página com estilo próprio' : ''].filter(Boolean).join(' · ') || undefined}
                 >
                   {i + 1}{p.style ? '*' : ''}
                 </button>
               ))}
               <button type="button" className="doc-editor__chip" onClick={addPage} disabled={draft.pages.length >= MAX_PAGES}>+ Página</button>
-              {draft.pages.length > 1 && <button type="button" className="doc-editor__chip" onClick={removePage}>Tirar a página {pageIdx + 1}</button>}
+              {!onCover && draft.pages.length > 1 && <button type="button" className="doc-editor__chip" onClick={removePage}>Tirar a página {at + 1}</button>}
             </div>
           )}
-          <div className="doc-editor__work">
-            <textarea
-              className="input doc-editor__text"
-              value={page?.text ?? ''}
-              maxLength={MAX_PAGE_CHARS}
-              onChange={(e) => change((d) => { d.pages[Math.min(pageIdx, d.pages.length - 1)].text = e.target.value })}
-              placeholder={isBook ? `Escreva a página ${pageIdx + 1}…` : 'Escreva a carta, o bilhete, o édito…'}
-              aria-label="Texto"
-              style={{ fontFamily: handStack(style.font), fontSize: 18 }}
-            />
-            <div className="doc-editor__preview">
-              <div className="doc-sheet">
-                <PaperPage text={page?.text ?? ''} style={style} seed={pageSeed(draft.id, pageIdx)} placeholder="O texto aparece aqui…" />
+          {onCover ? (
+            <div className="doc-editor__cover-work">
+              <div className="doc-editor__cover-big"><BookCover title={draft.title} style={draft.style} /></div>
+              <button type="button" className="btn btn-primary" onClick={() => setPageIdx(0)}>Escrever as páginas ›</button>
+            </div>
+          ) : (
+            <div className="doc-editor__work">
+              <textarea
+                ref={textRef}
+                className="input doc-editor__text"
+                value={page?.text ?? ''}
+                maxLength={isBook ? undefined : MAX_PAGE_CHARS}
+                onChange={(e) => setText(e.target.value, e.target.selectionStart)}
+                placeholder={isBook ? (at === 0 ? 'Escreva a primeira página… O que não couber vai sozinho pra próxima.' : `Escreva a página ${at + 1}…`) : 'Escreva a carta, o bilhete, o édito…'}
+                aria-label="Texto"
+                style={{ fontFamily: handStack(style.font), fontSize: 18 }}
+              />
+              <div className="doc-editor__preview">
+                <div className="doc-sheet">
+                  <PaperPage text={page?.text ?? ''} style={style} seed={pageSeed(draft.id, at)} placeholder="O texto aparece aqui…" className={isBook ? 'doc-paper--page' : undefined} />
+                </div>
+                {sheetOverflow && <p className="doc-editor__hint doc-editor__warn">O texto passou do tamanho da folha. Diminua a letra ou troque pra Livro (aí o resto vai pra próxima página).</p>}
               </div>
             </div>
-          </div>
+          )}
           <div className="doc-editor__foot">
             <span className="doc-editor__status" role="status">
               {error ?? (saving ? 'Salvando…' : dirty ? 'Alterações não salvas (Ctrl+S salva)' : 'Tudo salvo')}
@@ -252,39 +330,5 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
         </div>
       </div>
     </ModalOverlay>
-  )
-}
-
-/** Lista das letras à mão, cada uma escrita na própria fonte (baixa só quando aparece). */
-function FontList({ current, onPick }: { current: string; onPick: (font: string) => void }) {
-  const box = useRef<HTMLDivElement>(null)
-  const fonts = useMemo(() => HAND_FONTS, [])
-  // Rola até a escolhida ao abrir (só dentro da lista, sem mexer no painel).
-  useEffect(() => {
-    const list = box.current
-    const on = list?.querySelector<HTMLElement>('.is-on')
-    if (list && on) list.scrollTop = on.offsetTop - list.clientHeight / 2
-  }, [])
-  return (
-    <div className="doc-editor__fonts" ref={box} role="listbox" aria-label="Letra à mão">
-      {fonts.map((f) => <FontItem key={f} family={f} on={f === current} root={box} onPick={onPick} />)}
-    </div>
-  )
-}
-
-function FontItem({ family, on, root, onPick }: { family: string; on: boolean; root: RefObject<HTMLDivElement>; onPick: (f: string) => void }) {
-  const ref = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    if (typeof IntersectionObserver === 'undefined') { loadFontPreview(family); return }
-    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { loadFontPreview(family); io.disconnect() } }, { root: root.current, rootMargin: '80px 0px' })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [family, root])
-  return (
-    <button ref={ref} type="button" role="option" aria-selected={on} className={`doc-editor__font${on ? ' is-on' : ''}`} style={{ fontFamily: handStack(family) }} onClick={() => onPick(family)} title={family}>
-      {family}
-    </button>
   )
 }

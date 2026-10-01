@@ -12,6 +12,8 @@ export interface DocPage {
   text:   string
   /** Estilo só desta página (o resto vem do documento). */
   style?: Partial<DocStyle>
+  /** Continua a página anterior (o texto que não coube nela desceu pra cá). */
+  cont?:  boolean
 }
 
 export interface MesaDocument {
@@ -40,8 +42,8 @@ function normalize(row: Record<string, unknown>): MesaDocument {
     title:       String(row.title ?? 'Documento'),
     style:       normalizeStyle(row.style),
     pages:       (pages.length ? pages : [{ text: '' }]).map((p) => {
-      const o = (p && typeof p === 'object' ? p : {}) as { text?: unknown; style?: unknown }
-      return { text: typeof o.text === 'string' ? o.text : '', style: o.style && typeof o.style === 'object' ? o.style as Partial<DocStyle> : undefined }
+      const o = (p && typeof p === 'object' ? p : {}) as { text?: unknown; style?: unknown; cont?: unknown }
+      return { text: typeof o.text === 'string' ? o.text : '', style: o.style && typeof o.style === 'object' ? o.style as Partial<DocStyle> : undefined, ...(o.cont === true ? { cont: true } : {}) }
     }),
     visible:     !!row.visible,
     created_at:  String(row.created_at ?? ''),
@@ -77,7 +79,7 @@ export async function createDocument(campaignId: string, kind: DocKind): Promise
 }
 
 export async function saveDocument(doc: MesaDocument): Promise<MesaDocument> {
-  const pages = doc.pages.slice(0, MAX_PAGES).map((p) => ({ text: p.text.slice(0, MAX_PAGE_CHARS), ...(p.style ? { style: p.style } : {}) }))
+  const pages = doc.pages.slice(0, MAX_PAGES).map((p) => ({ text: p.text.slice(0, MAX_PAGE_CHARS), ...(p.style ? { style: p.style } : {}), ...(p.cont ? { cont: true } : {}) }))
   const { data, error } = await supabase
     .from('campaign_mesa_documents')
     .update({ kind: doc.kind, title: doc.title.trim().slice(0, 120) || 'Documento', style: doc.style, pages })
