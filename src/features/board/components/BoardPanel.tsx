@@ -10,8 +10,8 @@ import {
   type BoardConnection, type BoardId, type BoardItem, type BoardKind, type BoardPeer, type CursorMessage, type Endpoint, type ShapeType,
 } from '../services/boardService'
 import {
-  DEFAULT_SIZE, INK, MAX_ZOOM, MIN_ZOOM, NOTE_COLORS, TEXT_SIZES, clamp, connectorAnchors, connectorCurve, connectorEnds, contains, defaultData,
-  editableText, intersects, itemBounds, newId, normRect, rectOf, simplify, unionRect,
+  DEFAULT_SIZE, INK, MAX_ZOOM, MIN_ZOOM, NOTE_COLORS, TEXT_SIZES, clamp, connectorAnchors, connectorCurve, connectorEnds, contains, curvePoints, defaultData, MAX_CURVE_POINTS, worldToCurvePoint,
+  editableText, intersects, itemBounds, newId, normRect, rectOf, smoothStroke, unionRect,
   type Point, type Rect, type View,
 } from '../boardGeometry'
 import { BoardItemView, ConnectorLabel, ConnectorLayer, setEditCaret, strokePath } from './BoardItemView'
@@ -42,10 +42,10 @@ type Drag =
   | { type: 'move'; start: Point; orig: Record<string, BoardItem>; moved: boolean; clickId: string | null }
   | { type: 'resize'; id: string; handle: string; orig: BoardItem; start: Point }
   | { type: 'box'; start: Point; base: string[] }
-  | { type: 'draw'; points: Point[] }
+  | { type: 'draw'; points: Point[]; last: Point }
   | { type: 'connect'; id: string }
   | { type: 'endpoint'; id: string; end: 'from' | 'to'; orig: BoardItem }
-  | { type: 'bend'; id: string; orig: BoardItem }
+  | { type: 'curve'; id: string; index: number; orig: BoardItem }
 
 const CLIP_PREFIX = 'vorterium-quadro:'
 const SAVE_DELAY = 300
@@ -54,6 +54,15 @@ const CURSOR_EVERY = 50
 
 const viewKey = (campaignId: string, board: BoardId) => `vorterium:quadro-vista:${campaignId}${board === 'mestre' ? ':mestre' : ''}`
 const tabKey = (campaignId: string) => `vorterium:quadro-aba:${campaignId}`
+
+/**
+ * O que cada aba já mostrou nesta visita (campanha:aba → itens). Voltar pra
+ * uma aba aberta antes aparece na hora, e a lista do banco chega por trás.
+ */
+const boardCache = new Map<string, BoardItem[]>()
+const cacheKey = (campaignId: string, board: BoardId) => `${campaignId}:${board}`
+
+type EnterDir = 'left' | 'right'
 
 function readSavedView(campaignId: string, board: BoardId): View | null {
   try {
@@ -94,22 +103,27 @@ export function BoardPanel({ campaign }: { campaign: CampaignWithRole }) {
     try { return isMaster && localStorage.getItem(tabKey(campaign.id)) === 'mestre' ? 'mestre' : 'geral' } catch { return 'geral' }
   })
   const [full, setFull] = useState(false)
+  // Troca de aba: de onde veio (a aba anterior apaga) e pra que lado o quadro desliza.
+  const [enter, setEnter] = useState<{ from: BoardId; dir: EnterDir } | null>(null)
   const current: BoardId = isMaster ? board : 'geral'
 
   function pick(b: BoardId) {
+    if (b === current) return
+    const order = BOARD_TABS.map((t) => t.id)
+    setEnter({ from: current, dir: order.indexOf(b) > order.indexOf(current) ? 'right' : 'left' })
     setBoard(b)
     try { localStorage.setItem(tabKey(campaign.id), b) } catch { /* sem armazenamento */ }
   }
 
   const tabs = isMaster ? (
-    <div className="board-tabs" role="tablist" aria-label="Quadros">
+    <div className={`board-tabs${enter ? ' board-tabs--anim' : ''}`} role="tablist" aria-label="Quadros">
       {BOARD_TABS.map((t) => (
         <button
           key={t.id}
           type="button"
           role="tab"
           aria-selected={current === t.id}
-          className={`board-tab board-tab--${t.id}${current === t.id ? ' is-on' : ''}`}
+          className={`board-tab board-tab--${t.id}${current === t.id ? ' is-on' : enter?.from === t.id ? ' was-on' : ''}`}
           onClick={() => pick(t.id)}
         >
           {t.icon}
@@ -119,7 +133,7 @@ export function BoardPanel({ campaign }: { campaign: CampaignWithRole }) {
     </div>
   ) : null
 
-  return <BoardCanvas key={current} campaign={campaign} board={current} tabs={tabs} full={full} setFull={setFull} />
+  return <BoardCanvas key={current} campaign={campaign} board={current} tabs={tabs} full={full} setFull={setFull} enter={enter?.dir ?? null} />
 }
 
 interface CanvasProps {
@@ -128,9 +142,11 @@ interface CanvasProps {
   tabs:     ReactNode
   full:     boolean
   setFull:  React.Dispatch<React.SetStateAction<boolean>>
+  /** Veio de outra aba: o quadro entra deslizando deste lado. */
+  enter:    EnterDir | null
 }
 
-function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
+function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProps) {
   const shield = board === 'mestre'
   const { user } = useAuth()
   const myId = user!.id
@@ -164,7 +180,17 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
   const initialView = useRef<View | 'fit' | null>(null)
 
   const [vp, setVp]             = useState({ w: 0, h: 0 })
-  const [loading, setLoading]   = useState(true)
+  /** Os itens já chegaram (do banco ou da memória da aba). */
+  const loaded = useRef(false)
+  // Aba já vista nesta visita: mostra o que tinha, sem "Abrindo o quadro…".
+  const [loading, setLoading]   = useState(() => {
+    const cached = boardCache.get(cacheKey(campaign.id, board))
+    if (!cached) return true
+    loaded.current = true
+    itemsRef.current = Object.fromEntries(cached.map((i) => [i.id, i]))
+    initialView.current = readSavedView(campaign.id, board) ?? 'fit'
+    return false
+  })
   const [error, setError]       = useState<string | null>(null)
   const [toast, setToast]       = useState<string | null>(null)
   const [tool, setToolState]    = useState<Tool>('select')
@@ -347,16 +373,39 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
 
   useEffect(() => {
     let alive = true
-    setLoading(true)
+    const key = cacheKey(campaign.id, board)
+    if (!loaded.current) setLoading(true)
     listBoardItems(campaign.id, board)
       .then((list) => {
         if (!alive) return
-        itemsRef.current = Object.fromEntries(list.map((i) => [i.id, i]))
+        boardCache.set(key, list)
+        const next = Object.fromEntries(list.map((i) => [i.id, i]))
+        if (loaded.current) {
+          // Já estava na tela: atualiza sem desfazer o que está sendo mexido agora.
+          const d = dragRef.current
+          const busy = new Set<string>([...pendingSave.current, ...(d && 'orig' in d && d.type === 'move' ? Object.keys(d.orig) : []), ...(d && 'id' in d ? [d.id] : [])])
+          for (const id of busy) if (itemsRef.current[id]) next[id] = itemsRef.current[id]
+          for (const id of pendingDelete.current) delete next[id]
+          itemsRef.current = next
+          redraw()
+          return
+        }
+        loaded.current = true
+        itemsRef.current = next
         initialView.current = readSavedView(campaign.id, board) ?? 'fit'
         setLoading(false)
       })
-      .catch((err) => { if (alive) { setError(err instanceof Error ? err.message : 'Não foi possível carregar o quadro.'); setLoading(false) } })
+      .catch((err) => { if (alive && !loaded.current) { setError(err instanceof Error ? err.message : 'Não foi possível carregar o quadro.'); setLoading(false) } })
     return () => { alive = false }
+  }, [campaign.id, board])
+
+  // Ao trocar de aba, guarda o quadro como está (com o que mudou em tempo real).
+  useEffect(() => {
+    const items = itemsRef
+    const done = loaded
+    const key = cacheKey(campaign.id, board)
+    // Só se já tinha carregado (senão guardaria um quadro vazio).
+    return () => { if (done.current) boardCache.set(key, Object.values(items.current)) }
   }, [campaign.id, board])
 
   useEffect(() => {
@@ -788,14 +837,23 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       const it = itemsRef.current[id]
       if (!it) return
       if (handle === 'from' || handle === 'to') dragRef.current = { type: 'endpoint', id, end: handle, orig: it }
-      else if (handle === 'bend') dragRef.current = { type: 'bend', id, orig: it }
+      else if (handle.startsWith('pt:')) dragRef.current = { type: 'curve', id, index: Number(handle.slice(3)), orig: it }
+      else if (handle.startsWith('gap:')) {
+        // Bolinha vazia no meio de um trecho: nasce um ponto novo ali, já sendo arrastado.
+        const pts = curvePoints(it)
+        if (pts.length >= MAX_CURVE_POINTS) return
+        const index = Number(handle.slice(4))
+        pts.splice(index, 0, worldToCurvePoint(connectorAnchors(it, itemsRef.current), p))
+        applyLocal({ [id]: withData(it, { pts, bend: undefined }) })
+        dragRef.current = { type: 'curve', id, index, orig: it }
+      }
       else dragRef.current = { type: 'resize', id, handle, orig: it, start: p }
       return
     }
 
     switch (tool) {
       case 'pen':
-        dragRef.current = { type: 'draw', points: [p] }
+        dragRef.current = { type: 'draw', points: [p], last: p }
         setDrawing([p])
         return
       case 'connector': {
@@ -932,20 +990,26 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
         return
       }
       case 'draw': {
-        const last = d.points[d.points.length - 1]
-        if (Math.hypot(p.x - last.x, p.y - last.y) * v.zoom < 1.5) return
-        d.points.push(p)
+        // Estabilizador: a ponta da caneta vem "puxada por um fio" de ~6 px
+        // atrás do mouse, o que já tira a tremedeira enquanto desenha.
+        d.last = p
+        const tip = d.points[d.points.length - 1]
+        const gap = Math.hypot(p.x - tip.x, p.y - tip.y) * v.zoom
+        const slack = 6
+        if (gap <= slack + 1.5) return
+        const t = (gap - slack) / gap
+        d.points.push({ x: tip.x + (p.x - tip.x) * t, y: tip.y + (p.y - tip.y) * t })
         setDrawing([...d.points])
         return
       }
-      case 'bend': {
-        // O meio da seta segue o ponteiro; perto da reta, gruda nela.
+      case 'curve': {
+        // O ponto da curva segue o ponteiro.
         const c = itemsRef.current[d.id]
         if (!c) return
-        const { mid, normal } = connectorAnchors(c, itemsRef.current)
-        let bend = (p.x - mid.x) * normal.x + (p.y - mid.y) * normal.y
-        if (Math.abs(bend) * v.zoom < 8) bend = 0
-        applyLocal({ [d.id]: withData(c, { bend: Math.round(bend) }) })
+        const pts = curvePoints(c)
+        if (d.index < 0 || d.index >= pts.length) return
+        pts[d.index] = worldToCurvePoint(connectorAnchors(c, itemsRef.current), p)
+        applyLocal({ [d.id]: withData(c, { pts, bend: undefined }) })
         sendLive([d.id])
         return
       }
@@ -988,7 +1052,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       }
       case 'resize':
       case 'endpoint':
-      case 'bend': {
+      case 'curve': {
         const now = itemsRef.current[d.id]
         if (now && JSON.stringify(now) !== JSON.stringify(d.orig)) commit({ [d.id]: now }, { [d.id]: d.orig })
         return
@@ -998,7 +1062,9 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
         return
       case 'draw': {
         setDrawing(null)
-        const pts = simplify(d.points, 0.8 / v.zoom)
+        // Termina onde o mouse soltou e arredonda o traço todo.
+        const raw = Math.hypot(d.last.x - d.points[d.points.length - 1].x, d.last.y - d.points[d.points.length - 1].y) > 0 ? [...d.points, d.last] : d.points
+        const pts = smoothStroke(raw, v.zoom)
         const width = pen.width
         const pad = width / 2 + 2
         const xs = pts.map((q) => q.x), ys = pts.map((q) => q.y)
@@ -1042,10 +1108,18 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
   function onDoubleClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement
     if (target.isContentEditable || target.closest('.board-toolbar, .board-zoombar, .board-context, .board-help, .board-fonts, .board-toast')) return
-    // Duplo clique na alça do meio da seta: volta a ser reta.
-    if (document.elementsFromPoint(e.clientX, e.clientY).some((el) => (el as HTMLElement).dataset?.handle === 'bend')) {
+    // Duplo clique num ponto da curva: tira ele (sem pontos, a seta fica reta).
+    const isCurve = (h: string | undefined) => !!h && (h.startsWith('pt:') || h.startsWith('gap:'))
+    const own = target.closest<HTMLElement>('[data-handle]')?.dataset.handle
+    const curveHandle = isCurve(own) ? own : document.elementsFromPoint(e.clientX, e.clientY)
+      .map((el) => (el as HTMLElement).dataset?.handle).find(isCurve)
+    if (curveHandle) {
       const c = itemsRef.current[selRef.current[0]]
-      if (c?.kind === 'connector' && c.data.bend) commit({ [c.id]: withData(c, { bend: 0 }) }, { [c.id]: c })
+      if (c?.kind === 'connector' && curveHandle.startsWith('pt:')) {
+        const pts = curvePoints(c)
+        pts.splice(Number(curveHandle.slice(3)), 1)
+        commit({ [c.id]: withData(c, { pts: pts.length ? pts : undefined, bend: undefined }) }, { [c.id]: c })
+      }
       return
     }
     const id = itemUnder(e.clientX, e.clientY)
@@ -1229,15 +1303,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
     : tool === 'hand' || spaceDown.current ? 'is-hand'
     : tool === 'select' ? '' : 'is-creating'
 
-  if (loading) {
-    return <div className="board-state"><div className="spinner spinner--sm" /> Abrindo o quadro…</div>
-  }
   if (error) {
     return <p className="board-state board-state--error" role="alert">{error}</p>
   }
 
   return (
-    <div className={`board${full ? ' board--full' : ''}`}>
+    <div className={`board${full ? ' board--full' : ''}${enter ? ` board--enter board--enter-${enter}` : ''}`}>
       <header className="board-header">
         <div className="board-header__titles">
           <h3 className="board-header__title">{shield ? 'Escudo do mestre' : 'Quadro'}</h3>
@@ -1267,7 +1338,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       {tabs}
       <div
         ref={vpRef}
-        className={`board-viewport${tabs ? ' board-viewport--tabbed' : ''}${shield ? ' board-viewport--shield' : ''} ${cursorClass}`}
+        className={`board-viewport${tabs ? ' board-viewport--tabbed' : ''}${shield ? ' board-viewport--shield' : ''}${loading ? ' is-loading' : ''} ${cursorClass}`}
         style={{
           '--zoom': view.zoom,
           '--inv-zoom': 1 / view.zoom,
@@ -1288,6 +1359,9 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
           void uploadFiles([...e.dataTransfer.files], toWorld(e.clientX, e.clientY))
         }}
       >
+        {loading ? (
+          <div className="board-loading"><span className="spinner spinner--sm" /> Abrindo o quadro…</div>
+        ) : (<>
         <div className="board-world" style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.zoom})` }}>
           {frames.filter(shown).map((f) => (
             <BoardItemView key={f.id} item={f} {...itemProps} editing={editingId === f.id} />
@@ -1328,21 +1402,36 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
             return hs.map((h) => <span key={h} className={`board-handle board-handle--${h}`} data-handle={h} style={{ left: pos[h].x, top: pos[h].y }} />)
           })()}
           {single && !single.locked && single.kind === 'connector' && (() => {
-            const { a, b, mid } = connectorCurve(single, items)
+            const { a, b, points, gaps } = connectorCurve(single, items)
             const at = (q: Point) => ({ left: q.x * view.zoom + view.tx, top: q.y * view.zoom + view.ty })
+            const chain = [a, ...points, b]
+            const full = points.length >= MAX_CURVE_POINTS
             return (
               <>
                 {(['from', 'to'] as const).map((end) => (
                   <span key={end} className="board-handle board-handle--end" data-handle={end} style={at(end === 'from' ? a : b)} />
                 ))}
-                {!editingId && (
+                {!editingId && !full && gaps.map((g, i) => (
+                  // Trecho curtinho na tela: sem bolinha (ficaria uma em cima da outra).
+                  Math.hypot(chain[i + 1].x - chain[i].x, chain[i + 1].y - chain[i].y) * view.zoom < 28 ? null : (
+                    <span
+                      key={`g${i}`}
+                      className="board-handle board-handle--gap"
+                      data-handle={`gap:${i}`}
+                      style={at(g)}
+                      title="Arraste pra curvar (cria um ponto novo)"
+                    />
+                  )
+                ))}
+                {!editingId && points.map((q, i) => (
                   <span
-                    className={`board-handle board-handle--bend${single.data.bend ? ' is-bent' : ''}`}
-                    data-handle="bend"
-                    style={at(mid)}
-                    title="Arraste pra curvar a seta (duplo clique deixa reta)"
+                    key={`p${i}`}
+                    className="board-handle board-handle--pt"
+                    data-handle={`pt:${i}`}
+                    style={at(q)}
+                    title="Arraste pra mudar a curva (duplo clique tira o ponto)"
                   />
-                )}
+                ))}
               </>
             )
           })()}
@@ -1385,13 +1474,13 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
             onArrow={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { arrow: it.data.arrow === 'both' ? 'none' : it.data.arrow === 'none' ? 'end' : 'both' }) : null))}
             onDashed={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { dashed: !it.data.dashed }) : null))}
             onCurve={() => {
-              const curved = selItems.some((i) => i.kind === 'connector' && i.data.bend)
+              const curved = selItems.some((i) => i.kind === 'connector' && curvePoints(i).length > 0)
               mapSelected((it) => {
                 if (it.kind !== 'connector') return null
-                if (curved) return withData(it, { bend: 0 })
-                // Curva padrão: um quarto do comprimento.
-                const { from, to } = connectorAnchors(it, itemsRef.current)
-                return withData(it, { bend: Math.round(Math.hypot(to.p.x - from.p.x, to.p.y - from.p.y) / 4) })
+                if (curved) return withData(it, { pts: undefined, bend: undefined })
+                // Curva padrão: um ponto no meio, afastado um quarto do comprimento.
+                const { len } = connectorAnchors(it, itemsRef.current)
+                return withData(it, { pts: [[0.5, Math.round(len / 4)]], bend: undefined })
               })
             }}
             onFront={bringFront}
@@ -1444,6 +1533,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
           />
         )}
         {toast && <div className="board-toast" role="status">{toast}</div>}
+        </>)}
       </div>
 
       <input

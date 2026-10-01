@@ -12,7 +12,7 @@ import './Select.css'
 // não aceita estilo.
 //
 // O foco fica no botão o tempo todo (padrão combobox + aria-activedescendant):
-// ↑/↓/Home/End andam, Enter/Espaço escolhem, Esc/Tab fecham, e digitar uma
+// ↑/↓/Home/End andam, Enter escolhe, Esc/Tab fecham, e digitar uma
 // letra pula pra opção que começa com ela. A lista vai por portal pro
 // <body> (não é cortada por overflow nem fica atrás de janela modal) e abre
 // pra cima quando não cabe embaixo.
@@ -131,8 +131,8 @@ export function Select({
       }
       case 'Home': if (open) { e.preventDefault(); setActive(0) } return
       case 'End':  if (open) { e.preventDefault(); setActive(last) } return
+      // Espaço não: no site ele não aperta botão nenhum (ver noSpaceActivation).
       case 'Enter':
-      case ' ':
         e.preventDefault()
         if (open) choose(active); else openList()
         return

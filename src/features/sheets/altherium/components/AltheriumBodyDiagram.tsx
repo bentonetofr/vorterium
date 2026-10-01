@@ -628,7 +628,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
       'aria-label': `${ZONE_LABELS[zone]}: ${value > 0 ? `${value} ${unit}` : variant === 'dano' ? 'sem dano' : 'sem armadura'}`,
       onKeyDown: onZoneClick
         ? (e: KeyboardEvent<SVGElement>) => {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onZoneClick(zone) }
+            if (e.key === 'Enter') { e.preventDefault(); onZoneClick(zone) }
           }
         : undefined,
     }

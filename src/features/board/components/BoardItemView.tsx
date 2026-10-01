@@ -276,16 +276,21 @@ function FileView({ item }: ItemViewProps) {
 
 // ── Desenho à mão ───────────────────────────────────────
 
+/** Traço da caneta: curva contínua (Catmull-Rom) passando por todos os pontos. */
 export function strokePath(points: number[]): string {
   if (points.length < 2) return ''
   if (points.length === 2) return `M ${points[0]} ${points[1]} l 0.01 0`
-  let d = `M ${points[0]} ${points[1]}`
-  for (let i = 2; i < points.length - 2; i += 2) {
-    const mx = (points[i] + points[i + 2]) / 2
-    const my = (points[i + 1] + points[i + 3]) / 2
-    d += ` Q ${points[i]} ${points[i + 1]} ${mx} ${my}`
+  const n = points.length / 2
+  const P = (i: number) => {
+    const k = Math.min(n - 1, Math.max(0, i)) * 2
+    return { x: points[k], y: points[k + 1] }
   }
-  d += ` L ${points[points.length - 2]} ${points[points.length - 1]}`
+  const f = (v: number) => Math.round(v * 10) / 10
+  let d = `M ${f(points[0])} ${f(points[1])}`
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2)
+    d += ` C ${f(p1.x + (p2.x - p0.x) / 6)} ${f(p1.y + (p2.y - p0.y) / 6)} ${f(p2.x - (p3.x - p1.x) / 6)} ${f(p2.y - (p3.y - p1.y) / 6)} ${f(p2.x)} ${f(p2.y)}`
+  }
   return d
 }
 
@@ -356,12 +361,10 @@ export const ConnectorLayer = memo(function ConnectorLayer({ connectors, items, 
   return (
     <svg className="board-connectors" aria-hidden="true">
       {connectors.map((c) => {
-        const { a, b, c: q, dirA, dirB } = connectorCurve(c, items)
+        const { a, b, d, dirA, dirB } = connectorCurve(c, items)
         const color = inkColor(c.data.color)
         const arrow = c.data.arrow ?? 'end'
         const size = 14
-        // Reta ou curva: o mesmo caminho (na reta, o controle é o meio).
-        const d = `M ${a.x} ${a.y} Q ${q.x} ${q.y} ${b.x} ${b.y}`
         return (
           <g key={c.id} className={`board-connector${selected.has(c.id) ? ' is-selected' : ''}${c.locked ? ' is-locked' : ''}`}>
             <path className="board-connector__glow" d={d} fill="none" />
@@ -372,6 +375,7 @@ export const ConnectorLayer = memo(function ConnectorLayer({ connectors, items, 
               strokeWidth={2.5}
               strokeDasharray={c.data.dashed ? '10 8' : undefined}
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
             {(arrow === 'end' || arrow === 'both') && <polygon points={arrowHead(b, dirB, size)} fill={color} />}
             {arrow === 'both' && <polygon points={arrowHead(a, { x: -dirA.x, y: -dirA.y }, size)} fill={color} />}

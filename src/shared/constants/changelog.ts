@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.17',
+    date:    '2026-10-01',
+    title:   'Setas com curva de vários pontos, caneta que arredonda o traço e Espaço sem apertar botões',
+    items: [
+      'Quadro: as setas agora curvam com quantos pontos você quiser. Selecione a seta e arraste uma das bolinhas vazias no meio de cada trecho: ela vira um ponto novo, e a seta passa suave por todos. Arraste os pontos (bolinhas cheias) pra ajustar, e dê duplo clique num ponto pra tirar ele. O botão de curva na barra deixa a seta reta de novo, e a curva acompanha quando os itens mudam de lugar.',
+      'Quadro: a caneta agora arredonda o traço sozinha. Enquanto você desenha, a linha segue o mouse com uma folguinha que tira a tremedeira, e ao soltar o traço todo é alisado (curvas tortas viram curvas lisas, e um traço que termina perto do começo fecha certinho). Traços pequenos, como letras, são alisados de leve pra não perder a forma.',
+      'No site todo, a tecla Espaço não aperta mais botão nenhum (antes, ela repetia o último botão clicado — como um botão do Quadro ao arrastar com Espaço). Em campos de texto o Espaço continua normal, e o Enter segue apertando botões.',
+      'Quadro: trocar entre as abas Geral e Escudo do mestre ficou fluido — a aba escolhida sobe e acende, o quadro desliza do lado dela e o título troca suave. Voltar pra uma aba já aberta aparece na hora, sem "Abrindo o quadro…" (o que mudou chega por trás).',
+    ],
+  },
+  {
     version: '1.16',
     date:    '2026-09-30',
     title:   'Fontes e setas curvas no Quadro, zoom suave e caderninho com Tab',

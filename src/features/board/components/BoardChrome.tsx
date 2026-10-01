@@ -5,7 +5,7 @@ import {
 } from '../../library/services/campaignDocumentsService'
 import type { BoardItem, ShapeType, TimelineEvent } from '../services/boardService'
 import {
-  INK_COLORS, NOTE_COLORS, OUTLINE, SHAPE_COLORS, SHAPE_LABEL, inkColor, newId,
+  INK_COLORS, NOTE_COLORS, OUTLINE, SHAPE_COLORS, SHAPE_LABEL, curvePoints, inkColor, newId,
 } from '../boardGeometry'
 import { FONT_KINDS, fontStack } from '../boardFonts'
 
@@ -324,9 +324,9 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOp
           <button type="button" className={`board-context__btn${first.data.dashed ? ' is-on' : ''}`} onClick={a.onDashed} title="Tracejada" aria-label="Tracejada">┄</button>
           <button
             type="button"
-            className={`board-context__btn${items.some((i) => i.data.bend) ? ' is-on' : ''}`}
+            className={`board-context__btn${items.some((i) => curvePoints(i).length > 0) ? ' is-on' : ''}`}
             onClick={a.onCurve}
-            title={items.some((i) => i.data.bend) ? 'Deixar reta' : 'Curvar (ou arraste a bolinha do meio)'}
+            title={items.some((i) => curvePoints(i).length > 0) ? 'Deixar reta' : 'Curvar (ou arraste as bolinhas da seta)'}
             aria-label="Curvar a seta"
           >
             {Icons.curve}
@@ -509,7 +509,7 @@ const SHORTCUTS: [string, string][] = [
   ['Copiar, colar, duplicar', 'Ctrl+C · Ctrl+V · Ctrl+D'],
   ['Apagar', 'Delete ou Backspace'],
   ['Trocar a fonte', 'Selecione post-it, texto, forma ou moldura e clique em Aa'],
-  ['Curvar a seta', 'Selecione a seta e arraste a bolinha do meio (duplo clique nela deixa reta)'],
+  ['Curvar a seta', 'Selecione a seta e arraste as bolinhas vazias (cada uma vira um ponto novo); duplo clique num ponto tira ele'],
   ['Ajustar', 'Setas movem (Shift = 10×) · Shift+1 vê tudo · Shift+0 volta a 100%'],
   ['Fotos e arquivos', 'Arraste do computador ou cole (Ctrl+V). Fotos vão pra Galeria; PDFs e textos, pra Biblioteca'],
 ]

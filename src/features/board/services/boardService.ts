@@ -53,7 +53,9 @@ export interface BoardData {
   to?:     Endpoint
   arrow?:  'end' | 'both' | 'none'
   dashed?: boolean
-  /** Seta curva: quanto o meio sai da reta (0/sem = reta). */
+  /** Seta curva: pontos [u, v] relativos às pontas (ver boardGeometry.curvePoints). */
+  pts?:    [number, number][]
+  /** Curva antiga, de um ponto só no meio (vira pts ao mexer). */
   bend?:   number
   /** Desenho: pontos (x, y, x, y…) relativos ao canto, no tamanho bw × bh. */
   points?: number[]
