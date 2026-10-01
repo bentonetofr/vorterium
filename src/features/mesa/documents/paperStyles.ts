@@ -30,12 +30,16 @@ export interface DocStyle {
   size:    number
   /** Livro: cor da capa (id de COVERS). */
   cover:   string
+  /** Livro: nome do autor gravado na capa (vazio = sem autor). */
+  author:  string
 }
 
 export const DEFAULT_STYLE: DocStyle = {
   texture: 'foto-1', burn: 0, torn: false, folds: false, stains: 1,
-  font: 'La Belle Aurore', ink: 'sepia', size: 26, cover: 'couro',
+  font: 'La Belle Aurore', ink: 'sepia', size: 26, cover: 'couro', author: '',
 }
+
+export const MAX_AUTHOR = 80
 
 // ── Texturas ────────────────────────────────────────────
 
@@ -247,6 +251,17 @@ export function pageSeed(docId: string, index: number): number {
   return (h >>> 0) % 100000
 }
 
+/** Estilo próprio de uma página vindo do banco: só os campos que ela tem, já validados. */
+export function normalizePageStyle(raw: unknown): Partial<DocStyle> | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const full = normalizeStyle(raw)
+  const own: Partial<DocStyle> = {}
+  for (const key of Object.keys(raw) as (keyof DocStyle)[]) {
+    if (key in full && key !== 'cover' && key !== 'author') (own as Record<string, unknown>)[key] = full[key]
+  }
+  return Object.keys(own).length ? own : undefined
+}
+
 /** Completa um estilo vindo do banco (campos faltando viram o padrão). */
 export function normalizeStyle(raw: unknown): DocStyle {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<DocStyle>
@@ -260,5 +275,6 @@ export function normalizeStyle(raw: unknown): DocStyle {
     ink:     INKS.some((i) => i.id === s.ink) ? s.ink! : DEFAULT_STYLE.ink,
     size:    typeof s.size === 'number' && s.size >= 14 && s.size <= 60 ? s.size : DEFAULT_STYLE.size,
     cover:   COVERS.some((c) => c.id === s.cover) ? s.cover! : DEFAULT_STYLE.cover,
+    author:  typeof s.author === 'string' ? s.author.slice(0, MAX_AUTHOR) : '',
   }
 }

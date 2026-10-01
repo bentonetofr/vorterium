@@ -56,7 +56,7 @@ export interface MesaImage {
 export interface MesaDocRef {
   id:    string
   title: string
-  /** Abertura do livro (0 = capa); numa folha, sempre 0. */
+  /** Página aberta do livro (0 = capa, n = página n — igual em qualquer tela); numa folha, sempre 0. */
   page:  number
 }
 

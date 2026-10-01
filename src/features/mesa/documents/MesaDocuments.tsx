@@ -56,6 +56,11 @@ export function MesaDocuments({ campaignId }: { campaignId: string }) {
 
   const visibleDocs = isMaster ? docs : docs.filter((d) => d.visible)
 
+  // O documento aberto no leitor sumiu (excluído, ou o mestre escondeu de novo): fecha.
+  useEffect(() => {
+    if (reading && !loading && !visibleDocs.some((d) => d.id === reading.id)) setReading(null)
+  }, [reading, loading, visibleDocs])
+
   return (
     <section className="mesa-gallery" aria-labelledby="mesa-docs-title">
       <header className="mesa-gallery__head">
@@ -186,7 +191,12 @@ export function DocumentReader({ doc, onClose }: { doc: MesaDocument; onClose: (
   )
 }
 
-/** O documento no palco da Mesa. O mestre vira as páginas; os jogadores acompanham. */
+/**
+ * O documento no palco da Mesa. O mestre vira as páginas e leva todo mundo
+ * junto; o jogador também pode folhear por conta própria (ex.: no celular,
+ * que mostra uma página por vez, ver a segunda página da abertura do
+ * mestre) — e volta pra página do mestre assim que ele virar de novo.
+ */
 export function DocumentStage({ campaignId, docId, page }: { campaignId: string; docId: string; page: number }) {
   const mesa = useMesaStream()
   const [doc, setDoc] = useState<MesaDocument | null>(null)
@@ -209,10 +219,9 @@ export function DocumentStage({ campaignId, docId, page }: { campaignId: string;
     <div className="mesa-doc-stage" onClick={(e) => e.stopPropagation()}>
       <DocumentView
         doc={doc}
-        spread={page}
-        onSpread={mesa.isMaster ? mesa.setDocumentPage : undefined}
-        interactive={mesa.isMaster}
-        keys={mesa.isMaster}
+        page={page}
+        onPage={mesa.isMaster ? mesa.setDocumentPage : undefined}
+        keys
       />
     </div>
   )

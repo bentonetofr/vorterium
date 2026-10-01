@@ -1,5 +1,5 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
-import { DEFAULT_STYLE, normalizeStyle, type DocStyle } from './paperStyles'
+import { DEFAULT_STYLE, normalizePageStyle, normalizeStyle, type DocStyle } from './paperStyles'
 
 // ────────────────────────────────────────────────────────
 // Documentos da Mesa (tabela campaign_mesa_documents): folhas e livros que
@@ -43,7 +43,7 @@ function normalize(row: Record<string, unknown>): MesaDocument {
     style:       normalizeStyle(row.style),
     pages:       (pages.length ? pages : [{ text: '' }]).map((p) => {
       const o = (p && typeof p === 'object' ? p : {}) as { text?: unknown; style?: unknown; cont?: unknown }
-      return { text: typeof o.text === 'string' ? o.text : '', style: o.style && typeof o.style === 'object' ? o.style as Partial<DocStyle> : undefined, ...(o.cont === true ? { cont: true } : {}) }
+      return { text: typeof o.text === 'string' ? o.text : '', style: normalizePageStyle(o.style), ...(o.cont === true ? { cont: true } : {}) }
     }),
     visible:     !!row.visible,
     created_at:  String(row.created_at ?? ''),

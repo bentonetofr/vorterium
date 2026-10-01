@@ -29,6 +29,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Documentos: a escolha da letra virou uma caixa "Fontes" que abre um card com todas as letras à mão, cada uma escrita nela mesma, com busca pelo nome (antes a lista ficava espremida e as fontes não apareciam).',
       'Documentos: o livro novo começa pela capa — escolhe o título e o couro, e depois segue pras páginas (a capa fica sempre como primeira aba do editor).',
       'Documentos: no livro, o texto que não cabe numa página passa sozinho pra seguinte, e volta a subir quando você apaga e sobra espaço. Mudar a letra ou o tamanho redistribui as páginas. Na folha avulsa, aparece um aviso quando o texto passa do papel.',
+      'Documentos: o editor ganhou um × no canto superior direito pra fechar (se tiver alteração sem salvar, ele pergunta antes).',
+      'Documentos: a capa do livro na seção Documentos da Mesa agora aparece igual à do editor (o título ficava minúsculo), e a capa ganhou o nome do autor, gravado embaixo em dourado.',
+      'Documentos: livro na transmissão — todo mundo cai na mesma página que o mestre, mesmo quem vê uma página por vez (celular) e o mestre vê duas. O jogador também pode folhear por conta própria e volta pra página do mestre quando ele virar. A última página em branco de um livro ímpar não ganha mais número.',
+      'Documentos (correções): no livro com 200 páginas (o limite), o texto que passa da última não some mais; as setas ← → não viram ao mesmo tempo o livro da transmissão e o do leitor aberto por cima; ao trocar entre uma e duas páginas (girar o celular, redimensionar) o livro continua na mesma página; o leitor fecha sozinho se o documento for excluído ou escondido; o aviso de "texto passou da folha" mede a folha certa; Ctrl+S não salva duas vezes.',
     ],
   },
   {

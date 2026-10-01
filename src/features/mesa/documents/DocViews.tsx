@@ -34,15 +34,23 @@ export function PaperPage({ text, style, seed, placeholder, className }: PaperPr
   )
 }
 
-/** Capa do livro: couro, filete dourado e o título. */
+/**
+ * Capa do livro: couro, filete dourado, o título e o autor. A capa é a
+ * própria medida (cqw) de tudo que tem dentro, então fica igual em
+ * qualquer tamanho — na miniatura da Mesa, no editor e no livro aberto.
+ */
 export function BookCover({ title, style }: { title: string; style: DocStyle }) {
   useBoardFont('Cinzel Decorative')
   const c = coverOf(style.cover)
+  const author = style.author?.trim()
   return (
     <div className="doc-cover" style={{ '--cover': c.color, '--trim': c.trim } as CSSProperties}>
       <span className="doc-cover__frame" aria-hidden="true" />
-      <span className="doc-cover__title">{title}</span>
-      <span className="doc-cover__orn" aria-hidden="true">❦</span>
+      <div className="doc-cover__in">
+        <span className="doc-cover__title">{title}</span>
+        <span className="doc-cover__orn" aria-hidden="true">❦</span>
+        {author && <span className="doc-cover__author">{author}</span>}
+      </div>
     </div>
   )
 }
@@ -63,10 +71,15 @@ export function bookSpreads(pages: number, single: boolean): number {
 
 interface BookProps {
   doc:        MesaDocument
-  /** Abertura mostrada (controlada por fora, ex.: a transmissão); 0 = capa. */
-  spread?:    number
+  /**
+   * Página aberta, controlada por fora (ex.: a transmissão): 0 = capa, n = a
+   * página n. É pela página (e não pela "abertura") porque cada tela mostra
+   * o livro do seu jeito — uma página só no celular, duas no computador —
+   * e todo mundo tem que cair na mesma página.
+   */
+  page?:      number
   /** A pessoa virou a página (setas, clique na página ou teclado). */
-  onSpread?:  (v: number) => void
+  onPage?:    (page: number) => void
   /** Pode virar as páginas (senão, só acompanha `spread`). */
   interactive?: boolean
   /** Teclas ← → viram as páginas. */
@@ -75,25 +88,44 @@ interface BookProps {
 
 const FLIP_MS = 720
 
-export function BookView({ doc, spread, onSpread, interactive = true, keys = false }: BookProps) {
+export function BookView({ doc, page, onPage, interactive = true, keys = false }: BookProps) {
   const box = useRef<HTMLDivElement>(null)
   const [single, setSingle] = useState(false)
-  const [shown, setShown] = useState(spread ?? 0)
+  // página ↔ abertura: com duas páginas, a abertura v mostra as páginas 2v-1 e 2v.
+  const toV = (p: number) => (p <= 0 ? 0 : single ? p : Math.ceil(p / 2))
+  const toP = (v: number) => (v <= 0 ? 0 : single ? v : 2 * v - 1)
+  const [shown, setShown] = useState(() => (page ? Math.ceil(page / 2) : 0))
   const [flip, setFlip] = useState<{ from: number; to: number } | null>(null)
   const timer = useRef<number | undefined>(undefined)
+  const wasSingle = useRef(single)
 
   // Pouco espaço: uma página por vez. Mede o espaço em volta (o livro de uma
   // página é mais estreito — medir ele mesmo prenderia nesse modo).
   useLayoutEffect(() => {
     const el = box.current?.parentElement
     if (!el) return
-    const ro = new ResizeObserver(() => setSingle(el.clientWidth < 560))
+    const measure = () => setSingle(el.clientWidth < 560)
+    measure()
+    const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
+  // Trocou entre uma e duas páginas: continua na mesma página, sem animação.
+  useLayoutEffect(() => {
+    if (wasSingle.current === single) return
+    const was = wasSingle.current
+    wasSingle.current = single
+    const p = page ?? (shown <= 0 ? 0 : was ? shown : 2 * shown - 1)
+    window.clearTimeout(timer.current)
+    setFlip(null)
+    setShown(toV(p))
+  }, [single])  // eslint-disable-line react-hooks/exhaustive-deps
+
   const max = bookSpreads(doc.pages.length, single)
   const clampV = (v: number) => Math.max(0, Math.min(max, v))
+  // O livro encolheu (páginas apagadas): não fica aberto além do fim.
+  useEffect(() => { if (!flip && shown > max) setShown(max) }, [max, shown, flip])
 
   const turnTo = (to: number) => {
     to = clampV(to)
@@ -106,25 +138,32 @@ export function BookView({ doc, spread, onSpread, interactive = true, keys = fal
   }
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  // Controlado por fora (transmissão): vira junto.
+  // Controlado por fora (transmissão): vira junto, na mesma página.
   useEffect(() => {
-    if (spread == null) return
-    const target = clampV(spread)
+    if (page == null) return
+    const target = clampV(toV(page))
     if (target !== (flip ? flip.to : shown)) turnTo(target)
-  }, [spread, single])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const go = (dir: 1 | -1) => {
     const to = clampV((flip ? flip.to : shown) + dir)
-    if (spread != null && onSpread) { onSpread(to); return }
+    if (page != null && onPage) { onPage(toP(to)); return }
     turnTo(to)
-    onSpread?.(to)
+    onPage?.(toP(to))
   }
 
   useEffect(() => {
     if (!keys || !interactive) return
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
-      if (t?.closest('input, textarea, [contenteditable="true"]')) return
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return
+      if (t?.closest('input, textarea, select, [contenteditable="true"]')) return
+      // Só o livro que está à vista e por cima de tudo (o leitor aberto por
+      // cima da transmissão não vira as duas ao mesmo tempo).
+      const el = box.current
+      if (!el || !el.getClientRects().length) return
+      const top = [...document.querySelectorAll('.doc-reader, .modal-overlay')].pop()
+      if (top && !top.contains(el)) return
       if (e.key === 'ArrowRight') { e.preventDefault(); go(1) }
       if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
     }
@@ -135,11 +174,11 @@ export function BookView({ doc, spread, onSpread, interactive = true, keys = fal
   const renderSide = (s: Side): ReactNode => {
     if (s === null) return null
     if (s === 'cover') return <BookCover title={doc.title} style={doc.style} />
-    const page = doc.pages[s]
-    const style = pageStyle(doc.style, page?.style)
+    const pg = doc.pages[s]
+    const style = pageStyle(doc.style, pg?.style)
     return (
       <>
-        <PaperPage text={page?.text ?? ''} style={style} seed={pageSeed(doc.id, s)} className="doc-paper--page" />
+        <PaperPage text={pg?.text ?? ''} style={style} seed={pageSeed(doc.id, s)} className="doc-paper--page" />
         <span className={`doc-book__num doc-book__num--${s % 2 ? 'r' : 'l'}`} style={{ fontFamily: handStack(style.font), color: inkOf(style.ink) }}>{s + 1}</span>
       </>
     )
@@ -198,12 +237,12 @@ export function BookView({ doc, spread, onSpread, interactive = true, keys = fal
 }
 
 /** O documento inteiro: folha avulsa ou livro. */
-export function DocumentView({ doc, spread, onSpread, interactive = true, keys = false }: BookProps) {
-  if (doc.kind === 'book') return <BookView doc={doc} spread={spread} onSpread={onSpread} interactive={interactive} keys={keys} />
-  const page = doc.pages[0]
+export function DocumentView({ doc, page, onPage, interactive = true, keys = false }: BookProps) {
+  if (doc.kind === 'book') return <BookView doc={doc} page={page} onPage={onPage} interactive={interactive} keys={keys} />
+  const first = doc.pages[0]
   return (
     <div className="doc-sheet">
-      <PaperPage text={page?.text ?? ''} style={pageStyle(doc.style, page?.style)} seed={pageSeed(doc.id, 0)} />
+      <PaperPage text={first?.text ?? ''} style={pageStyle(doc.style, first?.style)} seed={pageSeed(doc.id, 0)} />
     </div>
   )
 }

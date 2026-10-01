@@ -6,7 +6,7 @@ import { BookCover, PaperPage } from './DocViews'
 import { FontPicker } from './FontPicker'
 import { overflows, reflow, reflowAll } from './pageFlow'
 import {
-  COVERS, INKS, PAPERS, handStack, pageSeed, pageStyle, type DocStyle,
+  COVERS, INKS, MAX_AUTHOR, PAPERS, handStack, pageSeed, pageStyle, type DocStyle,
 } from './paperStyles'
 
 // ────────────────────────────────────────────────────────
@@ -31,6 +31,8 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
+  /** O livro chegou ao limite de páginas e o texto que sobrou não aparece. */
+  const [full, setFull] = useState(false)
   const textRef = useRef<HTMLTextAreaElement>(null)
   const draftRef = useRef(draft)
   draftRef.current = draft
@@ -92,6 +94,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     const pages = draft.pages.map((p, i) => (i === at ? { ...p, text: value } : p))
     const flowed = reflow(pages, at, draft.style, caret)
     change((d) => { d.pages = flowed.pages })
+    setFull(flowed.full)
     if (flowed.page !== at) setPageIdx(flowed.page)
     caretTo.current = flowed.page !== at || flowed.pages[at]?.text !== value ? flowed.caret : null
   }
@@ -112,7 +115,8 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     void Promise.all([...fonts].map((f) => loadBoardFont(f))).then(() => {
       if (!alive) return
       const prev = draftRef.current
-      const pages = reflowAll(prev.pages, prev.style)
+      const { pages, full: over } = reflowAll(prev.pages, prev.style)
+      setFull(over)
       if (samePages(pages, prev.pages)) return
       setDraft({ ...prev, pages })
       setDirty(true)
@@ -121,9 +125,10 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   }, [layoutKey])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Folha avulsa: avisa quando o texto passa do papel.
-  const sheetOverflow = useMemo(() => !isBook && !!page && overflows(page.text, style), [isBook, page?.text, style.font, style.size])  // eslint-disable-line react-hooks/exhaustive-deps
+  const sheetOverflow = useMemo(() => !isBook && !!page && overflows(page.text, style, false), [isBook, page?.text, style.font, style.size])  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
+    if (saving) return
     setSaving(true)
     setError(null)
     try {
@@ -137,10 +142,16 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     }
   }
 
+  /** O × do canto: com alterações não salvas, pergunta antes de jogar fora. */
+  function closeX() {
+    if (dirty && !window.confirm('Fechar sem salvar? As alterações deste documento vão se perder.')) return
+    onClose()
+  }
+
   // Ctrl+S salva.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); void save() }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (dirty) void save() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -184,7 +195,17 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
             <div>
               <p className="doc-editor__label">Capa</p>
               {coverChoices}
-              <p className="doc-editor__hint" style={{ marginTop: 6 }}>O título acima vai gravado na capa. Depois é só seguir pras páginas.</p>
+              <p className="doc-editor__label" style={{ marginTop: 12 }}>Autor</p>
+              <input
+                className="input"
+                value={draft.style.author}
+                maxLength={MAX_AUTHOR}
+                onChange={(e) => change((d) => { d.style = { ...d.style, author: e.target.value } })}
+                placeholder="Ex.: Irmão Aldric de Varneth (opcional)"
+                aria-label="Autor do livro"
+                style={{ width: '100%' }}
+              />
+              <p className="doc-editor__hint" style={{ marginTop: 6 }}>O título acima e o autor vão gravados na capa. Depois é só seguir pras páginas.</p>
             </div>
           ) : (
             <>
@@ -275,26 +296,29 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
 
         {/* ── Texto e prévia ── */}
         <div className="doc-editor__main">
-          {isBook && (
-            <div className="doc-editor__pages" role="tablist" aria-label="Capa e páginas">
-              <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => setPageIdx(COVER)}>Capa</button>
-              {draft.pages.map((p, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  role="tab"
-                  aria-selected={!onCover && at === i}
-                  className={`doc-editor__chip${!onCover && at === i ? ' is-on' : ''}${p.cont ? ' doc-editor__chip--cont' : ''}`}
-                  onClick={() => setPageIdx(i)}
-                  title={[p.cont ? 'Continua a página anterior' : '', p.style ? 'Página com estilo próprio' : ''].filter(Boolean).join(' · ') || undefined}
-                >
-                  {i + 1}{p.style ? '*' : ''}
-                </button>
-              ))}
-              <button type="button" className="doc-editor__chip" onClick={addPage} disabled={draft.pages.length >= MAX_PAGES}>+ Página</button>
-              {!onCover && draft.pages.length > 1 && <button type="button" className="doc-editor__chip" onClick={removePage}>Tirar a página {at + 1}</button>}
-            </div>
-          )}
+          <div className="doc-editor__top">
+            {isBook && (
+              <div className="doc-editor__pages" role="tablist" aria-label="Capa e páginas">
+                <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => setPageIdx(COVER)}>Capa</button>
+                {draft.pages.map((p, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    role="tab"
+                    aria-selected={!onCover && at === i}
+                    className={`doc-editor__chip${!onCover && at === i ? ' is-on' : ''}${p.cont ? ' doc-editor__chip--cont' : ''}`}
+                    onClick={() => setPageIdx(i)}
+                    title={[p.cont ? 'Continua a página anterior' : '', p.style ? 'Página com estilo próprio' : ''].filter(Boolean).join(' · ') || undefined}
+                  >
+                    {i + 1}{p.style ? '*' : ''}
+                  </button>
+                ))}
+                <button type="button" className="doc-editor__chip" onClick={addPage} disabled={draft.pages.length >= MAX_PAGES}>+ Página</button>
+                {!onCover && draft.pages.length > 1 && <button type="button" className="doc-editor__chip" onClick={removePage}>Tirar a página {at + 1}</button>}
+              </div>
+            )}
+            <button type="button" className="doc-editor__close" onClick={closeX} disabled={saving} aria-label="Fechar" title="Fechar">×</button>
+          </div>
           {onCover ? (
             <div className="doc-editor__cover-work">
               <div className="doc-editor__cover-big"><BookCover title={draft.title} style={draft.style} /></div>
@@ -322,7 +346,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
           )}
           <div className="doc-editor__foot">
             <span className="doc-editor__status" role="status">
-              {error ?? (saving ? 'Salvando…' : dirty ? 'Alterações não salvas (Ctrl+S salva)' : 'Tudo salvo')}
+              {error ?? (full ? `O livro chegou ao limite de ${MAX_PAGES} páginas — o texto que passou da última não aparece.` : saving ? 'Salvando…' : dirty ? 'Alterações não salvas (Ctrl+S salva)' : 'Tudo salvo')}
             </span>
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>{dirty ? 'Descartar' : 'Fechar'}</button>
             <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={saving || !dirty}>Salvar</button>
