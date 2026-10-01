@@ -293,6 +293,15 @@
 .board-handle--ne, .board-handle--sw { cursor: nesw-resize; }
 .board-handle--w, .board-handle--e { cursor: ew-resize; width: 8px; height: 18px; }
 .board-handle--end { width: 13px; height: 13px; border-radius: 50%; cursor: move; }
+/* Bolinha azul: puxa uma seta presa no item (como no Miro). */
+.board-handle--link {
+  width: 12px; height: 12px; border-radius: 50%; cursor: crosshair;
+  background: #5b7cfa; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s ease;
+}
+.board-handle--link:hover { transform: translate(-50%, -50%) scale(1.35); }
+/* Item em que a seta vai se prender. */
+.board-sel--target { border: 2px solid #5b7cfa; border-radius: 6px; box-shadow: 0 0 0 4px rgba(91, 124, 250, 0.25); }
 .board-handle--pt { width: 12px; height: 12px; border-radius: 50%; cursor: grab; background: var(--accent-bright); }
 .board-handle--gap { width: 9px; height: 9px; border-radius: 50%; cursor: copy; background: var(--bg-elevated); opacity: 0.85; }
 .board-handle--gap:hover { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }

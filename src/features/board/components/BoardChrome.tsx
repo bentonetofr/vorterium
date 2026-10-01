@@ -509,6 +509,7 @@ const SHORTCUTS: [string, string][] = [
   ['Copiar, colar, duplicar', 'Ctrl+C · Ctrl+V · Ctrl+D'],
   ['Apagar', 'Delete ou Backspace'],
   ['Trocar a fonte', 'Selecione post-it, texto, forma ou moldura e clique em Aa'],
+  ['Ligar dois itens', 'Selecione o item e arraste uma das bolinhas azuis até o outro (a seta fica presa nos dois)'],
   ['Curvar a seta', 'Selecione a seta e arraste as bolinhas vazias (cada uma vira um ponto novo); duplo clique num ponto tira ele'],
   ['Ajustar', 'Setas movem (Shift = 10×) · Shift+1 vê tudo · Shift+0 volta a 100%'],
   ['Fotos e arquivos', 'Arraste do computador ou cole (Ctrl+V). Fotos vão pra Galeria; PDFs e textos, pra Biblioteca'],

@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.20',
+    date:    '2026-10-01',
+    title:   'Ligar itens do Quadro com setas',
+    items: [
+      'Quadro: ao selecionar uma imagem, post-it, forma, texto ou moldura, aparecem bolinhas azuis em volta (como no Miro). Arraste uma delas até outro item e nasce uma seta presa nos dois — o item de destino fica destacado enquanto você puxa, e a seta acompanha quando eles mudam de lugar. Bom pra árvores genealógicas e mapas de relações.',
+    ],
+  },
+  {
     version: '1.19',
     date:    '2026-10-01',
     title:   'Galeria de todos',

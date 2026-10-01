@@ -43,7 +43,7 @@ type Drag =
   | { type: 'resize'; id: string; handle: string; orig: BoardItem; start: Point }
   | { type: 'box'; start: Point; base: string[] }
   | { type: 'draw'; points: Point[]; last: Point }
-  | { type: 'connect'; id: string }
+  | { type: 'connect'; id: string; sx?: number; sy?: number }
   | { type: 'endpoint'; id: string; end: 'from' | 'to'; orig: BoardItem }
   | { type: 'curve'; id: string; index: number; orig: BoardItem }
 
@@ -173,6 +173,8 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   const active     = useRef(true)
   const editStart  = useRef<BoardItem | null>(null)
   const pointerWorld = useRef<Point | null>(null)
+  /** Item em que a seta sendo puxada vai se prender (fica destacado). */
+  const linkOver   = useRef<string | null>(null)
   const vpRef      = useRef<HTMLDivElement>(null)
   const fileRef    = useRef<HTMLInputElement>(null)
   const uploadAt   = useRef<Point | null>(null)
@@ -858,6 +860,13 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       const id = selRef.current[0]
       const it = itemsRef.current[id]
       if (!it) return
+      if (handle.startsWith('link:')) {
+        // Bolinha azul do lado do item: puxa uma seta já presa nele (como no Miro).
+        const c = blank('connector', 0, 0, 0, 0, { ...defaultData('connector'), from: { id }, to: { x: p.x, y: p.y } })
+        applyLocal({ [c.id]: c })
+        dragRef.current = { type: 'connect', id: c.id, sx: e.clientX, sy: e.clientY }
+        return
+      }
       if (handle === 'from' || handle === 'to') dragRef.current = { type: 'endpoint', id, end: handle, orig: it }
       else if (handle.startsWith('pt:')) dragRef.current = { type: 'curve', id, index: Number(handle.slice(3)), orig: it }
       else if (handle.startsWith('gap:')) {
@@ -1043,6 +1052,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         const other = end === 'to' ? c.data.from : c.data.to
         const over = itemAt(e.clientX, e.clientY, d.id)
         const target: Endpoint = over && over !== other?.id ? { id: over } : { x: p.x, y: p.y }
+        linkOver.current = target.id ?? null
         applyLocal({ [d.id]: withData(c, { [end]: target }) })
         return
       }
@@ -1051,6 +1061,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
 
   function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
     pointers.current.delete(e.pointerId)
+    linkOver.current = null
     if (pinch.current) {
       if (pointers.current.size < 2) pinch.current = null
       return
@@ -1102,7 +1113,9 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         if (!c) return
         const { a, b } = connectorEnds(c, itemsRef.current)
         const tiny = Math.hypot(a.x - b.x, a.y - b.y) * v.zoom < 12
-        if (tiny && !(c.data.from?.id && c.data.to?.id)) { applyLocal({ [d.id]: null }); return }
+        // Só um clique na bolinha azul (sem puxar até lugar nenhum): não cria seta.
+        const justClick = d.sx != null && d.sy != null && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 24
+        if ((tiny || justClick) && !(c.data.from?.id && c.data.to?.id)) { applyLocal({ [d.id]: null }); redraw(); return }
         commit({ [d.id]: c }, { [d.id]: null })
         setSelection([d.id])
         return
@@ -1333,7 +1346,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     const s = toScreen(selBounds)
     const left = clamp(s.x + s.w / 2, 150, Math.max(150, vp.w - 150))
     // Moldura tem o título em cima — a barra sobe mais um pouco.
-    const above = s.y - 56 - (selItems.some((i) => i.kind === 'frame') ? 26 : 0)
+    const above = s.y - 66 - (selItems.some((i) => i.kind === 'frame') ? 26 : 0)
     return { left, top: above > 8 ? above : Math.min(s.y + s.h + 14, vp.h - 52) }
   })() : null
 
@@ -1438,7 +1451,24 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
               nw: { x: s.x, y: s.y }, ne: { x: s.x + s.w, y: s.y }, sw: { x: s.x, y: s.y + s.h }, se: { x: s.x + s.w, y: s.y + s.h },
               w: { x: s.x, y: s.y + s.h / 2 }, e: { x: s.x + s.w, y: s.y + s.h / 2 },
             }
-            return hs.map((h) => <span key={h} className={`board-handle board-handle--${h}`} data-handle={h} style={{ left: pos[h].x, top: pos[h].y }} />)
+            // Bolinhas azuis pra puxar uma seta (fora da borda, no meio de cada lado).
+            const gap = 18
+            const links: Record<string, Point> = {
+              n: { x: s.x + s.w / 2, y: s.y - gap }, s: { x: s.x + s.w / 2, y: s.y + s.h + gap },
+              w: { x: s.x - gap, y: s.y + s.h / 2 }, e: { x: s.x + s.w + gap, y: s.y + s.h / 2 },
+            }
+            return (
+              <>
+                {hs.map((h) => <span key={h} className={`board-handle board-handle--${h}`} data-handle={h} style={{ left: pos[h].x, top: pos[h].y }} />)}
+                {tool === 'select' && Object.entries(links).map(([k, q]) => (
+                  <span key={`link-${k}`} className="board-handle board-handle--link" data-handle={`link:${k}`} style={{ left: q.x, top: q.y }} title="Arraste até outro item pra ligar com uma seta" />
+                ))}
+              </>
+            )
+          })()}
+          {linkOver.current && itemsRef.current[linkOver.current] && dragRef.current && (() => {
+            const s = toScreen(rectOf(itemsRef.current[linkOver.current!]))
+            return <div className="board-sel board-sel--target" style={{ left: s.x - 4, top: s.y - 4, width: s.w + 8, height: s.h + 8 }} />
           })()}
           {single && !single.locked && single.kind === 'connector' && (() => {
             const { a, b, points, gaps } = connectorCurve(single, items)
