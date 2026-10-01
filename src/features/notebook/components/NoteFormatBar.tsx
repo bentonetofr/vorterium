@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
 import type { FormatCommand, NoteEditorHandle } from './NoteEditor'
+import {
+  BOARD_FONTS, FONT_CATEGORIES, boardFont, fontStack, loadFontPreview, type FontCategory,
+} from '../../../shared/lib/googleFonts'
 
 // ────────────────────────────────────────────────────────
-// Barra de formatação do caderno: negrito, itálico, sublinhado, tachado,
-// cor da letra e marca-texto, tamanho, listas e limpar formatação. Os
+// Barra de formatação do caderno: fonte (a galeria do Google Fonts do
+// site), negrito, itálico, sublinhado, tachado, cor da letra e marca-texto,
+// tamanho, listas e limpar formatação. Os
 // botões não roubam o foco da folha (mousedown sem efeito), então a
 // formatação cai no trecho selecionado ou no que for digitado a seguir.
 // Os botões acendem conforme o que está onde o cursor está.
@@ -20,8 +24,18 @@ const SIZES: { value: string; label: string }[] = [
   { value: '6', label: 'Enorme' },
 ]
 
-interface Active { bold: boolean; italic: boolean; underline: boolean; strike: boolean; ul: boolean; ol: boolean; size: string }
-const NONE: Active = { bold: false, italic: false, underline: false, strike: false, ul: false, ol: false, size: '3' }
+interface Active { bold: boolean; italic: boolean; underline: boolean; strike: boolean; ul: boolean; ol: boolean; size: string; font: string; color: string; hilite: string }
+const NONE: Active = { bold: false, italic: false, underline: false, strike: false, ul: false, ol: false, size: '3', font: '', color: '', hilite: '' }
+
+/** Cor no formato do navegador ("rgb(…)"), pra comparar com a do cursor. */
+function normColor(c: string): string {
+  const probe = document.createElement('span')
+  probe.style.color = c
+  return probe.style.color.replace(/\s/g, '')
+}
+function commandValue(cmd: string): string {
+  try { return String(document.queryCommandValue(cmd) || '') } catch { return '' }
+}
 
 interface BtnProps { cmd: FormatCommand; on?: boolean; label: string; children: ReactNode; className?: string; run: (cmd: FormatCommand) => void }
 
@@ -48,22 +62,30 @@ function query(cmd: string): boolean {
 
 export function NoteFormatBar({ editor }: { editor: RefObject<NoteEditorHandle> }) {
   const [active, setActive] = useState<Active>(NONE)
-  const [menu, setMenu] = useState<'color' | 'size' | null>(null)
+  const [menu, setMenu] = useState<'font' | 'color' | 'size' | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
-  // O que está ativo onde o cursor está.
+  // O que está ativo onde o cursor está (e logo depois de cada clique na barra).
+  const refresh = useRef<() => void>(() => {})
   useEffect(() => {
     const update = () => {
       const el = editor.current?.element()
       const sel = window.getSelection()
       if (!el || !sel?.anchorNode || !el.contains(sel.anchorNode)) return
-      let size = '3'
+      let size = '3', font = ''
       try { size = document.queryCommandValue('fontSize') || '3' } catch { /* padrão */ }
+      try {
+        const name = (document.queryCommandValue('fontName') || '').split(',')[0].trim().replace(/^["']|["']$/g, '')
+        font = boardFont(name) ? name : ''
+      } catch { /* padrão */ }
       setActive({
         bold: query('bold'), italic: query('italic'), underline: query('underline'), strike: query('strikeThrough'),
-        ul: query('insertUnorderedList'), ol: query('insertOrderedList'), size,
+        ul: query('insertUnorderedList'), ol: query('insertOrderedList'), size, font,
+        color: normColor(commandValue('foreColor')),
+        hilite: normColor(commandValue('hiliteColor') || commandValue('backColor')),
       })
     }
+    refresh.current = update
     document.addEventListener('selectionchange', update)
     return () => document.removeEventListener('selectionchange', update)
   }, [editor])
@@ -81,10 +103,31 @@ export function NoteFormatBar({ editor }: { editor: RefObject<NoteEditorHandle> 
   const run = (cmd: FormatCommand, value?: string) => {
     editor.current?.format(cmd, value)
     setMenu(null)
+    refresh.current()
   }
+  /** Clicar de novo na opção que já está ativa desliga (volta ao normal). */
+  const toggle = (cmd: FormatCommand, value: string, on: boolean, off = 'default') => run(cmd, on ? off : value)
 
   return (
     <div className="note-fmt" ref={box} role="toolbar" aria-label="Formatação">
+      <div className="note-fmt__menu">
+        <button
+          type="button"
+          className={`note-fmt__btn note-fmt__btn--wide${menu === 'font' ? ' is-on' : ''}`}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setMenu((m) => (m === 'font' ? null : 'font'))}
+          aria-label="Fonte"
+          aria-expanded={menu === 'font'}
+          title={active.font ? `Fonte: ${active.font}` : 'Fonte'}
+        >
+          <span className="note-fmt__font-aa" style={{ fontFamily: fontStack(active.font) }}>Aa</span> ▾
+        </button>
+        {menu === 'font' && (
+          <NoteFontMenu current={active.font} onPick={(family) => run('fontName', !family || family === active.font ? 'default' : family)} />
+        )}
+      </div>
+      <span className="note-fmt__sep" />
+
       <Btn run={run} cmd="bold" on={active.bold} label="Negrito (Ctrl+B)"><b>B</b></Btn>
       <Btn run={run} cmd="italic" on={active.italic} label="Itálico (Ctrl+I)"><i>I</i></Btn>
       <Btn run={run} cmd="underline" on={active.underline} label="Sublinhado (Ctrl+U)"><u>U</u></Btn>
@@ -111,9 +154,9 @@ export function NoteFormatBar({ editor }: { editor: RefObject<NoteEditorHandle> 
                 <button
                   key={c}
                   type="button"
-                  className={`note-fmt__swatch${c === 'default' ? ' note-fmt__swatch--default' : ''}`}
+                  className={`note-fmt__swatch${c === 'default' ? ' note-fmt__swatch--default' : ''}${c !== 'default' && normColor(c) === active.color ? ' is-on' : ''}`}
                   style={c === 'default' ? undefined : { background: c }}
-                  onClick={() => run('foreColor', c)}
+                  onClick={() => toggle('foreColor', c, c !== 'default' && normColor(c) === active.color)}
                   aria-label={c === 'default' ? 'Cor normal' : `Cor ${c}`}
                   title={c === 'default' ? 'Cor normal' : undefined}
                 />
@@ -125,9 +168,9 @@ export function NoteFormatBar({ editor }: { editor: RefObject<NoteEditorHandle> 
                 <button
                   key={c}
                   type="button"
-                  className={`note-fmt__swatch${c === 'default' ? ' note-fmt__swatch--default' : ''}`}
+                  className={`note-fmt__swatch${c === 'default' ? ' note-fmt__swatch--default' : ''}${c !== 'default' && normColor(c) === active.hilite ? ' is-on' : ''}`}
                   style={c === 'default' ? undefined : { background: c }}
-                  onClick={() => run('hiliteColor', c)}
+                  onClick={() => toggle('hiliteColor', c, c !== 'default' && normColor(c) === active.hilite)}
                   aria-label={c === 'default' ? 'Sem marca-texto' : 'Marca-texto'}
                   title={c === 'default' ? 'Sem marca-texto' : undefined}
                 />
@@ -156,7 +199,7 @@ export function NoteFormatBar({ editor }: { editor: RefObject<NoteEditorHandle> 
                 key={s.value}
                 type="button"
                 className={`note-fmt__size note-fmt__size--${s.value}${active.size === s.value ? ' is-on' : ''}`}
-                onClick={() => run('fontSize', s.value)}
+                onClick={() => toggle('fontSize', s.value, s.value !== '3' && active.size === s.value, '3')}
               >
                 {s.label}
               </button>
@@ -176,5 +219,103 @@ export function NoteFormatBar({ editor }: { editor: RefObject<NoteEditorHandle> 
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 5h12M12 5l-4 14M4 20l16-16" /></svg>
       </Btn>
     </div>
+  )
+}
+
+// ── Fonte: a mesma galeria do Quadro, em lista ──────────
+
+const CAT_SHORT: Record<FontCategory, string> = {
+  'fantasia':   'Fantasia',
+  'terror':     'Terror',
+  'manuscrita': 'Caligrafia',
+  'mao':        'À mão',
+  'serifada':   'Clássicas',
+  'sem-serifa': 'Modernas',
+  'decorativa': 'Títulos',
+  'maquina':    'Máquina e pixel',
+}
+const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+function NoteFontMenu({ current, onPick }: { current: string; onPick: (family: string | null) => void }) {
+  const [query, setQuery] = useState('')
+  const [cat, setCat] = useState<FontCategory | 'all'>('all')
+  const listRef = useRef<HTMLDivElement>(null)
+  const q = norm(query.trim())
+  const list = useMemo(
+    () => BOARD_FONTS.filter((f) => (cat === 'all' || f.cat === cat) && (!q || norm(f.family).includes(q))),
+    [cat, q],
+  )
+  const grouped = cat === 'all' && !q
+  useEffect(() => { listRef.current?.scrollTo({ top: 0 }) }, [cat, q])
+
+  return (
+    // Clicar na lista não tira o cursor da folha; só a busca recebe o foco.
+    <div className="note-fmt__pop note-fmt__pop--fonts" onMouseDown={(e) => { if (!(e.target as HTMLElement).closest('input')) e.preventDefault() }}>
+      <input
+        className="input note-fmt__font-search"
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={`Procurar entre ${BOARD_FONTS.length} fontes…`}
+        aria-label="Procurar fonte"
+      />
+      <div className="note-fmt__font-cats" role="tablist" aria-label="Categorias">
+        {[{ id: 'all' as const, label: 'Todas' }, ...FONT_CATEGORIES.map((c) => ({ id: c.id, label: CAT_SHORT[c.id] }))].map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            role="tab"
+            aria-selected={cat === c.id}
+            className={`note-fmt__font-cat${cat === c.id ? ' is-on' : ''}`}
+            onClick={() => setCat(c.id)}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+      <div className="note-fmt__font-list" ref={listRef}>
+        {grouped && (
+          <button type="button" className={`note-fmt__font note-fmt__font--default${!current ? ' is-on' : ''}`} onClick={() => onPick(null)}>
+            Padrão
+          </button>
+        )}
+        {list.map((f, i) => (
+          <div key={f.family}>
+            {grouped && (i === 0 || list[i - 1].cat !== f.cat) && (
+              <p className="note-fmt__font-head">{FONT_CATEGORIES.find((c) => c.id === f.cat)?.label}</p>
+            )}
+            <NoteFontItem family={f.family} on={current === f.family} root={listRef} onPick={onPick} />
+          </div>
+        ))}
+        {list.length === 0 && <p className="note-fmt__font-empty">Nenhuma fonte com “{query.trim()}”.</p>}
+      </div>
+    </div>
+  )
+}
+
+function NoteFontItem({ family, on, root, onPick }: { family: string; on: boolean; root: RefObject<HTMLDivElement>; onPick: (family: string) => void }) {
+  const ref = useRef<HTMLButtonElement>(null)
+  // Baixa só as letras do nome quando o item chega perto da área visível.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (typeof IntersectionObserver === 'undefined') { loadFontPreview(family); return }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { loadFontPreview(family); io.disconnect() }
+    }, { root: root.current, rootMargin: '120px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [family, root])
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={`note-fmt__font${on ? ' is-on' : ''}`}
+      style={{ fontFamily: fontStack(family) }}
+      onClick={() => onPick(family)}
+      title={family}
+    >
+      {family}
+    </button>
   )
 }

@@ -40,9 +40,10 @@ export interface BoardData {
   shape?:  ShapeType
   /** Título (moldura, arquivo). */
   title?:  string
-  /** Onde mora a imagem: 'gallery' = foto posta no quadro (Galeria);
-   *  sem isso = arquivo da Biblioteca (docId). */
-  store?:  'gallery'
+  /** Onde mora o arquivo: 'gallery' = foto posta no quadro (Galeria; a do
+   *  Escudo fica numa pasta só do mestre, fora da lista); 'shield' = PDF/texto
+   *  que só existe no Escudo; sem isso = arquivo da Biblioteca (docId). */
+  store?:  'gallery' | 'shield'
   /** Arquivo da Biblioteca (imagem/arquivo). */
   docId?:  string
   path?:   string

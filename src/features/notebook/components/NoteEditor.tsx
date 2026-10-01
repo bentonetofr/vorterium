@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import { createNote, updateNote, type NotebookNote } from '../services/notebookService'
-import { noteToHtml, notePlainText, sanitizeNoteHtml } from '../noteHtml'
+import { loadNoteFonts, noteToHtml, notePlainText, sanitizeNoteHtml } from '../noteHtml'
+import { fontStack, loadBoardFont } from '../../../shared/lib/googleFonts'
 
 // ────────────────────────────────────────────────────────
 // Folha de anotação com formatação (negrito, itálico, cor, tamanho,
@@ -18,7 +19,7 @@ export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 export type FormatCommand =
   | 'bold' | 'italic' | 'underline' | 'strikeThrough'
   | 'insertUnorderedList' | 'insertOrderedList' | 'removeFormat'
-  | 'foreColor' | 'hiliteColor' | 'fontSize'
+  | 'foreColor' | 'hiliteColor' | 'fontSize' | 'fontName'
 
 const SAVE_DELAY_MS = 600
 /** Limite do banco (caracteres do HTML guardado). */
@@ -80,6 +81,7 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
   // Conteúdo inicial (a folha é "não controlada": o React não reescreve o HTML).
   useLayoutEffect(() => {
     if (ref.current) ref.current.innerHTML = noteToHtml(note?.content ?? '')
+  // (noteToHtml já pede as fontes que a anotação usa.)
   // Só ao montar; trocas de nota recriam a folha (key).
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -157,6 +159,7 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
     const el = ref.current
     if (!el) return
     const value = readContent(el)
+    loadNoteFonts(value)
     setEmpty(!value)
     if (value === latestText.current) return
     latestText.current = value
@@ -169,8 +172,12 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
   function restore() {
     const el = ref.current
     if (!el) return
-    el.focus({ preventScroll: true })
     const sel = window.getSelection()
+    // O cursor já está na folha (os botões não tiram o foco): não mexe. Refazer
+    // a seleção apagaria o estilo "pendente" (negrito ligado com o cursor
+    // parado), e o segundo clique no N não desligaria.
+    if (document.activeElement === el && sel?.rangeCount && el.contains(sel.anchorNode)) return
+    el.focus({ preventScroll: true })
     if (range.current && sel) {
       sel.removeAllRanges()
       sel.addRange(range.current)
@@ -189,16 +196,24 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
       restore()
       // Cor e tamanho como estilo (span style=…), não <font>.
       document.execCommand('styleWithCSS', false, 'true')
-      if ((command === 'foreColor' || command === 'hiliteColor') && value === 'default') {
-        // "Cor normal"/"sem marca-texto": pinta com uma cor-marcador e tira
-        // essa cor dos trechos (sobra a cor do tema, clara ou escura).
-        document.execCommand(command, false, 'rgb(1, 2, 3)')
-        const prop = command === 'foreColor' ? 'color' : 'background-color'
-        for (const node of [...el.querySelectorAll<HTMLElement>('[style]')]) {
-          if (node.style.getPropertyValue(prop).replace(/\s/g, '') !== 'rgb(1,2,3)') continue
-          node.style.removeProperty(prop)
-          if (!node.getAttribute('style')?.trim() && node.tagName === 'SPAN') node.replaceWith(...node.childNodes)
+      if ((command === 'foreColor' || command === 'hiliteColor' || command === 'fontName') && value === 'default') {
+        // "Cor normal"/"sem marca-texto"/"fonte normal": aplica um valor-marcador
+        // e tira ele dos trechos (sobra o do tema).
+        const MARK = command === 'fontName' ? 'vorterium-marcador' : 'rgb(1, 2, 3)'
+        document.execCommand(command, false, MARK)
+        const prop = command === 'foreColor' ? 'color' : command === 'hiliteColor' ? 'background-color' : 'font-family'
+        const isMark = (v: string) => (command === 'fontName' ? v.includes('vorterium-marcador') : v.replace(/\s/g, '') === 'rgb(1,2,3)')
+        for (const node of [...el.querySelectorAll<HTMLElement>('[style], font[face]')]) {
+          if (node.tagName === 'FONT' && isMark(node.getAttribute('face') ?? '')) node.removeAttribute('face')
+          if (isMark(node.style.getPropertyValue(prop))) node.style.removeProperty(prop)
+          const bare = !node.getAttribute('style')?.trim() && !node.getAttribute('face') && !node.getAttribute('color') && !node.getAttribute('size')
+          if (bare && (node.tagName === 'SPAN' || node.tagName === 'FONT')) node.replaceWith(...node.childNodes)
         }
+      } else if (command === 'fontName') {
+        // Fonte da galeria: baixa e aplica com a lista completa (nome + reserva).
+        if (!value || !fontStack(value)) return
+        void loadBoardFont(value)
+        document.execCommand('fontName', false, fontStack(value))
       } else {
         document.execCommand(command, false, value)
       }

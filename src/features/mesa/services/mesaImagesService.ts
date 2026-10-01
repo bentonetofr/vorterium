@@ -212,6 +212,9 @@ export async function uploadBoardPhoto(campaignId: string, file: File, shield: b
     throw new Error(`Não foi possível enviar "${file.name}".`)
   }
 
+  // Escudo do mestre: a foto fica só no Escudo (pasta só do mestre), sem ir pra Galeria.
+  if (shield) return { path, name, w: img.w, h: img.h }
+
   // Sem .select(): jogador pode registrar a foto na Galeria, mas não lê a tabela.
   const { error } = await supabase.from('campaign_mesa_images').insert({ campaign_id: campaignId, name, path })
   if (error) {

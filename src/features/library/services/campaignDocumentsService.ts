@@ -3,7 +3,7 @@ import { supabase } from '../../../shared/lib/supabase'
 // ────────────────────────────────────────────────────────
 // Biblioteca da campanha — livros e documentos que o mestre guarda pra
 // mesa. Tabela campaign_documents + bucket privado "campaign-documents"
-// (pasta = campanha). O mestre envia, renomeia, esconde e exclui; os
+// (pasta = campanha). O mestre envia, renomeia e exclui; os
 // jogadores leem o que está aberto pra mesa (a RLS já filtra) e só enviam
 // pelo Quadro (subpasta "quadro/").
 // ────────────────────────────────────────────────────────
@@ -125,6 +125,24 @@ export async function uploadDocument(campaignId: string, file: File, folder?: 'q
     throw new Error(`Não foi possível guardar "${file.name}" na biblioteca.`)
   }
   return data as CampaignDocument
+}
+
+/**
+ * Arquivo posto no Escudo do mestre: fica só no armazenamento da campanha,
+ * sem registro na Biblioteca — então só o mestre consegue abrir (jogador só
+ * lê documento registrado e aberto pra mesa).
+ */
+export async function uploadShieldFile(campaignId: string, file: File): Promise<{ path: string; name: string; mime: string }> {
+  const problem = validateDocument(file)
+  if (problem) throw new Error(problem)
+  const mime = mimeOf(file)!
+  const path = `${campaignId}/escudo/${crypto.randomUUID()}.${TYPES[mime].ext}`
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: mime, cacheControl: '3600' })
+  if (error) {
+    console.error('Erro do Storage ao enviar arquivo do Escudo:', error)
+    throw new Error(`Não foi possível enviar "${file.name}".`)
+  }
+  return { path, name: nameFromFile(file), mime }
 }
 
 export async function updateDocument(

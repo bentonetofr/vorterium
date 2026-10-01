@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.18',
+    date:    '2026-10-01',
+    title:   'Biblioteca de todos, Escudo fechado, setas por cima e fontes no caderninho',
+    items: [
+      'Biblioteca: tudo que está na estante da campanha agora é de todos — os jogadores leem todos os arquivos, e não existe mais a opção de esconder. Arquivos que o mestre já tinha escondido continuam escondidos até ele clicar em "Mostrar aos jogadores".',
+      'Escudo do mestre: fotos, PDFs e textos postos no Escudo agora ficam só no Escudo — não vão mais pra Galeria nem pra Biblioteca. Pra abrir um arquivo do Escudo, é só dar duplo clique nele.',
+      'Quadro: setas agora ficam por cima dos post-its e dos outros itens quando são mais novas (antes ficavam sempre por trás), e "Trazer pra frente" e "Mandar pra trás" também valem pras setas.',
+      'Meu caderninho: nova escolha de fonte na barra de formatação (o "Aa" no começo), com as mesmas 249 fontes do Google Fonts do Quadro — busca pelo nome e categorias. A fonte vale pro trecho selecionado ou pro que for escrito a seguir, e o mestre vê a fonte escolhida.',
+      'Quadro: depois de clicar num botão (como o dos dados), apertar Espaço com o mouse em cima do quadro agora arrasta o quadro na hora — antes o botão ficava "aceso" e segurava o Espaço. Em qualquer botão do site, o Espaço também tira o destaque de seleção.',
+      'Meu caderninho: clicar de novo num botão de formatação desliga ela — negrito, itálico, sublinhado e tachado agora desligam mesmo com o cursor parado (antes o segundo clique não tirava), e clicar na cor, no marca-texto, no tamanho ou na fonte que já está em uso volta ao normal. A cor e o marca-texto em uso aparecem marcados.',
+    ],
+  },
+  {
     version: '1.17',
     date:    '2026-10-01',
     title:   'Setas com curva de vários pontos, caneta que arredonda o traço e Espaço sem apertar botões',

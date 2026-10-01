@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCurrentProfile } from '../../users/services/profileService'
-import { documentKind, uploadDocument, type CampaignDocument } from '../../library/services/campaignDocumentsService'
+import { documentKind, uploadDocument, uploadShieldFile, type CampaignDocument } from '../../library/services/campaignDocumentsService'
 import { signBoardPhotos, uploadBoardPhoto, type BoardPhoto } from '../../mesa/services/mesaImagesService'
 import type { CampaignWithRole } from '../../../shared/types'
 import {
@@ -14,7 +14,7 @@ import {
   editableText, intersects, itemBounds, newId, normRect, rectOf, smoothStroke, unionRect,
   type Point, type Rect, type View,
 } from '../boardGeometry'
-import { BoardItemView, ConnectorLabel, ConnectorLayer, setEditCaret, strokePath } from './BoardItemView'
+import { BoardItemView, ConnectorLabel, ConnectorView, setEditCaret, strokePath } from './BoardItemView'
 import {
   BOARD_ACCEPT, BoardContextBar, BoardHelp, BoardToolbar, BoardZoomBar, Icons, ImageLightbox, LibraryPicker, TimelineEditor,
   type PenSettings, type Tool,
@@ -682,16 +682,31 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     navigate(`/biblioteca?estante=${campaign.id}&doc=${docId}`)
   }, [campaign.id, flush, navigate])
 
-  /** Onde abrir o original de uma imagem/arquivo: Galeria (só o mestre entra) ou Biblioteca. */
+  /** Arquivo que só existe no Escudo: abre direto, numa aba nova. */
+  const openShieldFile = useCallback((path?: string) => {
+    if (!path) return
+    // A aba abre já (no clique), senão o navegador bloqueia; o link chega depois.
+    const tab = window.open('', '_blank')
+    void signBoardPaths([path]).then((m) => {
+      const url = m.get(path)
+      if (url && tab) tab.location.href = url
+      else { tab?.close(); flash('Não foi possível abrir o arquivo.') }
+    })
+  }, [flash])
+
+  /** Onde abrir o original de uma imagem/arquivo: Galeria (só o mestre entra), Biblioteca ou o próprio arquivo (Escudo). */
   const sourceOf = useCallback((data: BoardItem['data'] | undefined): { label: string; open: () => void } | null => {
     if (!data) return null
+    if (data.store === 'shield') return { label: 'Abrir o arquivo', open: () => openShieldFile(data.path) }
     if (data.store === 'gallery') {
+      // Foto do Escudo não está na Galeria.
+      if (data.path?.includes('/quadro-mestre/')) return null
       return isMaster ? { label: 'Abrir na Galeria', open: () => { void flush(); navigate('/galeria') } } : null
     }
     return data.docId ? { label: 'Abrir na Biblioteca', open: () => openInLibrary(data.docId) } : null
-  }, [flush, isMaster, navigate, openInLibrary])
+  }, [flush, isMaster, navigate, openInLibrary, openShieldFile])
 
-  // ── Arquivos: fotos vão pra Galeria, PDFs e textos pra Biblioteca ──
+  // ── Arquivos: no Geral, fotos vão pra Galeria e PDFs/textos pra Biblioteca; no Escudo, ficam só no Escudo ──
 
   /** Foto recém-enviada pra Galeria → item de imagem (já aparece com o arquivo local). */
   const placePhoto = useCallback((photo: BoardPhoto, at: Point, file: File) => {
@@ -748,11 +763,18 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       const at = { x: base.x + i * 40, y: base.y + i * 40 }
       try {
         if (file.type.startsWith('image/')) {
-          // Foto → Galeria (a do escudo, numa pasta que só o mestre vê).
+          // Foto → Galeria (no Escudo, só numa pasta do mestre, fora da Galeria).
           placed.push(placePhoto(await uploadBoardPhoto(campaign.id, file, shield), at, file))
+        } else if (shield) {
+          // PDF/texto no Escudo → fica só no Escudo (não vai pra Biblioteca).
+          const f = await uploadShieldFile(campaign.id, file)
+          const size = DEFAULT_SIZE.file!
+          const it = blank('file', at.x - size.w / 2, at.y - size.h / 2, size.w, size.h, { store: 'shield', path: f.path, name: f.name, mime: f.mime })
+          commit({ [it.id]: it }, { [it.id]: null })
+          placed.push(it.id)
         } else {
-          // PDF/texto → Biblioteca (no escudo, escondido dos jogadores).
-          const doc = await uploadDocument(campaign.id, file, 'quadro', shield ? 'master' : 'all')
+          // PDF/texto → Biblioteca (todos da campanha leem).
+          const doc = await uploadDocument(campaign.id, file, 'quadro')
           placed.push(await placeDoc(doc, at, file))
         }
       } catch (err) {
@@ -762,7 +784,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       }
     }))
     if (placed.length) { setToolState('select'); setSelection(placed) }
-  }, [campaign.id, flash, placeDoc, placePhoto, setSelection, shield, viewCenter])
+  }, [blank, campaign.id, commit, flash, placeDoc, placePhoto, setSelection, shield, viewCenter])
 
   // ── Ponteiro ──────────────────────────────────────────
 
@@ -1130,7 +1152,10 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     else if (it.kind === 'image') {
       const url = it.data.path ? urls.get(it.data.path) : null
       if (url) setLightbox({ url, name: it.data.name ?? 'Imagem', data: it.data })
-    } else if (it.kind === 'file') openInLibrary(it.data.docId)
+    } else if (it.kind === 'file') {
+      if (it.data.store === 'shield') openShieldFile(it.data.path)
+      else openInLibrary(it.data.docId)
+    }
     else { setEditCaret({ x: e.clientX, y: e.clientY }); startEdit(it.id) }
   }
 
@@ -1176,7 +1201,20 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       // ficam com as próprias teclas.
       return !!t && (t.isContentEditable || !!t.closest?.('input, textarea, select, [role="combobox"], .dice-fab-wrapper, [data-fab-panel], .emoji-pop, .board-fonts'))
     }
+    /** Escrevendo de verdade (campo de texto): aí o Espaço é espaço. */
+    function writing(e: Event) {
+      const t = e.target as HTMLElement | null
+      return !!t && (t.isContentEditable || !!t.closest?.('input, textarea, select, .emoji-pop, .board-fonts'))
+    }
     function onKeyDown(e: KeyboardEvent) {
+      // Espaço com o mouse em cima do quadro arrasta, mesmo que o último
+      // clique tenha sido num botão de fora (dados, chat…), que ficou com o foco.
+      if (e.key === ' ' && pointerWorld.current && !writing(e) && !document.querySelector('.modal-overlay')) {
+        active.current = true
+        if (!spaceDown.current) { spaceDown.current = true; redraw() }
+        e.preventDefault()
+        return
+      }
       if (!active.current || typing(e) || document.querySelector('.modal-overlay')) return
       const mod = e.ctrlKey || e.metaKey
       const k = e.key.toLowerCase()
@@ -1274,8 +1312,8 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   const selSet = new Set(selection)
   const shown = (it: BoardItem) => selSet.has(it.id) || it.id === editingId || intersects(visible, rectOf(it))
   const frames = all.filter((i) => i.kind === 'frame').sort((a, b) => a.z - b.z)
-  const connectors = all.filter((i) => i.kind === 'connector')
-  const others = all.filter((i) => i.kind !== 'frame' && i.kind !== 'connector' && shown(i)).sort((a, b) => a.z - b.z)
+  // Setas entram na mesma pilha dos itens (ordem z), pra ficar por cima de um post-it quando são mais novas.
+  const others = all.filter((i) => i.kind !== 'frame' && (i.kind === 'connector' || shown(i))).sort((a, b) => a.z - b.z)
   const selItems = selection.map((id) => items[id]).filter(Boolean)
   const toScreen = (r: Rect): Rect => ({ x: r.x * view.zoom + view.tx, y: r.y * view.zoom + view.ty, w: r.w * view.zoom, h: r.h * view.zoom })
   const selBounds = unionRect(selItems.map((i) => itemBounds(i, items)))
@@ -1314,7 +1352,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
           <h3 className="board-header__title">{shield ? 'Escudo do mestre' : 'Quadro'}</h3>
           <p className="board-header__sub">
             {shield
-              ? 'Só os mestres da campanha veem este quadro. Fotos postas aqui vão pra Galeria, e arquivos pra Biblioteca escondidos dos jogadores.'
+              ? 'Só os mestres da campanha veem este quadro. Fotos e arquivos postos aqui ficam só aqui: não vão pra Galeria nem pra Biblioteca.'
               : 'O quadro infinito da campanha, onde todo mundo edita junto e em tempo real.'}
           </p>
         </div>
@@ -1366,8 +1404,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
           {frames.filter(shown).map((f) => (
             <BoardItemView key={f.id} item={f} {...itemProps} editing={editingId === f.id} />
           ))}
-          <ConnectorLayer connectors={connectors} items={items} selected={selSet} />
-          {others.map((it) => (
+          {others.map((it) => it.kind === 'connector' ? (
+            <Fragment key={it.id}>
+              <ConnectorView item={it} items={items} selected={selSet.has(it.id)} />
+              <ConnectorLabel item={it} items={items} {...itemProps} editing={editingId === it.id} />
+            </Fragment>
+          ) : (
             <BoardItemView
               key={it.id}
               item={it}
@@ -1375,9 +1417,6 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
               editing={editingId === it.id}
               imageUrl={it.kind === 'image' && it.data.path ? (urls.has(it.data.path) ? urls.get(it.data.path) : undefined) : undefined}
             />
-          ))}
-          {connectors.map((c) => (
-            <ConnectorLabel key={c.id} item={c} items={items} {...itemProps} editing={editingId === c.id} />
           ))}
           {drawing && (
             <svg className="board-connectors" aria-hidden="true">

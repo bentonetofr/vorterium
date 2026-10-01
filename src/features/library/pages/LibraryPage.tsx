@@ -31,7 +31,7 @@ import './LibraryPage.css'
 // imagem grande, texto como página.
 //
 // A navegação fica na URL (?estante=…&doc=…), então o "voltar" do
-// navegador e os links funcionam. O mestre envia, renomeia, esconde dos
+// navegador e os links funcionam. O mestre envia, renomeia, mostra aos
 // jogadores e exclui; os jogadores só leem o que está aberto pra mesa.
 // ────────────────────────────────────────────────────────
 
@@ -534,10 +534,12 @@ function DocumentBody({ doc, isMaster, onChanged, onDeleted }: DocumentBodyProps
     }
   }
 
-  async function toggleVisibility() {
+  // A Biblioteca é de todos da campanha: não dá mais pra esconder. Documento
+  // escondido antes disso continua escondido até o mestre mostrar.
+  async function showToPlayers() {
     setBusy(true)
     try {
-      await updateDocument(doc, { visibility: doc.visibility === 'all' ? 'master' : 'all' })
+      await updateDocument(doc, { visibility: 'all' })
       await onChanged()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível alterar.')
@@ -607,9 +609,9 @@ function DocumentBody({ doc, isMaster, onChanged, onDeleted }: DocumentBodyProps
           {isMaster && !renaming && (
             <button type="button" className="btn btn-ghost doc-viewer__btn" onClick={() => setRenaming(true)}>Renomear</button>
           )}
-          {isMaster && (
-            <button type="button" className="btn btn-ghost doc-viewer__btn" onClick={() => void toggleVisibility()} disabled={busy}>
-              {doc.visibility === 'all' ? 'Esconder dos jogadores' : 'Mostrar aos jogadores'}
+          {isMaster && doc.visibility === 'master' && (
+            <button type="button" className="btn btn-ghost doc-viewer__btn" onClick={() => void showToPlayers()} disabled={busy}>
+              Mostrar aos jogadores
             </button>
           )}
           {isMaster && (confirmDelete ? (

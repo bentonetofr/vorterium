@@ -6,6 +6,8 @@
 // foco está num botão (ou algo que faz papel de botão); em campo de texto ele
 // continua escrevendo espaço, e os atalhos com Espaço (como arrastar o
 // Quadro) continuam funcionando. O Enter segue apertando botões normalmente.
+// E o botão perde o foco no Espaço: senão ele fica "aceso" (contorno de
+// seleção) e continua segurando o teclado.
 // ────────────────────────────────────────────────────────
 
 const BUTTON_LIKE = [
@@ -23,7 +25,10 @@ function blockSpace(e: KeyboardEvent) {
   const t = e.target
   if (!(t instanceof Element)) return
   if ((t instanceof HTMLElement && t.isContentEditable) || t.closest(TEXT_ENTRY)) return
-  if (t.closest(BUTTON_LIKE)) e.preventDefault()
+  const button = t.closest(BUTTON_LIKE)
+  if (!button) return
+  e.preventDefault()
+  if (e.type === 'keydown' && button instanceof HTMLElement && document.activeElement === button) button.blur()
 }
 
 let installed = false

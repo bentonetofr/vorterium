@@ -268,7 +268,7 @@ function FileView({ item }: ItemViewProps) {
       <span className="board-file__icon" aria-hidden="true">{ext}</span>
       <span className="board-file__info">
         <span className="board-file__name">{item.data.name ?? 'Arquivo'}</span>
-        <span className="board-file__meta">Biblioteca · clique duas vezes pra abrir</span>
+        <span className="board-file__meta">{item.data.store === 'shield' ? 'Só no Escudo' : 'Biblioteca'} · clique duas vezes pra abrir</span>
       </span>
     </div>
   )
@@ -342,7 +342,7 @@ function TimelineView({ item }: ItemViewProps) {
   )
 }
 
-// ── Setas (todas numa camada SVG) ───────────────────────
+// ── Setas (cada uma no seu lugar da pilha, como os outros itens) ──
 
 /** Ponta de flecha em `tip`, apontando na direção `dir`. */
 function arrowHead(tip: Point, dir: Point, size: number): string {
@@ -351,22 +351,24 @@ function arrowHead(tip: Point, dir: Point, size: number): string {
   return `${tip.x},${tip.y} ${tip.x + size * Math.cos(a1)},${tip.y + size * Math.sin(a1)} ${tip.x + size * Math.cos(a2)},${tip.y + size * Math.sin(a2)}`
 }
 
-interface ConnectorsProps {
-  connectors: BoardItem[]
-  items:      Record<string, BoardItem>
-  selected:   Set<string>
+interface ConnectorProps {
+  item:     BoardItem
+  items:    Record<string, BoardItem>
+  selected: boolean
 }
 
-export const ConnectorLayer = memo(function ConnectorLayer({ connectors, items, selected }: ConnectorsProps) {
+/** Uma seta. Fica na pilha junto com os outros itens (pela ordem z): seta nova
+ *  aparece por cima dos post-its, e "trazer pra frente/mandar pra trás" vale pra ela. */
+export function ConnectorView({ item: c, items, selected }: ConnectorProps) {
   return (
     <svg className="board-connectors" aria-hidden="true">
-      {connectors.map((c) => {
+      {(() => {
         const { a, b, d, dirA, dirB } = connectorCurve(c, items)
         const color = inkColor(c.data.color)
         const arrow = c.data.arrow ?? 'end'
         const size = 14
         return (
-          <g key={c.id} className={`board-connector${selected.has(c.id) ? ' is-selected' : ''}${c.locked ? ' is-locked' : ''}`}>
+          <g className={`board-connector${selected ? ' is-selected' : ''}${c.locked ? ' is-locked' : ''}`}>
             <path className="board-connector__glow" d={d} fill="none" />
             <path
               d={d}
@@ -382,10 +384,10 @@ export const ConnectorLayer = memo(function ConnectorLayer({ connectors, items, 
             <path className="board-connector__hit" data-board-id={c.id} d={d} fill="none" />
           </g>
         )
-      })}
+      })()}
     </svg>
   )
-})
+}
 
 /** Legenda no meio da seta (editável com duplo clique). */
 export function ConnectorLabel({ item, items, editing, onText, onDone }: ItemViewProps & { items: Record<string, BoardItem> }) {

@@ -267,6 +267,7 @@
 .note-fmt__swatches { display: grid; grid-template-columns: repeat(5, 22px); gap: 6px; }
 .note-fmt__swatch { width: 22px; height: 22px; padding: 0; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 50%; }
 .note-fmt__swatch:hover { outline: 2px solid var(--accent-bright); outline-offset: 1px; }
+.note-fmt__swatch.is-on { outline: 2px solid var(--accent-bright); outline-offset: 2px; box-shadow: 0 0 0 1px var(--bg-elevated) inset; }
 .note-fmt__swatch--default { background: linear-gradient(135deg, transparent 45%, var(--danger) 45%, var(--danger) 55%, transparent 55%), var(--bg-surface); border-color: var(--border-base); }
 .note-fmt__pop--list { gap: 2px; padding: 4px; min-width: 140px; }
 .note-fmt__size {
@@ -279,6 +280,36 @@
 .note-fmt__size--3 { font-size: 16px; }
 .note-fmt__size--5 { font-size: 22px; }
 .note-fmt__size--6 { font-size: 28px; }
+/* Fonte: galeria em lista (abre do começo da barra, cabe no caderno). */
+.note-fmt__font-aa { font-size: 16px; line-height: 1; }
+.note-fmt__pop--fonts { width: min(290px, calc(100vw - 48px)); max-height: min(360px, 60vh); padding: 8px; gap: 6px; }
+.note-fmt__font-search { width: 100%; font-size: var(--text-sm); }
+.note-fmt__font-cats { display: flex; flex-wrap: wrap; gap: 4px; }
+.note-fmt__font-cat {
+  padding: 2px 8px;
+  font-family: var(--font-label); font-size: 11px; font-weight: 600;
+  color: var(--text-secondary); background: var(--bg-overlay); border: 1px solid var(--border-dim); border-radius: 999px;
+}
+.note-fmt__font-cat:hover { color: var(--text-primary); border-color: var(--gilded); }
+.note-fmt__font-cat.is-on { color: var(--text-inverse); background: var(--accent); border-color: var(--accent); }
+.note-fmt__font-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+.note-fmt__font-head {
+  position: sticky; top: 0; z-index: 1;
+  margin: 6px 0 2px; padding: 4px 6px;
+  font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent-bright); background: var(--bg-elevated);
+}
+.note-fmt__font {
+  display: block; width: 100%;
+  padding: 5px 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 18px; line-height: 1.35; text-align: left;
+  color: var(--text-primary); background: none; border: 1px solid transparent; border-radius: 6px;
+}
+.note-fmt__font:hover { background: var(--bg-overlay); }
+.note-fmt__font.is-on { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--gilded); }
+.note-fmt__font--default { font-family: var(--font-body); font-size: 15px; }
+.note-fmt__font-empty { margin: var(--space-3) 0; text-align: center; font-size: var(--text-sm); color: var(--text-muted); }
 .player-note .note-fmt { padding-left: 0; padding-right: 0; border-bottom: none; margin-bottom: var(--space-2); }
 
 /* ── Página do mestre ── */

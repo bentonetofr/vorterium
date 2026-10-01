@@ -1,3 +1,5 @@
+import { boardFont, fontStack, loadBoardFont } from '../../shared/lib/googleFonts'
+
 // ────────────────────────────────────────────────────────
 // Texto das anotações com formatação (negrito, itálico, cor, tamanho,
 // listas…). Fica guardado como HTML, mas SEMPRE passa por sanitizeNoteHtml
@@ -23,6 +25,11 @@ const STYLE_RULES: Record<string, RegExp> = {
   'text-decoration-line':  /^(underline|line-through|none|underline line-through|line-through underline)$/i,
 }
 
+/** Primeiro nome de uma lista de fontes, sem aspas ("Pirata One", serif → Pirata One). */
+function firstFamily(value: string): string {
+  return (value.split(',')[0] ?? '').trim().replace(/^["']|["']$/g, '').trim()
+}
+
 function cleanStyle(style: string): string {
   const out: string[] = []
   for (const part of style.split(';')) {
@@ -30,6 +37,12 @@ function cleanStyle(style: string): string {
     if (i < 0) continue
     const prop = part.slice(0, i).trim().toLowerCase()
     const value = part.slice(i + 1).trim()
+    // Fonte: só as da galeria do site (e sempre escrita do mesmo jeito).
+    if (prop === 'font-family') {
+      const stack = fontStack(firstFamily(value))
+      if (stack) out.push(`font-family: ${stack}`)
+      continue
+    }
     const rule = STYLE_RULES[prop]
     if (rule && rule.test(value)) out.push(`${prop}: ${value}`)
   }
@@ -47,10 +60,10 @@ function cleanNode(node: Node, doc: Document): Node[] {
   if (!ALLOWED_TAGS.has(tag)) return children
   const clean = doc.createElement(tag.toLowerCase())
   const style = el.getAttribute('style')
-  if (style && tag !== 'BR') {
-    const s = cleanStyle(style)
-    if (s) clean.setAttribute('style', s)
-  }
+  // <font face="…"> (alguns navegadores) vira estilo, se a fonte é da galeria.
+  const face = tag === 'FONT' ? fontStack(firstFamily(el.getAttribute('face') ?? '')) : undefined
+  const css = [style && tag !== 'BR' ? cleanStyle(style) : '', face ? `font-family: ${face}` : ''].filter(Boolean).join('; ')
+  if (css) clean.setAttribute('style', css)
   if (tag === 'FONT') {
     const color = el.getAttribute('color')
     const size = el.getAttribute('size')
@@ -95,10 +108,21 @@ function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+const FAMILY_IN_HTML = /font-family:\s*(?:&quot;|")([^"&;]+)/g
+
+/** Baixa as fontes que aparecem no HTML da anotação (cada uma uma vez só). */
+export function loadNoteFonts(html: string): void {
+  for (const m of html.matchAll(FAMILY_IN_HTML)) if (boardFont(m[1])) void loadBoardFont(m[1])
+}
+
 /** O que vai pra tela: HTML limpo (anotação antiga em texto puro vira HTML). */
 export function noteToHtml(content: string): string {
   if (!content) return ''
-  if (isHtmlNote(content)) return sanitizeNoteHtml(unreescape(content))
+  if (isHtmlNote(content)) {
+    const html = sanitizeNoteHtml(unreescape(content))
+    loadNoteFonts(html)
+    return html
+  }
   return escapeHtml(content).replace(/\n/g, '<br>')
 }
 
