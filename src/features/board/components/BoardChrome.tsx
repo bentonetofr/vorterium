@@ -54,6 +54,8 @@ export const Icons = {
   open:      <Icon size={18}><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" /></Icon>,
   zoomImg:   <Icon size={18}><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5M11 8v6M8 11h6" /></Icon>,
   edit:      <Icon size={18}><path d="M4 20h4L19 9l-4-4L4 16z" /></Icon>,
+  sharp:     <Icon size={18}><path d="M4 18l6-10 5 7 5-9" /></Icon>,
+  round:     <Icon size={18}><path d="M4 18c2-6 4-10 6-10s3 7 5 7 3-6 5-9" /></Icon>,
   curve:     <Icon size={18}><path d="M4 18C6 8 14 4 20 6" /><path d="M16 3.5l4 2.5-2.5 4" /></Icon>,
   help:      <Icon size={18}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 015 .5c0 1.5-2.5 2-2.5 3.5" /><path d="M12 17h.01" /></Icon>,
 }
@@ -211,6 +213,8 @@ export interface ContextActions {
   onDashed:     () => void
   /** Seta reta ⇄ curva. */
   onCurve:      () => void
+  /** Linha com pontos: cantos retos ⇄ arredondados. */
+  onSharp:      () => void
   onFront:      () => void
   onBack:       () => void
   onDuplicate:  () => void
@@ -331,6 +335,17 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOp
           >
             {Icons.curve}
           </button>
+          {items.some((i) => curvePoints(i).length > 0) && (
+            <button
+              type="button"
+              className={`board-context__btn${items.some((i) => i.data.sharp) ? ' is-on' : ''}`}
+              onClick={a.onSharp}
+              title={items.some((i) => i.data.sharp) ? 'Arredondar os cantos' : 'Cantos retos'}
+              aria-label={items.some((i) => i.data.sharp) ? 'Arredondar os cantos' : 'Cantos retos'}
+            >
+              {items.some((i) => i.data.sharp) ? Icons.round : Icons.sharp}
+            </button>
+          )}
         </>
       )}
 
@@ -509,6 +524,8 @@ const SHORTCUTS: [string, string][] = [
   ['Copiar, colar, duplicar', 'Ctrl+C · Ctrl+V · Ctrl+D'],
   ['Apagar', 'Delete ou Backspace'],
   ['Trocar a fonte', 'Selecione post-it, texto, forma ou moldura e clique em Aa'],
+  ['Linha com quinas', 'Ferramenta Seta (L): clique, clique de novo pra cada quina, e termine com duplo clique, Enter ou clicando num item'],
+  ['Encaixar na grade', 'Segure Shift enquanto arrasta um item'],
   ['Ligar dois itens', 'Selecione o item e arraste uma das bolinhas azuis até o outro (a seta fica presa nos dois)'],
   ['Curvar a seta', 'Selecione a seta e arraste as bolinhas vazias (cada uma vira um ponto novo); duplo clique num ponto tira ele'],
   ['Ajustar', 'Setas movem (Shift = 10×) · Shift+1 vê tudo · Shift+0 volta a 100%'],

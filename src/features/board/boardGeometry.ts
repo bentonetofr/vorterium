@@ -147,6 +147,19 @@ export function connectorCurve(conn: BoardItem, items: Record<string, BoardItem>
     return { a, b, d: `M ${a.x} ${a.y} L ${b.x} ${b.y}`, points, gaps: [m], mid: m, dirA: dir, dirB: dir }
   }
   const P = [a, ...points, b]
+  if (conn.data.sharp) {
+    // Cantos retos: segmentos de reta ponto a ponto.
+    const n = P.length - 1
+    const half = (i: number) => ({ x: (P[i].x + P[i + 1].x) / 2, y: (P[i].y + P[i + 1].y) / 2 })
+    return {
+      a, b, points,
+      d: `M ${P.map((q) => `${q.x} ${q.y}`).join(' L ')}`,
+      gaps: P.slice(0, -1).map((_, i) => half(i)),
+      mid: n % 2 ? half((n - 1) / 2) : P[n / 2],
+      dirA: { x: P[1].x - a.x, y: P[1].y - a.y },
+      dirB: { x: b.x - P[n - 1].x, y: b.y - P[n - 1].y },
+    }
+  }
   const segs: Cubic[] = []
   for (let i = 0; i < P.length - 1; i++) {
     const p0 = P[i - 1] ?? P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] ?? P[i + 1]

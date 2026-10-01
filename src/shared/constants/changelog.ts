@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.21',
+    date:    '2026-10-01',
+    title:   'Linha com quinas e grade com Shift no Quadro',
+    items: [
+      'Quadro: com a ferramenta Seta, agora dá pra fazer a linha com cliques — clique pra começar, clique de novo em cada lugar pra fazer uma quina reta, e termine com duplo clique, Enter, Esc ou clicando num item (a ponta se prende nele). Arrastar continua funcionando como antes.',
+      'Quadro: novo botão na barra da seta pra alternar entre cantos retos e arredondados em linhas com quinas ou curvas.',
+      'Quadro: segure Shift enquanto arrasta um item e aparece uma grade — o item encaixa nela, alinhado com os pontinhos do quadro. Soltando o Shift, a grade some e o item volta a andar livre.',
+    ],
+  },
+  {
     version: '1.20',
     date:    '2026-10-01',
     title:   'Ligar itens do Quadro com setas',

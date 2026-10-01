@@ -56,6 +56,8 @@ export interface BoardData {
   dashed?: boolean
   /** Seta curva: pontos [u, v] relativos às pontas (ver boardGeometry.curvePoints). */
   pts?:    [number, number][]
+  /** Com pontos: cantos retos (segmentos) em vez de curva arredondada. */
+  sharp?:  boolean
   /** Curva antiga, de um ponto só no meio (vira pts ao mexer). */
   bend?:   number
   /** Desenho: pontos (x, y, x, y…) relativos ao canto, no tamanho bw × bh. */

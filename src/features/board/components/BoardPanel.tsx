@@ -39,13 +39,16 @@ interface HistoryEntry { before: Changes; after: Changes }
 
 type Drag =
   | { type: 'pan'; sx: number; sy: number; tx: number; ty: number }
-  | { type: 'move'; start: Point; orig: Record<string, BoardItem>; moved: boolean; clickId: string | null }
+  | { type: 'move'; start: Point; orig: Record<string, BoardItem>; moved: boolean; clickId: string | null; last?: Point }
   | { type: 'resize'; id: string; handle: string; orig: BoardItem; start: Point }
   | { type: 'box'; start: Point; base: string[] }
   | { type: 'draw'; points: Point[]; last: Point }
-  | { type: 'connect'; id: string; sx?: number; sy?: number }
+  | { type: 'connect'; id: string; sx?: number; sy?: number; fromTool?: boolean }
   | { type: 'endpoint'; id: string; end: 'from' | 'to'; orig: BoardItem }
   | { type: 'curve'; id: string; index: number; orig: BoardItem }
+
+/** Grade do Shift: o mesmo passo dos pontinhos do quadro (afastado, 4×). */
+const gridStep = (zoom: number) => (zoom < 0.35 ? 96 : 24)
 
 const CLIP_PREFIX = 'vorterium-quadro:'
 const SAVE_DELAY = 300
@@ -175,6 +178,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   const pointerWorld = useRef<Point | null>(null)
   /** Item em que a seta sendo puxada vai se prender (fica destacado). */
   const linkOver   = useRef<string | null>(null)
+  /** Linha sendo feita com cliques (ferramenta Seta): cada clique vira uma quina. */
+  const poly       = useRef<{ id: string; verts: Point[] } | null>(null)
+  /** Shift segurado enquanto arrasta: grade ligada (os itens encaixam nela). */
+  const snapOn     = useRef(false)
+  // Pras teclas (o efeito do teclado não é refeito a cada desenho).
+  const keyActs    = useRef<{ polyEnd: () => void; resnap: (on: boolean) => void }>({ polyEnd: () => {}, resnap: () => {} })
   const vpRef      = useRef<HTMLDivElement>(null)
   const fileRef    = useRef<HTMLInputElement>(null)
   const uploadAt   = useRef<Point | null>(null)
@@ -808,6 +817,98 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     return null
   }, [])
 
+  // ── Linha com cliques (ferramenta Seta) ──────────────
+
+  /** A ponta acompanha o mouse (ou prende no item embaixo); as quinas ficam onde foram clicadas. */
+  function polyUpdate(p: Point, clientX: number, clientY: number) {
+    const st = poly.current
+    const c = st && itemsRef.current[st.id]
+    if (!st || !c) { poly.current = null; return }
+    const over = itemAt(clientX, clientY, st.id)
+    const to: Endpoint = over && over !== c.data.from?.id ? { id: over } : { x: p.x, y: p.y }
+    linkOver.current = to.id ?? null
+    const moved = withData(c, { to })
+    const an = connectorAnchors(moved, itemsRef.current)
+    const pts = st.verts.map((q) => worldToCurvePoint(an, q))
+    applyLocal({ [st.id]: withData(moved, { pts: pts.length ? pts : undefined, sharp: pts.length ? true : undefined }) })
+  }
+
+  /** Termina a linha como está agora (curta e solta demais = desiste). */
+  function polyFinish() {
+    const st = poly.current
+    poly.current = null
+    linkOver.current = null
+    const c = st && itemsRef.current[st.id]
+    if (!st || !c) return
+    const { a, b } = connectorEnds(c, itemsRef.current)
+    if (Math.hypot(a.x - b.x, a.y - b.y) * viewRef.current.zoom < 12 && !(c.data.from?.id && c.data.to?.id)) {
+      applyLocal({ [st.id]: null })
+      redraw()
+      return
+    }
+    commit({ [st.id]: c }, { [st.id]: null })
+    setSelection([st.id])
+  }
+
+  /** Duplo clique / Enter / Esc: termina na última quina clicada (sem nenhuma, desiste). */
+  function polyEnd() {
+    const st = poly.current
+    if (!st) return
+    const last = st.verts.pop()
+    if (!last) { const id = st.id; poly.current = null; linkOver.current = null; applyLocal({ [id]: null }); redraw(); return }
+    const c = itemsRef.current[st.id]
+    if (c) {
+      const moved = withData(c, { to: { x: last.x, y: last.y } })
+      const an = connectorAnchors(moved, itemsRef.current)
+      const pts = st.verts.map((q) => worldToCurvePoint(an, q))
+      applyLocal({ [st.id]: withData(moved, { pts: pts.length ? pts : undefined, sharp: pts.length ? true : undefined }) })
+    }
+    polyFinish()
+  }
+
+  // Trocou de ferramenta no meio da linha: termina ela.
+  useEffect(() => {
+    if (tool !== 'connector' && poly.current) polyEnd()
+  }, [tool])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Arrastar itens (com a grade do Shift) ────────────
+
+  /** Move o que está sendo arrastado até `p`; com Shift, o canto do grupo encaixa na grade. */
+  function moveTo(d: Extract<Drag, { type: 'move' }>, p: Point, snap: boolean) {
+    d.last = p
+    let dx = p.x - d.start.x, dy = p.y - d.start.y
+    const boxes = Object.values(d.orig).filter((o) => o.kind !== 'connector')
+    snapOn.current = snap
+    if (snap && boxes.length) {
+      const step = gridStep(viewRef.current.zoom)
+      const minX = Math.min(...boxes.map((o) => o.x)), minY = Math.min(...boxes.map((o) => o.y))
+      dx = Math.round((minX + dx) / step) * step - minX
+      dy = Math.round((minY + dy) / step) * step - minY
+    }
+    const changes: Changes = {}
+    for (const [id, o] of Object.entries(d.orig)) {
+      if (o.kind === 'connector') {
+        const sh = (e2?: Endpoint) => (e2 && !e2.id ? { x: (e2.x ?? 0) + dx, y: (e2.y ?? 0) + dy } : e2)
+        changes[id] = withData(o, { from: sh(o.data.from), to: sh(o.data.to) })
+      } else {
+        changes[id] = { ...o, x: o.x + dx, y: o.y + dy }
+      }
+    }
+    applyLocal(changes)
+    sendLive(Object.keys(changes))
+  }
+
+  useEffect(() => { keyActs.current = {
+    polyEnd,
+    // Shift apertado/solto no meio do arraste: liga/desliga a grade na hora.
+    resnap: (on: boolean) => {
+      const d = dragRef.current
+      if (d?.type !== 'move' || !d.moved || !d.last) { snapOn.current = false; return }
+      moveTo(d, d.last, on)
+      redraw()
+    },
+  } })
+
   function endEditingIfAny() {
     const el = document.activeElement as HTMLElement | null
     if (el?.isContentEditable) el.blur()
@@ -856,6 +957,20 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       return
     }
 
+    // Linha com cliques: clique num item prende e termina; clique no mesmo
+    // lugar do último (duplo clique) termina ali; senão, mais uma quina.
+    if (poly.current) {
+      const st = poly.current
+      const c = itemsRef.current[st.id]
+      const last = st.verts[st.verts.length - 1]
+      const over = itemAt(e.clientX, e.clientY, st.id)
+      if (c && over && over !== c.data.from?.id) { polyUpdate(p, e.clientX, e.clientY); polyFinish(); return }
+      if (last && Math.hypot(p.x - last.x, p.y - last.y) * v.zoom < 8) { polyEnd(); return }
+      if (st.verts.length < MAX_CURVE_POINTS) st.verts.push(p)
+      polyUpdate(p, e.clientX, e.clientY)
+      return
+    }
+
     if (handle) {
       const id = selRef.current[0]
       const it = itemsRef.current[id]
@@ -891,7 +1006,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         const from: Endpoint = hit && hit.kind !== 'connector' ? { id: hit.id } : { x: p.x, y: p.y }
         const c = blank('connector', 0, 0, 0, 0, { ...defaultData('connector'), from, to: { x: p.x, y: p.y } })
         applyLocal({ [c.id]: c })
-        dragRef.current = { type: 'connect', id: c.id }
+        dragRef.current = { type: 'connect', id: c.id, sx: e.clientX, sy: e.clientY, fromTool: true }
         return
       }
       case 'note': case 'text': case 'shape': case 'frame': case 'timeline':
@@ -960,7 +1075,10 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     }
 
     const d = dragRef.current
-    if (!d) return
+    if (!d) {
+      if (poly.current) polyUpdate(p, e.clientX, e.clientY)
+      return
+    }
     const v = viewRef.current
 
     switch (d.type) {
@@ -968,20 +1086,9 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         setView({ ...v, tx: d.tx + e.clientX - d.sx, ty: d.ty + e.clientY - d.sy })
         return
       case 'move': {
-        const dx = p.x - d.start.x, dy = p.y - d.start.y
-        if (!d.moved && Math.hypot(dx * v.zoom, dy * v.zoom) < 3) return
+        if (!d.moved && Math.hypot((p.x - d.start.x) * v.zoom, (p.y - d.start.y) * v.zoom) < 3) return
         d.moved = true
-        const changes: Changes = {}
-        for (const [id, o] of Object.entries(d.orig)) {
-          if (o.kind === 'connector') {
-            const sh = (e2?: Endpoint) => (e2 && !e2.id ? { x: (e2.x ?? 0) + dx, y: (e2.y ?? 0) + dy } : e2)
-            changes[id] = withData(o, { from: sh(o.data.from), to: sh(o.data.to) })
-          } else {
-            changes[id] = { ...o, x: o.x + dx, y: o.y + dy }
-          }
-        }
-        applyLocal(changes)
-        sendLive(Object.keys(changes))
+        moveTo(d, p, e.shiftKey)
         return
       }
       case 'resize': {
@@ -1074,6 +1181,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
 
     switch (d.type) {
       case 'move': {
+        snapOn.current = false
         if (d.moved) {
           const after: Changes = {}
           for (const id of Object.keys(d.orig)) after[id] = itemsRef.current[id] ?? null
@@ -1113,8 +1221,14 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         if (!c) return
         const { a, b } = connectorEnds(c, itemsRef.current)
         const tiny = Math.hypot(a.x - b.x, a.y - b.y) * v.zoom < 12
+        // Clique (sem arrastar) com a ferramenta Seta: começa uma linha com cliques.
+        if (d.fromTool && d.sx != null && d.sy != null && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6 && !c.data.to?.id) {
+          poly.current = { id: d.id, verts: [] }
+          flash('Clique pra fazer quinas. Duplo clique, Enter ou clique num item pra terminar.')
+          return
+        }
         // Só um clique na bolinha azul (sem puxar até lugar nenhum): não cria seta.
-        const justClick = d.sx != null && d.sy != null && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 24
+        const justClick = !d.fromTool && d.sx != null && d.sy != null && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 24
         if ((tiny || justClick) && !(c.data.from?.id && c.data.to?.id)) { applyLocal({ [d.id]: null }); redraw(); return }
         commit({ [d.id]: c }, { [d.id]: null })
         setSelection([d.id])
@@ -1141,6 +1255,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   }
 
   function onDoubleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (tool === 'connector') return
     const target = e.target as HTMLElement
     if (target.isContentEditable || target.closest('.board-toolbar, .board-zoombar, .board-context, .board-help, .board-fonts, .board-toast')) return
     // Duplo clique num ponto da curva: tira ele (sem pontos, a seta fica reta).
@@ -1228,7 +1343,9 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         e.preventDefault()
         return
       }
+      if (e.key === 'Shift' && dragRef.current?.type === 'move') { keyActs.current.resnap(true); return }
       if (!active.current || typing(e) || document.querySelector('.modal-overlay')) return
+      if ((e.key === 'Escape' || e.key === 'Enter') && poly.current) { e.preventDefault(); keyActs.current.polyEnd(); return }
       const mod = e.ctrlKey || e.metaKey
       const k = e.key.toLowerCase()
       if (e.key === ' ') { if (!spaceDown.current) { spaceDown.current = true; redraw() } e.preventDefault(); return }
@@ -1267,6 +1384,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     }
     function onKeyUp(e: KeyboardEvent) {
       if (e.key === ' ' && spaceDown.current) { spaceDown.current = false; redraw() }
+      if (e.key === 'Shift' && dragRef.current?.type === 'move') keyActs.current.resnap(false)
     }
     function onCopy(e: ClipboardEvent) {
       if (!active.current || typing(e)) return
@@ -1413,6 +1531,16 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         {loading ? (
           <div className="board-loading"><span className="spinner spinner--sm" /> Abrindo o quadro…</div>
         ) : (<>
+        {snapOn.current && dragRef.current?.type === 'move' && (
+          <div
+            className="board-grid"
+            style={{
+              backgroundSize: `${gridStep(view.zoom) * view.zoom}px ${gridStep(view.zoom) * view.zoom}px`,
+              backgroundPosition: `${view.tx}px ${view.ty}px`,
+            }}
+            aria-hidden="true"
+          />
+        )}
         <div className="board-world" style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.zoom})` }}>
           {frames.filter(shown).map((f) => (
             <BoardItemView key={f.id} item={f} {...itemProps} editing={editingId === f.id} />
@@ -1466,7 +1594,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
               </>
             )
           })()}
-          {linkOver.current && itemsRef.current[linkOver.current] && dragRef.current && (() => {
+          {linkOver.current && itemsRef.current[linkOver.current] && (dragRef.current || poly.current) && (() => {
             const s = toScreen(rectOf(itemsRef.current[linkOver.current!]))
             return <div className="board-sel board-sel--target" style={{ left: s.x - 4, top: s.y - 4, width: s.w + 8, height: s.h + 8 }} />
           })()}
@@ -1542,6 +1670,10 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
             })}
             onArrow={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { arrow: it.data.arrow === 'both' ? 'none' : it.data.arrow === 'none' ? 'end' : 'both' }) : null))}
             onDashed={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { dashed: !it.data.dashed }) : null))}
+            onSharp={() => {
+              const sharp = selItems.some((i) => i.kind === 'connector' && i.data.sharp)
+              mapSelected((it) => (it.kind === 'connector' && curvePoints(it).length ? withData(it, { sharp: sharp ? undefined : true }) : null))
+            }}
             onCurve={() => {
               const curved = selItems.some((i) => i.kind === 'connector' && curvePoints(i).length > 0)
               mapSelected((it) => {
