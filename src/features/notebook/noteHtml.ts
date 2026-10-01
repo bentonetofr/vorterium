@@ -72,8 +72,23 @@ export function sanitizeNoteHtml(html: string): string {
 
 const LOOKS_HTML = /<\/?(b|strong|i|em|u|s|strike|del|span|font|br|div|p|ul|ol|li)\b[^>]*>/i
 
+/** >, <, & e espaço duro viram &gt;, &lt;, &amp; e &nbsp; no HTML guardado. */
+const HAS_ENTITY = /&(gt|lt|amp|quot|nbsp|#\d{1,6});/i
+/** "&amp;gt;", "&amp;amp;gt;"…: um > escapado de novo a cada vez que a nota abria. */
+const REESCAPED = /&(?:amp;)+(?=(?:gt|lt|amp|quot|nbsp|#\d{1,6});)/gi
+
+/**
+ * HTML ou texto puro? Nota de uma linha só (ou escrita no Firefox, que guarda
+ * as quebras de linha como texto) não tem tag nenhuma — mas um >, < ou & no
+ * meio já vem como &gt;, &lt;, &amp;, e isso também é HTML.
+ */
 export function isHtmlNote(content: string): boolean {
-  return LOOKS_HTML.test(content)
+  return LOOKS_HTML.test(content) || HAS_ENTITY.test(content)
+}
+
+/** Conserta notas que ficaram com "&gt;" aparecendo no lugar do ">". */
+function unreescape(html: string): string {
+  return html.replace(REESCAPED, '&')
 }
 
 function escapeHtml(text: string): string {
@@ -83,7 +98,7 @@ function escapeHtml(text: string): string {
 /** O que vai pra tela: HTML limpo (anotação antiga em texto puro vira HTML). */
 export function noteToHtml(content: string): string {
   if (!content) return ''
-  if (isHtmlNote(content)) return sanitizeNoteHtml(content)
+  if (isHtmlNote(content)) return sanitizeNoteHtml(unreescape(content))
   return escapeHtml(content).replace(/\n/g, '<br>')
 }
 
@@ -91,7 +106,7 @@ export function noteToHtml(content: string): string {
 export function notePlainText(content: string): string {
   if (!content) return ''
   if (!isHtmlNote(content)) return content
-  const marked = content
+  const marked = unreescape(content)
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(div|p|li)>/gi, '\n')
   const doc = new DOMParser().parseFromString(`<body>${marked}</body>`, 'text/html')

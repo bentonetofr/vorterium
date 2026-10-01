@@ -10,15 +10,17 @@ import {
   type BoardConnection, type BoardId, type BoardItem, type BoardKind, type BoardPeer, type CursorMessage, type Endpoint, type ShapeType,
 } from '../services/boardService'
 import {
-  DEFAULT_SIZE, INK, MAX_ZOOM, MIN_ZOOM, NOTE_COLORS, TEXT_SIZES, clamp, connectorEnds, contains, defaultData,
+  DEFAULT_SIZE, INK, MAX_ZOOM, MIN_ZOOM, NOTE_COLORS, TEXT_SIZES, clamp, connectorAnchors, connectorCurve, connectorEnds, contains, defaultData,
   editableText, intersects, itemBounds, newId, normRect, rectOf, simplify, unionRect,
   type Point, type Rect, type View,
 } from '../boardGeometry'
-import { BoardItemView, ConnectorLabel, ConnectorLayer, strokePath } from './BoardItemView'
+import { BoardItemView, ConnectorLabel, ConnectorLayer, setEditCaret, strokePath } from './BoardItemView'
 import {
   BOARD_ACCEPT, BoardContextBar, BoardHelp, BoardToolbar, BoardZoomBar, Icons, ImageLightbox, LibraryPicker, TimelineEditor,
   type PenSettings, type Tool,
 } from './BoardChrome'
+import { BoardFontPanel } from './BoardFontPanel'
+import { FONT_KINDS } from '../boardFonts'
 import './Board.css'
 
 // ────────────────────────────────────────────────────────
@@ -43,6 +45,7 @@ type Drag =
   | { type: 'draw'; points: Point[] }
   | { type: 'connect'; id: string }
   | { type: 'endpoint'; id: string; end: 'from' | 'to'; orig: BoardItem }
+  | { type: 'bend'; id: string; orig: BoardItem }
 
 const CLIP_PREFIX = 'vorterium-quadro:'
 const SAVE_DELAY = 300
@@ -174,6 +177,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
   const [panning, setPanning]   = useState(false)
   const [help, setHelp]         = useState(false)
   const [picker, setPicker]     = useState(false)
+  const [fontsOpen, setFontsOpen] = useState(false)
   const [timelineId, setTimelineId] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<{ url: string; name: string; data: BoardItem['data'] } | null>(null)
   const [uploading, setUploading] = useState(0)
@@ -207,6 +211,33 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
     const wx = (sx - v.tx) / v.zoom, wy = (sy - v.ty) / v.zoom
     setView({ zoom, tx: sx - wx * zoom, ty: sy - wy * zoom })
   }, [setView])
+
+  // Zoom suave (roda do mouse e botões): junta os "cliques" da roda num alvo
+  // e chega nele aos poucos, sempre em volta do ponto do mouse.
+  const zoomAnim = useRef<{ target: number; sx: number; sy: number; raf: number; at: number } | null>(null)
+  const stopZoomAnim = useCallback(() => {
+    if (zoomAnim.current) cancelAnimationFrame(zoomAnim.current.raf)
+    zoomAnim.current = null
+  }, [])
+  const zoomSmooth = useCallback((sx: number, sy: number, factor: number) => {
+    let cur = zoomAnim.current
+    // Animação parada (aba ficou escondida no meio): recomeça do zoom atual.
+    if (cur && performance.now() - cur.at > 250) { cancelAnimationFrame(cur.raf); zoomAnim.current = cur = null }
+    const target = clamp((cur ? cur.target : viewRef.current.zoom) * factor, MIN_ZOOM, MAX_ZOOM)
+    if (cur) { cur.target = target; cur.sx = sx; cur.sy = sy; return }
+    const anim = { target, sx, sy, raf: 0, at: performance.now() }
+    zoomAnim.current = anim
+    const step = () => {
+      if (zoomAnim.current !== anim) return
+      anim.at = performance.now()
+      const ratio = anim.target / viewRef.current.zoom
+      if (Math.abs(Math.log(ratio)) < 0.002) { zoomAt(anim.sx, anim.sy, ratio); zoomAnim.current = null; return }
+      zoomAt(anim.sx, anim.sy, Math.pow(ratio, 0.3))
+      anim.raf = requestAnimationFrame(step)
+    }
+    anim.raf = requestAnimationFrame(step)
+  }, [zoomAt])
+  useEffect(() => stopZoomAnim, [stopZoomAnim])
 
   const fitRect = useCallback((r: Rect | null, maxZoom = 1) => {
     const el = vpRef.current
@@ -714,6 +745,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
     if (target.isContentEditable) return
     if (e.button === 2) return
     active.current = true
+    stopZoomAnim()
     endEditingIfAny()
     // Mouse/caneta é um ponteiro só: descarta algum que ficou sem o "soltar".
     if (e.pointerType !== 'touch') pointers.current.clear()
@@ -756,6 +788,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       const it = itemsRef.current[id]
       if (!it) return
       if (handle === 'from' || handle === 'to') dragRef.current = { type: 'endpoint', id, end: handle, orig: it }
+      else if (handle === 'bend') dragRef.current = { type: 'bend', id, orig: it }
       else dragRef.current = { type: 'resize', id, handle, orig: it, start: p }
       return
     }
@@ -905,6 +938,17 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
         setDrawing([...d.points])
         return
       }
+      case 'bend': {
+        // O meio da seta segue o ponteiro; perto da reta, gruda nela.
+        const c = itemsRef.current[d.id]
+        if (!c) return
+        const { mid, normal } = connectorAnchors(c, itemsRef.current)
+        let bend = (p.x - mid.x) * normal.x + (p.y - mid.y) * normal.y
+        if (Math.abs(bend) * v.zoom < 8) bend = 0
+        applyLocal({ [d.id]: withData(c, { bend: Math.round(bend) }) })
+        sendLive([d.id])
+        return
+      }
       case 'connect':
       case 'endpoint': {
         const c = itemsRef.current[d.id]
@@ -943,7 +987,8 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
         return
       }
       case 'resize':
-      case 'endpoint': {
+      case 'endpoint':
+      case 'bend': {
         const now = itemsRef.current[d.id]
         if (now && JSON.stringify(now) !== JSON.stringify(d.orig)) commit({ [d.id]: now }, { [d.id]: d.orig })
         return
@@ -977,22 +1022,42 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
     }
   }
 
+  /**
+   * Item no ponto da tela. Pela posição (e não pelo alvo do evento): com o
+   * ponteiro "capturado" pelo quadro, o duplo clique chega com o quadro
+   * inteiro de alvo — e as alças da seleção ficam por cima de textos baixinhos.
+   */
+  function itemUnder(clientX: number, clientY: number): string | null {
+    for (const el of document.elementsFromPoint(clientX, clientY)) {
+      const h = el as HTMLElement
+      if (h.closest?.('[data-handle]')) continue
+      if (h.closest?.('.board-toolbar, .board-zoombar, .board-context, .board-help, .board-fonts, .board-toast')) return null
+      const id = h.closest?.('[data-board-id]')?.getAttribute('data-board-id')
+      if (id && itemsRef.current[id]) return id
+      if (h === vpRef.current) return null
+    }
+    return null
+  }
+
   function onDoubleClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement
-    if (target.isContentEditable || target.closest('.board-toolbar, .board-zoombar, .board-context, .board-help, .board-toast, [data-handle]')) return
-    const id = target.closest('[data-board-id]')?.getAttribute('data-board-id')
-    const it = id ? itemsRef.current[id] : undefined
-    if (!it) {
-      // Duplo clique no vazio: um post-it ali mesmo.
-      if (tool === 'select') createAt('note', toWorld(e.clientX, e.clientY))
+    if (target.isContentEditable || target.closest('.board-toolbar, .board-zoombar, .board-context, .board-help, .board-fonts, .board-toast')) return
+    // Duplo clique na alça do meio da seta: volta a ser reta.
+    if (document.elementsFromPoint(e.clientX, e.clientY).some((el) => (el as HTMLElement).dataset?.handle === 'bend')) {
+      const c = itemsRef.current[selRef.current[0]]
+      if (c?.kind === 'connector' && c.data.bend) commit({ [c.id]: withData(c, { bend: 0 }) }, { [c.id]: c })
       return
     }
+    const id = itemUnder(e.clientX, e.clientY)
+    const it = id ? itemsRef.current[id] : undefined
+    // No vazio não faz nada (post-it é pela ferramenta ou pela tecla N).
+    if (!it) return
     if (it.kind === 'timeline' && !it.locked) setTimelineId(it.id)
     else if (it.kind === 'image') {
       const url = it.data.path ? urls.get(it.data.path) : null
       if (url) setLightbox({ url, name: it.data.name ?? 'Imagem', data: it.data })
     } else if (it.kind === 'file') openInLibrary(it.data.docId)
-    else startEdit(it.id)
+    else { setEditCaret({ x: e.clientX, y: e.clientY }); startEdit(it.id) }
   }
 
   // Roda do mouse: zoom no cursor; trackpad arrasta; Ctrl/pinça dá zoom.
@@ -1000,21 +1065,29 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
     const el = vpRef.current
     if (!el) return
     function onWheel(e: WheelEvent) {
-      if ((e.target as HTMLElement).closest('.board-help, .board-menu, .board-context__swatches')) return
+      if ((e.target as HTMLElement).closest('.board-help, .board-fonts, .board-menu, .board-context__swatches')) return
       e.preventDefault()
       const r = el!.getBoundingClientRect()
       const sx = e.clientX - r.left, sy = e.clientY - r.top
       const v = viewRef.current
-      const lineMode = e.deltaMode === 1
-      const trackpad = !lineMode && (Math.abs(e.deltaX) > 0.5 || !Number.isInteger(e.deltaY))
-      if (e.ctrlKey || e.metaKey) zoomAt(sx, sy, Math.exp(-e.deltaY * 0.01))
-      else if (e.shiftKey) setView({ ...v, tx: v.tx - (e.deltaY || e.deltaX) })
-      else if (trackpad) setView({ ...v, tx: v.tx - e.deltaX, ty: v.ty - e.deltaY })
-      else zoomAt(sx, sy, Math.exp(-e.deltaY * (lineMode ? 0.05 : 0.0015)))
+      // Em pixels: linha ≈ 40 px, página ≈ a altura da tela.
+      const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? el!.clientHeight : 1
+      const dy = e.deltaY * unit, dx = e.deltaX * unit
+      // Trackpad: arrasta de lado ou manda passinhos quebrados; roda de
+      // mouse manda "cliques" inteiros e maiores (mesmo com a tela em 125%).
+      const trackpad = e.deltaMode === 0 && (Math.abs(dx) > 0.5 || (Math.abs(dy) < 40 && !Number.isInteger(dy)))
+      if (e.ctrlKey || e.metaKey) {
+        // Pinça no trackpad (ou Ctrl + roda): segue o dedo, sem animação.
+        stopZoomAnim()
+        zoomAt(sx, sy, Math.exp(-clamp(dy, -60, 60) * 0.008))
+      } else if (e.shiftKey) setView({ ...v, tx: v.tx - (dy || dx) })
+      else if (trackpad) setView({ ...v, tx: v.tx - dx, ty: v.ty - dy })
+      // Roda: ~10% por clique, e um giro rápido não arremessa o zoom longe.
+      else zoomSmooth(sx, sy, Math.exp(-clamp(dy, -120, 120) * 0.001))
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
-  }, [loading, setView, zoomAt])
+  }, [loading, setView, stopZoomAnim, zoomAt, zoomSmooth])
 
   // ── Teclado, copiar e colar ───────────────────────────
 
@@ -1027,7 +1100,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       const t = e.target as HTMLElement | null
       // Campos de texto e as janelas/botões do canto (chat, dados, caderno)
       // ficam com as próprias teclas.
-      return !!t && (t.isContentEditable || !!t.closest?.('input, textarea, select, [role="combobox"], .dice-fab-wrapper, [data-fab-panel], .emoji-pop'))
+      return !!t && (t.isContentEditable || !!t.closest?.('input, textarea, select, [role="combobox"], .dice-fab-wrapper, [data-fab-panel], .emoji-pop, .board-fonts'))
     }
     function onKeyDown(e: KeyboardEvent) {
       if (!active.current || typing(e) || document.querySelector('.modal-overlay')) return
@@ -1061,8 +1134,8 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
         mapSelected((it) => (it.kind === 'connector' ? null : { ...it, x: it.x + dx, y: it.y + dy }))
         return
       }
-      if (e.key === '+' || e.key === '=') { const el = vpRef.current!; zoomAt(el.clientWidth / 2, el.clientHeight / 2, 1.25); return }
-      if (e.key === '-') { const el = vpRef.current!; zoomAt(el.clientWidth / 2, el.clientHeight / 2, 1 / 1.25); return }
+      if (e.key === '+' || e.key === '=') { const el = vpRef.current!; zoomSmooth(el.clientWidth / 2, el.clientHeight / 2, 1.2); return }
+      if (e.key === '-') { const el = vpRef.current!; zoomSmooth(el.clientWidth / 2, el.clientHeight / 2, 1 / 1.2); return }
       const map: Record<string, Tool> = { v: 'select', h: 'hand', n: 'note', t: 'text', s: 'shape', l: 'connector', p: 'pen', f: 'frame', y: 'timeline' }
       if (map[k]) { setTool(map[k]); return }
       if (k === 'b') setPicker(true)
@@ -1115,7 +1188,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
       document.removeEventListener('cut', onCut)
       document.removeEventListener('paste', onPaste)
     }
-  }, [blank, commit, deleteSelection, duplicate, fitAll, full, mapSelected, noteColor, pasteItems, redo, setSelection, setTool, startEdit, toClipboardText, tool, undo, uploadFiles, viewCenter, zoomAt])
+  }, [blank, commit, deleteSelection, duplicate, fitAll, full, mapSelected, noteColor, pasteItems, redo, setSelection, setTool, startEdit, toClipboardText, tool, undo, uploadFiles, viewCenter, zoomAt, zoomSmooth])
 
   // ── Desenho ───────────────────────────────────────────
 
@@ -1134,6 +1207,13 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
   const selBounds = unionRect(selItems.map((i) => itemBounds(i, items)))
   const single = selItems.length === 1 ? selItems[0] : null
   const timelineItem = timelineId ? items[timelineId] : null
+  // Galeria de fontes: vale enquanto houver post-it/texto/forma/moldura selecionado.
+  const fontItems = selItems.filter((i) => FONT_KINDS.has(i.kind))
+  const fontsShown = fontsOpen && fontItems.length > 0
+  const fontNow = fontItems.length && fontItems.every((i) => (i.data.font ?? null) === (fontItems[0].data.font ?? null))
+    ? fontItems[0].data.font ?? null
+    : undefined
+  useEffect(() => { if (fontsOpen && fontItems.length === 0) setFontsOpen(false) })
 
   const itemProps = { editing: false, onText, onDone, onMeasure }
 
@@ -1248,11 +1328,23 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
             return hs.map((h) => <span key={h} className={`board-handle board-handle--${h}`} data-handle={h} style={{ left: pos[h].x, top: pos[h].y }} />)
           })()}
           {single && !single.locked && single.kind === 'connector' && (() => {
-            const { a, b } = connectorEnds(single, items)
-            return (['from', 'to'] as const).map((end) => {
-              const q = end === 'from' ? a : b
-              return <span key={end} className="board-handle board-handle--end" data-handle={end} style={{ left: q.x * view.zoom + view.tx, top: q.y * view.zoom + view.ty }} />
-            })
+            const { a, b, mid } = connectorCurve(single, items)
+            const at = (q: Point) => ({ left: q.x * view.zoom + view.tx, top: q.y * view.zoom + view.ty })
+            return (
+              <>
+                {(['from', 'to'] as const).map((end) => (
+                  <span key={end} className="board-handle board-handle--end" data-handle={end} style={at(end === 'from' ? a : b)} />
+                ))}
+                {!editingId && (
+                  <span
+                    className={`board-handle board-handle--bend${single.data.bend ? ' is-bent' : ''}`}
+                    data-handle="bend"
+                    style={at(mid)}
+                    title="Arraste pra curvar a seta (duplo clique deixa reta)"
+                  />
+                )}
+              </>
+            )
           })()}
           {boxRect && (() => { const s = toScreen(boxRect); return <div className="board-box" style={{ left: s.x, top: s.y, width: s.w, height: s.h }} /> })()}
           {[...cursors.current.values()].map((c) => (
@@ -1267,7 +1359,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
               <p className="board-empty__text">
                 {shield
                   ? 'Segredos, planos, mapas e anotações que os jogadores não podem ver. Só os mestres veem o que for posto aqui.'
-                  : 'Escolha uma ferramenta à esquerda, dê um duplo clique pra criar um post-it, ou arraste fotos do computador pra cá. Elas vão direto pra Galeria da campanha.'}
+                  : 'Escolha uma ferramenta à esquerda (a tecla N cria um post-it) ou arraste fotos do computador pra cá. Elas vão direto pra Galeria da campanha.'}
               </p>
             </div>
           )}
@@ -1281,6 +1373,8 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
             isMaster={isMaster}
             onColor={(color) => mapSelected((it) => (['note', 'shape', 'text', 'connector', 'drawing', 'timeline', 'frame'].includes(it.kind) ? withData(it, { color }) : null))}
             onShape={(s) => mapSelected((it) => (it.kind === 'shape' ? withData(it, { shape: s }) : null))}
+            fontsOpen={fontsShown}
+            onFonts={() => setFontsOpen((v) => !(v && fontItems.length > 0))}
             onTextSize={(dir) => mapSelected((it) => {
               if (it.kind !== 'text') return null
               const cur = it.data.size ?? 24
@@ -1290,6 +1384,16 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
             })}
             onArrow={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { arrow: it.data.arrow === 'both' ? 'none' : it.data.arrow === 'none' ? 'end' : 'both' }) : null))}
             onDashed={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { dashed: !it.data.dashed }) : null))}
+            onCurve={() => {
+              const curved = selItems.some((i) => i.kind === 'connector' && i.data.bend)
+              mapSelected((it) => {
+                if (it.kind !== 'connector') return null
+                if (curved) return withData(it, { bend: 0 })
+                // Curva padrão: um quarto do comprimento.
+                const { from, to } = connectorAnchors(it, itemsRef.current)
+                return withData(it, { bend: Math.round(Math.hypot(to.p.x - from.p.x, to.p.y - from.p.y) / 4) })
+              })
+            }}
             onFront={bringFront}
             onBack={sendBack}
             onDuplicate={duplicate}
@@ -1325,13 +1429,20 @@ function BoardCanvas({ campaign, board, tabs, full, setFull }: CanvasProps) {
         <BoardZoomBar
           zoom={view.zoom}
           frames={frames}
-          onZoom={(f) => zoomAt(vp.w / 2, vp.h / 2, f)}
-          onReset={() => zoomAt(vp.w / 2, vp.h / 2, 1 / view.zoom)}
+          onZoom={(f) => zoomSmooth(vp.w / 2, vp.h / 2, f)}
+          onReset={() => zoomSmooth(vp.w / 2, vp.h / 2, 1 / view.zoom)}
           onFit={fitAll}
           onFrame={(id) => { const f = itemsRef.current[id]; if (f) { fitRect(rectOf(f), 2); setSelection([id]) } }}
         />
 
         {help && <BoardHelp onClose={() => setHelp(false)} />}
+        {fontsShown && (
+          <BoardFontPanel
+            current={fontNow}
+            onPick={(family) => mapSelected((it) => (FONT_KINDS.has(it.kind) ? withData(it, { font: family ?? undefined }) : null))}
+            onClose={() => setFontsOpen(false)}
+          />
+        )}
         {toast && <div className="board-toast" role="status">{toast}</div>}
       </div>
 

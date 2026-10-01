@@ -9,8 +9,8 @@ export interface Rect { x: number; y: number; w: number; h: number }
 export interface Point { x: number; y: number }
 export interface View { tx: number; ty: number; zoom: number }
 
-export const MIN_ZOOM = 0.1
-export const MAX_ZOOM = 4
+export const MIN_ZOOM = 0.15
+export const MAX_ZOOM = 3
 
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
@@ -65,20 +65,98 @@ function endpointAnchor(e: Endpoint | undefined, items: Record<string, BoardItem
   return { p: { x: e?.x ?? 0, y: e?.y ?? 0 }, item: null }
 }
 
-/** Pontas da seta, já na borda dos itens em que ela está presa. */
-export function connectorEnds(c: BoardItem, items: Record<string, BoardItem>): { a: Point; b: Point } {
+const isRound = (i: BoardItem | null) => i?.kind === 'shape' && i.data.shape === 'ellipse'
+
+/** O ponto está dentro do item (retângulo ou elipse)? */
+function inside(i: BoardItem, p: Point): boolean {
+  if (isRound(i)) {
+    const hw = i.w / 2 || 1, hh = i.h / 2 || 1
+    const dx = (p.x - i.x - hw) / hw, dy = (p.y - i.y - hh) / hh
+    return dx * dx + dy * dy <= 1
+  }
+  return p.x >= i.x && p.x <= i.x + i.w && p.y >= i.y && p.y <= i.y + i.h
+}
+
+/** Curva da seta (Bézier quadrática): ponto em t. */
+function bezier(a: Point, c: Point, b: Point, t: number): Point {
+  const u = 1 - t
+  return { x: u * u * a.x + 2 * u * t * c.x + t * t * b.x, y: u * u * a.y + 2 * u * t * c.y + t * t * b.y }
+}
+
+/** Onde a curva sai de dentro do item (busca binária entre um t dentro e um fora). */
+function exitT(a: Point, c: Point, b: Point, item: BoardItem, tIn: number, tOut: number): number {
+  if (inside(item, bezier(a, c, b, tOut))) return tIn
+  for (let k = 0; k < 24; k++) {
+    const m = (tIn + tOut) / 2
+    if (inside(item, bezier(a, c, b, m))) tIn = m
+    else tOut = m
+  }
+  return tOut
+}
+
+/**
+ * Centros (ou pontas soltas) da seta e a perpendicular — a curva é medida a
+ * partir daqui: `bend` é quanto o meio da seta sai da reta, pro lado da
+ * perpendicular (negativo = pro outro lado).
+ */
+export function connectorAnchors(c: BoardItem, items: Record<string, BoardItem>) {
   const from = endpointAnchor(c.data.from, items)
   const to = endpointAnchor(c.data.to, items)
-  const round = (i: BoardItem | null) => i?.kind === 'shape' && i.data.shape === 'ellipse'
-  const a = from.item ? clipToBorder(rectOf(from.item), to.p, round(from.item)) : from.p
-  const b = to.item ? clipToBorder(rectOf(to.item), from.p, round(to.item)) : to.p
+  const dx = to.p.x - from.p.x, dy = to.p.y - from.p.y
+  const len = Math.hypot(dx, dy) || 1
+  return {
+    from, to,
+    mid:    { x: (from.p.x + to.p.x) / 2, y: (from.p.y + to.p.y) / 2 },
+    normal: { x: -dy / len, y: dx / len },
+  }
+}
+
+export interface ConnectorCurve {
+  /** Pontas, já na borda dos itens. */
+  a:   Point
+  b:   Point
+  /** Ponto de controle do trecho desenhado (reta: o meio). */
+  c:   Point
+  /** Meio da curva (alça pra curvar e lugar da legenda). */
+  mid: Point
+  /** Direção da seta em cada ponta (pras pontas de flecha). */
+  dirA: Point
+  dirB: Point
+}
+
+/** Desenho da seta: reta, ou curva quando `data.bend` não é zero. */
+export function connectorCurve(conn: BoardItem, items: Record<string, BoardItem>): ConnectorCurve {
+  const { from, to, mid, normal } = connectorAnchors(conn, items)
+  const bend = conn.data.bend ?? 0
+  if (Math.abs(bend) < 0.5) {
+    const a = from.item ? clipToBorder(rectOf(from.item), to.p, isRound(from.item)) : from.p
+    const b = to.item ? clipToBorder(rectOf(to.item), from.p, isRound(to.item)) : to.p
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+    const dir = { x: b.x - a.x, y: b.y - a.y }
+    return { a, b, c: m, mid: m, dirA: dir, dirB: dir }
+  }
+  // A curva passa pelo meio deslocado (mid + normal·bend) em t = ½.
+  const A = from.p, B = to.p
+  const C = { x: mid.x + normal.x * bend * 2, y: mid.y + normal.y * bend * 2 }
+  const t0 = from.item ? exitT(A, C, B, from.item, 0, 0.5) : 0
+  const t1 = to.item ? exitT(A, C, B, to.item, 1, 0.5) : 1
+  // Trecho [t0, t1] da curva: o controle é o "blossom" B(t0, t1).
+  const k = (1 - t0) * (1 - t1), l = (1 - t0) * t1 + t0 * (1 - t1), m2 = t0 * t1
+  const c = { x: k * A.x + l * C.x + m2 * B.x, y: k * A.y + l * C.y + m2 * B.y }
+  const a = bezier(A, C, B, t0), b = bezier(A, C, B, t1)
+  return { a, b, c, mid: bezier(A, C, B, 0.5), dirA: { x: c.x - a.x, y: c.y - a.y }, dirB: { x: b.x - c.x, y: b.y - c.y } }
+}
+
+/** Pontas da seta, já na borda dos itens em que ela está presa. */
+export function connectorEnds(c: BoardItem, items: Record<string, BoardItem>): { a: Point; b: Point } {
+  const { a, b } = connectorCurve(c, items)
   return { a, b }
 }
 
 /** Retângulo que cobre a seta (pra seleção por área e "ajustar à tela"). */
 export function connectorRect(c: BoardItem, items: Record<string, BoardItem>): Rect {
-  const { a, b } = connectorEnds(c, items)
-  return normRect(a, b)
+  const { a, b, mid } = connectorCurve(c, items)
+  return unionRect([normRect(a, b), { x: mid.x, y: mid.y, w: 0, h: 0 }])!
 }
 
 export function itemBounds(i: BoardItem, items: Record<string, BoardItem>): Rect {

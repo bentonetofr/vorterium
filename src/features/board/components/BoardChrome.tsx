@@ -7,6 +7,7 @@ import type { BoardItem, ShapeType, TimelineEvent } from '../services/boardServi
 import {
   INK_COLORS, NOTE_COLORS, OUTLINE, SHAPE_COLORS, SHAPE_LABEL, inkColor, newId,
 } from '../boardGeometry'
+import { FONT_KINDS, fontStack } from '../boardFonts'
 
 // ────────────────────────────────────────────────────────
 // Peças em volta do Quadro: barra de ferramentas, zoom, barra da seleção,
@@ -53,6 +54,7 @@ export const Icons = {
   open:      <Icon size={18}><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" /></Icon>,
   zoomImg:   <Icon size={18}><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5M11 8v6M8 11h6" /></Icon>,
   edit:      <Icon size={18}><path d="M4 20h4L19 9l-4-4L4 16z" /></Icon>,
+  curve:     <Icon size={18}><path d="M4 18C6 8 14 4 20 6" /><path d="M16 3.5l4 2.5-2.5 4" /></Icon>,
   help:      <Icon size={18}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 015 .5c0 1.5-2.5 2-2.5 3.5" /><path d="M12 17h.01" /></Icon>,
 }
 
@@ -203,8 +205,12 @@ export interface ContextActions {
   onColor:      (color: string) => void
   onShape:      (shape: ShapeType) => void
   onTextSize:   (dir: 1 | -1) => void
+  /** Abre/fecha a galeria de fontes. */
+  onFonts:      () => void
   onArrow:      () => void
   onDashed:     () => void
+  /** Seta reta ⇄ curva. */
+  onCurve:      () => void
   onFront:      () => void
   onBack:       () => void
   onDuplicate:  () => void
@@ -222,9 +228,11 @@ interface ContextBarProps extends ContextActions {
   left:     number
   top:      number
   isMaster: boolean
+  /** A galeria de fontes está aberta. */
+  fontsOpen: boolean
 }
 
-export function BoardContextBar({ items, left, top, isMaster, openLabel, ...a }: ContextBarProps) {
+export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOpen, ...a }: ContextBarProps) {
   const [palette, setPalette] = useState(false)
   if (items.length === 0) return null
   const first = items[0]
@@ -247,6 +255,7 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, ...a }:
     : only && ['text', 'connector', 'drawing', 'timeline', 'frame'].includes(only) ? INK_COLORS
     : null
   const current = first.data.color
+  const fontable = items.every((i) => FONT_KINDS.has(i.kind))
 
   return (
     <div className="board-context" style={{ left, top }} onPointerDown={(e) => e.stopPropagation()}>
@@ -280,6 +289,19 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, ...a }:
         </div>
       )}
 
+      {fontable && (
+        <button
+          type="button"
+          className={`board-context__btn board-context__font${fontsOpen ? ' is-on' : ''}`}
+          onClick={() => { setPalette(false); a.onFonts() }}
+          title={first.data.font ? `Fonte: ${first.data.font}` : 'Fonte'}
+          aria-label="Fonte"
+          aria-expanded={fontsOpen}
+        >
+          <span style={{ fontFamily: fontStack(first.data.font) }}>Aa</span>
+        </button>
+      )}
+
       {only === 'shape' && (Object.keys(SHAPE_LABEL) as ShapeType[]).map((s) => (
         <button key={s} type="button" className={`board-context__btn${first.data.shape === s ? ' is-on' : ''}`} onClick={() => a.onShape(s)} title={SHAPE_LABEL[s]} aria-label={SHAPE_LABEL[s]}>
           {SHAPE_ICON[s]}
@@ -300,6 +322,15 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, ...a }:
             {first.data.arrow === 'both' ? '↔' : first.data.arrow === 'none' ? '—' : '→'}
           </button>
           <button type="button" className={`board-context__btn${first.data.dashed ? ' is-on' : ''}`} onClick={a.onDashed} title="Tracejada" aria-label="Tracejada">┄</button>
+          <button
+            type="button"
+            className={`board-context__btn${items.some((i) => i.data.bend) ? ' is-on' : ''}`}
+            onClick={a.onCurve}
+            title={items.some((i) => i.data.bend) ? 'Deixar reta' : 'Curvar (ou arraste a bolinha do meio)'}
+            aria-label="Curvar a seta"
+          >
+            {Icons.curve}
+          </button>
         </>
       )}
 
@@ -477,6 +508,8 @@ const SHORTCUTS: [string, string][] = [
   ['Desfazer / refazer', 'Ctrl+Z · Ctrl+Shift+Z'],
   ['Copiar, colar, duplicar', 'Ctrl+C · Ctrl+V · Ctrl+D'],
   ['Apagar', 'Delete ou Backspace'],
+  ['Trocar a fonte', 'Selecione post-it, texto, forma ou moldura e clique em Aa'],
+  ['Curvar a seta', 'Selecione a seta e arraste a bolinha do meio (duplo clique nela deixa reta)'],
   ['Ajustar', 'Setas movem (Shift = 10×) · Shift+1 vê tudo · Shift+0 volta a 100%'],
   ['Fotos e arquivos', 'Arraste do computador ou cole (Ctrl+V). Fotos vão pra Galeria; PDFs e textos, pra Biblioteca'],
 ]

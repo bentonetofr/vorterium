@@ -47,6 +47,12 @@ export interface NoteEditorHandle {
   element: () => HTMLDivElement | null
 }
 
+/** a é uma versão mais velha que b? (updated_at do banco; vazio = desconhecida) */
+export function isOlder(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false
+  return Date.parse(a) < Date.parse(b)
+}
+
 /** HTML do bloco editável → o que vai pro banco ('' se não tem texto nenhum). */
 function readContent(el: HTMLElement): string {
   if (!(el.textContent ?? '').trim() && !el.querySelector('li')) return ''
@@ -60,6 +66,8 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
   const idRef      = useRef<string | null>(note?.id ?? null)
   const savedText  = useRef(note?.content ?? '')
   const latestText = useRef(note?.content ?? '')
+  /** Hora (updated_at) da versão que a folha já tem — versão mais velha que chega atrasada é ignorada. */
+  const seenAt     = useRef(note?.updated_at ?? '')
   const timer      = useRef<number | undefined>(undefined)
   const chain      = useRef<Promise<void>>(Promise.resolve())
   const ref        = useRef<HTMLDivElement>(null)
@@ -80,9 +88,13 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
   useEffect(() => { if (note?.id && !idRef.current) idRef.current = note.id }, [note?.id])
 
   // Outra pessoa (o mestre, ou a Bruna em outra aba) mudou a nota e aqui
-  // não há nada por salvar: mostra a versão nova.
+  // não há nada por salvar: mostra a versão nova. Só se for MAIS NOVA que a
+  // da folha: com a internet lenta, a lista recarregada de um salvamento
+  // anterior chega depois e traria de volta o texto que já foi apagado.
   useEffect(() => {
     if (!note || !ref.current) return
+    if (isOlder(note.updated_at, seenAt.current)) return
+    seenAt.current = note.updated_at
     if (note.content !== savedText.current && latestText.current === savedText.current) {
       savedText.current = note.content
       latestText.current = note.content
@@ -129,6 +141,7 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
           : await createNote(cb.current.campaignId, cb.current.sessionId, value)
         idRef.current = saved.id
         savedText.current = value
+        if (!isOlder(saved.updated_at, seenAt.current)) seenAt.current = saved.updated_at
         cb.current.onSaved(saved)
         cb.current.onStatus?.(latestText.current === value ? 'saved' : 'saving')
       } catch {
@@ -212,6 +225,23 @@ export const NoteEditor = forwardRef<NoteEditorHandle, NoteEditorProps>(function
       data-placeholder={placeholder ?? 'Escreva aqui… salva sozinho.'}
       spellCheck
       onInput={changed}
+      onKeyDown={(e) => {
+        // Tab escreve uma tabulação (ou, numa lista, desce/sobe um nível com
+        // Shift) em vez de pular pra fora da folha.
+        if (e.key !== 'Tab' || e.ctrlKey || e.altKey || e.metaKey || e.nativeEvent.isComposing) return
+        e.preventDefault()
+        const sel = window.getSelection()
+        const at = sel?.anchorNode
+        const inList = !!(at && (at.nodeType === Node.ELEMENT_NODE ? at as Element : at.parentElement)?.closest('li'))
+        if (inList) {
+          // Sem estilo: o nível vira uma lista dentro da outra (margem solta não passa pelo filtro).
+          document.execCommand('styleWithCSS', false, 'false')
+          document.execCommand(e.shiftKey ? 'outdent' : 'indent')
+        }
+        else if (!e.shiftKey) document.execCommand('insertText', false, '\t')
+        else if (sel?.isCollapsed && at?.nodeType === Node.TEXT_NODE && at.textContent?.[sel.anchorOffset - 1] === '\t') document.execCommand('delete')
+        changed()
+      }}
       onPaste={(e) => {
         const files = onFiles ? images(e.clipboardData.items, e.clipboardData.files) : []
         if (files.length) { e.preventDefault(); onFiles!(files); return }

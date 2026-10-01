@@ -35,6 +35,8 @@ export interface BoardData {
   /** Tamanho da letra (texto solto). */
   size?:   number
   bold?:   boolean
+  /** Fonte do Google Fonts (só nomes da lista de boardFonts; outro nome é ignorado). */
+  font?:   string
   shape?:  ShapeType
   /** Título (moldura, arquivo). */
   title?:  string
@@ -51,6 +53,8 @@ export interface BoardData {
   to?:     Endpoint
   arrow?:  'end' | 'both' | 'none'
   dashed?: boolean
+  /** Seta curva: quanto o meio sai da reta (0/sem = reta). */
+  bend?:   number
   /** Desenho: pontos (x, y, x, y…) relativos ao canto, no tamanho bw × bh. */
   points?: number[]
   bw?:     number

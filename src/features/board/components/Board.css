@@ -118,14 +118,14 @@
 .board-note__text {
   width: 100%;
   max-height: 100%;
-  font-family: var(--font-body);
+  font-family: var(--board-font, var(--font-body));
   line-height: 1.25;
   text-align: center;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.board-textitem { font-family: var(--font-body); line-height: 1.3; }
+.board-textitem { font-family: var(--board-font, var(--font-body)); line-height: 1.3; }
 .board-textitem__text { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.3em; }
 
 .board-shape__svg { position: absolute; inset: 0; overflow: visible; }
@@ -135,7 +135,7 @@
 .board-shape__text {
   width: 100%;
   max-height: 100%;
-  font-family: var(--font-body);
+  font-family: var(--board-font, var(--font-body));
   line-height: 1.25;
   color: #1c1a14;
   text-align: center;
@@ -164,7 +164,7 @@
 }
 .board-frame__title-text {
   max-width: 480px;
-  font-family: var(--font-label);
+  font-family: var(--board-font, var(--font-label));
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -260,6 +260,8 @@
 .board-handle--ne, .board-handle--sw { cursor: nesw-resize; }
 .board-handle--w, .board-handle--e { cursor: ew-resize; width: 8px; height: 18px; }
 .board-handle--end { width: 13px; height: 13px; border-radius: 50%; cursor: move; }
+.board-handle--bend { width: 12px; height: 12px; border-radius: 50%; cursor: grab; background: var(--bg-elevated); border-style: dashed; }
+.board-handle--bend.is-bent { background: var(--accent-bright); border-style: solid; }
 .board-box { position: absolute; background: rgba(255, 193, 116, 0.08); border: 1px solid var(--accent-bright); }
 
 .board-cursor { position: absolute; transition: left 90ms linear, top 90ms linear; }
@@ -373,6 +375,57 @@
   position: absolute; left: 0; top: calc(100% + 8px);
   display: grid; grid-template-columns: repeat(4, 22px); gap: 8px; padding: 10px;
   background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: 10px; box-shadow: var(--shadow-md);
+}
+
+/* ── Galeria de fontes ── */
+.board-context__font span { font-size: 17px; font-weight: 400; line-height: 1; }
+.board-fonts {
+  position: absolute; right: 12px; top: 12px; bottom: 12px; z-index: 5;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  width: min(420px, calc(100% - 24px));
+  padding: var(--space-3);
+  background: var(--bg-elevated); border: 1px solid var(--gilded); border-radius: 12px; box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.15s ease-out;
+}
+.board-fonts__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
+.board-fonts__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--accent-bright); }
+.board-fonts__sub { margin: 0; font-size: var(--text-xs); color: var(--text-muted); }
+.board-fonts__search { width: 100%; }
+.board-fonts__cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.board-fonts__cat {
+  padding: 4px 10px;
+  font-family: var(--font-label); font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); background: var(--bg-overlay); border: 1px solid var(--border-dim); border-radius: 999px;
+  cursor: pointer;
+}
+.board-fonts__cat:hover { color: var(--text-primary); border-color: var(--gilded); }
+.board-fonts__cat.is-on { color: var(--text-inverse); background: var(--accent); border-color: var(--accent); }
+.board-fonts__list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 calc(var(--space-3) * -1); padding: 0 var(--space-3) var(--space-2); }
+.board-fonts__section + .board-fonts__section { margin-top: var(--space-3); }
+.board-fonts__section-title {
+  position: sticky; top: 0; z-index: 1;
+  margin: 0 0 6px; padding: 6px 0;
+  font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent-bright); background: var(--bg-elevated);
+}
+.board-fonts__section-title span { margin-left: 4px; color: var(--text-muted); font-weight: 600; }
+.board-fonts__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.board-font {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
+  min-height: 56px; padding: 8px 12px;
+  text-align: left; color: var(--text-primary);
+  background: var(--bg-overlay); border: 1px solid var(--border-dim); border-radius: 8px;
+  cursor: pointer; transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.board-font:hover { border-color: var(--gilded); background: color-mix(in srgb, var(--accent) 8%, var(--bg-overlay)); }
+.board-font.is-on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--bg-overlay)); }
+.board-font__name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 20px; line-height: 1.3; }
+.board-font--default { width: 100%; margin-bottom: var(--space-2); }
+.board-font--default .board-font__name { font-family: var(--font-body); }
+.board-font__cat { font-size: var(--text-xs); color: var(--text-muted); }
+.board-fonts__empty { margin: var(--space-4) 0; text-align: center; font-size: var(--text-sm); color: var(--text-muted); }
+@media (max-width: 640px) {
+  .board-fonts { top: auto; height: min(70%, 520px); right: 8px; bottom: 8px; width: calc(100% - 16px); }
 }
 
 /* ── Ajuda e aviso ── */

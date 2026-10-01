@@ -4,6 +4,7 @@ import type { CampaignSession, CampaignWithRole } from '../../../shared/types'
 import {
   getCampaignNotebookAuthors,
   listNotes,
+  mergeNotes,
   sessionLabel,
   subscribeNotes,
   timeLabel,
@@ -24,6 +25,7 @@ import './Notebook.css'
 // ────────────────────────────────────────────────────────
 
 const NO_SESSION = '__sem-sessao__'
+const NONE_DELETED: ReadonlySet<string> = new Set()
 
 export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const [authors, setAuthors]   = useState<NotebookAuthor[]>([])
@@ -51,9 +53,14 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
     return () => { alive = false }
   }, [campaign.id])
 
+  // Recarregas fora de ordem (internet lenta) não trazem versão velha de volta.
+  const reloadSeq = useRef(0)
   const reload = useCallback(async () => {
     if (!authorId) return
-    setNotes(await listNotes(campaign.id, authorId))
+    const seq = ++reloadSeq.current
+    const fresh = await listNotes(campaign.id, authorId)
+    if (seq !== reloadSeq.current) return
+    setNotes((prev) => mergeNotes(prev.filter((n) => n.author_id === authorId), fresh, NONE_DELETED))
   }, [campaign.id, authorId])
 
   useEffect(() => {

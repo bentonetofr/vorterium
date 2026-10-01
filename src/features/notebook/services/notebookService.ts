@@ -170,8 +170,24 @@ export async function updateNote(id: string, changes: Partial<Pick<NotebookNote,
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  const { error } = await supabase.from('player_session_notes').delete().eq('id', id)
-  if (error) throw new Error('Não foi possível apagar a anotação.')
+  const { data, error } = await supabase.from('player_session_notes').delete().eq('id', id).select('id')
+  // Sem erro e sem linha apagada = o banco não deixou (ou ela já não existia).
+  if (error || !data?.length) throw new Error('Não foi possível apagar a anotação.')
+}
+
+/**
+ * Lista recarregada (tempo real) + o que a tela já tem. Com a internet
+ * lenta, a lista de um salvamento anterior chega depois do seguinte: aí
+ * fica a versão mais nova de cada nota, e nota já apagada não volta.
+ */
+export function mergeNotes(current: NotebookNote[], fresh: NotebookNote[], deleted: ReadonlySet<string>): NotebookNote[] {
+  const mine = new Map(current.map((n) => [n.id, n]))
+  return fresh
+    .filter((n) => !deleted.has(n.id))
+    .map((n) => {
+      const local = mine.get(n.id)
+      return local && Date.parse(local.updated_at) > Date.parse(n.updated_at) ? local : n
+    })
 }
 
 /** Anotações da campanha chegando/mudando em tempo real (o mestre acompanha). */

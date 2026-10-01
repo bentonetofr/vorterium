@@ -11,6 +11,7 @@ import {
   currentSessionId,
   deleteNote,
   listNotes,
+  mergeNotes,
   noteHeadline,
   sessionLabel,
   subscribeNotes,
@@ -77,20 +78,17 @@ export function NotebookFab() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isOpen])
 
-  // Atalho: Tab abre o caderno já com o cursor na folha; Tab de novo (de
-  // dentro dele) fecha. Fora dele, Tab em campo de texto ou com janela modal
-  // aberta continua sendo o Tab normal.
+  // Atalho: Tab abre o caderno já com o cursor na folha; Esc fecha. Dentro
+  // da folha o Tab escreve uma tabulação (pra organizar o texto), e nos
+  // botões do caderno é o Tab normal. Fora dele, Tab em campo de texto ou
+  // com janela modal aberta também continua sendo o Tab normal.
   const enabled = !!user && !!campaign && !!title
   useEffect(() => {
     if (!enabled) return
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Tab' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey || e.isComposing || e.defaultPrevented) return
       const target = e.target instanceof HTMLElement ? e.target : null
-      if (target?.closest('[data-fab-panel="notes"]')) {
-        e.preventDefault()
-        setIsOpen(false)
-        return
-      }
+      if (target?.closest('[data-fab-panel="notes"]')) return
       if (target && (target.isContentEditable || target.closest('input, textarea, select, [contenteditable="true"], .emoji-pop'))) return
       if (document.querySelector('.modal-overlay, [aria-modal="true"]')) return
       e.preventDefault()
@@ -129,7 +127,7 @@ export function NotebookFab() {
           aria-label={title}
           aria-expanded={isOpen}
           aria-keyshortcuts="Tab"
-          title={`${title} (Tab)`}
+          title={`${title} (Tab abre, Esc fecha)`}
         >
           <QuillIcon key={writing} />
         </button>
@@ -226,6 +224,7 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
   const [status, setStatus]     = useState<SaveStatus>('idle')
   const [loading, setLoading]   = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
   const [uploading, setUploading] = useState(0)
   const editorRef = useRef<NoteEditorHandle>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -234,10 +233,16 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
   // Muda só quando a pessoa troca de anotação/sessão — salvar a primeira vez
   // não recria a folha (o cursor não pula no meio da digitação).
   const [sheetKey, setSheetKey] = useState(0)
-  const open = (id: string) => { setActive(id); setConfirmDelete(false); setSheetKey((k) => k + 1) }
+  const open = (id: string) => { setActive(id); setConfirmDelete(false); setDeleteError(false); setSheetKey((k) => k + 1) }
 
+  // Recarregas fora de ordem não desfazem nada (ver mergeNotes).
+  const reloadSeq = useRef(0)
+  const deleted = useRef(new Set<string>())
   const reload = useCallback(async () => {
-    setNotes(await listNotes(campaign.id, userId))
+    const seq = ++reloadSeq.current
+    const fresh = await listNotes(campaign.id, userId)
+    if (seq !== reloadSeq.current) return
+    setNotes((prev) => mergeNotes(prev, fresh, deleted.current))
   }, [campaign.id, userId])
 
   useEffect(() => {
@@ -318,14 +323,19 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
 
   async function remove() {
     if (!current) return
+    const id = current.id
+    setDeleteError(false)
+    deleted.current.add(id)
     try {
-      await deleteNote(current.id)
-      const rest = notes.filter((n) => n.id !== current.id)
+      await deleteNote(id)
+      const rest = notesRef.current.filter((n) => n.id !== id)
       setNotes(rest)
       const list = rest.filter((n) => n.session_id === sessionId)
       open(list.length ? list[list.length - 1].id : 'new')
     } catch {
-      setStatus('error')
+      deleted.current.delete(id)
+      setDeleteError(true)
+      void reload().catch(() => {})
     }
     setConfirmDelete(false)
   }
@@ -412,7 +422,7 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
             campaignId={campaign.id}
             sessionId={sessionId}
             autoFocus
-            placeholder="Escreva aqui… salva sozinho. Cole imagens com Ctrl+V. Tab fecha."
+            placeholder="Escreva aqui… salva sozinho. Cole imagens com Ctrl+V. Esc fecha."
             className="note-sheet--panel"
             onSaved={onSaved}
             onStatus={setStatus}
@@ -424,11 +434,15 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
           <div className="notebook-panel__foot">
             {current ? (
               <>
-                <span className="notebook-panel__meta">
-                  criada {timeLabel(current.created_at)}
-                  {current.updated_at !== current.created_at && ` · editada ${timeLabel(current.updated_at)}`}
-                  {current.updated_by && current.updated_by !== userId && ' pelo mestre'}
-                </span>
+                {deleteError ? (
+                  <span className="notebook-panel__meta notebook-panel__meta--error" role="alert">Não deu pra apagar. Tente de novo.</span>
+                ) : (
+                  <span className="notebook-panel__meta">
+                    criada {timeLabel(current.created_at)}
+                    {current.updated_at !== current.created_at && ` · editada ${timeLabel(current.updated_at)}`}
+                    {current.updated_by && current.updated_by !== userId && ' pelo mestre'}
+                  </span>
+                )}
                 {confirmDelete ? (
                   <span className="notebook-panel__confirm">
                     Apagar?

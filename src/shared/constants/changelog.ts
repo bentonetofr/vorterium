@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.16',
+    date:    '2026-09-30',
+    title:   'Fontes e setas curvas no Quadro, zoom suave e caderninho com Tab',
+    items: [
+      'Quadro: nova galeria de fontes com 249 fontes do Google Fonts — fantasia e medieval, terror, caligrafia, escrita à mão, clássicas, modernas, títulos chamativos e máquina de escrever/pixel. Selecione um post-it, texto, forma ou moldura e clique em "Aa" na barra da seleção; dá pra procurar pelo nome e filtrar por categoria, e todo mundo no quadro vê a fonte escolhida.',
+      'Quadro: setas curvas. Selecione a seta e arraste a bolinha do meio pra curvar (ou use o botão de curva na barra); duplo clique na bolinha deixa reta de novo. A curva acompanha quando os itens mudam de lugar.',
+      'Quadro: duplo clique (ou dois toques) agora sempre abre a edição do texto do item, com o cursor onde você clicou — antes ele às vezes criava um post-it no lugar, e a edição começava com o texto todo selecionado (a primeira tecla apagava tudo). No espaço vazio, o duplo clique não cria mais post-it (use a ferramenta ou a tecla N).',
+      'Quadro: zoom mais suave e controlado — a roda do mouse anda uns 10% por clique, girar rápido não arremessa mais o zoom pra longe ou pra perto demais, e o zoom vai de 15% a 300%.',
+      'Meu caderninho: o Tab dentro da folha agora escreve uma tabulação, pra organizar eventos e listas (numa lista com marcadores, Tab desce um nível e Shift+Tab sobe). O caderno continua abrindo com Tab e agora fecha com Esc.',
+      'Meu caderninho: corrigido o ">" (e o "<" e o "&") que virava "&gt;" ao colar ou escrever, principalmente no Firefox. As anotações que já tinham ficado assim voltam a mostrar o símbolo certo.',
+      'Meu caderninho: com a internet lenta, um texto apagado podia voltar sozinho (e uma anotação apagada reaparecer) quando chegava uma versão antiga atrasada. Agora vale sempre a versão mais nova, e se não der pra apagar uma anotação o caderno avisa.',
+    ],
+  },
+  {
     version: '1.15',
     date:    '2026-09-30',
     title:   'Episódios em janela, caderno com formatação, emojis e desvantagem nos domínios',
