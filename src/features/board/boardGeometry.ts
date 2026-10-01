@@ -134,9 +134,60 @@ export interface ConnectorCurve {
   dirB:   Point
 }
 
-/** Desenho da seta: reta, ou curva suave (Catmull-Rom) pelos pontos da curva. */
+/**
+ * Linha em degrau (árvore genealógica): sai do lado do item virado pro outro,
+ * anda até o meio do caminho, vira, e entra no outro item — tudo em ângulo
+ * reto, com os cantos levemente arredondados. Refaz sozinha quando os itens
+ * mudam de lugar.
+ */
+function elbowCurve(an: ReturnType<typeof connectorAnchors>): ConnectorCurve {
+  const A = an.from.p, B = an.to.p
+  const fi = an.from.item, ti = an.to.item
+  const vertical = Math.abs(B.y - A.y) >= Math.abs(B.x - A.x)
+  let P: Point[]
+  if (vertical) {
+    const down = B.y >= A.y
+    const s = fi ? { x: A.x, y: down ? fi.y + fi.h : fi.y } : A
+    const e = ti ? { x: B.x, y: down ? ti.y : ti.y + ti.h } : B
+    // Quase alinhados: desce reto (sem um degrau minúsculo), se ainda cai no item.
+    if (ti && Math.abs(e.x - s.x) < 16 && s.x >= ti.x && s.x <= ti.x + ti.w) e.x = s.x
+    const my = (s.y + e.y) / 2
+    P = [s, { x: s.x, y: my }, { x: e.x, y: my }, e]
+  } else {
+    const right = B.x >= A.x
+    const s = fi ? { x: right ? fi.x + fi.w : fi.x, y: A.y } : A
+    const e = ti ? { x: right ? ti.x : ti.x + ti.w, y: B.y } : B
+    if (ti && Math.abs(e.y - s.y) < 16 && s.y >= ti.y && s.y <= ti.y + ti.h) e.y = s.y
+    const mx = (s.x + e.x) / 2
+    P = [s, { x: mx, y: s.y }, { x: mx, y: e.y }, e]
+  }
+  // Tira os cantos que não viram (pontos repetidos / em linha).
+  P = P.filter((q, i) => i === 0 || Math.hypot(q.x - P[i - 1].x, q.y - P[i - 1].y) > 0.5)
+  const a = P[0], b = P[P.length - 1]
+  // Cantos arredondados (raio até 14, menor se o trecho for curto).
+  let d = `M ${a.x} ${a.y}`
+  for (let i = 1; i < P.length - 1; i++) {
+    const c = P[i], prev = P[i - 1], next = P[i + 1]
+    const lin = Math.hypot(c.x - prev.x, c.y - prev.y), lout = Math.hypot(next.x - c.x, next.y - c.y)
+    const r = Math.min(14, lin / 2, lout / 2)
+    const p1 = { x: c.x - ((c.x - prev.x) / (lin || 1)) * r, y: c.y - ((c.y - prev.y) / (lin || 1)) * r }
+    const p2 = { x: c.x + ((next.x - c.x) / (lout || 1)) * r, y: c.y + ((next.y - c.y) / (lout || 1)) * r }
+    d += ` L ${p1.x} ${p1.y} Q ${c.x} ${c.y} ${p2.x} ${p2.y}`
+  }
+  d += ` L ${b.x} ${b.y}`
+  const n = P.length - 1
+  const mid = n % 2 ? { x: (P[(n - 1) / 2].x + P[(n + 1) / 2].x) / 2, y: (P[(n - 1) / 2].y + P[(n + 1) / 2].y) / 2 } : P[n / 2]
+  return {
+    a, b, d, mid, points: [], gaps: [],
+    dirA: { x: P[1].x - a.x, y: P[1].y - a.y },
+    dirB: { x: b.x - P[n - 1].x, y: b.y - P[n - 1].y },
+  }
+}
+
+/** Desenho da seta: reta, curva suave (Catmull-Rom) pelos pontos, cantos retos ou degrau. */
 export function connectorCurve(conn: BoardItem, items: Record<string, BoardItem>): ConnectorCurve {
   const an = connectorAnchors(conn, items)
+  if (conn.data.elbow && curvePoints(conn).length === 0) return elbowCurve(an)
   const points = curvePoints(conn).map((q) => curvePointToWorld(an, q))
   // A ponta sai da borda do item na direção do primeiro (ou último) ponto.
   const a = an.from.item ? clipToBorder(rectOf(an.from.item), points[0] ?? an.to.p, isRound(an.from.item)) : an.from.p

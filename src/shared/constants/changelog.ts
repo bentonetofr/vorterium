@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.22',
+    date:    '2026-10-01',
+    title:   'Árvore genealógica e alinhamento de texto no Quadro',
+    items: [
+      'Quadro: nova linha em degrau (ângulos retos, cantos levemente arredondados), o formato clássico de árvore genealógica — ela sai do item, desce até o meio do caminho, anda na horizontal e entra no outro, e se refaz sozinha quando você mexe nos itens. Setas puxadas das bolinhas azuis já nascem assim, e o botão de degrau na barra da seta liga e desliga.',
+      'Quadro: clicar (sem arrastar) numa bolinha azul agora também funciona — a linha sai presa no item; clique no outro item pra ligar, ou clique no caminho pra fazer quinas.',
+      'Quadro: textos, post-its e formas agora têm alinhamento — à esquerda, no centro ou à direita — pelos três botões na barra da seleção.',
+    ],
+  },
+  {
     version: '1.21',
     date:    '2026-10-01',
     title:   'Linha com quinas e grade com Shift no Quadro',

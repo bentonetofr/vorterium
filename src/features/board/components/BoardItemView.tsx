@@ -1,7 +1,7 @@
 import { memo, useLayoutEffect, useRef, type CSSProperties } from 'react'
 import type { BoardItem } from '../services/boardService'
 import { connectorCurve, inkColor, OUTLINE, type Point } from '../boardGeometry'
-import { fontStack, useBoardFont } from '../boardFonts'
+import { alignOf, fontStack, useBoardFont } from '../boardFonts'
 
 // ────────────────────────────────────────────────────────
 // Desenho de cada item do Quadro (no "mundo": posição e tamanho em
@@ -151,6 +151,7 @@ function NoteView({ item, editing, onText, onDone }: ItemViewProps) {
           value={text}
           editing={editing}
           className="board-note__text"
+          style={{ textAlign: alignOf('note', item.data.align) }}
           onInput={(t) => onText(item.id, t)}
           onDone={() => onDone(item.id)}
         />
@@ -182,6 +183,7 @@ function TextView({ item, editing, onText, onDone, onMeasure }: ItemViewProps) {
         value={item.data.text ?? ''}
         editing={editing}
         className="board-textitem__text"
+        style={{ textAlign: alignOf('text', item.data.align) }}
         placeholder="Escreva algo"
         onInput={(t) => onText(item.id, t)}
         onDone={() => onDone(item.id)}
@@ -221,6 +223,7 @@ function ShapeView({ item, editing, onText, onDone }: ItemViewProps) {
           value={item.data.text ?? ''}
           editing={editing}
           className="board-shape__text"
+          style={{ textAlign: alignOf('shape', item.data.align) }}
           onInput={(t) => onText(item.id, t)}
           onDone={() => onDone(item.id)}
         />

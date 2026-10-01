@@ -20,7 +20,7 @@ import {
   type PenSettings, type Tool,
 } from './BoardChrome'
 import { BoardFontPanel } from './BoardFontPanel'
-import { FONT_KINDS } from '../boardFonts'
+import { ALIGN_KINDS, FONT_KINDS } from '../boardFonts'
 import './Board.css'
 
 // ────────────────────────────────────────────────────────
@@ -830,7 +830,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     const moved = withData(c, { to })
     const an = connectorAnchors(moved, itemsRef.current)
     const pts = st.verts.map((q) => worldToCurvePoint(an, q))
-    applyLocal({ [st.id]: withData(moved, { pts: pts.length ? pts : undefined, sharp: pts.length ? true : undefined }) })
+    applyLocal({ [st.id]: withData(moved, { pts: pts.length ? pts : undefined, sharp: pts.length ? true : undefined, elbow: pts.length ? undefined : moved.data.elbow }) })
   }
 
   /** Termina a linha como está agora (curta e solta demais = desiste). */
@@ -861,7 +861,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       const moved = withData(c, { to: { x: last.x, y: last.y } })
       const an = connectorAnchors(moved, itemsRef.current)
       const pts = st.verts.map((q) => worldToCurvePoint(an, q))
-      applyLocal({ [st.id]: withData(moved, { pts: pts.length ? pts : undefined, sharp: pts.length ? true : undefined }) })
+      applyLocal({ [st.id]: withData(moved, { pts: pts.length ? pts : undefined, sharp: pts.length ? true : undefined, elbow: pts.length ? undefined : moved.data.elbow }) })
     }
     polyFinish()
   }
@@ -977,7 +977,8 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       if (!it) return
       if (handle.startsWith('link:')) {
         // Bolinha azul do lado do item: puxa uma seta já presa nele (como no Miro).
-        const c = blank('connector', 0, 0, 0, 0, { ...defaultData('connector'), from: { id }, to: { x: p.x, y: p.y } })
+        // Nasce em degrau (ângulos retos): o jeito das árvores genealógicas.
+        const c = blank('connector', 0, 0, 0, 0, { ...defaultData('connector'), from: { id }, to: { x: p.x, y: p.y }, elbow: true })
         applyLocal({ [c.id]: c })
         dragRef.current = { type: 'connect', id: c.id, sx: e.clientX, sy: e.clientY }
         return
@@ -1222,9 +1223,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         const { a, b } = connectorEnds(c, itemsRef.current)
         const tiny = Math.hypot(a.x - b.x, a.y - b.y) * v.zoom < 12
         // Clique (sem arrastar) com a ferramenta Seta: começa uma linha com cliques.
-        if (d.fromTool && d.sx != null && d.sy != null && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6 && !c.data.to?.id) {
+        // (Vale também pro clique na bolinha azul do item: a linha sai presa nele.)
+        if (d.sx != null && d.sy != null && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6 && !c.data.to?.id) {
           poly.current = { id: d.id, verts: [] }
-          flash('Clique pra fazer quinas. Duplo clique, Enter ou clique num item pra terminar.')
+          flash(d.fromTool
+            ? 'Clique pra fazer quinas. Duplo clique, Enter ou clique num item pra terminar.'
+            : 'Clique no item pra ligar (ou clique pra fazer quinas). Duplo clique, Enter ou Esc terminam.')
           return
         }
         // Só um clique na bolinha azul (sem puxar até lugar nenhum): não cria seta.
@@ -1659,6 +1663,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
             isMaster={isMaster}
             onColor={(color) => mapSelected((it) => (['note', 'shape', 'text', 'connector', 'drawing', 'timeline', 'frame'].includes(it.kind) ? withData(it, { color }) : null))}
             onShape={(s) => mapSelected((it) => (it.kind === 'shape' ? withData(it, { shape: s }) : null))}
+            onAlign={(align) => mapSelected((it) => (ALIGN_KINDS.has(it.kind) ? withData(it, { align }) : null))}
             fontsOpen={fontsShown}
             onFonts={() => setFontsOpen((v) => !(v && fontItems.length > 0))}
             onTextSize={(dir) => mapSelected((it) => {
@@ -1670,6 +1675,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
             })}
             onArrow={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { arrow: it.data.arrow === 'both' ? 'none' : it.data.arrow === 'none' ? 'end' : 'both' }) : null))}
             onDashed={() => mapSelected((it) => (it.kind === 'connector' ? withData(it, { dashed: !it.data.dashed }) : null))}
+            onElbow={() => {
+              const on = selItems.some((i) => i.kind === 'connector' && i.data.elbow && !curvePoints(i).length)
+              mapSelected((it) => (it.kind === 'connector'
+                ? withData(it, on ? { elbow: undefined } : { elbow: true, pts: undefined, bend: undefined, sharp: undefined })
+                : null))
+            }}
             onSharp={() => {
               const sharp = selItems.some((i) => i.kind === 'connector' && i.data.sharp)
               mapSelected((it) => (it.kind === 'connector' && curvePoints(it).length ? withData(it, { sharp: sharp ? undefined : true }) : null))
@@ -1678,10 +1689,10 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
               const curved = selItems.some((i) => i.kind === 'connector' && curvePoints(i).length > 0)
               mapSelected((it) => {
                 if (it.kind !== 'connector') return null
-                if (curved) return withData(it, { pts: undefined, bend: undefined })
+                if (curved) return withData(it, { pts: undefined, bend: undefined, elbow: undefined })
                 // Curva padrão: um ponto no meio, afastado um quarto do comprimento.
                 const { len } = connectorAnchors(it, itemsRef.current)
-                return withData(it, { pts: [[0.5, Math.round(len / 4)]], bend: undefined })
+                return withData(it, { pts: [[0.5, Math.round(len / 4)]], bend: undefined, elbow: undefined })
               })
             }}
             onFront={bringFront}

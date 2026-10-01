@@ -418,6 +418,7 @@
 .board-context__btn.is-on { color: var(--accent-bright); background: var(--accent-glow); }
 .board-context__btn--text { padding: 0 10px; font-size: var(--text-xs); }
 .board-context__btn--danger:hover:not(:disabled) { color: var(--danger); }
+.board-context__group { display: inline-flex; gap: 1px; }
 .board-context__sep { width: 1px; height: 22px; margin: 0 3px; background: var(--border-dim); }
 .board-context__value { min-width: 24px; font-family: var(--font-label); font-size: var(--text-xs); text-align: center; color: var(--text-muted); }
 .board-context__note { display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; font-size: var(--text-xs); color: var(--text-muted); }

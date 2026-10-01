@@ -35,6 +35,8 @@ export interface BoardData {
   /** Tamanho da letra (texto solto). */
   size?:   number
   bold?:   boolean
+  /** Alinhamento do texto (texto solto: esquerda; post-it e forma: centro). */
+  align?:  'left' | 'center' | 'right'
   /** Fonte do Google Fonts (só nomes da lista de boardFonts; outro nome é ignorado). */
   font?:   string
   shape?:  ShapeType
@@ -56,6 +58,8 @@ export interface BoardData {
   dashed?: boolean
   /** Seta curva: pontos [u, v] relativos às pontas (ver boardGeometry.curvePoints). */
   pts?:    [number, number][]
+  /** Linha em degrau (ângulos retos, refeita sozinha) — árvores genealógicas. */
+  elbow?:  boolean
   /** Com pontos: cantos retos (segmentos) em vez de curva arredondada. */
   sharp?:  boolean
   /** Curva antiga, de um ponto só no meio (vira pts ao mexer). */

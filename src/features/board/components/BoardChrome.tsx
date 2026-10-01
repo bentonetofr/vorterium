@@ -7,7 +7,7 @@ import type { BoardItem, ShapeType, TimelineEvent } from '../services/boardServi
 import {
   INK_COLORS, NOTE_COLORS, OUTLINE, SHAPE_COLORS, SHAPE_LABEL, curvePoints, inkColor, newId,
 } from '../boardGeometry'
-import { FONT_KINDS, fontStack } from '../boardFonts'
+import { ALIGN_KINDS, FONT_KINDS, alignOf, fontStack, type TextAlign } from '../boardFonts'
 
 // ────────────────────────────────────────────────────────
 // Peças em volta do Quadro: barra de ferramentas, zoom, barra da seleção,
@@ -54,6 +54,10 @@ export const Icons = {
   open:      <Icon size={18}><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" /></Icon>,
   zoomImg:   <Icon size={18}><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5M11 8v6M8 11h6" /></Icon>,
   edit:      <Icon size={18}><path d="M4 20h4L19 9l-4-4L4 16z" /></Icon>,
+  align_left:   <Icon size={18}><path d="M4 6h16M4 10h10M4 14h16M4 18h10" /></Icon>,
+  align_center: <Icon size={18}><path d="M4 6h16M7 10h10M4 14h16M7 18h10" /></Icon>,
+  align_right:  <Icon size={18}><path d="M4 6h16M10 10h10M4 14h16M10 18h10" /></Icon>,
+  elbow:     <Icon size={18}><path d="M6 4v6h12v10" /><circle cx="6" cy="4" r="1.5" fill="currentColor" /><circle cx="18" cy="20" r="1.5" fill="currentColor" /></Icon>,
   sharp:     <Icon size={18}><path d="M4 18l6-10 5 7 5-9" /></Icon>,
   round:     <Icon size={18}><path d="M4 18c2-6 4-10 6-10s3 7 5 7 3-6 5-9" /></Icon>,
   curve:     <Icon size={18}><path d="M4 18C6 8 14 4 20 6" /><path d="M16 3.5l4 2.5-2.5 4" /></Icon>,
@@ -203,10 +207,14 @@ export function BoardZoomBar({ zoom, frames, onZoom, onReset, onFit, onFrame }: 
 
 // ── Barra da seleção ────────────────────────────────────
 
+const ALIGN_LABEL: Record<TextAlign, string> = { left: 'Alinhar à esquerda', center: 'Centralizar', right: 'Alinhar à direita' }
+
 export interface ContextActions {
   onColor:      (color: string) => void
   onShape:      (shape: ShapeType) => void
   onTextSize:   (dir: 1 | -1) => void
+  /** Alinha o texto: esquerda, centro ou direita. */
+  onAlign:      (align: TextAlign) => void
   /** Abre/fecha a galeria de fontes. */
   onFonts:      () => void
   onArrow:      () => void
@@ -215,6 +223,8 @@ export interface ContextActions {
   onCurve:      () => void
   /** Linha com pontos: cantos retos ⇄ arredondados. */
   onSharp:      () => void
+  /** Linha em degrau (árvore genealógica) liga/desliga. */
+  onElbow:      () => void
   onFront:      () => void
   onBack:       () => void
   onDuplicate:  () => void
@@ -260,6 +270,8 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOp
     : null
   const current = first.data.color
   const fontable = items.every((i) => FONT_KINDS.has(i.kind))
+  const alignable = items.every((i) => ALIGN_KINDS.has(i.kind))
+  const align = alignOf(first.kind, first.data.align)
 
   return (
     <div className="board-context" style={{ left, top }} onPointerDown={(e) => e.stopPropagation()}>
@@ -312,6 +324,24 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOp
         </button>
       ))}
 
+      {alignable && (
+        <span className="board-context__group" role="group" aria-label="Alinhamento do texto">
+          {(['left', 'center', 'right'] as const).map((al) => (
+            <button
+              key={al}
+              type="button"
+              className={`board-context__btn${align === al ? ' is-on' : ''}`}
+              onClick={() => a.onAlign(al)}
+              title={ALIGN_LABEL[al]}
+              aria-label={ALIGN_LABEL[al]}
+              aria-pressed={align === al}
+            >
+              {Icons[`align_${al}`]}
+            </button>
+          ))}
+        </span>
+      )}
+
       {only === 'text' && (
         <>
           <button type="button" className="board-context__btn" onClick={() => a.onTextSize(-1)} title="Letra menor" aria-label="Letra menor">A−</button>
@@ -334,6 +364,15 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOp
             aria-label="Curvar a seta"
           >
             {Icons.curve}
+          </button>
+          <button
+            type="button"
+            className={`board-context__btn${items.some((i) => i.data.elbow && curvePoints(i).length === 0) ? ' is-on' : ''}`}
+            onClick={a.onElbow}
+            title={items.some((i) => i.data.elbow && curvePoints(i).length === 0) ? 'Deixar reta' : 'Em degrau (árvore genealógica)'}
+            aria-label="Linha em degrau"
+          >
+            {Icons.elbow}
           </button>
           {items.some((i) => curvePoints(i).length > 0) && (
             <button
@@ -526,7 +565,7 @@ const SHORTCUTS: [string, string][] = [
   ['Trocar a fonte', 'Selecione post-it, texto, forma ou moldura e clique em Aa'],
   ['Linha com quinas', 'Ferramenta Seta (L): clique, clique de novo pra cada quina, e termine com duplo clique, Enter ou clicando num item'],
   ['Encaixar na grade', 'Segure Shift enquanto arrasta um item'],
-  ['Ligar dois itens', 'Selecione o item e arraste uma das bolinhas azuis até o outro (a seta fica presa nos dois)'],
+  ['Ligar dois itens', 'Selecione o item e arraste uma bolinha azul até o outro — ou clique na bolinha e depois no outro item. A linha nasce em degrau (bom pra árvore genealógica)'],
   ['Curvar a seta', 'Selecione a seta e arraste as bolinhas vazias (cada uma vira um ponto novo); duplo clique num ponto tira ele'],
   ['Ajustar', 'Setas movem (Shift = 10×) · Shift+1 vê tudo · Shift+0 volta a 100%'],
   ['Fotos e arquivos', 'Arraste do computador ou cole (Ctrl+V). Fotos vão pra Galeria; PDFs e textos, pra Biblioteca'],
