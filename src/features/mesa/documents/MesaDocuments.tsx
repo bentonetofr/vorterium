@@ -100,7 +100,7 @@ export function MesaDocuments({ campaignId }: { campaignId: string }) {
                     ? <BookCover title={doc.title} style={doc.style} />
                     : (
                       <div className="doc-sheet">
-                        <PaperPage text={doc.pages[0]?.text ?? ''} style={pageStyle(doc.style, doc.pages[0]?.style)} seed={pageSeed(doc.id, 0)} />
+                        <PaperPage html={doc.pages[0]?.html ?? ''} style={pageStyle(doc.style, doc.pages[0]?.style)} seed={pageSeed(doc.id, 0)} />
                       </div>
                     )}
                 </button>

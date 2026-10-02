@@ -12,7 +12,18 @@ import { HAND_FONTS, handStack } from './paperStyles'
 const CARD_W = 380
 const CARD_H = 380
 
-export function FontPicker({ current, onPick }: { current: string; onPick: (font: string) => void }) {
+interface PickerProps {
+  current:  string
+  onPick:   (font: string) => void
+  /** Texto da caixa (padrão "Fontes"). */
+  label?:   string
+  /** Versão menor, pra barra de formatação. */
+  compact?: boolean
+  /** Opção "volta pra letra padrão" no topo do card (onPick recebe 'default'). */
+  defaultLabel?: string
+}
+
+export function FontPicker({ current, onPick, label = 'Fontes', compact, defaultLabel }: PickerProps) {
   const [open, setOpen] = useState(false)
   const btn = useRef<HTMLButtonElement>(null)
   useEffect(() => { loadFontPreview(current) }, [current])
@@ -21,21 +32,24 @@ export function FontPicker({ current, onPick }: { current: string; onPick: (font
       <button
         ref={btn}
         type="button"
-        className={`doc-fontbox${open ? ' is-open' : ''}`}
+        className={`doc-fontbox${compact ? ' doc-fontbox--compact' : ''}${open ? ' is-open' : ''}`}
+        // Não tira o foco do texto (a letra cai no trecho selecionado).
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen((o) => !o)}
+        title={label}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className="doc-fontbox__label">Fontes</span>
+        <span className="doc-fontbox__label">{label}</span>
         <span className="doc-fontbox__name" style={{ fontFamily: handStack(current) }}>{current}</span>
         <span className="doc-fontbox__caret" aria-hidden="true">▾</span>
       </button>
-      {open && <FontCard anchor={btn} current={current} onPick={(f) => { onPick(f); setOpen(false) }} onClose={() => setOpen(false)} />}
+      {open && <FontCard anchor={btn} current={current} defaultLabel={defaultLabel} onPick={(f) => { onPick(f); setOpen(false) }} onClose={() => setOpen(false)} />}
     </>
   )
 }
 
-function FontCard({ anchor, current, onPick, onClose }: { anchor: RefObject<HTMLButtonElement>; current: string; onPick: (f: string) => void; onClose: () => void }) {
+function FontCard({ anchor, current, defaultLabel, onPick, onClose }: { anchor: RefObject<HTMLButtonElement>; current: string; defaultLabel?: string; onPick: (f: string) => void; onClose: () => void }) {
   const card = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const search = useRef<HTMLInputElement>(null)
@@ -97,6 +111,11 @@ function FontCard({ anchor, current, onPick, onClose }: { anchor: RefObject<HTML
         />
       </div>
       <div ref={list} className="doc-fontcard__grid" role="listbox" aria-label="Letra à mão">
+        {defaultLabel && !query && (
+          <button type="button" role="option" aria-selected={false} className="doc-fontcard__tile doc-fontcard__tile--default" onClick={() => onPick('default')}>
+            {defaultLabel}
+          </button>
+        )}
         {fonts.map((f) => <FontTile key={f} family={f} on={f === current} root={list} onPick={onPick} />)}
         {!fonts.length && <p className="doc-fontcard__none">Nenhuma fonte com esse nome.</p>}
       </div>

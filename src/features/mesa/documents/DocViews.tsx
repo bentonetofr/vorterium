@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useBoardFont } from '../../../shared/lib/googleFonts'
+import { loadDocFonts } from './docHtml'
 import type { MesaDocument } from './documentsService'
 import { coverOf, handStack, inkOf, pageSeed, pageStyle, paperCss, type DocStyle } from './paperStyles'
 import './Documents.css'
@@ -12,26 +13,33 @@ import './Documents.css'
 // ────────────────────────────────────────────────────────
 
 interface PaperProps {
-  text:         string
+  /** Texto formatado da página (HTML já limpo). */
+  html:         string
   style:        DocStyle
   seed:         number
   placeholder?: string
   className?:   string
 }
 
+/** Letra, tamanho e tinta padrão do texto de uma página. */
+export const textCss = (style: DocStyle): CSSProperties => ({ fontFamily: handStack(style.font), color: inkOf(style.ink), fontSize: `${style.size / 6}cqw` })
+
 /** Uma folha: o papel e o texto escrito à mão por cima. */
-export function PaperPage({ text, style, seed, placeholder, className }: PaperProps) {
+export function PaperPage({ html, style, seed, placeholder, className }: PaperProps) {
   useBoardFont(style.font)
+  useEffect(() => { void loadDocFonts(html) }, [html])
   return (
-    <div className={`doc-paper${className ? ` ${className}` : ''}`} style={paperCss(style, seed)}>
-      <div
-        className="doc-paper__text"
-        style={{ fontFamily: handStack(style.font), color: inkOf(style.ink), fontSize: `${style.size / 6}cqw` } as CSSProperties}
-      >
-        {text || (placeholder ? <span className="doc-paper__empty">{placeholder}</span> : null)}
-      </div>
-    </div>
+    <PaperFrame style={style} seed={seed} className={className}>
+      {html
+        ? <div className="doc-paper__text" style={textCss(style)} dangerouslySetInnerHTML={{ __html: html }} />
+        : <div className="doc-paper__text" style={textCss(style)}>{placeholder ? <span className="doc-paper__empty">{placeholder}</span> : null}</div>}
+    </PaperFrame>
   )
+}
+
+/** Só o papel (textura e efeitos); o texto vem de quem usa (ex.: o editor). */
+export function PaperFrame({ style, seed, className, children }: { style: DocStyle; seed: number; className?: string; children: ReactNode }) {
+  return <div className={`doc-paper${className ? ` ${className}` : ''}`} style={paperCss(style, seed)}>{children}</div>
 }
 
 /**
@@ -175,10 +183,12 @@ export function BookView({ doc, page, onPage, interactive = true, keys = false }
     if (s === null) return null
     if (s === 'cover') return <BookCover title={doc.title} style={doc.style} />
     const pg = doc.pages[s]
-    const style = pageStyle(doc.style, pg?.style)
+    // Livro com número ímpar de páginas: o verso da última fica em branco, sem número.
+    if (!pg) return <PaperPage html="" style={doc.style} seed={pageSeed(doc.id, s)} className="doc-paper--page" />
+    const style = pageStyle(doc.style, pg.style)
     return (
       <>
-        <PaperPage text={pg?.text ?? ''} style={style} seed={pageSeed(doc.id, s)} className="doc-paper--page" />
+        <PaperPage html={pg.html} style={style} seed={pageSeed(doc.id, s)} className="doc-paper--page" />
         <span className={`doc-book__num doc-book__num--${s % 2 ? 'r' : 'l'}`} style={{ fontFamily: handStack(style.font), color: inkOf(style.ink) }}>{s + 1}</span>
       </>
     )
@@ -242,7 +252,7 @@ export function DocumentView({ doc, page, onPage, interactive = true, keys = fal
   const first = doc.pages[0]
   return (
     <div className="doc-sheet">
-      <PaperPage text={first?.text ?? ''} style={pageStyle(doc.style, first?.style)} seed={pageSeed(doc.id, 0)} />
+      <PaperPage html={first?.html ?? ''} style={pageStyle(doc.style, first?.style)} seed={pageSeed(doc.id, 0)} />
     </div>
   )
 }

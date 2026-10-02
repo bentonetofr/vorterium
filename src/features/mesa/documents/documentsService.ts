@@ -1,4 +1,5 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
+import { sanitizeDocHtml, textToHtml } from './docHtml'
 import { DEFAULT_STYLE, normalizePageStyle, normalizeStyle, type DocStyle } from './paperStyles'
 
 // ────────────────────────────────────────────────────────
@@ -9,11 +10,18 @@ import { DEFAULT_STYLE, normalizePageStyle, normalizeStyle, type DocStyle } from
 export type DocKind = 'paper' | 'book'
 
 export interface DocPage {
-  text:   string
+  /** Texto formatado da página (HTML já limpo por sanitizeDocHtml). */
+  html:   string
   /** Estilo só desta página (o resto vem do documento). */
   style?: Partial<DocStyle>
   /** Continua a página anterior (o texto que não coube nela desceu pra cá). */
   cont?:  boolean
+  /**
+   * Na continuação: quantos níveis do começo desta página são o mesmo
+   * parágrafo (ou lista, ou item) que terminava na anterior — quando o
+   * texto volta a subir, eles se juntam de novo em vez de virar dois.
+   */
+  join?:  number
 }
 
 export interface MesaDocument {
@@ -29,7 +37,8 @@ export interface MesaDocument {
 }
 
 export const MAX_PAGES = 200
-export const MAX_PAGE_CHARS = 4000
+/** Tamanho máximo do HTML de uma página. */
+export const MAX_PAGE_CHARS = 20000
 
 const COLUMNS = 'id, campaign_id, kind, title, style, pages, visible, created_at, updated_at'
 
@@ -41,9 +50,13 @@ function normalize(row: Record<string, unknown>): MesaDocument {
     kind:        row.kind === 'book' ? 'book' : 'paper',
     title:       String(row.title ?? 'Documento'),
     style:       normalizeStyle(row.style),
-    pages:       (pages.length ? pages : [{ text: '' }]).map((p) => {
-      const o = (p && typeof p === 'object' ? p : {}) as { text?: unknown; style?: unknown; cont?: unknown }
-      return { text: typeof o.text === 'string' ? o.text : '', style: normalizePageStyle(o.style), ...(o.cont === true ? { cont: true } : {}) }
+    pages:       (pages.length ? pages : [{}]).map((p): DocPage => {
+      const o = (p && typeof p === 'object' ? p : {}) as { html?: unknown; text?: unknown; style?: unknown; cont?: unknown; join?: unknown }
+      // Páginas antigas eram texto puro (campo text).
+      const html = typeof o.html === 'string' ? sanitizeDocHtml(o.html) : typeof o.text === 'string' ? textToHtml(o.text) : ''
+      const cont = o.cont === true
+      const join = cont && typeof o.join === 'number' && o.join > 0 && o.join <= 20 ? Math.floor(o.join) : 0
+      return { html, style: normalizePageStyle(o.style), ...(cont ? { cont: true } : {}), ...(join ? { join } : {}) }
     }),
     visible:     !!row.visible,
     created_at:  String(row.created_at ?? ''),
@@ -68,7 +81,7 @@ export async function getDocument(id: string): Promise<MesaDocument | null> {
 }
 
 export async function createDocument(campaignId: string, kind: DocKind): Promise<MesaDocument> {
-  const pages: DocPage[] = kind === 'book' ? [{ text: '' }, { text: '' }] : [{ text: '' }]
+  const pages: DocPage[] = kind === 'book' ? [{ html: '' }, { html: '' }] : [{ html: '' }]
   const { data, error } = await supabase
     .from('campaign_mesa_documents')
     .insert({ campaign_id: campaignId, kind, title: kind === 'book' ? 'Livro sem título' : 'Carta sem título', style: DEFAULT_STYLE, pages })
@@ -79,7 +92,12 @@ export async function createDocument(campaignId: string, kind: DocKind): Promise
 }
 
 export async function saveDocument(doc: MesaDocument): Promise<MesaDocument> {
-  const pages = doc.pages.slice(0, MAX_PAGES).map((p) => ({ text: p.text.slice(0, MAX_PAGE_CHARS), ...(p.style ? { style: p.style } : {}), ...(p.cont ? { cont: true } : {}) }))
+  const pages = doc.pages.slice(0, MAX_PAGES).map((p) => ({
+    html: p.html.length > MAX_PAGE_CHARS ? sanitizeDocHtml(p.html.slice(0, MAX_PAGE_CHARS)) : p.html,
+    ...(p.style ? { style: p.style } : {}),
+    ...(p.cont ? { cont: true } : {}),
+    ...(p.cont && p.join ? { join: p.join } : {}),
+  }))
   const { data, error } = await supabase
     .from('campaign_mesa_documents')
     .update({ kind: doc.kind, title: doc.title.trim().slice(0, 120) || 'Documento', style: doc.style, pages })

@@ -1,28 +1,41 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import { loadBoardFont } from '../../../shared/lib/googleFonts'
-import { MAX_PAGE_CHARS, MAX_PAGES, saveDocument, type DocPage, type MesaDocument } from './documentsService'
+import { CARET_MARK, loadDocFonts, stripCaret } from './docHtml'
+import { MAX_PAGES, saveDocument, type DocPage, type MesaDocument } from './documentsService'
+import { DocToolbar } from './DocToolbar'
 import { BookCover, PaperPage } from './DocViews'
 import { FontPicker } from './FontPicker'
+import { PageEditor, type ChangeKind, type PageEditorHandle } from './PageEditor'
 import { overflows, reflow, reflowAll } from './pageFlow'
 import {
-  COVERS, INKS, MAX_AUTHOR, PAPERS, handStack, pageSeed, pageStyle, type DocStyle,
+  COVERS, INKS, MAX_AUTHOR, PAPERS, pageSeed, pageStyle, type DocStyle,
 } from './paperStyles'
 
 // ────────────────────────────────────────────────────────
 // Editor de documento (só o mestre): título, folha ou livro, as páginas, e
 // o estilo — textura do papel, efeitos (queimado, rasgado, dobras,
-// manchas), letra à mão, tamanho e cor da tinta. No livro, o estilo vale
-// pro livro todo ou só pra página aberta (cada página pode ter o seu).
-// O livro começa pela capa; o texto que não cabe numa página desce
-// sozinho pra seguinte (e sobe de volta quando sobra espaço).
+// manchas), letra à mão, tamanho e cor da tinta padrão. No livro, o estilo
+// vale pro livro todo ou só pra página aberta (cada página pode ter o seu).
+// O texto se escreve direto na folha, com formatação de Word (DocToolbar):
+// letra, tamanho, negrito…, tinta, alinhamento, listas, recuo, espaçamento
+// e Tab. O livro começa pela capa; o texto que não cabe numa página desce
+// sozinho pra seguinte (e sobe de volta quando sobra espaço). Ctrl+Z/Ctrl+Y
+// desfazem e refazem tudo (texto, formatação, estilo).
 // ────────────────────────────────────────────────────────
 
 const clone = (d: MesaDocument): MesaDocument => ({ ...d, style: { ...d.style }, pages: d.pages.map((p) => ({ ...p, style: p.style ? { ...p.style } : undefined })) })
-const samePages = (a: DocPage[], b: DocPage[]) => a.length === b.length && a.every((p, i) => p.text === b[i].text && !!p.cont === !!b[i].cont)
+const samePages = (a: DocPage[], b: DocPage[]) => a.length === b.length && a.every((p, i) => p.html === b[i].html && !!p.cont === !!b[i].cont && (p.join ?? 0) === (b[i].join ?? 0))
 
 /** Índice da "página" da capa no editor do livro. */
 const COVER = -1
+/** Digitação seguida (sem pausa maior que isso, e por até TYPING_GROUP_MS) vira um passo só do desfazer. */
+const TYPING_PAUSE_MS = 900
+const TYPING_GROUP_MS = 4000
+const MAX_HISTORY = 300
+
+/** Um passo do desfazer: o documento, a página aberta e o HTML dela com a marca do cursor. */
+interface Snap { draft: MesaDocument; pageIdx: number; marked: string | null }
 
 export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; onClose: () => void; onSaved: (doc: MesaDocument) => void }) {
   const [draft, setDraft] = useState<MesaDocument>(() => clone(doc))
@@ -33,11 +46,21 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   const [dirty, setDirty] = useState(false)
   /** O livro chegou ao limite de páginas e o texto que sobrou não aparece. */
   const [full, setFull] = useState(false)
-  const textRef = useRef<HTMLTextAreaElement>(null)
+  /** Reescrever a folha editável (v muda) — com a marca do cursor, se `marked`. */
+  const [ed, setEd] = useState<{ v: number; marked: string | null }>({ v: 0, marked: null })
+  const editor = useRef<PageEditorHandle>(null)
   const draftRef = useRef(draft)
   draftRef.current = draft
-  /** Onde pôr o cursor depois que o texto correu pra outra página. */
-  const caretTo = useRef<number | null>(null)
+  const pageIdxRef = useRef(pageIdx)
+  pageIdxRef.current = pageIdx
+  /** Página aberta com o cursor, depois da última mudança (= antes da próxima, pro desfazer). */
+  const lastMarked = useRef<string | null>(null)
+  const undoStack = useRef<Snap[]>([])
+  const redoStack = useRef<Snap[]>([])
+  const lastTyping = useRef(0)
+  const typingSince = useRef(0)
+  const [, setHistoryTick] = useState(0)
+
   const isBook = draft.kind === 'book'
   const onCover = isBook && pageIdx === COVER
   const at = Math.max(0, Math.min(pageIdx, draft.pages.length - 1))
@@ -46,7 +69,20 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   const editingPage = isBook && scope === 'page' && !onCover
   const style = pageStyle(draft.style, page?.style)
 
-  const change = (fn: (d: MesaDocument) => void) => {
+  /** Guarda o estado de agora no desfazer (digitação seguida vira um passo só). */
+  function remember(kind: ChangeKind | 'other') {
+    const now = Date.now()
+    if (kind === 'type' && now - lastTyping.current < TYPING_PAUSE_MS && now - typingSince.current < TYPING_GROUP_MS) { lastTyping.current = now; return }
+    lastTyping.current = kind === 'type' ? now : 0
+    typingSince.current = now
+    undoStack.current.push({ draft: draftRef.current, pageIdx: pageIdxRef.current, marked: lastMarked.current })
+    if (undoStack.current.length > MAX_HISTORY) undoStack.current.shift()
+    redoStack.current = []
+    setHistoryTick((n) => n + 1)
+  }
+
+  const change = (fn: (d: MesaDocument) => void, kind: ChangeKind | 'other' = 'other') => {
+    remember(kind)
     setDraft((prev) => { const next = clone(prev); fn(next); return next })
     setDirty(true)
   }
@@ -59,13 +95,36 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     }
   })
 
+  /** Abre uma página (ou a capa); com `marked` (HTML com a marca), já com o cursor nela. */
+  function openPage(i: number, marked: string | null = null) {
+    setPageIdx(i)
+    setEd((e) => ({ v: e.v + 1, marked }))
+  }
+
+  function travel(from: MutableRefObject<Snap[]>, to: MutableRefObject<Snap[]>) {
+    const snap = from.current.pop()
+    if (!snap) return
+    to.current.push({ draft: draftRef.current, pageIdx: pageIdxRef.current, marked: editor.current?.marked() ?? lastMarked.current })
+    lastTyping.current = 0
+    lastMarked.current = snap.marked
+    setDraft(snap.draft)
+    setDirty(true)
+    setFull(false)
+    // A marca só vale se ainda é a mesma página (senão abre sem mexer no cursor).
+    const same = snap.marked != null && stripCaret(snap.marked) === snap.draft.pages[snap.pageIdx]?.html
+    openPage(snap.pageIdx, snap.pageIdx !== COVER && same ? snap.marked : null)
+    setHistoryTick((n) => n + 1)
+  }
+  const undo = () => travel(undoStack, redoStack)
+  const redo = () => travel(redoStack, undoStack)
+
   function setKind(kind: 'paper' | 'book') {
     change((d) => {
       d.kind = kind
-      if (kind === 'book' && d.pages.length < 2) d.pages.push({ text: '' })
+      if (kind === 'book' && d.pages.length < 2) d.pages.push({ html: '' })
     })
-    if (kind === 'paper') { setPageIdx(0); setScope('doc') }
-    else setPageIdx(COVER)
+    if (kind === 'paper') { openPage(0); setScope('doc') }
+    else openPage(COVER)
   }
 
   /** Página nova (em branco) depois do texto corrido da página aberta. */
@@ -73,8 +132,8 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     if (draft.pages.length >= MAX_PAGES) return
     let end = at
     while (end + 1 < draft.pages.length && draft.pages[end + 1].cont) end++
-    change((d) => { d.pages.splice(end + 1, 0, { text: '' }) })
-    setPageIdx(end + 1)
+    change((d) => { d.pages.splice(end + 1, 0, { html: '' }) })
+    openPage(end + 1, CARET_MARK)
   }
   function removePage() {
     if (draft.pages.length <= 1) return
@@ -82,37 +141,43 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
       const [gone] = d.pages.splice(at, 1)
       // A seguinte continuava esta: passa a continuar o que vinha antes (ou vira começo).
       const next = d.pages[at]
-      if (next?.cont && !gone.cont) delete next.cont
-      if (d.pages[0]?.cont) delete d.pages[0].cont
+      if (next?.cont && !gone.cont) { delete next.cont; delete next.join }
+      if (next?.cont) delete next.join
+      if (d.pages[0]?.cont) { delete d.pages[0].cont; delete d.pages[0].join }
     })
-    setPageIdx(Math.max(0, at - 1))
+    openPage(Math.max(0, at - 1))
   }
 
-  /** Escreveu na página: no livro, o que não couber desce pra seguinte. */
-  function setText(value: string, caret: number) {
-    if (!isBook) { change((d) => { d.pages[at].text = value }); return }
-    const pages = draft.pages.map((p, i) => (i === at ? { ...p, text: value } : p))
-    const flowed = reflow(pages, at, draft.style, caret)
-    change((d) => { d.pages = flowed.pages })
+  /**
+   * Escreveu/formatou na página (`marked`: o HTML com a marca do cursor). No
+   * livro, o que não couber desce pra seguinte — e o cursor vai junto, se for
+   * o caso, pra onde a marca cair.
+   */
+  function onPageChange(marked: string, kind: ChangeKind) {
+    if (!isBook) {
+      change((d) => { d.pages[at].html = stripCaret(marked) }, kind)
+      lastMarked.current = marked
+      return
+    }
+    const flowed = reflow(draft.pages.map((p, i) => (i === at ? { ...p, html: marked } : p)), at, draft.style)
+    const k = flowed.pages.findIndex((p) => p.html.includes(CARET_MARK))
+    const markedPage = k >= 0 ? flowed.pages[k].html : null
+    const pages = flowed.pages.map((p) => (p.html.includes(CARET_MARK) ? { ...p, html: stripCaret(p.html) } : p))
+    change((d) => { d.pages = pages }, kind)
     setFull(flowed.full)
-    if (flowed.page !== at) setPageIdx(flowed.page)
-    caretTo.current = flowed.page !== at || flowed.pages[at]?.text !== value ? flowed.caret : null
+    lastMarked.current = markedPage
+    const target = k >= 0 ? k : at
+    if (target !== at) openPage(target, markedPage)
+    else if (markedPage !== marked) setEd((e) => ({ v: e.v + 1, marked: markedPage }))
   }
-  useLayoutEffect(() => {
-    const el = textRef.current
-    if (caretTo.current == null || !el) return
-    el.focus()
-    el.setSelectionRange(caretTo.current, caretTo.current)
-    caretTo.current = null
-  })
 
   // Mudou a letra, o tamanho ou o tipo: espera as fontes e redistribui o livro.
-  const layoutKey = isBook ? [draft.style.font, draft.style.size, ...draft.pages.map((p) => `${p.style?.font ?? ''}/${p.style?.size ?? ''}`)].join('|') : ''
+  const layoutKey = isBook ? [draft.style.font, draft.style.size, ...draft.pages.filter((p) => p.style?.font || p.style?.size).map((p) => `${p.style?.font ?? ''}/${p.style?.size ?? ''}`)].join('|') : ''
   useEffect(() => {
     if (!isBook) return
     let alive = true
     const fonts = new Set([draft.style.font, ...draft.pages.map((p) => p.style?.font).filter((f): f is string => !!f)])
-    void Promise.all([...fonts].map((f) => loadBoardFont(f))).then(() => {
+    void Promise.all([...[...fonts].map((f) => loadBoardFont(f)), ...draft.pages.map((p) => loadDocFonts(p.html))]).then(() => {
       if (!alive) return
       const prev = draftRef.current
       const { pages, full: over } = reflowAll(prev.pages, prev.style)
@@ -120,12 +185,14 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
       if (samePages(pages, prev.pages)) return
       setDraft({ ...prev, pages })
       setDirty(true)
+      const i = pageIdxRef.current
+      if (i !== COVER && pages[i]?.html !== prev.pages[i]?.html) setEd((e) => ({ v: e.v + 1, marked: null }))
     })
     return () => { alive = false }
   }, [layoutKey])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Folha avulsa: avisa quando o texto passa do papel.
-  const sheetOverflow = useMemo(() => !isBook && !!page && overflows(page.text, style, false), [isBook, page?.text, style.font, style.size])  // eslint-disable-line react-hooks/exhaustive-deps
+  const sheetOverflow = useMemo(() => !isBook && !!page && overflows(page.html, style, false), [isBook, page?.html, style.font, style.size])  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
     if (saving) return
@@ -148,10 +215,17 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     onClose()
   }
 
-  // Ctrl+S salva.
+  // Atalhos: Ctrl+S salva; Ctrl+Z/Ctrl+Y desfazem/refazem (com o foco fora da folha).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (dirty) void save() }
+      if (!(e.ctrlKey || e.metaKey) || e.defaultPrevented) return
+      const k = e.key.toLowerCase()
+      if (k === 's') { e.preventDefault(); if (dirty) void save(); return }
+      // Desfazer/refazer com o foco fora da folha (a folha cuida dos dela); campos de texto têm o seu.
+      const t = e.target as HTMLElement | null
+      if (t?.closest('input, textarea, [contenteditable="true"]')) return
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
+      else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redo() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -177,7 +251,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
               className="input doc-editor__title-input"
               value={draft.title}
               maxLength={120}
-              onChange={(e) => change((d) => { d.title = e.target.value })}
+              onChange={(e) => change((d) => { d.title = e.target.value }, 'type')}
               aria-label="Título do documento"
               placeholder="Título"
             />
@@ -226,7 +300,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
               )}
 
               <div>
-                <p className="doc-editor__label">Letra à mão · tamanho {style.size}</p>
+                <p className="doc-editor__label">Letra padrão · tamanho {style.size}</p>
                 <FontPicker current={style.font} onPick={(font) => setStyle({ font })} />
                 <input
                   type="range" min={16} max={48} value={style.size}
@@ -248,7 +322,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
                       title={p.label}
                       aria-label={p.label}
                     >
-                      <PaperPage text="" style={{ ...style, texture: p.id, burn: 0, torn: false }} seed={i * 97 + 11} />
+                      <PaperPage html="" style={{ ...style, texture: p.id, burn: 0, torn: false }} seed={i * 97 + 11} />
                     </button>
                   ))}
                 </div>
@@ -275,7 +349,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
               </div>
 
               <div>
-                <p className="doc-editor__label">Tinta</p>
+                <p className="doc-editor__label">Tinta padrão</p>
                 <div className="doc-editor__inks">
                   {INKS.map((ink) => (
                     <button
@@ -299,7 +373,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
           <div className="doc-editor__top">
             {isBook && (
               <div className="doc-editor__pages" role="tablist" aria-label="Capa e páginas">
-                <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => setPageIdx(COVER)}>Capa</button>
+                <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => openPage(COVER)}>Capa</button>
                 {draft.pages.map((p, i) => (
                   <button
                     key={i}
@@ -307,7 +381,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
                     role="tab"
                     aria-selected={!onCover && at === i}
                     className={`doc-editor__chip${!onCover && at === i ? ' is-on' : ''}${p.cont ? ' doc-editor__chip--cont' : ''}`}
-                    onClick={() => setPageIdx(i)}
+                    onClick={() => openPage(i)}
                     title={[p.cont ? 'Continua a página anterior' : '', p.style ? 'Página com estilo próprio' : ''].filter(Boolean).join(' · ') || undefined}
                   >
                     {i + 1}{p.style ? '*' : ''}
@@ -322,27 +396,38 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
           {onCover ? (
             <div className="doc-editor__cover-work">
               <div className="doc-editor__cover-big"><BookCover title={draft.title} style={draft.style} /></div>
-              <button type="button" className="btn btn-primary" onClick={() => setPageIdx(0)}>Escrever as páginas ›</button>
+              <button type="button" className="btn btn-primary" onClick={() => openPage(0, (draft.pages[0]?.html ?? '') + CARET_MARK)}>Escrever as páginas ›</button>
             </div>
           ) : (
-            <div className="doc-editor__work">
-              <textarea
-                ref={textRef}
-                className="input doc-editor__text"
-                value={page?.text ?? ''}
-                maxLength={isBook ? undefined : MAX_PAGE_CHARS}
-                onChange={(e) => setText(e.target.value, e.target.selectionStart)}
-                placeholder={isBook ? (at === 0 ? 'Escreva a primeira página… O que não couber vai sozinho pra próxima.' : `Escreva a página ${at + 1}…`) : 'Escreva a carta, o bilhete, o édito…'}
-                aria-label="Texto"
-                style={{ fontFamily: handStack(style.font), fontSize: 18 }}
+            <>
+              <DocToolbar
+                editor={editor}
+                base={style}
+                canUndo={undoStack.current.length > 0}
+                canRedo={redoStack.current.length > 0}
+                onUndo={undo}
+                onRedo={redo}
               />
-              <div className="doc-editor__preview">
-                <div className="doc-sheet">
-                  <PaperPage text={page?.text ?? ''} style={style} seed={pageSeed(draft.id, at)} placeholder="O texto aparece aqui…" className={isBook ? 'doc-paper--page' : undefined} />
+              <div className="doc-editor__work">
+                <div className="doc-editor__sheet">
+                  <PageEditor
+                    key={at}
+                    ref={editor}
+                    html={page?.html ?? ''}
+                    version={ed.v}
+                    marked={ed.marked}
+                    style={style}
+                    seed={pageSeed(draft.id, at)}
+                    book={isBook}
+                    placeholder={isBook ? (at === 0 ? 'Escreva a primeira página… O que não couber vai sozinho pra próxima.' : `Escreva a página ${at + 1}…`) : 'Escreva a carta, o bilhete, o édito…'}
+                    onChange={onPageChange}
+                    onUndo={undo}
+                    onRedo={redo}
+                  />
                 </div>
                 {sheetOverflow && <p className="doc-editor__hint doc-editor__warn">O texto passou do tamanho da folha. Diminua a letra ou troque pra Livro (aí o resto vai pra próxima página).</p>}
               </div>
-            </div>
+            </>
           )}
           <div className="doc-editor__foot">
             <span className="doc-editor__status" role="status">
