@@ -1,0 +1,135 @@
+diff --git a/scripts/verify-migrations.mjs b/scripts/verify-migrations.mjs
+index b202b29..dfcffdb 100644
+--- a/scripts/verify-migrations.mjs
++++ b/scripts/verify-migrations.mjs
+@@ -78,6 +78,8 @@ const expectedMigrations = [
+   '20240174000000_mesa_documents.sql',
+   '20240175000000_site_features.sql',
+   '20240176000000_raiz_mestre.sql',
++  '20240177000000_caatedrum.sql',
++  '20240178000000_caatedrum_conteudo.sql',
+ ]
+ 
+ const actualMigrations = readdirSync(migrationDirectory)
+diff --git a/src/app/layouts/PrivateLayout.tsx b/src/app/layouts/PrivateLayout.tsx
+index 40dd47a..31f327b 100644
+--- a/src/app/layouts/PrivateLayout.tsx
++++ b/src/app/layouts/PrivateLayout.tsx
+@@ -12,6 +12,7 @@ import { ControlFab }         from '../../features/control/ControlFab'
+ import { MestreAscension }    from '../../features/mestre/MestreAscension'
+ import { MestreCall }         from '../../features/mestre/MestreCall'
+ import { MestreTheme }        from '../../features/mestre/MestreTheme'
++import { CaatNotice }       from '../../features/caatedrum/CaatNotice'
+ import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
+ import { CritWolf }           from '../../features/dice/components/CritWolf'
+ import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
+@@ -278,6 +279,7 @@ function PrivateLayoutContent() {
+     <div className="dice-fab-wrapper">
+       <FabToasts>
+         <MesaLiveNotice />
++        <CaatNotice />
+         <NotificationPopup />
+       </FabToasts>
+       <ControlFab />
+diff --git a/src/features/campaigns/campaignSections.ts b/src/features/campaigns/campaignSections.ts
+index 96ea849..a920cb7 100644
+--- a/src/features/campaigns/campaignSections.ts
++++ b/src/features/campaigns/campaignSections.ts
+@@ -7,7 +7,7 @@
+ export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'quadro' | 'anotacoes' | 'mesa-sessao' | 'configuracoes'
+ 
+ /** Sub-abas dentro de "Sessão" (id mesa-sessao) — estado local (fora da URL), ver spec. */
+-export type SessionSubTabId = 'mesa' | 'ficha' | 'atividade' | 'iniciativa' | 'bestiario' | 'livro'
++export type SessionSubTabId = 'mesa' | 'ficha' | 'atividade' | 'iniciativa' | 'bestiario' | 'livro' | 'caatedrum'
+ 
+ export interface CampaignSection {
+   id: TabId
+diff --git a/src/features/campaigns/components/SessionTablePanel.tsx b/src/features/campaigns/components/SessionTablePanel.tsx
+index 857c908..6181f5a 100644
+--- a/src/features/campaigns/components/SessionTablePanel.tsx
++++ b/src/features/campaigns/components/SessionTablePanel.tsx
+@@ -7,6 +7,9 @@ import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPa
+ import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
+ import { MesaPanel } from '../../mesa/components/MesaPanel'
+ import { useMesaStream } from '../../mesa/MesaStreamProvider'
++import { useFeature } from '../../control/siteFeatures'
++import { CAATEDRUM_FEATURE } from '../../caatedrum/caatService'
++import { CaatedrumPanel } from '../../caatedrum/CaatedrumPanel'
+ import type { CampaignWithRole } from '../../../shared/types'
+ import type { SessionSubTabId } from '../campaignSections'
+ import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
+@@ -22,7 +25,7 @@ interface SubTab {
+   label: string
+ }
+ 
+-const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
++const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'caatedrum', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
+ 
+ interface NavigationState {
+   initialSessionSubTab?: SessionSubTabId
+@@ -36,11 +39,14 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
+   const location = useLocation()
+   const mesa = useMesaStream()
+   const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
++  // Caatedrum: liberado pelo Painel de controle (guardado, só o dono do site vê).
++  const showCaatedrum = useFeature(CAATEDRUM_FEATURE).visible
+   // Abas que essa pessoa tem nessa campanha — pedido de outra (ex.:
+   // Bestiário pra jogador) cai na Ficha em vez de abrir um painel vazio.
+   const available = (tab: SessionSubTabId | undefined): tab is SessionSubTabId =>
+     tab != null &&
+     (tab !== 'bestiario' || showBestiary) &&
++    (tab !== 'caatedrum' || showCaatedrum) &&
+     (tab !== 'livro' || hasRulebook(campaign.system))
+   // Com transmissão rolando, a Sessão já abre na Mesa.
+   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(() => {
+@@ -64,6 +70,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
+   // sentido na visão dele; jogador só tem a própria ficha.
+   const subTabs: SubTab[] = [
+     { id: 'mesa',       label: 'Mesa' },
++    ...(showCaatedrum ? [{ id: 'caatedrum' as const, label: 'Caatedrum' }] : []),
+     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
+     { id: 'atividade',  label: 'Atividade' },
+     { id: 'iniciativa', label: 'Iniciativa' },
+@@ -104,6 +111,17 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
+         {activeSubTab === 'mesa' && <MesaPanel campaignId={campaign.id} />}
+       </div>
+ 
++      {showCaatedrum && (
++        <div
++          id="session-subtabpanel-caatedrum"
++          role="tabpanel"
++          hidden={activeSubTab !== 'caatedrum'}
++          className="anim-tab-panel"
++        >
++          {activeSubTab === 'caatedrum' && <CaatedrumPanel campaignId={campaign.id} isMaster={campaign.role === 'master'} />}
++        </div>
++      )}
++
+       <div
+         id="session-subtabpanel-ficha"
+         role="tabpanel"
+diff --git a/src/features/control/siteFeatures.tsx b/src/features/control/siteFeatures.tsx
+index 2e0f275..7bc74eb 100644
+--- a/src/features/control/siteFeatures.tsx
++++ b/src/features/control/siteFeatures.tsx
+@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react
+ import { supabase, uniqueChannel } from '../../shared/lib/supabase'
+ import { useAuth } from '../auth/AuthProvider'
+ import { MESTRE_FEATURE, ownerResetMestre } from '../mestre/mestreService'
++import { CAATEDRUM_FEATURE } from '../caatedrum/caatService'
+ 
+ // ────────────────────────────────────────────────────────
+ // Recursos que o dono do site controla pelo Painel de controle (o livro
+@@ -34,6 +35,12 @@ export const SITE_FEATURES: SiteFeature[] = [
+     where: 'Campanhas de Altherium (qualquer aba)',
+     actions: [{ label: 'Voltar a ser normal (só você)', run: ownerResetMestre }],
+   },
++  {
++    key: CAATEDRUM_FEATURE,
++    name: 'O Crime de Caatedrum',
++    description: 'Jogo de tabuleiro de dedução para os 4 jogadores: aba Caatedrum na Sessão; o mestre põe a mesa e os jogadores recebem um aviso pra sentar. Guardado, só você vê a aba — dá pra pôr a mesa e testar o lobby.',
++    where: 'Sessão → Caatedrum (qualquer campanha)',
++  },
+ ]
+ 
+ // ── Quem é o dono do site ───────────────────────────────

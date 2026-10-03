@@ -12,7 +12,6 @@ import { ControlFab }         from '../../features/control/ControlFab'
 import { MestreAscension }    from '../../features/mestre/MestreAscension'
 import { MestreCall }         from '../../features/mestre/MestreCall'
 import { MestreTheme }        from '../../features/mestre/MestreTheme'
-import { CaatNotice }       from '../../features/caatedrum/CaatNotice'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { CritWolf }           from '../../features/dice/components/CritWolf'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
@@ -279,7 +278,6 @@ function PrivateLayoutContent() {
     <div className="dice-fab-wrapper">
       <FabToasts>
         <MesaLiveNotice />
-        <CaatNotice />
         <NotificationPopup />
       </FabToasts>
       <ControlFab />
