@@ -58,6 +58,8 @@ export interface TorreView {
   players:    TorrePlayer[]
   members:    TorreMember[]
   game?:      TorreGame | null
+  /** A dica do mestre, enquanto vale (25 s). */
+  hint?:      { t: number; text: string } | null
   /** Só o mestre: a solução e a linha do tempo. */
   gm?:        { secret: Record<string, unknown>; events: { t: number; m: string }[] }
 }

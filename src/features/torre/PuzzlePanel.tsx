@@ -7,6 +7,16 @@ import { EspelhosPanel } from './puzzles/EspelhosPanel'
 import { ManivelaPanel } from './puzzles/ManivelaPanel'
 import { PenduloPanel } from './puzzles/PenduloPanel'
 import { AstrarioPanel } from './puzzles/AstrarioPanel'
+import { sfx, type SoundName } from './sound'
+import { HintBanner } from './HintBanner'
+
+/** O som na hora da jogada (antes da resposta do banco). */
+const ACTION_SOUND: Partial<Record<string, SoundName>> = {
+  mirror: 'mirror', dome: 'crank', latch: 'latch', push: 'push',
+  marker: 'tap', ast_seq: 'tap', ast_star: 'tap', go: 'gear',
+}
+/** Jogadas cujo "deu certo" já tem som próprio. */
+const OK_SOUND: Partial<Record<string, SoundName>> = { pull: 'unlock', ast_key: 'unlock' }
 
 // ────────────────────────────────────────────────────────
 // A janela de um objeto: aparece no centro da tela, o fundo desfoca e o
@@ -46,13 +56,23 @@ export function PuzzlePanel({ id, floor, view, offset, onClose, watching }: Prop
   const clock = useCallback(() => Date.now() + offRef.current, [])
 
   const act = useCallback(async (action: Record<string, unknown>) => {
+    const a = String(action.a)
+    const before = ACTION_SOUND[a]
+    if (before) sfx(before)
     try {
       const r = await play(view.room.id, action)
+      if (!r.ok) sfx('bad')
+      else if (r.msg && OK_SOUND[a]) sfx(OK_SOUND[a]!)
+      else if (r.msg && a !== 'push' && a !== 'go') sfx('ok')
       if (r.msg) setFlash((f) => ({ ok: r.ok, msg: r.msg!, n: (f?.n ?? 0) + 1 }))
     } catch (e) {
+      sfx('bad')
       setFlash((f) => ({ ok: false, msg: e instanceof Error ? e.message : 'Não deu certo.', n: (f?.n ?? 0) + 1 }))
     }
   }, [view.room.id])
+
+  // abrir e fechar a janela
+  useEffect(() => { sfx('open'); return () => sfx('close') }, [])
 
   // a faixa some sozinha
   useEffect(() => {
@@ -88,6 +108,7 @@ export function PuzzlePanel({ id, floor, view, offset, onClose, watching }: Prop
         <button type="button" className="lb-x" onClick={onClose} aria-label="Fechar">✕</button>
         {watching && <p className="lb-panel__watch">Assistindo {watching}</p>}
         <h2 className="lb-panel__title">{TITLES[id]}</h2>
+        <HintBanner hint={view.hint ?? null} offset={offset} inline />
         {body}
         {flash && <p key={flash.n} className={`lb-toast${flash.ok ? '' : ' is-bad'}`} role="status">{flash.msg}</p>}
       </section>

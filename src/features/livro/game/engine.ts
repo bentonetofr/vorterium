@@ -39,6 +39,8 @@ export interface GameOptions<Id extends string = PanelId> {
    * divide a tela em duas salas pequenas desliga, senão fica tudo em 1×.
    */
   integerScale?: boolean
+  /** A cada passo do MEU boneco (pra tocar o som do passo). */
+  onStep?:      (x: number, y: number) => void
 }
 
 /** Um boneco já posto na tela neste quadro (pra luz e nomes). */
@@ -116,6 +118,7 @@ export class RoomGame<Id extends string, G> {
   private lastSend = 0
   private lastSent = ''
   private lastSave = 0
+  private stepDist = 0
   private disposers: (() => void)[] = []
   private game: G | null = null
 
@@ -463,6 +466,10 @@ export class RoomGame<Id extends string, G> {
       const by = me.y
       this.step(me, sx, sy)
       me.moving = Math.abs(me.x - bx) + Math.abs(me.y - by) > 0.01
+      if (me.moving && this.opts.onStep) {
+        this.stepDist += Math.hypot(me.x - bx, me.y - by)
+        if (this.stepDist >= 11) { this.stepDist = 0; this.opts.onStep(me.x, me.y) }
+      }
       if (Math.abs(dx) > Math.abs(dy)) me.d = dx > 0 ? 'right' : 'left'
       else me.d = dy > 0 ? 'down' : 'up'
       // Esbarrou seguindo o caminho: tolera um instante antes de desistir.

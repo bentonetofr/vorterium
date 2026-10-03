@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { gm, type TorreView } from './torreService'
 import { floorOf, ROLE_TITLES, type Floor, type TorreNet, type TorrePanel, type TorrePeer } from './torreNet'
 import { TorreFloor } from './game/room'
+import { GRATE } from './game/art'
 import { PuzzlePanel } from './PuzzlePanel'
+import { HintBanner } from './HintBanner'
+import { onSoundChange, sfx, startAmbient, stopAmbient } from './sound'
 
 // ────────────────────────────────────────────────────────
 // A partida. Quem joga vê só o SEU andar (o outro aparece como sombra pela
@@ -56,6 +59,8 @@ function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, pa
       onRemotePanel: (uid, p) => cb.current.onRemotePanel(uid, p),
       // quem assiste vê os dois andares lado a lado: sem isso ficariam em 1×
       integerScale: controllable,
+      // em cima, pisar na grade soa a ferro
+      onStep: (x, y) => sfx(floor === 'cima' && x > GRATE.x && x < GRATE.x + GRATE.w && y > GRATE.y && y < GRATE.y + GRATE.h + 4 ? 'stepMetal' : 'step'),
     }, floor)
     game.setPlayers(playersRef.current)
     game.setGame(gameRef0.current)
@@ -76,6 +81,36 @@ function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, pa
   return <canvas ref={canvasRef} className="lb-canvas" aria-label={FLOOR_TITLES[floor]} />
 }
 
+/**
+ * Sons que vêm do estado (o que mudou desde a última visão): estrela
+ * acendendo, o mapa girando, o sino quando a sombra do pêndulo mostra algo
+ * (é o "agora!"), a chave, o outro lado girando o Astrário, a dica e o fim.
+ */
+function useStateSounds(view: TorreView, myFloor: Floor | null) {
+  const prev = useRef<TorreView['game'] | null | undefined>(undefined)
+  const prevHint = useRef<number | null | undefined>(undefined)
+  useEffect(() => {
+    const g = view.game
+    const p = prev.current
+    prev.current = g
+    if (p === undefined || !g || !p) return
+    const lit = (x: typeof g) => x.tele?.stars.filter((s) => s.state === 'lit').length ?? 0
+    if (lit(g) > lit(p)) sfx('sparkle')
+    if (g.map?.turned && !p.map?.turned) sfx('grind')
+    const showing = (x: typeof g) => !!(x.shadow || x.map?.rim || x.tele?.fifth)
+    if (showing(g) && !showing(p)) sfx('bell')
+    if (g.inv.chave && !p.inv.chave && myFloor !== 'baixo') sfx('unlock')
+    const other = myFloor === 'cima' ? 'baixo_go' : myFloor === 'baixo' ? 'cima_go' : null
+    if (other && g.other[other] && g.other[other] !== p.other[other]) sfx('gear')
+    if (g.opened && !p.opened) sfx('finale')
+  }, [view.game, myFloor])
+  useEffect(() => {
+    const t = view.hint?.t ?? null
+    if (prevHint.current !== undefined && t && t !== prevHint.current) sfx('hint')
+    prevHint.current = t
+  }, [view.hint])
+}
+
 function fmtTime(ms: number) {
   const s = Math.round(ms / 1000)
   const h = Math.floor(s / 3600)
@@ -91,6 +126,16 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
   const me = view.me
   const myFloor = floorOf(me.slot)
   const controllable = myFloor !== null
+
+  // Som de fundo: vento lá em cima, máquinas embaixo (quem assiste ouve os dois).
+  useEffect(() => {
+    const kind = myFloor ?? 'todos'
+    startAmbient(kind)
+    const off = onSoundChange((on) => { if (on) startAmbient(kind) })
+    return () => { off(); stopAmbient() }
+  }, [myFloor])
+
+  useStateSounds(view, myFloor)
 
   // A dica de controles some sozinha.
   useEffect(() => { const t = window.setTimeout(() => setHint(false), 10000); return () => window.clearTimeout(t) }, [])
@@ -160,6 +205,8 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
           })}
         </div>
       )}
+
+      {!blurred && <HintBanner hint={view.hint ?? null} offset={offset} />}
 
       {view.game?.inv.chave && (
         <div className="lb-inv" aria-label="O que a dupla carrega">

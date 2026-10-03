@@ -3,10 +3,12 @@ import { gm, type TorreRoomRow } from './torreService'
 import { connectTorre, FLOOR_NAMES, ROLE_NAMES, type TorreNet, type TorrePeer } from './torreNet'
 import { TorreGameView } from './TorreGameView'
 import { TorreLobby } from './TorreLobby'
+import { TorreGmPanel } from './TorreGmPanel'
 import { useTorreView } from './useTorreRoom'
 import { spriteTelescopio } from './game/art'
 import { nextEdge } from './game/sky'
 import type { TorreView } from './torreService'
+import { onSoundChange, setSoundOn, sfx, soundOn } from './sound'
 import { useFullscreen, usePixelFont } from '../livro/LivroOverlay'
 import '../livro/Livro.css'
 import './Torre.css'
@@ -69,11 +71,24 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointerdown', onDown) }
   }, [menu])
 
+  // Clique de qualquer botão do jogo.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const onDown = (e: PointerEvent) => { if ((e.target as HTMLElement).closest('button')) sfx('click') }
+    el.addEventListener('pointerdown', onDown)
+    return () => el.removeEventListener('pointerdown', onDown)
+  }, [])
+  const [gmOpen, setGmOpen] = useState(false)
+  const [sound, setSound] = useState(soundOn)
+  useEffect(() => onSoundChange(setSound), [])
+
   const isGm = !!view?.me.gm
   const playing = view?.room.status === 'jogo'
 
   return (
-    <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="A Torre do Observatório">
+    <div ref={rootRef} className="lb-overlay" role="dialog" aria-modal="true" aria-label="A Torre do Observatório">
       {!entered || !view ? (
         <TitleCard
           ready={!!view}
@@ -87,6 +102,8 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
         <TorreGameView view={view} offset={offset} net={net} peers={peers} />
       ) : null}
 
+      {entered && view && isGm && playing && gmOpen && <TorreGmPanel view={view} offset={offset} onClose={() => setGmOpen(false)} />}
+
       {entered && view && (
         <div className="lb-menu" ref={menuRef}>
           <button type="button" className="lb-menu__btn" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menu">
@@ -95,7 +112,9 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
           {menu && (
             <div className="lb-menu__list lb-frame" role="menu">
               <button type="button" role="menuitem" onClick={() => { setMenu(false); if (fs.full) fs.exit(); else fs.enter() }}>{fs.full ? 'Sair da tela cheia' : 'Tela cheia'}</button>
+              <button type="button" role="menuitem" onClick={() => setSoundOn(!sound)} aria-pressed={sound}>{sound ? 'Som: ligado' : 'Som: desligado'}</button>
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
+              {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); setGmOpen(true) }}>Painel do mestre</button>}
               {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); void gm(room.id, { a: 'lobby' }) }}>Trocar quem joga</button>}
               {isGm && (
                 <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); if (window.confirm('Encerrar a Torre do Observatório pra todo mundo?')) void gm(room.id, { a: 'close' }) }}>Encerrar o jogo</button>
