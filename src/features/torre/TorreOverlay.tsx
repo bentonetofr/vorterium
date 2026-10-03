@@ -5,6 +5,8 @@ import { TorreGameView } from './TorreGameView'
 import { TorreLobby } from './TorreLobby'
 import { useTorreView } from './useTorreRoom'
 import { spriteTelescopio } from './game/art'
+import { nextEdge } from './game/sky'
+import type { TorreView } from './torreService'
 import { useFullscreen, usePixelFont } from '../livro/LivroOverlay'
 import '../livro/Livro.css'
 import './Torre.css'
@@ -20,7 +22,8 @@ import './Torre.css'
 
 export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinimize: () => void }) {
   usePixelFont()
-  const { view, error } = useTorreView(room.id, room.version)
+  const { view, error, refresh, offset } = useTorreView(room.id, room.version)
+  usePendulumRefresh(view, offset, refresh)
   const enteredKey = `tor-entrou:${room.id}`
   const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem(enteredKey) === '1' } catch { return false } })
   const [net, setNet] = useState<TorreNet | null>(null)
@@ -81,7 +84,7 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
       ) : view.room.status === 'lobby' ? (
         <TorreLobby view={view} peers={peers} />
       ) : net ? (
-        <TorreGameView view={view} net={net} peers={peers} />
+        <TorreGameView view={view} offset={offset} net={net} peers={peers} />
       ) : null}
 
       {entered && view && (
@@ -103,6 +106,24 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
       )}
     </div>
   )
+}
+
+/**
+ * O que o pêndulo mostra só vem do banco DURANTE a janela: a cada borda de
+ * janela (e quando o "girou agora" do Astrário vence), pede a visão de novo.
+ */
+function usePendulumRefresh(view: TorreView | null, offset: number, refresh: () => Promise<void>) {
+  const g = view?.game
+  useEffect(() => {
+    if (!g || g.opened) return
+    const now = Date.now() + offset
+    const edges = [nextEdge(g.pend, now)]
+    for (const go of [g.other.cima_go, g.other.baixo_go]) if (go) edges.push(go + 3000)
+    const next = edges.filter((e): e is number => !!e && e > now).sort((a, b) => a - b)[0]
+    if (!next) return
+    const t = window.setTimeout(() => { void refresh() }, Math.max(0, next - now) + 60)
+    return () => window.clearTimeout(t)
+  }, [g, offset, refresh])
 }
 
 function TitleCard({ ready, error, role, onEnter }: { ready: boolean; error: string | null; role: string | null; onEnter: () => void }) {

@@ -19,8 +19,36 @@ export interface TorreRoomRow {
 export interface TorrePlayer { uid: string; name: string; slot: number }
 export interface TorreMember { uid: string; name: string; role: 'master' | 'player' }
 
-/** O jogo como cada um vê agora (os enigmas chegam no marco 2). */
-export type TorreGame = Record<string, unknown>
+export type Sym = 'sol' | 'lua' | 'estrela' | 'cruz'
+export type Node = 'telescopio' | 'mapa' | 'espelhos' | 'manivela' | 'pendulo'
+
+/** Uma estrela escondida que já aparece no telescópio (k = de qual espelho). */
+export interface SkyStar { k: number; slot: number; state: 'lit' | 'glimmer' }
+
+/**
+ * O jogo como cada um vê agora — só o que já foi descoberto e só do SEU
+ * andar (quem assiste recebe os dois). O que depende do pêndulo só vem
+ * durante a janela, com `until` (hora do banco) pra sumir sozinho.
+ */
+export interface TorreGame {
+  side:        'cima' | 'baixo' | 'todos'
+  pend:        { t0: number | null; until: number | null; period: number }
+  progress:    Record<Node, number>
+  links:       [Node, Node][]
+  inv:         { chave: boolean }
+  opened:      boolean
+  finished_at: number | null
+  other:       { cima_ready: boolean; baixo_ready: boolean; cima_go: number | null; baixo_go: number | null }
+  // em cima
+  tele?:       { stars: SkyStar[]; pattern: [number, number][]; fifth: { s: number; until: number } | null }
+  map?:        { pattern: [number, number][]; holes: number[]; markers: (number | null)[]; colors: number[]; turned: boolean; runes: [number, number] | null; rim: { casa: number; until: number } | null }
+  ast_cima?:   { seq: (Sym | null)[]; star: number | null; go: number | null }
+  // embaixo
+  mir?:        { pos: number[]; reach: boolean[]; full: boolean }
+  crank?:      { dome: number; gear: boolean; latch: [number, number]; key: boolean }
+  shadow?:     { sym?: Sym; num?: number; until: number } | null
+  ast_baixo?:  { num: string; key: boolean; go: number | null }
+}
 
 export interface TorreView {
   room:       { id: string; campaign_id: string; status: TorreRoomRow['status']; version: number }
@@ -30,6 +58,8 @@ export interface TorreView {
   players:    TorrePlayer[]
   members:    TorreMember[]
   game?:      TorreGame | null
+  /** Só o mestre: a solução e a linha do tempo. */
+  gm?:        { secret: Record<string, unknown>; events: { t: number; m: string }[] }
 }
 
 function err(e: { message?: string } | null, fallback: string): never {
@@ -70,6 +100,13 @@ export async function closeMine(): Promise<number> {
 export async function gm(roomId: string, action: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.rpc('tor_gm', { p_room: roomId, p_action: action })
   if (error) err(error, 'Não deu certo.')
+}
+
+/** Uma jogada num objeto. Devolve se deu certo e o que aconteceu. */
+export async function play(roomId: string, action: Record<string, unknown>): Promise<{ ok: boolean; msg: string | null }> {
+  const { data, error } = await supabase.rpc('tor_play', { p_room: roomId, p_action: action })
+  if (error) err(error, 'Não deu certo.')
+  return (data ?? { ok: true, msg: null }) as { ok: boolean; msg: string | null }
 }
 
 // ── Painel de controle ──────────────────────────────────

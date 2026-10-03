@@ -426,6 +426,15 @@ export class RoomGame<Id extends string, G> {
       if (this.keys.has('down')) dy += 1
     }
     if (!dx && !dy && this.path && !this.frozen) {
+      // Já entrou onde dá pra usar o objeto clicado: abre (sem esperar o ponto exato).
+      const target = this.scene.objects.find((x) => x.id === this.path!.open)
+      if (target && inRect(me.x, me.y, target.zone)) {
+        this.path = null
+        me.d = target.approach.face
+        me.moving = false
+        this.opts.onOpen(target.id)
+        return
+      }
       const next = this.path.pts[0]
       const ddx = next.x - me.x
       const ddy = next.y - me.y
