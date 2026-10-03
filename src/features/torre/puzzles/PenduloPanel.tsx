@@ -94,7 +94,7 @@ export function PenduloPanel({ g, act, ro, clock, floor }: TorrePuzzleProps & { 
     return (
       <>
         <PixelScene w={W} h={H} maxH={300} draw={drawUp} label="A haste do pêndulo atravessando a grade" />
-        <Hint>{moving ? 'A haste balança. A cada ida, passa na frente da fresta — e da estrela mais brilhante.' : 'A haste desce do teto e some pela grade. Está parada.'}</Hint>
+        <Hint>{moving ? 'A haste balança. A cada ida, passa na frente da fresta e da estrela mais brilhante.' : 'A haste desce do teto e some pela grade. Está parada.'}</Hint>
       </>
     )
   }

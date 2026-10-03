@@ -301,7 +301,7 @@ export async function setFeedbackStatus(id: string, status: FeedbackStatus): Pro
 // ── Formatação ──────────────────────────────────────────
 
 export function fmtDateTime(iso: string | null | undefined): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 

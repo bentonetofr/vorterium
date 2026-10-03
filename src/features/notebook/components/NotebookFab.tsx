@@ -213,7 +213,7 @@ function usePanelHeight() {
 
 const OWNER_TITLE = 'Meu caderninho'
 
-const STATUS_LABEL: Record<SaveStatus, string> = { idle: '', saving: 'salvando…', saved: 'salvo ✓', error: 'não salvou — tente de novo' }
+const STATUS_LABEL: Record<SaveStatus, string> = { idle: '', saving: 'salvando…', saved: 'salvo ✓', error: 'não salvou, tente de novo' }
 
 function NotebookPanel({ campaign, title, userId, onClose }: { campaign: CampaignWithRole; title: string; userId: string; onClose: () => void }) {
   const [sessions, setSessions] = useState<CampaignSession[]>([])
@@ -399,7 +399,7 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
                 title={noteHeadline(n.content) || 'Anotação vazia'}
               >
                 <span className="notebook-tab__n">{i + 1}</span>
-                <span className="notebook-tab__text">{noteHeadline(n.content) || '—'}</span>
+                <span className="notebook-tab__text">{noteHeadline(n.content) || '-'}</span>
               </button>
             ))}
             <button

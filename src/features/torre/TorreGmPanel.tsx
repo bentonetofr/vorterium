@@ -30,9 +30,9 @@ const DIRS = ['em cima', 'em cima à direita', 'à direita', 'embaixo à direita
 /** A dica que cabe agora, pela etapa em que a dupla está. */
 export function suggestHint(g: TorreGame): string {
   const p = g.progress
-  if (p.espelhos === 0) return 'Embaixo, cada espelho joga luz no teto. Em cima, alguém precisa olhar pelo telescópio enquanto eles giram — e dizer quando uma estrela tremeluz.'
+  if (p.espelhos === 0) return 'Embaixo, cada espelho joga luz no teto. Em cima, alguém precisa olhar pelo telescópio enquanto eles giram e dizer quando uma estrela tremeluz.'
   if (p.espelhos === 1) return 'Uma estrela que tremeluz está a um passo de acender. Os espelhos 1 e 2 destravam a engrenagem.'
-  if (p.manivela < 2) return 'A manivela gira a cúpula. Quem está no telescópio procura a constelação de ouro desenhada no mapa — e grita "para!".'
+  if (p.manivela < 2) return 'A manivela gira a cúpula. Quem está no telescópio procura a constelação de ouro desenhada no mapa e grita "para!".'
   if (p.espelhos < 3) return 'Com a cúpula no lugar certo, os espelhos 3 e 4 alcançam o céu. Não mexam mais na manivela.'
   if (p.mapa < 2) return 'O mapa é o céu visto de fora: tudo o que está à esquerda no telescópio fica à direita no mapa.'
   if (p.pendulo < 2) return 'Com os quatro feixes acesos, empurrem o pêndulo. A sombra dele mostra coisas por um instante.'

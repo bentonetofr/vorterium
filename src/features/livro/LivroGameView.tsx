@@ -183,7 +183,7 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
           <section className="lb-panel lb-frame lb-ending" role="dialog" aria-label="O livro se abriu">
             <p className="lb-kicker">A biblioteca de Caatedrum</p>
             <h2 className="lb-panel__title">O livro se abre.</h2>
-            <p className="lb-panel__text">As quatro correntes caem no chão de pedra. As páginas viram sozinhas até parar numa que tem o nome de vocês escrito — com a mesma letra do bibliotecário.</p>
+            <p className="lb-panel__text">As quatro correntes caem no chão de pedra. As páginas viram sozinhas até parar numa que tem o nome de vocês escrito, com a mesma letra do bibliotecário.</p>
             {took !== null && <p className="lb-ending__time">Tempo: {fmtTime(took)}</p>}
             <div className="lb-lock__btns">
               <button type="button" className="lb-btn" onClick={() => setEndSeen(true)}>Ver a sala</button>

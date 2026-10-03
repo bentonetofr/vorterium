@@ -280,7 +280,7 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
       )}
 
       {participants.length === 0 ? (
-        <p className="initiative-empty__text">Nenhum participante — adicione um NPC abaixo ou espere os jogadores entrarem.</p>
+        <p className="initiative-empty__text">Nenhum participante. Adicione um NPC abaixo ou espere os jogadores entrarem.</p>
       ) : (
         <ul className="initiative-list anim-stagger" aria-label="Ordem de iniciativa">
           {participants.map((p) => {
@@ -325,7 +325,7 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
                     disabled={!canEdit}
                     title={canEdit ? 'Clique para digitar um valor' : undefined}
                   >
-                    {p.initiative_value ?? '—'}
+                    {p.initiative_value ?? '-'}
                   </button>
                 )}
 

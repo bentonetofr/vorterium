@@ -116,7 +116,7 @@ export function AltheriumRunaskinTriumphs({
         onClick={() => {
           onUse(cost, name)
           onRecent(id)
-          setLastUsed(`${name} usado — −${cost} ${unit}.`)
+          setLastUsed(`${name} usado: −${cost} ${unit}.`)
         }}
       >
         Usar
@@ -138,7 +138,7 @@ export function AltheriumRunaskinTriumphs({
             onChange={(v) => onTrailChange((v || null) as RunaskinTrail | null)}
             disabled={disabled}
             aria-label="Trilha"
-            options={[{ value: '', label: '—' }, ...RUNASKIN_TRAILS.map((t) => ({ value: t.id, label: t.label }))]}
+            options={[{ value: '', label: '-' }, ...RUNASKIN_TRAILS.map((t) => ({ value: t.id, label: t.label }))]}
           />
         </label>
 
@@ -146,7 +146,7 @@ export function AltheriumRunaskinTriumphs({
           <span className="label">Usos na cena (NR)</span>
           <div className="alth-runes__nr-row">
             <span className={`alth-runes__nr-value${limitHit ? ' alth-runes__nr-value--full' : ''}`}>
-              {sceneUses} / {usesLimit ?? '—'}
+              {sceneUses} / {usesLimit ?? '-'}
             </span>
             <button
               type="button" className="alth-triumph__btn"
@@ -297,7 +297,7 @@ export function AltheriumRunaskinTriumphs({
       </Presence>
 
       {runes.length === 0
-        ? <p className="alth-triumphs__empty">Nenhuma runa descoberta ainda — explore Altherium.</p>
+        ? <p className="alth-triumphs__empty">Nenhuma runa descoberta ainda. Explore Altherium.</p>
         : (
           <div className="alth-triumphs__grid">
             {runesSorted.map((r) => (
@@ -546,7 +546,7 @@ function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: Rune
                 onChange={(v) => setAction(v as TriumphAction | '')} disabled={busy}
                 aria-label="Tipo de ação"
                 options={[
-                  { value: '', label: '—' },
+                  { value: '', label: '-' },
                   ...(Object.keys(TRIUMPH_ACTION_LABELS) as TriumphAction[]).map((a) => ({ value: a, label: TRIUMPH_ACTION_LABELS[a] })),
                 ]}
               />
@@ -557,7 +557,7 @@ function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: Rune
                 value={range} onChange={setRange} disabled={busy}
                 aria-label="Distância"
                 options={[
-                  { value: '', label: '—' },
+                  { value: '', label: '-' },
                   // Mantém uma distância antiga fora da lista, se houver.
                   ...(range && !(TRIUMPH_RANGES as readonly string[]).includes(range) ? [{ value: range, label: range }] : []),
                   ...TRIUMPH_RANGES.map((r) => ({ value: r, label: r })),

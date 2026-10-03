@@ -336,7 +336,7 @@ function ShelfView({ shelf, onBack, onOpen, onChanged }: ShelfViewProps) {
           <p className="tool-page__empty-title">Estante vazia.</p>
           <p className="tool-page__empty-text">
             {isMaster
-              ? 'Arraste pra cá PDFs, imagens ou textos (até 25 MB) — ou use "Adicionar arquivos". Os jogadores da campanha também vão poder ler.'
+              ? 'Arraste pra cá PDFs, imagens ou textos (até 25 MB) ou use "Adicionar arquivos". Os jogadores da campanha também vão poder ler.'
               : 'Quando o mestre guardar livros e documentos da campanha, eles aparecem aqui.'}
           </p>
         </div>

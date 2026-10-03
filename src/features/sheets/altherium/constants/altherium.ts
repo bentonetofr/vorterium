@@ -30,7 +30,7 @@ export const ATTRIBUTES: { id: AltheriumAttribute; label: string; description: s
   { id: 'espirito',   label: 'Espírito',   description: 'Resistência física, mental e defesa.' },
   { id: 'impulso',    label: 'Impulso',    description: 'Agilidade, velocidade e aparar.' },
   { id: 'estrategia', label: 'Estratégia', description: 'Inteligência e tática.' },
-  { id: 'runico',     label: 'Rúnico',     description: 'Exclusivo de Runaskins — usa os poderes das runas.' },
+  { id: 'runico',     label: 'Rúnico',     description: 'Exclusivo de Runaskins: usa os poderes das runas.' },
 ]
 
 /** Total de pontos distribuídos na criação do personagem. */

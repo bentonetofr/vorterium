@@ -758,7 +758,7 @@ function DndAbilitiesColumn({ draft, errors, onChange, campaignId, rolling, onRo
               onChange={(e) => onChange({ spellcasting_ability: e.target.value })}
               className="dnd-inline-input"
               style={{ fontSize: 'var(--text-xs)', width: '70px', textAlign: 'right' }}
-              placeholder="—"
+              placeholder="-"
               maxLength={20}
             />
           </div>
@@ -774,7 +774,7 @@ function DndAbilitiesColumn({ draft, errors, onChange, campaignId, rolling, onRo
               className="dnd-num-input"
               style={{ marginLeft: 'auto' }}
               disabled={automaticFields.has('spell_save_dc')}
-              placeholder="—"
+              placeholder="-"
             />
           </div>
           <div className="dnd-save-row">
@@ -789,7 +789,7 @@ function DndAbilitiesColumn({ draft, errors, onChange, campaignId, rolling, onRo
               className="dnd-num-input"
               style={{ marginLeft: 'auto' }}
               disabled={automaticFields.has('spell_attack_bonus')}
-              placeholder="—"
+              placeholder="-"
             />
           </div>
         </div>
@@ -825,20 +825,20 @@ function TabResumo({ draft }: { draft: DndDraft }) {
         <div className="dnd-resume-field">
           <span className="dnd-header__meta-label">Classe / Nível</span>
           <span className="dnd-text-block">
-            {[draft.class_name, draft.subclass].filter(Boolean).join(' · ') || '—'} · Nv. {draft.level}
+            {[draft.class_name, draft.subclass].filter(Boolean).join(' · ') || '-'} · Nv. {draft.level}
           </span>
         </div>
         <div className="dnd-resume-field">
           <span className="dnd-header__meta-label">Espécie</span>
-          <span className="dnd-text-block">{draft.race || '—'}</span>
+          <span className="dnd-text-block">{draft.race || '-'}</span>
         </div>
         <div className="dnd-resume-field">
           <span className="dnd-header__meta-label">Antecedente</span>
-          <span className="dnd-text-block">{draft.background || '—'}</span>
+          <span className="dnd-text-block">{draft.background || '-'}</span>
         </div>
         <div className="dnd-resume-field">
           <span className="dnd-header__meta-label">Alinhamento</span>
-          <span className="dnd-text-block">{draft.alignment || '—'}</span>
+          <span className="dnd-text-block">{draft.alignment || '-'}</span>
         </div>
         <div className="dnd-resume-field">
           <span className="dnd-header__meta-label">Experiência</span>

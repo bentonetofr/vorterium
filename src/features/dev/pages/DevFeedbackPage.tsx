@@ -70,8 +70,8 @@ export function DevFeedbackPage() {
                   </button>
                 )}
                 <p className="dev-feedback__meta">
-                  <span>Onde: {f.page ?? '—'}</span>
-                  <span>Versão: {f.app_version ?? '—'}</span>
+                  <span>Onde: {f.page ?? '-'}</span>
+                  <span>Versão: {f.app_version ?? '-'}</span>
                   <span title={f.user_agent ?? ''}>Navegador: {shortAgent(f.user_agent)}</span>
                 </p>
                 <div className="dev-feedback__status" role="group" aria-label="Status">
@@ -101,7 +101,7 @@ export function DevFeedbackPage() {
 }
 
 function shortAgent(ua: string | null): string {
-  if (!ua) return '—'
+  if (!ua) return '-'
   const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Outro'
   const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : ''
   return os ? `${browser} · ${os}` : browser

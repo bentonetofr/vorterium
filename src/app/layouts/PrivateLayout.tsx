@@ -99,7 +99,7 @@ function PrivateLayoutContent() {
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ??
     user?.email ??
-    '—'
+    '-'
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
 
   const initial = displayName.trim().charAt(0).toUpperCase()

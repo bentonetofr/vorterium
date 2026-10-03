@@ -49,7 +49,7 @@ function isPlainValue(v: unknown) {
 }
 
 function fmtValue(key: string, v: unknown): ReactNode {
-  if (v == null || v === '') return <span className="dev-muted">—</span>
+  if (v == null || v === '') return <span className="dev-muted">-</span>
   if (typeof v === 'boolean') return v ? 'sim' : 'não'
   if (typeof v === 'string' && /_at$/.test(key) && !Number.isNaN(Date.parse(v))) {
     return new Date(v).toLocaleString('pt-BR')

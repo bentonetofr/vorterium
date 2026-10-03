@@ -120,7 +120,7 @@ export function MestreCall() {
         <button type="button" className="mestre-call__min" onClick={() => setMini(true)} aria-label="Minimizar" title="Minimizar">–</button>
         <span className="mestre-call__crest" aria-hidden="true">✦</span>
         <p className="mestre-call__lead">
-          {testing ? 'Teste do dono do site — só você vira Mestre.' : 'Vocês estudaram o suficiente. Berserker, Runaskin e Pilar — tudo de uma vez.'}
+          {testing ? 'Teste do dono do site: só você vira Mestre.' : 'Vocês estudaram o suficiente. Berserker, Runaskin e Pilar, tudo de uma vez.'}
         </p>
         {!pressed ? (
           <button type="button" className="mestre-call__btn" onClick={() => void press()} disabled={busy}>

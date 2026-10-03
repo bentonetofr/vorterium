@@ -51,7 +51,7 @@ export function DndCharacterSheetPreview() {
     <div className="dnd-sheet">
       {/* Banner de prévia */}
       <div className="dnd-preview-banner" role="status">
-        ⚗ Prévia visual — dados de demonstração · salvamento no banco em breve
+        ⚗ Prévia visual: dados de demonstração · salvamento no banco em breve
       </div>
 
       {/* Cabeçalho */}

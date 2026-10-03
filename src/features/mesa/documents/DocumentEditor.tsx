@@ -431,7 +431,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
           )}
           <div className="doc-editor__foot">
             <span className="doc-editor__status" role="status">
-              {error ?? (full ? `O livro chegou ao limite de ${MAX_PAGES} páginas — o texto que passou da última não aparece.` : saving ? 'Salvando…' : dirty ? 'Alterações não salvas (Ctrl+S salva)' : 'Tudo salvo')}
+              {error ?? (full ? `O livro chegou ao limite de ${MAX_PAGES} páginas: o texto que passou da última não aparece.` : saving ? 'Salvando…' : dirty ? 'Alterações não salvas (Ctrl+S salva)' : 'Tudo salvo')}
             </span>
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={saving}>{dirty ? 'Descartar' : 'Fechar'}</button>
             <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={saving || !dirty}>Salvar</button>

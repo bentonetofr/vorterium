@@ -270,7 +270,7 @@ export const MOCK_CHARACTER: DndCharacter = {
   toolProficiencies: ['Veículos terrestres', 'Kit de jogos de dados'],
 
   backstory:
-    'Nascido em uma cidade fronteiriça constantemente ameaçada por bandos de orcs, Kael aprendeu a lutar antes de aprender a ler. Serviu por seis anos no exército do reino antes de desertar após uma batalha que custou a vida de toda sua unidade — exceto a dele. Desde então, vaga pelo mundo carregando a culpa dos que deixou para trás.',
+    'Nascido em uma cidade fronteiriça constantemente ameaçada por bandos de orcs, Kael aprendeu a lutar antes de aprender a ler. Serviu por seis anos no exército do reino antes de desertar após uma batalha que custou a vida de toda sua unidade, exceto a dele. Desde então, vaga pelo mundo carregando a culpa dos que deixou para trás.',
   appearance:
     'Alto (1,88 m), ombros largos, cabelo escuro cortado rente. Uma cicatriz diagonal cruza o lado esquerdo do rosto, da têmpora à mandíbula.',
   notes:

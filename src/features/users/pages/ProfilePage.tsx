@@ -17,7 +17,7 @@ import '../../../features/campaigns/pages/CampaignPages.css'
 import './ProfilePage.css'
 
 function formatProvider(provider: string | null | undefined): string {
-  if (!provider) return '—'
+  if (!provider) return '-'
   if (provider === 'google') return 'Google'
   if (provider === 'email') return 'E-mail e senha'
   return provider

@@ -40,7 +40,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   {
     key: MESTRE_FEATURE,
     name: 'Raiz Mestre',
-    description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores — só aparece com a chave em "No site" e só na campanha de Altherium que você escolher (ligando com a página dela aberta, ou em "Só nesta campanha"; escolher outra tira o botão da anterior). Quando todos da campanha apertam: livro fechando, 4 s de escuro, site todo preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Se você é o mestre da mesa dessa campanha, também vê o botão e, apertando sozinho, só você vira Mestre (teste).',
+    description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores. Só aparece com a chave em "No site" e só na campanha de Altherium que você escolher (ligando com a página dela aberta, ou em "Só nesta campanha"; escolher outra tira o botão da anterior). Quando todos da campanha apertam: livro fechando, 4 s de escuro, site todo preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Se você é o mestre da mesa dessa campanha, também vê o botão e, apertando sozinho, só você vira Mestre (teste).',
     where: 'A campanha de Altherium escolhida (qualquer aba)',
     onToggle: mestreToggle,
     actions: [
@@ -52,7 +52,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   {
     key: LIVRO_FEATURE,
     name: 'O Livro Bloqueado',
-    description: 'Joguinho em pixel art pra 2 jogadores da sessão (os outros e você assistem). Ligando com a página da campanha aberta, o jogo cobre a tela de todo mundo dela, no saguão — você escolhe quem joga. Guardado, só você vê: use "Abrir nesta campanha" pra testar.',
+    description: 'Joguinho em pixel art pra 2 jogadores da sessão (os outros e você assistem). Ligando com a página da campanha aberta, o jogo cobre a tela de todo mundo dela, no saguão, e você escolhe quem joga. Guardado, só você vê: use "Abrir nesta campanha" pra testar.',
     where: 'Por cima do site, na campanha aberta',
     onToggle: livroToggle,
     actions: [
@@ -63,7 +63,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   {
     key: TORRE_FEATURE,
     name: 'A Torre do Observatório',
-    description: 'Joguinho em pixel art pra exatamente 2 jogadores da sessão, um em cada andar da torre (eles não se veem, só se ouvem — precisam falar pela voz). Os outros e você assistem os dois andares. Ligando com a página da campanha aberta, o jogo cobre a tela de todo mundo dela, no saguão. Guardado, só você vê: use "Abrir nesta campanha" pra testar.',
+    description: 'Joguinho em pixel art pra exatamente 2 jogadores da sessão, um em cada andar da torre (eles não se veem, só se ouvem: precisam falar pela voz). Os outros e você assistem os dois andares. Ligando com a página da campanha aberta, o jogo cobre a tela de todo mundo dela, no saguão. Guardado, só você vê: use "Abrir nesta campanha" pra testar.',
     where: 'Por cima do site, na campanha aberta',
     onToggle: torreToggle,
     actions: [
