@@ -3,6 +3,7 @@ import {
   ATTRIBUTE_POINTS_AT_CREATION,
   PILAR_CARDS_PER_LEVEL,
   RUNASKIN_FREE_RUNICO,
+  TORRE_PER_ESTRATEGIA,
   GENESIS_DOMAIN_BONUS,
   type AltheriumDomain,
   type AltheriumGenesis,
@@ -123,5 +124,14 @@ export function usesCards(raiz: AltheriumRaiz | null): boolean {
   return raiz === 'pilar'
 }
 export function usesRunico(raiz: AltheriumRaiz | null): boolean {
-  return raiz === 'runaskin'
+  return raiz === 'runaskin' || raiz === 'mestre'
+}
+/** Raiz Mestre: um recurso só, a TORRE, pra todos os triunfos. */
+export function usesTorre(raiz: AltheriumRaiz | null): boolean {
+  return raiz === 'mestre'
+}
+/** TORRE máxima (só Mestre): Estratégia × 5. */
+export function torreMax(sheet: Pick<AltheriumSheet, 'raiz' | 'attr_estrategia'>): number | null {
+  if (sheet.raiz !== 'mestre') return null
+  return Math.max(0, sheet.attr_estrategia) * TORRE_PER_ESTRATEGIA
 }

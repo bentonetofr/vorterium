@@ -23,8 +23,9 @@ import {
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
-import { RAIZES } from '../constants/altherium'
-import { cardsMax } from '../utils/altheriumCalculations'
+import { raizLabel } from '../constants/altherium'
+import { SHEET_REFRESH_EVENT } from '../../../mestre/mestreService'
+import { cardsMax, torreMax } from '../utils/altheriumCalculations'
 import type { BodyZone } from './AltheriumBodyDiagram'
 import type {
   AltheriumSheet,
@@ -266,7 +267,10 @@ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
       }
     }
     load()
-    return () => { cancelled = true }
+    // Virou Mestre (ou voltou ao normal): a ficha mudou no banco — recarrega sem piscar.
+    const refresh = () => { void getOrCreateMyAltheriumSheet(campaignId).then((d) => { if (!cancelled) setSheet(d) }).catch(() => {}) }
+    window.addEventListener(SHEET_REFRESH_EVENT, refresh)
+    return () => { cancelled = true; window.removeEventListener(SHEET_REFRESH_EVENT, refresh) }
   }, [campaignId])
 
   if (loading) {
@@ -357,7 +361,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
     <div className="sheets-list-wrapper">
       <div className="sheets-cards anim-stagger">
         {sheets.map((s) => {
-          const raizLabel = s.raiz ? RAIZES.find((r) => r.id === s.raiz)?.label ?? '—' : 'Sem raiz'
+          const raizName = s.raiz ? raizLabel(s.raiz) ?? '—' : 'Sem raiz'
           // profile vem null quando o dono não é mais membro da campanha
           // (RLS de profiles exige co-membro atual) — a ficha continua existindo.
           const ownerLabel = s.profile?.display_name ?? 'Jogador removido'
@@ -380,8 +384,8 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
 
               <span className="sheet-card__char">
                 {s.character_name
-                  ? <><strong>{s.character_name}</strong>{` · ${raizLabel} · Nv ${s.level}`}</>
-                  : `Sem nome · ${raizLabel} · Nv ${s.level}`
+                  ? <><strong>{s.character_name}</strong>{` · ${raizName} · Nv ${s.level}`}</>
+                  : `Sem nome · ${raizName} · Nv ${s.level}`
                 }
               </span>
 
@@ -396,6 +400,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
                 )}
                 {s.raiz === 'pilar' && (
                   <SummaryBar sigla="Cartas" tone="resource" current={s.cards_current} max={cardsMax(s)} />
+                )}
+                {s.raiz === 'mestre' && (
+                  <SummaryBar sigla="Torre" tone="resource" current={s.torre_current} max={torreMax(s)} />
                 )}
               </div>
             </button>

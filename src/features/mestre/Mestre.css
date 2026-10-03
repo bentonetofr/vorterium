@@ -1,0 +1,205 @@
+/* ════════════════════════════════════════════════════════
+   Raiz Mestre — tema, botão e a animação da ascensão.
+   ════════════════════════════════════════════════════════ */
+
+/* ── Tema do Mestre: Pantone Black 6 C (#101820) e um dourado mais vivo ── */
+html[data-mestre][data-theme] {
+  --bg-void:     #0a1016;
+  --bg-base:     #101820;
+  --bg-surface:  #151e27;
+  --bg-elevated: #1a232c;
+  --bg-overlay:  #222b34;
+  --bg-bright:   #2b343e;
+
+  --border-dim:    rgba(214, 170, 60, 0.22);
+  --border-base:   #5c4a24;
+  --border-bright: #b8964a;
+
+  --text-primary:   #f3e9d2;
+  --text-secondary: #dcc89c;
+  --text-muted:     #a8946a;
+  --text-inverse:   #1a1000;
+
+  --accent:        #f7b500;
+  --accent-bright: #ffd45e;
+  --accent-dim:    #e0b23a;
+  --accent-glow:   rgba(255, 205, 80, 0.2);
+  --gilded:        rgba(240, 196, 64, 0.55);
+  --gilded-bright: #f5c84a;
+  --shadow-glow:   0 0 24px rgba(255, 200, 70, 0.4);
+}
+html[data-mestre] { background: #101820; }
+/* O fundo fica por conta do <html> (preto), pra as partículas aparecerem atrás do conteúdo. */
+html[data-mestre] body,
+html[data-mestre] .private-layout { background: transparent; }
+
+/* O dourado brilha: títulos e o que é dourado ganham um halo. */
+html[data-mestre] h1,
+html[data-mestre] h2,
+html[data-mestre] h3 { text-shadow: 0 0 14px rgba(255, 200, 70, 0.28); }
+html[data-mestre] .btn-primary {
+  background: linear-gradient(110deg, #c98a00 0%, #ffd45e 40%, #fff1b8 50%, #ffd45e 60%, #c98a00 100%);
+  background-size: 260% 100%;
+  animation: mestre-sheen 4.5s linear infinite;
+  box-shadow: 0 0 16px rgba(255, 200, 70, 0.35);
+}
+@keyframes mestre-sheen { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+
+/* Partículas douradas subindo pelo fundo do site. */
+.mestre-particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.mestre-particle {
+  position: absolute; bottom: -12px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff4c2 0%, rgba(255, 205, 80, 0.9) 35%, rgba(240, 180, 40, 0.25) 75%, transparent 100%);
+  box-shadow: 0 0 6px 2px rgba(255, 200, 70, 0.45);
+  animation: mestre-rise linear infinite;
+  will-change: transform, opacity;
+}
+.mestre-particle--glow { box-shadow: 0 0 10px 4px rgba(255, 210, 90, 0.55), 0 0 22px 8px rgba(255, 190, 60, 0.18); }
+@keyframes mestre-rise {
+  0%   { transform: translate3d(0, 0, 0) scale(0.3); opacity: 0; }
+  10%  { opacity: 0.95; }
+  30%  { transform: translate3d(7px, -30vh, 0) scale(1); }
+  60%  { transform: translate3d(-6px, -62vh, 0) scale(0.9); opacity: 0.7; }
+  100% { transform: translate3d(3px, -106vh, 0) scale(0.5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mestre-particle, html[data-mestre] .btn-primary { animation: none; }
+  .mestre-particles { display: none; }
+}
+
+/* ── O botão, no meio da tela ── */
+.mestre-call {
+  position: fixed; inset: 0; z-index: 450;
+  display: grid; place-items: center;
+  padding: var(--space-4);
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(16, 24, 32, 0.55), transparent 65%);
+  animation: mestre-call-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mestre-call-in { from { opacity: 0; transform: scale(0.94); } }
+.mestre-call__card {
+  position: relative; pointer-events: auto;
+  width: min(440px, 100%);
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 200, 70, 0.14), transparent 60%), #101820;
+  border: 1px solid rgba(240, 196, 64, 0.6);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 190, 60, 0.18);
+}
+.mestre-call__min {
+  position: absolute; top: 8px; right: 10px; width: 28px; height: 28px;
+  font-size: 18px; line-height: 1; color: #c9b27a; background: none; border: none; border-radius: 50%;
+}
+.mestre-call__min:hover { color: #ffd45e; background: rgba(255, 255, 255, 0.06); }
+.mestre-call__crest { font-size: 34px; color: #ffd45e; text-shadow: 0 0 18px rgba(255, 200, 70, 0.7); animation: mestre-crest 3s ease-in-out infinite; }
+@keyframes mestre-crest { 50% { transform: scale(1.12) rotate(8deg); text-shadow: 0 0 28px rgba(255, 210, 90, 0.95); } }
+.mestre-call__lead { margin: 0; max-width: 340px; font-family: var(--font-display); font-size: var(--text-lg); color: #f3e9d2; }
+.mestre-call__btn {
+  margin-top: var(--space-2);
+  padding: 16px 30px;
+  font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0.08em;
+  color: #1a1000;
+  background: linear-gradient(110deg, #c98a00 0%, #ffd45e 40%, #fff1b8 50%, #ffd45e 60%, #c98a00 100%);
+  background-size: 260% 100%;
+  border: 1px solid #fff1b8; border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(255, 200, 70, 0.15), 0 0 30px rgba(255, 190, 60, 0.45);
+  animation: mestre-sheen 3.5s linear infinite, mestre-pulse 2.2s ease-in-out infinite;
+}
+.mestre-call__btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); }
+.mestre-call__btn:disabled { opacity: 0.7; }
+@keyframes mestre-pulse { 50% { box-shadow: 0 0 0 8px rgba(255, 200, 70, 0.08), 0 0 46px rgba(255, 200, 70, 0.7); } }
+.mestre-call__hint { margin: 0; font-size: var(--text-xs); color: #a8946a; }
+.mestre-call__error { margin: 0; font-size: var(--text-xs); color: var(--danger); }
+.mestre-call__wait { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #dcc89c; font-size: var(--text-sm); }
+.mestre-call__count { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: #ffd45e; text-shadow: 0 0 16px rgba(255, 200, 70, 0.5); }
+.mestre-call__dots { display: flex; gap: 6px; margin: 4px 0; }
+.mestre-call__dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #b8964a; background: transparent; transition: background 0.4s, box-shadow 0.4s; }
+.mestre-call__dot.is-on { background: #ffd45e; box-shadow: 0 0 10px rgba(255, 200, 70, 0.8); }
+.mestre-call__giveup { margin-top: 4px; padding: 4px 12px; font-size: var(--text-xs); color: #a8946a; background: none; border: 1px solid rgba(168, 148, 106, 0.4); border-radius: 999px; }
+.mestre-call__giveup:hover { color: #f3e9d2; border-color: #b8964a; }
+
+/* Minimizado: uma pílula dourada no alto. */
+.mestre-call-pill {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 450;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  color: #ffd45e; background: #101820;
+  border: 1px solid rgba(240, 196, 64, 0.6); border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 16px rgba(255, 190, 60, 0.25);
+}
+.mestre-call-pill__star { animation: mestre-crest 3s ease-in-out infinite; }
+
+/* ── A ascensão: o livro fecha, escuro, o site se monta ── */
+.mestre-asc { position: fixed; inset: 0; z-index: 3000; pointer-events: all; }
+.mestre-asc__book { position: absolute; inset: 0; perspective: 1800px; display: flex; }
+.mestre-asc__cover {
+  position: relative; width: 50%; height: 100%;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.06), transparent 60%),
+    radial-gradient(ellipse at 70% 90%, rgba(0, 0, 0, 0.5), transparent 60%),
+    linear-gradient(135deg, #2a1d12, #1a120b 55%, #0e0a06);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.85);
+  backface-visibility: hidden;
+  animation-duration: 1600ms;
+  animation-timing-function: cubic-bezier(0.55, 0, 0.75, 0.25);
+  animation-fill-mode: both;
+}
+.mestre-asc__cover--left  { transform-origin: left center;  animation-name: mestre-close-left; }
+.mestre-asc__cover--right { transform-origin: right center; animation-name: mestre-close-right; }
+@keyframes mestre-close-left  { from { transform: rotateY(-92deg); filter: brightness(1.6); } to { transform: rotateY(0); filter: brightness(1); } }
+@keyframes mestre-close-right { from { transform: rotateY(92deg);  filter: brightness(1.6); } to { transform: rotateY(0); filter: brightness(1); } }
+.mestre-asc__frame {
+  position: absolute; inset: 5vmin;
+  border: 3px double rgba(240, 196, 64, 0.7);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 6px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 190, 60, 0.15);
+}
+.mestre-asc__cover--left .mestre-asc__frame  { right: 0; border-right: none; border-radius: 4px 0 0 4px; }
+.mestre-asc__cover--right .mestre-asc__frame { left: 0;  border-left: none;  border-radius: 0 4px 4px 0; }
+.mestre-asc__sigil {
+  position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%);
+  font-size: 18vmin; color: #ffd45e; text-shadow: 0 0 40px rgba(255, 200, 70, 0.8);
+  opacity: 0; animation: mestre-sigil 1600ms ease-out both;
+}
+@keyframes mestre-sigil { 0%, 80% { opacity: 0; } 92% { opacity: 1; } 100% { opacity: 0.9; } }
+.mestre-asc__clasp { position: absolute; top: 50%; right: 0; width: 3vmin; height: 14vmin; transform: translateY(-50%); background: linear-gradient(90deg, #6b4a12, #e0b23a, #6b4a12); border-radius: 2px 0 0 2px; opacity: 0.85; }
+/* A linha de luz onde as capas batem. */
+.mestre-asc__seam {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%);
+  background: linear-gradient(to bottom, transparent, #fff1b8 30%, #ffd45e 50%, #fff1b8 70%, transparent);
+  box-shadow: 0 0 30px 8px rgba(255, 200, 70, 0.6);
+  opacity: 0; animation: mestre-seam 1600ms ease-out both;
+}
+@keyframes mestre-seam { 0%, 85% { opacity: 0; } 95% { opacity: 1; } 100% { opacity: 0.6; } }
+/* Escuro total por 4 s. */
+.mestre-asc__dark { position: absolute; inset: 0; background: #000; opacity: 0; }
+.mestre-asc--dark .mestre-asc__dark { opacity: 1; transition: opacity 0.7s ease-in; }
+.mestre-asc--assemble .mestre-asc__book { display: none; }
+.mestre-asc--assemble .mestre-asc__dark { opacity: 0; transition: opacity 1.1s ease-out; }
+.mestre-asc--assemble { pointer-events: none; }
+
+/* O site se monta de novo, pedaço por pedaço. */
+html.mestre-assemble .sidebar,
+html.mestre-assemble .topbar,
+html.mestre-assemble main > *,
+html.mestre-assemble main > * > *,
+html.mestre-assemble .dice-fab-wrapper {
+  animation: mestre-assemble 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+html.mestre-assemble .sidebar { animation-delay: 0.1s; }
+html.mestre-assemble main > * > *:nth-child(2) { animation-delay: 0.35s; }
+html.mestre-assemble main > * > *:nth-child(3) { animation-delay: 0.5s; }
+html.mestre-assemble main > * > *:nth-child(n + 4) { animation-delay: 0.65s; }
+html.mestre-assemble .dice-fab-wrapper { animation-delay: 0.8s; }
+@keyframes mestre-assemble {
+  from { opacity: 0; transform: translateY(26px) scale(0.97); filter: blur(6px) brightness(1.8); }
+  60%  { filter: blur(0) brightness(1.2); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mestre-asc__cover, .mestre-asc__sigil, .mestre-asc__seam { animation-duration: 1ms; }
+  html.mestre-assemble * { animation: none !important; }
+}

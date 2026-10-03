@@ -23,12 +23,15 @@ import {
   genesisBonusFor,
   movementMeters,
   runaskinUsesPerScene,
+  torreMax,
   usesCards,
   usesFv,
   usesPr,
   usesRunico,
+  usesTorre,
 } from '../utils/altheriumCalculations'
-import { AltheriumBodyDiagram, type BodyZone } from './AltheriumBodyDiagram'
+import { TriumphUnit } from './triumphUnit'
+import { AltheriumBodyDiagram, type BodyBuild, type BodyZone } from './AltheriumBodyDiagram'
 import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
 import { AltheriumInventoryCard, inventoryArmor } from './AltheriumInventoryCard'
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
@@ -104,6 +107,7 @@ type FormData = {
   pr_current:         number
   pr_max:             number
   cards_current:      number
+  torre_current:      number
   hacksilvers:        number
   db_pernas:          number
   db_bracos:          number
@@ -146,6 +150,7 @@ function sheetToForm(s: AltheriumSheet): FormData {
     pr_current:         s.pr_current,
     pr_max:             s.pr_max ?? 10,
     cards_current:      s.cards_current,
+    torre_current:      s.torre_current ?? 0,
     hacksilvers:        s.hacksilvers,
     db_pernas:          s.db_pernas,
     db_bracos:          s.db_bracos,
@@ -191,6 +196,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     pr_current:          f.pr_current,
     pr_max:              f.pr_max,
     cards_current:       f.cards_current,
+    torre_current:       f.torre_current,
     hacksilvers:         f.hacksilvers,
     db_pernas:           f.db_pernas,
     db_bracos:           f.db_bracos,
@@ -293,6 +299,8 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
 
 const RAIZ_OPTIONS    = [{ value: '', label: '—' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label }))]
+/** A Mestre só aparece na lista pra quem já é Mestre (não se escolhe na criação). */
+const RAIZ_OPTIONS_MESTRE = [...RAIZ_OPTIONS, { value: 'mestre', label: 'Mestre' }]
 const GENESIS_OPTIONS = [{ value: '', label: '—' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
 
 export function AltheriumSheetForm({
@@ -483,9 +491,14 @@ export function AltheriumSheetForm({
   // máximo de cada um é campo direto do form.
   const projected  = formToSheet(sheet, form)
   const raiz       = form.raiz === '' ? null : form.raiz
+  // Mestre não tem corpo próprio no desenho: usa o da raiz de antes.
+  const bodyBuild: BodyBuild = raiz === 'mestre' ? ((sheet.mestre_backup?.raiz as BodyBuild) ?? 'pilar') : raiz
   // Easter egg: o personagem chamado Gutris (ou Gustris) não tem pernas.
   const legless    = LEGLESS_NAMES.has(form.character_name.trim().toLowerCase())
   const cartasMax  = cardsMax(projected)
+  const torreMaxV  = torreMax(projected)
+  /** Raiz Mestre: qual raiz está aberta na aba Triunfos. */
+  const [mestreTab, setMestreTab] = useState<'berserker' | 'runaskin' | 'pilar'>('berserker')
   const slotsTotal = domainSlotsTotal(projected)
 
   const genesisLabel   = GENESIS.find((g) => g.id === form.genesis)?.label ?? ''
@@ -515,6 +528,143 @@ export function AltheriumSheetForm({
     e.preventDefault()
     void flush()
   }
+
+  // ── Triunfos: cada raiz com o seu painel. A Mestre usa os três, pagando em TORRE. ──
+  const mestre = raiz === 'mestre'
+  const torreNow = form.torre_current
+
+  const runaskinPanel = (
+    <AltheriumRunaskinTriumphs
+      trail={form.runaskin_trail === '' ? null : form.runaskin_trail}
+      onTrailChange={(t) => set('runaskin_trail', t ?? '')}
+      sceneUses={form.runaskin_scene_uses}
+      usesLimit={runaskinUsesPerScene(mestre ? (torreMaxV ?? 0) : form.pr_max, form.level)}
+      onNewScene={() => set('runaskin_scene_uses', 0)}
+      prCurrent={mestre ? torreNow : form.pr_current}
+      recent={form.recent_triumphs}
+      onRecent={markRecent}
+      onUse={(cost, name) => {
+        setForm((prev) => ({
+          ...prev,
+          ...(mestre ? { torre_current: Math.max(0, prev.torre_current - cost) } : { pr_current: Math.max(0, prev.pr_current - cost) }),
+          runaskin_scene_uses: prev.runaskin_scene_uses + 1,
+        }))
+        announceTriumph(`${name} (−${cost} ${mestre ? 'Torre' : 'PR'})`)
+      }}
+      runes={runes}
+      onRuneCreate={onRuneCreate}
+      onRuneUpdate={onRuneUpdate}
+      onRuneDelete={onRuneDelete}
+      trailOverrides={form.runaskin_trail_overrides}
+      onTrailImageUpload={(id, file) => uploadTrailTriumphImage(sheet.id, id, file)}
+      onTrailImageRemove={(id) => removeTrailTriumphImage(sheet.id, id)}
+      onTrailOverride={(id, override) => {
+        setForm((prev) => {
+          const next = { ...prev.runaskin_trail_overrides }
+          if (override) next[id] = override
+          else delete next[id]
+          return { ...prev, runaskin_trail_overrides: next }
+        })
+      }}
+      allTrails={mestre}
+    />
+  )
+
+  const pilarPanel = (
+    <AltheriumPilarTriumphs
+      campaignId={sheet.campaign_id}
+      cardsCurrent={mestre ? torreNow : form.cards_current}
+      cardsMax={mestre ? torreMaxV : cartasMax}
+      mode={form.pilar_card_mode}
+      deck={form.pilar_deck}
+      recent={form.recent_triumphs}
+      onRecent={markRecent}
+      onModeChange={(m) => set('pilar_card_mode', m)}
+      onDeckReset={() => set('pilar_deck', null)}
+      onSpend={(n, deck) => {
+        setForm((prev) => ({
+          ...prev,
+          ...(mestre ? { torre_current: Math.max(0, prev.torre_current - n) } : { cards_current: Math.max(0, prev.cards_current - n) }),
+          ...(deck ? { pilar_deck: deck } : {}),
+        }))
+      }}
+      onResolve={(r) => {
+        const s = suitInfo(r.suit)
+        const spent = mestre ? `${r.spent} de Torre` : `${r.spent} ${r.spent === 1 ? 'carta' : 'cartas'}`
+        const detail = `${r.instant ? 'Ás de espadas' : `${s.symbol} ${s.label.toLowerCase()}`} · ${spent}`
+        if (r.success) announceTriumph(`${r.triumph.name} (${detail})`)
+        else if (r.gaveUp) announceTriumph(`de ${r.triumph.name} (${detail})`, 'desistiu')
+        else announceTriumph(`${r.triumph.name} e não conseguiu a combinação (${detail})`, 'tentou')
+      }}
+      onRecover={(n) => {
+        if (mestre) {
+          setForm((prev) => ({ ...prev, torre_current: Math.min(torreMaxV ?? prev.torre_current + n, prev.torre_current + n) }))
+          announceTriumph(`${n} de Torre com Retorno do Baralho`, 'recuperou')
+          return
+        }
+        setForm((prev) => ({
+          ...prev,
+          cards_current: Math.min(cartasMax ?? prev.cards_current + n, prev.cards_current + n),
+        }))
+        announceTriumph(`${n} ${n === 1 ? 'carta' : 'cartas'} com Retorno do Baralho`, 'recuperou')
+      }}
+    />
+  )
+
+  const berserkerPanel = (
+    <AltheriumTriumphsPanel
+      raiz={mestre ? 'berserker' : raiz === 'berserker' ? 'berserker' : null}
+      triumphIds={form.berserker_triumphs}
+      limit={berserkerTriumphLimit(domains)}
+      fvCurrent={mestre ? torreNow : form.fv_current}
+      onChange={(ids) => set('berserker_triumphs', ids)}
+      recent={form.recent_triumphs}
+      onRecent={markRecent}
+      onSpendFv={(cost, name) => {
+        if (mestre) set('torre_current', Math.max(0, form.torre_current - cost))
+        else set('fv_current', Math.max(0, form.fv_current - cost))
+        announceTriumph(`${name} (−${cost} ${mestre ? 'Torre' : 'FV'})`)
+      }}
+      allOwned={mestre}
+    />
+  )
+
+  const MESTRE_TABS = [
+    { id: 'berserker', label: 'Berserker' },
+    { id: 'runaskin', label: 'Runaskin' },
+    { id: 'pilar', label: 'Pilar' },
+  ] as const
+
+  const triumphsTab = mestre
+    ? (
+      <TriumphUnit.Provider value="Torre">
+        <section className="alth-card alth-mestre-triumphs">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Triunfos do Mestre</h4>
+            <span className="alth-counter">Torre: {torreNow} / {torreMaxV ?? 0}</span>
+          </div>
+          <p className="alth-hint">
+            O Mestre usa os triunfos das três raízes. Cada triunfo gasta da TORRE (Estratégia × 5) o que custava na raiz dele.
+          </p>
+          <div className="alth-mestre-tabs" role="tablist" aria-label="Triunfos por raiz">
+            {MESTRE_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={mestreTab === t.id}
+                className={`alth-mestre-tab${mestreTab === t.id ? ' is-on' : ''}`}
+                onClick={() => setMestreTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </section>
+        {mestreTab === 'runaskin' ? runaskinPanel : mestreTab === 'pilar' ? pilarPanel : berserkerPanel}
+      </TriumphUnit.Provider>
+    )
+    : raiz === 'runaskin' ? runaskinPanel : raiz === 'pilar' ? pilarPanel : berserkerPanel
 
   return (
     <form
@@ -579,7 +729,7 @@ export function AltheriumSheetForm({
                   className="alth-hero__select" value={form.raiz}
                   onChange={(v) => set('raiz', v as AltheriumRaiz | '')}
                   aria-label="Raiz"
-                  options={RAIZ_OPTIONS}
+                  options={form.raiz === 'mestre' ? RAIZ_OPTIONS_MESTRE : RAIZ_OPTIONS}
                 />
               </label>
               <label className="alth-hero__field alth-hero__field--genesis">
@@ -619,6 +769,13 @@ export function AltheriumSheetForm({
               sigla="FV" label="Força de Vontade" tone="resource"
               current={form.fv_current} max={form.fv_max}
               onCurrent={(v) => set('fv_current', v)} onMax={(v) => set('fv_max', v)}
+            />
+          )}
+          {usesTorre(raiz) && torreMaxV != null && (
+            <VitalBar
+              sigla="TORRE" label="Torre (Estratégia × 5)" tone="resource" gold
+              current={form.torre_current} max={torreMaxV}
+              onCurrent={(v) => set('torre_current', v)}
             />
           )}
           {usesCards(raiz) && cartasMax != null && (
@@ -758,7 +915,7 @@ export function AltheriumSheetForm({
           <div className="alth-anatomy">
             <AltheriumBodyDiagram
               variant="protecao"
-              build={raiz}
+              build={bodyBuild}
               legless={legless}
               values={{
                 db_cabeca: form.db_cabeca,
@@ -804,7 +961,7 @@ export function AltheriumSheetForm({
 
             <AltheriumBodyDiagram
               variant="dano"
-              build={raiz}
+              build={bodyBuild}
               legless={legless}
               visualMax={form.vitality_max}
               values={{
@@ -946,92 +1103,7 @@ export function AltheriumSheetForm({
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
         {activeTab === 'triunfos' && (
           <div className="alth-tab-panel anim-tab-panel">
-            {raiz === 'runaskin'
-              ? (
-                <AltheriumRunaskinTriumphs
-                  trail={form.runaskin_trail === '' ? null : form.runaskin_trail}
-                  onTrailChange={(t) => set('runaskin_trail', t ?? '')}
-                  sceneUses={form.runaskin_scene_uses}
-                  usesLimit={runaskinUsesPerScene(form.pr_max, form.level)}
-                  onNewScene={() => set('runaskin_scene_uses', 0)}
-                  prCurrent={form.pr_current}
-                  recent={form.recent_triumphs}
-                  onRecent={markRecent}
-                  onUse={(cost, name) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      pr_current:          Math.max(0, prev.pr_current - cost),
-                      runaskin_scene_uses: prev.runaskin_scene_uses + 1,
-                    }))
-                    announceTriumph(`${name} (−${cost} PR)`)
-                  }}
-                  runes={runes}
-                  onRuneCreate={onRuneCreate}
-                  onRuneUpdate={onRuneUpdate}
-                  onRuneDelete={onRuneDelete}
-                  trailOverrides={form.runaskin_trail_overrides}
-                  onTrailImageUpload={(id, file) => uploadTrailTriumphImage(sheet.id, id, file)}
-                  onTrailImageRemove={(id) => removeTrailTriumphImage(sheet.id, id)}
-                  onTrailOverride={(id, override) => {
-                    setForm((prev) => {
-                      const next = { ...prev.runaskin_trail_overrides }
-                      if (override) next[id] = override
-                      else delete next[id]
-                      return { ...prev, runaskin_trail_overrides: next }
-                    })
-                  }}
-                />
-              )
-              : raiz === 'pilar'
-              ? (
-                <AltheriumPilarTriumphs
-                  campaignId={sheet.campaign_id}
-                  cardsCurrent={form.cards_current}
-                  cardsMax={cartasMax}
-                  mode={form.pilar_card_mode}
-                  deck={form.pilar_deck}
-                  recent={form.recent_triumphs}
-                  onRecent={markRecent}
-                  onModeChange={(m) => set('pilar_card_mode', m)}
-                  onDeckReset={() => set('pilar_deck', null)}
-                  onSpend={(n, deck) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      cards_current: Math.max(0, prev.cards_current - n),
-                      ...(deck ? { pilar_deck: deck } : {}),
-                    }))
-                  }}
-                  onResolve={(r) => {
-                    const s = suitInfo(r.suit)
-                    const detail = `${r.instant ? 'Ás de espadas' : `${s.symbol} ${s.label.toLowerCase()}`} · ${r.spent} ${r.spent === 1 ? 'carta' : 'cartas'}`
-                    if (r.success) announceTriumph(`${r.triumph.name} (${detail})`)
-                    else if (r.gaveUp) announceTriumph(`de ${r.triumph.name} (${detail})`, 'desistiu')
-                    else announceTriumph(`${r.triumph.name} e não conseguiu a combinação (${detail})`, 'tentou')
-                  }}
-                  onRecover={(n) => {
-                    setForm((prev) => ({
-                      ...prev,
-                      cards_current: Math.min(cartasMax ?? prev.cards_current + n, prev.cards_current + n),
-                    }))
-                    announceTriumph(`${n} ${n === 1 ? 'carta' : 'cartas'} com Retorno do Baralho`, 'recuperou')
-                  }}
-                />
-              )
-              : (
-                <AltheriumTriumphsPanel
-                  raiz={raiz}
-                  triumphIds={form.berserker_triumphs}
-                  limit={berserkerTriumphLimit(domains)}
-                  fvCurrent={form.fv_current}
-                  onChange={(ids) => set('berserker_triumphs', ids)}
-                  recent={form.recent_triumphs}
-                  onRecent={markRecent}
-                  onSpendFv={(cost, name) => {
-                    set('fv_current', Math.max(0, form.fv_current - cost))
-                    announceTriumph(`${name} (−${cost} FV)`)
-                  }}
-                />
-              )}
+            {triumphsTab}
           </div>
         )}
       </div>
@@ -1115,11 +1187,13 @@ interface VitalBarProps {
   /** Sem onMax o máximo é só leitura (ex.: Cartas = 13 × nível). */
   onMax?:    (value: number) => void
   disabled?: boolean
+  /** Dourada (a TORRE da raiz Mestre). */
+  gold?:     boolean
 }
 
-function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false }: VitalBarProps) {
+function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false, gold = false }: VitalBarProps) {
   return (
-    <div className={`alth-vital-bar alth-vital-bar--${tone}`}>
+    <div className={`alth-vital-bar alth-vital-bar--${tone}${gold ? ' alth-vital-bar--gold' : ''}`}>
       <div className="alth-vital-bar__top">
         <span className="alth-vital-bar__sigla" title={label}>{sigla}</span>
         <span className="alth-vital-bar__values">

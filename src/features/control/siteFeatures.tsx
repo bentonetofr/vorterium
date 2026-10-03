@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { supabase, uniqueChannel } from '../../shared/lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
+import { MESTRE_FEATURE, ownerResetMestre } from '../mestre/mestreService'
 
 // ────────────────────────────────────────────────────────
 // Recursos que o dono do site controla pelo Painel de controle (o livro
@@ -21,9 +22,19 @@ export interface SiteFeature {
   description: string
   /** Onde aparece no site (pra achar e testar). */
   where:       string
+  /** Botões de teste do dono no painel (ex.: voltar ao normal). */
+  actions?:    { label: string; run: (userId: string | null) => Promise<void> }[]
 }
 
-export const SITE_FEATURES: SiteFeature[] = []
+export const SITE_FEATURES: SiteFeature[] = [
+  {
+    key: MESTRE_FEATURE,
+    name: 'Raiz Mestre',
+    description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores de Altherium. Quando todos da campanha apertam: livro fechando, 4 s de escuro, tema preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Guardado, só você vê o botão — e ele vale só pra você.',
+    where: 'Campanhas de Altherium (qualquer aba)',
+    actions: [{ label: 'Voltar a ser normal (só você)', run: ownerResetMestre }],
+  },
+]
 
 // ── Quem é o dono do site ───────────────────────────────
 

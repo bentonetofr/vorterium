@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { useContext, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
 import {
@@ -18,6 +18,7 @@ import {
 import type { AltheriumRune, RunaskinTriumphOverride } from '../../../../shared/types'
 import { Select } from '../../../../shared/components/Select'
 import { AltheriumRecentTriumphs } from './AltheriumRecentTriumphs'
+import { TriumphUnit } from './triumphUnit'
 
 // ────────────────────────────────────────────────────────
 // Triunfos do Runaskin — trilha (3 iniciais do livro, editáveis na ficha)
@@ -50,6 +51,8 @@ interface AltheriumRunaskinTriumphsProps {
   onTrailImageUpload: (triumphId: string, file: File) => Promise<string>
   onTrailImageRemove: (triumphId: string) => Promise<void>
   disabled?:     boolean
+  /** Raiz Mestre: os triunfos das três trilhas de uma vez. */
+  allTrails?:    boolean
 }
 
 /** Um triunfo inicial com a edição da ficha aplicada por cima do livro. */
@@ -77,15 +80,16 @@ function trailTriumphAsRune(t: TrailTriumph): AltheriumRune {
 export function AltheriumRunaskinTriumphs({
   trail, onTrailChange, sceneUses, usesLimit, onNewScene, prCurrent, onUse, recent, onRecent,
   runes, onRuneCreate, onRuneUpdate, onRuneDelete, trailOverrides, onTrailOverride,
-  onTrailImageUpload, onTrailImageRemove, disabled = false,
+  onTrailImageUpload, onTrailImageRemove, disabled = false, allTrails = false,
 }: AltheriumRunaskinTriumphsProps) {
+  const unit = useContext(TriumphUnit) ?? 'PR'
   const [editing, setEditing]           = useState<AltheriumRune | 'new' | null>(null)
   const [editingTrail, setEditingTrail] = useState<TrailTriumph | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [lastUsed, setLastUsed]         = useState<string | null>(null)
 
   const trailDef   = RUNASKIN_TRAILS.find((t) => t.id === trail) ?? null
-  const initial: TrailTriumph[] = RUNASKIN_TRIUMPHS.filter((t) => t.trail === trail).map((t) => {
+  const initial: TrailTriumph[] = RUNASKIN_TRIUMPHS.filter((t) => allTrails || t.trail === trail).map((t) => {
     const o = trailOverrides[t.id]
     return o
       ? { id: t.id, trail: t.trail, name: o.name, description: o.description, cost: o.cost, test: o.test, action: o.action, range: o.range, image_url: o.image_url ?? null, edited: true }
@@ -108,11 +112,11 @@ export function AltheriumRunaskinTriumphs({
       <button
         type="button" className="alth-triumph__btn alth-triumph__btn--use"
         disabled={disabled || noPr || limitHit}
-        title={limitHit ? 'Limite de usos da cena (NR) atingido' : noPr ? 'PR insuficiente' : undefined}
+        title={limitHit ? 'Limite de usos da cena (NR) atingido' : noPr ? `${unit} insuficiente` : undefined}
         onClick={() => {
           onUse(cost, name)
           onRecent(id)
-          setLastUsed(`${name} usado — −${cost} PR.`)
+          setLastUsed(`${name} usado — −${cost} ${unit}.`)
         }}
       >
         Usar
@@ -156,7 +160,7 @@ export function AltheriumRunaskinTriumphs({
       </div>
 
       <p className="alth-hint">
-        NR = 15% do PR máximo (pra cima) no nível 1, dobrando a cada nível.
+        NR = 15% do {unit} máximo (pra cima) no nível 1, dobrando a cada nível.
       </p>
 
       {trailDef && (
@@ -362,13 +366,14 @@ interface RuneCardProps {
 }
 
 function RuneCard({ trailClass, media, name, cost, test, description, chips, children }: RuneCardProps) {
+  const unit = useContext(TriumphUnit) ?? 'PR'
   return (
     <article className={`alth-rune alth-rune--${trailClass}`}>
       <div className="alth-rune__media">{media}</div>
       <div className="alth-rune__body">
         <header className="alth-triumph__head">
           <h5 className="alth-triumph__name">{name}</h5>
-          <span className="alth-triumph__cost">{cost} PR</span>
+          <span className="alth-triumph__cost">{cost} {unit}</span>
         </header>
         <p className="alth-rune__test">
           <span>Teste:</span> {test || 'Sem teste'}
@@ -403,6 +408,7 @@ interface RuneEditorProps {
 }
 
 function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: RuneEditorProps) {
+  const unit = useContext(TriumphUnit) ?? 'PR'
   const [name, setName]               = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [cost, setCost]               = useState(initial?.pr_cost ?? 1)
@@ -516,7 +522,7 @@ function RuneEditorModal({ initial, trail, onSubmit, onCancel, onRestore }: Rune
           />
           <div className="alth-rune__editor-row">
             <label className="alth-rune__editor-cost">
-              <span className="label">PR</span>
+              <span className="label">{unit}</span>
               <input
                 type="number" className="input" min={0} max={99}
                 value={cost}

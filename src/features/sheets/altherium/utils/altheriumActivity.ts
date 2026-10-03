@@ -1,4 +1,4 @@
-import { ATTRIBUTES, BODY_PARTS, DOMAINS, GENESIS, RAIZES } from '../constants/altherium'
+import { ATTRIBUTES, BODY_PARTS, DOMAINS, GENESIS, RAIZES, RAIZ_MESTRE } from '../constants/altherium'
 import { findArmor, findItem, findWeapon } from '../constants/altheriumItems'
 import { RUNASKIN_TRAILS, RUNASKIN_TRIUMPHS, TRIUMPH_ACTION_LABELS, findBerserkerTriumph, type TriumphAction } from '../constants/altheriumTriumphs'
 
@@ -52,6 +52,7 @@ const NUMBER_LABELS: Record<string, string> = {
   pr_current:          'PR',
   pr_max:              'PR máximo',
   cards_current:       'Cartas',
+  torre_current:       'Torre',
   hacksilvers:         'Hacksilvers',
   runaskin_scene_uses: 'Usos de runa na cena',
   vitality_roll:       'd10 de Vitalidade',
@@ -226,7 +227,7 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
     case 'character_name':
       return [{ key, label: 'Nome', from: str(c.from) ?? '—', to: str(c.to) ?? '—', tone: 'neutral' }]
     case 'raiz':
-      return [{ key, label: 'Raiz', from: labelOf(RAIZES, c.from) ?? '—', to: labelOf(RAIZES, c.to) ?? '—', tone: 'neutral' }]
+      return [{ key, label: 'Raiz', from: labelOf([...RAIZES, RAIZ_MESTRE], c.from) ?? '—', to: labelOf([...RAIZES, RAIZ_MESTRE], c.to) ?? '—', tone: 'neutral' }]
     case 'genesis':
       return [{ key, label: 'Gênesis', from: labelOf(GENESIS, c.from) ?? '—', to: labelOf(GENESIS, c.to) ?? '—', tone: 'neutral' }]
     case 'runaskin_trail':

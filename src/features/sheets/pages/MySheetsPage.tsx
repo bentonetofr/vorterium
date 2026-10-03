@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getMySheets, isSheetFilled } from '../services/sheetService'
 import { getMyAltheriumSheetsEverywhere } from '../altherium/services/altheriumSheetService'
-import { RAIZES } from '../altherium/constants/altherium'
+import { raizLabel } from '../altherium/constants/altherium'
 import { getMyTdSheetsEverywhere } from '../terraDevastada/services/tdSheetService'
 import { getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import './MySheetsPage.css'
@@ -65,7 +65,7 @@ async function loadAllSheets(): Promise<MySheetItem[]> {
       characterName: s.character_name,
       filled:        Boolean(s.character_name?.trim()) && s.raiz != null,
       stats:         [
-        ...(s.raiz ? [RAIZES.find((r) => r.id === s.raiz)?.label ?? s.raiz] : []),
+        ...(s.raiz ? [raizLabel(s.raiz) ?? s.raiz] : []),
         `Nível ${s.level}`,
         `Vitalidade ${s.vitality_current}/${s.vitality_max}`,
       ],

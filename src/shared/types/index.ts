@@ -197,7 +197,7 @@ export interface AltheriumSheet {
   character_name:     string | null
   portrait_url:       string | null
   level:              number
-  raiz:               'berserker' | 'runaskin' | 'pilar' | null
+  raiz:               'berserker' | 'runaskin' | 'pilar' | 'mestre' | null
   genesis:            string | null
   attr_furia:         number
   attr_destino:       number
@@ -220,6 +220,10 @@ export interface AltheriumSheet {
   pr_current:         number
   pr_max:             number
   cards_current:      number
+  /** Raiz Mestre: TORRE atual (o máximo é Estratégia × 5, calculado no site). */
+  torre_current:      number
+  /** Raiz Mestre: como a ficha era antes de virar Mestre (o banco cuida). */
+  mestre_backup?:     Record<string, unknown> | null
   hacksilvers:        number
   db_pernas:          number
   db_bracos:          number

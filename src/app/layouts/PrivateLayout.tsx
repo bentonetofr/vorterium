@@ -9,6 +9,9 @@ import { NotificationBell }   from '../../features/activity/components/Notificat
 import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
 import { ControlFab }         from '../../features/control/ControlFab'
+import { MestreAscension }    from '../../features/mestre/MestreAscension'
+import { MestreCall }         from '../../features/mestre/MestreCall'
+import { MestreTheme }        from '../../features/mestre/MestreTheme'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { CritWolf }           from '../../features/dice/components/CritWolf'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
@@ -269,6 +272,9 @@ function PrivateLayoutContent() {
       </nav>
     </div>
     <CritWolf />
+    <MestreTheme />
+    <MestreAscension />
+    <MestreCall />
     <div className="dice-fab-wrapper">
       <FabToasts>
         <MesaLiveNotice />

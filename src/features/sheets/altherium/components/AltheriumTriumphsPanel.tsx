@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { useContext, useState, type ReactNode } from 'react'
 import type { AltheriumRaiz } from '../constants/altherium'
 import { AltheriumRecentTriumphs } from './AltheriumRecentTriumphs'
+import { TriumphUnit } from './triumphUnit'
 import {
   BERSERKER_TRIUMPHS,
   byName,
@@ -28,25 +29,29 @@ interface AltheriumTriumphsPanelProps {
   recent:         string[]
   onRecent:       (id: string) => void
   disabled?:      boolean
+  /** Raiz Mestre: tem todos os triunfos (sem escolher, sem limite). */
+  allOwned?:      boolean
 }
 
 export function AltheriumTriumphsPanel({
   raiz, triumphIds, limit, fvCurrent,
-  onChange, onSpendFv, recent, onRecent, disabled = false,
+  onChange, onSpendFv, recent, onRecent, disabled = false, allOwned = false,
 }: AltheriumTriumphsPanelProps) {
   const [lastUsed, setLastUsed] = useState<string | null>(null)
+  const unit = useContext(TriumphUnit) ?? 'FV'
 
   if (raiz === null) {
     return <TriumphsNotice title="Triunfos" message="Escolha uma raiz no cabeçalho para ver os triunfos do personagem." />
   }
 
   // Berserker
-  const owned     = triumphIds.map(findBerserkerTriumph).filter((t): t is BerserkerTriumphDef => !!t).sort(byName)
-  const available = BERSERKER_TRIUMPHS.filter((t) => !triumphIds.includes(t.id))
+  const ownedIds  = allOwned ? BERSERKER_TRIUMPHS.map((t) => t.id) : triumphIds
+  const owned     = ownedIds.map(findBerserkerTriumph).filter((t): t is BerserkerTriumphDef => !!t).sort(byName)
+  const available = allOwned ? [] : BERSERKER_TRIUMPHS.filter((t) => !triumphIds.includes(t.id))
   const full      = owned.length >= limit
   const over      = owned.length > limit
   // Recentes: só os que o personagem ainda tem.
-  const recentOwned = recent.filter((id) => triumphIds.includes(id))
+  const recentOwned = recent.filter((id) => ownedIds.includes(id))
     .map(findBerserkerTriumph).filter((t): t is BerserkerTriumphDef => !!t)
 
   function useButton(t: BerserkerTriumphDef) {
@@ -54,11 +59,11 @@ export function AltheriumTriumphsPanel({
       <button
         type="button" className="alth-triumph__btn alth-triumph__btn--use"
         disabled={disabled || fvCurrent < t.cost}
-        title={fvCurrent < t.cost ? 'FV insuficiente' : undefined}
+        title={fvCurrent < t.cost ? `${unit} insuficiente` : undefined}
         onClick={() => {
           onSpendFv(t.cost, t.name)
           onRecent(t.id)
-          setLastUsed(`${t.name} usado — −${t.cost} FV.`)
+          setLastUsed(`${t.name} usado — −${t.cost} ${unit}.`)
         }}
       >
         Usar
@@ -70,14 +75,18 @@ export function AltheriumTriumphsPanel({
     <section className="alth-card alth-triumphs">
       <div className="alth-card__header">
         <h4 className="alth-card__title">Triunfos do Berserker</h4>
-        <span className={`alth-counter${over ? ' alth-counter--over' : ''}`}>
-          Triunfos: {owned.length} / {limit}
-        </span>
+        {!allOwned && (
+          <span className={`alth-counter${over ? ' alth-counter--over' : ''}`}>
+            Triunfos: {owned.length} / {limit}
+          </span>
+        )}
       </div>
-      <p className="alth-hint">
-        Limite: (2 + domínios com ponto) ÷ 2, arredondado pra baixo.
-      </p>
-      {over && (
+      {!allOwned && (
+        <p className="alth-hint">
+          Limite: (2 + domínios com ponto) ÷ 2, arredondado pra baixo.
+        </p>
+      )}
+      {!allOwned && over && (
         <p className="alth-triumphs__warn" role="alert">
           Você tem mais triunfos do que o limite atual — remova algum ou ganhe domínios.
         </p>
@@ -98,20 +107,20 @@ export function AltheriumTriumphsPanel({
             {owned.map((t) => (
               <BerserkerTriumphCard key={t.id} triumph={t} owned>
                 {useButton(t)}
-                <button
+                {!allOwned && <button
                   type="button" className="alth-triumph__btn alth-triumph__btn--remove"
                   disabled={disabled}
                   onClick={() => onChange(triumphIds.filter((id) => id !== t.id))}
                 >
                   Remover
-                </button>
+                </button>}
               </BerserkerTriumphCard>
             ))}
           </div>
         )}
 
-      <h5 className="alth-triumphs__group">Disponíveis</h5>
-      <div className="alth-triumphs__grid">
+      {!allOwned && <h5 className="alth-triumphs__group">Disponíveis</h5>}
+      {!allOwned && <div className="alth-triumphs__grid">
         {available.map((t) => (
           <BerserkerTriumphCard key={t.id} triumph={t}>
             <button
@@ -124,17 +133,18 @@ export function AltheriumTriumphsPanel({
             </button>
           </BerserkerTriumphCard>
         ))}
-      </div>
+      </div>}
     </section>
   )
 }
 
 function BerserkerTriumphCard({ triumph: t, owned = false, children }: { triumph: BerserkerTriumphDef; owned?: boolean; children: ReactNode }) {
+  const unit = useContext(TriumphUnit) ?? 'FV'
   return (
     <article className={`alth-triumph${owned ? ' alth-triumph--owned' : ''}`}>
       <header className="alth-triumph__head">
         <h5 className="alth-triumph__name">{t.name}</h5>
-        <span className="alth-triumph__cost">{t.cost} FV</span>
+        <span className="alth-triumph__cost">{t.cost} {unit}</span>
       </header>
       <p className="alth-triumph__desc">{t.description}</p>
       <div className="alth-triumph__chips">

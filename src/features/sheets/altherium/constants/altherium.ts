@@ -3,7 +3,8 @@
 // Fonte: Livro de regras básicas de ALTHERIUM 1.0
 // ────────────────────────────────────────────────────────
 
-export type AltheriumRaiz = 'berserker' | 'runaskin' | 'pilar'
+/** 'mestre' não se escolhe na criação: vem do botão SE TORNAR UM MESTRE (migration 20240176). */
+export type AltheriumRaiz = 'berserker' | 'runaskin' | 'pilar' | 'mestre'
 
 export type AltheriumAttribute =
   | 'furia' | 'destino' | 'espirito' | 'impulso' | 'estrategia' | 'runico'
@@ -95,10 +96,35 @@ export const RAIZES: RaizEntry[] = [
   },
 ]
 
-const _raizById = Object.fromEntries(RAIZES.map((r) => [r.id, r])) as Record<AltheriumRaiz, RaizEntry>
+/**
+ * Raiz Mestre: estudou o suficiente pra usar tudo — os triunfos de
+ * Berserker, Runaskin e Pilar, pagos com TORRE (Estratégia × 5). Fica fora
+ * de RAIZES (não aparece na criação). Domínios como os do Pilar, o que mais tem.
+ */
+export const RAIZ_MESTRE: RaizEntry = {
+  id: 'mestre',
+  label: 'Mestre',
+  description: 'Estudou o suficiente para saber usar de tudo: é Berserker, Runaskin e Pilar ao mesmo tempo.',
+  vitalityBase: 0,
+  equilibrioBase: 0,
+  fvBase: null,
+  prBase: null,
+  domainBase: 8,
+  domainsPerLevel: 3,
+}
+
+/** TORRE máxima da raiz Mestre: Estratégia × 5. */
+export const TORRE_PER_ESTRATEGIA = 5
+
+const _raizById = Object.fromEntries([...RAIZES, RAIZ_MESTRE].map((r) => [r.id, r])) as Record<AltheriumRaiz, RaizEntry>
 
 export function getRaiz(raiz: AltheriumRaiz): RaizEntry {
   return _raizById[raiz]
+}
+
+/** Nome da raiz pra mostrar (inclui a Mestre). */
+export function raizLabel(raiz: string | null | undefined): string | null {
+  return raiz ? (_raizById[raiz as AltheriumRaiz]?.label ?? raiz) : null
 }
 
 // ── Gênesis ──────────────────────────────────────────────

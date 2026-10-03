@@ -55,6 +55,10 @@
 .control-item__desc { font-size: var(--text-sm); color: var(--text-secondary); }
 .control-item__meta { font-size: 11px; color: var(--text-muted); }
 .control-item__error { font-size: 11px; color: var(--danger); }
+.control-item__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
+.control-item__action { padding: 3px 10px; font-family: var(--font-label); font-size: 11px; font-weight: 600; color: var(--text-secondary); background: var(--bg-overlay); border: 1px solid var(--border-dim); border-radius: 999px; }
+.control-item__action:hover:not(:disabled) { color: var(--text-primary); border-color: var(--gilded); }
+.control-item__done { font-size: 11px; color: var(--success); }
 
 /* Chave Guardado ↔ No site */
 .control-item__switch {

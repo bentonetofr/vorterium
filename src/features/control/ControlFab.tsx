@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { Presence } from '../../shared/components/Presence'
 import { useFloatingPanel } from '../../shared/lib/floatingPanels'
+import { useAuth } from '../auth/AuthProvider'
 import { SITE_FEATURES, setFeature, useIsSiteOwner, useSiteFeatures, type SiteFeature } from './siteFeatures'
 import './ControlFab.css'
 
@@ -78,8 +79,16 @@ function ControlList() {
 }
 
 function ControlItem({ feature, on, changedAt }: { feature: SiteFeature; on: boolean; changedAt?: string }) {
+  const { user } = useAuth()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<string | null>(null)
+  async function act(a: NonNullable<SiteFeature['actions']>[number]) {
+    setBusy(true)
+    setError(null)
+    setDone(null)
+    try { await a.run(user?.id ?? null); setDone('Feito.') } catch (e) { setError(e instanceof Error ? e.message : 'Não deu certo.') } finally { setBusy(false) }
+  }
   async function toggle() {
     setBusy(true)
     setError(null)
@@ -92,6 +101,14 @@ function ControlItem({ feature, on, changedAt }: { feature: SiteFeature; on: boo
         <span className="control-item__name">{feature.name}</span>
         <span className="control-item__desc">{feature.description}</span>
         <span className="control-item__meta">{feature.where}{when ? ` · mudou em ${when}` : ''}</span>
+        {feature.actions && (
+          <div className="control-item__actions">
+            {feature.actions.map((a) => (
+              <button key={a.label} type="button" className="control-item__action" onClick={() => void act(a)} disabled={busy}>{a.label}</button>
+            ))}
+            {done && <span className="control-item__done" role="status">{done}</span>}
+          </div>
+        )}
         {error && <span className="control-item__error" role="alert">{error}</span>}
       </div>
       <button
