@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react'
 import { Presence } from '../../shared/components/Presence'
 import { useFloatingPanel } from '../../shared/lib/floatingPanels'
 import { useAuth } from '../auth/AuthProvider'
-import { SITE_FEATURES, setFeature, useIsSiteOwner, useSiteFeatures, type SiteFeature } from './siteFeatures'
+import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
+import { SITE_FEATURES, setFeature, useIsSiteOwner, useSiteFeatures, type FeatureContext, type SiteFeature } from './siteFeatures'
 import './ControlFab.css'
 
 // ────────────────────────────────────────────────────────
@@ -80,6 +81,11 @@ function ControlList() {
 
 function ControlItem({ feature, on, changedAt }: { feature: SiteFeature; on: boolean; changedAt?: string }) {
   const { user } = useAuth()
+  const { campaign } = useCurrentCampaign()
+  const ctx: FeatureContext = {
+    userId: user?.id ?? null,
+    campaign: campaign ? { id: campaign.id, name: campaign.name, master: campaign.role === 'master' } : null,
+  }
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
@@ -87,12 +93,17 @@ function ControlItem({ feature, on, changedAt }: { feature: SiteFeature; on: boo
     setBusy(true)
     setError(null)
     setDone(null)
-    try { await a.run(user?.id ?? null); setDone('Feito.') } catch (e) { setError(e instanceof Error ? e.message : 'Não deu certo.') } finally { setBusy(false) }
+    try { const msg = await a.run(user?.id ?? null, ctx); setDone(msg || 'Feito.') } catch (e) { setError(e instanceof Error ? e.message : 'Não deu certo.') } finally { setBusy(false) }
   }
   async function toggle() {
     setBusy(true)
     setError(null)
-    try { await setFeature(feature.key, !on) } catch (e) { setError(e instanceof Error ? e.message : 'Não deu certo.') } finally { setBusy(false) }
+    setDone(null)
+    try {
+      await setFeature(feature.key, !on)
+      const msg = await feature.onToggle?.(!on, ctx)
+      if (msg) setDone(msg)
+    } catch (e) { setError(e instanceof Error ? e.message : 'Não deu certo.') } finally { setBusy(false) }
   }
   const when = whenText(changedAt)
   return (
@@ -109,6 +120,7 @@ function ControlItem({ feature, on, changedAt }: { feature: SiteFeature; on: boo
             {done && <span className="control-item__done" role="status">{done}</span>}
           </div>
         )}
+        {!feature.actions && done && <span className="control-item__done" role="status">{done}</span>}
         {error && <span className="control-item__error" role="alert">{error}</span>}
       </div>
       <button

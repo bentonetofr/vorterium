@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react
 import { supabase, uniqueChannel } from '../../shared/lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { MESTRE_FEATURE, ownerResetMestre } from '../mestre/mestreService'
+import { LIVRO_FEATURE, livroOpenHere, livroToggle, closeMine as livroCloseMine } from '../livro/livroService'
 
 // ────────────────────────────────────────────────────────
 // Recursos que o dono do site controla pelo Painel de controle (o livro
@@ -15,6 +16,12 @@ import { MESTRE_FEATURE, ownerResetMestre } from '../mestre/mestreService'
 // Sem linha no banco = guardado.
 // ────────────────────────────────────────────────────────
 
+/** Onde o dono está ao mexer no painel (ex.: qual campanha está aberta). */
+export interface FeatureContext {
+  userId:   string | null
+  campaign: { id: string; name: string; master: boolean } | null
+}
+
 export interface SiteFeature {
   /** Chave no banco: minúsculas, números, - e _. */
   key:         string
@@ -22,8 +29,10 @@ export interface SiteFeature {
   description: string
   /** Onde aparece no site (pra achar e testar). */
   where:       string
-  /** Botões de teste do dono no painel (ex.: voltar ao normal). */
-  actions?:    { label: string; run: (userId: string | null) => Promise<void> }[]
+  /** Botões de teste do dono no painel (ex.: voltar ao normal). Podem devolver um aviso. */
+  actions?:    { label: string; run: (userId: string | null, ctx: FeatureContext) => Promise<string | void> }[]
+  /** Ao ligar/desligar (ex.: abrir o jogo na campanha aberta). Pode devolver um aviso. */
+  onToggle?:   (enabled: boolean, ctx: FeatureContext) => Promise<string | void>
 }
 
 export const SITE_FEATURES: SiteFeature[] = [
@@ -33,6 +42,17 @@ export const SITE_FEATURES: SiteFeature[] = [
     description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores de Altherium — só aparece com a chave em "No site". Quando todos da campanha apertam: livro fechando, 4 s de escuro, site todo preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Nas campanhas em que você é o mestre da mesa, você também vê o botão e, apertando sozinho, só você vira Mestre (teste).',
     where: 'Campanhas de Altherium (qualquer aba)',
     actions: [{ label: 'Voltar a ser normal (só você)', run: ownerResetMestre }],
+  },
+  {
+    key: LIVRO_FEATURE,
+    name: 'O Livro Bloqueado',
+    description: 'Joguinho em pixel art pra 2 jogadores da sessão (os outros e você assistem). Ligando com a página da campanha aberta, o jogo cobre a tela de todo mundo dela, no saguão — você escolhe quem joga. Guardado, só você vê: use "Abrir nesta campanha" pra testar.',
+    where: 'Por cima do site, na campanha aberta',
+    onToggle: livroToggle,
+    actions: [
+      { label: 'Abrir nesta campanha', run: (_u, ctx) => livroOpenHere(ctx.campaign) },
+      { label: 'Encerrar', run: async () => { const n = await livroCloseMine(); return n ? 'Encerrado.' : 'Não tinha jogo aberto.' } },
+    ],
   },
 ]
 

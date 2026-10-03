@@ -1,0 +1,187 @@
+/* ════════════════════════════════════════════════════════
+   O Livro Bloqueado — interface em pixel art, limpa: painéis de borda
+   dupla quadrada (sem cantos redondos), fonte Pixelify Sans, noite roxa,
+   ouro de vela. Cobre o site inteiro (z acima de tudo).
+   ════════════════════════════════════════════════════════ */
+
+.lb-overlay {
+  --lb-ink:    #0b0910;
+  --lb-bg:     #07060a;
+  --lb-panel:  #1b1524;
+  --lb-panel2: #261e33;
+  --lb-line:   #4a3f5c;
+  --lb-gold:   #ecc66a;
+  --lb-gold2:  #ffe7a3;
+  --lb-text:   #efe6d2;
+  --lb-muted:  #a99fb8;
+  --lb-blue:   #6585d6;
+  --lb-red:    #d55a62;
+  --lb-font:   'Pixelify Sans', 'Courier New', monospace;
+
+  position: fixed; inset: 0; z-index: 5000;
+  display: grid; place-items: center;
+  color: var(--lb-text);
+  font-family: var(--lb-font);
+  background: var(--lb-bg);
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+.lb-overlay * { box-sizing: border-box; }
+/* O site estiliza h1/h2/p com as fontes dele; aqui tudo é pixel. */
+.lb-overlay :where(h1, h2, h3, p, span, b, button, li) { font-family: var(--lb-font); letter-spacing: normal; }
+
+/* Moldura de pixel: borda dupla quadrada. */
+.lb-frame {
+  background: var(--lb-panel);
+  box-shadow:
+    0 0 0 3px var(--lb-ink),
+    0 0 0 6px var(--lb-line),
+    0 0 0 9px var(--lb-ink),
+    0 18px 0 9px rgba(0, 0, 0, 0.35);
+}
+
+.lb-kicker { font-size: 15px; letter-spacing: 0.06em; color: var(--lb-muted); }
+.lb-title { margin: 0; font-size: clamp(34px, 5.5vw, 64px); font-weight: 700; line-height: 1; color: var(--lb-gold); text-shadow: 0 4px 0 #3a2a10, 0 0 24px rgba(236, 198, 106, 0.25); }
+.lb-muted { color: var(--lb-muted); }
+.lb-flash { margin: 0; padding: 8px 12px; color: #ffd9d9; background: #3a1420; box-shadow: 0 0 0 3px #6a2030; }
+.lb-tc0 { color: var(--lb-blue); }
+.lb-tc1 { color: var(--lb-red); }
+
+.lb-btn {
+  min-height: 48px; padding: 0 22px;
+  font: 600 20px var(--lb-font); color: var(--lb-text);
+  background: var(--lb-panel2); border: 0;
+  box-shadow: 0 0 0 3px var(--lb-ink), inset 0 -4px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.lb-btn:hover:not(:disabled) { background: #31273f; }
+.lb-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 0 0 3px var(--lb-ink), inset 0 -2px 0 rgba(0, 0, 0, 0.35); }
+.lb-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.lb-btn--gold { color: #2a1a06; background: var(--lb-gold); }
+.lb-btn--gold:hover:not(:disabled) { background: var(--lb-gold2); }
+.lb-overlay button:focus-visible { outline: 3px solid var(--lb-gold2); outline-offset: 4px; }
+
+/* ── Cartão de entrada ── */
+.lb-title-card {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 40px; border: 0; background: none; color: inherit; font: inherit;
+  cursor: pointer;
+}
+.lb-title-card:disabled { cursor: progress; }
+.lb-title-card__art { image-rendering: pixelated; filter: drop-shadow(0 0 30px rgba(140, 100, 255, 0.35)); animation: lb-float 3s ease-in-out infinite; }
+.lb-title-card__role { font-size: 20px; color: var(--lb-text); }
+.lb-title-card__go { margin-top: 18px; font-size: 22px; color: var(--lb-gold2); animation: lb-blink 1.2s steps(2) infinite; }
+@keyframes lb-blink { 50% { opacity: 0.25; } }
+@keyframes lb-float { 50% { transform: translateY(-6px); } }
+
+/* ── Saguão ── */
+.lb-lobby { display: grid; place-items: center; width: 100%; height: 100%; padding: 24px; overflow-y: auto; }
+.lb-lobby__box { display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(860px, 100%); padding: 32px 28px 26px; text-align: center; }
+.lb-lobby__lead { margin: 0; max-width: 46ch; font-size: 18px; line-height: 1.4; color: var(--lb-muted); }
+.lb-people { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.lb-person {
+  width: 132px; min-height: 150px; padding: 10px 6px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font: inherit; color: inherit; background: var(--lb-panel2); border: 0;
+  box-shadow: 0 0 0 3px var(--lb-ink);
+}
+button.lb-person { cursor: pointer; }
+button.lb-person:hover:not(:disabled) { background: #31273f; }
+.lb-person.is-picked.is-slot0 { box-shadow: 0 0 0 3px var(--lb-ink), 0 0 0 6px var(--lb-blue); }
+.lb-person.is-picked.is-slot1 { box-shadow: 0 0 0 3px var(--lb-ink), 0 0 0 6px var(--lb-red); }
+.lb-mini { width: 48px; height: 60px; image-rendering: pixelated; }
+.lb-person__name { font-size: 17px; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+.lb-person__sub { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--lb-muted); }
+.lb-person.is-slot0 .lb-person__sub { color: var(--lb-blue); }
+.lb-person.is-slot1 .lb-person__sub { color: var(--lb-red); }
+.lb-online { width: 8px; height: 8px; background: #4a4458; }
+.lb-online.is-on { background: #7fd68e; box-shadow: 0 0 6px #7fd68e; }
+.lb-lobby__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin: 8px 0 0; font-size: 17px; }
+
+/* ── A partida ── */
+.lb-stage { position: absolute; inset: 0; }
+.lb-canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; transition: filter 0.25s steps(4); }
+.lb-stage.is-blurred .lb-canvas { filter: blur(3px) brightness(0.75) saturate(0.85); }
+
+.lb-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px;
+  font: 600 16px var(--lb-font); color: var(--lb-text);
+  background: rgba(27, 21, 36, 0.88); border: 0; box-shadow: 0 0 0 3px var(--lb-ink);
+}
+.lb-chip--role { position: absolute; top: 18px; left: 18px; pointer-events: none; }
+.lb-dot { width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--lb-ink); }
+.lb-dot--0 { background: var(--lb-blue); }
+.lb-dot--1 { background: var(--lb-red); }
+.lb-hint {
+  position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+  padding: 10px 18px; font-size: 17px; color: var(--lb-muted); white-space: nowrap;
+  background: rgba(27, 21, 36, 0.88); box-shadow: 0 0 0 3px var(--lb-ink);
+  animation: lb-fade 9s steps(12) forwards; pointer-events: none;
+}
+.lb-hint b { color: var(--lb-gold2); font-weight: 600; }
+@keyframes lb-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+.lb-watchbar { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; gap: 14px; }
+.lb-chip--player { cursor: pointer; }
+.lb-chip--player:disabled { cursor: default; }
+.lb-chip--player:not(:disabled):hover { background: #31273f; }
+.lb-chip__sub { font-weight: 400; color: var(--lb-muted); }
+.lb-chip--player:not(:disabled) .lb-chip__sub { color: var(--lb-gold2); }
+
+/* ── Janela de um objeto (no centro, fundo desfocado) ── */
+.lb-panel-wrap { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
+.lb-panel {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  width: min(560px, 100%); padding: 28px 30px 26px; text-align: center;
+  animation: lb-pop 0.22s steps(4);
+}
+@keyframes lb-pop { from { transform: scale(0.94); opacity: 0; } }
+.lb-panel__watch { margin: 0; font-size: 15px; color: var(--lb-gold2); }
+.lb-panel__title { margin: 0; font-size: 34px; font-weight: 700; color: var(--lb-gold); text-shadow: 0 3px 0 #3a2a10; }
+.lb-panel__art { max-width: 100%; height: auto; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.5)); }
+.lb-panel__text { margin: 0; max-width: 40ch; font-size: 19px; line-height: 1.45; }
+.lb-panel__soon { margin: 4px 0 0; font-size: 15px; color: var(--lb-muted); }
+.lb-x {
+  position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
+  display: grid; place-items: center;
+  font: 700 20px var(--lb-font); color: var(--lb-muted); background: var(--lb-panel2);
+  border: 0; box-shadow: 0 0 0 3px var(--lb-ink); cursor: pointer;
+}
+.lb-x:hover { color: var(--lb-text); background: #31273f; }
+
+/* ── Menu do canto ── */
+.lb-menu { position: absolute; top: 16px; right: 16px; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+.lb-menu__btn {
+  width: 44px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  background: rgba(27, 21, 36, 0.88); border: 0; box-shadow: 0 0 0 3px var(--lb-ink); cursor: pointer;
+}
+.lb-menu__btn span { display: block; width: 20px; height: 3px; background: var(--lb-muted); }
+.lb-menu__btn:hover span { background: var(--lb-text); }
+.lb-menu__list { display: flex; flex-direction: column; min-width: 230px; padding: 6px; }
+.lb-menu__list button {
+  min-height: 44px; padding: 0 14px; text-align: left;
+  font: 600 17px var(--lb-font); color: var(--lb-text); background: transparent; border: 0; cursor: pointer;
+}
+.lb-menu__list button:hover { background: var(--lb-panel2); }
+.lb-menu__list button.is-danger { color: #ff9aa2; }
+
+/* ── Pílula (minimizado) ── */
+.lb-pill {
+  position: fixed; top: 14px; left: 50%; z-index: 5000; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 18px;
+  font: 600 16px 'Pixelify Sans', 'Courier New', monospace; color: #efe6d2;
+  background: #1b1524; border: 0; box-shadow: 0 0 0 3px #0b0910, 0 0 0 5px #4a3f5c, 0 8px 20px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.lb-pill:hover { background: #261e33; }
+.lb-pill__dot { width: 10px; height: 10px; background: #ecc66a; animation: lb-blink 1.2s steps(2) infinite; }
+
+@media (max-width: 640px) {
+  .lb-lobby__box { padding: 22px 14px; }
+  .lb-person { width: 108px; min-height: 132px; }
+  .lb-hint { white-space: normal; width: calc(100% - 32px); text-align: center; }
+  .lb-watchbar { flex-direction: column; align-items: center; gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-overlay *, .lb-pill * { animation: none !important; transition: none !important; }
+}
