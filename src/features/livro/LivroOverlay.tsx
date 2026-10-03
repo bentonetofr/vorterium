@@ -29,7 +29,15 @@ export const ANY_GAME_KEY = 'vorterium:jogo-entrou'
 export function useBodyLock() {
   useEffect(() => {
     if (bodyLocks++ === 0) { bodyPrev = document.body.style.overflow; document.body.style.overflow = 'hidden' }
-    return () => { if (--bodyLocks === 0) document.body.style.overflow = bodyPrev }
+    return () => {
+      if (--bodyLocks > 0) return
+      document.body.style.overflow = bodyPrev
+      // Jogo encerrado: sai da tela cheia. Numa troca, o outro jogo entra
+      // logo em seguida e a tela cheia continua.
+      window.setTimeout(() => {
+        if (bodyLocks === 0 && document.fullscreenElement) void document.exitFullscreen().catch(() => {})
+      }, 1500)
+    }
   }, [])
 }
 
@@ -66,14 +74,28 @@ export function usePixelFont() {
   }, [])
 }
 
+// Em tela cheia, o navegador usa o Esc pra sair dela. Travando o Esc
+// (Chrome/Edge), ele volta a fechar as janelas do jogo — e segurar o Esc
+// ainda sai da tela cheia. Onde não existe, fica como era.
+type KeyboardLock = { lock?: (keys: string[]) => Promise<void>; unlock?: () => void }
+const keyboardApi = () => (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard
+
 export function useFullscreen() {
   const [full, setFull] = useState(() => !!document.fullscreenElement)
   useEffect(() => {
-    const f = () => setFull(!!document.fullscreenElement)
+    const f = () => {
+      setFull(!!document.fullscreenElement)
+      if (!document.fullscreenElement) keyboardApi()?.unlock?.()
+    }
     document.addEventListener('fullscreenchange', f)
     return () => document.removeEventListener('fullscreenchange', f)
   }, [])
-  const enter = () => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(() => {}) }
+  const enter = () => {
+    if (document.fullscreenElement) return
+    void document.documentElement.requestFullscreen?.()
+      .then(() => keyboardApi()?.lock?.(['Escape']))
+      .catch(() => {})
+  }
   const exit = () => { if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}) }
   return { full, enter, exit }
 }
@@ -89,6 +111,8 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   const [menu, setMenu] = useState(false)
   const fs = useFullscreen()
 
+  // O site por baixo não rola; quando o jogo some de vez (o mestre
+  // encerrou), a tela cheia sai junto — mas não numa troca de jogo.
   useBodyLock()
   const switching = useSwitchCard(entered)
   const torre = useFeature(TORRE_FEATURE)

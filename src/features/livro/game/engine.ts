@@ -143,7 +143,10 @@ export class RoomGame<Id extends string, G> {
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
       const k = keyName(e)
       if (!k) return
-      if (!this.opts.controllable) return
+      // Janela aberta (ou fim): as teclas são dos botões dela, não do boneco.
+      if (!this.opts.controllable || this.frozen) return
+      // Enter/Espaço num botão (o menu, por exemplo) apertam o botão.
+      if (k === 'use' && t?.closest('button, a, select, [role="menuitem"]')) return
       e.preventDefault()
       if (k === 'use') { if (!e.repeat) this.useNearby(); return }
       this.keys.add(k)

@@ -19,7 +19,8 @@ export function RetPanel({ g, act, ro }: PuzzleProps) {
   const r = g.ret
   const light = g.light
   const scene = useRef<{ c: HTMLCanvasElement; ctx: Ctx } | null>(null)
-  const canTake = r.face !== null && !g.inv.medalhao && !ro
+  const taken = r.taken ?? g.inv.medalhao
+  const canTake = r.face !== null && !taken && !ro
   const overMedal = (p: Pt) => canTake && Math.hypot(p.x - MEDAL.x, p.y - MEDAL.y) <= MEDAL.r + 2
 
   const drawScene = (ctx: Ctx, t: number) => {
@@ -60,7 +61,7 @@ export function RetPanel({ g, act, ro }: PuzzleProps) {
     }
     // o medalhão (o 5º símbolo) no peito
     if (r.face !== null) {
-      if (g.inv.medalhao) {
+      if (taken) {
         px(ctx, '#1a1208', MEDAL.x - 4, MEDAL.y - 4, 9, 9)
       } else {
         const pulse = 0.5 + 0.5 * Math.sin(t * 4)

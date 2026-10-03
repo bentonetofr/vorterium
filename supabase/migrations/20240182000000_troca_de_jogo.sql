@@ -158,7 +158,7 @@ begin
   return rid;
 end $$;
 
--- ── 3. Jogadas: recusadas com o jogo pausado (iguais às dos marcos 2, com uma linha a mais) ──
+-- ── 3. Jogadas: recusadas com o jogo pausado (iguais às das correções do Livro e do marco 2 da Torre, com uma linha a mais) ──
 
 create or replace function public.lb_play(p_room uuid, p_action jsonb)
 returns jsonb
@@ -184,6 +184,8 @@ declare
   angle  int;
   val    jsonb;
   good   boolean;
+  tried  jsonb;
+  remain jsonb;
 begin
   select * into r from public.lb_rooms where id = p_room for update;
   if r.id is null then raise exception 'Sala não encontrada.'; end if;
@@ -198,19 +200,28 @@ begin
   if (st->>'opened')::boolean then return jsonb_build_object('ok', false, 'msg', 'O livro já foi aberto.'); end if;
 
   if a = 'light' then
-    -- ── Castiçal: acender / abrir pavio selado ──
+    -- ── Castiçal: acender / trincar um pavio selado ──
     i := (p_action->>'i')::int;
     if i is null or i < 0 or i > 6 then raise exception 'Vela inválida.'; end if;
     if st->'sealed'->>i = 'true' then
-      n := (st->>'seal_n')::int;
-      if (sec->'seal_order'->>n)::int = i then
-        st := jsonb_set(jsonb_set(jsonb_set(st, array['sealed', i::text], 'false'), array['lit', i::text], 'true'), '{seal_n}', to_jsonb(n + 1));
-        msg := case when n + 1 = 4 then 'Os quatro pavios se abriram.' else 'A cera do pavio se parte.' end;
-      else
-        for k in 0..3 loop
-          st := jsonb_set(jsonb_set(st, array['sealed', sec->'seal_order'->>k], 'true'), array['lit', sec->'seal_order'->>k], 'false');
+      -- Os pavios selados só se abrem juntos: a ordem é conferida no último.
+      tried := coalesce(st->'seal_try', '[]'::jsonb);
+      if tried @> to_jsonb(array[i]) then return jsonb_build_object('ok', true); end if;
+      tried := tried || to_jsonb(i);
+      select coalesce(jsonb_agg(x order by o), '[]'::jsonb) into remain
+        from jsonb_array_elements(sec->'seal_order') with ordinality t(x, o)
+        where st->'sealed'->>((x::text)::int) = 'true';
+      if jsonb_array_length(tried) < jsonb_array_length(remain) then
+        st := jsonb_set(st, '{seal_try}', tried);
+        msg := 'A cera do pavio trinca.';
+      elsif tried = remain then
+        for k in 0 .. jsonb_array_length(remain) - 1 loop
+          st := jsonb_set(jsonb_set(st, array['sealed', remain->>k], 'false'), array['lit', remain->>k], 'true');
         end loop;
-        st := jsonb_set(st, '{seal_n}', '0');
+        st := jsonb_set(jsonb_set(st, '{seal_try}', '[]'), '{seal_n}', '4');
+        msg := 'Os quatro pavios se abriram.';
+      else
+        st := jsonb_set(st, '{seal_try}', '[]');
         ok := false;
         msg := 'A cera escorre e endurece de novo. A ordem estava errada.';
       end if;
@@ -269,7 +280,10 @@ begin
 
   elsif a = 'medal' then
     -- ── Retrato: pegar o medalhão (só com o rosto à vista) ──
-    if public.lb__light(sec, st) <> 'total' or (st->>'ret_view')::int <> angle then raise exception 'Não dá pra ver o rosto daqui.'; end if;
+    if (st->'inv'->>'medalhao')::boolean then return jsonb_build_object('ok', true); end if;
+    if public.lb__light(sec, st) <> 'total' or not (st->>'angle_found')::boolean or (st->>'ret_view')::int <> angle then
+      raise exception 'Não dá pra ver o rosto daqui.';
+    end if;
     st := jsonb_set(st, '{inv,medalhao}', 'true');
     msg := 'Você solta o medalhão da moldura.';
 
@@ -284,14 +298,17 @@ begin
     if not (st->>'word_ok')::boolean then st := jsonb_set(st, '{pulled}', '[]'); end if;
 
   elsif a = 'pull' then
+    -- A ordem dos livros só é conferida no 4º.
     if (st->>'word_ok')::boolean then return jsonb_build_object('ok', true); end if;
     i := (p_action->>'pos')::int;
     if i is null or i < 1 or i > 12 then raise exception 'Posição inválida.'; end if;
     n := jsonb_array_length(st->'pulled');
     if n >= 4 or st->'pulled' @> to_jsonb(array[i]) then return jsonb_build_object('ok', true); end if;
-    if (sec->'number'->>n)::int = i then
-      st := jsonb_set(st, '{pulled}', (st->'pulled') || to_jsonb(i));
-      msg := case when n + 1 = 4 then 'Atrás dos livros, uma frase gravada. Nas lombadas, uma palavra em símbolos.' else 'O livro desliza pra fora. Um símbolo aparece na lombada.' end;
+    st := jsonb_set(st, '{pulled}', (st->'pulled') || to_jsonb(i));
+    if n + 1 < 4 then
+      msg := 'O livro desliza pra fora.';
+    elsif st->'pulled' = sec->'number' then
+      msg := 'Atrás dos livros, uma frase gravada. Nas lombadas, uma palavra em símbolos.';
     else
       st := jsonb_set(st, '{pulled}', '[]');
       ok := false;
@@ -319,9 +336,12 @@ begin
     end if;
 
   elsif a = 'chain' then
-    -- ── Pedestal: abrir uma corrente ──
+    -- ── Pedestal: abrir uma corrente (só com a ordem à vista, na tampa) ──
     n := (p_action->>'n')::int;
     if n is null or n < 1 or n > 4 then raise exception 'Corrente inválida.'; end if;
+    if not (st->>'lid')::boolean then
+      return jsonb_build_object('ok', false, 'msg', 'As fechaduras estão travadas. Falta saber em que ordem abrir.');
+    end if;
     if st->'chains' @> to_jsonb(array[n]) then return jsonb_build_object('ok', true); end if;
     val := p_action->'value';
     good := case n
@@ -341,8 +361,7 @@ begin
     else
       st := jsonb_set(st, '{chains}', '[]');
       ok := false;
-      msg := case when good then 'A fechadura gira... e as outras correntes se apertam de novo. Não era a vez dela.'
-                  else 'A fechadura não cede. As correntes se apertam.' end;
+      msg := 'A fechadura não cede. As correntes se apertam.';
     end if;
 
   else
@@ -351,8 +370,8 @@ begin
 
   -- marcas do que a dupla já viu (o diagrama do pedestal usa)
   if public.lb__light(sec, st) <> 'escuro' then st := jsonb_set(st, '{seen_partial}', 'true'); end if;
-  if public.lb__light(sec, st) = 'total' and (st->>'cast_view')::int = angle then st := jsonb_set(st, '{num_seen}', 'true'); end if;
-  if public.lb__light(sec, st) = 'total' and (st->>'ret_view')::int = angle then st := jsonb_set(st, '{face_seen}', 'true'); end if;
+  if public.lb__light(sec, st) = 'total' and (st->>'angle_found')::boolean and (st->>'cast_view')::int = angle then st := jsonb_set(st, '{num_seen}', 'true'); end if;
+  if public.lb__light(sec, st) = 'total' and (st->>'angle_found')::boolean and (st->>'ret_view')::int = angle then st := jsonb_set(st, '{face_seen}', 'true'); end if;
 
   s := jsonb_set(s, '{game,st}', st);
   if msg is not null then

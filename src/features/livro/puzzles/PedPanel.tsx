@@ -8,7 +8,8 @@ import { PixelScene, Dial, SymbolIcon, type Pt, type PuzzleProps } from './kit'
 // quadrante por objeto, que se preenche sozinho conforme a dupla avança,
 // e linhas entre eles quando uma dependência aparece. Quatro fechaduras:
 // I castiçal (número) · II retrato (os 4 símbolos dos cantos) · III
-// astrolábio (a marca) · IV estante (a palavra) — abertas na ordem certa.
+// astrolábio (a marca) · IV estante (a palavra) — abertas na ordem certa,
+// que está na tampa do astrolábio (antes disso, as fechaduras nem giram).
 // ────────────────────────────────────────────────────────
 
 const W = 176
@@ -127,6 +128,8 @@ export function PedPanel({ g, act, ro }: PuzzleProps) {
       />
       {p.opened ? (
         <p className="lb-carved">As correntes estão no chão. O livro está aberto.</p>
+      ) : sel && !ro && !g.astro.lid ? (
+        <p className="lb-hint-line">A fechadura nem gira. Falta saber em que ordem abrir as correntes.</p>
       ) : sel && !ro ? (
         <LockForm n={sel} known={g.astro.known} act={act} onDone={() => setSel(null)} />
       ) : (
