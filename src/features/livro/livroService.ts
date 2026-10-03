@@ -19,6 +19,21 @@ export interface LivroRoomRow {
 export interface LivroPlayer { uid: string; name: string; slot: number }
 export interface LivroMember { uid: string; name: string; role: 'master' | 'player' }
 
+export type Sym = 'sol' | 'lua' | 'estrela' | 'cruz'
+export type Quadrant = 'castical' | 'retrato' | 'astrolabio' | 'estante'
+
+/** O jogo como a dupla (e quem assiste) vê agora — só o que já foi descoberto. */
+export interface GameView {
+  light: 'escuro' | 'parcial' | 'total'
+  cast: { lit: boolean[]; sealed: boolean[]; view: number; shadows: (Sym | null)[]; digits: number[] | null }
+  ret: { view: number; corners: (Sym | null)[]; silhouette: number[] | null; face: number | null; table: { l: string; g: number }[] | null }
+  astro: { runes: number[]; slots: (Sym | null)[]; known: Sym[]; angle: number | null; pointer: number; lid: boolean; seq: number[] | null }
+  est: { books: number[]; pulled: number[]; glyphs: number[]; word_ok: boolean; drawer: boolean }
+  ped: { chains: number[]; opened: boolean; progress: Record<Quadrant, number>; links: [Quadrant, Quadrant][] }
+  inv: { medalhao: boolean; chave: boolean }
+  finished_at: number | null
+}
+
 export interface LivroView {
   room:       { id: string; campaign_id: string; status: LivroRoomRow['status']; version: number }
   now:        number
@@ -26,6 +41,9 @@ export interface LivroView {
   me:         { uid: string; gm: boolean; slot: number | null }
   players:    LivroPlayer[]
   members:    LivroMember[]
+  game:       GameView | null
+  /** Só o mestre: a solução e a linha do tempo. */
+  gm?:        { secret: Record<string, unknown>; events: { t: number; m: string }[] }
 }
 
 function err(e: { message?: string } | null, fallback: string): never {
@@ -66,6 +84,13 @@ export async function closeMine(): Promise<number> {
 export async function gm(roomId: string, action: Record<string, unknown>): Promise<void> {
   const { error } = await supabase.rpc('lb_gm', { p_room: roomId, p_action: action })
   if (error) err(error, 'Não deu certo.')
+}
+
+/** Uma jogada num objeto. Devolve se deu certo e o que aconteceu. */
+export async function play(roomId: string, action: Record<string, unknown>): Promise<{ ok: boolean; msg: string | null }> {
+  const { data, error } = await supabase.rpc('lb_play', { p_room: roomId, p_action: action })
+  if (error) err(error, 'Não deu certo.')
+  return (data ?? { ok: true, msg: null }) as { ok: boolean; msg: string | null }
 }
 
 // ── Painel de controle ──────────────────────────────────

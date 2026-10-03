@@ -131,8 +131,9 @@ button.lb-person:hover:not(:disabled) { background: #31273f; }
 .lb-panel-wrap { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
 .lb-panel {
   position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  width: min(560px, 100%); padding: 28px 30px 26px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  width: min(760px, 100%); max-height: calc(100vh - 48px); overflow-y: auto;
+  padding: 24px 28px 22px; text-align: center;
   animation: lb-pop 0.22s steps(4);
 }
 @keyframes lb-pop { from { transform: scale(0.94); opacity: 0; } }
@@ -185,3 +186,66 @@ button.lb-person:hover:not(:disabled) { background: #31273f; }
 @media (prefers-reduced-motion: reduce) {
   .lb-overlay *, .lb-pill * { animation: none !important; transition: none !important; }
 }
+
+/* ── Peças dos enigmas ── */
+.lb-scene { width: 100%; display: flex; justify-content: center; }
+.lb-scene__canvas { display: block; max-width: 100%; height: auto; image-rendering: pixelated; box-shadow: 0 0 0 3px var(--lb-ink); touch-action: none; }
+.lb-bits { display: block; image-rendering: pixelated; }
+.lb-hint-line { margin: 0; font-size: 16px; color: var(--lb-muted); }
+
+.lb-dial { display: inline-flex; align-items: center; gap: 10px; }
+.lb-dial__face { width: 63px; height: 63px; image-rendering: pixelated; }
+.lb-dial__arrow {
+  width: 40px; height: 40px; font: 700 16px var(--lb-font); color: var(--lb-gold);
+  background: var(--lb-panel2); border: 0; box-shadow: 0 0 0 3px var(--lb-ink); cursor: pointer;
+}
+.lb-dial__arrow:hover:not(:disabled) { background: #31273f; }
+.lb-dial__arrow:disabled { opacity: 0.4; cursor: default; }
+.lb-dial__label { font-size: 16px; color: var(--lb-muted); }
+
+.lb-palette { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+.lb-palette__tip { font-size: 15px; color: var(--lb-muted); }
+.lb-sym {
+  width: 50px; height: 50px; display: grid; place-items: center; padding: 0;
+  background: var(--lb-panel2); border: 0; box-shadow: 0 0 0 3px var(--lb-ink); cursor: pointer;
+}
+.lb-sym:hover:not(:disabled) { background: #31273f; }
+.lb-sym.is-on { box-shadow: 0 0 0 3px var(--lb-ink), 0 0 0 6px var(--lb-gold2); }
+.lb-sym:disabled { cursor: default; }
+.lb-sym__q { font-size: 22px; color: var(--lb-muted); }
+.lb-corners { display: grid; grid-template-columns: repeat(2, 50px); gap: 12px; padding: 10px; box-shadow: 0 0 0 3px #7a5a1e; }
+
+.lb-table { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 560px; }
+.lb-table__cell { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--lb-panel2); box-shadow: 0 0 0 2px var(--lb-ink); }
+.lb-table__cell b { font-size: 20px; color: var(--lb-gold2); }
+
+.lb-word { display: flex; align-items: center; gap: 12px; }
+.lb-input {
+  height: 48px; padding: 0 12px;
+  font: 700 26px var(--lb-font); color: var(--lb-gold2); text-align: center;
+  background: #120e18; border: 0; box-shadow: 0 0 0 3px var(--lb-ink), inset 0 0 0 2px var(--lb-line);
+  user-select: text;
+}
+.lb-input:focus { outline: none; box-shadow: 0 0 0 3px var(--lb-ink), inset 0 0 0 2px var(--lb-gold); }
+.lb-input--word { width: 150px; letter-spacing: 0.35em; text-transform: uppercase; }
+.lb-carved { margin: 0; font-size: 17px; font-style: italic; color: #c9a86a; }
+
+.lb-lock { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.lb-lock__title { margin: 0; font-size: 19px; font-weight: 600; color: var(--lb-gold); }
+.lb-lock__title span { font-weight: 400; color: var(--lb-muted); }
+.lb-lock__btns { display: flex; gap: 12px; }
+
+.lb-toast {
+  margin: 2px 0 0; padding: 8px 14px; font-size: 17px; color: var(--lb-text);
+  background: #2a2232; box-shadow: 0 0 0 3px var(--lb-ink), inset 3px 0 0 var(--lb-gold);
+  animation: lb-pop 0.2s steps(3);
+}
+.lb-toast.is-bad { box-shadow: 0 0 0 3px var(--lb-ink), inset 3px 0 0 var(--lb-red); }
+
+.lb-inv { position: absolute; left: 18px; bottom: 22px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.lb-ico { display: inline-block; width: 14px; height: 14px; }
+.lb-ico--medal { background: var(--lb-gold); box-shadow: inset 0 0 0 3px #7a5a1e, 0 0 8px rgba(236, 198, 106, 0.6); border-radius: 50%; }
+.lb-ico--key { width: 18px; height: 8px; background: linear-gradient(90deg, var(--lb-gold) 0 6px, transparent 6px 7px, var(--lb-gold) 7px); box-shadow: 0 0 6px rgba(236, 198, 106, 0.5); }
+
+.lb-ending { gap: 14px; }
+.lb-ending__time { margin: 0; font-size: 18px; color: var(--lb-gold2); }

@@ -1,5 +1,6 @@
 import type { Dir, NetPeer, PanelId, PosMsg } from '../livroNet'
-import { CLOAKS, drawActor, drawFlame, drawRoomBackground, H, makeCanvas, outlineOf, px, W, type Ctx } from './art'
+import type { GameView } from '../livroService'
+import { candleTip, CLOAKS, drawActor, drawFlame, drawRoomBackground, H, makeCanvas, outlineOf, px, W, type Ctx } from './art'
 import { buildRoom, FEET, FLOOR, inRect, overlaps, SPAWNS, type Interactable, type Rect, type Room } from './room'
 
 // ────────────────────────────────────────────────────────
@@ -77,6 +78,7 @@ export class LivroGame {
   private lastSave = 0
   private motes: { x: number; y: number; v: number; p: number }[] = []
   private disposers: (() => void)[] = []
+  private game: GameView | null = null
 
   constructor(canvas: HTMLCanvasElement, opts: GameOptions) {
     this.canvas = canvas
@@ -184,6 +186,11 @@ export class LivroGame {
     if (msg.p !== a.panel) { a.panel = msg.p; this.opts.onRemotePanel(a.uid, msg.p) }
     a.samples.push({ t: performance.now(), x: msg.x, y: msg.y, d: msg.d, m: msg.m })
     if (a.samples.length > 30) a.samples.splice(0, a.samples.length - 30)
+  }
+
+  /** O estado dos enigmas (a sala mostra: velas acesas, luz no retrato, livro aberto). */
+  setGame(game: GameView | null) {
+    this.game = game
   }
 
   /** Janela aberta: o meu boneco para de andar. */
@@ -484,7 +491,29 @@ export class LivroGame {
     // Desenha tudo de trás pra frente (pelo pé).
     type D = { base: number; draw: () => void }
     const list: D[] = []
-    for (const o of this.room.objects) list.push({ base: o.base, draw: () => n.drawImage(o.sprite, o.at.x, o.at.y) })
+    for (const o of this.room.objects) {
+      list.push({
+        base: o.base,
+        draw: () => {
+          n.drawImage(o.sprite, o.at.x, o.at.y)
+          if (o.id === 'castical' && this.game) {
+            const c = this.game.cast
+            for (let i = 0; i < 7; i++) {
+              const [tx, ty] = candleTip(i)
+              const x = o.at.x + tx
+              const y = o.at.y + ty
+              if (c.sealed[i]) { px(n, '#9a2a2a', x - 1, y, 3, 2); px(n, '#d05050', x, y, 1, 1) }
+              else if (c.lit[i]) drawFlame(n, x, y + 1, time, i * 5)
+            }
+          }
+          if (o.id === 'pedestal' && this.game?.ped.opened) {
+            px(n, '#e8dcbc', o.at.x + 4, o.at.y + 2, 13, 10)
+            px(n, '#f2e8cc', o.at.x + 19, o.at.y + 2, 13, 10)
+            px(n, '#b8ad8c', o.at.x + 17, o.at.y + 2, 2, 10)
+          }
+        },
+      })
+    }
     for (const c of this.room.candles) list.push({ base: c.y + 16, draw: () => { n.drawImage(c.sprite, c.x, c.y); drawFlame(n, c.x + 4, c.y + 0, time, c.x) } })
     const placed: { a: Actor; x: number; y: number }[] = []
     for (const a of this.actors.values()) {
@@ -589,8 +618,12 @@ export class LivroGame {
     }
     const flick = (seed: number) => 1 + 0.05 * Math.sin(time * 11 + seed) + 0.03 * Math.sin(time * 23 + seed * 3)
     for (const c of this.room.candles) hole(c.x + 4, c.y + 2, 54 * flick(c.x), 0.95)
-    hole(192, 96, 34, 0.45)
-    hole(192, 34, 30, 0.25)
+    const g = this.game
+    const lit = g ? g.cast.lit.filter(Boolean).length : 0
+    hole(192, 96, g?.ped.opened ? 90 : 34, g?.ped.opened ? 0.95 : 0.45)
+    hole(192, 34, 30 + lit * 9, 0.25 + lit * 0.09)
+    if (lit) hole(192, 60, 20 + lit * 10, 0.2 + lit * 0.06)
+    if (g && g.light !== 'escuro') hole(338, 98, g.light === 'total' ? 34 : 24, g.light === 'total' ? 0.8 : 0.5)
     for (const { x, y } of placed) hole(x, y - 8, 26, 0.5)
     // luar entrando pelas janelas
     l.fillStyle = 'rgba(0,0,0,0.28)'
@@ -608,11 +641,25 @@ export class LivroGame {
     // brilho quente das velas e frio da lua
     n.globalCompositeOperation = 'lighter'
     for (const c of this.room.candles) {
-      const g = n.createRadialGradient(c.x + 4, c.y, 0, c.x + 4, c.y, 30 * flick(c.y))
-      g.addColorStop(0, 'rgba(255,150,60,0.22)')
-      g.addColorStop(1, 'rgba(255,150,60,0)')
-      n.fillStyle = g
+      const cg = n.createRadialGradient(c.x + 4, c.y, 0, c.x + 4, c.y, 30 * flick(c.y))
+      cg.addColorStop(0, 'rgba(255,150,60,0.22)')
+      cg.addColorStop(1, 'rgba(255,150,60,0)')
+      n.fillStyle = cg
       n.fillRect(c.x - 30, c.y - 30, 68, 68)
+    }
+    if (lit) {
+      const wg = n.createRadialGradient(192, 30, 0, 192, 30, 20 + lit * 7)
+      wg.addColorStop(0, `rgba(255,160,70,${(0.05 + lit * 0.03).toFixed(2)})`)
+      wg.addColorStop(1, 'rgba(255,160,70,0)')
+      n.fillStyle = wg
+      n.fillRect(192 - 80, 0, 160, 110)
+    }
+    if (g?.ped.opened) {
+      const og = n.createRadialGradient(192, 92, 0, 192, 92, 70)
+      og.addColorStop(0, `rgba(255,231,163,${(0.22 + 0.06 * Math.sin(time * 2)).toFixed(2)})`)
+      og.addColorStop(1, 'rgba(255,231,163,0)')
+      n.fillStyle = og
+      n.fillRect(122, 22, 140, 140)
     }
     const pg = n.createRadialGradient(192, 96, 0, 192, 96, 30)
     pg.addColorStop(0, 'rgba(140,100,255,0.10)')
