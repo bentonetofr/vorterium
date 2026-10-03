@@ -11,8 +11,8 @@ import { spriteCastical, spriteEstante, spriteFloorCandle, spriteMesa, spritePed
 
 export interface Rect { x: number; y: number; w: number; h: number }
 
-export interface Interactable {
-  id:       PanelId
+export interface Interactable<Id extends string = PanelId> {
+  id:       Id
   name:     string
   /** Onde o desenho fica (também é a área do mouse). */
   at:       { x: number; y: number }
@@ -23,6 +23,8 @@ export interface Interactable {
   zone:     Rect
   /** Pra onde o boneco anda quando clicam de longe, e pra onde ele olha. */
   approach: { x: number; y: number; face: Dir }
+  /** Onde ficam o nome e a seta (relativo ao desenho). Sem isso: centro, logo acima. */
+  tag?:     { x: number; y: number }
 }
 
 /** Limites do chão pros pés (o boneco não sai disso). */

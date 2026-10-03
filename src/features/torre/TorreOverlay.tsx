@@ -1,51 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { gm, type LivroRoomRow } from './livroService'
-import { connectLivro, type LivroNet, type NetPeer } from './livroNet'
-import { LivroGameView } from './LivroGameView'
-import { LivroLobby } from './LivroLobby'
-import { useLivroView } from './useLivroRoom'
-import { spritePedestal } from './game/art'
-import './Livro.css'
+import { gm, type TorreRoomRow } from './torreService'
+import { connectTorre, FLOOR_NAMES, ROLE_NAMES, type TorreNet, type TorrePeer } from './torreNet'
+import { TorreGameView } from './TorreGameView'
+import { TorreLobby } from './TorreLobby'
+import { useTorreView } from './useTorreRoom'
+import { spriteTelescopio } from './game/art'
+import { useFullscreen, usePixelFont } from '../livro/LivroOverlay'
+import '../livro/Livro.css'
+import './Torre.css'
 
 // ────────────────────────────────────────────────────────
-// O Livro Bloqueado cobre o site inteiro. O navegador só deixa entrar em
-// tela cheia depois de um clique, então a primeira tela é o cartão "clique
-// para entrar" — o clique já liga a tela cheia. Depois: saguão ou partida.
-// No canto, um menu pequeno: tela cheia, voltar ao site e (Mestre) voltar
-// ao saguão ou encerrar.
+// A Torre do Observatório cobre o site inteiro (o mesmo visual do Livro
+// Bloqueado: as peças lb-* vêm do Livro.css). O navegador só deixa entrar
+// em tela cheia depois de um clique, então a primeira tela é o cartão
+// "clique para entrar" — o clique já liga a tela cheia. Depois: saguão ou
+// partida. No canto, um menu pequeno: tela cheia, voltar ao site e
+// (Mestre) voltar ao saguão ou encerrar.
 // ────────────────────────────────────────────────────────
 
-const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap'
-
-export function usePixelFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return
-    const l = document.createElement('link')
-    l.rel = 'stylesheet'
-    l.href = FONT_HREF
-    document.head.appendChild(l)
-  }, [])
-}
-
-export function useFullscreen() {
-  const [full, setFull] = useState(() => !!document.fullscreenElement)
-  useEffect(() => {
-    const f = () => setFull(!!document.fullscreenElement)
-    document.addEventListener('fullscreenchange', f)
-    return () => document.removeEventListener('fullscreenchange', f)
-  }, [])
-  const enter = () => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(() => {}) }
-  const exit = () => { if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}) }
-  return { full, enter, exit }
-}
-
-export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinimize: () => void }) {
+export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinimize: () => void }) {
   usePixelFont()
-  const { view, error } = useLivroView(room.id, room.version)
-  const enteredKey = `lb-entrou:${room.id}`
+  const { view, error } = useTorreView(room.id, room.version)
+  const enteredKey = `tor-entrou:${room.id}`
   const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem(enteredKey) === '1' } catch { return false } })
-  const [net, setNet] = useState<LivroNet | null>(null)
-  const [peers, setPeers] = useState<NetPeer[]>([])
+  const [net, setNet] = useState<TorreNet | null>(null)
+  const [peers, setPeers] = useState<TorrePeer[]>([])
   const [menu, setMenu] = useState(false)
   const fs = useFullscreen()
 
@@ -61,7 +40,7 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   const meName = useMemo(() => view?.members.find((m) => m.uid === meUid)?.name ?? 'Alguém', [view?.members, meUid])
   useEffect(() => {
     if (!meUid) return
-    const n = connectLivro(room.id, { uid: meUid, name: meName, slot: null, gm: false, panel: null })
+    const n = connectTorre(room.id, { uid: meUid, name: meName, slot: null, gm: false, panel: null })
     setNet(n)
     const off = n.onPeers(setPeers)
     return () => { off(); n.close(); setNet(null) }
@@ -91,18 +70,18 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   const playing = view?.room.status === 'jogo'
 
   return (
-    <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
+    <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="A Torre do Observatório">
       {!entered || !view ? (
         <TitleCard
           ready={!!view}
           error={error}
-          role={view ? (view.me.slot !== null ? `Você joga de ${view.me.slot === 0 ? 'Capa Azul' : 'Capa Vermelha'}` : view.me.gm ? 'Você é o Mestre' : 'Você vai assistir') : null}
+          role={view ? (view.me.slot !== null ? `Você é ${ROLE_NAMES[view.me.slot]}, no ${FLOOR_NAMES[view.me.slot]}` : view.me.gm ? 'Você é o Mestre' : 'Você vai assistir') : null}
           onEnter={enter}
         />
       ) : view.room.status === 'lobby' ? (
-        <LivroLobby view={view} peers={peers} />
+        <TorreLobby view={view} peers={peers} />
       ) : net ? (
-        <LivroGameView view={view} net={net} peers={peers} />
+        <TorreGameView view={view} net={net} peers={peers} />
       ) : null}
 
       {entered && view && (
@@ -116,7 +95,7 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
               {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); void gm(room.id, { a: 'lobby' }) }}>Trocar quem joga</button>}
               {isGm && (
-                <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); if (window.confirm('Encerrar o Livro Bloqueado pra todo mundo?')) void gm(room.id, { a: 'close' }) }}>Encerrar o jogo</button>
+                <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); if (window.confirm('Encerrar a Torre do Observatório pra todo mundo?')) void gm(room.id, { a: 'close' }) }}>Encerrar o jogo</button>
               )}
             </div>
           )}
@@ -131,9 +110,9 @@ function TitleCard({ ready, error, role, onEnter }: { ready: boolean; error: str
   useEffect(() => {
     const c = art.current
     if (!c) return
-    const s = spritePedestal()
-    c.width = s.width * 5
-    c.height = s.height * 5
+    const s = spriteTelescopio()
+    c.width = s.width * 4
+    c.height = s.height * 4
     const ctx = c.getContext('2d')!
     ctx.imageSmoothingEnabled = false
     ctx.drawImage(s, 0, 0, c.width, c.height)
@@ -147,8 +126,8 @@ function TitleCard({ ready, error, role, onEnter }: { ready: boolean; error: str
   return (
     <button type="button" className="lb-title-card" onClick={() => { if (ready) onEnter() }} disabled={!ready}>
       <canvas ref={art} className="lb-title-card__art" aria-hidden="true" />
-      <span className="lb-kicker">A biblioteca de Caatedrum</span>
-      <span className="lb-title">O Livro Bloqueado</span>
+      <span className="lb-kicker">A torre de Caatedrum</span>
+      <span className="lb-title">A Torre do Observatório</span>
       {role && <span className="lb-title-card__role">{role}</span>}
       {error
         ? <span className="lb-flash">{error}</span>

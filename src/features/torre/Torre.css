@@ -1,0 +1,26 @@
+/* ════════════════════════════════════════════════════════
+   A Torre do Observatório — o visual vem do Livro Bloqueado (Livro.css:
+   molduras de pixel, fonte, chips, janelas). Aqui só o que é da torre:
+   os dois andares lado a lado pra quem assiste.
+   ════════════════════════════════════════════════════════ */
+
+.tor-floors {
+  position: absolute; inset: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 70px 8px 78px;
+}
+.tor-floor { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
+.tor-floor__title {
+  margin: 0; align-self: center;
+  padding: 4px 12px; font-size: 16px; font-weight: 600; color: var(--lb-muted);
+  background: rgba(27, 21, 36, 0.88); box-shadow: 0 0 0 3px var(--lb-ink);
+}
+.tor-floor__canvas { position: relative; flex: 1; min-height: 0; }
+.tor-floor__canvas .lb-canvas { position: absolute; inset: 0; }
+
+.tor-panel__art { max-height: 300px; width: auto; }
+
+/* Tela em pé: um andar em cima do outro. */
+@media (max-aspect-ratio: 1/1) {
+  .tor-floors { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; padding: 74px 16px 120px; }
+}

@@ -15,47 +15,48 @@ export type Dir = 'down' | 'up' | 'left' | 'right'
 /** Qual janela de enigma a pessoa tem aberta (null = andando pela sala). */
 export type PanelId = 'castical' | 'retrato' | 'astrolabio' | 'estante' | 'pedestal'
 
-export interface NetPeer {
+export interface NetPeer<P extends string = PanelId> {
   uid:   string
   name:  string
   slot:  number | null
   gm:    boolean
-  panel: PanelId | null
+  panel: P | null
   x?:    number
   y?:    number
   d?:    Dir
 }
 
 /** Posição de um boneco (u = quem, m = andando, p = janela aberta). */
-export interface PosMsg { u: string; x: number; y: number; d: Dir; m: boolean; p: PanelId | null; t: number }
+export interface PosMsg<P extends string = PanelId> { u: string; x: number; y: number; d: Dir; m: boolean; p: P | null; t: number }
 
-export interface LivroNet {
-  sendPos:  (msg: PosMsg) => void
+export interface LivroNet<P extends string = PanelId> {
+  sendPos:  (msg: PosMsg<P>) => void
   /** Atualiza o que os outros sabem de mim (janela aberta, última posição). */
-  setMe:    (patch: Partial<NetPeer>) => void
-  onPos:    (cb: (msg: PosMsg) => void) => () => void
-  onPeers:  (cb: (peers: NetPeer[]) => void) => () => void
+  setMe:    (patch: Partial<NetPeer<P>>) => void
+  onPos:    (cb: (msg: PosMsg<P>) => void) => () => void
+  onPeers:  (cb: (peers: NetPeer<P>[]) => void) => () => void
   close:    () => void
 }
 
-interface Transport {
+/** A camada de transporte (dá pra trocar em teste). */
+export interface Transport {
   send:       (event: string, payload: unknown) => void
-  track:      (state: NetPeer) => void
+  track:      (state: NetPeer<string>) => void
   onEvent:    (event: string, cb: (payload: unknown) => void) => void
-  onPresence: (cb: (states: NetPeer[]) => void) => void
+  onPresence: (cb: (states: NetPeer<string>[]) => void) => void
   close:      () => void
 }
 
 function supabaseTransport(topic: string, key: string): Transport {
   const events = new Map<string, (payload: unknown) => void>()
-  let presence: ((states: NetPeer[]) => void) | null = null
-  let pendingTrack: NetPeer | null = null
+  let presence: ((states: NetPeer<string>[]) => void) | null = null
+  let pendingTrack: NetPeer<string> | null = null
   let ready = false
   const channel = supabase.channel(topic, { config: { broadcast: { self: false }, presence: { key } } })
   channel
     .on('broadcast', { event: '*' }, ({ event, payload }) => events.get(event)?.(payload))
     .on('presence', { event: 'sync' }, () => {
-      const state = channel.presenceState<NetPeer>()
+      const state = channel.presenceState<NetPeer<string>>()
       presence?.(Object.values(state).flat())
     })
     .subscribe((status) => {
@@ -74,19 +75,24 @@ function supabaseTransport(topic: string, key: string): Transport {
 }
 
 export function connectLivro(roomId: string, me: NetPeer): LivroNet {
-  const t = supabaseTransport(`livro:${roomId}`, me.uid)
-  let mine: NetPeer = { ...me }
-  const posListeners = new Set<(msg: PosMsg) => void>()
-  const peerListeners = new Set<(peers: NetPeer[]) => void>()
-  let peers: NetPeer[] = []
+  return connectRoomNet<PanelId>(`livro:${roomId}`, me)
+}
+
+/** O ao vivo de qualquer joguinho do molde (o canal tem nome fixo: "<jogo>:<sala>"). */
+export function connectRoomNet<P extends string>(topic: string, me: NetPeer<P>): LivroNet<P> {
+  const t = supabaseTransport(topic, me.uid)
+  let mine: NetPeer<P> = { ...me }
+  const posListeners = new Set<(msg: PosMsg<P>) => void>()
+  const peerListeners = new Set<(peers: NetPeer<P>[]) => void>()
+  let peers: NetPeer<P>[] = []
   let lastTrack = 0
   let trackTimer: number | undefined
 
-  t.onEvent('pos', (payload) => { const m = payload as PosMsg; posListeners.forEach((l) => l(m)) })
+  t.onEvent('pos', (payload) => { const m = payload as PosMsg<P>; posListeners.forEach((l) => l(m)) })
   t.onPresence((states) => {
     // Uma pessoa pode estar em duas abas: fica a entrada mais "rica".
-    const byUid = new Map<string, NetPeer>()
-    for (const p of states) if (p?.uid && !byUid.has(p.uid)) byUid.set(p.uid, p)
+    const byUid = new Map<string, NetPeer<P>>()
+    for (const p of states as NetPeer<P>[]) if (p?.uid && !byUid.has(p.uid)) byUid.set(p.uid, p)
     peers = [...byUid.values()]
     peerListeners.forEach((l) => l(peers))
   })
@@ -95,19 +101,24 @@ export function connectLivro(roomId: string, me: NetPeer): LivroNet {
   // A presence não aguenta 12 por segundo: atualiza no máximo a cada 1,5 s.
   const flushTrack = () => { lastTrack = Date.now(); trackTimer = undefined; t.track(mine) }
 
+  let closed = false
+
   return {
     sendPos: (msg) => {
+      if (closed) return
       t.send('pos', msg)
       mine = { ...mine, x: msg.x, y: msg.y, d: msg.d, panel: msg.p }
       if (trackTimer === undefined) trackTimer = window.setTimeout(flushTrack, Math.max(0, 1500 - (Date.now() - lastTrack)))
     },
     setMe: (patch) => {
+      if (closed) return
       mine = { ...mine, ...patch }
       window.clearTimeout(trackTimer)
       flushTrack()
     },
     onPos: (cb) => { posListeners.add(cb); return () => { posListeners.delete(cb) } },
     onPeers: (cb) => { peerListeners.add(cb); cb(peers); return () => { peerListeners.delete(cb) } },
-    close: () => { window.clearTimeout(trackTimer); t.close() },
+    // Fechou: o que chegar depois (de uma tela que ainda não soube) é ignorado.
+    close: () => { closed = true; window.clearTimeout(trackTimer); t.close() },
   }
 }
