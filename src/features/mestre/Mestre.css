@@ -2,14 +2,14 @@
    Raiz Mestre — tema, botão e a animação da ascensão.
    ════════════════════════════════════════════════════════ */
 
-/* ── Tema do Mestre: Pantone Black 6 C (#101820) e um dourado mais vivo ── */
+/* ── Tema do Mestre: tudo preto (preto puro, sem azul) e um dourado mais vivo ── */
 html[data-mestre][data-theme] {
-  --bg-void:     #0a1016;
-  --bg-base:     #101820;
-  --bg-surface:  #151e27;
-  --bg-elevated: #1a232c;
-  --bg-overlay:  #222b34;
-  --bg-bright:   #2b343e;
+  --bg-void:     #000000;
+  --bg-base:     #000000;
+  --bg-surface:  #070707;
+  --bg-elevated: #0d0d0d;
+  --bg-overlay:  #161616;
+  --bg-bright:   #202020;
 
   --border-dim:    rgba(214, 170, 60, 0.22);
   --border-base:   #5c4a24;
@@ -28,7 +28,7 @@ html[data-mestre][data-theme] {
   --gilded-bright: #f5c84a;
   --shadow-glow:   0 0 24px rgba(255, 200, 70, 0.4);
 }
-html[data-mestre] { background: #101820; }
+html[data-mestre] { background: #000; }
 /* O fundo fica por conta do <html> (preto), pra as partículas aparecerem atrás do conteúdo. */
 html[data-mestre] body,
 html[data-mestre] .private-layout { background: transparent; }
@@ -73,7 +73,7 @@ html[data-mestre] .btn-primary {
   display: grid; place-items: center;
   padding: var(--space-4);
   pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(16, 24, 32, 0.55), transparent 65%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6), transparent 65%);
   animation: mestre-call-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes mestre-call-in { from { opacity: 0; transform: scale(0.94); } }
@@ -83,7 +83,7 @@ html[data-mestre] .btn-primary {
   display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
   padding: var(--space-6) var(--space-5) var(--space-5);
   text-align: center;
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 200, 70, 0.14), transparent 60%), #101820;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 200, 70, 0.14), transparent 60%), #000;
   border: 1px solid rgba(240, 196, 64, 0.6);
   border-radius: var(--radius-xl);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 190, 60, 0.18);
@@ -126,7 +126,7 @@ html[data-mestre] .btn-primary {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 16px;
   font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
-  color: #ffd45e; background: #101820;
+  color: #ffd45e; background: #000;
   border: 1px solid rgba(240, 196, 64, 0.6); border-radius: 999px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 16px rgba(255, 190, 60, 0.25);
 }

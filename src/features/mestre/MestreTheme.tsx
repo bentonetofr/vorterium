@@ -4,8 +4,8 @@ import { markSeen, playAscension, useMestreState, wasSeen } from './mestreServic
 import './Mestre.css'
 
 // ────────────────────────────────────────────────────────
-// O tema de quem virou Mestre, no site todo: o azul vira o preto Pantone
-// Black 6 C, o dourado fica mais dourado e brilha, e partículas douradas
+// O tema de quem virou Mestre, no site todo: o azul vira preto puro (tudo
+// preto), o dourado fica mais dourado e brilha, e partículas douradas
 // sobem pelo fundo. Liga só no fim da animação da ascensão. Quem não
 // estava online quando a campanha ascendeu vê a animação ao voltar.
 // ────────────────────────────────────────────────────────

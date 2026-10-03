@@ -9,10 +9,12 @@ import {
 
 // ────────────────────────────────────────────────────────
 // O botão SE TORNAR UM MESTRE, no meio da tela dos jogadores de uma
-// campanha de Altherium (quando o dono do site libera a Raiz Mestre). Cada
+// campanha de Altherium — só depois que o dono do site LIGA a Raiz Mestre
+// no Painel de controle (guardada, ninguém vê; nem ele). Cada
 // um aperta; quando TODOS os jogadores apertaram, a campanha ascende e a
 // animação roda pra todos juntos. Dá pra desistir, e minimizar enquanto
-// espera. O dono do site, testando, aperta sozinho e só ele vira Mestre.
+// espera. O dono do site (quando não é jogador da campanha) aperta sozinho
+// e só ele vira Mestre — é o teste dele.
 // ────────────────────────────────────────────────────────
 
 export function MestreCall() {
@@ -29,7 +31,7 @@ export function MestreCall() {
 
   const campaignId = campaign?.id ?? null
   const isPlayer = campaign?.role === 'player'
-  const eligible = !!campaignId && campaign?.system === 'altherium' && feature.visible && (isPlayer || owner) && mestre === false
+  const eligible = !!campaignId && campaign?.system === 'altherium' && feature.on && (isPlayer || owner) && mestre === false
 
   const ascend = useCallback(() => {
     if (played.current || !user?.id) return
@@ -59,7 +61,7 @@ export function MestreCall() {
   // Campanha que já ascendeu (e eu, jogador, ainda não "vi"): o tema cuida (MestreTheme).
   if (state?.ascended && isPlayer) return null
 
-  const testing = owner && (!isPlayer || feature.guarded)
+  const testing = owner && !isPlayer
   const pressed = !testing && !!state?.calls.includes(user.id)
   const total = state?.players.length ?? 0
   const ready = state ? state.calls.filter((id) => state.players.includes(id)).length : 0

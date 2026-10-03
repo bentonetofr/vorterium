@@ -30,7 +30,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   {
     key: MESTRE_FEATURE,
     name: 'Raiz Mestre',
-    description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores de Altherium. Quando todos da campanha apertam: livro fechando, 4 s de escuro, tema preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Guardado, só você vê o botão — e ele vale só pra você.',
+    description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores de Altherium — só aparece com a chave em "No site". Quando todos da campanha apertam: livro fechando, 4 s de escuro, site todo preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Nas campanhas em que você é o mestre da mesa, você também vê o botão e, apertando sozinho, só você vira Mestre (teste).',
     where: 'Campanhas de Altherium (qualquer aba)',
     actions: [{ label: 'Voltar a ser normal (só você)', run: ownerResetMestre }],
   },

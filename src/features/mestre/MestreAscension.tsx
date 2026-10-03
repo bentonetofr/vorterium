@@ -5,7 +5,7 @@ import { ASCEND_EVENT, refreshSheets, setAscending } from './mestreService'
 // ────────────────────────────────────────────────────────
 // A ascensão: um livro de couro fecha por cima do site inteiro (as duas
 // capas batem no meio), tudo fica escuro por 4 segundos, e o site vai se
-// montando de novo já com o tema do Mestre (preto Black 6 C e dourado).
+// montando de novo já com o tema do Mestre (tudo preto e dourado).
 // Roda pra todos os jogadores da campanha juntos (o evento chega pelo
 // tempo real) — ou só pro dono do site, no teste.
 // ────────────────────────────────────────────────────────
