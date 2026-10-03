@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { gm, type TorreView } from './torreService'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { gm, savePos, type TorreView } from './torreService'
+import { createPosSaver } from '../livro/game/posSaver'
 import { floorOf, ROLE_TITLES, type Floor, type TorreNet, type TorrePanel, type TorrePeer } from './torreNet'
 import { TorreFloor } from './game/room'
 import { GRATE } from './game/art'
@@ -32,10 +33,12 @@ interface FloorProps {
   onOpen:        (id: TorrePanel) => void
   onWatch:       (uid: string) => void
   onRemotePanel: (uid: string, p: TorrePanel | null) => void
+  /** Cada posição do meu boneco (pra guardar no banco). */
+  onSave?:       (msg: Parameters<ReturnType<typeof createPosSaver>['push']>[0]) => void
 }
 
 /** Um andar desenhado num canvas (o motor cuida de andar, mouse e luz). */
-function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, panel, onOpen, onWatch, onRemotePanel }: FloorProps) {
+function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, panel, onOpen, onWatch, onRemotePanel, onSave }: FloorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<TorreFloor | null>(null)
   const playersRef = useRef(view.players)
@@ -44,8 +47,9 @@ function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, pa
   peersRef.current = peers
   const gameRef0 = useRef(view.game ? { ...view.game, off: offset } : null)
   gameRef0.current = view.game ? { ...view.game, off: offset } : null
-  const cb = useRef({ onOpen, onWatch, onRemotePanel })
-  cb.current = { onOpen, onWatch, onRemotePanel }
+  const cb = useRef({ onOpen, onWatch, onRemotePanel, onSave })
+  cb.current = { onOpen, onWatch, onRemotePanel, onSave }
+  const posRef = useRef(view.pos)
   const me = view.me
 
   useEffect(() => {
@@ -55,14 +59,14 @@ function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, pa
       storageKey: `tor-pos:${view.room.id}:${me.uid}`,
       onOpen: (id) => cb.current.onOpen(id),
       onWatch: (uid) => cb.current.onWatch(uid),
-      onPos: (msg) => net.sendPos(msg),
+      onPos: (msg) => { net.sendPos(msg); cb.current.onSave?.(msg) },
       onRemotePanel: (uid, p) => cb.current.onRemotePanel(uid, p),
       // quem assiste vê os dois andares lado a lado: sem isso ficariam em 1×
       integerScale: controllable,
       // em cima, pisar na grade soa a ferro
       onStep: (x, y) => sfx(floor === 'cima' && x > GRATE.x && x < GRATE.x + GRATE.w && y > GRATE.y && y < GRATE.y + GRATE.h + 4 ? 'stepMetal' : 'step'),
     }, floor)
-    game.setPlayers(playersRef.current)
+    game.setPlayers(playersRef.current, posRef.current)
     game.setGame(gameRef0.current)
     game.applyPeers(peersRef.current)
     gameRef.current = game
@@ -119,13 +123,23 @@ function fmtTime(ms: number) {
 }
 
 export function TorreGameView({ view, offset, net, peers }: { view: TorreView; offset: number; net: TorreNet; peers: TorrePeer[] }) {
-  const [panel, setPanel] = useState<TorrePanel | null>(null)
+  // Volta com a janela que estava aberta (troca de jogo, recarregar).
+  const [panel, setPanel] = useState<TorrePanel | null>(() => (view.me.slot !== null ? (view.pos?.[view.me.uid]?.p as TorrePanel | null | undefined) ?? null : null))
   const [watch, setWatch] = useState<string | null>(null)
   const [remotePanels, setRemotePanels] = useState<Record<string, TorrePanel | null>>({})
   const [hint, setHint] = useState(true)
   const me = view.me
   const myFloor = floorOf(me.slot)
   const controllable = myFloor !== null
+
+  // Onde o meu boneco está fica no banco (pra voltar ao mesmo lugar).
+  const roomId = view.room.id
+  const saver = useMemo(() => createPosSaver((p) => savePos(roomId, p)), [roomId])
+  useEffect(() => {
+    const out = () => saver.flush()
+    window.addEventListener('pagehide', out)
+    return () => { window.removeEventListener('pagehide', out); saver.flush() }
+  }, [saver])
 
   // Som de fundo: vento lá em cima, máquinas embaixo (quem assiste ouve os dois).
   useEffect(() => {
@@ -166,7 +180,7 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
   return (
     <div className={`lb-stage${blurred ? ' is-blurred' : ''}`}>
       {controllable ? (
-        <FloorCanvas floor={myFloor} controllable {...floorProps} />
+        <FloorCanvas floor={myFloor} controllable onSave={saver.push} {...floorProps} />
       ) : (
         <div className="tor-floors">
           {(['cima', 'baixo'] as const).map((f) => (

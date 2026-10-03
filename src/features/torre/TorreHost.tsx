@@ -57,8 +57,10 @@ export function TorreHost() {
   }, [feature.visible, campaigns])
 
   if (!feature.visible) return null
-  const open = (currentId && rooms[currentId]) || Object.values(rooms).find((r) => r && r.status !== 'fim') || null
-  if (!open || open.status === 'fim') return null
+  // Sala pausada (o outro jogo está na tela) não aparece.
+  const shown = (r: TorreRoomRow | null | undefined) => !!r && r.status !== 'fim' && !r.paused_at
+  const open = (currentId && shown(rooms[currentId]) ? rooms[currentId] : null) || Object.values(rooms).find(shown) || null
+  if (!open) return null
 
   const setMin = (next: Set<string>) => {
     setMinimized(next)

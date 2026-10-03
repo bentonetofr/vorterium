@@ -184,14 +184,20 @@ export class RoomGame<Id extends string, G> {
 
   // ── Quem está na sala ─────────────────────────────────
 
-  setPlayers(players: GamePlayer[]) {
+  /**
+   * Quem joga. `positions` (do banco) põe cada boneco onde estava — depois
+   * de uma troca de jogo ou de recarregar — em vez do ponto de partida.
+   */
+  setPlayers(players: GamePlayer[], positions?: Record<string, { x: number; y: number; d: Dir } | undefined>) {
     const keep = new Set(players.map((p) => p.uid))
     for (const uid of [...this.actors.keys()]) if (!keep.has(uid)) this.actors.delete(uid)
     for (const p of players) {
       const a = this.actors.get(p.uid)
       if (a) { a.name = p.name; a.slot = p.slot; continue }
       const spawn = this.scene.spawns[p.slot] ?? this.scene.spawns[0]
-      const saved = p.uid === this.opts.meUid ? this.loadPos() : null
+      const fromDb = positions?.[p.uid]
+      const db = fromDb && typeof fromDb.x === 'number' && !this.blocked(fromDb.x, fromDb.y) ? fromDb : null
+      const saved = db ?? (p.uid === this.opts.meUid ? this.loadPos() : null)
       this.actors.set(p.uid, {
         uid: p.uid, name: p.name, slot: p.slot,
         x: saved?.x ?? spawn.x, y: saved?.y ?? spawn.y, d: saved?.d ?? spawn.d,

@@ -166,6 +166,15 @@ button.lb-person:hover:not(:disabled) { background: #31273f; }
 .lb-menu__list button:hover { background: var(--lb-panel2); }
 .lb-menu__list button.is-danger { color: #ff9aa2; }
 
+/* ── Cartão da troca de jogo (1,5 s, por cima de tudo) ── */
+.lb-switch {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  background: var(--lb-bg); pointer-events: none;
+  animation: lb-switch 1.5s steps(6) forwards;
+}
+@keyframes lb-switch { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
 /* ── Pílula (minimizado) ── */
 .lb-pill {
   position: fixed; top: 14px; left: 50%; z-index: 5000; transform: translateX(-50%);
