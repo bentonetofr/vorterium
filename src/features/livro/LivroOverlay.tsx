@@ -66,6 +66,27 @@ export function SwitchCard({ kicker, title }: { kicker: string; title: string })
   )
 }
 
+/**
+ * "Reconectando…": aparece quando o ao vivo (os bonecos andando) caiu há
+ * mais de 3 s. Some sozinho quando volta. Na entrada, espera 6 s antes.
+ */
+export function LiveBadge({ net }: { net: { onLive: (cb: (live: boolean) => void) => () => void } | null }) {
+  const [down, setDown] = useState(false)
+  useEffect(() => {
+    if (!net) return
+    let t: number | undefined
+    let first = true
+    const off = net.onLive((live) => {
+      window.clearTimeout(t)
+      if (live) { setDown(false); first = false; return }
+      t = window.setTimeout(() => setDown(true), first ? 6000 : 3000)
+    })
+    return () => { off(); window.clearTimeout(t) }
+  }, [net])
+  if (!down) return null
+  return <p className="lb-net-off" role="status">Reconectando ao vivo… os bonecos voltam a andar em instantes.</p>
+}
+
 export function usePixelFont() {
   useEffect(() => {
     if (document.querySelector(`link[href="${FONT_HREF}"]`)) return
@@ -172,6 +193,7 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   return (
     <div ref={rootRef} className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
       {entered && switching && <SwitchCard kicker="A biblioteca de Caatedrum" title="O Livro Bloqueado" />}
+      <LiveBadge net={net} />
       {!entered || !view ? (
         <TitleCard
           ready={!!view}

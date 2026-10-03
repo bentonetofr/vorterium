@@ -9,7 +9,7 @@ import { spriteTelescopio } from './game/art'
 import { nextEdge } from './game/sky'
 import type { TorreView } from './torreService'
 import { onSoundChange, setSoundOn, sfx, soundOn } from '../livro/game/sound'
-import { ANY_GAME_KEY, SwitchCard, useBodyLock, useFullscreen, usePixelFont, useSwitchCard } from '../livro/LivroOverlay'
+import { ANY_GAME_KEY, LiveBadge, SwitchCard, useBodyLock, useFullscreen, usePixelFont, useSwitchCard } from '../livro/LivroOverlay'
 import { useFeature } from '../control/siteFeatures'
 import { LIVRO_FEATURE, openRoom as openLivro } from '../livro/livroService'
 import '../livro/Livro.css'
@@ -90,6 +90,7 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
   return (
     <div ref={rootRef} className="lb-overlay" role="dialog" aria-modal="true" aria-label="A Torre do Observatório">
       {entered && switching && <SwitchCard kicker="A torre de Caatedrum" title="A Torre do Observatório" />}
+      <LiveBadge net={net} />
       {!entered || !view ? (
         <TitleCard
           ready={!!view}

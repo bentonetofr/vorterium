@@ -17,8 +17,13 @@ import { buildRoom, FEET, FLOOR, inRect, overlaps, SPAWNS, type Interactable, ty
 // ────────────────────────────────────────────────────────
 
 const SPEED = 72              // pixels nativos por segundo
-const SEND_EVERY = 1000 / 12  // posição pra rede: 12 por segundo
-const INTERP_DELAY = 110
+// Posição pra rede: 6 por segundo andando, e uma a cada 4 s parado (o plano
+// gratuito do Supabase aguenta ~100 mensagens por segundo no projeto todo,
+// contando cada pessoa que recebe). Quem recebe desenha um pouco no passado
+// (INTERP_DELAY) pra ir de uma posição à outra sem trancos.
+const SEND_EVERY = 1000 / 6
+const IDLE_EVERY = 4000
+const INTERP_DELAY = 240
 const HILITE = '#ffe7a3'
 
 export interface GamePlayer { uid: string; name: string; slot: number }
@@ -497,7 +502,7 @@ export class RoomGame<Id extends string, G> {
     const now = performance.now()
     const msg: PosMsg<Id> = { u: me.uid, x: Math.round(me.x * 10) / 10, y: Math.round(me.y * 10) / 10, d: me.d, m: me.moving, p: this.myPanel, t: Date.now() }
     const key = `${msg.x},${msg.y},${msg.d},${msg.m},${msg.p}`
-    if (!force && (now - this.lastSend < SEND_EVERY || (key === this.lastSent && now - this.lastSend < 1000))) return
+    if (!force && (now - this.lastSend < SEND_EVERY || (key === this.lastSent && now - this.lastSend < IDLE_EVERY))) return
     this.lastSend = now
     this.lastSent = key
     this.opts.onPos(msg)
@@ -527,7 +532,7 @@ export class RoomGame<Id extends string, G> {
         const b = s[i + 1]
         if (!b) {
           // sem dado novo: fica parado no último (e para a animação depois de um tempo)
-          const stale = tr - s[i].t > 350
+          const stale = tr - s[i].t > 600
           return { ...s[i], m: s[i].m && !stale }
         }
         const k = (tr - s[i].t) / Math.max(1, b.t - s[i].t)
