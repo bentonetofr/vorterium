@@ -68,9 +68,9 @@ export function TorreGmPanel({ view, offset, onClose }: { view: TorreView; offse
     try { await gm(view.room.id, a); if (done) setMsg(done) } catch (e) { setMsg(e instanceof Error ? e.message : 'Não deu certo.') } finally { setBusy(false) }
   }
 
-  if (!g || !sec) {
+  if (!g) {
     return (
-      <aside className="tor-gm lb-frame" aria-label="Painel do mestre">
+      <aside className="lb-gm lb-frame" aria-label="Painel do mestre">
         <button type="button" className="lb-x" onClick={onClose} aria-label="Fechar">✕</button>
         <h2 className="lb-panel__title">Painel do mestre</h2>
         <p className="lb-panel__text">A partida ainda não começou.</p>
@@ -80,54 +80,63 @@ export function TorreGmPanel({ view, offset, onClose }: { view: TorreView; offse
   const suggestion = suggestHint(g)
 
   return (
-    <aside className="tor-gm lb-frame" aria-label="Painel do mestre">
+    <aside className="lb-gm lb-frame" aria-label="Painel do mestre">
       <button type="button" className="lb-x" onClick={onClose} aria-label="Fechar">✕</button>
       <h2 className="lb-panel__title">Painel do mestre</h2>
 
-      <section className="tor-gm__sec">
+      <section className="lb-gm__sec">
         <h3>Andamento {view.started_at && <span>· {fmtClock(now - view.started_at)} de jogo</span>}</h3>
-        <ul className="tor-gm__progress">
+        <ul className="lb-gm__progress">
           {(Object.keys(NODE_NAMES) as (keyof typeof NODE_NAMES)[]).map((k) => (
-            <li key={k}><span>{NODE_NAMES[k]}</span><b className="tor-gm__pips">{[0, 1, 2].map((i) => <i key={i} className={i < g.progress[k] ? 'is-on' : ''} />)}</b></li>
+            <li key={k}><span>{NODE_NAMES[k]}</span><b className="lb-gm__pips">{[0, 1, 2].map((i) => <i key={i} className={i < g.progress[k] ? 'is-on' : ''} />)}</b></li>
           ))}
         </ul>
       </section>
 
-      <section className="tor-gm__sec">
+      <section className="lb-gm__sec">
         <h3>Dica {hintLeft > 0 && <span>· no ar por mais {Math.ceil(hintLeft / 1000)} s</span>}</h3>
-        <p className="tor-gm__suggest">{suggestion}</p>
+        <p className="lb-gm__suggest">{suggestion}</p>
         <div className="lb-lock__btns">
           <button type="button" className="lb-btn" disabled={busy} onClick={() => void run({ a: 'hint', text: suggestion }, 'Dica enviada.')}>Enviar esta</button>
         </div>
-        <textarea className="tor-gm__text" maxLength={240} rows={2} placeholder="Ou escreva a sua…" value={text} onChange={(e) => setText(e.target.value)} />
+        <textarea className="lb-gm__text" maxLength={240} rows={2} placeholder="Ou escreva a sua…" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="lb-lock__btns">
           <button type="button" className="lb-btn lb-btn--gold" disabled={busy || !text.trim()} onClick={() => void run({ a: 'hint', text }, 'Dica enviada.').then(() => setText(''))}>Enviar a minha</button>
         </div>
       </section>
 
-      <section className="tor-gm__sec">
+      {sec ? (
+      <section className="lb-gm__sec">
         <h3>Solução <span>· desta partida</span></h3>
-        <dl className="tor-gm__sol">
+        <dl className="lb-gm__sol">
           <dt>Espelhos</dt><dd>{sec.mir.map((p, k) => `${k + 1}: marca ${p + 1}`).join(' · ')}</dd>
           <dt>Cúpula</dt><dd>{sec.dome} cliques em "Girar ▶" a partir do começo (os espelhos 3 e 4 só acendem ali)</dd>
           <dt>Mapa</dt><dd>cada estrela no buraco espelhado (esquerda ↔ direita) de onde aparece no telescópio</dd>
-          <dt>Sequência</dt><dd className="tor-gm__icons">{sec.seq.map((s, i) => <span key={i} title={`Casa ${i + 1}`}><SymbolIcon sym={s} k={3} /></span>)}</dd>
+          <dt>Sequência</dt><dd className="lb-gm__icons">{sec.seq.map((s, i) => <span key={i} title={`Casa ${i + 1}`}><SymbolIcon sym={s} k={3} /></span>)}</dd>
           <dt>Número</dt><dd><b>{sec.num}</b></dd>
-          <dt>Trinco</dt><dd className="tor-gm__icons"><GlyphIcon g={sec.runes[0]} k={3} /><GlyphIcon g={sec.runes[1]} k={3} /> <span>({sec.runes[0]} e {sec.runes[1]} cliques em ▶)</span></dd>
+          <dt>Trinco</dt><dd className="lb-gm__icons"><GlyphIcon g={sec.runes[0]} k={3} /><GlyphIcon g={sec.runes[1]} k={3} /> <span>({sec.runes[0]} e {sec.runes[1]} cliques em ▶)</span></dd>
           <dt>5ª estrela</dt><dd>{DIRS[sec.fifth]} da mais brilhante</dd>
           <dt>Cores</dt><dd>{STAR_NAMES.map((n, k) => `${k + 1}º espelho: ${n}`).join(' · ')}</dd>
         </dl>
-      </section>
+        </section>
+      ) : view.me.slot !== null ? (
+        <section className="lb-gm__sec">
+          <h3>Solução</h3>
+          <p className="lb-gm__suggest">Você está jogando: a solução não vem pro seu navegador.</p>
+        </section>
+      ) : null}
 
-      <section className="tor-gm__sec">
+      {view.gm && (
+      <section className="lb-gm__sec">
         <h3>Linha do tempo</h3>
-        <ol className="tor-gm__events">
+        <ol className="lb-gm__events">
           {(view.gm?.events ?? []).slice(-14).reverse().map((e, i) => (
             <li key={i}><span>{view.started_at ? fmtClock(e.t - view.started_at) : ''}</span> {e.m}</li>
           ))}
           {(view.gm?.events ?? []).length === 0 && <li className="lb-muted">Nada ainda.</li>}
         </ol>
       </section>
+      )}
 
       <div className="lb-lock__btns">
         <button type="button" className="lb-btn" disabled={busy} onClick={() => { if (window.confirm('Recomeçar com outro segredo? Tudo o que a dupla fez se perde.')) void run({ a: 'reset' }, 'Partida nova.') }}>Recomeçar</button>

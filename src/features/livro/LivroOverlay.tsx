@@ -7,6 +7,8 @@ import { useLivroView } from './useLivroRoom'
 import { spritePedestal } from './game/art'
 import { useFeature } from '../control/siteFeatures'
 import { openRoom as openTorre, TORRE_FEATURE } from '../torre/torreService'
+import { LivroGmPanel } from './LivroGmPanel'
+import { onSoundChange, setSoundOn, sfx, soundOn } from './game/sound'
 import './Livro.css'
 
 // ────────────────────────────────────────────────────────
@@ -29,7 +31,15 @@ export const ANY_GAME_KEY = 'vorterium:jogo-entrou'
 export function useBodyLock() {
   useEffect(() => {
     if (bodyLocks++ === 0) { bodyPrev = document.body.style.overflow; document.body.style.overflow = 'hidden' }
-    return () => { if (--bodyLocks === 0) document.body.style.overflow = bodyPrev }
+    return () => {
+      if (--bodyLocks > 0) return
+      document.body.style.overflow = bodyPrev
+      // Jogo encerrado: sai da tela cheia. Numa troca, o outro jogo entra
+      // logo em seguida e a tela cheia continua.
+      window.setTimeout(() => {
+        if (bodyLocks === 0 && document.fullscreenElement) void document.exitFullscreen().catch(() => {})
+      }, 1500)
+    }
   }, [])
 }
 
@@ -66,14 +76,28 @@ export function usePixelFont() {
   }, [])
 }
 
+// Em tela cheia, o navegador usa o Esc pra sair dela. Travando o Esc
+// (Chrome/Edge), ele volta a fechar as janelas do jogo — e segurar o Esc
+// ainda sai da tela cheia. Onde não existe, fica como era.
+type KeyboardLock = { lock?: (keys: string[]) => Promise<void>; unlock?: () => void }
+const keyboardApi = () => (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard
+
 export function useFullscreen() {
   const [full, setFull] = useState(() => !!document.fullscreenElement)
   useEffect(() => {
-    const f = () => setFull(!!document.fullscreenElement)
+    const f = () => {
+      setFull(!!document.fullscreenElement)
+      if (!document.fullscreenElement) keyboardApi()?.unlock?.()
+    }
     document.addEventListener('fullscreenchange', f)
     return () => document.removeEventListener('fullscreenchange', f)
   }, [])
-  const enter = () => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(() => {}) }
+  const enter = () => {
+    if (document.fullscreenElement) return
+    void document.documentElement.requestFullscreen?.()
+      .then(() => keyboardApi()?.lock?.(['Escape']))
+      .catch(() => {})
+  }
   const exit = () => { if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}) }
   return { full, enter, exit }
 }
@@ -89,6 +113,8 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   const [menu, setMenu] = useState(false)
   const fs = useFullscreen()
 
+  // O site por baixo não rola; quando o jogo some de vez (o mestre
+  // encerrou), a tela cheia sai junto — mas não numa troca de jogo.
   useBodyLock()
   const switching = useSwitchCard(entered)
   const torre = useFeature(TORRE_FEATURE)
@@ -124,11 +150,24 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointerdown', onDown) }
   }, [menu])
 
+  // Clique de qualquer botão do jogo, e o som ligado/desligado.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const onDown = (e: PointerEvent) => { if ((e.target as HTMLElement).closest('button')) sfx('click') }
+    el.addEventListener('pointerdown', onDown)
+    return () => el.removeEventListener('pointerdown', onDown)
+  }, [])
+  const [sound, setSound] = useState(soundOn)
+  useEffect(() => onSoundChange(setSound), [])
+  const [gmOpen, setGmOpen] = useState(false)
+
   const isGm = !!view?.me.gm
   const playing = view?.room.status === 'jogo'
 
   return (
-    <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
+    <div ref={rootRef} className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
       {entered && switching && <SwitchCard kicker="A biblioteca de Caatedrum" title="O Livro Bloqueado" />}
       {!entered || !view ? (
         <TitleCard
@@ -143,6 +182,8 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
         <LivroGameView view={view} net={net} peers={peers} />
       ) : null}
 
+      {entered && view && isGm && playing && gmOpen && <LivroGmPanel view={view} onClose={() => setGmOpen(false)} />}
+
       {entered && view && (
         <div className="lb-menu" ref={menuRef}>
           <button type="button" className="lb-menu__btn" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menu">
@@ -151,7 +192,9 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
           {menu && (
             <div className="lb-menu__list lb-frame" role="menu">
               <button type="button" role="menuitem" onClick={() => { setMenu(false); if (fs.full) fs.exit(); else fs.enter() }}>{fs.full ? 'Sair da tela cheia' : 'Tela cheia'}</button>
+              <button type="button" role="menuitem" onClick={() => setSoundOn(!sound)} aria-pressed={sound}>{sound ? 'Som: ligado' : 'Som: desligado'}</button>
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
+              {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); setGmOpen(true) }}>Painel do mestre</button>}
               {isGm && torre.visible && (
                 <button type="button" role="menuitem" onClick={() => { setMenu(false); void openTorre(room.campaign_id).catch((e) => window.alert(e instanceof Error ? e.message : 'Não deu certo.')) }}>Trocar para A Torre do Observatório</button>
               )}

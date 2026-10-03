@@ -7,7 +7,10 @@ import { supabase } from '../../shared/lib/supabase'
 // então nada de uniqueChannel aqui).
 //   • broadcast "pos": quem joga manda a posição ~12 vezes por segundo;
 //   • presence: quem está na sala agora (e a última posição, pra quem
-//     chega no meio já ver os bonecos no lugar).
+//     chega no meio já ver os bonecos no lugar);
+//   • broadcast "ui": o que só existe na tela de quem joga, dentro da
+//     janela aberta (símbolo escolhido, o que está digitando, onde está o
+//     mouse/a lupa) — pra quem assiste ver igual. ~10 por segundo.
 // ────────────────────────────────────────────────────────
 
 export type Dir = 'down' | 'up' | 'left' | 'right'
@@ -26,6 +29,9 @@ export interface NetPeer<P extends string = PanelId> {
   d?:    Dir
 }
 
+/** O que está na janela de quem joga (u = quem, p = janela, s = o estado dela). */
+export interface UiMsg { u: string; p: string; s: Record<string, unknown> }
+
 /** Posição de um boneco (u = quem, m = andando, p = janela aberta). */
 export interface PosMsg<P extends string = PanelId> { u: string; x: number; y: number; d: Dir; m: boolean; p: P | null; t: number }
 
@@ -35,6 +41,9 @@ export interface LivroNet<P extends string = PanelId> {
   setMe:    (patch: Partial<NetPeer<P>>) => void
   onPos:    (cb: (msg: PosMsg<P>) => void) => () => void
   onPeers:  (cb: (peers: NetPeer<P>[]) => void) => () => void
+  /** O estado da minha janela aberta, pra quem assiste (no máximo ~10 por segundo). */
+  sendUi:   (msg: UiMsg) => void
+  onUi:     (cb: (msg: UiMsg) => void) => () => void
   close:    () => void
 }
 
@@ -89,6 +98,12 @@ export function connectRoomNet<P extends string>(topic: string, me: NetPeer<P>):
   let trackTimer: number | undefined
 
   t.onEvent('pos', (payload) => { const m = payload as PosMsg<P>; posListeners.forEach((l) => l(m)) })
+  const uiListeners = new Set<(msg: UiMsg) => void>()
+  t.onEvent('ui', (payload) => { const m = payload as UiMsg; uiListeners.forEach((l) => l(m)) })
+  // ui: manda a última de cada 100 ms (quem assiste não precisa de cada tecla)
+  let uiPending: UiMsg | null = null
+  let uiTimer: number | undefined
+  const flushUi = () => { uiTimer = undefined; if (uiPending && !closed) t.send('ui', uiPending); uiPending = null }
   t.onPresence((states) => {
     // Uma pessoa pode estar em duas abas: fica a entrada mais "rica".
     const byUid = new Map<string, NetPeer<P>>()
@@ -118,7 +133,13 @@ export function connectRoomNet<P extends string>(topic: string, me: NetPeer<P>):
     },
     onPos: (cb) => { posListeners.add(cb); return () => { posListeners.delete(cb) } },
     onPeers: (cb) => { peerListeners.add(cb); cb(peers); return () => { peerListeners.delete(cb) } },
+    sendUi: (msg) => {
+      if (closed) return
+      uiPending = msg
+      if (uiTimer === undefined) uiTimer = window.setTimeout(flushUi, 100)
+    },
+    onUi: (cb) => { uiListeners.add(cb); return () => { uiListeners.delete(cb) } },
     // Fechou: o que chegar depois (de uma tela que ainda não soube) é ignorado.
-    close: () => { closed = true; window.clearTimeout(trackTimer); t.close() },
+    close: () => { closed = true; window.clearTimeout(trackTimer); window.clearTimeout(uiTimer); t.close() },
   }
 }

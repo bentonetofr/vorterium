@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { CANDLE_HEIGHTS, CLOAKS, makeCanvas, px, type Ctx } from '../game/art'
 import { drawBits, SYMBOL_BITS } from './glyphs'
-import { Dial, GlyphIcon, PixelScene, type Pt, type PuzzleProps } from './kit'
+import { Dial, GlyphIcon, PixelScene, useUiShare, type Pt, type PuzzleProps } from './kit'
 
 // ────────────────────────────────────────────────────────
 // O Retrato do bibliotecário. Uma lupa segue o cursor. No escuro, 2
@@ -15,11 +15,13 @@ const H = 150
 const MEDAL = { x: 64, y: 70, r: 5 }
 const CORNERS: [number, number][] = [[12, 12], [107, 12], [12, 129], [107, 129]]
 
-export function RetPanel({ g, act, ro }: PuzzleProps) {
+export function RetPanel({ g, act, ro, ui }: PuzzleProps) {
+  const { put, remote } = useUiShare(ui, ro)
   const r = g.ret
   const light = g.light
   const scene = useRef<{ c: HTMLCanvasElement; ctx: Ctx } | null>(null)
-  const canTake = r.face !== null && !g.inv.medalhao && !ro
+  const taken = r.taken ?? g.inv.medalhao
+  const canTake = r.face !== null && !taken && !ro
   const overMedal = (p: Pt) => canTake && Math.hypot(p.x - MEDAL.x, p.y - MEDAL.y) <= MEDAL.r + 2
 
   const drawScene = (ctx: Ctx, t: number) => {
@@ -60,7 +62,7 @@ export function RetPanel({ g, act, ro }: PuzzleProps) {
     }
     // o medalhão (o 5º símbolo) no peito
     if (r.face !== null) {
-      if (g.inv.medalhao) {
+      if (taken) {
         px(ctx, '#1a1208', MEDAL.x - 4, MEDAL.y - 4, 9, 9)
       } else {
         const pulse = 0.5 + 0.5 * Math.sin(t * 4)
@@ -149,6 +151,8 @@ export function RetPanel({ g, act, ro }: PuzzleProps) {
         label="O retrato do bibliotecário"
         draw={draw}
         hot={overMedal}
+        remoteMouse={remote ? (remote.m as Pt | null) ?? null : undefined}
+        onMouse={(m) => put({ m })}
         onDown={(p) => { if (overMedal(p)) void act({ a: 'medal' }) }}
       />
       <Dial label="Olhar de" value={r.view} disabled={ro} onChange={(v) => void act({ a: 'ret_view', v })} />

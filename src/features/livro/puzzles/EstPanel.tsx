@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react'
 import { BOOK_COLORS, px, type Ctx } from '../game/art'
 import { DIGIT_BITS, drawBits, GLYPH_BITS } from './glyphs'
-import { PixelScene, type Pt, type PuzzleProps } from './kit'
+import { PixelScene, useUiShare, type Pt, type PuzzleProps } from './kit'
 
 // ────────────────────────────────────────────────────────
 // A Estante. 12 livros; as posições estão gravadas na prateleira.
 // Arrastar troca os livros de lugar (não muda nada... de propósito).
-// Clicar puxa um livro: na ordem certa (o número das sombras), cada um
-// mostra um glifo na lombada; errou, todos voltam. A palavra traduzida
+// Clicar puxa um livro; no 4º a ordem é conferida (o número das sombras):
+// certa, as lombadas mostram glifos; errada, todos voltam. A palavra traduzida
 // (+ o medalhão) abre a gaveta secreta.
 // ────────────────────────────────────────────────────────
 
@@ -25,11 +25,21 @@ function posAt(p: Pt): number | null {
 }
 const inDrawer = (p: Pt) => p.x >= DRAWER.x && p.x <= DRAWER.x + DRAWER.w && p.y >= DRAWER.y - 4 && p.y <= DRAWER.y + DRAWER.h
 
-export function EstPanel({ g, act, ro }: PuzzleProps) {
+type Drag = { from: number; sx: number; x: number; moved: boolean }
+
+export function EstPanel({ g, act, ro, ui }: PuzzleProps) {
   const e = g.est
-  const [word, setWord] = useState('')
-  const drag = useRef<{ from: number; sx: number; x: number; moved: boolean } | null>(null)
+  const { put, remote } = useUiShare(ui, ro)
+  const live = !ro || !!remote
+  const [myWord, setMyWord] = useState('')
+  // quem assiste vê a palavra sendo escrita e o livro sendo arrastado
+  const word = remote ? String(remote.word ?? '') : myWord
+  const setWord = (w: string) => { setMyWord(w); put({ word: w }) }
+  const drag = useRef<Drag | null>(null)
+  const setDrag = (d: Drag | null) => { drag.current = d; put({ drag: d }) }
   const hoverPos = useRef<number | null>(null)
+  // a gaveta desliza (em vez de aparecer aberta de uma vez)
+  const openShown = useRef(e.drawer ? 7 : e.word_ok ? 3 : 0)
 
   const drawBook = (ctx: Ctx, id: number, x: number, lift: number, pulledK: number | null, hot: boolean) => {
     const h = bookH(id)
@@ -44,8 +54,11 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
     if (pulledK !== null) {
       // a ordem em que foi puxado (é a ordem de ler a palavra)
       drawBits(ctx, DIGIT_BITS[pulledK + 1], x + Math.floor((w - 5) / 2), top - 10, '#ecc66a')
-      px(ctx, 'rgba(0,0,0,0.35)', x + 2, top + 12, w - 4, 9)
-      drawBits(ctx, GLYPH_BITS[e.glyphs[pulledK]] ?? GLYPH_BITS[0], x + Math.floor((w - 5) / 2), top + 14, '#ffe7a3')
+      const glyph = GLYPH_BITS[e.glyphs[pulledK]]
+      if (glyph) {
+        px(ctx, 'rgba(0,0,0,0.35)', x + 2, top + 12, w - 4, 9)
+        drawBits(ctx, glyph, x + Math.floor((w - 5) / 2), top + 14, '#ffe7a3')
+      }
     } else {
       px(ctx, '#c99a3b', x + 6, top + 9, 1, 2)
     }
@@ -53,7 +66,7 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
   }
 
   const draw = (ctx: Ctx, _t: number, mouse: Pt | null) => {
-    hoverPos.current = mouse && !ro && !e.word_ok ? posAt(mouse) : null
+    hoverPos.current = mouse && live && !e.word_ok ? posAt(mouse) : null
     // móvel
     px(ctx, '#3e281a', 0, 0, W, H)
     px(ctx, '#1d140c', 6, 6, W - 12, SHELF - 4)
@@ -62,7 +75,7 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
     // frase gravada atrás (aparece com os 4 puxados)
     if (e.pulled.length === 4) for (let x = 20; x < W - 20; x += 6) px(ctx, '#3a2a18', x, 30 + ((x / 6) % 2), 4, 1)
     // livros
-    const d = drag.current
+    const d = remote ? (remote.drag as Drag | null) ?? null : drag.current
     e.books.forEach((id, pos) => {
       if (d && d.moved && d.from === pos) return
       const k = e.pulled.indexOf(pos + 1)
@@ -85,7 +98,10 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
       drawBook(ctx, id, Math.round(d.x - 6), -6, k >= 0 ? k : null, true)
     }
     // gaveta
-    const open = e.drawer ? 7 : e.word_ok ? 3 : 0
+    const target = e.drawer ? 7 : e.word_ok ? 3 : 0
+    openShown.current += (target - openShown.current) * 0.08
+    if (Math.abs(target - openShown.current) < 0.05) openShown.current = target
+    const open = Math.round(openShown.current)
     if (open) px(ctx, '#0e0905', DRAWER.x, DRAWER.y, DRAWER.w, open)
     px(ctx, '#5a3b27', DRAWER.x, DRAWER.y + open, DRAWER.w, DRAWER.h - 2)
     px(ctx, '#73502f', DRAWER.x, DRAWER.y + open, DRAWER.w, 1)
@@ -102,17 +118,16 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
     if (inDrawer(p)) { if (e.word_ok && !e.drawer) void act({ a: 'drawer' }); return }
     const pos = posAt(p)
     if (pos === null) return
-    drag.current = { from: pos, sx: p.x, x: p.x, moved: false }
+    setDrag({ from: pos, sx: p.x, x: p.x, moved: false })
   }
   const onMove = (p: Pt) => {
     const d = drag.current
     if (!d) return
-    d.x = p.x
-    if (Math.abs(p.x - d.sx) > 4) d.moved = true
+    setDrag({ ...d, x: p.x, moved: d.moved || Math.abs(p.x - d.sx) > 4 })
   }
   const onUp = (p: Pt) => {
     const d = drag.current
-    drag.current = null
+    if (d) setDrag(null)
     if (!d || ro) return
     if (!d.moved) { if (!e.word_ok) void act({ a: 'pull', pos: d.from + 1 }); return }
     const to = Math.max(0, Math.min(11, Math.round((p.x - 18) / 16)))
@@ -135,6 +150,8 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
         onDown={onDown}
         onMove={onMove}
         onUp={onUp}
+        remoteMouse={remote ? (remote.m as Pt | null) ?? null : undefined}
+        onMouse={(m) => put({ m })}
       />
       {e.pulled.length === 4 && <p className="lb-carved">“Quem lê o que ninguém lê, um dia é lido.”</p>}
       {e.pulled.length === 4 && !e.word_ok && !ro && (
@@ -151,6 +168,9 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
           />
           <button type="submit" className="lb-btn lb-btn--gold" disabled={word.trim().length !== 4}>Dizer</button>
         </form>
+      )}
+      {e.pulled.length === 4 && !e.word_ok && ro && remote && (
+        <p className="lb-word"><span className="lb-input lb-input--word lb-input--watch" aria-label="O que está sendo escrito">{word || '····'}</span></p>
       )}
       {e.word_ok && !e.drawer && g.inv.medalhao && !ro && (
         <button type="button" className="lb-btn lb-btn--gold" onClick={() => void act({ a: 'drawer' })}>Encaixar o medalhão</button>

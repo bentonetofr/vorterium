@@ -5,8 +5,8 @@ import { floorOf, ROLE_TITLES, type Floor, type TorreNet, type TorrePanel, type 
 import { TorreFloor } from './game/room'
 import { GRATE } from './game/art'
 import { PuzzlePanel } from './PuzzlePanel'
-import { HintBanner } from './HintBanner'
-import { onSoundChange, sfx, startAmbient, stopAmbient } from './sound'
+import { HintBanner } from '../livro/HintBanner'
+import { onSoundChange, sfx, startAmbient, stopAmbient, type Ambient } from '../livro/game/sound'
 
 // ────────────────────────────────────────────────────────
 // A partida. Quem joga vê só o SEU andar (o outro aparece como sombra pela
@@ -143,9 +143,9 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
 
   // Som de fundo: vento lá em cima, máquinas embaixo (quem assiste ouve os dois).
   useEffect(() => {
-    const kind = myFloor ?? 'todos'
-    startAmbient(kind)
-    const off = onSoundChange((on) => { if (on) startAmbient(kind) })
+    const layers: Ambient[] = myFloor === 'cima' ? ['vento'] : myFloor === 'baixo' ? ['maquinas'] : ['vento', 'maquinas']
+    startAmbient(layers)
+    const off = onSoundChange((on) => { if (on) startAmbient(layers) })
     return () => { off(); stopAmbient() }
   }, [myFloor])
 
@@ -192,6 +192,7 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
         </div>
       )}
 
+      {controllable && !blurred && <p className="lb-rotate" aria-hidden="true">⟲ Vire o celular de lado</p>}
       <div className="lb-chip lb-chip--role">
         {controllable
           ? <><span className={`lb-dot lb-dot--${me.slot}`} /> Você é o {ROLE_TITLES[me.slot!]} · {myFloor === 'cima' ? 'em cima' : 'embaixo'}</>
@@ -200,7 +201,8 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
 
       {controllable && hint && !blurred && (
         <div className="lb-hint" role="note">
-          <b>WASD</b> anda · <b>clique</b> nos objetos (ou <b>E</b> perto deles) · <b>Esc</b> fecha · vocês só se ouvem: <b>falem</b>
+          <span className="lb-only-mouse"><b>WASD</b> anda · <b>clique</b> nos objetos (ou <b>E</b> perto deles) · <b>Esc</b> fecha · vocês só se ouvem: <b>falem</b></span>
+          <span className="lb-only-touch"><b>Toque</b> num objeto: o boneco vai até ele · vocês só se ouvem: <b>falem</b></span>
         </div>
       )}
 

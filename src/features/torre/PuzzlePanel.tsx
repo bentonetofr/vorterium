@@ -7,8 +7,8 @@ import { EspelhosPanel } from './puzzles/EspelhosPanel'
 import { ManivelaPanel } from './puzzles/ManivelaPanel'
 import { PenduloPanel } from './puzzles/PenduloPanel'
 import { AstrarioPanel } from './puzzles/AstrarioPanel'
-import { sfx, type SoundName } from './sound'
-import { HintBanner } from './HintBanner'
+import { sfx, type SoundName } from '../livro/game/sound'
+import { HintBanner } from '../livro/HintBanner'
 
 /** O som na hora da jogada (antes da resposta do banco). */
 const ACTION_SOUND: Partial<Record<string, SoundName>> = {
