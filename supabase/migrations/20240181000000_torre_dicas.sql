@@ -49,13 +49,13 @@ begin
   elsif a = 'reset' then
     -- Recomeçar: outra partida, com outro segredo.
     s := (s || jsonb_build_object('game', public.tor__new_game(), 'events', '[]'::jsonb)) - 'hint';
+    if r.status = 'jogo' then s := jsonb_set(s, '{started_at}', to_jsonb(public.tor__ms())); end if;
   elsif a = 'hint' then
     -- Uma dica pros jogadores: aparece pra todo mundo por 25 s.
     if r.status <> 'jogo' then raise exception 'A dica é durante o jogo.'; end if;
     txt := trim(coalesce(p_action->>'text', ''));
     if txt = '' or length(txt) > 240 then raise exception 'A dica precisa ter de 1 a 240 letras.'; end if;
     s := s || jsonb_build_object('hint', jsonb_build_object('t', public.tor__ms(), 'text', txt));
-    if r.status = 'jogo' then s := jsonb_set(s, '{started_at}', to_jsonb(public.tor__ms())); end if;
   elsif a = 'lobby' then
     update public.tor_rooms set status = 'lobby' where id = p_room;
   elsif a = 'close' then
