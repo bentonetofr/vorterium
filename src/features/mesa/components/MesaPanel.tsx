@@ -484,7 +484,7 @@ function ConnectionDetails({ diag, status }: { diag: MesaDiag; status: ViewerSta
       <dl className="mesa-diag__list">
         <div><dt>Navegador</dt><dd>{browserName()}</dd></div>
         <div><dt>Oferta do mestre</dt><dd>{diag.offers > 0 ? `recebida (${diag.offers}×)` : 'não chegou'}</dd></div>
-        <div><dt>Ligação de rede</dt><dd>{diag.iceState ? ICE_LABEL[diag.iceState] ?? diag.iceState : '—'}</dd></div>
+        <div><dt>Ligação de rede</dt><dd>{diag.iceState ? ICE_LABEL[diag.iceState] ?? diag.iceState : '-'}</dd></div>
         <div><dt>Suas rotas</dt><dd>{counts(diag.local)}</dd></div>
         <div><dt>Rotas do mestre</dt><dd>{counts(diag.remote)}</dd></div>
         <div><dt>Servidor TURN</dt><dd>{diag.turn ? 'configurado' : 'não configurado'}</dd></div>

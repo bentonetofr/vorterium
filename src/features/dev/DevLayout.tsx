@@ -43,7 +43,7 @@ export function DevLayout() {
         <span className="dev__who" title={user?.email ?? ''}>{user?.email}</span>
         <button type="button" className="dev__leave" onClick={() => void leave()}>Sair</button>
       </header>
-      <p className="dev__readonly">Modo leitura — nada aqui altera os dados dos jogadores (exceto o status do feedback).</p>
+      <p className="dev__readonly">Modo leitura: nada aqui altera os dados dos jogadores (exceto o status do feedback).</p>
       <main className="dev__main">
         <Outlet />
       </main>

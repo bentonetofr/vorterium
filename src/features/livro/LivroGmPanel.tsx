@@ -37,12 +37,12 @@ export function suggestLivroHint(g: GameView): string {
   if (p.astrolabio === 0) return 'As sombras das velas acesas têm forma de símbolo. Cada encaixe do astrolábio quer a sombra que cai no gancho da sua runa.'
   if (p.astrolabio < 2) return 'O ponteiro do astrolábio só gira sozinho com os quatro encaixes certos. A marca em que ele para é o ângulo de onde se olha.'
   if (p.castical < 3) return 'Com as sete velas acesas, olhem o castiçal da marca que o ponteiro mostrou: as sombras viram um número.'
-  if (p.retrato < 2) return 'Da mesma marca, o retrato mostra um rosto — e um medalhão. E o quadro de tradução.'
+  if (p.retrato < 2) return 'Da mesma marca, o retrato mostra um rosto e um medalhão. E o quadro de tradução.'
   if (p.estante < 1) return 'Puxem os livros da estante nas posições do número das sombras, na ordem.'
   if (p.estante < 2) return 'As lombadas mostram uma palavra em glifos. O quadro de tradução do retrato diz as letras.'
   if (p.estante < 3) return 'A gaveta escondida da estante tem um encaixe redondo: o medalhão do retrato.'
   if (p.astrolabio < 3) return 'A chave de bronze abre a tampa do astrolábio. Dentro, a ordem das correntes.'
-  return 'Cada fechadura do pedestal quer uma resposta: o número, os quatro símbolos dos cantos do retrato, a marca e a palavra — na ordem da tampa.'
+  return 'Cada fechadura do pedestal quer uma resposta: o número, os quatro símbolos dos cantos do retrato, a marca e a palavra, na ordem da tampa.'
 }
 
 function fmtClock(ms: number) {

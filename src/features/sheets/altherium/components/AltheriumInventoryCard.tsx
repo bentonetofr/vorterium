@@ -316,7 +316,7 @@ export function AltheriumInventoryCard({
 
       <p className="alth-hint">
         Equipar soma o DB da peça à zona escolhida (escudo cobre as 4 zonas de uma vez). Desequipar
-        só desmarca — os campos de DB continuam manuais, ajuste-os se remover a peça.
+        só desmarca: os campos de DB continuam manuais, ajuste-os se remover a peça.
       </p>
 
       <Presence show={editor !== null} exitMs={220}>
@@ -370,7 +370,7 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
     if (!name.trim()) { setError('Dê um nome ao item.'); return }
     const dice = damageDice.replace(/\s+/g, '').toLowerCase()
     if (isWeapon && !DAMAGE_DICE_PATTERN.test(dice)) {
-      setError('Dado de dano inválido — use o formato 1d8 ou 2d6+1.')
+      setError('Dado de dano inválido. Use o formato 1d8 ou 2d6+1.')
       return
     }
     setBusy(true)

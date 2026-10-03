@@ -191,7 +191,7 @@ function MasterView({ campaignId }: { campaignId: string }) {
         <div className="sheets-list__form" ref={formRef}>
           {outdated && latest && (
             <div className="sheet-outdated" role="status">
-              <span>O jogador atualizou a ficha — recarregar?</span>
+              <span>O jogador atualizou a ficha. Recarregar?</span>
               <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => setEditing(latest)}>
                 Recarregar
               </button>

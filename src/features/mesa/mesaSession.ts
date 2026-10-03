@@ -767,7 +767,7 @@ export class MesaSession {
       this.send('answer', { from: this.myId, sdp: pc.localDescription?.sdp ?? '' })
     } catch (err) {
       console.error('[Mesa] Falha ao aceitar a transmissão:', err)
-      this.diag({ lastError: `Falha ao aceitar a transmissão: ${err instanceof Error ? `${err.name} — ${err.message}` : String(err)}` })
+      this.diag({ lastError: `Falha ao aceitar a transmissão: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}` })
       if (this.viewerPc === pc) this.scheduleReconnect()
     }
   }

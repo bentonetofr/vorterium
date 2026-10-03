@@ -31,8 +31,8 @@ export function TermosPage() {
       <section className="public-page__section">
         <h2 className="public-page__section-title">2. Responsabilidade pelo conteúdo</h2>
         <p className="public-page__text">
-          O conteúdo inserido no sistema — nomes de campanhas, fichas de personagem,
-          anotações, mensagens, imagens enviadas e o que for transmitido na Mesa — é
+          O conteúdo inserido no sistema (nomes de campanhas, fichas de personagem,
+          anotações, mensagens, imagens enviadas e o que for transmitido na Mesa) é
           de responsabilidade exclusiva do usuário que o cadastrou ou compartilhou.
         </p>
         <p className="public-page__text">

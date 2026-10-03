@@ -360,7 +360,7 @@ export function BoardContextBar({ items, left, top, isMaster, openLabel, fontsOp
       {only === 'connector' && (
         <>
           <button type="button" className="board-context__btn" onClick={a.onArrow} title="Pontas da seta" aria-label="Pontas da seta">
-            {first.data.arrow === 'both' ? '↔' : first.data.arrow === 'none' ? '—' : '→'}
+            {first.data.arrow === 'both' ? '↔' : first.data.arrow === 'none' ? '-' : '→'}
           </button>
           <button type="button" className={`board-context__btn${first.data.dashed ? ' is-on' : ''}`} onClick={a.onDashed} title="Tracejada" aria-label="Tracejada">┄</button>
           <button
@@ -628,7 +628,7 @@ const SHORTCUTS: [string, string][] = [
   ['Trocar a fonte', 'Selecione post-it, texto, forma ou moldura e clique em Aa'],
   ['Linha com quinas', 'Ferramenta Seta (L): clique, clique de novo pra cada quina, e termine com duplo clique, Enter ou clicando num item'],
   ['Encaixar na grade', 'Segure Shift enquanto arrasta um item'],
-  ['Ligar dois itens', 'Selecione o item e arraste uma bolinha azul até o outro — ou clique na bolinha e depois no outro item. A linha nasce em degrau (bom pra árvore genealógica)'],
+  ['Ligar dois itens', 'Selecione o item e arraste uma bolinha azul até o outro, ou clique na bolinha e depois no outro item. A linha nasce em degrau (bom pra árvore genealógica)'],
   ['Curvar a seta', 'Selecione a seta e arraste as bolinhas vazias (cada uma vira um ponto novo); duplo clique num ponto tira ele'],
   ['Ajustar', 'Setas movem (Shift = 10×) · Shift+1 vê tudo · Shift+0 volta a 100%'],
   ['Fotos e arquivos', 'Arraste do computador ou cole (Ctrl+V). Fotos vão pra Galeria; PDFs e textos, pra Biblioteca'],

@@ -82,6 +82,14 @@ export function usePixelFont() {
 type KeyboardLock = { lock?: (keys: string[]) => Promise<void>; unlock?: () => void }
 const keyboardApi = () => (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard
 
+/** Entra em tela cheia (só funciona dentro de um clique) e trava o Esc. */
+export function enterFullscreen() {
+  if (document.fullscreenElement) return
+  void document.documentElement.requestFullscreen?.()
+    .then(() => keyboardApi()?.lock?.(['Escape']))
+    .catch(() => {})
+}
+
 export function useFullscreen() {
   const [full, setFull] = useState(() => !!document.fullscreenElement)
   useEffect(() => {
@@ -92,12 +100,7 @@ export function useFullscreen() {
     document.addEventListener('fullscreenchange', f)
     return () => document.removeEventListener('fullscreenchange', f)
   }, [])
-  const enter = () => {
-    if (document.fullscreenElement) return
-    void document.documentElement.requestFullscreen?.()
-      .then(() => keyboardApi()?.lock?.(['Escape']))
-      .catch(() => {})
-  }
+  const enter = enterFullscreen
   const exit = () => { if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}) }
   return { full, enter, exit }
 }

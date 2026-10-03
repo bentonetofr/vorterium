@@ -16,38 +16,25 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '1.24',
-    date:    '2026-10-03',
-    title:   'Dois jogos de enigma pra sessão: O Livro Bloqueado e A Torre do Observatório',
-    items: [
-      'Novos joguinhos em pixel art pra jogar no meio da sessão, por cima do site: o mestre abre na campanha, escolhe quem joga, e o jogo cobre a tela de todo mundo dela. Quem não joga assiste ao vivo, com a tela dividida mostrando os dois jogadores.',
-      'O Livro Bloqueado: uma biblioteca trancada com um castiçal, um retrato, um astrolábio, uma estante e o livro preso por correntes no pedestal. Cada partida tem um segredo novo. Quem assiste vê na hora o que a dupla escolhe, o que digita e por onde passa a lupa no retrato.',
-      'A Torre do Observatório: pra exatamente 2 jogadores, um em cada andar da torre. Eles não se veem e só se ouvem — o que um enxerga, o outro precisa pra avançar, então tudo depende de falar pela voz.',
-      'Os dois jogos têm sons (passos, cliques, velas, engrenagens, um fundo de vento e máquinas), que dá pra desligar no menu ≡, e funcionam no celular (de preferência deitado).',
-      'Pro mestre: painel com o andamento, dicas prontas pela etapa em que a dupla está (ou escritas na hora, que aparecem pra todos por 25 s), a solução da partida, a linha do tempo do que cada um fez e o botão Recomeçar. Se o mestre estiver jogando, a solução nem chega ao navegador dele.',
-      'Dá pra trocar de um jogo pro outro pelo menu ≡ no meio da sessão: o jogo que sai fica pausado (o relógio para) e, ao voltar, tudo está onde parou — posição dos bonecos, janela aberta, luzes e progresso.',
-    ],
-  },
-  {
     version: '1.23',
     date:    '2026-10-01',
     title:   'Artes e referências e Documentos na Mesa',
     items: [
-      'Mesa: a galeria virou "Artes e referências" e agora aparece pra todos da campanha — mestre e jogadores enviam imagens (retratos, mapas, artes) pra mostrar como referência, cada uma com o nome de quem enviou. Os jogadores clicam pra ver grande.',
-      'Mesa: nada entra na transmissão sozinho. Só o mestre põe uma imagem na mesa, clicando nela — inclusive as que os jogadores enviaram, que aparecem na hora pra ele com a marca "Nova". Cada um pode excluir o que enviou.',
+      'Mesa: a galeria virou "Artes e referências" e agora aparece pra todos da campanha: mestre e jogadores enviam imagens (retratos, mapas, artes) pra mostrar como referência, cada uma com o nome de quem enviou. Os jogadores clicam pra ver grande.',
+      'Mesa: nada entra na transmissão sozinho. Só o mestre põe uma imagem na mesa, clicando nela, inclusive as que os jogadores enviaram, que aparecem na hora pra ele com a marca "Nova". Cada um pode excluir o que enviou.',
       'Artes e referências também vão pra Galeria da campanha, e dá pra colocá-las no Quadro: pelo botão ▦ em cada arte na aba Mesa (vai pro quadro Geral, ao lado do que já tem lá) ou pelo novo botão "Artes e referências" na barra do Quadro (tecla G), que coloca a arte no meio da tela.',
-      'Mesa (Altherium): nova seção Documentos. O mestre escreve cartas e livros em papel antigo, com letra à mão — 16 papéis (fotos reais de papel antigo e pergaminho, e papéis manchados de chá, café, mofo, cinzas, couro, sangue…), efeitos que se combinam (bordas queimadas leves ou fortes, rasgos, dobras, manchas), 7 cores de tinta e dezenas de letras manuscritas e caligráficas.',
-      'Mesa (Altherium): o livro tem capa de couro com título dourado e as páginas viram em 3D — dá pra folhear com as setas, clicando na página ou pelas teclas ← →. Cada página pode ter o seu próprio papel e a sua própria letra.',
-      'Mesa (Altherium): documentos nascem escondidos. O mestre libera quando os jogadores encontram, ou põe na transmissão — e, num livro, a página que o mestre vira, vira pra todos.',
+      'Mesa (Altherium): nova seção Documentos. O mestre escreve cartas e livros em papel antigo, com letra à mão: 16 papéis (fotos reais de papel antigo e pergaminho, e papéis manchados de chá, café, mofo, cinzas, couro, sangue…), efeitos que se combinam (bordas queimadas leves ou fortes, rasgos, dobras, manchas), 7 cores de tinta e dezenas de letras manuscritas e caligráficas.',
+      'Mesa (Altherium): o livro tem capa de couro com título dourado e as páginas viram em 3D: dá pra folhear com as setas, clicando na página ou pelas teclas ← →. Cada página pode ter o seu próprio papel e a sua própria letra.',
+      'Mesa (Altherium): documentos nascem escondidos. O mestre libera quando os jogadores encontram, ou põe na transmissão. E, num livro, a página que o mestre vira, vira pra todos.',
       'Documentos: a escolha da letra virou uma caixa "Fontes" que abre um card com todas as letras à mão, cada uma escrita nela mesma, com busca pelo nome (antes a lista ficava espremida e as fontes não apareciam).',
-      'Documentos: o livro novo começa pela capa — escolhe o título e o couro, e depois segue pras páginas (a capa fica sempre como primeira aba do editor).',
+      'Documentos: o livro novo começa pela capa: escolhe o título e o couro, e depois segue pras páginas (a capa fica sempre como primeira aba do editor).',
       'Documentos: no livro, o texto que não cabe numa página passa sozinho pra seguinte, e volta a subir quando você apaga e sobra espaço. Mudar a letra ou o tamanho redistribui as páginas. Na folha avulsa, aparece um aviso quando o texto passa do papel.',
       'Documentos: o editor ganhou um × no canto superior direito pra fechar (se tiver alteração sem salvar, ele pergunta antes).',
       'Documentos: a capa do livro na seção Documentos da Mesa agora aparece igual à do editor (o título ficava minúsculo), e a capa ganhou o nome do autor, gravado embaixo em dourado.',
-      'Documentos: livro na transmissão — todo mundo cai na mesma página que o mestre, mesmo quem vê uma página por vez (celular) e o mestre vê duas. O jogador também pode folhear por conta própria e volta pra página do mestre quando ele virar. A última página em branco de um livro ímpar não ganha mais número.',
+      'Documentos: livro na transmissão: todo mundo cai na mesma página que o mestre, mesmo quem vê uma página por vez (celular) e o mestre vê duas. O jogador também pode folhear por conta própria e volta pra página do mestre quando ele virar. A última página em branco de um livro ímpar não ganha mais número.',
       'Documentos (correções): no livro com 200 páginas (o limite), o texto que passa da última não some mais; as setas ← → não viram ao mesmo tempo o livro da transmissão e o do leitor aberto por cima; ao trocar entre uma e duas páginas (girar o celular, redimensionar) o livro continua na mesma página; o leitor fecha sozinho se o documento for excluído ou escondido; o aviso de "texto passou da folha" mede a folha certa; Ctrl+S não salva duas vezes.',
-      'Documentos: as páginas agora se escrevem direto no papel, como no Word — barra de formatação com letra e tamanho (com A+ e A−) só no trecho escolhido, negrito, itálico, sublinhado, tachado, cor da tinta, alinhar à esquerda/centro/direita/justificar, marcadores e numeração, recuo, espaçamento entre linhas e limpar formatação. Tab pula até a próxima parada (numa lista, desce um nível), colar mantém a formatação básica, e Ctrl+Z/Ctrl+Y desfazem e refazem. Atalhos do Word: Ctrl+B/I/U, Ctrl+E/L/R/J, Ctrl+] e Ctrl+[. Documentos antigos continuam iguais.',
-      'Documentos: no livro, o texto formatado continua passando sozinho de uma página pra outra — um parágrafo ou item de lista cortado no meio continua na página seguinte sem repetir o marcador, a numeração segue, e tudo volta a se juntar quando sobra espaço.',
+      'Documentos: as páginas agora se escrevem direto no papel, como no Word: barra de formatação com letra e tamanho (com A+ e A−) só no trecho escolhido, negrito, itálico, sublinhado, tachado, cor da tinta, alinhar à esquerda/centro/direita/justificar, marcadores e numeração, recuo, espaçamento entre linhas e limpar formatação. Tab pula até a próxima parada (numa lista, desce um nível), colar mantém a formatação básica, e Ctrl+Z/Ctrl+Y desfazem e refazem. Atalhos do Word: Ctrl+B/I/U, Ctrl+E/L/R/J, Ctrl+] e Ctrl+[. Documentos antigos continuam iguais.',
+      'Documentos: no livro, o texto formatado continua passando sozinho de uma página pra outra: um parágrafo ou item de lista cortado no meio continua na página seguinte sem repetir o marcador, a numeração segue, e tudo volta a se juntar quando sobra espaço.',
     ],
   },
   {
@@ -55,9 +42,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-10-01',
     title:   'Árvore genealógica e alinhamento de texto no Quadro',
     items: [
-      'Quadro: nova linha em degrau (ângulos retos, cantos levemente arredondados), o formato clássico de árvore genealógica — ela sai do item, desce até o meio do caminho, anda na horizontal e entra no outro, e se refaz sozinha quando você mexe nos itens. Setas puxadas das bolinhas azuis já nascem assim, e o botão de degrau na barra da seta liga e desliga.',
-      'Quadro: clicar (sem arrastar) numa bolinha azul agora também funciona — a linha sai presa no item; clique no outro item pra ligar, ou clique no caminho pra fazer quinas.',
-      'Quadro: textos, post-its e formas agora têm alinhamento — à esquerda, no centro ou à direita — pelos três botões na barra da seleção.',
+      'Quadro: nova linha em degrau (ângulos retos, cantos levemente arredondados), o formato clássico de árvore genealógica: ela sai do item, desce até o meio do caminho, anda na horizontal e entra no outro, e se refaz sozinha quando você mexe nos itens. Setas puxadas das bolinhas azuis já nascem assim, e o botão de degrau na barra da seta liga e desliga.',
+      'Quadro: clicar (sem arrastar) numa bolinha azul agora também funciona: a linha sai presa no item; clique no outro item pra ligar, ou clique no caminho pra fazer quinas.',
+      'Quadro: textos, post-its e formas agora têm alinhamento (à esquerda, no centro ou à direita) pelos três botões na barra da seleção.',
     ],
   },
   {
@@ -65,9 +52,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-10-01',
     title:   'Linha com quinas e grade com Shift no Quadro',
     items: [
-      'Quadro: com a ferramenta Seta, agora dá pra fazer a linha com cliques — clique pra começar, clique de novo em cada lugar pra fazer uma quina reta, e termine com duplo clique, Enter, Esc ou clicando num item (a ponta se prende nele). Arrastar continua funcionando como antes.',
+      'Quadro: com a ferramenta Seta, agora dá pra fazer a linha com cliques: clique pra começar, clique de novo em cada lugar pra fazer uma quina reta, e termine com duplo clique, Enter, Esc ou clicando num item (a ponta se prende nele). Arrastar continua funcionando como antes.',
       'Quadro: novo botão na barra da seta pra alternar entre cantos retos e arredondados em linhas com quinas ou curvas.',
-      'Quadro: segure Shift enquanto arrasta um item e aparece uma grade — o item encaixa nela, alinhado com os pontinhos do quadro. Soltando o Shift, a grade some e o item volta a andar livre.',
+      'Quadro: segure Shift enquanto arrasta um item e aparece uma grade: o item encaixa nela, alinhado com os pontinhos do quadro. Soltando o Shift, a grade some e o item volta a andar livre.',
     ],
   },
   {
@@ -75,7 +62,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-10-01',
     title:   'Ligar itens do Quadro com setas',
     items: [
-      'Quadro: ao selecionar uma imagem, post-it, forma, texto ou moldura, aparecem bolinhas azuis em volta (como no Miro). Arraste uma delas até outro item e nasce uma seta presa nos dois — o item de destino fica destacado enquanto você puxa, e a seta acompanha quando eles mudam de lugar. Bom pra árvores genealógicas e mapas de relações.',
+      'Quadro: ao selecionar uma imagem, post-it, forma, texto ou moldura, aparecem bolinhas azuis em volta (como no Miro). Arraste uma delas até outro item e nasce uma seta presa nos dois. O item de destino fica destacado enquanto você puxa, e a seta acompanha quando eles mudam de lugar. Bom pra árvores genealógicas e mapas de relações.',
     ],
   },
   {
@@ -83,7 +70,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-10-01',
     title:   'Galeria de todos',
     items: [
-      'Galeria: agora é de todos da campanha — os jogadores também abrem os álbuns e veem as imagens da Mesa e as fotos do Quadro. Adicionar, excluir e levar pra outra campanha continua com o mestre, e as fotos do Escudo do mestre continuam só dele. Na aba Mesa, a seção de imagens passou a se chamar Galeria.',
+      'Galeria: agora é de todos da campanha: os jogadores também abrem os álbuns e veem as imagens da Mesa e as fotos do Quadro. Adicionar, excluir e levar pra outra campanha continua com o mestre, e as fotos do Escudo do mestre continuam só dele. Na aba Mesa, a seção de imagens passou a se chamar Galeria.',
     ],
   },
   {
@@ -91,12 +78,12 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-10-01',
     title:   'Biblioteca de todos, Escudo fechado, setas por cima e fontes no caderninho',
     items: [
-      'Biblioteca: tudo que está na estante da campanha agora é de todos — os jogadores leem todos os arquivos, e não existe mais a opção de esconder. Arquivos que o mestre já tinha escondido continuam escondidos até ele clicar em "Mostrar aos jogadores".',
-      'Escudo do mestre: fotos, PDFs e textos postos no Escudo agora ficam só no Escudo — não vão mais pra Galeria nem pra Biblioteca. Pra abrir um arquivo do Escudo, é só dar duplo clique nele.',
+      'Biblioteca: tudo que está na estante da campanha agora é de todos: os jogadores leem todos os arquivos, e não existe mais a opção de esconder. Arquivos que o mestre já tinha escondido continuam escondidos até ele clicar em "Mostrar aos jogadores".',
+      'Escudo do mestre: fotos, PDFs e textos postos no Escudo agora ficam só no Escudo e não vão mais pra Galeria nem pra Biblioteca. Pra abrir um arquivo do Escudo, é só dar duplo clique nele.',
       'Quadro: setas agora ficam por cima dos post-its e dos outros itens quando são mais novas (antes ficavam sempre por trás), e "Trazer pra frente" e "Mandar pra trás" também valem pras setas.',
-      'Meu caderninho: nova escolha de fonte na barra de formatação (o "Aa" no começo), com as mesmas 249 fontes do Google Fonts do Quadro — busca pelo nome e categorias. A fonte vale pro trecho selecionado ou pro que for escrito a seguir, e o mestre vê a fonte escolhida.',
-      'Quadro: depois de clicar num botão (como o dos dados), apertar Espaço com o mouse em cima do quadro agora arrasta o quadro na hora — antes o botão ficava "aceso" e segurava o Espaço. Em qualquer botão do site, o Espaço também tira o destaque de seleção.',
-      'Meu caderninho: clicar de novo num botão de formatação desliga ela — negrito, itálico, sublinhado e tachado agora desligam mesmo com o cursor parado (antes o segundo clique não tirava), e clicar na cor, no marca-texto, no tamanho ou na fonte que já está em uso volta ao normal. A cor e o marca-texto em uso aparecem marcados.',
+      'Meu caderninho: nova escolha de fonte na barra de formatação (o "Aa" no começo), com as mesmas 249 fontes do Google Fonts do Quadro, com busca pelo nome e categorias. A fonte vale pro trecho selecionado ou pro que for escrito a seguir, e o mestre vê a fonte escolhida.',
+      'Quadro: depois de clicar num botão (como o dos dados), apertar Espaço com o mouse em cima do quadro agora arrasta o quadro na hora. Antes o botão ficava "aceso" e segurava o Espaço. Em qualquer botão do site, o Espaço também tira o destaque de seleção.',
+      'Meu caderninho: clicar de novo num botão de formatação desliga ela: negrito, itálico, sublinhado e tachado agora desligam mesmo com o cursor parado (antes o segundo clique não tirava), e clicar na cor, no marca-texto, no tamanho ou na fonte que já está em uso volta ao normal. A cor e o marca-texto em uso aparecem marcados.',
     ],
   },
   {
@@ -106,8 +93,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     items: [
       'Quadro: as setas agora curvam com quantos pontos você quiser. Selecione a seta e arraste uma das bolinhas vazias no meio de cada trecho: ela vira um ponto novo, e a seta passa suave por todos. Arraste os pontos (bolinhas cheias) pra ajustar, e dê duplo clique num ponto pra tirar ele. O botão de curva na barra deixa a seta reta de novo, e a curva acompanha quando os itens mudam de lugar.',
       'Quadro: a caneta agora arredonda o traço sozinha. Enquanto você desenha, a linha segue o mouse com uma folguinha que tira a tremedeira, e ao soltar o traço todo é alisado (curvas tortas viram curvas lisas, e um traço que termina perto do começo fecha certinho). Traços pequenos, como letras, são alisados de leve pra não perder a forma.',
-      'No site todo, a tecla Espaço não aperta mais botão nenhum (antes, ela repetia o último botão clicado — como um botão do Quadro ao arrastar com Espaço). Em campos de texto o Espaço continua normal, e o Enter segue apertando botões.',
-      'Quadro: trocar entre as abas Geral e Escudo do mestre ficou fluido — a aba escolhida sobe e acende, o quadro desliza do lado dela e o título troca suave. Voltar pra uma aba já aberta aparece na hora, sem "Abrindo o quadro…" (o que mudou chega por trás).',
+      'No site todo, a tecla Espaço não aperta mais botão nenhum (antes, ela repetia o último botão clicado, como um botão do Quadro ao arrastar com Espaço). Em campos de texto o Espaço continua normal, e o Enter segue apertando botões.',
+      'Quadro: trocar entre as abas Geral e Escudo do mestre ficou fluido: a aba escolhida sobe e acende, o quadro desliza do lado dela e o título troca suave. Voltar pra uma aba já aberta aparece na hora, sem "Abrindo o quadro…" (o que mudou chega por trás).',
     ],
   },
   {
@@ -115,10 +102,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-09-30',
     title:   'Fontes e setas curvas no Quadro, zoom suave e caderninho com Tab',
     items: [
-      'Quadro: nova galeria de fontes com 249 fontes do Google Fonts — fantasia e medieval, terror, caligrafia, escrita à mão, clássicas, modernas, títulos chamativos e máquina de escrever/pixel. Selecione um post-it, texto, forma ou moldura e clique em "Aa" na barra da seleção; dá pra procurar pelo nome e filtrar por categoria, e todo mundo no quadro vê a fonte escolhida.',
+      'Quadro: nova galeria de fontes com 249 fontes do Google Fonts: fantasia e medieval, terror, caligrafia, escrita à mão, clássicas, modernas, títulos chamativos e máquina de escrever/pixel. Selecione um post-it, texto, forma ou moldura e clique em "Aa" na barra da seleção; dá pra procurar pelo nome e filtrar por categoria, e todo mundo no quadro vê a fonte escolhida.',
       'Quadro: setas curvas. Selecione a seta e arraste a bolinha do meio pra curvar (ou use o botão de curva na barra); duplo clique na bolinha deixa reta de novo. A curva acompanha quando os itens mudam de lugar.',
-      'Quadro: duplo clique (ou dois toques) agora sempre abre a edição do texto do item, com o cursor onde você clicou — antes ele às vezes criava um post-it no lugar, e a edição começava com o texto todo selecionado (a primeira tecla apagava tudo). No espaço vazio, o duplo clique não cria mais post-it (use a ferramenta ou a tecla N).',
-      'Quadro: zoom mais suave e controlado — a roda do mouse anda uns 10% por clique, girar rápido não arremessa mais o zoom pra longe ou pra perto demais, e o zoom vai de 15% a 300%.',
+      'Quadro: duplo clique (ou dois toques) agora sempre abre a edição do texto do item, com o cursor onde você clicou. Antes ele às vezes criava um post-it no lugar, e a edição começava com o texto todo selecionado (a primeira tecla apagava tudo). No espaço vazio, o duplo clique não cria mais post-it (use a ferramenta ou a tecla N).',
+      'Quadro: zoom mais suave e controlado: a roda do mouse anda uns 10% por clique, girar rápido não arremessa mais o zoom pra longe ou pra perto demais, e o zoom vai de 15% a 300%.',
       'Meu caderninho: o Tab dentro da folha agora escreve uma tabulação, pra organizar eventos e listas (numa lista com marcadores, Tab desce um nível e Shift+Tab sobe). O caderno continua abrindo com Tab e agora fecha com Esc.',
       'Meu caderninho: corrigido o ">" (e o "<" e o "&") que virava "&gt;" ao colar ou escrever, principalmente no Firefox. As anotações que já tinham ficado assim voltam a mostrar o símbolo certo.',
       'Meu caderninho: com a internet lenta, um texto apagado podia voltar sozinho (e uma anotação apagada reaparecer) quando chegava uma versão antiga atrasada. Agora vale sempre a versão mais nova, e se não der pra apagar uma anotação o caderno avisa.',
@@ -130,7 +117,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:   'Episódios em janela, caderno com formatação, emojis e desvantagem nos domínios',
     items: [
       'Emojis completos, como no WhatsApp, no chat das campanhas (botão 😊 ao lado do campo de mensagem) e no Meu caderninho: todas as categorias, busca em português (dá pra procurar "coração", "kkk", "s2"…), tons de pele e "usados recentemente".',
-      'Meu caderninho: nova barra de formatação — negrito, itálico, sublinhado, tachado, cor da letra, marca-texto, tamanho da letra (pequeno, normal, grande, enorme), listas com marcadores e numeradas, e limpar formatação. Ctrl+B, Ctrl+I e Ctrl+U também funcionam, e o mestre vê a formatação na página de anotações.',
+      'Meu caderninho: nova barra de formatação: negrito, itálico, sublinhado, tachado, cor da letra, marca-texto, tamanho da letra (pequeno, normal, grande, enorme), listas com marcadores e numeradas, e limpar formatação. Ctrl+B, Ctrl+I e Ctrl+U também funcionam, e o mestre vê a formatação na página de anotações.',
       'Episódios: "Nova sessão" e "Editar" agora abrem numa janela no centro da tela, com o fundo embaçado, em vez de empurrar a lista pra baixo. Esc ou clique fora fecham se nada foi mudado; com alterações, feche pelo Cancelar ou pelo ×.',
       'Altherium, domínios: os pontos agora vão de −1 a 2, e depois do 2 tem o "+", uma caixinha menor que acende o 0, o 1 e o 2 e soma mais um dado (4d10). Nem o −1 nem o "+" gastam ponto de domínio.',
       'Altherium, domínios: o −1 marca desvantagem (1d de desvantagem, com "desv." nos dados e a linha avermelhada). Com um atributo em 0, os domínios dele começam com o −1 marcado; clicar no 0, 1, 2 ou "+" tira a desvantagem daquele domínio e usa os dados normais do número clicado.',
@@ -176,7 +163,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:   'Mesa mais estável e livro mais fluido',
     items: [
       'Mesa: corrigida uma falha em que partes da negociação da conexão se perdiam quando chegavam antes da hora, deixando o jogador preso em "Reconectando…".',
-      'Enquanto a transmissão não abre, o jogador vê "Detalhes da conexão": se a oferta do mestre chegou, se a rede ligou e por qual rota — ajuda a descobrir o que está travando.',
+      'Enquanto a transmissão não abre, o jogador vê "Detalhes da conexão": se a oferta do mestre chegou, se a rede ligou e por qual rota. Ajuda a descobrir o que está travando.',
       'Livro de regras mais leve de rolar: as páginas foram preparadas pra o leitor desenhar bem mais rápido (a página mais pesada caiu de 151 ms pra 58 ms), com a mesma aparência e a busca de texto funcionando.',
     ],
   },
@@ -197,7 +184,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Na aba Atributos, o quadro Gênesis mostra o efeito do livro e guarda as habilidades de gênesis que o mestre der ao personagem.',
       'Triunfos do Pilar separados em grupos de 1, 2, 3 e 4 combinações, com cartinhas em leque no cabeçalho de cada grupo.',
       'Manequim do Pilar: as tranças ficam presas na cabeça e acompanham quando ela gira; batem na cabeça, nos ombros e nos braços em vez de atravessar, ficam apoiadas no ombro caindo pela frente, e balançam quando o boneco cai sem pernas, levanta ou quando um braço esbarra nelas.',
-      'Seção Recentes no topo dos triunfos das três raízes (Berserker, Runaskin — trilha e runas — e Pilar): os 4 últimos que você usou, pra achar rápido sem perder a lista toda.',
+      'Seção Recentes no topo dos triunfos das três raízes (Berserker, Runaskin com trilha e runas, e Pilar): os 4 últimos que você usou, pra achar rápido sem perder a lista toda.',
     ],
   },
   {

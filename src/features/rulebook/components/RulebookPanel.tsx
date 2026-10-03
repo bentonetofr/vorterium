@@ -86,7 +86,7 @@ export function RulebookPanel({ system }: { system: CampaignSystem }) {
       </header>
 
       {canEmbed ? (
-        <RulebookSlot className="rulebook__viewer" url={book.viewerUrl} title={`${book.title} — ${book.subtitle}`} />
+        <RulebookSlot className="rulebook__viewer" url={book.viewerUrl} title={`${book.title}: ${book.subtitle}`} />
       ) : (
         <div className="rulebook__mobile">
           <p>No celular, o livro abre no leitor de PDF do aparelho.</p>

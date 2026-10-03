@@ -34,7 +34,7 @@ export function DevUsersPage() {
                     <span>{u.display_name}<small>{u.email}</small></span>
                   </Link>
                 </td>
-                <td>{u.provider ?? '—'}</td>
+                <td>{u.provider ?? '-'}</td>
                 <td>{u.campaigns}</td>
                 <td>{fmtDateTime(u.created_at)}</td>
                 <td>{fmtAgo(u.last_sign_in_at)}</td>
@@ -71,7 +71,7 @@ export function DevUserPage() {
             </header>
             <dl className="dev-facts">
               <div><dt>ID</dt><dd><code>{data.user.id}</code></dd></div>
-              <div><dt>Entrada</dt><dd>{data.user.provider ?? '—'}</dd></div>
+              <div><dt>Entrada</dt><dd>{data.user.provider ?? '-'}</dd></div>
               <div><dt>Cadastro</dt><dd>{fmtDateTime(data.user.created_at)}</dd></div>
               <div><dt>Último login</dt><dd>{fmtDateTime(data.user.last_sign_in_at)}</dd></div>
             </dl>

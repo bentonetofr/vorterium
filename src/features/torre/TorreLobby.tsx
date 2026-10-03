@@ -59,7 +59,7 @@ export function TorreLobby({ view, peers }: { view: TorreView; peers: TorrePeer[
         <h1 className="lb-title">A Torre do Observatório</h1>
         <p className="lb-lobby__lead">
           Dois andares, uma grade de ferro entre eles. Um sobe e vê o céu; o outro desce e mexe nas máquinas.
-          Vocês não se enxergam — só se ouvem. Falem pela voz.
+          Vocês não se enxergam, só se ouvem. Falem pela voz.
         </p>
 
         <ul className="lb-people" aria-label="Quem está na sessão">

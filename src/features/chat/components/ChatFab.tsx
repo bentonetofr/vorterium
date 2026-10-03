@@ -81,7 +81,7 @@ export function ChatFab() {
         type="button"
         className={`chat-fab__button${isOpen ? ' chat-fab__button--open' : ''}`}
         onClick={toggle}
-        aria-label={unread > 0 ? `Chat — ${unread} mensagens novas` : 'Chat'}
+        aria-label={unread > 0 ? `Chat: ${unread} mensagens novas` : 'Chat'}
         aria-expanded={isOpen}
         title="Chat da campanha"
       >

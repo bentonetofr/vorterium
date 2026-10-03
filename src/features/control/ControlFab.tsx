@@ -68,7 +68,7 @@ function ControlList() {
     return (
       <div className="control-panel__state control-panel__state--empty">
         <p>Nada guardado por enquanto.</p>
-        <p>Os recursos novos que a gente criar aparecem aqui, guardados — e você decide quando vão pro site.</p>
+        <p>Os recursos novos que a gente criar aparecem aqui, guardados, e você decide quando vão pro site.</p>
       </div>
     )
   }

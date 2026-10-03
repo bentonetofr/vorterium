@@ -337,7 +337,7 @@ function TimelineView({ item }: ItemViewProps) {
           <span className="board-timeline__dot" />
           <span className="board-timeline__label">
             {ev.when && <span className="board-timeline__when">{ev.when}</span>}
-            <span className="board-timeline__title">{ev.title || '—'}</span>
+            <span className="board-timeline__title">{ev.title || '-'}</span>
           </span>
         </div>
       ))}

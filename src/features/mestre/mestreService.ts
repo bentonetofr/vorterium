@@ -119,6 +119,52 @@ export function subscribeCampaignMestre(campaignId: string, onChange: (what: 'ca
   return () => { void supabase.removeChannel(channel) }
 }
 
+// ── A campanha escolhida (o botão só aparece nela) ──────
+
+/** Esta campanha é a escolhida pelo dono do site? (Sem a migration: não.) */
+export async function loadMestreHere(campaignId: string): Promise<boolean> {
+  const { data, error } = await supabase.from('altherium_mestre_campaigns').select('campaign_id').eq('campaign_id', campaignId).maybeSingle()
+  return !error && !!data
+}
+
+/**
+ * Avisa quando a escolha muda. Sem filtro de campanha: quando o dono troca
+ * de campanha, a linha da antiga é apagada, e o aviso de "apagou" chega
+ * sem dizer de qual campanha era — quem recebe confere de novo.
+ */
+export function subscribeMestreHere(onChange: () => void): () => void {
+  const channel = supabase
+    .channel(uniqueChannel('mestre-campanha'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'altherium_mestre_campaigns' }, () => onChange())
+    .subscribe()
+  return () => { void supabase.removeChannel(channel) }
+}
+
+type HereCampaign = { id: string; name: string; master: boolean } | null
+
+/** O dono escolhe a campanha aberta (tira o botão da que era antes). */
+export async function mestreChooseHere(campaign: HereCampaign): Promise<string> {
+  if (!campaign) return 'Abra a página da campanha de Altherium e toque aqui de novo.'
+  const { data, error } = await supabase.rpc('mestre_choose_campaign', { p_campaign: campaign.id })
+  if (error) throw new Error(error.message || 'Não foi possível. Confira se a migration da campanha da Raiz Mestre já rodou.')
+  return `Agora só em "${data as string}".`
+}
+
+/** Em que campanha está (pro Painel). */
+export async function mestreWhere(): Promise<string> {
+  const { data, error } = await supabase.rpc('mestre_chosen_campaign')
+  if (error) throw new Error('Não foi possível. Confira se a migration da campanha da Raiz Mestre já rodou.')
+  return data ? `Está em "${data as string}".` : 'Em nenhuma campanha ainda.'
+}
+
+/** Ligar com uma campanha aberta já escolhe ela; sem campanha, só avisa onde está. */
+export async function mestreToggle(enabled: boolean, ctx: { campaign: HereCampaign }): Promise<string | void> {
+  if (!enabled) return 'Desligado em todas as campanhas.'
+  if (ctx.campaign) return mestreChooseHere(ctx.campaign)
+  const where = await mestreWhere()
+  return `Ligado. ${where} Pra escolher outra, abra a página dela e toque em "Só nesta campanha".`
+}
+
 // ── Testes do dono do site (só nele) ────────────────────
 
 /** O dono aperta sozinho: só ele vira Mestre (ficha dele nessa campanha, se tiver, e o tema). */

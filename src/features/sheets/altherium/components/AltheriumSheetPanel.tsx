@@ -361,7 +361,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
     <div className="sheets-list-wrapper">
       <div className="sheets-cards anim-stagger">
         {sheets.map((s) => {
-          const raizName = s.raiz ? raizLabel(s.raiz) ?? '—' : 'Sem raiz'
+          const raizName = s.raiz ? raizLabel(s.raiz) ?? '-' : 'Sem raiz'
           // profile vem null quando o dono não é mais membro da campanha
           // (RLS de profiles exige co-membro atual) — a ficha continua existindo.
           const ownerLabel = s.profile?.display_name ?? 'Jogador removido'
@@ -414,7 +414,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
         <div className="sheets-list__form" ref={formRef}>
           {outdated && latest && (
             <div className="sheet-outdated" role="status">
-              <span>O jogador atualizou a ficha — recarregar?</span>
+              <span>O jogador atualizou a ficha. Recarregar?</span>
               <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => setEditing(latest)}>
                 Recarregar
               </button>
@@ -454,7 +454,7 @@ function SummaryBar({ sigla, tone, current, max }: SummaryBarProps) {
     <div className={`sheet-card__bar sheet-card__bar--${tone}`}>
       <div className="sheet-card__bar-top">
         <span className="sheet-card__bar-sigla">{sigla}</span>
-        <span key={`${current}/${max}`} className="sheet-card__bar-values anim-bump">{current} / {max ?? '—'}</span>
+        <span key={`${current}/${max}`} className="sheet-card__bar-values anim-bump">{current} / {max ?? '-'}</span>
       </div>
       <div className="sheet-card__bar-track">
         <div className="sheet-card__bar-fill" style={{ width: `${pct}%` }} />
