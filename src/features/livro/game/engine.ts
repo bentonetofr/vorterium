@@ -39,6 +39,8 @@ export interface GameOptions<Id extends string = PanelId> {
    * divide a tela em duas salas pequenas desliga, senão fica tudo em 1×.
    */
   integerScale?: boolean
+  /** A cada passo do MEU boneco (pra tocar o som do passo). */
+  onStep?:      (x: number, y: number) => void
 }
 
 /** Um boneco já posto na tela neste quadro (pra luz e nomes). */
@@ -116,6 +118,7 @@ export class RoomGame<Id extends string, G> {
   private lastSend = 0
   private lastSent = ''
   private lastSave = 0
+  private stepDist = 0
   private disposers: (() => void)[] = []
   private game: G | null = null
 
@@ -181,14 +184,20 @@ export class RoomGame<Id extends string, G> {
 
   // ── Quem está na sala ─────────────────────────────────
 
-  setPlayers(players: GamePlayer[]) {
+  /**
+   * Quem joga. `positions` (do banco) põe cada boneco onde estava — depois
+   * de uma troca de jogo ou de recarregar — em vez do ponto de partida.
+   */
+  setPlayers(players: GamePlayer[], positions?: Record<string, { x: number; y: number; d: Dir } | undefined>) {
     const keep = new Set(players.map((p) => p.uid))
     for (const uid of [...this.actors.keys()]) if (!keep.has(uid)) this.actors.delete(uid)
     for (const p of players) {
       const a = this.actors.get(p.uid)
       if (a) { a.name = p.name; a.slot = p.slot; continue }
       const spawn = this.scene.spawns[p.slot] ?? this.scene.spawns[0]
-      const saved = p.uid === this.opts.meUid ? this.loadPos() : null
+      const fromDb = positions?.[p.uid]
+      const db = fromDb && typeof fromDb.x === 'number' && !this.blocked(fromDb.x, fromDb.y) ? fromDb : null
+      const saved = db ?? (p.uid === this.opts.meUid ? this.loadPos() : null)
       this.actors.set(p.uid, {
         uid: p.uid, name: p.name, slot: p.slot,
         x: saved?.x ?? spawn.x, y: saved?.y ?? spawn.y, d: saved?.d ?? spawn.d,
@@ -426,6 +435,15 @@ export class RoomGame<Id extends string, G> {
       if (this.keys.has('down')) dy += 1
     }
     if (!dx && !dy && this.path && !this.frozen) {
+      // Já entrou onde dá pra usar o objeto clicado: abre (sem esperar o ponto exato).
+      const target = this.scene.objects.find((x) => x.id === this.path!.open)
+      if (target && inRect(me.x, me.y, target.zone)) {
+        this.path = null
+        me.d = target.approach.face
+        me.moving = false
+        this.opts.onOpen(target.id)
+        return
+      }
       const next = this.path.pts[0]
       const ddx = next.x - me.x
       const ddy = next.y - me.y
@@ -454,6 +472,10 @@ export class RoomGame<Id extends string, G> {
       const by = me.y
       this.step(me, sx, sy)
       me.moving = Math.abs(me.x - bx) + Math.abs(me.y - by) > 0.01
+      if (me.moving && this.opts.onStep) {
+        this.stepDist += Math.hypot(me.x - bx, me.y - by)
+        if (this.stepDist >= 11) { this.stepDist = 0; this.opts.onStep(me.x, me.y) }
+      }
       if (Math.abs(dx) > Math.abs(dy)) me.d = dx > 0 ? 'right' : 'left'
       else me.d = dy > 0 ? 'down' : 'up'
       // Esbarrou seguindo o caminho: tolera um instante antes de desistir.

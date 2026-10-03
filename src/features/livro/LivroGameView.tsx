@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { gm, type LivroView } from './livroService'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { gm, savePos, type LivroView } from './livroService'
+import { createPosSaver } from './game/posSaver'
 import type { LivroNet, NetPeer, PanelId } from './livroNet'
 import { LivroGame } from './game/engine'
 import { PuzzlePanel } from './PuzzlePanel'
@@ -32,12 +33,23 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
   const gameStateRef = useRef(view.game)
   gameStateRef.current = view.game
   peersRef.current = peers
-  const [panel, setPanel] = useState<PanelId | null>(null)
+  // Volta com a janela que estava aberta (troca de jogo, recarregar).
+  const [panel, setPanel] = useState<PanelId | null>(() => (view.me.slot !== null ? (view.pos?.[view.me.uid]?.p as PanelId | null | undefined) ?? null : null))
   const [watch, setWatch] = useState<string | null>(null)
   const [remotePanels, setRemotePanels] = useState<Record<string, PanelId | null>>({})
   const [hint, setHint] = useState(true)
   const me = view.me
   const controllable = me.slot !== null
+
+  // Onde o meu boneco está fica no banco (pra voltar ao mesmo lugar).
+  const posRef = useRef(view.pos)
+  const roomId = view.room.id
+  const saver = useMemo(() => createPosSaver((p) => savePos(roomId, p)), [roomId])
+  useEffect(() => {
+    const out = () => saver.flush()
+    window.addEventListener('pagehide', out)
+    return () => { window.removeEventListener('pagehide', out); saver.flush() }
+  }, [saver])
 
   useEffect(() => {
     const game = new LivroGame(canvasRef.current!, {
@@ -46,16 +58,16 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
       storageKey: `lb-pos:${view.room.id}:${me.uid}`,
       onOpen: (id) => setPanel(id),
       onWatch: (uid) => setWatch(uid),
-      onPos: (msg) => net.sendPos(msg),
+      onPos: (msg) => { net.sendPos(msg); saver.push(msg) },
       onRemotePanel: (uid, p) => setRemotePanels((prev) => (prev[uid] === p ? prev : { ...prev, [uid]: p })),
     })
-    game.setPlayers(playersRef.current)
+    game.setPlayers(playersRef.current, posRef.current)
     game.setGame(gameStateRef.current)
     game.applyPeers(peersRef.current)
     gameRef.current = game
     const off = net.onPos((msg) => game.pushRemote(msg))
     return () => { off(); game.destroy(); gameRef.current = null }
-  }, [view.room.id, me.uid, controllable, net])
+  }, [view.room.id, me.uid, controllable, net, saver])
 
   useEffect(() => { gameRef.current?.setPlayers(view.players) }, [view.players])
   useEffect(() => { gameRef.current?.setGame(view.game) }, [view.game])

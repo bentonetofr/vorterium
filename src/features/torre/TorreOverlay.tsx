@@ -3,9 +3,15 @@ import { gm, type TorreRoomRow } from './torreService'
 import { connectTorre, FLOOR_NAMES, ROLE_NAMES, type TorreNet, type TorrePeer } from './torreNet'
 import { TorreGameView } from './TorreGameView'
 import { TorreLobby } from './TorreLobby'
+import { TorreGmPanel } from './TorreGmPanel'
 import { useTorreView } from './useTorreRoom'
 import { spriteTelescopio } from './game/art'
-import { useFullscreen, usePixelFont } from '../livro/LivroOverlay'
+import { nextEdge } from './game/sky'
+import type { TorreView } from './torreService'
+import { onSoundChange, setSoundOn, sfx, soundOn } from './sound'
+import { ANY_GAME_KEY, SwitchCard, useBodyLock, useFullscreen, usePixelFont, useSwitchCard } from '../livro/LivroOverlay'
+import { useFeature } from '../control/siteFeatures'
+import { LIVRO_FEATURE, openRoom as openLivro } from '../livro/livroService'
 import '../livro/Livro.css'
 import './Torre.css'
 
@@ -20,20 +26,19 @@ import './Torre.css'
 
 export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinimize: () => void }) {
   usePixelFont()
-  const { view, error } = useTorreView(room.id, room.version)
+  const { view, error, refresh, offset } = useTorreView(room.id, room.version)
+  usePendulumRefresh(view, offset, refresh)
   const enteredKey = `tor-entrou:${room.id}`
-  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem(enteredKey) === '1' } catch { return false } })
+  // Quem já entrou num dos jogos nesta aba não precisa clicar de novo (troca de jogo).
+  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem(enteredKey) === '1' || sessionStorage.getItem(ANY_GAME_KEY) === '1' } catch { return false } })
   const [net, setNet] = useState<TorreNet | null>(null)
   const [peers, setPeers] = useState<TorrePeer[]>([])
   const [menu, setMenu] = useState(false)
   const fs = useFullscreen()
 
-  // O site por baixo não rola.
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
-  }, [])
+  useBodyLock()
+  const switching = useSwitchCard(entered)
+  const livro = useFeature(LIVRO_FEATURE)
 
   // Uma conexão ao vivo por sala.
   const meUid = view?.me.uid ?? null
@@ -51,7 +56,7 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
   const enter = () => {
     fs.enter()
     setEntered(true)
-    try { sessionStorage.setItem(enteredKey, '1') } catch { /* sem storage */ }
+    try { sessionStorage.setItem(enteredKey, '1'); sessionStorage.setItem(ANY_GAME_KEY, '1') } catch { /* sem storage */ }
   }
   const minimize = () => { fs.exit(); onMinimize() }
 
@@ -66,11 +71,25 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointerdown', onDown) }
   }, [menu])
 
+  // Clique de qualquer botão do jogo.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const onDown = (e: PointerEvent) => { if ((e.target as HTMLElement).closest('button')) sfx('click') }
+    el.addEventListener('pointerdown', onDown)
+    return () => el.removeEventListener('pointerdown', onDown)
+  }, [])
+  const [gmOpen, setGmOpen] = useState(false)
+  const [sound, setSound] = useState(soundOn)
+  useEffect(() => onSoundChange(setSound), [])
+
   const isGm = !!view?.me.gm
   const playing = view?.room.status === 'jogo'
 
   return (
-    <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="A Torre do Observatório">
+    <div ref={rootRef} className="lb-overlay" role="dialog" aria-modal="true" aria-label="A Torre do Observatório">
+      {entered && switching && <SwitchCard kicker="A torre de Caatedrum" title="A Torre do Observatório" />}
       {!entered || !view ? (
         <TitleCard
           ready={!!view}
@@ -81,8 +100,10 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
       ) : view.room.status === 'lobby' ? (
         <TorreLobby view={view} peers={peers} />
       ) : net ? (
-        <TorreGameView view={view} net={net} peers={peers} />
+        <TorreGameView view={view} offset={offset} net={net} peers={peers} />
       ) : null}
+
+      {entered && view && isGm && playing && gmOpen && <TorreGmPanel view={view} offset={offset} onClose={() => setGmOpen(false)} />}
 
       {entered && view && (
         <div className="lb-menu" ref={menuRef}>
@@ -92,7 +113,12 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
           {menu && (
             <div className="lb-menu__list lb-frame" role="menu">
               <button type="button" role="menuitem" onClick={() => { setMenu(false); if (fs.full) fs.exit(); else fs.enter() }}>{fs.full ? 'Sair da tela cheia' : 'Tela cheia'}</button>
+              <button type="button" role="menuitem" onClick={() => setSoundOn(!sound)} aria-pressed={sound}>{sound ? 'Som: ligado' : 'Som: desligado'}</button>
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
+              {isGm && livro.visible && (
+                <button type="button" role="menuitem" onClick={() => { setMenu(false); void openLivro(room.campaign_id).catch((e) => window.alert(e instanceof Error ? e.message : 'Não deu certo.')) }}>Trocar para O Livro Bloqueado</button>
+              )}
+              {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); setGmOpen(true) }}>Painel do mestre</button>}
               {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); void gm(room.id, { a: 'lobby' }) }}>Trocar quem joga</button>}
               {isGm && (
                 <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); if (window.confirm('Encerrar a Torre do Observatório pra todo mundo?')) void gm(room.id, { a: 'close' }) }}>Encerrar o jogo</button>
@@ -103,6 +129,24 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
       )}
     </div>
   )
+}
+
+/**
+ * O que o pêndulo mostra só vem do banco DURANTE a janela: a cada borda de
+ * janela (e quando o "girou agora" do Astrário vence), pede a visão de novo.
+ */
+function usePendulumRefresh(view: TorreView | null, offset: number, refresh: () => Promise<void>) {
+  const g = view?.game
+  useEffect(() => {
+    if (!g || g.opened) return
+    const now = Date.now() + offset
+    const edges = [nextEdge(g.pend, now)]
+    for (const go of [g.other.cima_go, g.other.baixo_go]) if (go) edges.push(go + 3000)
+    const next = edges.filter((e): e is number => !!e && e > now).sort((a, b) => a - b)[0]
+    if (!next) return
+    const t = window.setTimeout(() => { void refresh() }, Math.max(0, next - now) + 60)
+    return () => window.clearTimeout(t)
+  }, [g, offset, refresh])
 }
 
 function TitleCard({ ready, error, role, onEnter }: { ready: boolean; error: string | null; role: string | null; onEnter: () => void }) {

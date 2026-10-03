@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { TorreView } from './torreService'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { gm, savePos, type TorreView } from './torreService'
+import { createPosSaver } from '../livro/game/posSaver'
 import { floorOf, ROLE_TITLES, type Floor, type TorreNet, type TorrePanel, type TorrePeer } from './torreNet'
 import { TorreFloor } from './game/room'
+import { GRATE } from './game/art'
 import { PuzzlePanel } from './PuzzlePanel'
+import { HintBanner } from './HintBanner'
+import { onSoundChange, sfx, startAmbient, stopAmbient } from './sound'
 
 // ────────────────────────────────────────────────────────
 // A partida. Quem joga vê só o SEU andar (o outro aparece como sombra pela
@@ -20,6 +24,7 @@ const FLOOR_TITLES: Record<Floor, string> = { cima: 'Cima · o Observatório', b
 interface FloorProps {
   floor:         Floor
   view:          TorreView
+  offset:        number
   net:           TorreNet
   peers:         TorrePeer[]
   controllable:  boolean
@@ -28,18 +33,23 @@ interface FloorProps {
   onOpen:        (id: TorrePanel) => void
   onWatch:       (uid: string) => void
   onRemotePanel: (uid: string, p: TorrePanel | null) => void
+  /** Cada posição do meu boneco (pra guardar no banco). */
+  onSave?:       (msg: Parameters<ReturnType<typeof createPosSaver>['push']>[0]) => void
 }
 
 /** Um andar desenhado num canvas (o motor cuida de andar, mouse e luz). */
-function FloorCanvas({ floor, view, net, peers, controllable, frozen, panel, onOpen, onWatch, onRemotePanel }: FloorProps) {
+function FloorCanvas({ floor, view, offset, net, peers, controllable, frozen, panel, onOpen, onWatch, onRemotePanel, onSave }: FloorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<TorreFloor | null>(null)
   const playersRef = useRef(view.players)
   playersRef.current = view.players
   const peersRef = useRef(peers)
   peersRef.current = peers
-  const cb = useRef({ onOpen, onWatch, onRemotePanel })
-  cb.current = { onOpen, onWatch, onRemotePanel }
+  const gameRef0 = useRef(view.game ? { ...view.game, off: offset } : null)
+  gameRef0.current = view.game ? { ...view.game, off: offset } : null
+  const cb = useRef({ onOpen, onWatch, onRemotePanel, onSave })
+  cb.current = { onOpen, onWatch, onRemotePanel, onSave }
+  const posRef = useRef(view.pos)
   const me = view.me
 
   useEffect(() => {
@@ -49,12 +59,15 @@ function FloorCanvas({ floor, view, net, peers, controllable, frozen, panel, onO
       storageKey: `tor-pos:${view.room.id}:${me.uid}`,
       onOpen: (id) => cb.current.onOpen(id),
       onWatch: (uid) => cb.current.onWatch(uid),
-      onPos: (msg) => net.sendPos(msg),
+      onPos: (msg) => { net.sendPos(msg); cb.current.onSave?.(msg) },
       onRemotePanel: (uid, p) => cb.current.onRemotePanel(uid, p),
       // quem assiste vê os dois andares lado a lado: sem isso ficariam em 1×
       integerScale: controllable,
+      // em cima, pisar na grade soa a ferro
+      onStep: (x, y) => sfx(floor === 'cima' && x > GRATE.x && x < GRATE.x + GRATE.w && y > GRATE.y && y < GRATE.y + GRATE.h + 4 ? 'stepMetal' : 'step'),
     }, floor)
-    game.setPlayers(playersRef.current)
+    game.setPlayers(playersRef.current, posRef.current)
+    game.setGame(gameRef0.current)
     game.applyPeers(peersRef.current)
     gameRef.current = game
     const off = net.onPos((msg) => game.pushRemote(msg))
@@ -62,7 +75,7 @@ function FloorCanvas({ floor, view, net, peers, controllable, frozen, panel, onO
   }, [view.room.id, me.uid, controllable, net, floor])
 
   useEffect(() => { gameRef.current?.setPlayers(view.players) }, [view.players])
-  useEffect(() => { gameRef.current?.setGame(view.game ?? null) }, [view.game])
+  useEffect(() => { gameRef.current?.setGame(view.game ? { ...view.game, off: offset } : null) }, [view.game, offset])
   useEffect(() => { gameRef.current?.applyPeers(peers) }, [peers])
   useEffect(() => {
     gameRef.current?.setFrozen(frozen)
@@ -72,14 +85,71 @@ function FloorCanvas({ floor, view, net, peers, controllable, frozen, panel, onO
   return <canvas ref={canvasRef} className="lb-canvas" aria-label={FLOOR_TITLES[floor]} />
 }
 
-export function TorreGameView({ view, net, peers }: { view: TorreView; net: TorreNet; peers: TorrePeer[] }) {
-  const [panel, setPanel] = useState<TorrePanel | null>(null)
+/**
+ * Sons que vêm do estado (o que mudou desde a última visão): estrela
+ * acendendo, o mapa girando, o sino quando a sombra do pêndulo mostra algo
+ * (é o "agora!"), a chave, o outro lado girando o Astrário, a dica e o fim.
+ */
+function useStateSounds(view: TorreView, myFloor: Floor | null) {
+  const prev = useRef<TorreView['game'] | null | undefined>(undefined)
+  const prevHint = useRef<number | null | undefined>(undefined)
+  useEffect(() => {
+    const g = view.game
+    const p = prev.current
+    prev.current = g
+    if (p === undefined || !g || !p) return
+    const lit = (x: typeof g) => x.tele?.stars.filter((s) => s.state === 'lit').length ?? 0
+    if (lit(g) > lit(p)) sfx('sparkle')
+    if (g.map?.turned && !p.map?.turned) sfx('grind')
+    const showing = (x: typeof g) => !!(x.shadow || x.map?.rim || x.tele?.fifth)
+    if (showing(g) && !showing(p)) sfx('bell')
+    if (g.inv.chave && !p.inv.chave && myFloor !== 'baixo') sfx('unlock')
+    const other = myFloor === 'cima' ? 'baixo_go' : myFloor === 'baixo' ? 'cima_go' : null
+    if (other && g.other[other] && g.other[other] !== p.other[other]) sfx('gear')
+    if (g.opened && !p.opened) sfx('finale')
+  }, [view.game, myFloor])
+  useEffect(() => {
+    const t = view.hint?.t ?? null
+    if (prevHint.current !== undefined && t && t !== prevHint.current) sfx('hint')
+    prevHint.current = t
+  }, [view.hint])
+}
+
+function fmtTime(ms: number) {
+  const s = Math.round(ms / 1000)
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  return h ? `${h}h${String(m).padStart(2, '0')}` : `${m} min ${String(s % 60).padStart(2, '0')} s`
+}
+
+export function TorreGameView({ view, offset, net, peers }: { view: TorreView; offset: number; net: TorreNet; peers: TorrePeer[] }) {
+  // Volta com a janela que estava aberta (troca de jogo, recarregar).
+  const [panel, setPanel] = useState<TorrePanel | null>(() => (view.me.slot !== null ? (view.pos?.[view.me.uid]?.p as TorrePanel | null | undefined) ?? null : null))
   const [watch, setWatch] = useState<string | null>(null)
   const [remotePanels, setRemotePanels] = useState<Record<string, TorrePanel | null>>({})
   const [hint, setHint] = useState(true)
   const me = view.me
   const myFloor = floorOf(me.slot)
   const controllable = myFloor !== null
+
+  // Onde o meu boneco está fica no banco (pra voltar ao mesmo lugar).
+  const roomId = view.room.id
+  const saver = useMemo(() => createPosSaver((p) => savePos(roomId, p)), [roomId])
+  useEffect(() => {
+    const out = () => saver.flush()
+    window.addEventListener('pagehide', out)
+    return () => { window.removeEventListener('pagehide', out); saver.flush() }
+  }, [saver])
+
+  // Som de fundo: vento lá em cima, máquinas embaixo (quem assiste ouve os dois).
+  useEffect(() => {
+    const kind = myFloor ?? 'todos'
+    startAmbient(kind)
+    const off = onSoundChange((on) => { if (on) startAmbient(kind) })
+    return () => { off(); stopAmbient() }
+  }, [myFloor])
+
+  useStateSounds(view, myFloor)
 
   // A dica de controles some sozinha.
   useEffect(() => { const t = window.setTimeout(() => setHint(false), 10000); return () => window.clearTimeout(t) }, [])
@@ -95,19 +165,22 @@ export function TorreGameView({ view, net, peers }: { view: TorreView; net: Torr
 
   const closePanel = useCallback(() => setPanel(null), [])
   const closeWatch = useCallback(() => setWatch(null), [])
-  const blurred = !!panel || !!watchedPanel
+  const opened = !!view.game?.opened
+  const [endSeen, setEndSeen] = useState(false)
+  const blurred = !!panel || !!watchedPanel || (opened && !endSeen)
+  const took = view.game?.finished_at && view.started_at ? Math.max(0, view.game.finished_at - view.started_at) : null
 
   useEffect(() => { net.setMe({ panel }) }, [panel, net])
 
   const floorProps = {
-    view, net, peers, frozen: blurred, panel,
+    view, offset, net, peers, frozen: blurred, panel,
     onOpen: setPanel, onWatch: setWatch, onRemotePanel,
   }
 
   return (
     <div className={`lb-stage${blurred ? ' is-blurred' : ''}`}>
       {controllable ? (
-        <FloorCanvas floor={myFloor} controllable {...floorProps} />
+        <FloorCanvas floor={myFloor} controllable onSave={saver.push} {...floorProps} />
       ) : (
         <div className="tor-floors">
           {(['cima', 'baixo'] as const).map((f) => (
@@ -147,9 +220,33 @@ export function TorreGameView({ view, net, peers }: { view: TorreView; net: Torr
         </div>
       )}
 
-      {panel && myFloor && <PuzzlePanel id={panel} floor={myFloor} view={view} onClose={closePanel} />}
+      {!blurred && <HintBanner hint={view.hint ?? null} offset={offset} />}
+
+      {view.game?.inv.chave && (
+        <div className="lb-inv" aria-label="O que a dupla carrega">
+          <span className="lb-chip" title="Chave de bronze"><i className="lb-ico lb-ico--key" aria-hidden="true" /> Chave de bronze</span>
+        </div>
+      )}
+
+      {panel && myFloor && <PuzzlePanel id={panel} floor={myFloor} view={view} offset={offset} onClose={closePanel} />}
       {!panel && watched && watchedPanel && (
-        <PuzzlePanel id={watchedPanel} floor={floorOf(watched.slot) ?? 'cima'} view={view} onClose={closeWatch} watching={watched.name} />
+        <PuzzlePanel id={watchedPanel} floor={floorOf(watched.slot) ?? 'cima'} view={view} offset={offset} onClose={closeWatch} watching={watched.name} />
+      )}
+
+      {opened && !endSeen && !panel && !watchedPanel && (
+        <div className="lb-panel-wrap">
+          <section className="lb-panel lb-frame lb-ending" role="dialog" aria-label="A cúpula se abriu">
+            <p className="lb-kicker">A torre de Caatedrum</p>
+            <h2 className="lb-panel__title">A cúpula se abre.</h2>
+            <p className="lb-panel__text">O céu inteiro aparece. Não são estrelas: são olhos. Centenas, milhares, abertos, olhando pra baixo.</p>
+            <p className="lb-panel__text">E no centro, o maior de todos. Ele estava olhando pra vocês o tempo todo.</p>
+            {took !== null && <p className="lb-ending__time">Tempo: {fmtTime(took)}</p>}
+            <div className="lb-lock__btns">
+              <button type="button" className="lb-btn" onClick={() => setEndSeen(true)}>Ver a torre</button>
+              {me.gm && <button type="button" className="lb-btn lb-btn--gold" onClick={() => { if (window.confirm('Encerrar a Torre do Observatório pra todo mundo?')) void gm(view.room.id, { a: 'close' }) }}>Encerrar o jogo</button>}
+            </div>
+          </section>
+        </div>
       )}
     </div>
   )

@@ -14,6 +14,8 @@ export interface LivroRoomRow {
   campaign_id: string
   status:      'lobby' | 'jogo' | 'fim'
   version:     number
+  /** Pausado (o outro jogo está na tela): não aparece pra ninguém. */
+  paused_at?:  string | null
 }
 
 export interface LivroPlayer { uid: string; name: string; slot: number }
@@ -35,7 +37,9 @@ export interface GameView {
 }
 
 export interface LivroView {
-  room:       { id: string; campaign_id: string; status: LivroRoomRow['status']; version: number }
+  room:       { id: string; campaign_id: string; status: LivroRoomRow['status']; version: number; paused?: boolean }
+  /** Onde cada boneco estava (a Torre só manda a sua pra quem joga). */
+  pos?:       Record<string, { x: number; y: number; d: 'down' | 'up' | 'left' | 'right'; p: string | null }>
   now:        number
   started_at: number | null
   me:         { uid: string; gm: boolean; slot: number | null }
@@ -54,7 +58,7 @@ function err(e: { message?: string } | null, fallback: string): never {
 export async function getOpenRoom(campaignId: string): Promise<LivroRoomRow | null> {
   const { data, error } = await supabase
     .from('lb_rooms')
-    .select('id, campaign_id, status, version')
+    .select('id, campaign_id, status, version, paused_at')
     .eq('campaign_id', campaignId)
     .neq('status', 'fim')
     .maybeSingle()
@@ -91,6 +95,12 @@ export async function play(roomId: string, action: Record<string, unknown>): Pro
   const { data, error } = await supabase.rpc('lb_play', { p_room: roomId, p_action: action })
   if (error) err(error, 'Não deu certo.')
   return (data ?? { ok: true, msg: null }) as { ok: boolean; msg: string | null }
+}
+
+/** Guarda onde o meu boneco está (não acorda as outras telas). */
+export async function savePos(roomId: string, pos: { x: number; y: number; d: string; p: string | null }): Promise<void> {
+  const { error } = await supabase.rpc('lb_save_pos', { p_room: roomId, p_pos: pos })
+  if (error) throw error
 }
 
 // ── Painel de controle ──────────────────────────────────

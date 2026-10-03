@@ -3,6 +3,7 @@ import { H, makeCanvas, px, W, type Ctx } from '../../livro/game/art'
 import type { Interactable, Rect } from '../../livro/game/room'
 import type { Dir, Floor, TorrePanel } from '../torreNet'
 import type { TorreGame } from '../torreService'
+import { LENS, SKY_SLOTS, STAR_COLORS, swingX } from './sky'
 import {
   BEAM_SLIT, BRIGHT_STARS, DOME_SLIT, drawBob, drawLowerBackground, drawRod, drawUpperBackground, GRATE, MIRRORS, onBar,
   spriteAstrario, spriteEspelhos, spriteManivela, spriteMapa, spritePenduloBaixo, spritePenduloCima, spriteTelescopio,
@@ -35,8 +36,32 @@ const FLOOR = { x0: 22, y0: 64, x1: 362, y1: 203 }
 /** O andar de cada slot: 0 em cima, 1 embaixo. */
 const slotFloor = (slot: number): Floor => (slot === 0 ? 'cima' : 'baixo')
 
-/** Balanço do pêndulo (enfeite por enquanto: no marco 2 o ritmo vem do banco). */
-const swing = (time: number) => Math.sin((time * Math.PI * 2) / 6)
+/** O jogo como a sala recebe: a visão e a diferença pro relógio do banco. */
+export type FloorGame = TorreGame & { off: number }
+
+/** Balanço do pêndulo agora (−1 a 1; parado = 0), pela hora do banco. */
+const swing = (g: FloorGame | null) => (g ? swingX(g.pend, Date.now() + g.off) : 0)
+
+/** O céu de olhos (a revelação), dentro da fresta da cúpula. */
+function drawEyes(n: Ctx, time: number) {
+  const s = DOME_SLIT
+  for (let i = 0; i < 26; i++) {
+    const x = s.x + 4 + ((i * 37) % (s.w - 8))
+    const y = s.y + 6 + ((i * 23) % (s.h - 12))
+    const blink = Math.sin(time * 1.3 + i * 2.1) > 0.96
+    px(n, '#d9dff0', x - 1, y, 3, 1)
+    if (!blink) px(n, '#120c16', x, y, 1, 1)
+  }
+  // o olho do Rei, no meio
+  const cx = s.x + s.w / 2
+  const cy = s.y + s.h / 2
+  for (let x = -9; x <= 9; x++) {
+    const h = Math.round(Math.sqrt(Math.max(0, 1 - (x * x) / 81)) * 5)
+    px(n, '#efe6d2', cx + x, cy - h, 1, h * 2 + 1)
+  }
+  px(n, '#a8323a', cx - 3, cy - 3, 7, 7)
+  px(n, '#120c16', cx - 1, cy - 2, 3, 5)
+}
 
 function astrario(floor: Floor): Interactable<TorrePanel> {
   return {
@@ -62,13 +87,13 @@ function silhouette(x: number, y: number, each: (px: number, py: number) => void
 }
 
 /** Uma das duas plantas da torre. */
-export function floorScene(floor: Floor): Scene<TorrePanel, TorreGame> {
+export function floorScene(floor: Floor): Scene<TorrePanel, FloorGame> {
   return floor === 'cima' ? upperScene() : lowerScene()
 }
 
 // ── Cima: o Observatório ────────────────────────────────
 
-function upperScene(): Scene<TorrePanel, TorreGame> {
+function upperScene(): Scene<TorrePanel, FloorGame> {
   const [bg, bctx] = makeCanvas(W, H)
   drawUpperBackground(bctx)
 
@@ -111,12 +136,12 @@ function upperScene(): Scene<TorrePanel, TorreGame> {
     { x: 178, y: 182, w: 28, h: 8 },   // coluna do Astrário
   ]
 
-  const drawObject = (n: Ctx, o: Interactable<TorrePanel>, time: number) => {
-    if (o.id === 'pendulo') drawRod(n, o.at.x + 14, o.at.y, swing(time) * 3)
+  const drawObject = (n: Ctx, o: Interactable<TorrePanel>, _time: number, g: FloorGame | null) => {
+    if (o.id === 'pendulo') drawRod(n, o.at.x + 14, o.at.y, swing(g) * 3)
   }
 
-  const drawLight = (l: Ctx, n: Ctx, light: HTMLCanvasElement, time: number, placed: Placed[]) => {
-    l.fillStyle = 'rgba(6,4,14,0.62)'
+  const drawLight = (l: Ctx, n: Ctx, light: HTMLCanvasElement, time: number, placed: Placed[], g: FloorGame | null) => {
+    l.fillStyle = g?.opened ? 'rgba(6,4,14,0.4)' : 'rgba(6,4,14,0.62)'
     l.fillRect(0, 0, W, H)
     l.globalCompositeOperation = 'destination-out'
     const hole = (x: number, y: number, r: number, a: number) => {
@@ -150,8 +175,27 @@ function upperScene(): Scene<TorrePanel, TorreGame> {
     n.lineTo(140, 160)
     n.closePath()
     n.fill()
+    // a revelação: o céu está cheio de olhos
+    if (g?.opened) {
+      n.globalCompositeOperation = 'source-over'
+      drawEyes(n, time)
+      n.globalCompositeOperation = 'lighter'
+    }
+    // as estrelas escondidas que já acenderam também aparecem na fresta
+    for (const st of g && !g.opened ? g.tele?.stars ?? [] : []) {
+      if (st.state !== 'lit') continue
+      const [lx, ly] = SKY_SLOTS[st.slot]
+      const sx = Math.round(DOME_SLIT.x + (lx / LENS.w) * DOME_SLIT.w)
+      const sy = Math.round(DOME_SLIT.y + 2 + (ly / LENS.h) * (DOME_SLIT.h - 4))
+      n.fillStyle = STAR_COLORS[st.k]
+      n.fillRect(sx, sy, 1, 1)
+      n.globalAlpha = 0.4
+      n.fillRect(sx - 1, sy, 3, 1)
+      n.fillRect(sx, sy - 1, 1, 3)
+      n.globalAlpha = 1
+    }
     // as 3 estrelas que brilham, piscando
-    for (let i = 0; i < BRIGHT_STARS.length; i++) {
+    for (let i = 0; i < (g?.opened ? 0 : BRIGHT_STARS.length); i++) {
       const [sx, sy] = BRIGHT_STARS[i]
       const a = 0.75 + 0.25 * Math.sin(time * 2.3 + i * 2)
       n.fillStyle = `rgba(255,240,200,${a.toFixed(2)})`
@@ -186,7 +230,7 @@ function upperScene(): Scene<TorrePanel, TorreGame> {
 
 // ── Baixo: a Casa das Máquinas ──────────────────────────
 
-function lowerScene(): Scene<TorrePanel, TorreGame> {
+function lowerScene(): Scene<TorrePanel, FloorGame> {
   const [bg, bctx] = makeCanvas(W, H)
   drawLowerBackground(bctx)
   const MIRRORS_AT = { x: 56, y: 82 }
@@ -234,11 +278,13 @@ function lowerScene(): Scene<TorrePanel, TorreGame> {
   const beamTo = { x: MIRRORS_AT.x + MIRRORS[0][0] + 1, y: MIRRORS_AT.y + MIRRORS[0][1] + 5 }
   const beamFrom = { x: BEAM_SLIT.x + BEAM_SLIT.w / 2, y: BEAM_SLIT.y + BEAM_SLIT.h / 2 }
 
-  const drawObject = (n: Ctx, o: Interactable<TorrePanel>, time: number) => {
-    if (o.id === 'pendulo') drawBob(n, swing(time) * 16, 12, 110)
+  const MANIVELA_GLASS = { x: 296 + 32, y: 12 + 82 }   // a trava de vidro, na engrenagem de baixo
+
+  const drawObject = (n: Ctx, o: Interactable<TorrePanel>, _time: number, g: FloorGame | null) => {
+    if (o.id === 'pendulo') drawBob(n, swing(g) * 16, 12, 110)
   }
 
-  const drawLight = (l: Ctx, n: Ctx, light: HTMLCanvasElement, time: number, placed: Placed[]) => {
+  const drawLight = (l: Ctx, n: Ctx, light: HTMLCanvasElement, time: number, placed: Placed[], g: FloorGame | null) => {
     l.fillStyle = 'rgba(6,4,14,0.6)'
     l.fillRect(0, 0, W, H)
     l.globalCompositeOperation = 'destination-out'
@@ -256,9 +302,34 @@ function lowerScene(): Scene<TorrePanel, TorreGame> {
     hole(beamTo.x, beamTo.y, 22, 0.7)
     hole(GRATE.x + GRATE.w / 2, GRATE.y + GRATE.h / 2, 44, 0.45)
     for (const { x, y } of placed) hole(x, y - 8, 26, 0.5)
+    const full = !!g?.mir?.full
+    const bob = { x: Math.round(192 + swing(g) * 16), y: 114 }
+    if (full) hole(bob.x, bob.y, 30, 0.7)
+    if (g?.crank?.gear) hole(MANIVELA_GLASS.x, MANIVELA_GLASS.y, 14, 0.6)
     n.drawImage(light, 0, 0)
 
     n.globalCompositeOperation = 'lighter'
+    // os 4 feixes fechados: de cada espelho até o peso do pêndulo
+    if (full) {
+      n.strokeStyle = 'rgba(255,231,163,0.35)'
+      n.lineWidth = 1
+      for (const [mx, my] of MIRRORS) {
+        n.beginPath()
+        n.moveTo(MIRRORS_AT.x + mx + 1, MIRRORS_AT.y + my + 5)
+        n.lineTo(bob.x, bob.y)
+        n.stroke()
+      }
+      const bg2 = n.createRadialGradient(bob.x, bob.y, 0, bob.x, bob.y, 18)
+      bg2.addColorStop(0, `rgba(255,231,163,${(0.3 + 0.08 * Math.sin(time * 4)).toFixed(2)})`)
+      bg2.addColorStop(1, 'rgba(255,231,163,0)')
+      n.fillStyle = bg2
+      n.fillRect(bob.x - 18, bob.y - 18, 36, 36)
+    }
+    // a trava de vidro acesa
+    if (g?.crank?.gear) {
+      n.fillStyle = `rgba(255,231,163,${(0.35 + 0.1 * Math.sin(time * 3)).toFixed(2)})`
+      n.fillRect(MANIVELA_GLASS.x - 2, MANIVELA_GLASS.y - 2, 5, 5)
+    }
     // o feixe de luz
     const dx = beamTo.x - beamFrom.x
     const dy = beamTo.y - beamFrom.y
@@ -284,7 +355,7 @@ function lowerScene(): Scene<TorrePanel, TorreGame> {
       n.fillRect(lx - 36, 0, 72, 70)
     }
     // o luar de cima caindo pela grade: quadradinhos de luz no chão
-    n.fillStyle = 'rgba(150,170,255,0.16)'
+    n.fillStyle = g?.opened ? 'rgba(255,231,163,0.22)' : 'rgba(150,170,255,0.16)'
     for (let gy = GRATE.y + 2; gy < GRATE.y + GRATE.h; gy += 6) {
       for (let gx = GRATE.x + 2; gx < GRATE.x + GRATE.w; gx += 6) n.fillRect(gx, gy, 4, 4)
     }
@@ -307,7 +378,7 @@ function lowerScene(): Scene<TorrePanel, TorreGame> {
 }
 
 /** O motor com um dos andares. */
-export class TorreFloor extends RoomGame<TorrePanel, TorreGame> {
+export class TorreFloor extends RoomGame<TorrePanel, FloorGame> {
   constructor(canvas: HTMLCanvasElement, opts: GameOptions<TorrePanel>, floor: Floor) {
     super(canvas, opts, floorScene(floor))
   }

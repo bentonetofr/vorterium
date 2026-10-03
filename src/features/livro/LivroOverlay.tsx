@@ -5,6 +5,8 @@ import { LivroGameView } from './LivroGameView'
 import { LivroLobby } from './LivroLobby'
 import { useLivroView } from './useLivroRoom'
 import { spritePedestal } from './game/art'
+import { useFeature } from '../control/siteFeatures'
+import { openRoom as openTorre, TORRE_FEATURE } from '../torre/torreService'
 import './Livro.css'
 
 // ────────────────────────────────────────────────────────
@@ -16,6 +18,43 @@ import './Livro.css'
 // ────────────────────────────────────────────────────────
 
 const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap'
+
+// O site por baixo não rola enquanto houver um jogo na tela. Contador: na
+// troca de jogo um sai e outro entra, e o que sai não pode destravar.
+let bodyLocks = 0
+let bodyPrev = ''
+/** "Já entrou num dos joguinhos nesta aba" (sessionStorage). */
+export const ANY_GAME_KEY = 'vorterium:jogo-entrou'
+
+export function useBodyLock() {
+  useEffect(() => {
+    if (bodyLocks++ === 0) { bodyPrev = document.body.style.overflow; document.body.style.overflow = 'hidden' }
+    return () => { if (--bodyLocks === 0) document.body.style.overflow = bodyPrev }
+  }, [])
+}
+
+/**
+ * O cartão curto da troca de jogo (1,5 s): quem já tinha entrado volta
+ * direto pro jogo, mas vê o nome dele antes — todo mundo entende que trocou.
+ */
+export function useSwitchCard(already: boolean) {
+  const [show, setShow] = useState(already)
+  useEffect(() => {
+    if (!show) return
+    const t = window.setTimeout(() => setShow(false), 1500)
+    return () => window.clearTimeout(t)
+  }, [show])
+  return show
+}
+
+export function SwitchCard({ kicker, title }: { kicker: string; title: string }) {
+  return (
+    <div className="lb-switch" role="status" aria-live="polite">
+      <span className="lb-kicker">{kicker}</span>
+      <span className="lb-title">{title}</span>
+    </div>
+  )
+}
 
 export function usePixelFont() {
   useEffect(() => {
@@ -43,18 +82,16 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   usePixelFont()
   const { view, error } = useLivroView(room.id, room.version)
   const enteredKey = `lb-entrou:${room.id}`
-  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem(enteredKey) === '1' } catch { return false } })
+  // Quem já entrou num dos jogos nesta aba não precisa clicar de novo (troca de jogo).
+  const [entered, setEntered] = useState(() => { try { return sessionStorage.getItem(enteredKey) === '1' || sessionStorage.getItem(ANY_GAME_KEY) === '1' } catch { return false } })
   const [net, setNet] = useState<LivroNet | null>(null)
   const [peers, setPeers] = useState<NetPeer[]>([])
   const [menu, setMenu] = useState(false)
   const fs = useFullscreen()
 
-  // O site por baixo não rola.
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
-  }, [])
+  useBodyLock()
+  const switching = useSwitchCard(entered)
+  const torre = useFeature(TORRE_FEATURE)
 
   // Uma conexão ao vivo por sala.
   const meUid = view?.me.uid ?? null
@@ -72,7 +109,7 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   const enter = () => {
     fs.enter()
     setEntered(true)
-    try { sessionStorage.setItem(enteredKey, '1') } catch { /* sem storage */ }
+    try { sessionStorage.setItem(enteredKey, '1'); sessionStorage.setItem(ANY_GAME_KEY, '1') } catch { /* sem storage */ }
   }
   const minimize = () => { fs.exit(); onMinimize() }
 
@@ -92,6 +129,7 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
 
   return (
     <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
+      {entered && switching && <SwitchCard kicker="A biblioteca de Caatedrum" title="O Livro Bloqueado" />}
       {!entered || !view ? (
         <TitleCard
           ready={!!view}
@@ -114,6 +152,9 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
             <div className="lb-menu__list lb-frame" role="menu">
               <button type="button" role="menuitem" onClick={() => { setMenu(false); if (fs.full) fs.exit(); else fs.enter() }}>{fs.full ? 'Sair da tela cheia' : 'Tela cheia'}</button>
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
+              {isGm && torre.visible && (
+                <button type="button" role="menuitem" onClick={() => { setMenu(false); void openTorre(room.campaign_id).catch((e) => window.alert(e instanceof Error ? e.message : 'Não deu certo.')) }}>Trocar para A Torre do Observatório</button>
+              )}
               {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); void gm(room.id, { a: 'lobby' }) }}>Trocar quem joga</button>}
               {isGm && (
                 <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); if (window.confirm('Encerrar o Livro Bloqueado pra todo mundo?')) void gm(room.id, { a: 'close' }) }}>Encerrar o jogo</button>
