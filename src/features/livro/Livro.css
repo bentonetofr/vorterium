@@ -175,17 +175,6 @@ button.lb-person:hover:not(:disabled) { background: #31273f; }
 }
 @keyframes lb-switch { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 
-/* ── Pílula (minimizado) ── */
-.lb-pill {
-  position: fixed; top: 14px; left: 50%; z-index: 5000; transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 18px;
-  font: 600 16px 'Pixelify Sans', 'Courier New', monospace; color: #efe6d2;
-  background: #1b1524; border: 0; box-shadow: 0 0 0 3px #0b0910, 0 0 0 5px #4a3f5c, 0 8px 20px rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-}
-.lb-pill:hover { background: #261e33; }
-.lb-pill__dot { width: 10px; height: 10px; background: #ecc66a; animation: lb-blink 1.2s steps(2) infinite; }
-
 @media (max-width: 640px) {
   .lb-lobby__box { padding: 22px 14px; }
   .lb-person { width: 108px; min-height: 132px; }
@@ -222,7 +211,7 @@ button.lb-person:hover:not(:disabled) { background: #31273f; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lb-overlay *, .lb-pill * { animation: none !important; transition: none !important; }
+  .lb-overlay * { animation: none !important; transition: none !important; }
 }
 
 /* ── Peças dos enigmas ── */

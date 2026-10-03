@@ -13,6 +13,7 @@ import { MestreAscension }    from '../../features/mestre/MestreAscension'
 import { MestreCall }         from '../../features/mestre/MestreCall'
 import { MestreTheme }        from '../../features/mestre/MestreTheme'
 import { LivroHost }          from '../../features/livro/LivroHost'
+import { GameDockSlot } from '../../features/livro/GameDock'
 import { TorreHost }          from '../../features/torre/TorreHost'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { CritWolf }           from '../../features/dice/components/CritWolf'
@@ -284,6 +285,7 @@ function PrivateLayoutContent() {
         <MesaLiveNotice />
         <NotificationPopup />
       </FabToasts>
+      <GameDockSlot />
       <ControlFab />
       <NotificationBell />
       <DiceFab />
