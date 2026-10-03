@@ -1,0 +1,54 @@
+{
+  "nome": "Caatedrum",
+  "abertura": [
+    "Caatedrum é uma fortaleza-catedral do tamanho de uma cidade. Uma escola, dizem. Uma prisão, sabem os que estudam nela: aqui se aprende a servir ao rei — na guerra, nas sombras, na chancelaria, na moeda — e quem não é escolhido nunca mais sai.",
+    "Marrow entrou aos doze anos para achar a irmã, Ysolde, que sumira antes dele. Trinta anos e três reprovações depois, roubou o Registro do Primeiro Mestre para ver o nome dela. O Registro o leu de volta.",
+    "Na mesma noite, no baile, o Mestre Orlan caiu morto à meia-noite. O assassino usava a Máscara de Raposa — a única que nenhum espelho reflete.",
+    "Duas duplas. Dois rastros. Um segue o nome; o outro segue o rosto. No fim, os dois se encontram na Banca."
+  ],
+  "consentimento": [
+    "Este jogo pode quebrar a quarta parede: dicas falsas, coisas que somem da tela, nomes trocados por alguns segundos. É tudo parte de Caatedrum e fica dentro do site.",
+    "Qualquer pessoa pode apertar Pausar a qualquer momento — o jogo para para todos, sem perguntas."
+  ],
+  "memoria_padrao": "Lembro do cheiro de tinta velha no primeiro dia, e de alguém dizendo meu nome na porta do refeitório como se já soubesse que eu ia ficar.",
+  "duplas": {
+    "A": {
+      "nome": "O Registro Perdido",
+      "lugar": "Ala do Arquivo",
+      "segue": "o nome",
+      "abertura": "O Registro do Primeiro Mestre sumiu da Ala Proibida ao terceiro sino. Vocês seguem o nome."
+    },
+    "B": {
+      "nome": "O Assassino Mascarado",
+      "lugar": "Salão dos Rostos",
+      "segue": "o rosto",
+      "abertura": "O Mestre Orlan, da Moeda, está morto no salão de baile. Vocês seguem o rosto."
+    }
+  },
+  "fases": {
+    "A": [
+      { "n": 1, "tipo": "Investigação", "titulo": "Testemunhas de Papel", "papeis": ["interrogador", "cruzador"] },
+      { "n": 2, "tipo": "Puzzle",       "titulo": "A Estante que Reordena", "papeis": ["linhas", "colunas"] },
+      { "n": 3, "tipo": "Combate",      "titulo": "O Leitor", "papeis": ["gramatica", "sentido"] }
+    ],
+    "B": [
+      { "n": 1, "tipo": "Investigação", "titulo": "O Baile em 3 Valsas", "papeis": ["mascaras", "nomes"] },
+      { "n": 2, "tipo": "Puzzle",       "titulo": "O Corredor dos Espelhos", "papeis": ["maos", "olhos"] },
+      { "n": 3, "tipo": "Combate",      "titulo": "O Colecionador", "papeis": ["ve", "monta"] }
+    ]
+  },
+  "papeis": {
+    "interrogador": { "nome": "Interrogador", "resumo": "Você gasta tintas para ler os depoimentos. Só você vê os textos — e nunca a tinta deles." },
+    "cruzador":     { "nome": "Cruzador", "resumo": "Você nunca lê os textos. Vê de que tinta é cada depoimento (fresca ou antiga) e monta a grade de deduções." },
+    "linhas":       { "nome": "Linhas", "resumo": "Você vê só o capítulo de cada livro e só gira linhas." },
+    "colunas":      { "nome": "Colunas", "resumo": "Você vê só a folha de cada livro e só gira colunas." },
+    "gramatica":    { "nome": "Gramática", "resumo": "Você vê a frase com lacunas e as pistas de gramática." },
+    "sentido":      { "nome": "Sentido", "resumo": "Você vê o banco de palavras e as pistas de significado." },
+    "mascaras":     { "nome": "Máscaras", "resumo": "Você vê que máscara está em cada assento e as regras que movem as máscaras." },
+    "nomes":        { "nome": "Nomes", "resumo": "Você vê quem está em cada assento, os motivos de cada convidado e as regras que movem as pessoas." },
+    "maos":         { "nome": "Mãos", "resumo": "Você vê os pedestais e troca as máscaras de lugar. Não vê o reflexo." },
+    "olhos":        { "nome": "Olhos", "resumo": "Você vê só o reflexo — o de agora e o do alvo." },
+    "ve":           { "nome": "Vê", "resumo": "Você enxerga o rosto original e descreve em voz alta." },
+    "monta":        { "nome": "Monta", "resumo": "Você reconstrói o rosto só pela descrição." }
+  }
+}

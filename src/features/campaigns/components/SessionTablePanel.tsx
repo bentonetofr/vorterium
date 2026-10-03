@@ -7,6 +7,9 @@ import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPa
 import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
 import { MesaPanel } from '../../mesa/components/MesaPanel'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { useFeature } from '../../control/siteFeatures'
+import { CAATEDRUM_FEATURE } from '../../caatedrum/caatService'
+import { CaatedrumPanel } from '../../caatedrum/CaatedrumPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
@@ -22,7 +25,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'caatedrum', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -36,11 +39,14 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   const location = useLocation()
   const mesa = useMesaStream()
   const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
+  // Caatedrum: liberado pelo Painel de controle (guardado, só o dono do site vê).
+  const showCaatedrum = useFeature(CAATEDRUM_FEATURE).visible
   // Abas que essa pessoa tem nessa campanha — pedido de outra (ex.:
   // Bestiário pra jogador) cai na Ficha em vez de abrir um painel vazio.
   const available = (tab: SessionSubTabId | undefined): tab is SessionSubTabId =>
     tab != null &&
     (tab !== 'bestiario' || showBestiary) &&
+    (tab !== 'caatedrum' || showCaatedrum) &&
     (tab !== 'livro' || hasRulebook(campaign.system))
   // Com transmissão rolando, a Sessão já abre na Mesa.
   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(() => {
@@ -64,6 +70,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // sentido na visão dele; jogador só tem a própria ficha.
   const subTabs: SubTab[] = [
     { id: 'mesa',       label: 'Mesa' },
+    ...(showCaatedrum ? [{ id: 'caatedrum' as const, label: 'Caatedrum' }] : []),
     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
@@ -103,6 +110,17 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
       >
         {activeSubTab === 'mesa' && <MesaPanel campaignId={campaign.id} />}
       </div>
+
+      {showCaatedrum && (
+        <div
+          id="session-subtabpanel-caatedrum"
+          role="tabpanel"
+          hidden={activeSubTab !== 'caatedrum'}
+          className="anim-tab-panel"
+        >
+          {activeSubTab === 'caatedrum' && <CaatedrumPanel campaignId={campaign.id} isMaster={campaign.role === 'master'} />}
+        </div>
+      )}
 
       <div
         id="session-subtabpanel-ficha"

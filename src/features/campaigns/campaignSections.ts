@@ -7,7 +7,7 @@
 export type TabId = 'visao-geral' | 'membros' | 'sessoes' | 'notas' | 'quadro' | 'anotacoes' | 'mesa-sessao' | 'configuracoes'
 
 /** Sub-abas dentro de "Sessão" (id mesa-sessao) — estado local (fora da URL), ver spec. */
-export type SessionSubTabId = 'mesa' | 'ficha' | 'atividade' | 'iniciativa' | 'bestiario' | 'livro'
+export type SessionSubTabId = 'mesa' | 'ficha' | 'atividade' | 'iniciativa' | 'bestiario' | 'livro' | 'caatedrum'
 
 export interface CampaignSection {
   id: TabId

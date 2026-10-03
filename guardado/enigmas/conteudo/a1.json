@@ -1,0 +1,51 @@
+{
+  "titulo": "Testemunhas de Papel",
+  "cenario": "O Registro sumiu da Ala Proibida ao terceiro sino. Cinco estudantes estavam no corredor, cada um numa ala diferente. Quem estava na Ala Proibida é o ladrão.",
+  "regras": [
+    "Cada livro tem exatamente um depoimento falso.",
+    "A mentira sempre tem tinta fresca — e em cada livro há também uma verdade de tinta fresca, como isca.",
+    "Tinta antiga é sempre verdade."
+  ],
+  "alas": ["Ala dos Mapas", "Ala dos Selos", "Ala dos Salmos", "Ala das Genealogias", "Ala Proibida"],
+  "alas_curtas": ["Mapas", "Selos", "Salmos", "Genealogias", "Proibida"],
+  "suspeitos": ["Ilvane", "Brokk", "Sessaly", "Marrow", "Quenn"],
+  "tintas": 12,
+  "livros": [
+    { "id": "horas",   "titulo": "Livro de Horas" },
+    { "id": "contas",  "titulo": "Livro de Contas" },
+    { "id": "visitas", "titulo": "Livro de Visitas" },
+    { "id": "sombras", "titulo": "Livro das Sombras" },
+    { "id": "ecos",    "titulo": "Livro de Ecos" }
+  ],
+  "depoimentos": [
+    { "livro": "horas",   "n": 1, "tipo": "left", "args": ["Sessaly", "Quenn"],     "tinta": "fresca", "verdade": false },
+    { "livro": "horas",   "n": 2, "tipo": "adj",  "args": ["Marrow", "Sessaly"],    "tinta": "fresca", "verdade": true },
+    { "livro": "horas",   "n": 3, "tipo": "not",  "args": ["Brokk", "Mapas"],       "tinta": "antiga", "verdade": true },
+    { "livro": "contas",  "n": 1, "tipo": "not",  "args": ["Sessaly", "Mapas"],     "tinta": "antiga", "verdade": true },
+    { "livro": "contas",  "n": 2, "tipo": "left", "args": ["Quenn", "Brokk"],       "tinta": "fresca", "verdade": true },
+    { "livro": "contas",  "n": 3, "tipo": "left", "args": ["Sessaly", "Brokk"],     "tinta": "fresca", "verdade": false },
+    { "livro": "visitas", "n": 1, "tipo": "left", "args": ["Marrow", "Ilvane"],     "tinta": "fresca", "verdade": false },
+    { "livro": "visitas", "n": 2, "tipo": "is",   "args": ["Quenn", "Mapas"],       "tinta": "antiga", "verdade": true },
+    { "livro": "visitas", "n": 3, "tipo": "is",   "args": ["Ilvane", "Selos"],      "tinta": "fresca", "verdade": true },
+    { "livro": "sombras", "n": 1, "tipo": "left", "args": ["Quenn", "Marrow"],      "tinta": "fresca", "verdade": true },
+    { "livro": "sombras", "n": 2, "tipo": "not",  "args": ["Marrow", "Mapas"],      "tinta": "antiga", "verdade": true },
+    { "livro": "sombras", "n": 3, "tipo": "not",  "args": ["Marrow", "Proibida"],   "tinta": "fresca", "verdade": false },
+    { "livro": "ecos",    "n": 1, "tipo": "left", "args": ["Ilvane", "Sessaly"],    "tinta": "antiga", "verdade": true },
+    { "livro": "ecos",    "n": 2, "tipo": "left", "args": ["Brokk", "Ilvane"],      "tinta": "fresca", "verdade": false },
+    { "livro": "ecos",    "n": 3, "tipo": "is",   "args": ["Brokk", "Salmos"],      "tinta": "fresca", "verdade": true }
+  ],
+  "solucao": { "Quenn": "Mapas", "Ilvane": "Selos", "Brokk": "Salmos", "Sessaly": "Genealogias", "Marrow": "Proibida" },
+  "culpado": "Marrow",
+  "dicas": [
+    "Tinta antiga é sempre verdade — comecem por ela.",
+    "Um depoimento de tinta antiga já põe alguém na primeira ala.",
+    "O ladrão está entre Sessaly e Marrow."
+  ],
+  "acusacao_errada": "A acusação ecoa vazia pelo arquivo. Duas tintas secam no tinteiro — e um dos livros se fecha com lacre de cera.",
+  "entrega": {
+    "texto": "Marrow. O nome cai do livro como uma folha solta. Na margem, alguém desenhou um livro no canto de uma estante: \"O Livro Que Me Leu\".",
+    "nome": "Marrow",
+    "fragmento": "MAR",
+    "libera": "Na Estante que Reordena, a célula do canto inferior direito — \"O Livro Que Me Leu\" — já começa certa e marcada."
+  }
+}

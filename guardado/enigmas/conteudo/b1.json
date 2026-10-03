@@ -1,0 +1,51 @@
+{
+  "titulo": "O Baile em 3 Valsas",
+  "cenario": "O Mestre Orlan foi achado morto à meia-noite. O assassino usava a Máscara de Raposa. Oito assentos em círculo, numerados de 0 a 7 no sentido horário a partir da porta. A cada valsa, máscaras e pessoas trocam de lugar — cada uma por uma regra diferente.",
+  "assentos": 8,
+  "mascaras": ["Lua", "Sol", "Estrela", "Corvo", "Névoa", "Raposa", "Serpente", "Cervo"],
+  "pessoas": ["Aldric", "Bessa", "Corvin", "Fenna", "Dessa", "Ewan", "Gorm", "Hilde"],
+  "operacoes": {
+    "girar": "Girar k no sentido horário: quem estava no assento i vai para o assento i + k (dando a volta no círculo). k negativo gira no sentido anti-horário.",
+    "pares": "Trocar pares: trocam de lugar os assentos 0 e 1, 2 e 3, 4 e 5, 6 e 7.",
+    "oposto": "Oposto: cada um vai para o assento da frente (i + 4, dando a volta).",
+    "espelhar": "Espelhar: quem está no assento i vai para o assento 7 − i.",
+    "inverter03": "Inverter 0 a 3: trocam de lugar os assentos 0 e 3, e 1 e 2. Os outros ficam."
+  },
+  "valsas": [
+    { "n": 1, "mascaras": { "op": "girar", "k": 3,  "texto": "As máscaras giram 3 assentos no sentido horário." },
+              "pessoas":  { "op": "girar", "k": -2, "texto": "As pessoas giram 2 assentos no sentido anti-horário." } },
+    { "n": 2, "mascaras": { "op": "pares", "texto": "As máscaras trocam de lugar aos pares." },
+              "pessoas":  { "op": "oposto", "texto": "As pessoas vão para o assento oposto." } },
+    { "n": 3, "mascaras": { "op": "espelhar", "texto": "As máscaras se espelham." },
+              "pessoas":  { "op": "inverter03", "texto": "As pessoas dos assentos 0 a 3 se invertem." } }
+  ],
+  "esperado": {
+    "mascaras": ["Corvo", "Névoa", "Sol", "Estrela", "Cervo", "Lua", "Raposa", "Serpente"],
+    "pessoas":  ["Bessa", "Aldric", "Hilde", "Gorm", "Corvin", "Fenna", "Dessa", "Ewan"]
+  },
+  "motivos": [
+    { "nome": "Dessa",  "texto": "Foi reprovada três vezes sob o Mestre Orlan." },
+    { "nome": "Gorm",   "texto": "Devia dinheiro a Orlan." },
+    { "nome": "Corvin", "texto": "Era rival acadêmico dele." },
+    { "nome": "Hilde",  "texto": "Era a aprendiz favorita de Orlan. Nenhum motivo conhecido." },
+    { "nome": "Aldric", "texto": "Estava com o mestre de cerimônias a noite toda. Tem álibi." },
+    { "nome": "Bessa",  "texto": "Tocava na orquestra durante as três valsas. Tem álibi." },
+    { "nome": "Fenna",  "texto": "Foi vista na cozinha à meia-noite. Tem álibi." },
+    { "nome": "Ewan",   "texto": "Passou o baile ao lado da Reitora. Tem álibi." }
+  ],
+  "culpado": "Dessa",
+  "relogio_min": 8,
+  "acusacao_errada_seg": 60,
+  "dicas": [
+    "Façam as três valsas uma de cada vez, em voz alta: Máscaras diz onde está a Raposa depois de cada valsa.",
+    "Depois da primeira valsa, a Raposa está no assento 0.",
+    "A Raposa termina no assento 6. Nomes: quem está no assento 6 no fim?"
+  ],
+  "acusacao_errada": "A orquestra para no meio do compasso. Os convidados olham para vocês — e o relógio da torre adianta um minuto.",
+  "entrega": {
+    "texto": "Dessa. Por trás da Raposa, três traços: uma cicatriz em forma de chave no queixo, olhos de cores diferentes, uma mecha branca no cabelo. A Raposa não reflete em espelho nenhum — e ela fugiu pelo Corredor dos Espelhos.",
+    "nome": "Dessa",
+    "tracos": ["cicatriz em forma de chave no queixo", "olhos de cores diferentes", "mecha branca no cabelo"],
+    "libera": "No Corredor dos Espelhos, Mãos sabe qual das máscaras é a Raposa — a que nenhum espelho reflete."
+  }
+}

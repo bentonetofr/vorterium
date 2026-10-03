@@ -1,0 +1,92 @@
+{
+  "_leia": "Caso 1 de O Crime de Caatedrum. 'publico' qualquer jogador vê; 'secreto' fica só no banco (nunca vai pro navegador). As cartas (baralho) entram no marco 3.",
+
+  "publico": {
+    "titulo": "A morte do Mestre da Moeda",
+    "vitima": "Mestre Orlan",
+    "local_do_corpo": "Ga",
+    "sinos": [
+      { "id": "ve", "nome": "Vésperas",  "quando": "anoitecer" },
+      { "id": "co", "nome": "Completas", "quando": "noite — a hora do crime" },
+      { "id": "ma", "nome": "Matinas",   "quando": "antes do amanhecer — o corpo é achado" }
+    ],
+    "sino_do_crime": "co",
+    "suspeitos": [
+      { "id": "dessa",  "nome": "Dessa Vael",   "perfil": "Estudante três vezes reprovada sob Orlan. Orgulhosa.", "motivos": ["vinganca", "ambicao", "segredo"] },
+      { "id": "marrow", "nome": "Marrow",       "perfil": "Estudante veterano há trinta anos. Calado, sempre com tinta nos dedos.", "motivos": ["amor", "vinganca", "segredo"] },
+      { "id": "gorm",   "nome": "Gorm Haldt",   "perfil": "Aspirante a Mestre da Guerra, jogador de dados.", "motivos": ["divida", "ambicao", "vinganca"] },
+      { "id": "hilde",  "nome": "Hilde Brannoc","perfil": "Copista favorita de Orlan. Ambiciosa.", "motivos": ["ambicao", "amor", "segredo"] },
+      { "id": "oswin",  "nome": "Oswin Prym",   "perfil": "Bibliotecário e guardião das chaves.", "motivos": ["segredo", "fe", "divida"] },
+      { "id": "quenn",  "nome": "Irmã Quenn",   "perfil": "Capelã que ouve as confissões da torre.", "motivos": ["fe", "segredo", "amor"] }
+    ],
+    "criadagem": [
+      { "id": "sineiro",  "nome": "Sineiro" },
+      { "id": "porteiro", "nome": "Porteiro" },
+      { "id": "cozinheira", "nome": "Mãe Berta, a cozinheira" },
+      { "id": "guarda",   "nome": "Guarda-noturno" }
+    ],
+    "salas": [
+      { "id": "P",  "nome": "Portão" },
+      { "id": "Pa", "nome": "Pátio dos Sinos" },
+      { "id": "Ca", "nome": "Capela" },
+      { "id": "Re", "nome": "Refeitório" },
+      { "id": "Co", "nome": "Cozinhas" },
+      { "id": "Do", "nome": "Dormitórios" },
+      { "id": "Bi", "nome": "Grande Biblioteca" },
+      { "id": "Sc", "nome": "Scriptorium" },
+      { "id": "Ga", "nome": "Gabinete do Mestre da Moeda" },
+      { "id": "Cn", "nome": "Sala do Conselho" },
+      { "id": "Cm", "nome": "Torre do Sino" },
+      { "id": "Ci", "nome": "Cisternas" },
+      { "id": "Ap", "nome": "Ala Proibida" },
+      { "id": "Sp", "nome": "Galeria dos Espelhos" }
+    ],
+    "ligacoes": [
+      ["P", "Pa"], ["Pa", "Ca"], ["Pa", "Re"], ["Pa", "Bi"], ["Pa", "Cm"], ["Re", "Co"], ["Re", "Do"],
+      ["Do", "Bi"], ["Bi", "Sc"], ["Bi", "Ap"], ["Sc", "Ga"], ["Ga", "Cn"], ["Cn", "Sp"], ["Cn", "Cm"],
+      ["Co", "Ci"], ["Ci", "Ap"], ["Ca", "Sp"]
+    ],
+    "regra_movimento": "Entre dois sinos, uma pessoa fica na mesma sala ou vai a uma sala ligada à sua.",
+    "motivos": [
+      { "id": "ambicao",  "nome": "Ambição" },
+      { "id": "vinganca", "nome": "Vingança" },
+      { "id": "divida",   "nome": "Dívida" },
+      { "id": "segredo",  "nome": "Segredo a esconder" },
+      { "id": "fe",       "nome": "Fé fanática" },
+      { "id": "amor",     "nome": "Amor perdido" }
+    ],
+    "sinais": [
+      { "id": "sangue",  "nome": "Sangue no chão" },
+      { "id": "ferida",  "nome": "Ferida aberta" },
+      { "id": "labios",  "nome": "Lábios negros" },
+      { "id": "pescoco", "nome": "Marca roxa no pescoço" },
+      { "id": "ossos",   "nome": "Ossos partidos" },
+      { "id": "intacto", "nome": "Pele sem nenhum corte" }
+    ],
+    "armas": [
+      { "id": "punhal",     "nome": "Punhal de escriba",          "morte": "apunhalado",       "sinais": ["sangue", "ferida"] },
+      { "id": "tinta",      "nome": "Tinta de ferro envenenada",  "morte": "envenenado",       "sinais": ["labios", "intacto"] },
+      { "id": "corda",      "nome": "Corda do sino",              "morte": "estrangulado",     "sinais": ["pescoco", "intacto"] },
+      { "id": "candelabro", "nome": "Candelabro de ferro",        "morte": "golpe na cabeça",  "sinais": ["sangue", "ossos"] },
+      { "id": "besta",      "nome": "Besta da guarda",            "morte": "flechado",         "sinais": ["ferida", "ossos"] },
+      { "id": "queda",      "nome": "Empurrado do campanário",    "morte": "queda",            "sinais": ["ossos", "intacto"] }
+    ],
+    "perguntas": ["quem", "porque", "como", "cumplice"]
+  },
+
+  "secreto": {
+    "solucao": { "quem": "marrow", "porque": "amor", "como": "tinta", "cumplice": "oswin" },
+    "mundo": {
+      "marrow":     ["Sc", "Ga", "Sc"],
+      "hilde":      ["Sc", "Sc", "Sc"],
+      "dessa":      ["Do", "Bi", "Do"],
+      "gorm":       ["Re", "Co", "Re"],
+      "oswin":      ["Bi", "Bi", "Bi"],
+      "quenn":      ["Ca", "Ca", "Pa"],
+      "sineiro":    ["Cm", "Cm", "Cm"],
+      "porteiro":   ["P",  "P",  "P"],
+      "cozinheira": ["Co", "Co", "Co"],
+      "guarda":     ["Cn", "Cn", "Ga"]
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react
 import { supabase, uniqueChannel } from '../../shared/lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { MESTRE_FEATURE, ownerResetMestre } from '../mestre/mestreService'
+import { CAATEDRUM_FEATURE } from '../caatedrum/caatService'
 
 // ────────────────────────────────────────────────────────
 // Recursos que o dono do site controla pelo Painel de controle (o livro
@@ -33,6 +34,12 @@ export const SITE_FEATURES: SiteFeature[] = [
     description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores de Altherium — só aparece com a chave em "No site". Quando todos da campanha apertam: livro fechando, 4 s de escuro, site todo preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Nas campanhas em que você é o mestre da mesa, você também vê o botão e, apertando sozinho, só você vira Mestre (teste).',
     where: 'Campanhas de Altherium (qualquer aba)',
     actions: [{ label: 'Voltar a ser normal (só você)', run: ownerResetMestre }],
+  },
+  {
+    key: CAATEDRUM_FEATURE,
+    name: 'O Crime de Caatedrum',
+    description: 'Jogo de tabuleiro de dedução para os 4 jogadores: aba Caatedrum na Sessão; o mestre põe a mesa e os jogadores recebem um aviso pra sentar. Guardado, só você vê a aba — dá pra pôr a mesa e testar o lobby.',
+    where: 'Sessão → Caatedrum (qualquer campanha)',
   },
 ]
 

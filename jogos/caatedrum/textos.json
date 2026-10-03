@@ -1,0 +1,27 @@
+{
+  "nome": "O Crime de Caatedrum",
+  "chamada": "A mesa de Caatedrum está posta",
+  "abertura": [
+    "É a Noite da Prova dos Mestres. Nas Matinas, o Mestre Orlan, Mestre da Moeda, foi achado morto em seu gabinete.",
+    "Seis suspeitos, quatro criados e uma guarda que anotou tudo. Cada um de vocês guarda pedaços do que aconteceu — e só troca o que sabe por algo de igual valor.",
+    "Quem desvendar primeiro quem matou, por quê, como e se teve cúmplice, ganha a prova."
+  ],
+  "consentimento": [
+    "O Mestre pode interferir durante a partida: mandar um bilhete da torre para o seu caderno (que pode ser falso), borrar parte do caderno com tinta por 60 segundos ou trocar o apelido de dois jogadores por 30 segundos. Tudo fica registrado e é mostrado no fim.",
+    "Qualquer um pode apertar Pausar a qualquer momento — o jogo para para todos."
+  ],
+  "niveis": [
+    { "n": 1, "nome": "Aprendiz",   "vantagem": "Nenhuma vantagem." },
+    { "n": 2, "nome": "Copista",    "vantagem": "Uma ficha de interrogatório a mais." },
+    { "n": 3, "nome": "Escrivão",   "vantagem": "Começa com 7 cartas e descarta 1 na primeira rodada." },
+    { "n": 4, "nome": "Inquisidor", "vantagem": "Uma vez por partida, pode pedir duas vezes na mesma rodada." },
+    { "n": 5, "nome": "Mestre",     "vantagem": "Uma vez por partida, vê uma carta que acabou de voltar para quem a ofertou." }
+  ],
+  "niveisAviso": "Quanto maior o nível, maior a vantagem — e maior o castigo no RPG se você perder.",
+  "assentos": [
+    { "cor": "azul",     "emblema": "torre" },
+    { "cor": "vermelho", "emblema": "chave" },
+    { "cor": "verde",    "emblema": "folha" },
+    { "cor": "roxo",     "emblema": "sino" }
+  ]
+}

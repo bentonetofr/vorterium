@@ -1,0 +1,40 @@
+{
+  "_leia": "Regras de O Crime de Caatedrum. 'original' = igual ao jogo de tabuleiro; 'sessao' = extras da nossa sessão de RPG (0 ou null desliga). Mudou algo? Rode: node scripts/caatedrum-conteudo.mjs",
+
+  "original": {
+    "jogadores": 4,
+    "maoInicial": 6,
+    "referenciasPorPedido": 2,
+    "tiposDeReferencia": ["suspeito", "sala"],
+    "ofertaPodeTerVariasCartas": true,
+    "ofertaPrecisaCitarAoMenos": 1,
+    "pagamentoMinimoIgualAoValor": true,
+    "trocaComVariosOfertantes": true,
+    "compraQuandoNinguemOferta": 3,
+    "descartarAteFicarCom": 3,
+    "completarMaoAte": 6,
+    "aoReembaralharRevelar": 3,
+    "erroNaSolucaoFicaForaDe": 1,
+    "baralhoPorCaso": 70,
+    "ordem": "anti-horaria",
+    "inicialPassaPara": "proximo-na-ordem"
+  },
+
+  "sessao": {
+    "rodadasMax": 7,
+    "timerPedirSegundos": 120,
+    "timerOfertaSegundos": 60,
+    "timerTrocaSegundos": 90,
+    "timerSolucaoSegundos": 90,
+    "fichasInterrogatorio": 0,
+    "pontosVitoria": 3,
+    "pontosPorAcertoSecundario": 1
+  },
+
+  "niveis": {
+    "2": { "fichasInterrogatorioExtra": 1 },
+    "3": { "maoInicialExtra": 1, "descartaNaPrimeiraRodada": 1 },
+    "4": { "pedidoExtraPorPartida": 1 },
+    "5": { "verOfertaDevolvidaPorPartida": 1 }
+  }
+}
