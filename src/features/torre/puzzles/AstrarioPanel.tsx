@@ -78,7 +78,7 @@ function StarPicker({ value, onPick, ro }: { value: number | null; onPick: (s: n
     for (let s = 0; s < 8; s++) {
       const [x, y] = fifthXY(s, 18, 18, 12)
       if (s === value) drawStar(ctx, x, y, '#d8e4ff')
-      else px(ctx, '#3a4672', x, y)
+      else px(ctx, '#7f8fc8', x - 1, y - 1, 3, 3)
     }
   }
   return <PixelScene w={S} h={S} maxH={150} draw={draw} onDown={(p) => { const s = at(p); if (!ro && s !== null) onPick(s) }} hot={(p) => !ro && at(p) !== null} label="Onde está a 5ª estrela" />
@@ -96,6 +96,7 @@ function TopHalf({ g, act, ro }: TorrePuzzleProps) {
           </button>
         ))}
       </div>
+      <p className="lb-hint-line">A 5ª estrela: clique no ponto onde ela apareceu, em volta da mais brilhante.</p>
       <StarPicker value={a.star} ro={ro} onPick={(s) => void act({ a: 'ast_star', s })} />
     </div>
   )
@@ -128,6 +129,33 @@ export function AstrarioPanel(props: TorrePuzzleProps & { floor: Floor }) {
   const otherGo = g.other[`${other}_go`]
   const otherReady = g.other[`${other}_ready`]
   const myGo = g.other[`${floor}_go`]
+  // Tentou girar faltando algo: mostra o que falta (e vai atualizando).
+  const [tried, setTried] = useState(false)
+
+  /** O que ainda falta na minha metade (null = tudo posto). */
+  const whatsMissing = (): string | null => {
+    if (mine === 'cima' && g.ast_cima) {
+      const casas = g.ast_cima.seq.map((s, i) => (s ? null : i + 1)).filter((n): n is number => n !== null)
+      const parts: string[] = []
+      if (casas.length === 1) parts.push(`a casa ${casas[0]}`)
+      else if (casas.length > 1) parts.push(`as casas ${casas.slice(0, -1).join(', ')} e ${casas[casas.length - 1]}`)
+      if (g.ast_cima.star === null) parts.push('a 5ª estrela (clique no ponto em volta da estrela brilhante)')
+      return parts.length ? `Ainda falta: ${parts.join(' e ')}.` : null
+    }
+    if (mine === 'baixo' && g.ast_baixo) {
+      const parts: string[] = []
+      if (g.ast_baixo.num.length !== 3) parts.push('o número de 3 algarismos')
+      if (!g.ast_baixo.key) parts.push(g.inv.chave ? 'a chave (clique em "Pôr a chave")' : 'a chave (ela sai do trinco da manivela)')
+      return parts.length ? `Ainda falta: ${parts.join(' e ')}.` : null
+    }
+    return null
+  }
+  const go = () => {
+    const m = whatsMissing()
+    setTried(!!m)
+    if (!m) void act({ a: 'go' })
+  }
+  const missingNow = tried ? whatsMissing() : null
 
   return (
     <>
@@ -137,10 +165,11 @@ export function AstrarioPanel(props: TorrePuzzleProps & { floor: Floor }) {
       {mine === null && floor === 'cima' && g.ast_baixo && <BottomHalf {...props} ro />}
       {mine === null && floor === 'baixo' && g.ast_cima && <TopHalf {...props} ro />}
       {!ro && mine && (
-        <button type="button" className={`lb-btn lb-btn--gold${myGo && now - myGo < 3000 ? ' tor-go--on' : ''}`} onClick={() => void act({ a: 'go' })}>
+        <button type="button" className={`lb-btn lb-btn--gold${myGo && now - myGo < 3000 ? ' tor-go--on' : ''}`} onClick={go}>
           Girar a minha metade
         </button>
       )}
+      {missingNow && <p className="lb-toast is-bad" role="status">{missingNow}</p>}
       <Hint>
         {otherGo && now - otherGo < 3000
           ? `O outro lado está girando agora!`
