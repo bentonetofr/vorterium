@@ -8,6 +8,7 @@ import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
 import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
+import { ControlFab }         from '../../features/control/ControlFab'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { CritWolf }           from '../../features/dice/components/CritWolf'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
@@ -273,6 +274,7 @@ function PrivateLayoutContent() {
         <MesaLiveNotice />
         <NotificationPopup />
       </FabToasts>
+      <ControlFab />
       <NotificationBell />
       <DiceFab />
       <ChatFab />

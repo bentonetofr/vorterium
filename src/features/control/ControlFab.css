@@ -1,0 +1,83 @@
+/* ── Painel de controle (só o dono do site) ── */
+
+/* O livro vinho, centralizado em cima do sino (mesmo tamanho dele). */
+.control-fab {
+  --vinho: #7a1f2b;
+  --vinho-claro: #a33244;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin-right: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f3dfc3;
+  background: radial-gradient(circle at 35% 30%, var(--vinho-claro), var(--vinho) 70%);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  cursor: var(--cursor-hand);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.control-fab:hover { transform: translateY(-2px); border-color: var(--gilded-bright, #f5c542); }
+.control-fab:active { transform: scale(0.9); transition-duration: 80ms; }
+.control-fab--open { border-color: var(--gilded-bright, #f5c542); box-shadow: 0 0 0 4px rgba(122, 31, 43, 0.35), 0 6px 18px rgba(0, 0, 0, 0.3); }
+@media (max-width: 480px) { .control-fab { width: 38px; height: 38px; margin-right: 5px; } }
+
+/* A janela: mesmo lugar e tamanho das outras do canto. */
+.control-panel { border-color: rgba(163, 50, 68, 0.6); }
+.control-panel__head {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  color: #f3dfc3;
+  background: linear-gradient(135deg, #5c1620, #7a1f2b);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+}
+.control-panel__titles { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.control-panel__title { font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.2; }
+.control-panel__sub { font-size: 11px; opacity: 0.75; }
+.control-panel__close { width: 28px; height: 28px; color: inherit; background: rgba(0, 0, 0, 0.18); border: none; border-radius: 50%; }
+.control-panel__close:hover { background: rgba(0, 0, 0, 0.32); }
+
+.control-panel__state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-5); text-align: center; color: var(--text-muted); font-size: var(--text-sm); }
+.control-panel__state--empty p { margin: 0; max-width: 280px; }
+.control-panel__state--empty p:first-child { color: var(--text-primary); font-weight: 600; }
+
+.control-panel__list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; margin: 0; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); }
+.control-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-left: 3px solid #7a1f2b; border-radius: var(--radius-md);
+}
+.control-item--on { border-left-color: var(--success, #4ade80); }
+.control-item__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.control-item__name { font-weight: 700; color: var(--text-primary); }
+.control-item__desc { font-size: var(--text-sm); color: var(--text-secondary); }
+.control-item__meta { font-size: 11px; color: var(--text-muted); }
+.control-item__error { font-size: 11px; color: var(--danger); }
+
+/* Chave Guardado ↔ No site */
+.control-item__switch {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 0; background: none; border: none; color: var(--text-muted);
+}
+.control-item__knob {
+  position: relative; width: 42px; height: 24px; border-radius: 12px;
+  background: #5c1620; border: 1px solid rgba(212, 175, 55, 0.35);
+  transition: background var(--transition-base);
+}
+.control-item__knob::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+  background: #f3dfc3; transition: transform var(--transition-base);
+}
+.control-item__switch[aria-checked="true"] .control-item__knob { background: color-mix(in srgb, var(--success, #4ade80) 70%, #0b1326); }
+.control-item__switch[aria-checked="true"] .control-item__knob::after { transform: translateX(18px); }
+.control-item__switch[aria-checked="true"] { color: var(--success, #4ade80); }
+.control-item__switch:disabled { opacity: 0.6; }
+.control-item__state { font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.control-panel__foot {
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  font-size: 11px; color: var(--text-muted);
+  border-top: 1px solid var(--border-dim);
+}
