@@ -4,10 +4,12 @@ import { DIGIT_BITS, drawBits, SYMBOL_BITS } from './glyphs'
 import { Dial, PixelScene, type Pt, type PuzzleProps } from './kit'
 
 // ────────────────────────────────────────────────────────
-// O Castiçal. Clicar numa vela acende/apaga; nas seladas, tenta abrir o
-// pavio (a ordem certa está na silhueta do retrato). Cada vela acesa joga
-// uma sombra na parede — algumas têm forma de símbolo. O mostrador muda de
-// onde se olha: com as 7 acesas e no ângulo certo, as sombras viram números.
+// O Castiçal. Clicar numa vela acende/apaga; nas seladas, trinca a cera
+// do pavio — no último, a ordem é conferida (a certa está na silhueta do
+// retrato). Cada vela acesa joga uma sombra na parede, logo acima do seu
+// gancho — algumas têm forma de símbolo; as manchas comuns mudam com o
+// mostrador. Com as 7 acesas, o astrolábio calibrado e olhando do ângulo
+// certo, as sombras viram números.
 // ────────────────────────────────────────────────────────
 
 const W = 176
@@ -27,6 +29,7 @@ function candleAt(p: Pt): number | null {
 
 export function CastPanel({ g, act, ro }: PuzzleProps) {
   const c = g.cast
+  const tried = c.tried ?? []
   const hover = useRef<number | null>(null)
 
   const draw = (ctx: Ctx, t: number, mouse: Pt | null) => {
@@ -65,10 +68,11 @@ export function CastPanel({ g, act, ro }: PuzzleProps) {
       const spread = c.view - 4.5
       for (let i = 0; i < 7; i++) {
         if (!c.lit[i]) continue
-        const sx = cx(i) + spread * (i - 3) * 1.6
         const sym = c.shadows[i]
-        if (sym) drawBits(ctx, SYMBOL_BITS[sym], sx - 9, 12, SHADOW, 2)
+        // o símbolo fica sempre em cima do próprio gancho; só as manchas se movem
+        if (sym) drawBits(ctx, SYMBOL_BITS[sym], cx(i) - 9, 12, SHADOW, 2)
         else {
+          const sx = cx(i) + spread * (i - 3) * 1.6
           px(ctx, SHADOW, sx - 4, 18, 8, 14)
           px(ctx, SHADOW, sx - 3, 16, 6, 2)
           px(ctx, SHADOW, sx - 2, 32, 4, 2)
@@ -101,6 +105,12 @@ export function CastPanel({ g, act, ro }: PuzzleProps) {
         px(ctx, '#b83a3a', x - 2, top - 3, 4, 2)
         px(ctx, '#e06060', x - 1, top - 3, 1, 1)
         px(ctx, '#7a1d1d', x - 2, top + 1, 1, 3)
+        if (tried.includes(i)) {
+          // cera trincada, esperando os outros
+          px(ctx, '#2a0e0e', x - 1, top - 3, 1, 2)
+          px(ctx, '#2a0e0e', x, top - 2, 1, 2)
+          px(ctx, '#2a0e0e', x + 1, top - 1, 1, 1)
+        }
       } else if (c.lit[i]) {
         drawFlame(ctx, x, top - 2, t, i * 3)
         px(ctx, '#ffb347', x, top - 6, 1, 1)

@@ -6,8 +6,8 @@ import { PixelScene, type Pt, type PuzzleProps } from './kit'
 // ────────────────────────────────────────────────────────
 // A Estante. 12 livros; as posições estão gravadas na prateleira.
 // Arrastar troca os livros de lugar (não muda nada... de propósito).
-// Clicar puxa um livro: na ordem certa (o número das sombras), cada um
-// mostra um glifo na lombada; errou, todos voltam. A palavra traduzida
+// Clicar puxa um livro; no 4º a ordem é conferida (o número das sombras):
+// certa, as lombadas mostram glifos; errada, todos voltam. A palavra traduzida
 // (+ o medalhão) abre a gaveta secreta.
 // ────────────────────────────────────────────────────────
 
@@ -44,8 +44,11 @@ export function EstPanel({ g, act, ro }: PuzzleProps) {
     if (pulledK !== null) {
       // a ordem em que foi puxado (é a ordem de ler a palavra)
       drawBits(ctx, DIGIT_BITS[pulledK + 1], x + Math.floor((w - 5) / 2), top - 10, '#ecc66a')
-      px(ctx, 'rgba(0,0,0,0.35)', x + 2, top + 12, w - 4, 9)
-      drawBits(ctx, GLYPH_BITS[e.glyphs[pulledK]] ?? GLYPH_BITS[0], x + Math.floor((w - 5) / 2), top + 14, '#ffe7a3')
+      const glyph = GLYPH_BITS[e.glyphs[pulledK]]
+      if (glyph) {
+        px(ctx, 'rgba(0,0,0,0.35)', x + 2, top + 12, w - 4, 9)
+        drawBits(ctx, glyph, x + Math.floor((w - 5) / 2), top + 14, '#ffe7a3')
+      }
     } else {
       px(ctx, '#c99a3b', x + 6, top + 9, 1, 2)
     }

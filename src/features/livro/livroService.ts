@@ -25,8 +25,8 @@ export type Quadrant = 'castical' | 'retrato' | 'astrolabio' | 'estante'
 /** O jogo como a dupla (e quem assiste) vê agora — só o que já foi descoberto. */
 export interface GameView {
   light: 'escuro' | 'parcial' | 'total'
-  cast: { lit: boolean[]; sealed: boolean[]; view: number; shadows: (Sym | null)[]; digits: number[] | null }
-  ret: { view: number; corners: (Sym | null)[]; silhouette: number[] | null; face: number | null; table: { l: string; g: number }[] | null }
+  cast: { lit: boolean[]; sealed: boolean[]; tried?: number[]; view: number; shadows: (Sym | null)[]; digits: number[] | null }
+  ret: { view: number; corners: (Sym | null)[]; silhouette: number[] | null; face: number | null; taken?: boolean; table: { l: string; g: number }[] | null }
   astro: { runes: number[]; slots: (Sym | null)[]; known: Sym[]; angle: number | null; pointer: number; lid: boolean; seq: number[] | null }
   est: { books: number[]; pulled: number[]; glyphs: number[]; word_ok: boolean; drawer: boolean }
   ped: { chains: number[]; opened: boolean; progress: Record<Quadrant, number>; links: [Quadrant, Quadrant][] }

@@ -27,14 +27,28 @@ function usePixelFont() {
   }, [])
 }
 
+// Em tela cheia, o navegador usa o Esc pra sair dela. Travando o Esc
+// (Chrome/Edge), ele volta a fechar as janelas do jogo — e segurar o Esc
+// ainda sai da tela cheia. Onde não existe, fica como era.
+type KeyboardLock = { lock?: (keys: string[]) => Promise<void>; unlock?: () => void }
+const keyboardApi = () => (navigator as Navigator & { keyboard?: KeyboardLock }).keyboard
+
 function useFullscreen() {
   const [full, setFull] = useState(() => !!document.fullscreenElement)
   useEffect(() => {
-    const f = () => setFull(!!document.fullscreenElement)
+    const f = () => {
+      setFull(!!document.fullscreenElement)
+      if (!document.fullscreenElement) keyboardApi()?.unlock?.()
+    }
     document.addEventListener('fullscreenchange', f)
     return () => document.removeEventListener('fullscreenchange', f)
   }, [])
-  const enter = () => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(() => {}) }
+  const enter = () => {
+    if (document.fullscreenElement) return
+    void document.documentElement.requestFullscreen?.()
+      .then(() => keyboardApi()?.lock?.(['Escape']))
+      .catch(() => {})
+  }
   const exit = () => { if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}) }
   return { full, enter, exit }
 }
@@ -49,11 +63,15 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
   const [menu, setMenu] = useState(false)
   const fs = useFullscreen()
 
-  // O site por baixo não rola.
+  // O site por baixo não rola. E quando o jogo some (o mestre encerrou),
+  // a tela cheia sai junto.
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    return () => {
+      document.body.style.overflow = prev
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {})
+    }
   }, [])
 
   // Uma conexão ao vivo por sala.
