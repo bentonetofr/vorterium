@@ -3,14 +3,15 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { useFeature, useIsSiteOwner } from '../control/siteFeatures'
 import {
-  MESTRE_FEATURE, callMestre, cancelMestreCall, loadCampaignMestre, markSeen, ownerTestMestre,
-  playAscension, setMyMestre, subscribeCampaignMestre, useMestreState, type CampaignMestre,
+  MESTRE_FEATURE, callMestre, cancelMestreCall, loadCampaignMestre, loadMestreHere, markSeen, ownerTestMestre,
+  playAscension, setMyMestre, subscribeCampaignMestre, subscribeMestreHere, useMestreState, type CampaignMestre,
 } from './mestreService'
 
 // ────────────────────────────────────────────────────────
 // O botão SE TORNAR UM MESTRE, no meio da tela dos jogadores de uma
 // campanha de Altherium — só depois que o dono do site LIGA a Raiz Mestre
-// no Painel de controle (guardada, ninguém vê; nem ele). Cada
+// no Painel de controle (guardada, ninguém vê; nem ele) — e só na campanha
+// que ele escolheu lá (as outras campanhas não veem o botão). Cada
 // um aperta; quando TODOS os jogadores apertaram, a campanha ascende e a
 // animação roda pra todos juntos. Dá pra desistir, e minimizar enquanto
 // espera. O dono do site (quando não é jogador da campanha) aperta sozinho
@@ -27,11 +28,23 @@ export function MestreCall() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mini, setMini] = useState(false)
+  const [here, setHere] = useState<{ id: string; yes: boolean } | null>(null)
   const played = useRef(false)
 
   const campaignId = campaign?.id ?? null
   const isPlayer = campaign?.role === 'player'
-  const eligible = !!campaignId && campaign?.system === 'altherium' && feature.on && (isPlayer || owner) && mestre === false
+  const candidate = !!campaignId && campaign?.system === 'altherium' && feature.on && (isPlayer || owner) && mestre === false
+  const eligible = candidate && here?.id === campaignId && here.yes
+
+  // Esta campanha é a escolhida? (confere de novo a cada troca no Painel)
+  useEffect(() => {
+    if (!candidate || !campaignId) return
+    let alive = true
+    const check = () => { void loadMestreHere(campaignId).then((yes) => { if (alive) setHere({ id: campaignId, yes }) }) }
+    check()
+    const off = subscribeMestreHere(check)
+    return () => { alive = false; off() }
+  }, [candidate, campaignId])
 
   const ascend = useCallback(() => {
     if (played.current || !user?.id) return
