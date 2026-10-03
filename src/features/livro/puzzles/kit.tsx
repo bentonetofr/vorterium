@@ -13,12 +13,36 @@ import { bitsCanvas, SYMBOL_BITS, GLYPH_BITS, type Sym } from './glyphs'
 
 export type Act = (action: Record<string, unknown>) => Promise<void>
 
+/**
+ * O que só existe na tela de quem joga (mouse, símbolo escolhido, o que
+ * está digitando): quem joga manda (`share`), quem assiste recebe (`remote`).
+ */
+export interface UiLink {
+  share:  (state: Record<string, unknown>) => void
+  remote: Record<string, unknown> | null
+}
+
 export interface PuzzleProps {
   g:    GameView
   act:  Act
   /** Só olhando (quem assiste, ou o mestre). */
   ro:   boolean
   view: LivroView
+  ui?:  UiLink
+}
+
+/**
+ * Pra cada janela: `put` junta um pedaço do estado e manda pra quem
+ * assiste; `remote` é o estado de quem eu assisto (null se sou eu que jogo).
+ */
+export function useUiShare(ui: UiLink | undefined, ro: boolean) {
+  const state = useRef<Record<string, unknown>>({})
+  const put = (patch: Record<string, unknown>) => {
+    if (ro || !ui) return
+    state.current = { ...state.current, ...patch }
+    ui.share(state.current)
+  }
+  return { put, remote: ro ? ui?.remote ?? null : null }
 }
 
 export interface Pt { x: number; y: number }
@@ -26,6 +50,10 @@ export interface Pt { x: number; y: number }
 interface SceneProps {
   w: number
   h: number
+  /** O mouse de outra pessoa (quem assiste vê a lupa e os destaques dela). */
+  remoteMouse?: Pt | null
+  /** Avisa onde está o meu mouse na cena (null = saiu). */
+  onMouse?: (p: Pt | null) => void
   /** Altura máxima na tela (px CSS). */
   maxH?: number
   draw: (ctx: Ctx, t: number, mouse: Pt | null) => void
@@ -37,11 +65,11 @@ interface SceneProps {
   label: string
 }
 
-export function PixelScene({ w, h, maxH = 420, draw, onDown, onMove, onUp, hot, label }: SceneProps) {
+export function PixelScene({ w, h, maxH = 420, draw, onDown, onMove, onUp, hot, label, remoteMouse, onMouse }: SceneProps) {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
-  const props = useRef({ draw, onDown, onMove, onUp, hot })
-  props.current = { draw, onDown, onMove, onUp, hot }
+  const props = useRef({ draw, onDown, onMove, onUp, hot, remoteMouse, onMouse })
+  props.current = { draw, onDown, onMove, onUp, hot, remoteMouse, onMouse }
   const [scale, setScale] = useState(3)
   const mouse = useRef<Pt | null>(null)
 
@@ -67,7 +95,8 @@ export function PixelScene({ w, h, maxH = 420, draw, onDown, onMove, onUp, hot, 
     let raf = 0
     const loop = (t: number) => {
       nctx.clearRect(0, 0, w, h)
-      props.current.draw(nctx, t / 1000, mouse.current)
+      const m = props.current.remoteMouse !== undefined ? props.current.remoteMouse : mouse.current
+      props.current.draw(nctx, t / 1000, m)
       ctx.imageSmoothingEnabled = false
       ctx.clearRect(0, 0, c.width, c.height)
       ctx.drawImage(native, 0, 0, c.width, c.height)
@@ -95,8 +124,9 @@ export function PixelScene({ w, h, maxH = 420, draw, onDown, onMove, onUp, hot, 
           mouse.current = p
           canvas.current!.style.cursor = props.current.hot?.(p) ? 'pointer' : 'default'
           props.current.onMove?.(p)
+          props.current.onMouse?.({ x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10 })
         }}
-        onPointerLeave={() => { mouse.current = null }}
+        onPointerLeave={() => { mouse.current = null; props.current.onMouse?.(null) }}
         onPointerDown={(e) => {
           if (e.button !== 0) return
           ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)

@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.24',
+    date:    '2026-10-03',
+    title:   'Dois jogos de enigma pra sessão: O Livro Bloqueado e A Torre do Observatório',
+    items: [
+      'Novos joguinhos em pixel art pra jogar no meio da sessão, por cima do site: o mestre abre na campanha, escolhe quem joga, e o jogo cobre a tela de todo mundo dela. Quem não joga assiste ao vivo, com a tela dividida mostrando os dois jogadores.',
+      'O Livro Bloqueado: uma biblioteca trancada com um castiçal, um retrato, um astrolábio, uma estante e o livro preso por correntes no pedestal. Cada partida tem um segredo novo. Quem assiste vê na hora o que a dupla escolhe, o que digita e por onde passa a lupa no retrato.',
+      'A Torre do Observatório: pra exatamente 2 jogadores, um em cada andar da torre. Eles não se veem e só se ouvem — o que um enxerga, o outro precisa pra avançar, então tudo depende de falar pela voz.',
+      'Os dois jogos têm sons (passos, cliques, velas, engrenagens, um fundo de vento e máquinas), que dá pra desligar no menu ≡, e funcionam no celular (de preferência deitado).',
+      'Pro mestre: painel com o andamento, dicas prontas pela etapa em que a dupla está (ou escritas na hora, que aparecem pra todos por 25 s), a solução da partida, a linha do tempo do que cada um fez e o botão Recomeçar. Se o mestre estiver jogando, a solução nem chega ao navegador dele.',
+      'Dá pra trocar de um jogo pro outro pelo menu ≡ no meio da sessão: o jogo que sai fica pausado (o relógio para) e, ao voltar, tudo está onde parou — posição dos bonecos, janela aberta, luzes e progresso.',
+    ],
+  },
+  {
     version: '1.23',
     date:    '2026-10-01',
     title:   'Artes e referências e Documentos na Mesa',

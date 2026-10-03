@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { makeCanvas, px, RUNES, type Ctx } from '../game/art'
 import type { Sym } from '../livroService'
 import { DIGIT_BITS, drawBits, SYMBOL_BITS } from './glyphs'
-import { markXY, PixelScene, SymbolIcon, type Pt, type PuzzleProps } from './kit'
+import { markXY, PixelScene, SymbolIcon, useUiShare, type Pt, type PuzzleProps } from './kit'
 
 // ────────────────────────────────────────────────────────
 // O Astrolábio. Quatro encaixes, cada um com uma runa (a mesma de um
@@ -46,14 +46,19 @@ function discCanvas() {
 
 const inLid = (p: Pt) => p.x >= LID.x && p.x <= LID.x + LID.w && p.y >= LID.y && p.y <= LID.y + LID.h
 
-export function AstroPanel({ g, act, ro }: PuzzleProps) {
+export function AstroPanel({ g, act, ro, ui }: PuzzleProps) {
   const a = g.astro
-  const [pick, setPick] = useState<Sym | null>(null)
+  const { put, remote } = useUiShare(ui, ro)
+  const live = !ro || !!remote
+  const [myPick, setMyPick] = useState<Sym | null>(null)
+  // quem assiste vê o símbolo que a pessoa escolheu
+  const pick = remote ? (remote.pick as Sym | null) ?? null : myPick
+  const setPick = (s: Sym | null) => { setMyPick(s); put({ pick: s }) }
   const angleShown = useRef(a.pointer)
   const hover = useRef<{ socket: number | null; mark: number | null; lid: boolean }>({ socket: null, mark: null, lid: false })
 
   const draw = (ctx: Ctx, t: number, mouse: Pt | null) => {
-    hover.current = { socket: mouse && !ro ? socketAt(mouse) : null, mark: mouse && !ro && a.angle === null ? markAt(mouse) : null, lid: !!mouse && !ro && inLid(mouse) }
+    hover.current = { socket: mouse && live ? socketAt(mouse) : null, mark: mouse && live && a.angle === null ? markAt(mouse) : null, lid: !!mouse && live && inLid(mouse) }
     // mesa
     px(ctx, '#3e281a', 0, 0, W, H)
     for (let y = 0; y < H; y += 7) px(ctx, '#46301f', 0, y, W, 1)
@@ -143,6 +148,8 @@ export function AstroPanel({ g, act, ro }: PuzzleProps) {
         draw={draw}
         hot={(p) => !ro && (socketAt(p) !== null || (a.angle === null && markAt(p) !== null) || (inLid(p) && !a.lid))}
         onDown={onDown}
+        remoteMouse={remote ? (remote.m as Pt | null) ?? null : undefined}
+        onMouse={(m) => put({ m })}
       />
       {a.angle === null && (
         <div className="lb-palette" role="group" aria-label="Símbolos que vocês já viram">

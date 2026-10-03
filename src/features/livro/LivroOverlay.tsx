@@ -7,6 +7,8 @@ import { useLivroView } from './useLivroRoom'
 import { spritePedestal } from './game/art'
 import { useFeature } from '../control/siteFeatures'
 import { openRoom as openTorre, TORRE_FEATURE } from '../torre/torreService'
+import { LivroGmPanel } from './LivroGmPanel'
+import { onSoundChange, setSoundOn, sfx, soundOn } from './game/sound'
 import './Livro.css'
 
 // ────────────────────────────────────────────────────────
@@ -148,11 +150,24 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointerdown', onDown) }
   }, [menu])
 
+  // Clique de qualquer botão do jogo, e o som ligado/desligado.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    const onDown = (e: PointerEvent) => { if ((e.target as HTMLElement).closest('button')) sfx('click') }
+    el.addEventListener('pointerdown', onDown)
+    return () => el.removeEventListener('pointerdown', onDown)
+  }, [])
+  const [sound, setSound] = useState(soundOn)
+  useEffect(() => onSoundChange(setSound), [])
+  const [gmOpen, setGmOpen] = useState(false)
+
   const isGm = !!view?.me.gm
   const playing = view?.room.status === 'jogo'
 
   return (
-    <div className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
+    <div ref={rootRef} className="lb-overlay" role="dialog" aria-modal="true" aria-label="O Livro Bloqueado">
       {entered && switching && <SwitchCard kicker="A biblioteca de Caatedrum" title="O Livro Bloqueado" />}
       {!entered || !view ? (
         <TitleCard
@@ -167,6 +182,8 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
         <LivroGameView view={view} net={net} peers={peers} />
       ) : null}
 
+      {entered && view && isGm && playing && gmOpen && <LivroGmPanel view={view} onClose={() => setGmOpen(false)} />}
+
       {entered && view && (
         <div className="lb-menu" ref={menuRef}>
           <button type="button" className="lb-menu__btn" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Menu">
@@ -175,7 +192,9 @@ export function LivroOverlay({ room, onMinimize }: { room: LivroRoomRow; onMinim
           {menu && (
             <div className="lb-menu__list lb-frame" role="menu">
               <button type="button" role="menuitem" onClick={() => { setMenu(false); if (fs.full) fs.exit(); else fs.enter() }}>{fs.full ? 'Sair da tela cheia' : 'Tela cheia'}</button>
+              <button type="button" role="menuitem" onClick={() => setSoundOn(!sound)} aria-pressed={sound}>{sound ? 'Som: ligado' : 'Som: desligado'}</button>
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
+              {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); setGmOpen(true) }}>Painel do mestre</button>}
               {isGm && torre.visible && (
                 <button type="button" role="menuitem" onClick={() => { setMenu(false); void openTorre(room.campaign_id).catch((e) => window.alert(e instanceof Error ? e.message : 'Não deu certo.')) }}>Trocar para A Torre do Observatório</button>
               )}

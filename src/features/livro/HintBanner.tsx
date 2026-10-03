@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 
 // ────────────────────────────────────────────────────────
-// A dica que o mestre manda (painel do mestre): uma faixa de pergaminho
-// que vale 25 s, pela hora do banco.
+// A dica que o mestre manda (painel do mestre), nos dois jogos: uma faixa
+// de pergaminho que vale 25 s, pela hora do banco.
 // ────────────────────────────────────────────────────────
 
 /** No alto da tela ou, com uma janela aberta, dentro dela (inline). */
-export function HintBanner({ hint, offset, inline }: { hint: { t: number; text: string } | null; offset: number; inline?: boolean }) {
+export function HintBanner({ hint, offset, inline, kicker = 'Um sussurro na torre' }: { hint: { t: number; text: string } | null; offset: number; inline?: boolean; kicker?: string }) {
   const [, tick] = useState(0)
   useEffect(() => {
     if (!hint) return
@@ -17,9 +17,9 @@ export function HintBanner({ hint, offset, inline }: { hint: { t: number; text: 
   }, [hint, offset])
   if (!hint || Date.now() + offset - hint.t >= 25000) return null
   return (
-    <div className={`tor-hint${inline ? ' tor-hint--inline' : ''}`} role="status">
-      <span className="tor-hint__kicker">Um sussurro na torre</span>
-      <span className="tor-hint__text">{hint.text}</span>
+    <div className={`lb-hint-banner${inline ? ' lb-hint-banner--inline' : ''}`} role="status">
+      <span className="lb-hint-banner__kicker">{kicker}</span>
+      <span className="lb-hint-banner__text">{hint.text}</span>
     </div>
   )
 }

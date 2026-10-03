@@ -46,7 +46,9 @@ export interface LivroView {
   players:    LivroPlayer[]
   members:    LivroMember[]
   game:       GameView | null
-  /** Só o mestre: a solução e a linha do tempo. */
+  /** A dica do mestre, enquanto vale (25 s). */
+  hint?:      { t: number; text: string } | null
+  /** Só o mestre (e só se não estiver jogando): a solução e a linha do tempo. */
   gm?:        { secret: Record<string, unknown>; events: { t: number; m: string }[] }
 }
 
