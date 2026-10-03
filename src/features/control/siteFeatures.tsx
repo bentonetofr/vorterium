@@ -3,6 +3,7 @@ import { supabase, uniqueChannel } from '../../shared/lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { MESTRE_FEATURE, ownerResetMestre } from '../mestre/mestreService'
 import { LIVRO_FEATURE, livroOpenHere, livroToggle, closeMine as livroCloseMine } from '../livro/livroService'
+import { TORRE_FEATURE, torreOpenHere, torreToggle, closeMine as torreCloseMine } from '../torre/torreService'
 
 // ────────────────────────────────────────────────────────
 // Recursos que o dono do site controla pelo Painel de controle (o livro
@@ -52,6 +53,17 @@ export const SITE_FEATURES: SiteFeature[] = [
     actions: [
       { label: 'Abrir nesta campanha', run: (_u, ctx) => livroOpenHere(ctx.campaign) },
       { label: 'Encerrar', run: async () => { const n = await livroCloseMine(); return n ? 'Encerrado.' : 'Não tinha jogo aberto.' } },
+    ],
+  },
+  {
+    key: TORRE_FEATURE,
+    name: 'A Torre do Observatório',
+    description: 'Joguinho em pixel art pra exatamente 2 jogadores da sessão, um em cada andar da torre (eles não se veem, só se ouvem — precisam falar pela voz). Os outros e você assistem os dois andares. Ligando com a página da campanha aberta, o jogo cobre a tela de todo mundo dela, no saguão. Guardado, só você vê: use "Abrir nesta campanha" pra testar.',
+    where: 'Por cima do site, na campanha aberta',
+    onToggle: torreToggle,
+    actions: [
+      { label: 'Abrir nesta campanha', run: (_u, ctx) => torreOpenHere(ctx.campaign) },
+      { label: 'Encerrar', run: async () => { const n = await torreCloseMine(); return n ? 'Encerrado.' : 'Não tinha jogo aberto.' } },
     ],
   },
 ]
