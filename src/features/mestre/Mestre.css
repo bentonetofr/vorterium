@@ -203,3 +203,24 @@ html.mestre-assemble .dice-fab-wrapper { animation-delay: 0.8s; }
   .mestre-asc__cover, .mestre-asc__sigil, .mestre-asc__seam { animation-duration: 1ms; }
   html.mestre-assemble * { animation: none !important; }
 }
+
+/* NÃO ME TORNAR UM MESTRE: vermelho com borda e letra douradas. */
+.mestre-call__refuse {
+  padding: 10px 22px;
+  font-family: var(--font-display); font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
+  color: #ffd45e;
+  background: linear-gradient(180deg, #8f1622 0%, #5e0c14 100%);
+  border: 1px solid #d4a63a; border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(143, 22, 34, 0.25), 0 0 18px rgba(143, 22, 34, 0.45);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+.mestre-call__refuse:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 0 4px rgba(212, 166, 58, 0.25), 0 0 24px rgba(180, 30, 45, 0.6); }
+.mestre-call__refuse:disabled { opacity: 0.7; }
+
+/* A confirmação da recusa. */
+.mestre-call__confirm { display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 420px; text-align: left; }
+.mestre-call__warn { margin: 0; color: #f3d9a0; font-size: var(--text-sm); text-align: center; }
+.mestre-call__warn b { color: #ffd45e; }
+.mestre-call__list { margin: 0; padding-left: 18px; color: #dcc89c; font-size: var(--text-xs); line-height: 1.5; }
+.mestre-call__row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin-top: 4px; }
+.mestre-call__card--refused { border-color: rgba(212, 166, 58, 0.6); }

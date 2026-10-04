@@ -80,19 +80,25 @@ export interface CampaignMestre {
   players:  string[]
   /** Quem já apertou. */
   calls:    string[]
+  /** Quem apertou NÃO ME TORNAR (sai da conta). */
+  refused:  string[]
   ascended: boolean
 }
 
 export async function loadCampaignMestre(campaignId: string): Promise<CampaignMestre> {
-  const [members, calls, asc] = await Promise.all([
+  const [members, calls, asc, refused] = await Promise.all([
     supabase.from('campaign_members').select('user_id').eq('campaign_id', campaignId).eq('role', 'player'),
     supabase.from('altherium_mestre_calls').select('user_id').eq('campaign_id', campaignId),
     supabase.from('altherium_mestre_ascensions').select('campaign_id').eq('campaign_id', campaignId).maybeSingle(),
+    supabase.from('altherium_mestre_refusals').select('user_id').eq('campaign_id', campaignId),
   ])
   if (calls.error || asc.error) throw new Error('A Raiz Mestre ainda não está pronta no banco.')
+  // Sem a migration da recusa: ninguém recusou.
+  const out = (refused.error ? [] : refused.data ?? []).map((r) => r.user_id as string)
   return {
-    players:  (members.data ?? []).map((m) => m.user_id as string),
+    players:  (members.data ?? []).map((m) => m.user_id as string).filter((id) => !out.includes(id)),
     calls:    (calls.data ?? []).map((c) => c.user_id as string),
+    refused:  out,
     ascended: !!asc.data,
   }
 }
@@ -115,8 +121,27 @@ export function subscribeCampaignMestre(campaignId: string, onChange: (what: 'ca
     .channel(uniqueChannel(`mestre:${campaignId}`))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'altherium_mestre_calls', filter: `campaign_id=eq.${campaignId}` }, () => onChange('calls'))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'altherium_mestre_ascensions', filter: `campaign_id=eq.${campaignId}` }, () => onChange('ascended'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'altherium_mestre_refusals', filter: `campaign_id=eq.${campaignId}` }, () => onChange('calls'))
     .subscribe()
   return () => { void supabase.removeChannel(channel) }
+}
+
+/**
+ * Aperta NÃO ME TORNAR UM MESTRE: a ficha volta ao nível 1 (o banco faz
+ * tudo e guarda uma cópia). Se só faltava eu, os outros ascendem.
+ */
+export async function refuseMestre(campaignId: string): Promise<{ ascended: boolean }> {
+  const { data, error } = await supabase.rpc('mestre_refuse', { p_campaign: campaignId })
+  if (error) throw new Error(error.message || 'Não foi possível.')
+  refreshSheets()
+  return data as { ascended: boolean }
+}
+
+/** O mestre da mesa (ou o dono do site) desfaz a recusa: a ficha volta a ser como era. */
+export async function undoMestreRefusal(campaignId: string, userId: string): Promise<void> {
+  const { error } = await supabase.rpc('mestre_undo_refusal', { p_campaign: campaignId, p_user: userId })
+  if (error) throw new Error(error.message || 'Não foi possível desfazer.')
+  refreshSheets()
 }
 
 // ── A campanha escolhida (o botão só aparece nela) ──────

@@ -23,7 +23,8 @@ import type { AltheriumSheet } from '../../../../shared/types'
 /** Cartas máximas (só Pilar): 13 por nível — 13/26/39/52/65. */
 export function cardsMax(sheet: AltheriumSheet): number | null {
   if (sheet.raiz !== 'pilar') return null
-  return PILAR_CARDS_PER_LEVEL * sheet.level
+  // fixo quando a ficha foi rebaixada (recusou a Raiz Mestre); senão, 13 por nível
+  return sheet.cards_max ?? PILAR_CARDS_PER_LEVEL * sheet.level
 }
 
 // ────────────────────────────────────────────────────────

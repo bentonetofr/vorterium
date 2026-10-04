@@ -88,6 +88,7 @@ const expectedMigrations = [
   '20240183000000_livro_marco3.sql',
   '20240184000000_raiz_mestre_campanha.sql',
   '20240185000000_sem_travessao.sql',
+  '20240186000000_raiz_mestre_recusa.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)
