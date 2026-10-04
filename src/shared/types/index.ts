@@ -224,6 +224,10 @@ export interface AltheriumSheet {
   torre_current:      number
   /** Raiz Mestre: como a ficha era antes de virar Mestre (o banco cuida). */
   mestre_backup?:     Record<string, unknown> | null
+  /** Máximo de cartas fixo (null = 13 por nível). */
+  cards_max?:         number | null
+  /** Como a ficha era antes de recusar a Raiz Mestre (o mestre pode desfazer). */
+  mestre_refusal_backup?: Record<string, unknown> | null
   hacksilvers:        number
   db_pernas:          number
   db_bracos:          number
