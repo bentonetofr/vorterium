@@ -17,13 +17,16 @@ function whenText(iso: string | undefined): string | null {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
+/** O livro vinho no canto (escondido por enquanto, a pedido). */
+const CONTROL_FAB_ON = false
+
 export function ControlFab() {
   const owner = useIsSiteOwner()
   const [isOpen, setIsOpen] = useState(false)
   const close = useCallback(() => setIsOpen(false), [])
   const { instant } = useFloatingPanel('control', isOpen, close)
 
-  if (!owner) return null
+  if (!owner || !CONTROL_FAB_ON) return null
 
   return (
     <>
