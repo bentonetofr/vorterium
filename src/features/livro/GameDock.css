@@ -41,3 +41,15 @@
 @media (prefers-reduced-motion: reduce) {
   .game-fab__dot { animation: none; }
 }
+
+/* Com os ícones escondidos: a pílula no alto, pra voltar pro jogo. */
+.game-pill {
+  position: fixed; top: 14px; left: 50%; z-index: 5000; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 18px;
+  font: 600 16px 'Pixelify Sans', 'Courier New', monospace; color: #efe6d2;
+  background: #1b1524; border: 0; box-shadow: 0 0 0 3px #0b0910, 0 0 0 5px #4a3f5c, 0 8px 20px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.game-pill:hover { background: #261e33; }
+.game-pill__dot { width: 10px; height: 10px; background: #ecc66a; animation: game-fab-blink 1.2s steps(2) infinite; }
+@media (prefers-reduced-motion: reduce) { .game-pill__dot { animation: none; } }

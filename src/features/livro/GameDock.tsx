@@ -13,6 +13,12 @@ import './GameDock.css'
 // põe o seu ícone lá dentro, com createPortal.
 // ────────────────────────────────────────────────────────
 
+/**
+ * Os ícones estão no canto? (escondidos por enquanto, a pedido). Escondidos,
+ * quem saiu de um jogo volta pela pílula no alto da tela, como era antes.
+ */
+export const GAME_DOCK_ON = false
+
 let slotEl: HTMLElement | null = null
 const listeners = new Set<() => void>()
 function setSlot(el: HTMLElement | null) {
@@ -27,6 +33,7 @@ function subscribe(l: () => void) {
 
 /** O lugar dos ícones, na coluna do canto. */
 export function GameDockSlot() {
+  if (!GAME_DOCK_ON) return null
   return <div ref={setSlot} className="game-dock" />
 }
 
@@ -46,6 +53,16 @@ export function GameFab({ game, label, live, confirm, onOpen }: {
 }) {
   const slot = useSyncExternalStore(subscribe, () => slotEl)
   const [busy, setBusy] = useState(false)
+  // Sem os ícones: só a pílula de voltar pro jogo que está rolando.
+  if (!GAME_DOCK_ON) {
+    if (!live) return null
+    return createPortal(
+      <button type="button" className="game-pill" onClick={() => { enterFullscreen(); void onOpen() }}>
+        <span className="game-pill__dot" aria-hidden="true" /> {label}
+      </button>,
+      document.body,
+    )
+  }
   if (!slot) return null
   const click = () => {
     if (busy) return
