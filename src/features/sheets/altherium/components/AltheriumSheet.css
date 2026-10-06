@@ -588,6 +588,36 @@
   touch-action: none;
 }
 
+/* Armas do inventário (AltheriumWeaponArt): cor própria de cada material,
+   não a da zona. Não recebem clique — passa pro braço embaixo. A das
+   costas fica um pouco mais escura, por estar atrás do corpo. */
+.alth-weapon { pointer-events: none; }
+.alth-weapon * { stroke: var(--bg-void); stroke-width: 0.9; stroke-linejoin: round; }
+.alth-weapon--back { filter: brightness(0.9); }
+.alth-weapon .wm      { fill: #c9ced8; }
+.alth-weapon .wm2     { fill: #868e9c; }
+.alth-weapon .ww      { fill: #9a6538; }
+.alth-weapon .wl      { fill: #6b4630; }
+.alth-weapon .wb      { fill: #e6dcc3; }
+.alth-weapon .ws      { fill: #7c7e86; }
+.alth-weapon .wg      { fill: var(--gilded-bright); }
+.alth-weapon .wdk     { fill: #2a2018; stroke: none; }
+.alth-weapon .whl     { fill: rgba(255, 255, 255, 0.35); stroke: none; }
+.alth-weapon .wfeather { fill: #b9b2a1; }
+.alth-weapon .wfeather--red { fill: #b5483c; }
+.alth-weapon .wq      { fill: #7a4f2e; }
+.alth-weapon .wstrap  { fill: none; stroke: #6b4630; stroke-width: 2.6; stroke-linecap: round; }
+.alth-weapon .wpoison { fill: #7ee06b; filter: drop-shadow(0 0 1.5px rgba(126, 224, 107, 0.9)); }
+.alth-weapon .wline     { fill: none; stroke: rgba(0, 0, 0, 0.3); stroke-width: 0.8; }
+.alth-weapon .wdk-line  { fill: none; stroke: rgba(0, 0, 0, 0.35); stroke-width: 0.7; }
+.alth-weapon .wlash     { fill: none; stroke: #6b4630; stroke-width: 1.6; stroke-linecap: round; }
+.alth-weapon .wwire     { fill: none; stroke: #c9ced8; stroke-width: 1.4; stroke-linecap: round; }
+.alth-weapon .wring     { fill: none; stroke: #c9ced8; stroke-width: 1.3; }
+.alth-weapon .wstring   { fill: none; stroke: #ddd5c0; stroke-width: 0.6; }
+.alth-weapon .wbow      { fill: none; stroke: #9a6538; stroke-width: 2.8; stroke-linecap: round; }
+.alth-weapon .wprod     { fill: none; stroke: #868e9c; stroke-width: 2.2; stroke-linecap: round; }
+.alth-weapon .wprod--heavy { stroke-width: 3; }
+
 @media (prefers-reduced-motion: reduce) {
   .alth-body__rune { animation: none; opacity: 1; }
 }

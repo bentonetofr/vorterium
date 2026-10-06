@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.24',
+    date:    '2026-10-06',
+    title:   'Armas no manequim do Altherium',
+    items: [
+      'Ficha de Altherium: o manequim da aba Inventário agora segura as armas do personagem, cada uma com o seu próprio desenho — machado, martelo, espada, sabre, adagas, lanças, tridente, arcos, bestas, dardos e todas as outras do catálogo. A primeira arma vai numa mão, a segunda na outra e a terceira fica presa nas costas. As armas acompanham os braços quando você posa o manequim.',
+      'Duas unidades da mesma arma vão uma em cada mão, e as Lâminas Gêmeas ocupam as duas mãos. Itens personalizados do tipo Arma ganham o desenho que combina com o nome (um "Machado do Norte" vira machado, uma "Katana" vira sabre…).',
+      'Quem tem arco ou besta no inventário ganha uma aljava nas costas, com alça cruzando o peito — de flechas pro arco, de virotes pra besta. Se já tiver uma arma nas costas, a aljava vai pro outro ombro.',
+    ],
+  },
+  {
     version: '1.23',
     date:    '2026-10-01',
     title:   'Artes e referências e Documentos na Mesa',

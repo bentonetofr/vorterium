@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
+import { QuiverArt, QuiverStrap, WeaponArt, backMount, type QuiverAmmo, type WeaponShape } from './AltheriumWeaponArt'
 
 export type BodyZone = 'db_cabeca' | 'db_bracos' | 'db_tronco' | 'db_pernas'
 export type BodyDiagramVariant = 'protecao' | 'dano'
@@ -19,6 +20,12 @@ interface AltheriumBodyDiagramProps {
   /** Sem pernas: elas somem e o manequim despenca no chão (easter egg do
    *  nome "Gutris" — ver AltheriumSheetForm). Voltando a false, ele levanta. */
   legless?:    boolean
+  /** Armas que ele carrega, na ordem: mão direita dele (esquerda da tela),
+   *  mão esquerda, costas. O resto é ignorado. */
+  weapons?:    WeaponShape[]
+  /** Aljava nas costas (quem tem arco ou besta). Vai no ombro da arma das
+   *  costas; se já tem arma lá, vai no outro. */
+  quiver?:     QuiverAmmo | null
 }
 
 const ZONE_LABELS: Record<BodyZone, string> = {
@@ -57,6 +64,33 @@ const HIP      = { x: 86, y: 126 }
 const KNEE     = { x: 83, y: 175 }
 const ANKLE    = { x: 82, y: 227 }
 const HEAD     = { x: 100, y: 40 }
+
+// Arma na mão: segue o antebraço, aberta um pouco pra fora do corpo pra
+// não cobrir a perna. Nas costas: na diagonal, saindo por cima do ombro
+// direito dele (esquerda da tela) — ver backMount.
+const FOREARM_ANGLE = (Math.atan2(WRIST.y - ELBOW.y, WRIST.x - ELBOW.x) * 180) / Math.PI
+const WEAPON_SPLAY  = 22
+const WEAPON_SCALE  = 1.2
+const BACK_TILT     = 32
+/** Onde a arma das costas cruza a linha do ombro. */
+const BACK_EXIT     = { x: 82, y: 58 }
+
+function backWeaponTransform(shape: WeaponShape): string {
+  const { headUp, reach } = backMount(shape)
+  // Direção pra cima-e-pra-fora do ombro; a ponta (+y do desenho) vai pra
+  // ela quando a cabeça da arma fica pra cima, e pro lado oposto quando é o cabo.
+  const rad = (BACK_TILT * Math.PI) / 180
+  const up  = { x: -Math.sin(rad), y: -Math.cos(rad) }
+  const k   = (headUp ? -reach : reach) * WEAPON_SCALE
+  const at  = { x: BACK_EXIT.x + up.x * k, y: BACK_EXIT.y + up.y * k }
+  return `translate(${at.x} ${at.y}) rotate(${headUp ? 180 - BACK_TILT : -BACK_TILT}) scale(${WEAPON_SCALE})`
+}
+
+/** Boca da aljava, logo acima do ombro; o tubo desce na diagonal por trás. */
+const QUIVER_MOUTH     = { x: 77, y: 52 }
+const QUIVER_TRANSFORM = `translate(${QUIVER_MOUTH.x} ${QUIVER_MOUTH.y}) rotate(${-BACK_TILT}) scale(${WEAPON_SCALE})`
+/** Espelho no meio do corpo — leva a aljava (e a alça) pro outro ombro. */
+const MIRROR_X = `translate(${CENTER_X * 2} 0) scale(-1 1)`
 
 // ────────────────────────────────────────────────────────
 // Articulações — cadeia cinemática (pai → filho) + física de mola
@@ -575,7 +609,7 @@ function Rune({ x, y, glyph, size = 10 }: { x: number; y: number; glyph: string;
 
 interface ZoneStyle extends CSSProperties { '--zone-color'?: string }
 
-export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao', visualMax, build = null, legless = false }: AltheriumBodyDiagramProps) {
+export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao', visualMax, build = null, legless = false, weapons = [], quiver = null }: AltheriumBodyDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const rig = useJointRig()
   const shape = build === 'berserker' ? MUSCULAR_BUILD : NEUTRAL_BUILD
@@ -755,6 +789,14 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
       {/* Da cintura pra cima — é esse grupo que despenca quando fica sem pernas. */}
       <g className="alth-body__upper">
 
+      {/* Terceira arma, nas costas — atrás dos braços e do tronco. */}
+      {weapons[2] && <WeaponArt shape={weapons[2]} back transform={backWeaponTransform(weapons[2])} />}
+      {quiver && (
+        <g transform={weapons[2] ? MIRROR_X : undefined}>
+          <QuiverArt ammo={quiver} transform={QUIVER_TRANSFORM} />
+        </g>
+      )}
+
       {/* Braços: cadeia ombro → cotovelo. Alça do ombro no cotovelo (gira o
           braço todo), alça do cotovelo na mão (dobra só o antebraço). */}
       {(['L', 'R'] as const).map((side) => {
@@ -763,6 +805,9 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
         const shoulder = { x: side === 'L' ? SHOULDER.x : mirror(SHOULDER.x), y: SHOULDER.y }
         const elbow    = { x: side === 'L' ? ELBOW.x : mirror(ELBOW.x), y: ELBOW.y }
         const wrist    = { x: side === 'L' ? WRIST.x : mirror(WRIST.x), y: WRIST.y }
+        const weapon   = weapons[side === 'L' ? 0 : 1]
+        // Mão direita é o espelho: vira o desenho e o ângulo junto.
+        const weaponTransform = `translate(${wrist.x} ${WRIST.y + 3})${side === 'R' ? ' scale(-1 1)' : ''} rotate(${FOREARM_ANGLE - 90 + WEAPON_SPLAY}) scale(${WEAPON_SCALE})`
         return (
           <g key={shoulderId} transform={rotate(shoulderId)}>
             <g {...limbClickProps('db_bracos', 'alth-body__limb')}>
@@ -779,6 +824,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
                 <line x1={elbow.x} y1={elbow.y} x2={wrist.x} y2={wrist.y} strokeWidth={shape.forearm} />
               </g>
               {build === 'runaskin' && <LimbRune a={elbow} b={wrist} glyph={LIMB_RUNES.forearm} />}
+              {weapon && <WeaponArt shape={weapon} transform={weaponTransform} />}
               <g {...limbClickProps('db_bracos', 'alth-body__mass')}>
                 <ellipse cx={wrist.x} cy={WRIST.y + 3} rx={shape.hand.rx} ry={shape.hand.ry} />
               </g>
@@ -802,6 +848,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
           <path d="M 92 103 L 108 103" />
         </g>
       )}
+      {quiver && <QuiverStrap transform={weapons[2] ? MIRROR_X : undefined} />}
       {build === 'runaskin' && <Rune x={100} y={88} glyph="ᛟ" size={19} />}
 
       {/* Tranças do Pilar — atrás da cabeça, por cima dos ombros. Cada gomo

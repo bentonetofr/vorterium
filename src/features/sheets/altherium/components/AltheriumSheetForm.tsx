@@ -32,6 +32,7 @@ import {
 } from '../utils/altheriumCalculations'
 import { TriumphUnit } from './triumphUnit'
 import { AltheriumBodyDiagram, type BodyBuild, type BodyZone } from './AltheriumBodyDiagram'
+import { carriedWeapons, quiverAmmo } from './AltheriumWeaponArt'
 import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
 import { AltheriumInventoryCard, inventoryArmor } from './AltheriumInventoryCard'
 import { AltheriumTriumphsPanel } from './AltheriumTriumphsPanel'
@@ -59,7 +60,7 @@ import './AltheriumSheet.css'
 
 const NOTES_MAX = 2000
 /** Nomes que deixam o manequim sem pernas (comparados em minúsculas). */
-const LEGLESS_NAMES = new Set(['gutris', 'gustris'])
+const LEGLESS_NAMES = new Set(['gutris', 'gustris', 'gutris, o nascido da morte'])
 
 interface AltheriumSheetFormProps {
   sheet:                    AltheriumSheet
@@ -493,8 +494,12 @@ export function AltheriumSheetForm({
   const raiz       = form.raiz === '' ? null : form.raiz
   // Mestre não tem corpo próprio no desenho: usa o da raiz de antes.
   const bodyBuild: BodyBuild = raiz === 'mestre' ? ((sheet.mestre_backup?.raiz as BodyBuild) ?? 'pilar') : raiz
-  // Easter egg: o personagem chamado Gutris (ou Gustris) não tem pernas.
-  const legless    = LEGLESS_NAMES.has(form.character_name.trim().toLowerCase())
+  // Easter egg: o personagem chamado Gutris (ou Gustris, ou Gutris, O Nascido
+  // Da Morte) não tem pernas. Espaços repetidos contam como um só.
+  const legless    = LEGLESS_NAMES.has(form.character_name.trim().replace(/\s+/g, ' ').toLowerCase())
+  // Armas do inventário nas mãos do manequim (e a terceira nas costas).
+  const weapons    = useMemo(() => carriedWeapons(inventory), [inventory])
+  const quiver     = useMemo(() => quiverAmmo(inventory), [inventory])
   const cartasMax  = cardsMax(projected)
   const torreMaxV  = torreMax(projected)
   /** Raiz Mestre: qual raiz está aberta na aba Triunfos. */
@@ -917,6 +922,8 @@ export function AltheriumSheetForm({
               variant="protecao"
               build={bodyBuild}
               legless={legless}
+              weapons={weapons}
+              quiver={quiver}
               values={{
                 db_cabeca: form.db_cabeca,
                 db_bracos: form.db_bracos,
@@ -963,6 +970,8 @@ export function AltheriumSheetForm({
               variant="dano"
               build={bodyBuild}
               legless={legless}
+              weapons={weapons}
+              quiver={quiver}
               visualMax={form.vitality_max}
               values={{
                 db_cabeca: form.dano_cabeca,
