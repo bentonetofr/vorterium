@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { pcOnly } from './npcService'
 import { logActivity } from '../../activity/services/activityService'
 import type { CharacterSheet, ProfilePublic, SheetWithProfile, CampaignSystem } from '../../../shared/types'
 
@@ -78,6 +79,7 @@ export async function getMySheet(campaignId: string): Promise<CharacterSheet | n
   const { data, error } = await supabase
     .from('character_sheets')
     .select('*')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .eq('user_id', user.id)
     .single()
@@ -136,7 +138,8 @@ export async function updateSheet(
   const sheet = updated as CharacterSheet
   const charName = sheet.character_name?.trim()
   const sheetMsg = charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.'
-  logActivity(sheet.campaign_id, 'sheet_updated', sheetMsg)
+  // NPC não vai pro histórico: o nome escondido não pode vazar pros jogadores.
+  if (!sheet.is_npc) logActivity(sheet.campaign_id, 'sheet_updated', sheetMsg)
   return sheet
 }
 
@@ -164,6 +167,7 @@ export async function getMySheets(): Promise<SheetWithCampaign[]> {
   const { data, error } = await supabase
     .from('character_sheets')
     .select('*, campaigns(id, name, system)')
+    .match(await pcOnly())
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
 
@@ -187,6 +191,7 @@ export async function getCampaignSheets(campaignId: string): Promise<SheetWithPr
   const { data, error } = await supabase
     .from('character_sheets')
     .select('*, profiles(id, display_name, email, avatar_url)')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: true })
 

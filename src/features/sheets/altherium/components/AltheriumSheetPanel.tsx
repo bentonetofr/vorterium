@@ -23,6 +23,7 @@ import {
   type AltheriumSheetUpdate,
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
+import { NpcSection } from '../../components/NpcSection'
 import { raizLabel } from '../constants/altherium'
 import { SHEET_REFRESH_EVENT, undoMestreRefusal } from '../../../mestre/mestreService'
 import { useIsSiteOwner } from '../../../control/siteFeatures'
@@ -58,6 +59,24 @@ export function AltheriumSheetPanel({ campaignId, userRole }: AltheriumSheetPane
           ? <PlayerAltheriumView campaignId={campaignId} />
           : <MasterAltheriumView campaignId={campaignId} />
         }
+        <NpcSection<AltheriumSheet>
+          table="altherium_character_sheets"
+          campaignId={campaignId}
+          userRole={userRole}
+          summary={(s) => ({
+            line:     `${s.raiz ? raizLabel(s.raiz) ?? '-' : 'Sem raiz'} · Nv ${s.level}`,
+            portrait: s.portrait_url,
+            bars: (
+              <>
+                <SummaryBar sigla="PV" tone="vitality" current={s.vitality_current} max={s.vitality_max} />
+                <SummaryBar sigla="PE" tone="mystic" current={s.equilibrio_current} max={s.equilibrio_max} />
+              </>
+            ),
+          })}
+          renderSheet={(s, { readOnly, onUpdated }) => (
+            <SheetEditor sheet={s} ownerName="NPC" readOnly={readOnly} onSheetUpdated={onUpdated} />
+          )}
+        />
       </div>
     </section>
   )
@@ -70,10 +89,12 @@ export function AltheriumSheetPanel({ campaignId, userRole }: AltheriumSheetPane
 interface SheetEditorProps {
   sheet:      AltheriumSheet
   ownerName?: string
+  /** NPC aberto por um jogador: mostra tudo e não salva nada. */
+  readOnly?:  boolean
   onSheetUpdated: (sheet: AltheriumSheet) => void
 }
 
-function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
+function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: SheetEditorProps) {
   const [domains, setDomains]         = useState<AltheriumDomainPoints[]>([])
   const [inventory, setInventory]     = useState<AltheriumInventoryItem[]>([])
   const [runes, setRunes]             = useState<AltheriumRune[]>([])
@@ -106,6 +127,7 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   // Salvamento automático do formulário: não trava a ficha enquanto salva
   // e relança o erro pro formulário marcar "Erro ao salvar".
   async function handleSave(data: AltheriumSheetUpdate) {
+    if (readOnly) return
     setSaveError(null)
     try {
       onSheetUpdated(await updateAltheriumSheet(sheet.id, data))

@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { pcOnly } from '../../sheets/services/npcService'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 // ────────────────────────────────────────────────────────
@@ -249,11 +250,13 @@ export interface CharacterFace {
 
 export async function getCharacterFaces(campaignId: string): Promise<Map<string, CharacterFace>> {
   type Row = { user_id: string; character_name: string | null; portrait_url?: string | null }
+  // NPCs são do mestre: o retrato e o nome dele vêm da ficha de jogador.
+  const pc = await pcOnly()
   const [alth, vtm, td, generic] = await Promise.all([
-    supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId),
-    supabase.from('vtm_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId),
-    supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId),
-    supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId),
+    supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
+    supabase.from('vtm_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
+    supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
+    supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
   ])
 
   const faces = new Map<string, CharacterFace>()

@@ -1,4 +1,5 @@
 import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
+import { pcOnly } from '../../services/npcService'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
 import type { ProfilePublic, TdSheet, TdSheetWithProfile } from '../../../../shared/types'
@@ -25,6 +26,7 @@ export async function getMyTdSheet(campaignId: string): Promise<TdSheet | null> 
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -63,7 +65,8 @@ export async function updateTdSheet(sheetId: string, data: TdSheetUpdate): Promi
 
   const sheet = updated as TdSheet
   const charName = sheet.character_name?.trim()
-  logActivity(
+  // NPC não vai pro histórico: o nome escondido não pode vazar pros jogadores.
+  if (!sheet.is_npc) logActivity(
     sheet.campaign_id,
     'sheet_updated',
     charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.',
@@ -88,6 +91,7 @@ export async function getMyTdSheetsEverywhere(): Promise<(TdSheet & { campaign_n
   const { data, error } = await supabase
     .from(TABLE)
     .select('*, campaigns(id, name)')
+    .match(await pcOnly())
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
 
@@ -102,6 +106,7 @@ export async function getCampaignTdSheets(campaignId: string): Promise<TdSheetWi
   const { data, error } = await supabase
     .from(TABLE)
     .select('*, profiles!user_id(id, display_name, avatar_url)')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: true })
 

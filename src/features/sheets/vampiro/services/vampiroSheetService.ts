@@ -1,4 +1,5 @@
 import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
+import { pcOnly } from '../../services/npcService'
 import { logActivity } from '../../../activity/services/activityService'
 import type { ProfilePublic, VtmSheet, VtmSheetWithProfile } from '../../../../shared/types'
 import { VTM_PORTRAIT_MAX_BYTES, VTM_PORTRAIT_TYPES } from '../constants/vampiro'
@@ -27,6 +28,7 @@ export async function getMyVtmSheet(campaignId: string): Promise<VtmSheet | null
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -65,7 +67,8 @@ export async function updateVtmSheet(sheetId: string, data: VtmSheetUpdate): Pro
 
   const sheet = updated as VtmSheet
   const charName = sheet.character_name?.trim()
-  logActivity(
+  // NPC não vai pro histórico: o nome escondido não pode vazar pros jogadores.
+  if (!sheet.is_npc) logActivity(
     sheet.campaign_id,
     'sheet_updated',
     charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.',
@@ -103,6 +106,7 @@ export async function getMyVtmSheetsEverywhere(): Promise<(VtmSheet & { campaign
   const { data, error } = await supabase
     .from(TABLE)
     .select('*, campaigns(id, name)')
+    .match(await pcOnly())
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
 
@@ -118,6 +122,7 @@ export async function getCampaignVtmSheets(campaignId: string): Promise<VtmSheet
   const { data, error } = await supabase
     .from(TABLE)
     .select('*, profiles!user_id(id, display_name, avatar_url)')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: true })
 

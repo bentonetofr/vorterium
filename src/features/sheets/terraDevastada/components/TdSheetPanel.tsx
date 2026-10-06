@@ -7,6 +7,7 @@ import {
   type TdSheetUpdate,
 } from '../services/tdSheetService'
 import { TdSheetForm } from './TdSheetForm'
+import { NpcSection } from '../../components/NpcSection'
 import { CONVICTION_MAX, HORROR_MAX } from '../constants/terraDevastada'
 import { horrorBand } from '../utils/tdRules'
 import type { TdSheet, TdSheetWithProfile } from '../../../../shared/types'
@@ -33,6 +34,23 @@ export function TdSheetPanel({ campaignId, userRole }: TdSheetPanelProps) {
           ? <PlayerView campaignId={campaignId} />
           : <MasterView campaignId={campaignId} />
         }
+        <NpcSection<TdSheet>
+          table="td_character_sheets"
+          campaignId={campaignId}
+          userRole={userRole}
+          summary={(s) => ({
+            line: s.concept?.trim() || 'Sem conceito',
+            bars: (
+              <>
+                <CardBar sigla="Horror" tone="vitality" current={s.horror} max={HORROR_MAX} note={horrorBand(s.horror).title} />
+                <CardBar sigla="Convicção" tone="resource" current={s.conviction} max={CONVICTION_MAX} />
+              </>
+            ),
+          })}
+          renderSheet={(s, { readOnly, onUpdated }) => (
+            <SheetEditor sheet={s} ownerName="NPC" readOnly={readOnly} onSheetUpdated={onUpdated} />
+          )}
+        />
       </div>
     </section>
   )
@@ -43,13 +61,16 @@ export function TdSheetPanel({ campaignId, userRole }: TdSheetPanelProps) {
 interface SheetEditorProps {
   sheet:          TdSheet
   ownerName?:     string
+  /** NPC aberto por um jogador: mostra tudo e não salva nada. */
+  readOnly?:      boolean
   onSheetUpdated: (sheet: TdSheet) => void
 }
 
-function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
+function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: SheetEditorProps) {
   const [saveError, setSaveError] = useState<string | null>(null)
 
   async function handleSave(data: TdSheetUpdate) {
+    if (readOnly) return
     setSaveError(null)
     try {
       onSheetUpdated(await updateTdSheet(sheet.id, data))

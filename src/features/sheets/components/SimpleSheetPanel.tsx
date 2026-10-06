@@ -7,6 +7,7 @@ import {
 } from '../services/sheetService'
 import { SimpleSheetForm } from './SimpleSheetForm'
 import { CampaignSheetsList } from './CampaignSheetsList'
+import { NpcSection } from './NpcSection'
 import type { CharacterSheet } from '../../../shared/types'
 import './SheetPanel.css'
 
@@ -53,6 +54,17 @@ export function SimpleSheetPanel({ campaignId, userRole }: SimpleSheetPanelProps
           )
           : <CampaignSheetsList campaignId={campaignId} />
         }
+        <NpcSection<CharacterSheet>
+          table="character_sheets"
+          campaignId={campaignId}
+          userRole={userRole}
+          summary={(s) => ({
+            line: `${s.archetype?.trim() || 'Sem classe'} · Nv ${s.level} · PV ${s.hp_current}/${s.hp_max}`,
+          })}
+          renderSheet={(s, { readOnly, onUpdated }) => (
+            <NpcSheetEditor sheet={s} readOnly={readOnly} onSheetUpdated={onUpdated} />
+          )}
+        />
       </div>
     </section>
   )
@@ -135,6 +147,50 @@ function PlayerSheetView({ campaignId, onSheetChange }: PlayerSheetViewProps) {
   return (
     <SimpleSheetForm
       sheet={sheet}
+      onSave={handleSave}
+      saving={saving}
+      saveError={saveError}
+      saveSuccess={saveSuccess}
+    />
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// Ficha de NPC (o mestre edita; o jogador só lê, ver NpcSection)
+// ────────────────────────────────────────────────────────
+
+interface NpcSheetEditorProps {
+  sheet:          CharacterSheet
+  readOnly:       boolean
+  onSheetUpdated: (sheet: CharacterSheet) => void
+}
+
+function NpcSheetEditor({ sheet, readOnly, onSheetUpdated }: NpcSheetEditorProps) {
+  const [saving, setSaving]           = useState(false)
+  const [saveError, setSaveError]     = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
+  async function handleSave(data: SheetUpdateData) {
+    if (readOnly) return
+    setSaving(true)
+    setSaveError(null)
+    setSaveSuccess(false)
+    try {
+      onSheetUpdated(await updateSheet(sheet.id, data))
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível salvar a ficha.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <SimpleSheetForm
+      key={sheet.id}
+      sheet={sheet}
+      ownerName="NPC"
       onSave={handleSave}
       saving={saving}
       saveError={saveError}
