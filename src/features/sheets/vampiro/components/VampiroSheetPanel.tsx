@@ -9,7 +9,8 @@ import {
   type VtmSheetUpdate,
 } from '../services/vampiroSheetService'
 import { VampiroSheetForm } from './VampiroSheetForm'
-import { getClan, VTM_HUMANITY_MAX, VTM_HUNGER_MAX } from '../constants/vampiro'
+import { getClan, VAMPIRO_FEATURE, VTM_HUMANITY_MAX, VTM_HUNGER_MAX } from '../constants/vampiro'
+import { useFeature } from '../../../control/siteFeatures'
 import { clampTrack, healthMax, ordinal, trackState, willpowerMax } from '../utils/vampiroRules'
 import type { VtmSheet, VtmSheetWithProfile } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
@@ -27,6 +28,9 @@ interface VampiroSheetPanelProps {
 }
 
 export function VampiroSheetPanel({ campaignId, userRole }: VampiroSheetPanelProps) {
+  // Guardado no Painel de controle: só o dono do site usa a ficha (o banco
+  // também só deixa ele, migration 20240188000000).
+  const feature = useFeature(VAMPIRO_FEATURE)
   return (
     <section className="sheet-panel">
       <header className="sheet-panel__header">
@@ -36,7 +40,9 @@ export function VampiroSheetPanel({ campaignId, userRole }: VampiroSheetPanelPro
         </div>
       </header>
       <div className="sheet-panel__body">
-        {userRole === 'player' ? <PlayerView campaignId={campaignId} /> : <MasterView campaignId={campaignId} />}
+        {!feature.visible
+          ? <p className="sheet-empty">A ficha de Vampiro ainda não foi liberada. Volte em breve.</p>
+          : userRole === 'player' ? <PlayerView campaignId={campaignId} /> : <MasterView campaignId={campaignId} />}
       </div>
     </section>
   )
