@@ -1,0 +1,218 @@
+/* ── Ficha de Vampiro: A Máscara ──
+   Vermelho-sangue e cor de osso sobre o fundo escuro do site. O mesmo
+   esqueleto da ficha Altherium: cabeçalho (retrato, identidade e
+   trilhas), abas e cartões. */
+
+.vtm-sheet {
+  --vtm-blood:      #c0142f;
+  --vtm-blood-dark: #6d0b1b;
+  --vtm-blood-glow: rgba(192, 20, 47, 0.35);
+  --vtm-bone:       #ead9c3;
+  --vtm-bone-dim:   #a8977f;
+  --vtm-ink:        #0d0709;
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+.vtm-sheet__owner { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+.vtm-sheet__owner strong { color: var(--vtm-bone); }
+
+/* ── Cabeçalho ── */
+.vtm-hero {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--space-4);
+  padding: var(--space-4);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(192, 20, 47, 0.16), transparent 55%),
+    var(--bg-surface);
+  border: 1px solid rgba(192, 20, 47, 0.35);
+  border-radius: var(--radius-lg);
+}
+.vtm-hero__id { display: flex; gap: var(--space-4); align-items: flex-start; min-width: 0; }
+.vtm-hero__fields { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; flex: 1; }
+.vtm-hero__name {
+  width: 100%; padding: 2px 0; background: none; border: 0; border-bottom: 1px solid transparent;
+  font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--vtm-bone);
+}
+.vtm-hero__name:focus { outline: none; border-bottom-color: var(--vtm-blood); }
+.vtm-hero__name::placeholder { color: var(--vtm-bone-dim); opacity: 0.6; }
+.vtm-hero__selects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.vtm-hero__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+
+.vtm-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vtm-label { font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--vtm-bone-dim); }
+.vtm-muted { color: var(--text-muted); font-size: var(--text-xs); text-transform: none; letter-spacing: 0; }
+
+/* Retrato */
+.vtm-portrait { position: relative; flex-shrink: 0; }
+.vtm-portrait__img {
+  position: relative; width: 104px; height: 104px; padding: 0; overflow: hidden;
+  border-radius: 50%; border: 2px solid var(--vtm-blood-dark);
+  background: radial-gradient(circle at 50% 35%, #2a1016, var(--vtm-ink));
+  box-shadow: 0 0 0 3px rgba(192, 20, 47, 0.15), 0 8px 22px rgba(0, 0, 0, 0.45);
+  cursor: var(--cursor-hand);
+}
+.vtm-portrait__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vtm-portrait__img:hover { border-color: var(--vtm-blood); }
+.vtm-portrait__empty { font-size: 44px; color: var(--vtm-blood); line-height: 104px; }
+.vtm-portrait__busy { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, 0.55); }
+.vtm-portrait__remove {
+  position: absolute; top: 2px; right: 2px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--vtm-ink); color: var(--vtm-bone); border: 1px solid var(--vtm-bone-dim); font-size: 14px; line-height: 1;
+}
+
+/* ── Trilhas (Vitalidade, Força de Vontade, Fome, Humanidade) ── */
+.vtm-track {
+  display: flex; flex-direction: column; gap: 6px; padding: var(--space-3);
+  background: rgba(0, 0, 0, 0.22); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+}
+.vtm-track--impaired { border-color: rgba(214, 160, 60, 0.6); }
+.vtm-track--broken   { border-color: var(--vtm-blood); box-shadow: 0 0 14px var(--vtm-blood-glow); }
+.vtm-track__head { display: flex; justify-content: space-between; align-items: baseline; }
+.vtm-track__title { font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--vtm-bone); }
+.vtm-track__value { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--vtm-bone); }
+.vtm-track__value small { font-size: 13px; color: var(--vtm-bone-dim); font-weight: 400; }
+.vtm-track__btns { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.vtm-track__group { display: inline-flex; align-items: center; gap: 4px; }
+.vtm-track__group-label { font-size: var(--text-xs); color: var(--text-muted); margin-right: 2px; }
+.vtm-track__foot { margin: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: var(--text-xs); color: var(--text-muted); }
+.vtm-track__alert { color: #f0b44a; font-weight: 600; }
+.vtm-track--broken .vtm-track__alert { color: #ff6b81; }
+.vtm-track__adjust { display: inline-flex; gap: 2px; flex-shrink: 0; }
+
+/* Quadradinhos de dano: / superficial, X agravado */
+.vtm-boxes { display: flex; flex-wrap: wrap; gap: 4px; }
+.vtm-box {
+  position: relative; width: 18px; height: 18px;
+  border: 1.5px solid var(--vtm-bone-dim); border-radius: 3px; background: rgba(0, 0, 0, 0.3);
+}
+.vtm-box--sup::after, .vtm-box--agg::before, .vtm-box--agg::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 2px; height: 20px; background: var(--vtm-bone);
+  transform: translate(-50%, -50%) rotate(45deg); border-radius: 1px;
+}
+.vtm-box--agg { border-color: var(--vtm-blood); background: rgba(192, 20, 47, 0.25); }
+.vtm-box--agg::before, .vtm-box--agg::after { background: #ff5a72; }
+.vtm-box--agg::before { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* Humanidade: pontos cheios, manchas pela direita */
+.vtm-boxes--humanity { gap: 3px; }
+.vtm-hbox {
+  width: 20px; height: 20px; padding: 0; border-radius: 50%;
+  border: 1.5px solid var(--vtm-bone-dim); background: transparent; cursor: var(--cursor-hand);
+}
+.vtm-hbox--full { background: var(--vtm-bone); border-color: var(--vtm-bone); }
+.vtm-hbox--stain { background: repeating-linear-gradient(45deg, #5a1520 0 3px, transparent 3px 6px); border-color: #8a2a38; }
+.vtm-hbox--overlap { background: repeating-linear-gradient(45deg, var(--vtm-blood) 0 3px, var(--vtm-bone) 3px 6px); border-color: var(--vtm-blood); }
+
+/* Fome: gotas */
+.vtm-drops { display: flex; gap: 6px; }
+.vtm-drop { width: 26px; height: 32px; padding: 0; background: none; border: 0; cursor: var(--cursor-hand); }
+.vtm-drop svg { width: 100%; height: 100%; fill: transparent; stroke: var(--vtm-bone-dim); stroke-width: 1.4; transition: fill var(--transition-fast); }
+.vtm-drop.is-on svg { fill: var(--vtm-blood); stroke: #ff5a72; filter: drop-shadow(0 0 4px var(--vtm-blood-glow)); }
+.vtm-drop:hover svg { stroke: var(--vtm-bone); }
+
+/* Botões pequenos */
+.vtm-chip {
+  padding: 3px 9px; font-size: var(--text-xs); color: var(--vtm-bone);
+  background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-base); border-radius: 999px;
+  cursor: var(--cursor-hand); transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.vtm-chip:hover:not(:disabled) { border-color: var(--vtm-bone-dim); background: rgba(255, 255, 255, 0.08); }
+.vtm-chip:disabled { opacity: 0.4; cursor: default; }
+.vtm-chip--agg { border-color: rgba(192, 20, 47, 0.5); }
+.vtm-mini {
+  width: 20px; height: 20px; padding: 0; font-size: 13px; line-height: 1; color: var(--vtm-bone-dim);
+  background: none; border: 1px solid var(--border-dim); border-radius: 4px; cursor: var(--cursor-hand);
+}
+.vtm-mini:hover { color: var(--vtm-bone); border-color: var(--vtm-bone-dim); }
+
+/* ── Pontinhos ── */
+.vtm-dots { display: inline-flex; gap: 3px; flex-shrink: 0; border-radius: 999px; }
+.vtm-dots:focus-visible { outline: 1px solid var(--vtm-blood); outline-offset: 3px; }
+.vtm-dot {
+  width: 14px; height: 14px; padding: 0; border-radius: 50%;
+  border: 1.5px solid var(--vtm-bone-dim); background: transparent; cursor: var(--cursor-hand);
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.vtm-dots--sm .vtm-dot { width: 11px; height: 11px; }
+.vtm-dot.is-on { background: var(--vtm-blood); border-color: #ff5a72; box-shadow: 0 0 6px var(--vtm-blood-glow); }
+.vtm-dot.is-over { background: #d68a1f; border-color: #f0b44a; box-shadow: none; }
+.vtm-dot:hover:not(:disabled) { transform: scale(1.15); }
+.vtm-dots--ro .vtm-dot { cursor: default; }
+
+/* ── Abas e cartões ── */
+.vtm-tab-panel { display: flex; flex-direction: column; gap: var(--space-4); }
+.vtm-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); align-items: start; }
+.vtm-card {
+  display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4);
+  background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg);
+}
+.vtm-card__header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.vtm-card__title { margin: 0; font-family: var(--font-display); font-size: var(--text-lg); color: var(--vtm-bone); }
+.vtm-badge {
+  font-size: var(--text-xs); color: var(--text-muted); padding: 2px 10px;
+  border: 1px solid var(--border-dim); border-radius: 999px;
+}
+.vtm-badge--ok { color: #8be0a4; border-color: rgba(139, 224, 164, 0.4); }
+.vtm-counter { font-size: var(--text-xs); color: var(--text-muted); }
+
+.vtm-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+.vtm-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vtm-col__title {
+  margin: 0 0 2px; padding-bottom: 4px; border-bottom: 1px solid rgba(192, 20, 47, 0.35);
+  font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--vtm-blood);
+}
+.vtm-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 24px; }
+.vtm-row__label { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); color: var(--text-primary); min-width: 0; }
+.vtm-row--bp { justify-content: flex-start; gap: var(--space-3); }
+.vtm-bp-num { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--vtm-bone); }
+
+/* Especializações */
+.vtm-skill { display: flex; flex-direction: column; gap: 3px; }
+.vtm-spec-add {
+  width: 16px; height: 16px; padding: 0; font-size: 12px; line-height: 1; color: var(--text-muted);
+  background: none; border: 1px solid var(--border-dim); border-radius: 50%; cursor: var(--cursor-hand); opacity: 0.7;
+}
+.vtm-spec-add:hover { opacity: 1; color: var(--vtm-bone); border-color: var(--vtm-bone-dim); }
+.vtm-specs { display: flex; flex-wrap: wrap; gap: 4px; padding-left: 8px; }
+.vtm-spec {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 4px 1px 8px; font-size: 11px; color: var(--vtm-bone);
+  background: rgba(192, 20, 47, 0.14); border: 1px solid rgba(192, 20, 47, 0.35); border-radius: 999px;
+}
+.vtm-spec button { padding: 0 3px; font-size: 12px; line-height: 1; color: var(--vtm-bone-dim); background: none; border: 0; cursor: var(--cursor-hand); }
+.vtm-spec-input {
+  width: 140px; padding: 2px 8px; font-size: 12px; color: var(--text-primary);
+  background: var(--bg-void); border: 1px solid var(--vtm-blood); border-radius: 999px;
+}
+
+/* Fatos do clã e da Potência de Sangue */
+.vtm-facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: var(--text-sm); }
+.vtm-facts dt { color: var(--vtm-bone-dim); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+.vtm-facts dd { margin: 0; color: var(--text-primary); }
+.vtm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vtm-tag { padding: 2px 10px; font-size: var(--text-xs); color: var(--vtm-bone); background: rgba(192, 20, 47, 0.18); border: 1px solid rgba(192, 20, 47, 0.45); border-radius: 999px; }
+.vtm-warn { margin: 0; font-size: var(--text-xs); color: #f0b44a; }
+
+.vtm-textarea { resize: vertical; min-height: 80px; }
+.vtm-textarea--tall { min-height: 180px; }
+
+/* ── Rodapé ── */
+.vtm-sheet__footer { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.vtm-save { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-muted); }
+.vtm-save--saved { color: #8be0a4; }
+.vtm-save--error { color: var(--danger); }
+
+/* Card do mestre: Fome em vermelho */
+.vtm-cardbar--hunger { --bar-color: #c0142f; --bar-glow: rgba(192, 20, 47, 0.35); }
+
+/* ── Telas menores ── */
+@media (max-width: 1100px) {
+  .vtm-hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .vtm-grid3 { grid-template-columns: 1fr; }
+  .vtm-hero__selects { grid-template-columns: 1fr; }
+  .vtm-hero__tracks { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .vtm-hero { padding: var(--space-3); }
+  .vtm-hero__id { flex-direction: column; align-items: center; }
+  .vtm-hero__name { text-align: center; font-size: 22px; }
+}
