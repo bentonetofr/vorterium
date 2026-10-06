@@ -33,7 +33,10 @@
 }
 .vtm-hero__name:focus { outline: none; border-bottom-color: var(--vtm-blood); }
 .vtm-hero__name::placeholder { color: var(--vtm-bone-dim); opacity: 0.6; }
-.vtm-hero__selects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+/* Clã, Geração e Tipo de predador: um embaixo do outro, na largura toda,
+   com caixa mais alta, pra o nome escolhido caber inteiro. */
+.vtm-hero__selects { display: flex; flex-direction: column; gap: var(--space-3); }
+.vtm-hero__selects .select-trigger { min-height: 44px; padding-top: 10px; padding-bottom: 10px; font-size: var(--text-md); }
 .vtm-hero__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 
 .vtm-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -208,7 +211,6 @@
 }
 @media (max-width: 760px) {
   .vtm-grid3 { grid-template-columns: 1fr; }
-  .vtm-hero__selects { grid-template-columns: 1fr; }
   .vtm-hero__tracks { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
