@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { MESTRE_FEATURE, mestreChooseHere, mestreToggle, mestreWhere, ownerResetMestre } from '../mestre/mestreService'
 import { LIVRO_FEATURE, livroOpenHere, livroToggle, closeMine as livroCloseMine } from '../livro/livroService'
 import { TORRE_FEATURE, torreOpenHere, torreToggle, closeMine as torreCloseMine } from '../torre/torreService'
+import { VAMPIRO_FEATURE } from '../sheets/vampiro/constants/vampiro'
 
 // ────────────────────────────────────────────────────────
 // Recursos que o dono do site controla pelo Painel de controle (o livro
@@ -70,6 +71,12 @@ export const SITE_FEATURES: SiteFeature[] = [
       { label: 'Abrir nesta campanha', run: (_u, ctx) => torreOpenHere(ctx.campaign) },
       { label: 'Encerrar', run: async () => { const n = await torreCloseMine(); return n ? 'Encerrado.' : 'Não tinha jogo aberto.' } },
     ],
+  },
+  {
+    key: VAMPIRO_FEATURE,
+    name: 'Vampiro: A Máscara',
+    description: 'Sistema novo (5ª edição): campanhas de Vampiro com ficha própria (clã, atributos e perícias, Vitalidade e Força de Vontade com dano superficial e agravado, Fome, Humanidade com manchas e Potência de Sangue). Guardado, só você vê a opção ao criar campanha.',
+    where: 'Criação de campanha e a aba Ficha das campanhas de Vampiro',
   },
 ]
 

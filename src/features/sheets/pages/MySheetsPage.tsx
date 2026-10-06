@@ -4,6 +4,9 @@ import { getMySheets, isSheetFilled } from '../services/sheetService'
 import { getMyAltheriumSheetsEverywhere } from '../altherium/services/altheriumSheetService'
 import { raizLabel } from '../altherium/constants/altherium'
 import { getMyTdSheetsEverywhere } from '../terraDevastada/services/tdSheetService'
+import { getMyVtmSheetsEverywhere } from '../vampiro/services/vampiroSheetService'
+import { getClan } from '../vampiro/constants/vampiro'
+import { healthMax } from '../vampiro/utils/vampiroRules'
 import { getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import './MySheetsPage.css'
 
@@ -38,8 +41,8 @@ function formatRelativeTime(iso: string): string {
 }
 
 async function loadAllSheets(): Promise<MySheetItem[]> {
-  const [simple, altherium, td] = await Promise.all([
-    getMySheets(), getMyAltheriumSheetsEverywhere(), getMyTdSheetsEverywhere(),
+  const [simple, altherium, td, vtm] = await Promise.all([
+    getMySheets(), getMyAltheriumSheetsEverywhere(), getMyTdSheetsEverywhere(), getMyVtmSheetsEverywhere(),
   ])
 
   const items: MySheetItem[] = [
@@ -82,6 +85,21 @@ async function loadAllSheets(): Promise<MySheetItem[]> {
         ...(s.concept ? [s.concept] : []),
         `Horror ${s.horror}/12`,
         `Convicção ${s.conviction}/24`,
+      ],
+      updatedAt:     s.updated_at,
+    })),
+    ...vtm.map((s) => ({
+      id:            s.id,
+      campaignId:    s.campaign_id,
+      campaignName:  s.campaign_name,
+      system:        'vampiro' as const,
+      characterName: s.character_name,
+      filled:        Boolean(s.character_name?.trim()) && s.clan != null,
+      stats:         [
+        ...(s.clan ? [getClan(s.clan)?.label ?? s.clan] : []),
+        `Vitalidade ${Math.max(0, healthMax(s) - s.health_superficial - s.health_aggravated)}/${healthMax(s)}`,
+        `Fome ${s.hunger}`,
+        `Humanidade ${s.humanity}`,
       ],
       updatedAt:     s.updated_at,
     })),

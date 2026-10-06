@@ -409,6 +409,60 @@ export interface TdSheetWithProfile extends TdSheet {
   profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
+/** Especialização de uma perícia (Vampiro). */
+export interface VtmSpecialty {
+  id:    string
+  skill: string
+  name:  string
+}
+
+/** Ficha de Vampiro: A Máscara (5ª edição) — tabela vtm_character_sheets. */
+export interface VtmSheet {
+  id:              string
+  campaign_id:     string
+  user_id:         string
+  character_name:  string | null
+  concept:         string | null
+  chronicle:       string | null
+  sire:            string | null
+  ambition:        string | null
+  desire:          string | null
+  clan:            string | null
+  predator_type:   string | null
+  generation:      number
+  portrait_url:    string | null
+  attr_strength:     number
+  attr_dexterity:    number
+  attr_stamina:      number
+  attr_charisma:     number
+  attr_manipulation: number
+  attr_composure:    number
+  attr_intelligence: number
+  attr_wits:         number
+  attr_resolve:      number
+  /** Pontos de cada perícia (chave → 0..5; ausente = 0). */
+  skills:          Record<string, number>
+  specialties:     VtmSpecialty[]
+  health_superficial:    number
+  health_aggravated:     number
+  health_bonus:          number
+  willpower_superficial: number
+  willpower_aggravated:  number
+  willpower_bonus:       number
+  hunger:          number
+  humanity:        number
+  stains:          number
+  blood_potency:   number
+  history:         string | null
+  notes:           string | null
+  created_at:      string
+  updated_at:      string
+}
+
+export interface VtmSheetWithProfile extends VtmSheet {
+  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
+}
+
 /** Inimigo do bestiário do mestre (campanhas Altherium). HP e dano são o
  *  valor final; rounds/danger_pct/party_* guardam como ele foi calculado. */
 export interface AltheriumCreature {

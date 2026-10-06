@@ -249,14 +249,15 @@ export interface CharacterFace {
 
 export async function getCharacterFaces(campaignId: string): Promise<Map<string, CharacterFace>> {
   type Row = { user_id: string; character_name: string | null; portrait_url?: string | null }
-  const [alth, td, generic] = await Promise.all([
+  const [alth, vtm, td, generic] = await Promise.all([
     supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId),
+    supabase.from('vtm_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId),
     supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId),
     supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId),
   ])
 
   const faces = new Map<string, CharacterFace>()
-  for (const res of [alth, td, generic]) {
+  for (const res of [alth, vtm, td, generic]) {
     for (const row of (res.data ?? []) as Row[]) {
       const current = faces.get(row.user_id)
       const name = row.character_name?.trim() || null
