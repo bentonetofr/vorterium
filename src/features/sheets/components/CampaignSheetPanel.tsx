@@ -2,6 +2,7 @@ import { SimpleSheetPanel }           from './SimpleSheetPanel'
 import { DndComingSoon }             from '../dnd/DndComingSoon'
 import { AltheriumSheetPanel }       from '../altherium/components/AltheriumSheetPanel'
 import { TdSheetPanel }              from '../terraDevastada/components/TdSheetPanel'
+import { VampiroSheetPanel }         from '../vampiro/components/VampiroSheetPanel'
 import type { CampaignWithRole }     from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -33,6 +34,14 @@ export function CampaignSheetPanel({ campaign }: CampaignSheetPanelProps) {
     case 'terra_devastada':
       return (
         <TdSheetPanel
+          campaignId={campaign.id}
+          userRole={campaign.role}
+        />
+      )
+
+    case 'vampiro':
+      return (
+        <VampiroSheetPanel
           campaignId={campaign.id}
           userRole={campaign.role}
         />

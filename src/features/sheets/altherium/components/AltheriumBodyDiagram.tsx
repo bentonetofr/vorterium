@@ -733,7 +733,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
       ].filter(Boolean).join(' ')}
       viewBox="0 0 200 268"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label={`Manequim articulado — arraste as mãos, pés ou a cabeça pra posar, clique nos membros pra editar ${variant === 'dano' ? 'o dano' : 'a proteção'}`}
+      aria-label={`Manequim articulado: arraste as mãos, pés ou a cabeça pra posar, clique nos membros pra editar ${variant === 'dano' ? 'o dano' : 'a proteção'}`}
     >
       {/* Pernas: cadeia quadril → joelho. A alça do quadril fica no joelho
           (gira a perna toda) e a do joelho fica no pé (dobra só a canela) —
@@ -881,7 +881,7 @@ export function AltheriumBodyDiagram({ values, onZoneClick, variant = 'protecao'
                 className="alth-body__braid-grip"
                 cx={P[BRAID_SEGMENTS].x} cy={P[BRAID_SEGMENTS].y} r={8}
                 onPointerDown={handleBraidPointerDown(b)}
-                aria-label={`Trança ${b === 0 ? 'esquerda' : 'direita'} — arraste`}
+                aria-label={`Trança ${b === 0 ? 'esquerda' : 'direita'}: arraste`}
               />
             </g>
           ))}

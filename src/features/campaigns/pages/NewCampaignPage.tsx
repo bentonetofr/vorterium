@@ -4,12 +4,17 @@ import { createCampaign } from '../services/campaignService'
 import { SYSTEMS_CATALOG, STATUS_LABELS, isSupportedSystem } from '../../../shared/constants/systems'
 import type { CampaignSystem } from '../../../shared/types'
 import { DndComingSoon } from '../../sheets/dnd/DndComingSoon'
+import { useFeature } from '../../control/siteFeatures'
+import { VAMPIRO_FEATURE } from '../../sheets/vampiro/constants/vampiro'
 import './CampaignPages.css'
 
 const NAME_MAX        = 120
 const DESCRIPTION_MAX = 1000
 
 export function NewCampaignPage() {
+  // Vampiro nasce guardado: só aparece pra quem pode ver (o dono, testando).
+  const vampiro = useFeature(VAMPIRO_FEATURE)
+  const systems = SYSTEMS_CATALOG.filter((s) => s.id !== 'vampiro' || vampiro.visible)
   const navigate = useNavigate()
 
   const [name,        setName]        = useState('')
@@ -114,7 +119,7 @@ export function NewCampaignPage() {
             <div className="auth-field">
               <span className="label">Sistema da campanha</span>
               <div className="system-selector" role="radiogroup" aria-label="Sistema da campanha">
-                {SYSTEMS_CATALOG.map((sys) => {
+                {systems.map((sys) => {
                   const isSelected = system === sys.id
                   const statusLabel = STATUS_LABELS[sys.status]
                   return (
@@ -148,6 +153,9 @@ export function NewCampaignPage() {
                             <span className={`system-status-badge system-status-badge--${sys.status}`}>
                               {statusLabel}
                             </span>
+                          )}
+                          {sys.id === 'vampiro' && vampiro.guarded && (
+                            <span className="system-status-badge system-status-badge--preview">Guardado</span>
                           )}
                         </span>
                         <p className="system-option__desc">{sys.description}</p>

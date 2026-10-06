@@ -13,6 +13,8 @@ import { MestreAscension }    from '../../features/mestre/MestreAscension'
 import { MestreCall }         from '../../features/mestre/MestreCall'
 import { MestreTheme }        from '../../features/mestre/MestreTheme'
 import { LivroHost }          from '../../features/livro/LivroHost'
+import { GameDockSlot } from '../../features/livro/GameDock'
+import { TorreHost }          from '../../features/torre/TorreHost'
 import { ChatMessagePopup }   from '../../features/chat/components/ChatMessagePopup'
 import { CritWolf }           from '../../features/dice/components/CritWolf'
 import { NotificationPopup }  from '../../features/activity/components/NotificationPopup'
@@ -97,7 +99,7 @@ function PrivateLayoutContent() {
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ??
     user?.email ??
-    '—'
+    '-'
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
 
   const initial = displayName.trim().charAt(0).toUpperCase()
@@ -277,11 +279,13 @@ function PrivateLayoutContent() {
     <MestreAscension />
     <MestreCall />
     <LivroHost />
+    <TorreHost />
     <div className="dice-fab-wrapper">
       <FabToasts>
         <MesaLiveNotice />
         <NotificationPopup />
       </FabToasts>
+      <GameDockSlot />
       <ControlFab />
       <NotificationBell />
       <DiceFab />

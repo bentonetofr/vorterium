@@ -18,7 +18,7 @@ export function DndTraitosTab({ character: c }: Props) {
       {/* Proficiências */}
       <div>
         <p className="dnd-section-title">Proficiências</p>
-        <p className="dnd-text-block">{c.proficienciesText || '—'}</p>
+        <p className="dnd-text-block">{c.proficienciesText || '-'}</p>
       </div>
 
       {/* Idiomas */}

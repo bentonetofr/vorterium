@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { CANDLE_HEIGHTS, drawFlame, px, RUNES, seeded, type Ctx } from '../game/art'
 import { DIGIT_BITS, drawBits, SYMBOL_BITS } from './glyphs'
-import { Dial, PixelScene, type Pt, type PuzzleProps } from './kit'
+import { Dial, PixelScene, useUiShare, type Pt, type PuzzleProps } from './kit'
 
 // ────────────────────────────────────────────────────────
 // O Castiçal. Clicar numa vela acende/apaga; nas seladas, trinca a cera
@@ -27,13 +27,15 @@ function candleAt(p: Pt): number | null {
   return null
 }
 
-export function CastPanel({ g, act, ro }: PuzzleProps) {
+export function CastPanel({ g, act, ro, ui }: PuzzleProps) {
+  const { put, remote } = useUiShare(ui, ro)
+  const live = !ro || !!remote
   const c = g.cast
   const tried = c.tried ?? []
   const hover = useRef<number | null>(null)
 
   const draw = (ctx: Ctx, t: number, mouse: Pt | null) => {
-    hover.current = mouse && !ro ? candleAt(mouse) : null
+    hover.current = mouse && live ? candleAt(mouse) : null
     // parede
     const rnd = seeded(3)
     px(ctx, '#1f1828', 0, 0, W, H)
@@ -133,6 +135,8 @@ export function CastPanel({ g, act, ro }: PuzzleProps) {
         label="As sete velas e os ganchos com runas"
         draw={draw}
         hot={(p) => !ro && candleAt(p) !== null}
+        remoteMouse={remote ? (remote.m as Pt | null) ?? null : undefined}
+        onMouse={(m) => put({ m })}
         onDown={(p) => { if (ro) return; const i = candleAt(p); if (i !== null) void act({ a: 'light', i }) }}
       />
       <Dial label="Olhar de" value={c.view} disabled={ro} onChange={(v) => void act({ a: 'cast_view', v })} />

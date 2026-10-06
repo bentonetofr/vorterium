@@ -4,14 +4,18 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { getMyCampaigns } from '../campaigns/services/campaignService'
 import { useFeature } from '../control/siteFeatures'
-import { getOpenRoom, LIVRO_FEATURE, subscribeRooms, type LivroRoomRow } from './livroService'
+import { getOpenRoom, LIVRO_FEATURE, openRoom, subscribeRooms, type LivroRoomRow } from './livroService'
+import { GameFab } from './GameDock'
 import { LivroOverlay } from './LivroOverlay'
 
 // ────────────────────────────────────────────────────────
 // Fica no layout do site, em qualquer página: se uma campanha minha tem o
 // Livro Bloqueado aberto, o jogo cobre a tela (pra todos dela — jogadores,
-// quem assiste e o mestre). "Voltar ao site" minimiza: sobra uma pílula
-// pra voltar. Guardado no Painel de controle, só o dono do site vê.
+// quem assiste e o mestre). "Voltar ao site" minimiza: sobra um ícone na
+// coluna do canto pra voltar de onde parou (GameDock). O mestre da campanha
+// aberta também tem o ícone pra trazer o jogo pra tela (abrir, ou voltar
+// a ele depois de trocar pela Torre). Guardado no Painel de controle, só
+// o dono do site vê.
 // ────────────────────────────────────────────────────────
 
 const MIN_KEY = 'vorterium:livro-minimizado'
@@ -57,25 +61,44 @@ export function LivroHost() {
   }, [feature.visible, campaigns])
 
   if (!feature.visible) return null
-  const open = (currentId && rooms[currentId]) || Object.values(rooms).find((r) => r && r.status !== 'fim') || null
-  if (!open || open.status === 'fim') return null
+  // Sala pausada (o outro jogo está na tela) não aparece.
+  const shown = (r: LivroRoomRow | null | undefined) => !!r && r.status !== 'fim' && !r.paused_at
+  const open = (currentId && shown(rooms[currentId]) ? rooms[currentId] : null) || Object.values(rooms).find(shown) || null
 
   const setMin = (next: Set<string>) => {
     setMinimized(next)
     try { sessionStorage.setItem(MIN_KEY, JSON.stringify([...next].slice(-20))) } catch { /* sem storage */ }
   }
 
-  if (minimized.has(open.id)) {
+  if (open && !minimized.has(open.id)) {
     return createPortal(
-      <button type="button" className="lb-pill" onClick={() => { const n = new Set(minimized); n.delete(open.id); setMin(n) }}>
-        <span className="lb-pill__dot" aria-hidden="true" /> Voltar ao Livro Bloqueado
-      </button>,
+      <LivroOverlay key={open.id} room={open} onMinimize={() => { const n = new Set(minimized); n.add(open.id); setMin(n) }} />,
       document.body,
     )
   }
 
-  return createPortal(
-    <LivroOverlay key={open.id} room={open} onMinimize={() => { const n = new Set(minimized); n.add(open.id); setMin(n) }} />,
-    document.body,
-  )
+  // Saí do jogo: o ícone volta pra ele, de onde parei.
+  if (open) {
+    return <GameFab game="livro" live label="Voltar ao Livro Bloqueado" onOpen={() => { const n = new Set(minimized); n.delete(open.id); setMin(n) }} />
+  }
+
+  // Mestre na página da campanha: traz o jogo pra tela (volta a ele se
+  // estava pausado pela troca, ou abre um novo — aí cobre a tela de todos).
+  if (campaign && campaign.role === 'master') {
+    const here = rooms[campaign.id]
+    const label = here ? 'Voltar ao Livro Bloqueado' : 'Abrir o Livro Bloqueado nesta campanha'
+    return (
+      <GameFab
+        game="livro"
+        live={false}
+        label={label}
+        confirm={here ? undefined : `Abrir o Livro Bloqueado em ${campaign.name}? O jogo cobre a tela de todos da campanha.`}
+        onOpen={async () => {
+          if (here) { const n = new Set(minimized); n.delete(here.id); setMin(n) }
+          await openRoom(campaign.id)
+        }}
+      />
+    )
+  }
+  return null
 }

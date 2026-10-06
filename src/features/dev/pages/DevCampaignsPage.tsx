@@ -46,7 +46,7 @@ export function DevCampaignsPage() {
               <tr key={c.id}>
                 <td><Link to={`/dev/campanhas/${c.id}`} className="dev-strong">{c.name}</Link></td>
                 <td>{getSystemLabel(c.system)}</td>
-                <td>{c.master ? <Link to={`/dev/usuarios/${c.master.id}`}>{c.master.display_name}</Link> : '—'}</td>
+                <td>{c.master ? <Link to={`/dev/usuarios/${c.master.id}`}>{c.master.display_name}</Link> : '-'}</td>
                 <td>{c.members[0]?.count ?? 0}</td>
                 <td>{getCampaignStatusLabel(c.status)}</td>
                 <td>{fmtAgo(c.created_at)}</td>
@@ -117,7 +117,7 @@ export function DevCampaignPage() {
 }
 
 function nameOf(detail: DevCampaignDetail, id: string | null | undefined) {
-  if (!id) return '—'
+  if (!id) return '-'
   return detail.profiles.get(id)?.display_name ?? 'ex-membro'
 }
 
@@ -192,6 +192,7 @@ function Rolls({ detail }: { detail: DevCampaignDetail }) {
 const SHEET_LABEL = {
   altherium_character_sheets: 'Altherium',
   td_character_sheets: 'Terra Devastada',
+  vtm_character_sheets: 'Vampiro',
   character_sheets: 'Genérica',
 } as const
 

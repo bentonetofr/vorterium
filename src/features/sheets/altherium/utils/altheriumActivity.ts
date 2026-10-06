@@ -92,8 +92,8 @@ function numberLine(key: string, label: string, from: unknown, to: unknown, fmt 
   const delta = a != null && b != null ? b - a : undefined
   return {
     key, label,
-    from: a == null ? '—' : fmt(a),
-    to:   b == null ? '—' : fmt(b),
+    from: a == null ? '-' : fmt(a),
+    to:   b == null ? '-' : fmt(b),
     delta,
     tone: delta == null || delta === 0 ? 'neutral' : delta > 0 ? 'up' : 'down',
   }
@@ -109,7 +109,7 @@ function objectDiff(from: unknown, to: unknown, labels: Record<string, string>):
     const vb = b[key]
     if (JSON.stringify(va ?? null) === JSON.stringify(vb ?? null)) continue
     const fmt = (v: unknown) => {
-      if (v == null || v === '') return '—'
+      if (v == null || v === '') return '-'
       if (typeof v === 'boolean') return v ? 'sim' : 'não'
       if (key === 'acao' && typeof v === 'string') return TRIUMPH_ACTION_LABELS[v as TriumphAction] ?? v
       const s = String(v)
@@ -225,15 +225,15 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
 
   switch (field) {
     case 'character_name':
-      return [{ key, label: 'Nome', from: str(c.from) ?? '—', to: str(c.to) ?? '—', tone: 'neutral' }]
+      return [{ key, label: 'Nome', from: str(c.from) ?? '-', to: str(c.to) ?? '-', tone: 'neutral' }]
     case 'raiz':
-      return [{ key, label: 'Raiz', from: labelOf([...RAIZES, RAIZ_MESTRE], c.from) ?? '—', to: labelOf([...RAIZES, RAIZ_MESTRE], c.to) ?? '—', tone: 'neutral' }]
+      return [{ key, label: 'Raiz', from: labelOf([...RAIZES, RAIZ_MESTRE], c.from) ?? '-', to: labelOf([...RAIZES, RAIZ_MESTRE], c.to) ?? '-', tone: 'neutral' }]
     case 'genesis':
-      return [{ key, label: 'Gênesis', from: labelOf(GENESIS, c.from) ?? '—', to: labelOf(GENESIS, c.to) ?? '—', tone: 'neutral' }]
+      return [{ key, label: 'Gênesis', from: labelOf(GENESIS, c.from) ?? '-', to: labelOf(GENESIS, c.to) ?? '-', tone: 'neutral' }]
     case 'runaskin_trail':
-      return [{ key, label: 'Trilha', from: labelOf(RUNASKIN_TRAILS, c.from) ?? '—', to: labelOf(RUNASKIN_TRAILS, c.to) ?? '—', tone: 'neutral' }]
+      return [{ key, label: 'Trilha', from: labelOf(RUNASKIN_TRAILS, c.from) ?? '-', to: labelOf(RUNASKIN_TRAILS, c.to) ?? '-', tone: 'neutral' }]
     case 'pilar_card_mode': {
-      const mode = (v: unknown) => (v === 'fisico' ? 'Cartas físicas' : v === 'virtual' ? 'Baralho virtual' : str(v) ?? '—')
+      const mode = (v: unknown) => (v === 'fisico' ? 'Cartas físicas' : v === 'virtual' ? 'Baralho virtual' : str(v) ?? '-')
       return [{ key, label: 'Modo das cartas', from: mode(c.from), to: mode(c.to), tone: 'neutral' }]
     }
     case 'portrait_url':

@@ -17,13 +17,16 @@ function whenText(iso: string | undefined): string | null {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
+/** O livro vinho no canto (escondido por enquanto, a pedido). */
+const CONTROL_FAB_ON = false
+
 export function ControlFab() {
   const owner = useIsSiteOwner()
   const [isOpen, setIsOpen] = useState(false)
   const close = useCallback(() => setIsOpen(false), [])
   const { instant } = useFloatingPanel('control', isOpen, close)
 
-  if (!owner) return null
+  if (!owner || !CONTROL_FAB_ON) return null
 
   return (
     <>
@@ -68,7 +71,7 @@ function ControlList() {
     return (
       <div className="control-panel__state control-panel__state--empty">
         <p>Nada guardado por enquanto.</p>
-        <p>Os recursos novos que a gente criar aparecem aqui, guardados — e você decide quando vão pro site.</p>
+        <p>Os recursos novos que a gente criar aparecem aqui, guardados, e você decide quando vão pro site.</p>
       </div>
     )
   }

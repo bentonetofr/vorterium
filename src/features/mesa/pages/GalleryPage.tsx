@@ -95,7 +95,7 @@ export function GalleryPage() {
       <div className="tool-page__header">
         <div className="tool-page__titles">
           <h1 className="tool-page__title">Galeria</h1>
-          <p className="tool-page__sub">As lembranças das suas campanhas — tudo o que já passou pela Mesa e pelo Quadro.</p>
+          <p className="tool-page__sub">As lembranças das suas campanhas: tudo o que já passou pela Mesa e pelo Quadro.</p>
         </div>
       </div>
 
@@ -302,7 +302,7 @@ function Album({ campaign, images, otherCampaigns, onClose, onChanged }: AlbumPr
         {images.length === 0 ? (
           <p className="album__empty">
             {isMaster
-              ? 'Mostre mapas, retratos e cenas na aba Mesa da campanha — ou adicione aqui — e eles ficam guardados neste álbum.'
+              ? 'Mostre mapas, retratos e cenas na aba Mesa da campanha (ou adicione aqui) e eles ficam guardados neste álbum.'
               : 'Quando o mestre mostrar imagens na Mesa, ou alguém puser fotos no Quadro, elas aparecem aqui.'}
           </p>
         ) : (

@@ -24,7 +24,8 @@ import {
 } from '../services/altheriumSheetService'
 import { AltheriumSheetForm } from './AltheriumSheetForm'
 import { raizLabel } from '../constants/altherium'
-import { SHEET_REFRESH_EVENT } from '../../../mestre/mestreService'
+import { SHEET_REFRESH_EVENT, undoMestreRefusal } from '../../../mestre/mestreService'
+import { useIsSiteOwner } from '../../../control/siteFeatures'
 import { cardsMax, torreMax } from '../utils/altheriumCalculations'
 import type { BodyZone } from './AltheriumBodyDiagram'
 import type {
@@ -94,6 +95,13 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
   useEffect(() => { loadDomains() }, [loadDomains])
   useEffect(() => { loadInventory() }, [loadInventory])
   useEffect(() => { loadRunes() }, [loadRunes])
+  // A ficha mudou no banco de uma vez (recusou a Raiz Mestre, o mestre desfez):
+  // domínios e runas vêm de novo.
+  useEffect(() => {
+    const again = () => { loadDomains(); loadRunes() }
+    window.addEventListener(SHEET_REFRESH_EVENT, again)
+    return () => window.removeEventListener(SHEET_REFRESH_EVENT, again)
+  }, [loadDomains, loadRunes])
 
   // Salvamento automático do formulário: não trava a ficha enquanto salva
   // e relança o erro pro formulário marcar "Erro ao salvar".
@@ -247,6 +255,7 @@ function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
 // ────────────────────────────────────────────────────────
 
 function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
+  const owner = useIsSiteOwner()
   const [sheet, setSheet]     = useState<AltheriumSheet | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
@@ -285,7 +294,45 @@ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
   if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
   if (!sheet) return null
 
-  return <SheetEditor sheet={sheet} onSheetUpdated={setSheet} />
+  return (
+    <>
+      {sheet.mestre_refusal_backup && (
+        // o dono do site (testando) desfaz a própria recusa daqui
+        <RefusalBanner onUndo={owner ? () => undoMestreRefusal(campaignId, sheet.user_id) : undefined} />
+      )}
+      <SheetEditor sheet={sheet} onSheetUpdated={setSheet} />
+    </>
+  )
+}
+
+/**
+ * A ficha foi rebaixada porque o jogador recusou a Raiz Mestre. Pro
+ * mestre da mesa, com o botão de desfazer (a ficha volta a ser como era).
+ */
+function RefusalBanner({ onUndo }: { onUndo?: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  async function undo() {
+    if (!onUndo || !window.confirm('Desfazer a recusa? A ficha volta a ser exatamente como era antes (nível, atributos, domínios, runas e recursos). O que mudou nela depois da recusa se perde.')) return
+    setBusy(true)
+    setError(null)
+    try { await onUndo() } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível desfazer.') } finally { setBusy(false) }
+  }
+  return (
+    <div className="sheet-outdated sheet-refused" role="status">
+      <span>
+        {onUndo
+          ? 'Este jogador recusou se tornar um Mestre: a ficha voltou ao nível 1.'
+          : 'Você recusou se tornar um Mestre: a ficha voltou ao nível 1. Se foi sem querer, o mestre da mesa pode desfazer.'}
+      </span>
+      {onUndo && (
+        <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => void undo()} disabled={busy}>
+          Desfazer a recusa
+        </button>
+      )}
+      {error && <span className="sheet-feedback--error" role="alert">{error}</span>}
+    </div>
+  )
 }
 
 // ────────────────────────────────────────────────────────
@@ -301,6 +348,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
   // mestre. Se o jogador salvar nesse meio tempo, aparece um aviso pra
   // recarregar em vez de trocar a ficha por baixo das edições do mestre.
   const [editing, setEditing]   = useState<AltheriumSheetWithProfile | null>(null)
+  // Muda quando a ficha aberta é trocada de uma vez no banco (desfazer a
+  // recusa): o editor monta de novo, com domínios e runas novos.
+  const [rev, setRev] = useState(0)
   const formRef = useRef<HTMLDivElement>(null)
 
   // No celular os cards ficam empilhados e a ficha abre bem abaixo deles —
@@ -361,7 +411,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
     <div className="sheets-list-wrapper">
       <div className="sheets-cards anim-stagger">
         {sheets.map((s) => {
-          const raizName = s.raiz ? raizLabel(s.raiz) ?? '—' : 'Sem raiz'
+          const raizName = s.raiz ? raizLabel(s.raiz) ?? '-' : 'Sem raiz'
           // profile vem null quando o dono não é mais membro da campanha
           // (RLS de profiles exige co-membro atual) — a ficha continua existindo.
           const ownerLabel = s.profile?.display_name ?? 'Jogador removido'
@@ -414,13 +464,22 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
         <div className="sheets-list__form" ref={formRef}>
           {outdated && latest && (
             <div className="sheet-outdated" role="status">
-              <span>O jogador atualizou a ficha — recarregar?</span>
+              <span>O jogador atualizou a ficha. Recarregar?</span>
               <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => setEditing(latest)}>
                 Recarregar
               </button>
             </div>
           )}
-          <div key={selected.id} className="anim-page">
+          {(latest ?? selected).mestre_refusal_backup && (
+            <RefusalBanner onUndo={async () => {
+              await undoMestreRefusal(campaignId, selected.user_id)
+              const data = await getCampaignAltheriumSheets(campaignId)
+              setSheets(data)
+              setEditing(data.find((x) => x.id === selected.id) ?? null)
+              setRev((n) => n + 1)
+            }} />
+          )}
+          <div key={`${selected.id}:${rev}`} className="anim-page">
             <SheetEditor
               sheet={selected}
               ownerName={selected.profile?.display_name ?? 'Jogador removido'}
@@ -454,7 +513,7 @@ function SummaryBar({ sigla, tone, current, max }: SummaryBarProps) {
     <div className={`sheet-card__bar sheet-card__bar--${tone}`}>
       <div className="sheet-card__bar-top">
         <span className="sheet-card__bar-sigla">{sigla}</span>
-        <span key={`${current}/${max}`} className="sheet-card__bar-values anim-bump">{current} / {max ?? '—'}</span>
+        <span key={`${current}/${max}`} className="sheet-card__bar-values anim-bump">{current} / {max ?? '-'}</span>
       </div>
       <div className="sheet-card__bar-track">
         <div className="sheet-card__bar-fill" style={{ width: `${pct}%` }} />

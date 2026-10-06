@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { gm, type LivroView } from './livroService'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { gm, savePos, type LivroView } from './livroService'
+import { createPosSaver } from './game/posSaver'
 import type { LivroNet, NetPeer, PanelId } from './livroNet'
 import { LivroGame } from './game/engine'
 import { PuzzlePanel } from './PuzzlePanel'
+import { HintBanner } from './HintBanner'
+import { onSoundChange, sfx, startAmbient, stopAmbient } from './game/sound'
+import type { UiMsg } from './livroNet'
 
 // ────────────────────────────────────────────────────────
 // A partida: a sala desenhada no canvas (o motor cuida de andar, mouse e
@@ -32,12 +36,23 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
   const gameStateRef = useRef(view.game)
   gameStateRef.current = view.game
   peersRef.current = peers
-  const [panel, setPanel] = useState<PanelId | null>(null)
+  // Volta com a janela que estava aberta (troca de jogo, recarregar).
+  const [panel, setPanel] = useState<PanelId | null>(() => (view.me.slot !== null ? (view.pos?.[view.me.uid]?.p as PanelId | null | undefined) ?? null : null))
   const [watch, setWatch] = useState<string | null>(null)
   const [remotePanels, setRemotePanels] = useState<Record<string, PanelId | null>>({})
   const [hint, setHint] = useState(true)
   const me = view.me
   const controllable = me.slot !== null
+
+  // Onde o meu boneco está fica no banco (pra voltar ao mesmo lugar).
+  const posRef = useRef(view.pos)
+  const roomId = view.room.id
+  const saver = useMemo(() => createPosSaver((p) => savePos(roomId, p)), [roomId])
+  useEffect(() => {
+    const out = () => saver.flush()
+    window.addEventListener('pagehide', out)
+    return () => { window.removeEventListener('pagehide', out); saver.flush() }
+  }, [saver])
 
   useEffect(() => {
     const game = new LivroGame(canvasRef.current!, {
@@ -46,16 +61,44 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
       storageKey: `lb-pos:${view.room.id}:${me.uid}`,
       onOpen: (id) => setPanel(id),
       onWatch: (uid) => setWatch(uid),
-      onPos: (msg) => net.sendPos(msg),
+      onPos: (msg) => { net.sendPos(msg); saver.push(msg) },
       onRemotePanel: (uid, p) => setRemotePanels((prev) => (prev[uid] === p ? prev : { ...prev, [uid]: p })),
+      onStep: () => sfx('step'),
     })
-    game.setPlayers(playersRef.current)
+    game.setPlayers(playersRef.current, posRef.current)
     game.setGame(gameStateRef.current)
     game.applyPeers(peersRef.current)
     gameRef.current = game
     const off = net.onPos((msg) => game.pushRemote(msg))
     return () => { off(); game.destroy(); gameRef.current = null }
-  }, [view.room.id, me.uid, controllable, net])
+  }, [view.room.id, me.uid, controllable, net, saver])
+
+  // O que está na janela de cada jogador (pra quem assiste ver igual).
+  const [remoteUi, setRemoteUi] = useState<Record<string, UiMsg>>({})
+  useEffect(() => net.onUi((m) => setRemoteUi((prev) => ({ ...prev, [m.u]: m }))), [net])
+  const shareUi = useCallback((s: Record<string, unknown>) => { if (panel) net.sendUi({ u: me.uid, p: panel, s }) }, [net, panel, me.uid])
+  // janela nova: começa limpa pra quem assiste
+  useEffect(() => { if (panel && controllable) net.sendUi({ u: me.uid, p: panel, s: {} }) }, [panel, controllable, net, me.uid])
+
+  // Som de fundo: velas estalando e o vento nas janelas.
+  useEffect(() => {
+    startAmbient(['velas', 'vento'])
+    const off = onSoundChange((on) => { if (on) startAmbient(['velas', 'vento']) })
+    return () => { off(); stopAmbient() }
+  }, [])
+  // Sons que vêm do estado: o livro abrindo e a dica do mestre.
+  const prevOpened = useRef(view.game?.ped.opened)
+  useEffect(() => {
+    const o = view.game?.ped.opened
+    if (o && prevOpened.current === false) sfx('bookOpen')
+    prevOpened.current = o
+  }, [view.game?.ped.opened])
+  const prevHint = useRef(view.hint?.t)
+  useEffect(() => {
+    const t = view.hint?.t
+    if (t && t !== prevHint.current) sfx('hint')
+    prevHint.current = t
+  }, [view.hint?.t])
 
   useEffect(() => { gameRef.current?.setPlayers(view.players) }, [view.players])
   useEffect(() => { gameRef.current?.setGame(view.game) }, [view.game])
@@ -90,6 +133,7 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
     <div className={`lb-stage${blurred ? ' is-blurred' : ''}`}>
       <canvas ref={canvasRef} className="lb-canvas" aria-label="A biblioteca de Caatedrum" />
 
+      {controllable && !blurred && <p className="lb-rotate" aria-hidden="true">⟲ Vire o celular de lado</p>}
       <div className="lb-chip lb-chip--role">
         {controllable
           ? <><span className={`lb-dot lb-dot--${mine?.slot ?? 0}`} /> Você é a {CLOAK_NAMES[mine?.slot ?? 0]}</>
@@ -97,7 +141,10 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
       </div>
 
       {controllable && hint && !blurred && (
-        <div className="lb-hint" role="note"><b>WASD</b> anda · <b>clique</b> nos objetos (ou <b>E</b> perto deles) · <b>Esc</b> fecha</div>
+        <div className="lb-hint" role="note">
+          <span className="lb-only-mouse"><b>WASD</b> anda · <b>clique</b> nos objetos (ou <b>E</b> perto deles) · <b>Esc</b> fecha</span>
+          <span className="lb-only-touch"><b>Toque</b> num objeto: o boneco vai até ele e abre · <b>✕</b> fecha</span>
+        </div>
       )}
 
       {!controllable && (
@@ -123,15 +170,20 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
         </div>
       )}
 
-      {panel && <PuzzlePanel id={panel} view={view} onClose={closePanel} />}
-      {!panel && watched && watchedPanel && <PuzzlePanel id={watchedPanel} view={view} onClose={closeWatch} watching={watched.name} />}
+      {!blurred && <HintBanner hint={view.hint ?? null} offset={view.now - Date.now()} kicker="Um sussurro na biblioteca" />}
+
+      {panel && <PuzzlePanel id={panel} view={view} onClose={closePanel} ui={{ share: shareUi, remote: null }} />}
+      {!panel && watched && watchedPanel && (
+        <PuzzlePanel id={watchedPanel} view={view} onClose={closeWatch} watching={watched.name}
+          ui={{ share: () => {}, remote: remoteUi[watched.uid]?.p === watchedPanel ? remoteUi[watched.uid].s : null }} />
+      )}
 
       {opened && !endSeen && !panel && !watchedPanel && (
         <div className="lb-panel-wrap">
           <section className="lb-panel lb-frame lb-ending" role="dialog" aria-label="O livro se abriu">
             <p className="lb-kicker">A biblioteca de Caatedrum</p>
             <h2 className="lb-panel__title">O livro se abre.</h2>
-            <p className="lb-panel__text">As quatro correntes caem no chão de pedra. As páginas viram sozinhas até parar numa que tem o nome de vocês escrito — com a mesma letra do bibliotecário.</p>
+            <p className="lb-panel__text">As quatro correntes caem no chão de pedra. As páginas viram sozinhas até parar numa que tem o nome de vocês escrito, com a mesma letra do bibliotecário.</p>
             {took !== null && <p className="lb-ending__time">Tempo: {fmtTime(took)}</p>}
             <div className="lb-lock__btns">
               <button type="button" className="lb-btn" onClick={() => setEndSeen(true)}>Ver a sala</button>

@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { CANDLE_HEIGHTS, CLOAKS, makeCanvas, px, type Ctx } from '../game/art'
 import { drawBits, SYMBOL_BITS } from './glyphs'
-import { Dial, GlyphIcon, PixelScene, type Pt, type PuzzleProps } from './kit'
+import { Dial, GlyphIcon, PixelScene, useUiShare, type Pt, type PuzzleProps } from './kit'
 
 // ────────────────────────────────────────────────────────
 // O Retrato do bibliotecário. Uma lupa segue o cursor. No escuro, 2
@@ -15,7 +15,8 @@ const H = 150
 const MEDAL = { x: 64, y: 70, r: 5 }
 const CORNERS: [number, number][] = [[12, 12], [107, 12], [12, 129], [107, 129]]
 
-export function RetPanel({ g, act, ro }: PuzzleProps) {
+export function RetPanel({ g, act, ro, ui }: PuzzleProps) {
+  const { put, remote } = useUiShare(ui, ro)
   const r = g.ret
   const light = g.light
   const scene = useRef<{ c: HTMLCanvasElement; ctx: Ctx } | null>(null)
@@ -150,6 +151,8 @@ export function RetPanel({ g, act, ro }: PuzzleProps) {
         label="O retrato do bibliotecário"
         draw={draw}
         hot={overMedal}
+        remoteMouse={remote ? (remote.m as Pt | null) ?? null : undefined}
+        onMouse={(m) => put({ m })}
         onDown={(p) => { if (overMedal(p)) void act({ a: 'medal' }) }}
       />
       <Dial label="Olhar de" value={r.view} disabled={ro} onChange={(v) => void act({ a: 'ret_view', v })} />

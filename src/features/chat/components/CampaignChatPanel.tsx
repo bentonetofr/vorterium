@@ -488,7 +488,7 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole, compact
           type="button"
           className={`chat-sidebar__item${activeThread.type === 'public' ? ' chat-sidebar__item--active' : ''}`}
           onClick={() => setActiveThread({ type: 'public' })}
-          title="Mesa — todos"
+          title="Mesa: todos"
           aria-label="Mesa (conversa com todos)"
         >
           <svg className="chat-sidebar__glyph" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

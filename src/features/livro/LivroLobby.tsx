@@ -84,7 +84,7 @@ export function LivroLobby({ view, peers }: { view: LivroView; peers: NetPeer[] 
 
         {me.gm ? (
           <div className="lb-lobby__foot">
-            <p className="lb-muted">{picked.length === 0 ? 'Toque em quem vai jogar (até 2).' : picked.length === 1 ? 'Dá pra começar com 1 — ou escolha mais um.' : 'Dupla pronta.'}</p>
+            <p className="lb-muted">{picked.length === 0 ? 'Toque em quem vai jogar (até 2).' : picked.length === 1 ? 'Dá pra começar com 1, ou escolha mais um.' : 'Dupla pronta.'}</p>
             <button type="button" className="lb-btn lb-btn--gold" disabled={busy || picked.length === 0} onClick={() => void run({ a: 'start' })}>Começar</button>
           </div>
         ) : (

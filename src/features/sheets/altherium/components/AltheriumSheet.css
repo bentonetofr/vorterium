@@ -312,7 +312,7 @@
 .alth-drag-bar--static { cursor: var(--cursor-arrow); }
 .alth-drag-bar:focus { outline: none; }
 .alth-drag-bar:focus-visible { box-shadow: 0 0 0 1px var(--gilded-bright); }
-.alth-drag-bar--dragging .alth-vital-bar__bar-fill,
+.alth-drag-bar--dragging .alth-vital-bar__bar-fill { transition: none; }
 
 .alth-drag-bar__handle {
   position: absolute;

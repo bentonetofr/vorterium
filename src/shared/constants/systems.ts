@@ -5,7 +5,7 @@
 // Usuários NÃO criam sistemas personalizados.
 // ────────────────────────────────────────────────────────
 
-export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada'
+export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada' | 'vampiro'
 
 export type SystemStatus = 'available' | 'preview' | 'coming-soon'
 
@@ -46,6 +46,15 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Horror de sobrevivência num apocalipse zumbi: características livres, testes de pares em d6, Horror e Convicção.',
     status:      'available',
     icon:        '☣',
+  },
+  {
+    // Guardado no Painel de controle (recurso 'vampiro'): só aparece na
+    // criação de campanha pra quem pode ver (NewCampaignPage).
+    id:          'vampiro',
+    label:       'Vampiro: A Máscara',
+    description: 'Horror pessoal entre os vampiros (5ª edição): clãs, atributos e perícias, Fome, Humanidade e Potência de Sangue.',
+    status:      'available',
+    icon:        '☥',
   },
 ]
 

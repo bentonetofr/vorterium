@@ -152,7 +152,7 @@ export interface DevRoll {
 export type DevRecord = Record<string, unknown>
 
 export interface DevSheet {
-  table: 'character_sheets' | 'altherium_character_sheets' | 'td_character_sheets'
+  table: 'character_sheets' | 'altherium_character_sheets' | 'td_character_sheets' | 'vtm_character_sheets'
   row: DevRecord
   /** Só Altherium: domínios, inventário e runas. */
   extras?: { label: string; rows: DevRecord[] }[]
@@ -205,7 +205,7 @@ export async function getCampaignRolls(campaignId: string): Promise<DevRoll[]> {
 }
 
 export async function getCampaignSheets(campaignId: string): Promise<DevSheet[]> {
-  const tables = ['altherium_character_sheets', 'td_character_sheets', 'character_sheets'] as const
+  const tables = ['altherium_character_sheets', 'vtm_character_sheets', 'td_character_sheets', 'character_sheets'] as const
   const results = await Promise.all(
     tables.map((t) => supabase.from(t).select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true })),
   )
@@ -301,7 +301,7 @@ export async function setFeedbackStatus(id: string, status: FeedbackStatus): Pro
 // ── Formatação ──────────────────────────────────────────
 
 export function fmtDateTime(iso: string | null | undefined): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 

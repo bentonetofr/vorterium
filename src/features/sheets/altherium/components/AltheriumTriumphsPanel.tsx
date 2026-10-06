@@ -63,7 +63,7 @@ export function AltheriumTriumphsPanel({
         onClick={() => {
           onSpendFv(t.cost, t.name)
           onRecent(t.id)
-          setLastUsed(`${t.name} usado — −${t.cost} ${unit}.`)
+          setLastUsed(`${t.name} usado: −${t.cost} ${unit}.`)
         }}
       >
         Usar
@@ -88,7 +88,7 @@ export function AltheriumTriumphsPanel({
       )}
       {!allOwned && over && (
         <p className="alth-triumphs__warn" role="alert">
-          Você tem mais triunfos do que o limite atual — remova algum ou ganhe domínios.
+          Você tem mais triunfos do que o limite atual: remova algum ou ganhe domínios.
         </p>
       )}
       {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}
@@ -101,7 +101,7 @@ export function AltheriumTriumphsPanel({
 
       <h5 className="alth-triumphs__group">Seus triunfos</h5>
       {owned.length === 0
-        ? <p className="alth-triumphs__empty">Nenhum triunfo escolhido ainda — adicione abaixo.</p>
+        ? <p className="alth-triumphs__empty">Nenhum triunfo escolhido ainda. Adicione abaixo.</p>
         : (
           <div className="alth-triumphs__grid">
             {owned.map((t) => (

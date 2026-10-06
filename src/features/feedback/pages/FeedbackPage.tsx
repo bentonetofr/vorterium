@@ -94,7 +94,7 @@ export function FeedbackPage() {
       <div className="tool-page__header">
         <div className="tool-page__titles">
           <h1 className="tool-page__title">Enviar feedback</h1>
-          <p className="tool-page__sub">Achou um problema ou tem uma ideia? Conte aqui — chega direto pra quem cuida do site.</p>
+          <p className="tool-page__sub">Achou um problema ou tem uma ideia? Conte aqui: chega direto pra quem cuida do site.</p>
         </div>
       </div>
 

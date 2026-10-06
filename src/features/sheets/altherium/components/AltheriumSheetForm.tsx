@@ -299,10 +299,10 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
 ]
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
 
-const RAIZ_OPTIONS    = [{ value: '', label: '—' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label }))]
+const RAIZ_OPTIONS    = [{ value: '', label: '-' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label }))]
 /** A Mestre só aparece na lista pra quem já é Mestre (não se escolhe na criação). */
 const RAIZ_OPTIONS_MESTRE = [...RAIZ_OPTIONS, { value: 'mestre', label: 'Mestre' }]
-const GENESIS_OPTIONS = [{ value: '', label: '—' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
+const GENESIS_OPTIONS = [{ value: '', label: '-' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
 
 export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,
@@ -1005,7 +1005,7 @@ export function AltheriumSheetForm({
         <div className="alth-section__header">
           <h4 className="alth-section__title">Domínios</h4>
           <span className={`alth-counter${slotsTotal != null && domainsUsed > slotsTotal ? ' alth-counter--over' : ''}`}>
-            {domainsUsed} / {slotsTotal ?? '—'} pontos
+            {domainsUsed} / {slotsTotal ?? '-'} pontos
           </span>
         </div>
 
@@ -1050,7 +1050,7 @@ export function AltheriumSheetForm({
                     fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : '',
                     bonusDie ? 'Inclui +1d10 extra (+)' : '',
                     disadv === 'manual' ? 'Desvantagem: joga com 1d de desvantagem' : '',
-                    disadv === 'atributo' ? `Desvantagem: ${attrLabel} está em 0 — joga com 1d de desvantagem` : '',
+                    disadv === 'atributo' ? `Desvantagem: ${attrLabel} está em 0, joga com 1d de desvantagem` : '',
                   ].filter(Boolean).join(' · ') || undefined}
                 >
                   {domainTestDice(points, fromGenesis, bonusDie)}d10

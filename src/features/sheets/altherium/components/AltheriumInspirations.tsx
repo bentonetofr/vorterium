@@ -88,7 +88,7 @@ export function AltheriumInspirations({ inspirations, disabled, onChange, onUse 
                         </button>
                         <button
                           type="button" className="alth-triumph__btn alth-triumph__btn--use" disabled={disabled}
-                          onClick={() => { onUse(i); setLastUsed(`${i.name} usada — a mesa foi avisada.`) }}
+                          onClick={() => { onUse(i); setLastUsed(`${i.name} usada. A mesa foi avisada.`) }}
                         >
                           Usar
                         </button>
@@ -185,7 +185,7 @@ function InspirationEditor({ initial, onSubmit, onCancel }: InspirationEditorPro
               <Select
                 value={action} onChange={(v) => setAction(v as TriumphAction | '')} aria-label="Tipo de ação"
                 options={[
-                  { value: '', label: '—' },
+                  { value: '', label: '-' },
                   ...(Object.keys(TRIUMPH_ACTION_LABELS) as TriumphAction[]).map((a) => ({ value: a, label: TRIUMPH_ACTION_LABELS[a] })),
                 ]}
               />
@@ -195,7 +195,7 @@ function InspirationEditor({ initial, onSubmit, onCancel }: InspirationEditorPro
               <Select
                 value={range} onChange={setRange} aria-label="Distância"
                 options={[
-                  { value: '', label: '—' },
+                  { value: '', label: '-' },
                   ...(range && !(TRIUMPH_RANGES as readonly string[]).includes(range) ? [{ value: range, label: range }] : []),
                   ...TRIUMPH_RANGES.map((r) => ({ value: r, label: r })),
                 ]}

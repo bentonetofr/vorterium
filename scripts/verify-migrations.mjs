@@ -80,7 +80,16 @@ const expectedMigrations = [
   '20240176000000_raiz_mestre.sql',
   '20240177000000_livro_bloqueado.sql',
   '20240178000000_livro_enigmas.sql',
-  '20240179000000_livro_correcoes.sql',
+  '20240178500000_livro_correcoes.sql',
+  '20240179000000_torre_observatorio.sql',
+  '20240180000000_torre_enigmas.sql',
+  '20240181000000_torre_dicas.sql',
+  '20240182000000_troca_de_jogo.sql',
+  '20240183000000_livro_marco3.sql',
+  '20240184000000_raiz_mestre_campanha.sql',
+  '20240185000000_sem_travessao.sql',
+  '20240186000000_raiz_mestre_recusa.sql',
+  '20240187000000_vampiro_base.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

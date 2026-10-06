@@ -181,7 +181,7 @@ export function Select({
         onKeyDown={handleKeyDown}
       >
         <span className={`select-trigger__value${selected?.value === '' ? ' select-trigger__value--empty' : ''}`}>
-          {selected?.label ?? '—'}
+          {selected?.label ?? '-'}
         </span>
         <svg className="select-trigger__chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

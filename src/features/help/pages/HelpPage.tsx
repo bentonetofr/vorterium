@@ -116,7 +116,7 @@ export function HelpPage() {
 
       <div className="tool-card help-page__more">
         <p className="tool-hint">
-          Não achou o que procurava ou algo não funcionou? <Link to="/feedback">Envie um feedback</Link> — ele chega direto
+          Não achou o que procurava ou algo não funcionou? <Link to="/feedback">Envie um feedback</Link>: ele chega direto
           pra quem cuida do site. E veja em <Link to="/novidades">Novidades</Link> o que mudou recentemente.
         </p>
       </div>
