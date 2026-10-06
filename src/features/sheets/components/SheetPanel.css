@@ -417,3 +417,115 @@
   box-shadow: 0 0 6px var(--bar-glow);
   transition: width 600ms var(--ease-out);
 }
+
+/* ── Fichas de NPC (seção abaixo dos jogadores) ── */
+.npc-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.npc-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.npc-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+.npc-section__count {
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--gilded);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: 20px;
+  text-align: center;
+  color: var(--accent-bright);
+}
+.npc-section__hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.npc-card { padding: 0; gap: 0; cursor: default; }
+.npc-card__open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: var(--cursor-hand);
+  min-width: 0;
+}
+.npc-card--hidden .npc-card__open { opacity: 0.72; }
+.npc-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-dim);
+}
+.npc-card__eye {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-bright);
+  background: none;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  cursor: var(--cursor-hand);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.npc-card__eye.is-on {
+  border-style: solid;
+  border-color: var(--gilded);
+  color: var(--accent-bright);
+  background: rgba(212, 175, 55, 0.08);
+}
+.npc-card__del {
+  width: 28px; height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-dim);
+  background: none;
+  color: var(--text-muted);
+  cursor: var(--cursor-hand);
+}
+.npc-card__del:hover { color: var(--danger); border-color: var(--danger); }
+.npc-card__eye:disabled, .npc-card__del:disabled { opacity: 0.5; cursor: progress; }
+
+/* Ficha de NPC aberta por um jogador: tudo à vista, nada muda. */
+.npc-readonly__badge {
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-bright);
+  background: var(--bg-overlay);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.npc-readonly button:not([role="tab"]),
+.npc-readonly select,
+.npc-readonly label,
+.npc-readonly [role="slider"] { cursor: default !important; }
+.npc-readonly input[readonly], .npc-readonly textarea[readonly] { caret-color: transparent; }

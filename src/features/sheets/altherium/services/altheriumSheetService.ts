@@ -1,4 +1,5 @@
 import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
+import { pcOnly } from '../../services/npcService'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
 import type {
@@ -40,6 +41,7 @@ export async function getMyAltheriumSheet(campaignId: string): Promise<Altherium
   const { data, error } = await supabase
     .from('altherium_character_sheets')
     .select(SHEET_COLUMNS)
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -147,6 +149,7 @@ export async function getMyAltheriumSheetsEverywhere(): Promise<(AltheriumSheet 
   const { data, error } = await supabase
     .from('altherium_character_sheets')
     .select('*, campaigns(id, name)')
+    .match(await pcOnly())
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
 
@@ -161,6 +164,7 @@ export async function getCampaignAltheriumSheets(campaignId: string): Promise<Al
   const { data, error } = await supabase
     .from('altherium_character_sheets')
     .select('*, profiles!user_id(id, display_name, avatar_url)')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: true })
 

@@ -9,6 +9,7 @@ import {
   type VtmSheetUpdate,
 } from '../services/vampiroSheetService'
 import { VampiroSheetForm } from './VampiroSheetForm'
+import { NpcSection } from '../../components/NpcSection'
 import { getClan, VAMPIRO_FEATURE, VTM_HUMANITY_MAX, VTM_HUNGER_MAX } from '../constants/vampiro'
 import { useFeature } from '../../../control/siteFeatures'
 import { clampTrack, healthMax, ordinal, trackState, willpowerMax } from '../utils/vampiroRules'
@@ -43,6 +44,30 @@ export function VampiroSheetPanel({ campaignId, userRole }: VampiroSheetPanelPro
         {!feature.visible
           ? <p className="sheet-empty">A ficha de Vampiro ainda não foi liberada. Volte em breve.</p>
           : userRole === 'player' ? <PlayerView campaignId={campaignId} /> : <MasterView campaignId={campaignId} />}
+        {feature.visible && (
+          <NpcSection<VtmSheet>
+            table="vtm_character_sheets"
+            campaignId={campaignId}
+            userRole={userRole}
+            summary={(s) => {
+              const hMax = healthMax(s)
+              const h = clampTrack({ superficial: s.health_superficial, aggravated: s.health_aggravated }, hMax)
+              return {
+                line:     `${getClan(s.clan)?.label ?? 'Sem clã'} · ${ordinal(s.generation)} geração`,
+                portrait: s.portrait_url,
+                bars: (
+                  <>
+                    <CardBar sigla="Vitalidade" tone="vitality" current={hMax - h.superficial - h.aggravated} max={hMax} />
+                    <CardBar sigla="Fome" tone="hunger" current={s.hunger} max={VTM_HUNGER_MAX} />
+                  </>
+                ),
+              }
+            }}
+            renderSheet={(s, { readOnly, onUpdated }) => (
+              <SheetEditor sheet={s} ownerName="NPC" readOnly={readOnly} onSheetUpdated={onUpdated} />
+            )}
+          />
+        )}
       </div>
     </section>
   )
@@ -53,14 +78,17 @@ export function VampiroSheetPanel({ campaignId, userRole }: VampiroSheetPanelPro
 interface SheetEditorProps {
   sheet:          VtmSheet
   ownerName?:     string
+  /** NPC aberto por um jogador: mostra tudo e não salva nada. */
+  readOnly?:      boolean
   onSheetUpdated: (sheet: VtmSheet) => void
 }
 
-function SheetEditor({ sheet, ownerName, onSheetUpdated }: SheetEditorProps) {
+function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: SheetEditorProps) {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [portraitBusy, setPortraitBusy] = useState(false)
 
   async function handleSave(data: VtmSheetUpdate) {
+    if (readOnly) return
     setSaveError(null)
     try {
       onSheetUpdated(await updateVtmSheet(sheet.id, data))

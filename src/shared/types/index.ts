@@ -76,6 +76,10 @@ export interface CharacterSheet {
   wisdom: number
   charisma: number
   notes: string | null
+  /** Ficha de NPC do mestre (migration 20240189000000). */
+  is_npc?: boolean
+  /** O mestre mostrou o NPC pros jogadores (eles só leem). */
+  npc_visible?: boolean
   created_at: string
   updated_at: string
 }
@@ -256,6 +260,10 @@ export interface AltheriumSheet {
   /** Inspirações Skald ganhas na história (não há no livro; o jogador cria). */
   skald_inspirations: AltheriumSkaldInspiration[]
   notes:              string | null
+  /** Ficha de NPC do mestre (migration 20240189000000). */
+  is_npc?: boolean
+  /** O mestre mostrou o NPC pros jogadores (eles só leem). */
+  npc_visible?: boolean
   created_at:         string
   updated_at:         string
 }
@@ -400,6 +408,10 @@ export interface TdSheet {
   horror:         number
   conviction:     number
   notes:          string | null
+  /** Ficha de NPC do mestre (migration 20240189000000). */
+  is_npc?: boolean
+  /** O mestre mostrou o NPC pros jogadores (eles só leem). */
+  npc_visible?: boolean
   created_at:     string
   updated_at:     string
 }
@@ -455,6 +467,10 @@ export interface VtmSheet {
   blood_potency:   number
   history:         string | null
   notes:           string | null
+  /** Ficha de NPC do mestre (migration 20240189000000). */
+  is_npc?: boolean
+  /** O mestre mostrou o NPC pros jogadores (eles só leem). */
+  npc_visible?: boolean
   created_at:      string
   updated_at:      string
 }
