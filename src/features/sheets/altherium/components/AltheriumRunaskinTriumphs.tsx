@@ -51,7 +51,7 @@ interface AltheriumRunaskinTriumphsProps {
   onTrailImageUpload: (triumphId: string, file: File) => Promise<string>
   onTrailImageRemove: (triumphId: string) => Promise<void>
   disabled?:     boolean
-  /** Raiz Mestre: os triunfos das três trilhas de uma vez. */
+  /** Mostra os triunfos das três trilhas de uma vez (era da raiz Mestre, guardada). */
   allTrails?:    boolean
 }
 

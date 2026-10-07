@@ -3,7 +3,6 @@ import {
   ATTRIBUTE_POINTS_AT_CREATION,
   PILAR_CARDS_PER_LEVEL,
   RUNASKIN_FREE_RUNICO,
-  TORRE_PER_ESTRATEGIA,
   GENESIS_DOMAIN_BONUS,
   type AltheriumDomain,
   type AltheriumGenesis,
@@ -23,8 +22,7 @@ import type { AltheriumSheet } from '../../../../shared/types'
 /** Cartas máximas (só Pilar): 13 por nível — 13/26/39/52/65. */
 export function cardsMax(sheet: AltheriumSheet): number | null {
   if (sheet.raiz !== 'pilar') return null
-  // fixo quando a ficha foi rebaixada (recusou a Raiz Mestre); senão, 13 por nível
-  return sheet.cards_max ?? PILAR_CARDS_PER_LEVEL * sheet.level
+  return PILAR_CARDS_PER_LEVEL * sheet.level
 }
 
 // ────────────────────────────────────────────────────────
@@ -125,14 +123,5 @@ export function usesCards(raiz: AltheriumRaiz | null): boolean {
   return raiz === 'pilar'
 }
 export function usesRunico(raiz: AltheriumRaiz | null): boolean {
-  return raiz === 'runaskin' || raiz === 'mestre'
-}
-/** Raiz Mestre: um recurso só, a TORRE, pra todos os triunfos. */
-export function usesTorre(raiz: AltheriumRaiz | null): boolean {
-  return raiz === 'mestre'
-}
-/** TORRE máxima (só Mestre): Estratégia × 5. */
-export function torreMax(sheet: Pick<AltheriumSheet, 'raiz' | 'attr_estrategia'>): number | null {
-  if (sheet.raiz !== 'mestre') return null
-  return Math.max(0, sheet.attr_estrategia) * TORRE_PER_ESTRATEGIA
+  return raiz === 'runaskin'
 }

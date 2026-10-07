@@ -1,0 +1,648 @@
+diff --git b/src/app/layouts/PrivateLayout.tsx a/src/app/layouts/PrivateLayout.tsx
+index 247329c..9eae4b6 100644
+--- b/src/app/layouts/PrivateLayout.tsx
++++ a/src/app/layouts/PrivateLayout.tsx
+@@ -9,6 +9,9 @@ import { NotificationBell }   from '../../features/activity/components/Notificat
+ import { ChatFab }            from '../../features/chat/components/ChatFab'
+ import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
+ import { ControlFab }         from '../../features/control/ControlFab'
++import { MestreAscension }    from '../../features/mestre/MestreAscension'
++import { MestreCall }         from '../../features/mestre/MestreCall'
++import { MestreTheme }        from '../../features/mestre/MestreTheme'
+ import { LivroHost }          from '../../features/livro/LivroHost'
+ import { GameDockSlot } from '../../features/livro/GameDock'
+ import { TorreHost }          from '../../features/torre/TorreHost'
+@@ -272,6 +275,9 @@ function PrivateLayoutContent() {
+       </nav>
+     </div>
+     <CritWolf />
++    <MestreTheme />
++    <MestreAscension />
++    <MestreCall />
+     <LivroHost />
+     <TorreHost />
+     <div className="dice-fab-wrapper">
+diff --git b/src/features/control/siteFeatures.tsx a/src/features/control/siteFeatures.tsx
+index 8e320ec..27d0899 100644
+--- b/src/features/control/siteFeatures.tsx
++++ a/src/features/control/siteFeatures.tsx
+@@ -1,6 +1,7 @@
+ import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
+ import { supabase, uniqueChannel } from '../../shared/lib/supabase'
+ import { useAuth } from '../auth/AuthProvider'
++import { MESTRE_FEATURE, mestreChooseHere, mestreToggle, mestreWhere, ownerResetMestre } from '../mestre/mestreService'
+ import { LIVRO_FEATURE, livroOpenHere, livroToggle, closeMine as livroCloseMine } from '../livro/livroService'
+ import { TORRE_FEATURE, torreOpenHere, torreToggle, closeMine as torreCloseMine } from '../torre/torreService'
+ import { VAMPIRO_FEATURE } from '../sheets/vampiro/constants/vampiro'
+@@ -37,6 +38,18 @@ export interface SiteFeature {
+ }
+ 
+ export const SITE_FEATURES: SiteFeature[] = [
++  {
++    key: MESTRE_FEATURE,
++    name: 'Raiz Mestre',
++    description: 'Botão SE TORNAR UM MESTRE no meio da tela dos jogadores. Só aparece com a chave em "No site" e só na campanha de Altherium que você escolher (ligando com a página dela aberta, ou em "Só nesta campanha"; escolher outra tira o botão da anterior). Quando todos da campanha apertam: livro fechando, 4 s de escuro, site todo preto e dourado e a ficha vira Mestre (todos os triunfos, TORRE). Se você é o mestre da mesa dessa campanha, também vê o botão e, apertando sozinho, só você vira Mestre (teste).',
++    where: 'A campanha de Altherium escolhida (qualquer aba)',
++    onToggle: mestreToggle,
++    actions: [
++      { label: 'Só nesta campanha', run: (_u, ctx) => mestreChooseHere(ctx.campaign) },
++      { label: 'Em qual campanha está?', run: () => mestreWhere() },
++      { label: 'Voltar a ser normal (só você)', run: ownerResetMestre },
++    ],
++  },
+   {
+     key: LIVRO_FEATURE,
+     name: 'O Livro Bloqueado',
+diff --git b/src/features/sheets/altherium/components/AltheriumRunaskinTriumphs.tsx a/src/features/sheets/altherium/components/AltheriumRunaskinTriumphs.tsx
+index 50a1243..05c5383 100644
+--- b/src/features/sheets/altherium/components/AltheriumRunaskinTriumphs.tsx
++++ a/src/features/sheets/altherium/components/AltheriumRunaskinTriumphs.tsx
+@@ -51,7 +51,7 @@ interface AltheriumRunaskinTriumphsProps {
+   onTrailImageUpload: (triumphId: string, file: File) => Promise<string>
+   onTrailImageRemove: (triumphId: string) => Promise<void>
+   disabled?:     boolean
+-  /** Mostra os triunfos das três trilhas de uma vez (era da raiz Mestre, guardada). */
++  /** Raiz Mestre: os triunfos das três trilhas de uma vez. */
+   allTrails?:    boolean
+ }
+ 
+diff --git b/src/features/sheets/altherium/components/AltheriumSheet.css a/src/features/sheets/altherium/components/AltheriumSheet.css
+index 98fd542..605b18a 100644
+--- b/src/features/sheets/altherium/components/AltheriumSheet.css
++++ a/src/features/sheets/altherium/components/AltheriumSheet.css
+@@ -242,6 +242,8 @@
+ .alth-vital-bar--vitality .alth-vital-bar__sigla { color: var(--danger); }
+ .alth-vital-bar--mystic   .alth-vital-bar__sigla { color: var(--alth-mystic); }
+ .alth-vital-bar--resource .alth-vital-bar__sigla { color: var(--alth-resource); }
++/* TORRE (raiz Mestre): o recurso em dourado. */
++.alth-vital-bar--gold { --alth-resource: #ffc93c; --alth-resource-glow: rgba(255, 200, 60, 0.4); }
+ .alth-vital-bar__max-fixed {
+   font-size: var(--text-sm);
+   font-weight: 600;
+@@ -2088,3 +2090,14 @@
+   .alth-genesis__item { flex-direction: column; }
+ }
+ 
++/* ── Raiz Mestre: abas Berserker / Runaskin / Pilar na aba Triunfos ── */
++.alth-mestre-triumphs { margin-bottom: var(--space-3); }
++.alth-mestre-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
++.alth-mestre-tab {
++  padding: 6px 16px;
++  font-family: var(--font-label); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.04em;
++  color: var(--text-secondary); background: var(--bg-overlay);
++  border: 1px solid var(--border-dim); border-radius: 999px;
++}
++.alth-mestre-tab:hover { color: var(--text-primary); border-color: var(--gilded); }
++.alth-mestre-tab.is-on { color: #1a1000; background: linear-gradient(110deg, #c98a00, #ffd45e 55%, #c98a00); border-color: #ffd45e; box-shadow: 0 0 12px rgba(255, 200, 70, 0.35); }
+diff --git b/src/features/sheets/altherium/components/AltheriumSheetForm.tsx a/src/features/sheets/altherium/components/AltheriumSheetForm.tsx
+index 282c566..6bee2f4 100644
+--- b/src/features/sheets/altherium/components/AltheriumSheetForm.tsx
++++ a/src/features/sheets/altherium/components/AltheriumSheetForm.tsx
+@@ -23,11 +23,14 @@ import {
+   genesisBonusFor,
+   movementMeters,
+   runaskinUsesPerScene,
++  torreMax,
+   usesCards,
+   usesFv,
+   usesPr,
+   usesRunico,
++  usesTorre,
+ } from '../utils/altheriumCalculations'
++import { TriumphUnit } from './triumphUnit'
+ import { AltheriumBodyDiagram, type BodyBuild, type BodyZone } from './AltheriumBodyDiagram'
+ import { carriedWeapons, quiverAmmo } from './AltheriumWeaponArt'
+ import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
+@@ -105,6 +108,7 @@ type FormData = {
+   pr_current:         number
+   pr_max:             number
+   cards_current:      number
++  torre_current:      number
+   hacksilvers:        number
+   db_pernas:          number
+   db_bracos:          number
+@@ -147,6 +151,7 @@ function sheetToForm(s: AltheriumSheet): FormData {
+     pr_current:         s.pr_current,
+     pr_max:             s.pr_max ?? 10,
+     cards_current:      s.cards_current,
++    torre_current:      s.torre_current ?? 0,
+     hacksilvers:        s.hacksilvers,
+     db_pernas:          s.db_pernas,
+     db_bracos:          s.db_bracos,
+@@ -192,6 +197,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
+     pr_current:          f.pr_current,
+     pr_max:              f.pr_max,
+     cards_current:       f.cards_current,
++    torre_current:       f.torre_current,
+     hacksilvers:         f.hacksilvers,
+     db_pernas:           f.db_pernas,
+     db_bracos:           f.db_bracos,
+@@ -294,6 +300,8 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
+ const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
+ 
+ const RAIZ_OPTIONS    = [{ value: '', label: '-' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label }))]
++/** A Mestre só aparece na lista pra quem já é Mestre (não se escolhe na criação). */
++const RAIZ_OPTIONS_MESTRE = [...RAIZ_OPTIONS, { value: 'mestre', label: 'Mestre' }]
+ const GENESIS_OPTIONS = [{ value: '', label: '-' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
+ 
+ export function AltheriumSheetForm({
+@@ -484,7 +492,8 @@ export function AltheriumSheetForm({
+   // máximo de cada um é campo direto do form.
+   const projected  = formToSheet(sheet, form)
+   const raiz       = form.raiz === '' ? null : form.raiz
+-  const bodyBuild: BodyBuild = raiz
++  // Mestre não tem corpo próprio no desenho: usa o da raiz de antes.
++  const bodyBuild: BodyBuild = raiz === 'mestre' ? ((sheet.mestre_backup?.raiz as BodyBuild) ?? 'pilar') : raiz
+   // Easter egg: o personagem chamado Gutris (ou Gustris, ou Gutris, O Nascido
+   // Da Morte) não tem pernas. Espaços repetidos contam como um só.
+   const legless    = LEGLESS_NAMES.has(form.character_name.trim().replace(/\s+/g, ' ').toLowerCase())
+@@ -492,6 +501,9 @@ export function AltheriumSheetForm({
+   const weapons    = useMemo(() => carriedWeapons(inventory), [inventory])
+   const quiver     = useMemo(() => quiverAmmo(inventory), [inventory])
+   const cartasMax  = cardsMax(projected)
++  const torreMaxV  = torreMax(projected)
++  /** Raiz Mestre: qual raiz está aberta na aba Triunfos. */
++  const [mestreTab, setMestreTab] = useState<'berserker' | 'runaskin' | 'pilar'>('berserker')
+   const slotsTotal = domainSlotsTotal(projected)
+ 
+   const genesisLabel   = GENESIS.find((g) => g.id === form.genesis)?.label ?? ''
+@@ -522,24 +534,27 @@ export function AltheriumSheetForm({
+     void flush()
+   }
+ 
+-  // ── Triunfos: cada raiz com o seu painel. ──
++  // ── Triunfos: cada raiz com o seu painel. A Mestre usa os três, pagando em TORRE. ──
++  const mestre = raiz === 'mestre'
++  const torreNow = form.torre_current
++
+   const runaskinPanel = (
+     <AltheriumRunaskinTriumphs
+       trail={form.runaskin_trail === '' ? null : form.runaskin_trail}
+       onTrailChange={(t) => set('runaskin_trail', t ?? '')}
+       sceneUses={form.runaskin_scene_uses}
+-      usesLimit={runaskinUsesPerScene(form.pr_max, form.level)}
++      usesLimit={runaskinUsesPerScene(mestre ? (torreMaxV ?? 0) : form.pr_max, form.level)}
+       onNewScene={() => set('runaskin_scene_uses', 0)}
+-      prCurrent={form.pr_current}
++      prCurrent={mestre ? torreNow : form.pr_current}
+       recent={form.recent_triumphs}
+       onRecent={markRecent}
+       onUse={(cost, name) => {
+         setForm((prev) => ({
+           ...prev,
+-          pr_current: Math.max(0, prev.pr_current - cost),
++          ...(mestre ? { torre_current: Math.max(0, prev.torre_current - cost) } : { pr_current: Math.max(0, prev.pr_current - cost) }),
+           runaskin_scene_uses: prev.runaskin_scene_uses + 1,
+         }))
+-        announceTriumph(`${name} (−${cost} PR)`)
++        announceTriumph(`${name} (−${cost} ${mestre ? 'Torre' : 'PR'})`)
+       }}
+       runes={runes}
+       onRuneCreate={onRuneCreate}
+@@ -556,14 +571,15 @@ export function AltheriumSheetForm({
+           return { ...prev, runaskin_trail_overrides: next }
+         })
+       }}
++      allTrails={mestre}
+     />
+   )
+ 
+   const pilarPanel = (
+     <AltheriumPilarTriumphs
+       campaignId={sheet.campaign_id}
+-      cardsCurrent={form.cards_current}
+-      cardsMax={cartasMax}
++      cardsCurrent={mestre ? torreNow : form.cards_current}
++      cardsMax={mestre ? torreMaxV : cartasMax}
+       mode={form.pilar_card_mode}
+       deck={form.pilar_deck}
+       recent={form.recent_triumphs}
+@@ -573,19 +589,24 @@ export function AltheriumSheetForm({
+       onSpend={(n, deck) => {
+         setForm((prev) => ({
+           ...prev,
+-          cards_current: Math.max(0, prev.cards_current - n),
++          ...(mestre ? { torre_current: Math.max(0, prev.torre_current - n) } : { cards_current: Math.max(0, prev.cards_current - n) }),
+           ...(deck ? { pilar_deck: deck } : {}),
+         }))
+       }}
+       onResolve={(r) => {
+         const s = suitInfo(r.suit)
+-        const spent = `${r.spent} ${r.spent === 1 ? 'carta' : 'cartas'}`
++        const spent = mestre ? `${r.spent} de Torre` : `${r.spent} ${r.spent === 1 ? 'carta' : 'cartas'}`
+         const detail = `${r.instant ? 'Ás de espadas' : `${s.symbol} ${s.label.toLowerCase()}`} · ${spent}`
+         if (r.success) announceTriumph(`${r.triumph.name} (${detail})`)
+         else if (r.gaveUp) announceTriumph(`de ${r.triumph.name} (${detail})`, 'desistiu')
+         else announceTriumph(`${r.triumph.name} e não conseguiu a combinação (${detail})`, 'tentou')
+       }}
+       onRecover={(n) => {
++        if (mestre) {
++          setForm((prev) => ({ ...prev, torre_current: Math.min(torreMaxV ?? prev.torre_current + n, prev.torre_current + n) }))
++          announceTriumph(`${n} de Torre com Retorno do Baralho`, 'recuperou')
++          return
++        }
+         setForm((prev) => ({
+           ...prev,
+           cards_current: Math.min(cartasMax ?? prev.cards_current + n, prev.cards_current + n),
+@@ -597,21 +618,58 @@ export function AltheriumSheetForm({
+ 
+   const berserkerPanel = (
+     <AltheriumTriumphsPanel
+-      raiz={raiz === 'berserker' ? 'berserker' : null}
++      raiz={mestre ? 'berserker' : raiz === 'berserker' ? 'berserker' : null}
+       triumphIds={form.berserker_triumphs}
+       limit={berserkerTriumphLimit(domains)}
+-      fvCurrent={form.fv_current}
++      fvCurrent={mestre ? torreNow : form.fv_current}
+       onChange={(ids) => set('berserker_triumphs', ids)}
+       recent={form.recent_triumphs}
+       onRecent={markRecent}
+       onSpendFv={(cost, name) => {
+-        set('fv_current', Math.max(0, form.fv_current - cost))
+-        announceTriumph(`${name} (−${cost} FV)`)
++        if (mestre) set('torre_current', Math.max(0, form.torre_current - cost))
++        else set('fv_current', Math.max(0, form.fv_current - cost))
++        announceTriumph(`${name} (−${cost} ${mestre ? 'Torre' : 'FV'})`)
+       }}
++      allOwned={mestre}
+     />
+   )
+ 
+-  const triumphsTab = raiz === 'runaskin' ? runaskinPanel : raiz === 'pilar' ? pilarPanel : berserkerPanel
++  const MESTRE_TABS = [
++    { id: 'berserker', label: 'Berserker' },
++    { id: 'runaskin', label: 'Runaskin' },
++    { id: 'pilar', label: 'Pilar' },
++  ] as const
++
++  const triumphsTab = mestre
++    ? (
++      <TriumphUnit.Provider value="Torre">
++        <section className="alth-card alth-mestre-triumphs">
++          <div className="alth-card__header">
++            <h4 className="alth-card__title">Triunfos do Mestre</h4>
++            <span className="alth-counter">Torre: {torreNow} / {torreMaxV ?? 0}</span>
++          </div>
++          <p className="alth-hint">
++            O Mestre usa os triunfos das três raízes. Cada triunfo gasta da TORRE (Estratégia × 5) o que custava na raiz dele.
++          </p>
++          <div className="alth-mestre-tabs" role="tablist" aria-label="Triunfos por raiz">
++            {MESTRE_TABS.map((t) => (
++              <button
++                key={t.id}
++                type="button"
++                role="tab"
++                aria-selected={mestreTab === t.id}
++                className={`alth-mestre-tab${mestreTab === t.id ? ' is-on' : ''}`}
++                onClick={() => setMestreTab(t.id)}
++              >
++                {t.label}
++              </button>
++            ))}
++          </div>
++        </section>
++        {mestreTab === 'runaskin' ? runaskinPanel : mestreTab === 'pilar' ? pilarPanel : berserkerPanel}
++      </TriumphUnit.Provider>
++    )
++    : raiz === 'runaskin' ? runaskinPanel : raiz === 'pilar' ? pilarPanel : berserkerPanel
+ 
+   return (
+     <form
+@@ -676,7 +734,7 @@ export function AltheriumSheetForm({
+                   className="alth-hero__select" value={form.raiz}
+                   onChange={(v) => set('raiz', v as AltheriumRaiz | '')}
+                   aria-label="Raiz"
+-                  options={RAIZ_OPTIONS}
++                  options={form.raiz === 'mestre' ? RAIZ_OPTIONS_MESTRE : RAIZ_OPTIONS}
+                 />
+               </label>
+               <label className="alth-hero__field alth-hero__field--genesis">
+@@ -718,6 +776,13 @@ export function AltheriumSheetForm({
+               onCurrent={(v) => set('fv_current', v)} onMax={(v) => set('fv_max', v)}
+             />
+           )}
++          {usesTorre(raiz) && torreMaxV != null && (
++            <VitalBar
++              sigla="TORRE" label="Torre (Estratégia × 5)" tone="resource" gold
++              current={form.torre_current} max={torreMaxV}
++              onCurrent={(v) => set('torre_current', v)}
++            />
++          )}
+           {usesCards(raiz) && cartasMax != null && (
+             <VitalBar
+               sigla="Cartas" label="Cartas" tone="resource"
+@@ -1131,11 +1196,13 @@ interface VitalBarProps {
+   /** Sem onMax o máximo é só leitura (ex.: Cartas = 13 × nível). */
+   onMax?:    (value: number) => void
+   disabled?: boolean
++  /** Dourada (a TORRE da raiz Mestre). */
++  gold?:     boolean
+ }
+ 
+-function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false }: VitalBarProps) {
++function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false, gold = false }: VitalBarProps) {
+   return (
+-    <div className={`alth-vital-bar alth-vital-bar--${tone}`}>
++    <div className={`alth-vital-bar alth-vital-bar--${tone}${gold ? ' alth-vital-bar--gold' : ''}`}>
+       <div className="alth-vital-bar__top">
+         <span className="alth-vital-bar__sigla" title={label}>{sigla}</span>
+         <span className="alth-vital-bar__values">
+diff --git b/src/features/sheets/altherium/components/AltheriumSheetPanel.tsx a/src/features/sheets/altherium/components/AltheriumSheetPanel.tsx
+index dea648f..b434411 100644
+--- b/src/features/sheets/altherium/components/AltheriumSheetPanel.tsx
++++ a/src/features/sheets/altherium/components/AltheriumSheetPanel.tsx
+@@ -25,7 +25,9 @@ import {
+ import { AltheriumSheetForm } from './AltheriumSheetForm'
+ import { NpcSection } from '../../components/NpcSection'
+ import { raizLabel } from '../constants/altherium'
+-import { cardsMax } from '../utils/altheriumCalculations'
++import { SHEET_REFRESH_EVENT, undoMestreRefusal } from '../../../mestre/mestreService'
++import { useIsSiteOwner } from '../../../control/siteFeatures'
++import { cardsMax, torreMax } from '../utils/altheriumCalculations'
+ import type { BodyZone } from './AltheriumBodyDiagram'
+ import type {
+   AltheriumSheet,
+@@ -114,6 +116,13 @@ function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: She
+   useEffect(() => { loadDomains() }, [loadDomains])
+   useEffect(() => { loadInventory() }, [loadInventory])
+   useEffect(() => { loadRunes() }, [loadRunes])
++  // A ficha mudou no banco de uma vez (recusou a Raiz Mestre, o mestre desfez):
++  // domínios e runas vêm de novo.
++  useEffect(() => {
++    const again = () => { loadDomains(); loadRunes() }
++    window.addEventListener(SHEET_REFRESH_EVENT, again)
++    return () => window.removeEventListener(SHEET_REFRESH_EVENT, again)
++  }, [loadDomains, loadRunes])
+ 
+   // Salvamento automático do formulário: não trava a ficha enquanto salva
+   // e relança o erro pro formulário marcar "Erro ao salvar".
+@@ -268,6 +277,7 @@ function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: She
+ // ────────────────────────────────────────────────────────
+ 
+ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
++  const owner = useIsSiteOwner()
+   const [sheet, setSheet]     = useState<AltheriumSheet | null>(null)
+   const [loading, setLoading] = useState(true)
+   const [error, setError]     = useState<string | null>(null)
+@@ -288,7 +298,10 @@ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
+       }
+     }
+     load()
+-    return () => { cancelled = true }
++    // Virou Mestre (ou voltou ao normal): a ficha mudou no banco — recarrega sem piscar.
++    const refresh = () => { void getOrCreateMyAltheriumSheet(campaignId).then((d) => { if (!cancelled) setSheet(d) }).catch(() => {}) }
++    window.addEventListener(SHEET_REFRESH_EVENT, refresh)
++    return () => { cancelled = true; window.removeEventListener(SHEET_REFRESH_EVENT, refresh) }
+   }, [campaignId])
+ 
+   if (loading) {
+@@ -303,7 +316,45 @@ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
+   if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
+   if (!sheet) return null
+ 
+-  return <SheetEditor sheet={sheet} onSheetUpdated={setSheet} />
++  return (
++    <>
++      {sheet.mestre_refusal_backup && (
++        // o dono do site (testando) desfaz a própria recusa daqui
++        <RefusalBanner onUndo={owner ? () => undoMestreRefusal(campaignId, sheet.user_id) : undefined} />
++      )}
++      <SheetEditor sheet={sheet} onSheetUpdated={setSheet} />
++    </>
++  )
++}
++
++/**
++ * A ficha foi rebaixada porque o jogador recusou a Raiz Mestre. Pro
++ * mestre da mesa, com o botão de desfazer (a ficha volta a ser como era).
++ */
++function RefusalBanner({ onUndo }: { onUndo?: () => Promise<void> }) {
++  const [busy, setBusy] = useState(false)
++  const [error, setError] = useState<string | null>(null)
++  async function undo() {
++    if (!onUndo || !window.confirm('Desfazer a recusa? A ficha volta a ser exatamente como era antes (nível, atributos, domínios, runas e recursos). O que mudou nela depois da recusa se perde.')) return
++    setBusy(true)
++    setError(null)
++    try { await onUndo() } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível desfazer.') } finally { setBusy(false) }
++  }
++  return (
++    <div className="sheet-outdated sheet-refused" role="status">
++      <span>
++        {onUndo
++          ? 'Este jogador recusou se tornar um Mestre: a ficha voltou ao nível 1.'
++          : 'Você recusou se tornar um Mestre: a ficha voltou ao nível 1. Se foi sem querer, o mestre da mesa pode desfazer.'}
++      </span>
++      {onUndo && (
++        <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => void undo()} disabled={busy}>
++          Desfazer a recusa
++        </button>
++      )}
++      {error && <span className="sheet-feedback--error" role="alert">{error}</span>}
++    </div>
++  )
+ }
+ 
+ // ────────────────────────────────────────────────────────
+@@ -321,6 +372,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
+   const [editing, setEditing]   = useState<AltheriumSheetWithProfile | null>(null)
+   // Muda quando a ficha aberta é trocada de uma vez no banco (desfazer a
+   // recusa): o editor monta de novo, com domínios e runas novos.
++  const [rev, setRev] = useState(0)
+   const formRef = useRef<HTMLDivElement>(null)
+ 
+   // No celular os cards ficam empilhados e a ficha abre bem abaixo deles —
+@@ -421,6 +473,9 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
+                 {s.raiz === 'pilar' && (
+                   <SummaryBar sigla="Cartas" tone="resource" current={s.cards_current} max={cardsMax(s)} />
+                 )}
++                {s.raiz === 'mestre' && (
++                  <SummaryBar sigla="Torre" tone="resource" current={s.torre_current} max={torreMax(s)} />
++                )}
+               </div>
+             </button>
+           )
+@@ -437,7 +492,16 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
+               </button>
+             </div>
+           )}
+-          <div key={selected.id} className="anim-page">
++          {(latest ?? selected).mestre_refusal_backup && (
++            <RefusalBanner onUndo={async () => {
++              await undoMestreRefusal(campaignId, selected.user_id)
++              const data = await getCampaignAltheriumSheets(campaignId)
++              setSheets(data)
++              setEditing(data.find((x) => x.id === selected.id) ?? null)
++              setRev((n) => n + 1)
++            }} />
++          )}
++          <div key={`${selected.id}:${rev}`} className="anim-page">
+             <SheetEditor
+               sheet={selected}
+               ownerName={selected.profile?.display_name ?? 'Jogador removido'}
+diff --git b/src/features/sheets/altherium/components/AltheriumTriumphsPanel.tsx a/src/features/sheets/altherium/components/AltheriumTriumphsPanel.tsx
+index 38b4ee3..2c000b1 100644
+--- b/src/features/sheets/altherium/components/AltheriumTriumphsPanel.tsx
++++ a/src/features/sheets/altherium/components/AltheriumTriumphsPanel.tsx
+@@ -29,7 +29,7 @@ interface AltheriumTriumphsPanelProps {
+   recent:         string[]
+   onRecent:       (id: string) => void
+   disabled?:      boolean
+-  /** Tem todos os triunfos, sem escolher nem limite (era da raiz Mestre, guardada). */
++  /** Raiz Mestre: tem todos os triunfos (sem escolher, sem limite). */
+   allOwned?:      boolean
+ }
+ 
+diff --git b/src/features/sheets/altherium/components/triumphUnit.ts a/src/features/sheets/altherium/components/triumphUnit.ts
+index 11e11c9..fa61316 100644
+--- b/src/features/sheets/altherium/components/triumphUnit.ts
++++ a/src/features/sheets/altherium/components/triumphUnit.ts
+@@ -1,8 +1,8 @@
+ import { createContext } from 'react'
+ 
+ /**
+- * Nome do recurso que os painéis de triunfo mostram ("FV", "PR"…). null =
+- * o padrão de cada painel. (A raiz Mestre, guardada em guardado/raiz-mestre/,
+- * usava 'Torre'.)
++ * Nome do recurso que os painéis de triunfo mostram ("FV", "PR"…). A raiz
++ * Mestre usa os painéis das três raízes pagando tudo em TORRE: ela envolve
++ * os painéis com este contexto valendo 'Torre'. null = o padrão de cada painel.
+  */
+ export const TriumphUnit = createContext<string | null>(null)
+diff --git b/src/features/sheets/altherium/constants/altherium.ts a/src/features/sheets/altherium/constants/altherium.ts
+index 8b109ed..62630ba 100644
+--- b/src/features/sheets/altherium/constants/altherium.ts
++++ a/src/features/sheets/altherium/constants/altherium.ts
+@@ -3,7 +3,8 @@
+ // Fonte: Livro de regras básicas de ALTHERIUM 1.0
+ // ────────────────────────────────────────────────────────
+ 
+-export type AltheriumRaiz = 'berserker' | 'runaskin' | 'pilar'
++/** 'mestre' não se escolhe na criação: vem do botão SE TORNAR UM MESTRE (migration 20240176). */
++export type AltheriumRaiz = 'berserker' | 'runaskin' | 'pilar' | 'mestre'
+ 
+ export type AltheriumAttribute =
+   | 'furia' | 'destino' | 'espirito' | 'impulso' | 'estrategia' | 'runico'
+@@ -95,13 +96,33 @@ export const RAIZES: RaizEntry[] = [
+   },
+ ]
+ 
+-const _raizById = Object.fromEntries(RAIZES.map((r) => [r.id, r])) as Record<AltheriumRaiz, RaizEntry>
++/**
++ * Raiz Mestre: estudou o suficiente pra usar tudo — os triunfos de
++ * Berserker, Runaskin e Pilar, pagos com TORRE (Estratégia × 5). Fica fora
++ * de RAIZES (não aparece na criação). Domínios como os do Pilar, o que mais tem.
++ */
++export const RAIZ_MESTRE: RaizEntry = {
++  id: 'mestre',
++  label: 'Mestre',
++  description: 'Estudou o suficiente para saber usar de tudo: é Berserker, Runaskin e Pilar ao mesmo tempo.',
++  vitalityBase: 0,
++  equilibrioBase: 0,
++  fvBase: null,
++  prBase: null,
++  domainBase: 8,
++  domainsPerLevel: 3,
++}
++
++/** TORRE máxima da raiz Mestre: Estratégia × 5. */
++export const TORRE_PER_ESTRATEGIA = 5
++
++const _raizById = Object.fromEntries([...RAIZES, RAIZ_MESTRE].map((r) => [r.id, r])) as Record<AltheriumRaiz, RaizEntry>
+ 
+ export function getRaiz(raiz: AltheriumRaiz): RaizEntry {
+   return _raizById[raiz]
+ }
+ 
+-/** Nome da raiz pra mostrar. */
++/** Nome da raiz pra mostrar (inclui a Mestre). */
+ export function raizLabel(raiz: string | null | undefined): string | null {
+   return raiz ? (_raizById[raiz as AltheriumRaiz]?.label ?? raiz) : null
+ }
+diff --git b/src/features/sheets/altherium/utils/altheriumActivity.ts a/src/features/sheets/altherium/utils/altheriumActivity.ts
+index 106bfd5..15a83b1 100644
+--- b/src/features/sheets/altherium/utils/altheriumActivity.ts
++++ a/src/features/sheets/altherium/utils/altheriumActivity.ts
+@@ -1,7 +1,4 @@
+-import { ATTRIBUTES, BODY_PARTS, DOMAINS, GENESIS, RAIZES } from '../constants/altherium'
+-
+-/** A raiz Mestre saiu do site (guardado/raiz-mestre/), mas o histórico antigo ainda fala dela. */
+-const RAIZ_LABELS = [...RAIZES, { id: 'mestre', label: 'Mestre' }]
++import { ATTRIBUTES, BODY_PARTS, DOMAINS, GENESIS, RAIZES, RAIZ_MESTRE } from '../constants/altherium'
+ import { findArmor, findItem, findWeapon } from '../constants/altheriumItems'
+ import { RUNASKIN_TRAILS, RUNASKIN_TRIUMPHS, TRIUMPH_ACTION_LABELS, findBerserkerTriumph, type TriumphAction } from '../constants/altheriumTriumphs'
+ 
+@@ -230,7 +227,7 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
+     case 'character_name':
+       return [{ key, label: 'Nome', from: str(c.from) ?? '-', to: str(c.to) ?? '-', tone: 'neutral' }]
+     case 'raiz':
+-      return [{ key, label: 'Raiz', from: labelOf(RAIZ_LABELS, c.from) ?? '-', to: labelOf(RAIZ_LABELS, c.to) ?? '-', tone: 'neutral' }]
++      return [{ key, label: 'Raiz', from: labelOf([...RAIZES, RAIZ_MESTRE], c.from) ?? '-', to: labelOf([...RAIZES, RAIZ_MESTRE], c.to) ?? '-', tone: 'neutral' }]
+     case 'genesis':
+       return [{ key, label: 'Gênesis', from: labelOf(GENESIS, c.from) ?? '-', to: labelOf(GENESIS, c.to) ?? '-', tone: 'neutral' }]
+     case 'runaskin_trail':
+diff --git b/src/features/sheets/altherium/utils/altheriumCalculations.ts a/src/features/sheets/altherium/utils/altheriumCalculations.ts
+index e14b22d..ecedc8a 100644
+--- b/src/features/sheets/altherium/utils/altheriumCalculations.ts
++++ a/src/features/sheets/altherium/utils/altheriumCalculations.ts
+@@ -3,6 +3,7 @@ import {
+   ATTRIBUTE_POINTS_AT_CREATION,
+   PILAR_CARDS_PER_LEVEL,
+   RUNASKIN_FREE_RUNICO,
++  TORRE_PER_ESTRATEGIA,
+   GENESIS_DOMAIN_BONUS,
+   type AltheriumDomain,
+   type AltheriumGenesis,
+@@ -22,7 +23,8 @@ import type { AltheriumSheet } from '../../../../shared/types'
+ /** Cartas máximas (só Pilar): 13 por nível — 13/26/39/52/65. */
+ export function cardsMax(sheet: AltheriumSheet): number | null {
+   if (sheet.raiz !== 'pilar') return null
+-  return PILAR_CARDS_PER_LEVEL * sheet.level
++  // fixo quando a ficha foi rebaixada (recusou a Raiz Mestre); senão, 13 por nível
++  return sheet.cards_max ?? PILAR_CARDS_PER_LEVEL * sheet.level
+ }
+ 
+ // ────────────────────────────────────────────────────────
+@@ -123,5 +125,14 @@ export function usesCards(raiz: AltheriumRaiz | null): boolean {
+   return raiz === 'pilar'
+ }
+ export function usesRunico(raiz: AltheriumRaiz | null): boolean {
+-  return raiz === 'runaskin'
++  return raiz === 'runaskin' || raiz === 'mestre'
++}
++/** Raiz Mestre: um recurso só, a TORRE, pra todos os triunfos. */
++export function usesTorre(raiz: AltheriumRaiz | null): boolean {
++  return raiz === 'mestre'
++}
++/** TORRE máxima (só Mestre): Estratégia × 5. */
++export function torreMax(sheet: Pick<AltheriumSheet, 'raiz' | 'attr_estrategia'>): number | null {
++  if (sheet.raiz !== 'mestre') return null
++  return Math.max(0, sheet.attr_estrategia) * TORRE_PER_ESTRATEGIA
+ }
+diff --git b/src/shared/types/index.ts a/src/shared/types/index.ts
+index 484dd95..fb3c6c5 100644
+--- b/src/shared/types/index.ts
++++ a/src/shared/types/index.ts
+@@ -201,7 +201,7 @@ export interface AltheriumSheet {
+   character_name:     string | null
+   portrait_url:       string | null
+   level:              number
+-  raiz:               'berserker' | 'runaskin' | 'pilar' | null
++  raiz:               'berserker' | 'runaskin' | 'pilar' | 'mestre' | null
+   genesis:            string | null
+   attr_furia:         number
+   attr_destino:       number
+@@ -224,6 +224,14 @@ export interface AltheriumSheet {
+   pr_current:         number
+   pr_max:             number
+   cards_current:      number
++  /** Raiz Mestre: TORRE atual (o máximo é Estratégia × 5, calculado no site). */
++  torre_current:      number
++  /** Raiz Mestre: como a ficha era antes de virar Mestre (o banco cuida). */
++  mestre_backup?:     Record<string, unknown> | null
++  /** Máximo de cartas fixo (null = 13 por nível). */
++  cards_max?:         number | null
++  /** Como a ficha era antes de recusar a Raiz Mestre (o mestre pode desfazer). */
++  mestre_refusal_backup?: Record<string, unknown> | null
+   hacksilvers:        number
+   db_pernas:          number
+   db_bracos:          number

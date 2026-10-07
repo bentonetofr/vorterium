@@ -29,7 +29,7 @@ interface AltheriumTriumphsPanelProps {
   recent:         string[]
   onRecent:       (id: string) => void
   disabled?:      boolean
-  /** Raiz Mestre: tem todos os triunfos (sem escolher, sem limite). */
+  /** Tem todos os triunfos, sem escolher nem limite (era da raiz Mestre, guardada). */
   allOwned?:      boolean
 }
 

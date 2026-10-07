@@ -1,4 +1,7 @@
-import { ATTRIBUTES, BODY_PARTS, DOMAINS, GENESIS, RAIZES, RAIZ_MESTRE } from '../constants/altherium'
+import { ATTRIBUTES, BODY_PARTS, DOMAINS, GENESIS, RAIZES } from '../constants/altherium'
+
+/** A raiz Mestre saiu do site (guardado/raiz-mestre/), mas o histórico antigo ainda fala dela. */
+const RAIZ_LABELS = [...RAIZES, { id: 'mestre', label: 'Mestre' }]
 import { findArmor, findItem, findWeapon } from '../constants/altheriumItems'
 import { RUNASKIN_TRAILS, RUNASKIN_TRIUMPHS, TRIUMPH_ACTION_LABELS, findBerserkerTriumph, type TriumphAction } from '../constants/altheriumTriumphs'
 
@@ -227,7 +230,7 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
     case 'character_name':
       return [{ key, label: 'Nome', from: str(c.from) ?? '-', to: str(c.to) ?? '-', tone: 'neutral' }]
     case 'raiz':
-      return [{ key, label: 'Raiz', from: labelOf([...RAIZES, RAIZ_MESTRE], c.from) ?? '-', to: labelOf([...RAIZES, RAIZ_MESTRE], c.to) ?? '-', tone: 'neutral' }]
+      return [{ key, label: 'Raiz', from: labelOf(RAIZ_LABELS, c.from) ?? '-', to: labelOf(RAIZ_LABELS, c.to) ?? '-', tone: 'neutral' }]
     case 'genesis':
       return [{ key, label: 'Gênesis', from: labelOf(GENESIS, c.from) ?? '-', to: labelOf(GENESIS, c.to) ?? '-', tone: 'neutral' }]
     case 'runaskin_trail':

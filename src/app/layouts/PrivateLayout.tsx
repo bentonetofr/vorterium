@@ -9,9 +9,6 @@ import { NotificationBell }   from '../../features/activity/components/Notificat
 import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
 import { ControlFab }         from '../../features/control/ControlFab'
-import { MestreAscension }    from '../../features/mestre/MestreAscension'
-import { MestreCall }         from '../../features/mestre/MestreCall'
-import { MestreTheme }        from '../../features/mestre/MestreTheme'
 import { LivroHost }          from '../../features/livro/LivroHost'
 import { GameDockSlot } from '../../features/livro/GameDock'
 import { TorreHost }          from '../../features/torre/TorreHost'
@@ -275,9 +272,6 @@ function PrivateLayoutContent() {
       </nav>
     </div>
     <CritWolf />
-    <MestreTheme />
-    <MestreAscension />
-    <MestreCall />
     <LivroHost />
     <TorreHost />
     <div className="dice-fab-wrapper">

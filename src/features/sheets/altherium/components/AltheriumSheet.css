@@ -242,8 +242,6 @@
 .alth-vital-bar--vitality .alth-vital-bar__sigla { color: var(--danger); }
 .alth-vital-bar--mystic   .alth-vital-bar__sigla { color: var(--alth-mystic); }
 .alth-vital-bar--resource .alth-vital-bar__sigla { color: var(--alth-resource); }
-/* TORRE (raiz Mestre): o recurso em dourado. */
-.alth-vital-bar--gold { --alth-resource: #ffc93c; --alth-resource-glow: rgba(255, 200, 60, 0.4); }
 .alth-vital-bar__max-fixed {
   font-size: var(--text-sm);
   font-weight: 600;
@@ -2090,14 +2088,3 @@
   .alth-genesis__item { flex-direction: column; }
 }
 
-/* ── Raiz Mestre: abas Berserker / Runaskin / Pilar na aba Triunfos ── */
-.alth-mestre-triumphs { margin-bottom: var(--space-3); }
-.alth-mestre-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-.alth-mestre-tab {
-  padding: 6px 16px;
-  font-family: var(--font-label); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.04em;
-  color: var(--text-secondary); background: var(--bg-overlay);
-  border: 1px solid var(--border-dim); border-radius: 999px;
-}
-.alth-mestre-tab:hover { color: var(--text-primary); border-color: var(--gilded); }
-.alth-mestre-tab.is-on { color: #1a1000; background: linear-gradient(110deg, #c98a00, #ffd45e 55%, #c98a00); border-color: #ffd45e; box-shadow: 0 0 12px rgba(255, 200, 70, 0.35); }
