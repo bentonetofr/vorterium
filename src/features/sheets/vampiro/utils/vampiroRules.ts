@@ -19,9 +19,16 @@ import {
 
 export const attr = (s: Pick<VtmSheet, `attr_${VtmAttrKey}`>, k: VtmAttrKey): number => s[`attr_${k}`]
 
-/** Vitalidade: Vigor + 3 (+ ajuste manual, ex.: Fortitude). */
-export function healthMax(s: Pick<VtmSheet, 'attr_stamina' | 'health_bonus'>): number {
-  return Math.max(1, s.attr_stamina + 3 + s.health_bonus)
+/** Resiliência (Fortitude 1) soma os pontos de Fortitude à Vitalidade. */
+export function resilienceBonus(s: Partial<Pick<VtmSheet, 'disciplines' | 'powers'>>): number {
+  if (!s.powers?.includes('fortitude.resiliencia')) return 0
+  const v = s.disciplines?.fortitude
+  return typeof v === 'number' ? Math.max(0, Math.min(5, v)) : 0
+}
+
+/** Vitalidade: Vigor + 3 (+ Resiliência + ajuste manual). */
+export function healthMax(s: Pick<VtmSheet, 'attr_stamina' | 'health_bonus'> & Partial<Pick<VtmSheet, 'disciplines' | 'powers'>>): number {
+  return Math.max(1, s.attr_stamina + 3 + resilienceBonus(s) + s.health_bonus)
 }
 
 /** Força de Vontade: Autocontrole + Determinação (+ ajuste manual). */

@@ -4,21 +4,31 @@ import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../s
 import type { VtmSheet, VtmSpecialty } from '../../../../shared/types'
 import {
   VTM_ATTRIBUTES, VTM_CLANS, VTM_DISCIPLINES, VTM_GENERATION_MAX, VTM_GENERATION_MIN, VTM_GROUPS,
-  VTM_PORTRAIT_TYPES, VTM_PREDATORS, VTM_SKILL_KEYS, VTM_SKILLS, VTM_TEXT_LIMITS,
+  VTM_PORTRAIT_TYPES, VTM_SKILL_KEYS, VTM_SKILLS, VTM_TEXT_LIMITS,
   getClan, type VtmAttrKey,
 } from '../constants/vampiro'
+import { VTM_PREDATORS } from '../constants/vtmPredators'
+import { VTM_POWER_BY_ID } from '../constants/vtmPowers'
+import { VTM_RITE_BY_ID } from '../constants/vtmRituals'
 import {
   attrSpreadOk, bloodPotencyRow, bpRange, clampTrack, healthMax, isThinBlood, newId, ordinal,
-  skillSpread, willpowerMax, type Track,
+  resilienceBonus, skillSpread, willpowerMax, type Track,
 } from '../utils/vampiroRules'
 import type { VtmSheetUpdate } from '../services/vampiroSheetService'
 import { DamageTrack, Dots, HumanityTrack, HungerTrack } from './VtmControls'
+import { VtmDisciplinesTab } from './VtmDisciplinesTab'
+import { VtmAdvantagesTab } from './VtmAdvantagesTab'
+import { VtmConvictionsTab } from './VtmConvictionsTab'
+import { VtmXpTab } from './VtmXpTab'
+import { VtmPredatorCard } from './VtmPredatorCard'
+import type { VtmForm } from './vtmForm'
 import './VampiroSheet.css'
 
 // ────────────────────────────────────────────────────────
 // Ficha de Vampiro: A Máscara (5ª edição). Cabeçalho com retrato,
 // identidade e as trilhas (Vitalidade, Força de Vontade, Fome,
-// Humanidade); abas de Atributos e Perícias, Clã e Sangue, e História.
+// Humanidade); abas de Atributos e Perícias, Disciplinas, Vantagens, Clã e
+// Sangue (com o tipo de predador), Convicções, Experiência e História.
 // Tudo que é conta sai sozinho (máximos, Potência de Sangue, disciplinas
 // e perdição do clã, conferência da criação). Salvamento automático igual
 // ao da ficha Altherium: AUTOSAVE_DELAY_MS depois da última mudança, um
@@ -35,19 +45,7 @@ interface VampiroSheetFormProps {
   onPortraitRemove: () => void
 }
 
-type FormData = Omit<VtmSheet, 'id' | 'campaign_id' | 'user_id' | 'created_at' | 'updated_at' | 'portrait_url'
-  | 'character_name' | 'concept' | 'chronicle' | 'sire' | 'ambition' | 'desire' | 'history' | 'notes' | 'clan' | 'predator_type'> & {
-  character_name: string
-  concept:        string
-  chronicle:      string
-  sire:           string
-  ambition:       string
-  desire:         string
-  clan:           string
-  predator_type:  string
-  history:        string
-  notes:          string
-}
+type FormData = VtmForm
 
 const ATTR_COLS = VTM_ATTRIBUTES.map((a) => `attr_${a.key}` as const)
 
@@ -75,8 +73,19 @@ function sheetToForm(s: VtmSheet): FormData {
     blood_potency:  s.blood_potency,
     history:        s.history ?? '',
     notes:          s.notes ?? '',
+    // Marco 2 (sem a migration, as colunas não vêm: começam vazias)
+    disciplines:     s.disciplines ?? {},
+    powers:          s.powers ?? [],
+    rituals:         s.rituals ?? [],
+    advantages:      s.advantages ?? [],
+    convictions:     s.convictions ?? [],
+    xp_log:          s.xp_log ?? [],
+    predator_grants: s.predator_grants ?? null,
+    creation_tier:   s.creation_tier ?? 'neonato',
   }
 }
+
+const DISC_ORDER = Object.keys(VTM_DISCIPLINES)
 
 function formToPayload(f: FormData): VtmSheetUpdate {
   // Perícias: só as com ponto, sempre na ordem da lista (o jsonb devolve as
@@ -111,6 +120,30 @@ function formToPayload(f: FormData): VtmSheetUpdate {
     blood_potency:  f.blood_potency,
     history:        f.history.trim() || null,
     notes:          f.notes.trim() || null,
+    // Disciplinas na ordem fixa e só com ponto (mesmo motivo das perícias).
+    disciplines:     Object.fromEntries(DISC_ORDER.filter((d) => (f.disciplines[d] ?? 0) > 0).map((d) => [d, f.disciplines[d]])),
+    powers:          f.powers.filter((id) => VTM_POWER_BY_ID.has(id)),
+    rituals:         f.rituals.filter((id) => VTM_RITE_BY_ID.has(id)),
+    // Objetos sempre com as chaves na mesma ordem: o jsonb devolve reordenado.
+    advantages:      f.advantages.map((a) => ({
+      id: a.id, key: a.key, kind: a.kind, name: a.name.trim() || 'Sem nome', dots: a.dots, note: a.note.trim(), source: a.source,
+    })),
+    convictions:     f.convictions.map((c) => ({
+      id: c.id, conviction: c.conviction.trim(), touchstone: c.touchstone.trim(), note: c.note.trim(), status: c.status,
+    })),
+    xp_log:          f.xp_log.map((e) => ({
+      id: e.id, at: e.at, kind: e.kind, amount: e.amount, label: e.label,
+      ...(e.note ? { note: e.note } : {}),
+      ...(e.target ? { target: {
+        type: e.target.type, key: e.target.key, from: e.target.from, to: e.target.to,
+        ...(e.target.extra ? { extra: e.target.extra } : {}),
+      } } : {}),
+    })),
+    predator_grants: f.predator_grants && {
+      predator: f.predator_grants.predator, discipline: f.predator_grants.discipline, specialtyId: f.predator_grants.specialtyId,
+      advantageIds: f.predator_grants.advantageIds, humanity: f.predator_grants.humanity, bloodPotency: f.predator_grants.bloodPotency,
+    },
+    creation_tier:   f.creation_tier,
   }
 }
 
@@ -131,11 +164,15 @@ function validateForm(f: FormData): string | null {
 const AUTOSAVE_DELAY_MS = 800
 type SaveState = 'saved' | 'pending' | 'saving' | 'error'
 
-type TabId = 'atributos' | 'cla' | 'historia'
+type TabId = 'atributos' | 'disciplinas' | 'vantagens' | 'cla' | 'conviccoes' | 'experiencia' | 'historia'
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'atributos', label: 'Atributos e Perícias' },
-  { id: 'cla',       label: 'Clã e Sangue' },
-  { id: 'historia',  label: 'História' },
+  { id: 'atributos',   label: 'Atributos e Perícias' },
+  { id: 'disciplinas', label: 'Disciplinas' },
+  { id: 'vantagens',   label: 'Vantagens' },
+  { id: 'cla',         label: 'Clã e Sangue' },
+  { id: 'conviccoes',  label: 'Convicções' },
+  { id: 'experiencia', label: 'Experiência' },
+  { id: 'historia',    label: 'História' },
 ]
 const TAB_IDS = TABS.map((t) => t.id)
 
@@ -232,6 +269,12 @@ export function VampiroSheetForm({
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
+    setError(null)
+  }
+
+  /** As abas do Marco 2 mexem em várias partes de uma vez. */
+  function update(fn: (prev: FormData) => FormData) {
+    setForm(fn)
     setError(null)
   }
 
@@ -337,7 +380,8 @@ export function VampiroSheetForm({
 
         <div className="vtm-hero__tracks">
           <DamageTrack
-            kind="health" title="Vitalidade" formula={`Vigor ${form.attr_stamina} + 3`} max={hMax} track={health} bonus={form.health_bonus}
+            kind="health" title="Vitalidade" max={hMax}
+            formula={`Vigor ${form.attr_stamina} + 3${resilienceBonus(form) ? ` + Resiliência ${resilienceBonus(form)}` : ''}`} track={health} bonus={form.health_bonus}
             onTrack={(t) => setForm((p) => ({ ...p, health_superficial: t.superficial, health_aggravated: t.aggravated }))}
             onBonus={(b) => set('health_bonus', b)}
           />
@@ -453,6 +497,16 @@ export function VampiroSheetForm({
           )}
         </div>
 
+        {/* ── Disciplinas ── */}
+        <div id="vtm-tabpanel-disciplinas" role="tabpanel" hidden={activeTab !== 'disciplinas'}>
+          {activeTab === 'disciplinas' && <VtmDisciplinesTab form={form} update={update} />}
+        </div>
+
+        {/* ── Vantagens ── */}
+        <div id="vtm-tabpanel-vantagens" role="tabpanel" hidden={activeTab !== 'vantagens'}>
+          {activeTab === 'vantagens' && <VtmAdvantagesTab form={form} update={update} />}
+        </div>
+
         {/* ── Clã e sangue ── */}
         <div id="vtm-tabpanel-cla" role="tabpanel" hidden={activeTab !== 'cla'}>
           {activeTab === 'cla' && (
@@ -484,6 +538,8 @@ export function VampiroSheetForm({
                 </label>
               </section>
 
+              <VtmPredatorCard form={form} update={update} />
+
               <section className="vtm-card">
                 <div className="vtm-card__header">
                   <h4 className="vtm-card__title">Potência de Sangue</h4>
@@ -510,6 +566,16 @@ export function VampiroSheetForm({
               </section>
             </div>
           )}
+        </div>
+
+        {/* ── Convicções ── */}
+        <div id="vtm-tabpanel-conviccoes" role="tabpanel" hidden={activeTab !== 'conviccoes'}>
+          {activeTab === 'conviccoes' && <VtmConvictionsTab form={form} update={update} />}
+        </div>
+
+        {/* ── Experiência ── */}
+        <div id="vtm-tabpanel-experiencia" role="tabpanel" hidden={activeTab !== 'experiencia'}>
+          {activeTab === 'experiencia' && <VtmXpTab form={form} update={update} />}
         </div>
 
         {/* ── História ── */}

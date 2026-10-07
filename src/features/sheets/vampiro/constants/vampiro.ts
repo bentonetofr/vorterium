@@ -122,24 +122,7 @@ export function getClan(id: string | null | undefined): VtmClan | null {
   return VTM_CLANS.find((c) => c.id === id) ?? null
 }
 
-// ── Tipos de predador ───────────────────────────────────
-
-export const VTM_PREDATORS: { id: string; label: string }[] = [
-  { id: 'gato_de_beco',   label: 'Gato de Beco' },
-  { id: 'ensacador',      label: 'Ensacador' },
-  { id: 'sanguessuga',    label: 'Sanguessuga' },
-  { id: 'cutelo',         label: 'Cutelo' },
-  { id: 'consensualista', label: 'Consensualista' },
-  { id: 'fazendeiro',     label: 'Fazendeiro' },
-  { id: 'osiris',         label: 'Osíris' },
-  { id: 'joao_pestana',   label: 'João Pestana' },
-  { id: 'rainha_da_cena', label: 'Rainha da Cena' },
-  { id: 'sereia',         label: 'Sereia' },
-]
-
-export function getPredator(id: string | null | undefined) {
-  return VTM_PREDATORS.find((p) => p.id === id) ?? null
-}
+// Tipos de predador: vtmPredators.ts (com o que cada um dá na criação).
 
 // ── Geração e Potência de Sangue ────────────────────────
 

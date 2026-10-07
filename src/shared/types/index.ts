@@ -471,8 +471,65 @@ export interface VtmSheet {
   is_npc?: boolean
   /** O mestre mostrou o NPC pros jogadores (eles só leem). */
   npc_visible?: boolean
+  // ── Marco 2 (migration 20240190000000) ──
+  /** Pontos em cada disciplina (chave → 0..5; ausente = 0). */
+  disciplines:     Record<string, number>
+  /** Poderes escolhidos ("disciplina.poder"). */
+  powers:          string[]
+  /** Rituais, cerimônias e fórmulas aprendidos ("ritual.x", "cerimonia.x", "formula.x"). */
+  rituals:         string[]
+  advantages:      VtmAdvantage[]
+  convictions:     VtmConviction[]
+  xp_log:          VtmXpEntry[]
+  predator_grants: VtmPredatorGrants | null
+  creation_tier:   'neonato' | 'ancilla'
   created_at:      string
   updated_at:      string
+}
+
+/** Antecedente, Mérito ou Defeito na ficha de Vampiro. */
+export interface VtmAdvantage {
+  id:     string
+  /** Chave do catálogo (vtmAdvantages.ts); "custom" = criado à mão. */
+  key:    string
+  kind:   'background' | 'merit' | 'flaw'
+  name:   string
+  dots:   number
+  note:   string
+  /** De onde veio: escolhido na criação, dado pelo predador ou comprado com XP. */
+  source: 'criacao' | 'predador' | 'xp'
+}
+
+/** Convicção e o Pilar de Toque ligado a ela. */
+export interface VtmConviction {
+  id:         string
+  conviction: string
+  touchstone: string
+  note:       string
+  /** vivo: protege; ferido: já custou mancha; perdido: o Pilar se foi e a Convicção com ele. */
+  status:     'vivo' | 'ferido' | 'perdido'
+}
+
+/** Linha do histórico de experiência. */
+export interface VtmXpEntry {
+  id:     string
+  at:     string
+  kind:   'ganho' | 'gasto'
+  amount: number
+  label:  string
+  note?:  string
+  /** Só nos gastos: o que subiu, pra poder desfazer. */
+  target?: { type: string; key: string; from: number; to: number; extra?: string }
+}
+
+/** O que o tipo de predador pôs na ficha (pra desfazer ao trocar). */
+export interface VtmPredatorGrants {
+  predator:      string
+  discipline:    string | null
+  specialtyId:   string | null
+  advantageIds:  string[]
+  humanity:      number
+  bloodPotency:  number
 }
 
 export interface VtmSheetWithProfile extends VtmSheet {
