@@ -37,6 +37,7 @@ export declare class NpcPanel {
     private pick;
     private renderList;
     private row;
+    private toggleName;
     private turn;
     private move;
     private remove;

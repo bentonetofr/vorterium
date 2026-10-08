@@ -8,6 +8,7 @@ export declare const ICONS: {
     world: string;
     ruler: string;
     npc: string;
+    nametag: string;
     flip: string;
     person: string;
     star: string;

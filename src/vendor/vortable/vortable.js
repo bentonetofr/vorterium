@@ -43322,18 +43322,22 @@ var Qr = 160, $r = 8e3, ei = class {
 			color: "#ffe9c2",
 			stroke: "#000",
 			strokeThickness: 3
-		}).setOrigin(.5, 1).setResolution(4).setVisible(this.names === "always")), e.sprite.anims.play(`${e.texKey}:idle:${e.npc.dir}`, !0), this.place(e));
+		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), e.sprite.anims.play(`${e.texKey}:idle:${e.npc.dir}`, !0), this.place(e));
 	}
 	place(e) {
 		let { sprite: t, shadow: n, label: r, npc: i } = e;
 		if (!t || !n || !r) return;
-		t.setPosition(i.x, i.y).setDepth(i.y), n.setPosition(i.x, i.y - 1).setDepth(i.y - .5), r.setPosition(i.x, i.y - 66).setDepth(1e8), r.text !== i.name && r.setText(i.name);
+		t.setPosition(i.x, i.y).setDepth(i.y), n.setPosition(i.x, i.y - 1).setDepth(i.y - .5), r.setPosition(i.x, i.y - 66).setDepth(1e8), r.text !== i.name && r.setText(i.name), i.showName ? this.names === "always" && r.setVisible(!0) : r.setVisible(!1);
 		let a = `${e.texKey}:idle:${i.dir}`;
 		t.anims.currentAnim?.key !== a && this.scene.anims.exists(a) && t.anims.play(a, !0);
 	}
 	update(e) {
 		if (this.names !== "always") for (let t of this.items.values()) {
 			if (!t.label) continue;
+			if (!t.npc.showName) {
+				t.label.setVisible(!1);
+				continue;
+			}
 			let n = !!e && c.default.Math.Distance.Between(e.x, e.y, t.npc.x, t.npc.y) < ti;
 			t.label.setVisible(n);
 		}
@@ -45312,7 +45316,8 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 			appearance: n.appearance,
 			x: r,
 			y: i,
-			dir: n.dir ?? "down"
+			dir: n.dir ?? "down",
+			...n.showName ? { showName: !0 } : {}
 		}), this.npcGhost?.setVisible(!1), this.state.set({
 			tool: "select",
 			npcDraft: null
@@ -45473,6 +45478,7 @@ var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	world: J("<path d=\"M14.1 6.3 9.9 4.2a2 2 0 0 0-1.8 0L3.6 6.4A1 1 0 0 0 3 7.3v12.1a1 1 0 0 0 1.4.9l3.7-1.8a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.2a1 1 0 0 0 .6-.9V5.4a1 1 0 0 0-1.4-.9l-3.7 1.8a2 2 0 0 1-1.8 0Z\"/><path d=\"M15 6.8v14\"/><path d=\"M9 3.2v14\"/>"),
 	ruler: J("<path d=\"M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z\"/><path d=\"m14.5 12.5 2-2\"/><path d=\"m11.5 9.5 2-2\"/><path d=\"m8.5 6.5 2-2\"/><path d=\"m17.5 15.5 2-2\"/>"),
 	npc: J("<circle cx=\"12\" cy=\"5\" r=\"2.6\"/><path d=\"M12 8.2v6.3\"/><path d=\"M6.5 11.2 12 9l5.5 2.2\"/><path d=\"M8.5 21.5l3.5-7 3.5 7\"/>"),
+	nametag: J("<path d=\"M3 7h18v8H12l-3 3v-3H3Z\"/><path d=\"M7 10.5h6\"/>"),
 	flip: J("<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>"),
 	person: J("<circle cx=\"12\" cy=\"7\" r=\"4\"/><path d=\"M5.5 21a6.5 6.5 0 0 1 13 0\"/>"),
 	star: J("<path d=\"M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9Z\"/>"),
@@ -47079,6 +47085,11 @@ var uo = 6, fo = [
 			html: Y.center,
 			onclick: () => this.hooks.focus(e.x, e.y - 20)
 		}), q("button", {
+			class: `vt-btn vt-icononly${e.showName ? " vt-on" : ""}`,
+			title: e.showName ? "Nome em cima da cabeça: ligado" : "Nome em cima da cabeça: desligado",
+			html: Y.nametag,
+			onclick: () => this.toggleName(e)
+		}), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Virar (muda pra onde ele olha)",
 			html: Y.flip,
@@ -47095,6 +47106,9 @@ var uo = 6, fo = [
 			onclick: () => this.remove(e)
 		}));
 	}
+	toggleName(e) {
+		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
+	}
 	turn(e) {
 		this.state.checkpoint(), e.dir = fo[(fo.indexOf(e.dir) + 1) % fo.length], this.state.emit("npcs"), this.state.edited();
 	}
@@ -47106,7 +47120,8 @@ var uo = 6, fo = [
 				name: e.name,
 				role: e.role,
 				appearance: e.appearance,
-				dir: e.dir
+				dir: e.dir,
+				showName: e.showName
 			}
 		}), this.hooks.toast("Clique no novo lugar (Esc cancela)."), this.renderList();
 	}
@@ -47544,7 +47559,8 @@ function Do(e, t, n) {
 			appearance: a.appearance,
 			x: ko(Math.round(e.x), 0, t),
 			y: ko(Math.round(e.y), 0, n),
-			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down"
+			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
+			...e.showName === !0 ? { showName: !0 } : {}
 		});
 	}
 	return r;

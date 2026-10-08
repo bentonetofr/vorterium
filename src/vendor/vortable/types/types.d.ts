@@ -116,6 +116,8 @@ export interface ZoneNpc {
     x: number;
     y: number;
     dir: Dir;
+    /** Mostra o nome em cima da cabeça. Desligado por padrão. */
+    showName?: boolean;
 }
 /** Uma luz solta no mapa, em px; o brilho dos objetos vem do catálogo. */
 export interface ZoneLight {
