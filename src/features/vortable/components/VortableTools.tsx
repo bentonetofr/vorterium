@@ -8,13 +8,15 @@ import { useActiveChat } from '../../chat/ActiveChatContext'
 import { NotificationBell } from '../../activity/components/NotificationBell'
 import { NotificationPopup } from '../../activity/components/NotificationPopup'
 import { NotebookFab } from '../../notebook/components/NotebookFab'
+import { DocumentOverlay } from '../../mesa/documents/DocumentOverlay'
+import { DocumentsFab } from '../../mesa/documents/DocumentsFab'
 import { SheetFab } from './SheetFab'
 import { VortableFab } from './VortableFab'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { FabToasts } from '../../../shared/components/FabToasts'
 
 /**
- * Os botões flutuantes do site (sino, dados, chat e o caderno de quem tem um)
+ * Os botões flutuantes do site (sino, dados, chat, o caderno de quem tem um e o livro de documentos do mestre)
  * dentro do Vortable, no canto inferior direito (como no resto do site). O caderno só aparece pra
  * quem tem caderno: o NotebookFab já confere isso na conta.
  */
@@ -53,6 +55,7 @@ export function VortableTools() {
   return (
     <>
       <CritWolf />
+      <DocumentOverlay />
       <div className="dice-fab-wrapper">
         <FabToasts>
           <NotificationPopup />
@@ -63,6 +66,7 @@ export function VortableTools() {
         <DiceFab />
         <ChatFab />
         <NotebookFab />
+        <DocumentsFab />
         <ChatMessagePopup />
       </div>
     </>
