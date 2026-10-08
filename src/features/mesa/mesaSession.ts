@@ -134,6 +134,13 @@ function parseSpectate(raw: unknown): SpectateRules {
   }
 }
 
+/**
+ * Sessões do mestre na mesma campanha (a do layout e a da página do Vortable): dividem o palco,
+ * senão cada uma mandaria aos jogadores o seu (ex.: um documento posto pelo botão do livro
+ * apagaria o "ao vivo" da página do Vortable).
+ */
+const MASTER_SESSIONS = new Map<string, Set<MesaSession>>()
+
 export class MesaSession {
   private readonly opts: SessionOptions
   private readonly myId: string
@@ -147,6 +154,22 @@ export class MesaSession {
     this.opts = opts
     this.myId = `${opts.userId}:${newId()}`
     if (opts.resume && opts.isMaster) this.snap = { ...EMPTY_SNAPSHOT, stage: opts.resume, live: Boolean(opts.resume.liveId) }
+    if (opts.isMaster) {
+      let set = MASTER_SESSIONS.get(opts.campaignId)
+      if (!set) MASTER_SESSIONS.set(opts.campaignId, (set = new Set()))
+      if (opts.resume) for (const s of set) s.adopt(opts.resume)
+      else { const other = [...set][0]; if (other) this.snap = { ...EMPTY_SNAPSHOT, stage: other.snap.stage, live: other.snap.live } }
+      set.add(this)
+    }
+  }
+
+  /** Outra sessão do mesmo mestre mudou o palco: acompanha (sem mandar nada aos jogadores). */
+  private adopt(stage: MesaStage) {
+    this.update({ stage })
+  }
+
+  private mirror() {
+    for (const s of MASTER_SESSIONS.get(this.opts.campaignId) ?? []) if (s !== this) s.adopt(this.snap.stage)
   }
 
   get snapshot(): MesaSnapshot {
@@ -212,13 +235,15 @@ export class MesaSession {
   dispose(): void {
     if (this.disposed) return
     // numa passagem (telinha ↔ página do Vortable) a sessão continua no ar: não avisa que acabou
-    if (this.opts.isMaster && this.snap.stage.liveId && !peekHandoff(this.opts.campaignId)) {
+    if (this.opts.isMaster && this.opts.announce && this.snap.stage.liveId && !peekHandoff(this.opts.campaignId)) {
       const ended = this.snap.stage.liveId
       this.snap = { ...this.snap, stage: EMPTY_STAGE, live: false }
+      this.mirror()
       this.sendState()
       this.sendAviso('ended', { liveId: ended })
     }
     this.disposed = true
+    MASTER_SESSIONS.get(this.opts.campaignId)?.delete(this)
     if (this.channel) void supabase.removeChannel(this.channel)
     if (this.aviso) void supabase.removeChannel(this.aviso)
     this.channel = null
@@ -249,10 +274,12 @@ export class MesaSession {
     if (on) {
       const stage = { ...this.snap.stage, liveId: newId() }
       this.update({ stage })
+      this.mirror()
       this.sendState()
       this.sendAviso('live', { liveId: stage.liveId, masterName: this.opts.name })
     } else {
       this.update({ stage: { ...this.snap.stage, liveId: null, scene: GAME_SCENE } })
+      this.mirror()
       this.sendState()
       this.sendAviso('ended', { liveId })
     }
@@ -261,6 +288,7 @@ export class MesaSession {
   private setStage(patch: Partial<MesaStage>) {
     if (!this.opts.isMaster) return
     this.update({ stage: { ...this.snap.stage, ...patch } })
+    this.mirror()
     this.sendState()
   }
 

@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 
 const EVENT = 'vorterium:floating-open'
 
-export type FloatingPanelId = 'chat' | 'dice' | 'bell' | 'notes' | 'control'
+export type FloatingPanelId = 'chat' | 'dice' | 'bell' | 'notes' | 'control' | 'docs'
 
 let openPanel: FloatingPanelId | null = null
 const listeners = new Set<() => void>()

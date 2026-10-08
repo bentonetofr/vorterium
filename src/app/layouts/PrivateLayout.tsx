@@ -22,6 +22,8 @@ import { RulebookHostProvider } from '../../features/rulebook/RulebookHost'
 import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
 import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { VortableFab } from '../../features/vortable/components/VortableFab'
+import { DocumentOverlay } from '../../features/mesa/documents/DocumentOverlay'
+import { DocumentsFab } from '../../features/mesa/documents/DocumentsFab'
 import { VortablePip } from '../../features/vortable/components/VortablePip'
 import { usePip } from '../../features/vortable/pip/pipStore'
 import { Presence } from '../../shared/components/Presence'
@@ -278,6 +280,7 @@ function PrivateLayoutContent() {
     </div>
     <CritWolf />
     <VortablePip />
+    <DocumentOverlay />
     <LivroHost />
     <TorreHost />
     <div className="dice-fab-wrapper">
@@ -292,6 +295,7 @@ function PrivateLayoutContent() {
       <DiceFab />
       <ChatFab />
       <NotebookFab />
+      <DocumentsFab />
       <ChatMessagePopup />
     </div>
     </>

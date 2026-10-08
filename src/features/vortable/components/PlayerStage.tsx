@@ -28,7 +28,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   // o mundo que o mestre abriu: se ele abrir outro, o jogo recomeça nele
   const { active, ready } = useVortableWorlds()
   const allowSpectate = stage.spectate.allow
-  const covered = stage.scene.kind !== 'game'
+  const covered = stage.scene.kind !== 'game' || !!stage.document
   const coveredRef = useRef(covered)
   const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void } | null>(null)
   useEffect(() => {
