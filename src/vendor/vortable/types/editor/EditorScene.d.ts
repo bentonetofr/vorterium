@@ -180,13 +180,9 @@ export declare class EditorScene extends Phaser.Scene {
     brushBy(d: number): void;
     private rulerGfx;
     private rulerTexts;
-    /** Régua sendo riscada agora. */
+    /** A régua do clique que está apertado (some ao soltar). */
     private rulerLive;
-    /** Ponta de régua já feita sendo arrastada (end 0 = início, 1 = fim). */
-    private rulerEdit;
-    /** A ponta de régua sob o mouse (até 10 px de tela), pra ajustar. */
-    private rulerEndAt;
-    /** Move a ponta que está sendo arrastada; Shift trava o ângulo em múltiplos de 45°. */
+    /** Move a ponta solta da régua; Shift trava o ângulo em múltiplos de 45°. */
     private rulerMove;
     private rulerText;
     /** Desenha as réguas: linha, marcas a cada metro (ou 2, 5, 10... conforme o zoom), guias em L e o rótulo com medida e direção. */
