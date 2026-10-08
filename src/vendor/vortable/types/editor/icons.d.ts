@@ -46,6 +46,8 @@ export declare const ICONS: {
     redo: string;
     play: string;
     stop: string;
+    menu: string;
+    close: string;
     plus: string;
     open: string;
     save: string;

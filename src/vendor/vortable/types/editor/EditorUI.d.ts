@@ -80,6 +80,11 @@ export declare class EditorUI {
     destroy(): void;
     private iconBtn;
     private buildTop;
+    /** Gaveta da esquerda: nome da zona e ações em cima, painel de terrenos/objetos embaixo. */
+    private buildDrawer;
+    /** Canto do palco com a gaveta fechada: abre o painel, salva e testa. */
+    private buildQuick;
+    private setDrawer;
     private buildTools;
     /** Controle de zoom no canto do palco: −, régua, porcentagem (volta a 100%), +, enquadrar. */
     private buildZoomBar;

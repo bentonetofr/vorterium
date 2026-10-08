@@ -10,11 +10,10 @@ import { NotificationPopup } from '../../activity/components/NotificationPopup'
 import { NotebookFab } from '../../notebook/components/NotebookFab'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { FabToasts } from '../../../shared/components/FabToasts'
-import './VortableTools.css'
 
 /**
  * Os botões flutuantes do site (sino, dados, chat e o caderno de quem tem um)
- * dentro do Vortable, no canto inferior ESQUERDO. O caderno só aparece pra
+ * dentro do Vortable, no canto inferior direito (como no resto do site). O caderno só aparece pra
  * quem tem caderno: o NotebookFab já confere isso na conta.
  */
 export function VortableTools() {
@@ -52,7 +51,7 @@ export function VortableTools() {
   return (
     <>
       <CritWolf />
-      <div className="dice-fab-wrapper vortable-tools">
+      <div className="dice-fab-wrapper">
         <FabToasts>
           <NotificationPopup />
         </FabToasts>
