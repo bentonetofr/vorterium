@@ -7,7 +7,7 @@ import './WorldsPanel.css'
 
 /** Mundos prontos que vêm com o site (viram um mundo seu ao importar). */
 const TEMPLATES = [
-  { id: 'torvallen', label: 'TORVALLEN', text: 'Grande Biblioteca do palácio (1 zona)', url: `${import.meta.env.BASE_URL}vortable/maps/torvallen.mundo.json` },
+  { id: 'torvallen', label: 'TORVALLEN', text: 'Grande Biblioteca do palácio: 4 andares, saguão e seção proibida (6 zonas)', url: `${import.meta.env.BASE_URL}vortable/maps/torvallen.mundo.json` },
 ]
 
 interface WorldsPanelProps {
