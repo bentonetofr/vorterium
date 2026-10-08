@@ -27,6 +27,8 @@ export interface WorldSceneData {
         x: number;
         y: number;
     };
+    /** Câmera do mestre: sem boneco, câmera livre, só observa os jogadores. */
+    watch?: boolean;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;
@@ -55,6 +57,24 @@ export declare class WorldScene extends Phaser.Scene {
     private inputLocked;
     /** Trava/destrava o teclado do boneco (cena do mestre por cima da tela). */
     setInputLocked(locked: boolean): void;
+    private following;
+    private startWatch;
+    /** Troca a zona que o observador está vendo. */
+    watchZone(id: string): Promise<void>;
+    /** Enquadra a zona inteira na tela. */
+    watchFit(): void;
+    watchZoom(factor: number): void;
+    watchFocus(x: number, y: number): void;
+    /** A câmera acompanha um jogador (null solta). */
+    watchFollow(id: string | null): void;
+    /** Quem está na sala e onde (pra lista do mestre). */
+    watchPeers(): {
+        id: string;
+        name: string;
+        zone: string | null;
+        x: number;
+        y: number;
+    }[];
     /** O mestre levou este jogador pra (x, y) de uma zona. */
     private teleportTo;
     /** Troca a aparência do jogador sem recarregar a cena. */

@@ -46,7 +46,8 @@ const TOPICS: Topic[] = [
     steps: [
       'Na sub-aba Mesa, "Entrar no Vortable" abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Mestre: entre e clique em "Iniciar sessão" pra liberar os jogadores e avisar todos. Jogador: o botão fica bloqueado até o mestre iniciar; na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre).',
       'Mestre, Editar mundo: pinte terreno, ponha objetos, cômodos, luzes, clima e sons, e ligue as zonas por portas e saídas. Salva na campanha.',
-      'Mestre, Testar: anda pelo mundo com o seu boneco. Personagens: cria bonecos, inclusive de NPCs.',
+      'Mestre, Testar (botão amarelo do editor): anda pelo mundo com o seu boneco, junto com os jogadores. Personagens: cria bonecos, inclusive de NPCs.',
+      'Mestre, Controle (durante a sessão): veja o mapa como os jogadores, troque de zona, enquadre o mapa inteiro, siga um jogador e mude hora, tempo e vento ao vivo pra todos, sem recarregar.',
       'Mestre, Jogadores: veja o boneco de cada jogador, troque por outro (até um que você criou) ou apague pra ele criar de novo.',
     ],
   },

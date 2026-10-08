@@ -75,6 +75,8 @@ export class VortableNet {
   /** Nome mostrado sobre o boneco (o do personagem na ficha); pode mudar com o jogo aberto. */
   name: string
   status: NetStatus = 'off'
+  /** Mestre: hora/tempo/vento ao vivo por zona ('*' = todas), entregues a quem entra. */
+  private readonly envs = new Map<string, unknown>()
   private readonly peers = new Map<string, Peer>()   // mestre: um por jogador
   private link: Peer | null = null                    // jogador: a ligação com o mestre
   private live = false
@@ -92,6 +94,9 @@ export class VortableNet {
 
   /** Manda uma mensagem do jogo (mestre: pra todos; jogador: pro mestre, que repassa). */
   send(msg: unknown) {
+    if (this.opts.isMaster && typeof msg === 'object' && msg !== null && (msg as { t?: unknown }).t === 'env') {
+      this.envs.set(String((msg as { zone?: unknown }).zone ?? '*'), msg)
+    }
     const data = JSON.stringify(msg)
     if (this.opts.isMaster) {
       for (const p of this.peers.values()) if (p.dc?.readyState === 'open') p.dc.send(data)
@@ -104,6 +109,15 @@ export class VortableNet {
   sendTo(id: string, msg: unknown) {
     const dc = this.peers.get(id)?.dc
     if (dc?.readyState === 'open') dc.send(JSON.stringify(msg))
+  }
+
+  /** Mestre: os ajustes ao vivo que já valem (pra a câmera do mestre mostrar de novo ao remontar). */
+  envList(): unknown[] {
+    return [...this.envs.values()]
+  }
+
+  private sendEnvs(id: string) {
+    for (const env of this.envs.values()) this.sendTo(id, env)
   }
 
   /** Mestre: tira o jogador da sessão. */
@@ -185,7 +199,7 @@ export class VortableNet {
 
     const dc = pc.createDataChannel('vortable')
     peer.dc = dc
-    dc.onopen = () => { this.onChange?.(); this.onOpen?.() }
+    dc.onopen = () => { this.sendEnvs(id); this.onChange?.(); this.onOpen?.() }
     dc.onmessage = (e) => this.fromPeer(id, String(e.data))
     dc.onclose = () => { if (this.peers.get(id) === peer) this.closePeer(id) }
 
@@ -233,6 +247,8 @@ export class VortableNet {
     let msg: unknown
     try { msg = JSON.parse(data) } catch { return }
     if (typeof msg !== 'object' || msg === null || 'sys' in msg) return
+    // jogo recém-montado perguntando quem está aí: ele também precisa da hora/tempo do mestre
+    if ((msg as { t?: unknown }).t === 'who') this.sendEnvs(id)
     this.sink?.(msg)
     for (const [other, p] of this.peers) if (other !== id && p.dc?.readyState === 'open') p.dc.send(data)
   }

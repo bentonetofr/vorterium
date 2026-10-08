@@ -4,14 +4,15 @@ import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shar
 import { createCharacterStorage, createWorldStorage, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
 import { EngineStage } from './EngineStage'
 import { PlayersManager } from './PlayersManager'
+import { LiveControl } from './LiveControl'
 import { SceneBar } from './SceneBar'
 import { useVortableNet } from '../net/VortableNetProvider'
 
-type Tab = 'editar' | 'testar' | 'personagens' | 'jogadores'
+type Tab = 'editar' | 'controle' | 'personagens' | 'jogadores'
 
-const TABS: Tab[] = ['editar', 'testar', 'personagens', 'jogadores']
+const TABS: Tab[] = ['editar', 'controle', 'personagens', 'jogadores']
 const LABELS: Record<Tab, string> = {
-  editar: 'Editar mundo', testar: 'Testar', personagens: 'Personagens', jogadores: 'Jogadores',
+  editar: 'Editar mundo', controle: 'Controle', personagens: 'Personagens', jogadores: 'Jogadores',
 }
 
 /** Mestre: editor do mundo, teste como boneco, criador de personagens e gerência dos jogadores. */
@@ -44,7 +45,7 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
       {tab === 'editar' && (
         <EngineStage
           key="editar"
-          deps={[campaign.id, userId]}
+          deps={[campaign.id, userId, vnet.net]}
           mount={async (engine, host, isDead) => {
             const [worlds, characters] = await Promise.all([
               createWorldStorage(campaign.id, campaign.name),
@@ -55,6 +56,7 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
             const [last] = await worlds.list()
             const zone = last ? (await worlds.load(last.id)) ?? undefined : undefined
             if (isDead()) return () => {}
+            const net = vnet.net
             const game = engine.mountVortable(host, {
               mode: 'edit',
               zone,
@@ -62,30 +64,7 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
               onEditCharacter: () => selectTab('personagens'),
-            })
-            return game.destroy
-          }}
-        />
-      )}
-
-      {tab === 'testar' && (
-        <EngineStage
-          key="testar"
-          deps={[campaign.id, userId, vnet.net]}
-          mount={async (engine, host, isDead) => {
-            const [worlds, characters] = await Promise.all([
-              createWorldStorage(campaign.id, campaign.name),
-              createCharacterStorage(campaign.id, userId),
-            ])
-            const appearance = await resolveAppearance(characters)
-            if (isDead()) return () => {}
-            const net = vnet.net
-            const game = engine.mountVortable(host, {
-              mode: 'play',
-              appearance,
-              assetBase: VORTABLE_ASSETS,
-              storage: worlds,
-              // no teste o mestre anda no mundo junto com os jogadores
+              // o botão Testar do editor põe o mestre no mundo, junto com os jogadores
               net: net ? { selfId: userId, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
             })
             if (net) {
@@ -99,6 +78,8 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
           }}
         />
       )}
+
+      {tab === 'controle' && <LiveControl key="controle" campaign={campaign} userId={userId} />}
 
       {tab === 'personagens' && (
         <EngineStage

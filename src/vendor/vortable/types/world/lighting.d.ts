@@ -50,6 +50,12 @@ export declare class Lighting {
     enabled: boolean;
     /** Hora forçada (prévia do editor); null = a da zona. */
     hourOverride: number | null;
+    /** Ajuste ao vivo do mestre (hora, tempo, vento); cada campo null = o padrão da zona. */
+    liveEnv: {
+        hour: number | null;
+        weather: string | null;
+        wind: number | null;
+    } | null;
     /** Deslocamento do relógio do mundo, em ms (o teste do editor começa na hora da prévia). */
     timeOffset: number;
     /** Bonecos que fazem sombra. */
