@@ -5,6 +5,7 @@ import {
   type CampaignCharacter,
 } from '../services/vortableService'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { useVortableNet } from '../net/VortableNetProvider'
 import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import './SceneBar.css'
@@ -19,6 +20,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   const [error, setError] = useState<string | null>(null)
   // cena do mestre por cima do jogo (preto, pausa, imagem, título)
   const { stage } = useMesaStream()
+  const vnet = useVortableNet()
   const covered = stage.scene.kind !== 'game'
   const coveredRef = useRef(covered)
   const gameRef = useRef<{ setInputLocked(locked: boolean): void } | null>(null)
@@ -42,6 +44,14 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
     return watchCharacters(campaign.id, () => { void refresh() })
   }, [campaign.id, refresh])
 
+  if (vnet.kicked) {
+    return (
+      <div className="vortable-stage"><div className="vortable-stage__cover" role="alert">
+        <span>O mestre tirou você da sessão.</span>
+        <button className="btn btn-ghost" onClick={vnet.retry}>Entrar de novo</button>
+      </div></div>
+    )
+  }
   if (error) {
     return (
       <div className="vortable-stage"><div className="vortable-stage__cover" role="alert">
@@ -83,7 +93,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
     <div className="vortable-player-wrap">
       <EngineStage
         key={mine.id}
-        deps={[campaign.id, userId, mine.id, JSON.stringify(mine.appearance)]}
+        deps={[campaign.id, userId, mine.id, JSON.stringify(mine.appearance), vnet.net]}
         mount={async (engine, host, isDead) => {
           const worlds = await createWorldStorage(campaign.id, campaign.name)
           const data = await engine.loadCharacterData(VORTABLE_ASSETS)
@@ -93,11 +103,18 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
             appearance: engine.normalizeAppearance(data, mine.appearance),
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
+            net: vnet.net ? { selfId: userId, name: vnet.name, send: (m) => vnet.net?.send(m) } : undefined,
           })
           game.setInputLocked(coveredRef.current)
           gameRef.current = game
+          const net = vnet.net
+          if (net) {
+            net.sink = (m) => game.receive(m)
+            net.onOpen = () => game.resync()
+          }
           return () => {
             if (gameRef.current === game) gameRef.current = null
+            if (net && net.sink) { net.sink = null; net.onOpen = null }
             game.destroy()
           }
         }}

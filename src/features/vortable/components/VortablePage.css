@@ -60,3 +60,18 @@
 }
 .vortable-page .vortable-msg { padding: var(--space-5, 20px); }
 .vortable-page .vortable-players { padding: var(--space-4, 16px) var(--space-5, 20px); overflow: auto; flex: 1; }
+
+.vortable-page__net {
+  flex: none;
+  padding: 2px 10px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: 1px solid var(--border-dim);
+  border-radius: 999px;
+}
+.vortable-page__net--online { color: var(--success); border-color: var(--success); }
+.vortable-page__net--connecting { color: var(--warning); border-color: var(--warning); }

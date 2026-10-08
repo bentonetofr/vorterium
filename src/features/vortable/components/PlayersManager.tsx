@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import type { CampaignMemberWithProfile, CampaignWithRole } from '../../../shared/types'
 import { getCampaignMembers } from '../../members/services/memberService'
 import {
-  assignCharacter, deleteCharacter, listCampaignCharacters, watchCharacters, type CampaignCharacter,
+  assignCharacter, createWorldStorage, deleteCharacter, listCampaignCharacters, watchCharacters, type CampaignCharacter,
 } from '../services/vortableService'
+import { useVortableNet } from '../net/VortableNetProvider'
 import { CharacterFace } from './CharacterFace'
 
 /** Mestre: quem joga com qual boneco, troca, apaga e bonecos sem dono. */
@@ -12,6 +13,32 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole }) {
   const [characters, setCharacters] = useState<CampaignCharacter[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  const vnet = useVortableNet()
+  const [zones, setZones] = useState<{ id: string; name: string }[]>([])
+
+  // zonas do mundo (pra levar um jogador até uma delas)
+  useEffect(() => {
+    let dead = false
+    createWorldStorage(campaign.id, campaign.name)
+      .then((worlds) => worlds.list())
+      .then((list) => { if (!dead) setZones(list.map((z) => ({ id: z.id, name: z.name }))) })
+      .catch(() => {})
+    return () => { dead = true }
+  }, [campaign.id, campaign.name])
+
+  /** Leva o jogador (conectado) ao início de uma zona. */
+  async function teleport(playerId: string, zoneId: string) {
+    if (!zoneId) return
+    setError(null)
+    try {
+      const worlds = await createWorldStorage(campaign.id, campaign.name)
+      const zone = await worlds.load(zoneId)
+      if (!zone) throw new Error('Essa zona não existe mais.')
+      vnet.net?.sendTo(playerId, { t: 'teleport', zone: zone.id, x: zone.spawn.x, y: zone.spawn.y })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não deu pra levar o jogador.')
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -66,13 +93,37 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole }) {
       <ul className="vortable-players__list">
         {players.map((p) => {
           const mine = controlledBy(p.user_id)
+          const online = vnet.peers.some((x) => x.id === p.user_id && x.connected)
           return (
             <li key={p.user_id} className="vortable-player">
               {mine ? <CharacterFace appearance={mine.appearance} /> : <span className="vortable-face vortable-face--empty" />}
               <div className="vortable-player__info">
-                <strong>{p.profile.display_name}</strong>
+                <strong>
+                  <span className={`vortable-dot${online ? ' vortable-dot--on' : ''}`} title={online ? 'Online no Vortable' : 'Fora do Vortable'} />
+                  {p.profile.display_name}
+                </strong>
                 <span>{mine ? mine.name : 'Ainda sem boneco'}</span>
               </div>
+              {online && (
+                <>
+                  <select
+                    className="vortable-player__select"
+                    aria-label={`Levar ${p.profile.display_name} a uma zona`}
+                    value=""
+                    onChange={(e) => void teleport(p.user_id, e.target.value)}
+                  >
+                    <option value="">Levar a…</option>
+                    {zones.map((z) => <option key={z.id} value={z.id}>{z.name}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => { if (confirm(`Tirar ${p.profile.display_name} da sessão?`)) vnet.net?.kick(p.user_id) }}
+                  >
+                    Expulsar
+                  </button>
+                </>
+              )}
               <select
                 className="vortable-player__select"
                 aria-label={`Boneco de ${p.profile.display_name}`}

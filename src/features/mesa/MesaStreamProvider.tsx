@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { EMPTY_SNAPSHOT, GAME_SCENE, MesaSession, type MesaScene, type MesaSnapshot } from './mesaSession'
@@ -16,6 +16,8 @@ interface MesaStreamValue extends MesaSnapshot {
   /** A aba Mesa está aberta agora (o aviso de "ao vivo" não aparece por cima dela). */
   viewing:      boolean
   setViewing:   (v: boolean) => void
+  /** Conversa de conexão do multiplayer (WebRTC) pelo canal da Mesa. */
+  signaling:    { send: (payload: Record<string, unknown>) => void; subscribe: (handler: (payload: Record<string, unknown>) => void) => () => void }
   /** Mestre: troca a cena que os jogadores veem (vale na hora pra todos). */
   setScene:     (scene: MesaScene) => void
   /** Mestre: põe uma imagem da galeria como cena (gera o link pros jogadores). */
@@ -70,6 +72,22 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
     return () => window.removeEventListener('pagehide', onUnload)
   }, [])
 
+  const signaling = useMemo(() => ({
+    send: (payload: Record<string, unknown>) => sessionRef.current?.signal(payload),
+    // a sessão pode ainda não existir (conecta num efeito): espera ela aparecer
+    subscribe: (handler: (payload: Record<string, unknown>) => void) => {
+      let off: (() => void) | null = null
+      let timer = 0
+      const attach = () => {
+        const session = sessionRef.current
+        if (session) { off = session.onSignal(handler); return }
+        timer = window.setTimeout(attach, 200)
+      }
+      attach()
+      return () => { window.clearTimeout(timer); off?.() }
+    },
+  }), [])
+
   const setScene = useCallback((scene: MesaScene) => sessionRef.current?.setScene(scene), [])
 
   const showImage = useCallback(async (image: { id: string; path: string; name: string }) => {
@@ -96,6 +114,7 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
     isMaster,
     viewing,
     setViewing,
+    signaling,
     setScene,
     showImage,
     hideImage,

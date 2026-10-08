@@ -41636,8 +41636,12 @@ var Wt = class {
 		} else this.play("idle");
 		this.sprite.setDepth(this.sprite.y);
 	}
+	get animName() {
+		return this.current;
+	}
+	current = "idle";
 	play(e) {
-		this.sprite.anims.play(`${this.charKey}:${e}:${this.dir}`, !0);
+		this.current = e, this.sprite.anims.play(`${this.charKey}:${e}:${this.dir}`, !0);
 	}
 };
 function Yt() {
@@ -43226,42 +43230,112 @@ function Gr(e, t, n) {
 	return i.putImageData(a, 0, 0), r;
 }
 //#endregion
-//#region src/engine/audio/prefs.ts
-var Kr = "vortable:sound", qr = {
+//#region src/engine/net/remotes.ts
+var Kr = 160, qr = 8e3, Jr = class {
+	scene;
+	hub;
+	assetBase;
+	zoneId;
+	avatars = /* @__PURE__ */ new Map();
+	constructor(e, t, n, r) {
+		this.scene = e, this.hub = t, this.assetBase = n, this.zoneId = r, e.events.once(c.default.Scenes.Events.SHUTDOWN, () => this.destroy());
+	}
+	get sprites() {
+		return [...this.avatars.values()].filter((e) => e.sprite?.visible).map((e) => e.sprite);
+	}
+	update(e) {
+		let t = this.scene.time.now;
+		for (let [e, n] of this.hub.peers) {
+			let r = JSON.stringify(n.hello.appearance), i = this.avatars.get(e);
+			i || (i = {
+				id: e,
+				texKey: `char:r:${e}`,
+				sig: "",
+				appearance: n.hello.appearance,
+				building: !1,
+				sprite: null,
+				shadow: null,
+				label: null,
+				name: n.hello.name,
+				state: null,
+				stateAt: 0,
+				placed: !1,
+				playing: ""
+			}, this.avatars.set(e, i)), i.name = n.hello.name, i.label && i.label.text !== i.name && i.label.setText(i.name), n.state && n.state !== i.state && (i.state = n.state, i.stateAt = t), i.sig !== r && !i.building && this.build(i, n.hello.appearance, r);
+		}
+		for (let [e, t] of this.avatars) this.hub.peers.has(e) || (this.drop(t), this.avatars.delete(e));
+		let n = 1 - Math.exp(-14 * e);
+		for (let e of this.avatars.values()) {
+			let { sprite: r, shadow: i, label: a, state: o } = e;
+			if (!r || !i || !a || !o) continue;
+			let s = o.zone === this.zoneId && t - e.stateAt < qr;
+			if (r.setVisible(s), i.setVisible(s), a.setVisible(s), !s) {
+				e.placed = !1;
+				continue;
+			}
+			!e.placed || c.default.Math.Distance.Between(r.x, r.y, o.x, o.y) > Kr ? (r.setPosition(o.x, o.y), e.placed = !0) : r.setPosition(r.x + (o.x - r.x) * n, r.y + (o.y - r.y) * n), r.setDepth(r.y), i.setPosition(r.x, r.y - 1).setDepth(r.depth - .5), a.setPosition(r.x, r.y - 66).setDepth(1e8);
+			let l = `${e.texKey}:${o.anim}:${o.dir}`;
+			e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l);
+		}
+	}
+	async build(e, t, n) {
+		e.building = !0;
+		try {
+			await Pt(this.scene, e.texKey, this.assetBase, t);
+		} catch (t) {
+			console.error("[vortable] boneco de outro jogador não carregou", t), e.building = !1, e.sig = n;
+			return;
+		}
+		e.building = !1, this.scene.sys.isActive() && this.avatars.get(e.id) === e && (e.sig = n, e.appearance = t, e.playing = "", e.sprite || (e.sprite = this.scene.add.sprite(0, 0, `${e.texKey}:idle`, 0).setOrigin(.5, 62 / 64).setVisible(!1), e.shadow = this.scene.add.image(0, 0, Cr).setScale(.75, .6).setAlpha(.32).setVisible(!1), e.label = this.scene.add.text(0, 0, e.name, {
+			fontFamily: "system-ui",
+			fontSize: "9px",
+			color: "#ffe9c2",
+			stroke: "#000",
+			strokeThickness: 3
+		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), e.label?.setText(e.name));
+	}
+	drop(e) {
+		e.sprite?.destroy(), e.shadow?.destroy(), e.label?.destroy(), e.sprite = e.shadow = e.label = null;
+	}
+	destroy() {
+		for (let e of this.avatars.values()) this.drop(e);
+		this.avatars.clear();
+	}
+}, Yr = "vortable:sound", Xr = {
 	master: .8,
 	muted: !1,
 	steps: .7,
 	editor: !1
-}, Jr = null;
-function Yr() {
-	if (Jr) return Jr;
+}, Zr = null;
+function Qr() {
+	if (Zr) return Zr;
 	try {
-		Jr = {
-			...qr,
-			...JSON.parse(localStorage.getItem(Kr) ?? "{}")
+		Zr = {
+			...Xr,
+			...JSON.parse(localStorage.getItem(Yr) ?? "{}")
 		};
 	} catch {
-		Jr = { ...qr };
+		Zr = { ...Xr };
 	}
-	return Jr;
+	return Zr;
 }
-function Xr(e) {
-	Jr = {
-		...Yr(),
+function $r(e) {
+	Zr = {
+		...Qr(),
 		...e
 	};
 	try {
-		localStorage.setItem(Kr, JSON.stringify(Jr));
+		localStorage.setItem(Yr, JSON.stringify(Zr));
 	} catch {}
-	return Jr;
+	return Zr;
 }
 //#endregion
 //#region src/engine/audio/engine.ts
-var Zr = /* @__PURE__ */ new WeakMap(), Qr = "./assets/";
-function $r(e) {
-	Qr = e;
+var ei = /* @__PURE__ */ new WeakMap(), ti = "./assets/";
+function ni(e) {
+	ti = e;
 }
-var ei = class e {
+var ri = class e {
 	ctx;
 	master;
 	dry;
@@ -43272,9 +43346,9 @@ var ei = class e {
 	clips = /* @__PURE__ */ new Map();
 	static of(t) {
 		let n = t.game;
-		if (Zr.has(n)) return Zr.get(n);
+		if (ei.has(n)) return ei.get(n);
 		let r = t.sound.context, i = r ? new e(r) : null;
-		return Zr.set(n, i), i;
+		return ei.set(n, i), i;
 	}
 	constructor(e) {
 		this.ctx = e, this.master = e.createGain(), this.master.connect(e.destination), this.dry = e.createGain(), this.dry.connect(this.master), this.reverb = e.createConvolver(), this.reverbSend = e.createGain(), this.reverbSend.gain.value = 0, this.reverbSend.connect(this.reverb), this.reverb.connect(this.master), this.applyPrefs();
@@ -43286,7 +43360,7 @@ var ei = class e {
 		return this.ctx.state === "running";
 	}
 	applyPrefs() {
-		let e = Yr();
+		let e = Qr();
 		this.master.gain.setTargetAtTime(e.muted ? 0 : e.master, this.now, .05);
 	}
 	setRoom(e) {
@@ -43304,9 +43378,9 @@ var ei = class e {
 	}
 	clip(e) {
 		let t = this.clips.get(e);
-		return t || (t = fetch(`${Qr}audio/${e}.mp3`).then((e) => e.ok ? e.arrayBuffer() : Promise.reject(Error(String(e.status)))).then((e) => this.ctx.decodeAudioData(e)).then((e) => ({
+		return t || (t = fetch(`${ti}audio/${e}.mp3`).then((e) => e.ok ? e.arrayBuffer() : Promise.reject(Error(String(e.status)))).then((e) => this.ctx.decodeAudioData(e)).then((e) => ({
 			buffer: e,
-			...ti(e)
+			...ii(e)
 		})).catch((t) => (console.warn("[vortable] som não carregou:", e, t), null)), this.clips.set(e, t)), t;
 	}
 	play(e, t, n = 1, r = 1, i = this.now) {
@@ -43335,7 +43409,7 @@ var ei = class e {
 		}
 	}
 };
-function ti(e) {
+function ii(e) {
 	let t = e.getChannelData(0), n = 8e-4, r = 0, i = t.length - 1;
 	for (; r < t.length - 1 && Math.abs(t[r]) < n;) r++;
 	for (; i > r && Math.abs(t[i]) < n;) i--;
@@ -43346,7 +43420,7 @@ function ti(e) {
 }
 //#endregion
 //#region src/engine/audio/ambience.ts
-var ni = [
+var ai = [
 	{
 		id: "forest",
 		label: "Floresta",
@@ -43422,7 +43496,7 @@ var ni = [
 		label: "Tocha",
 		icon: "torch"
 	}
-], ri = {
+], oi = {
 	forest: ["amb/forest-day", "amb/forest-night"],
 	spooky: ["amb/spooky"],
 	wind: ["amb/wind"],
@@ -43437,7 +43511,7 @@ var ni = [
 	cave: ["amb/cave"],
 	fire: ["amb/fire"],
 	torch: ["amb/torch"]
-}, ii = (e, t) => e + Math.random() * (t - e), ai = class {
+}, si = (e, t) => e + Math.random() * (t - e), ci = class {
 	e;
 	id;
 	out;
@@ -43446,7 +43520,7 @@ var ni = [
 	sources = [];
 	parts = [];
 	current = 0;
-	nextThunder = ii(4, 12);
+	nextThunder = si(4, 12);
 	thunder;
 	level = 0;
 	constructor(e, t) {
@@ -43458,7 +43532,7 @@ var ni = [
 			e.clip("fx/thunder").then((e) => this.thunder = e);
 			return;
 		}
-		for (let t of ri[this.id]) {
+		for (let t of oi[this.id]) {
 			let n = e.gain(+!t.endsWith("night"));
 			n.connect(this.out), this.parts.push(n), e.clip(t).then((t) => {
 				if (!t || !this.out) return;
@@ -43472,7 +43546,7 @@ var ni = [
 		let n = (n) => {
 			if (!n || !this.muffle) return;
 			let r = this.e.filter("lowpass", 9e3 - e * 8e3, .5);
-			r.connect(this.muffle), this.e.play(n, r, t * (1 - e * .55), ii(.82, 1.08) - e * .12);
+			r.connect(this.muffle), this.e.play(n, r, t * (1 - e * .55), si(.82, 1.08) - e * .12);
 		};
 		this.thunder === void 0 ? this.e.clip("fx/thunder").then(n) : n(this.thunder);
 	}
@@ -43483,7 +43557,7 @@ var ni = [
 			this.build();
 		}
 		let r = n.now;
-		this.out.gain.setTargetAtTime(this.id === "thunder" ? 1 : this.current, r, .15), this.muffle.frequency.setTargetAtTime(t.muffled ? 700 : 18e3, r, .3), this.panner.pan.setTargetAtTime(t.pan, r, .3), this.id === "forest" && this.parts.length === 2 && (this.parts[0].gain.setTargetAtTime(t.day, r, 1), this.parts[1].gain.setTargetAtTime(1 - t.day, r, 1)), this.id === "thunder" && this.current > .01 && n.running && (this.nextThunder -= e, this.nextThunder <= 0 && (this.nextThunder = ii(10, 28) / Math.max(.3, this.current), this.strike(ii(.5, .95), this.current)));
+		this.out.gain.setTargetAtTime(this.id === "thunder" ? 1 : this.current, r, .15), this.muffle.frequency.setTargetAtTime(t.muffled ? 700 : 18e3, r, .3), this.panner.pan.setTargetAtTime(t.pan, r, .3), this.id === "forest" && this.parts.length === 2 && (this.parts[0].gain.setTargetAtTime(t.day, r, 1), this.parts[1].gain.setTargetAtTime(1 - t.day, r, 1)), this.id === "thunder" && this.current > .01 && n.running && (this.nextThunder -= e, this.nextThunder <= 0 && (this.nextThunder = si(10, 28) / Math.max(.3, this.current), this.strike(si(.5, .95), this.current)));
 	}
 	destroy() {
 		for (let e of this.sources) try {
@@ -43491,7 +43565,7 @@ var ni = [
 		} catch {}
 		this.sources = [], this.panner?.disconnect(), this.out = void 0;
 	}
-}, oi = {
+}, li = {
 	grass: "Grama",
 	dirt: "Terra",
 	sand: "Areia",
@@ -43501,7 +43575,7 @@ var ni = [
 	wood: "Madeira",
 	rug: "Tapete",
 	water: "Água"
-}, si = {
+}, ui = {
 	grass: {
 		set: "grass",
 		n: 5,
@@ -43551,21 +43625,21 @@ var ni = [
 		n: 5,
 		gain: .8
 	}
-}, ci = (e, t) => e + Math.random() * (t - e), li = class {
+}, di = (e, t) => e + Math.random() * (t - e), fi = class {
 	e;
 	clips = /* @__PURE__ */ new Map();
 	last = /* @__PURE__ */ new Map();
 	constructor(e) {
 		this.e = e;
-		for (let t of new Set(Object.values(si).map((e) => e.set))) {
-			let n = Math.max(...Object.values(si).filter((e) => e.set === t).map((e) => e.n));
+		for (let t of new Set(Object.values(ui).map((e) => e.set))) {
+			let n = Math.max(...Object.values(ui).filter((e) => e.set === t).map((e) => e.n));
 			Promise.all(Array.from({ length: n }, (n, r) => e.clip(`steps/${t}-${r}`))).then((e) => {
 				this.clips.set(t, e.filter((e) => !!e));
 			});
 		}
 	}
 	play(e, t, n = 0, r = !1) {
-		let i = si[e], a = this.clips.get(i.set);
+		let i = ui[e], a = this.clips.get(i.set);
 		if (!a?.length) return;
 		let o = Math.floor(Math.random() * a.length);
 		a.length > 1 && o === this.last.get(i.set) && (o = (o + 1) % a.length), this.last.set(i.set, o);
@@ -43579,16 +43653,16 @@ var ni = [
 			e.connect(c), c = e;
 		}
 		let u = s.gain(.4);
-		if (l.connect(u), u.connect(s.reverbSend), s.play(a[o], c, t * i.gain * ci(.8, 1), (i.rate ?? 1) * ci(.93, 1.07)), r && e !== "water") {
+		if (l.connect(u), u.connect(s.reverbSend), s.play(a[o], c, t * i.gain * di(.8, 1), (i.rate ?? 1) * di(.93, 1.07)), r && e !== "water") {
 			let e = this.clips.get("water");
-			e?.length && s.play(e[Math.floor(Math.random() * e.length)], l, t * .22, ci(1.1, 1.3));
+			e?.length && s.play(e[Math.floor(Math.random() * e.length)], l, t * .22, di(1.1, 1.3));
 		}
 	}
-}, ui = 240, di = 280;
-function fi(e) {
+}, pi = 240, mi = 280;
+function hi(e) {
 	return e.sound ?? {};
 }
-var pi = class e {
+var gi = class e {
 	engine;
 	zone;
 	layers = /* @__PURE__ */ new Map();
@@ -43623,11 +43697,11 @@ var pi = class e {
 	enabled = !0;
 	constructor(e, t) {
 		this.engine = e, this.zone = t;
-		for (let t of ni) this.layers.set(t.id, new ai(e, t.id));
-		this.steps = new li(e), this.setZone(t);
+		for (let t of ai) this.layers.set(t.id, new ci(e, t.id));
+		this.steps = new fi(e), this.setZone(t);
 	}
 	static create(t, n) {
-		let r = ei.of(t);
+		let r = ri.of(t);
 		return r ? new e(r, n) : null;
 	}
 	setZone(e) {
@@ -43658,7 +43732,7 @@ var pi = class e {
 		return e;
 	}
 	previewStep(e) {
-		this.steps.play(e, Math.max(.4, Yr().steps));
+		this.steps.play(e, Math.max(.4, Qr().steps));
 	}
 	thunderNow() {
 		this.layers.get("thunder").strike(.3, 1);
@@ -43666,7 +43740,7 @@ var pi = class e {
 	update(e, t) {
 		let n = this.engine, r = Xt(this.zone).place;
 		n.setRoom(r === "outdoor" ? "none" : r === "indoor" ? "room" : "cave");
-		let i = r === "underground" ? 0 : an(t.hour), a = t.weather, o = r === "outdoor", s = r === "indoor", c = fi(this.zone), l = c.auto !== !1 && this.enabled, u = this.near(t.x, t.y), d = Object.fromEntries(ni.map((e) => [e.id, 0])), f = a.lightning ? 0 : a.rain, p = a.lightning ? a.rain : 0;
+		let i = r === "underground" ? 0 : an(t.hour), a = t.weather, o = r === "outdoor", s = r === "indoor", c = hi(this.zone), l = c.auto !== !1 && this.enabled, u = this.near(t.x, t.y), d = Object.fromEntries(ai.map((e) => [e.id, 0])), f = a.lightning ? 0 : a.rain, p = a.lightning ? a.rain : 0;
 		l && (o ? (d.forest = this.trees >= 3 ? .6 : this.trees ? .4 : .2, (a.rain > .5 || a.snow > .5) && (d.forest *= .25), d.wind = .1 + .5 * t.wind, d.rain = f, d.storm = p, d.snow = a.snow * .9) : s ? (d.wind = a.minWind >= .9 ? .4 : 0, d.rain = f * .9, d.storm = p * .9, d.snow = a.snow * .4) : d.cave = .6, d.fire = u.fire.level, d.torch = u.torch.level * .6, d.lake = u.lake.level * .7, d.swamp = u.swamp.level * .8);
 		let m = this.enabled && c.layers || {}, h = s;
 		for (let [t, n] of this.layers) {
@@ -43700,12 +43774,12 @@ var pi = class e {
 				pan: Math.max(-.8, Math.min(.8, a / r))
 			};
 		};
-		return n.fire = i(this.fires, ui), n.torch = i(this.torches, ui * .6), n.lake = i(this.water, di), n.swamp = i(this.swamp, di), n;
+		return n.fire = i(this.fires, pi), n.torch = i(this.torches, pi * .6), n.lake = i(this.water, mi), n.swamp = i(this.swamp, mi), n;
 	}
 	step(e, t, n, r) {
-		let i = Yr();
+		let i = Qr();
 		if (!i.steps || !this.engine.running) return;
-		let a = Xt(this.zone).place === "outdoor", o = mi(this.zone, e, t);
+		let a = Xt(this.zone).place === "outdoor", o = _i(this.zone, e, t);
 		a && r.snow >= .6 && (o === "grass" || o === "dirt" || o === "sand") && (o = "snow"), this.stepSide = -this.stepSide, this.steps.play(o, i.steps * (n ? .9 : .7), this.stepSide * .08, a && r.rain > .2);
 	}
 	destroy() {
@@ -43713,20 +43787,20 @@ var pi = class e {
 		this.layers.clear();
 	}
 };
-function mi(e, t, n) {
+function _i(e, t, n) {
 	let r = Math.max(0, Math.min(e.width, Math.round(t / 32))), i = Math.max(0, Math.min(e.height, Math.round(n / 32))), a = xe(e, r, i);
-	return a && /tapete|rug/i.test(a.label + a.category) ? "rug" : hi(Se(e, r, i));
+	return a && /tapete|rug/i.test(a.label + a.category) ? "rug" : vi(Se(e, r, i));
 }
-function hi(e) {
+function vi(e) {
 	let t = `${e.id} ${e.label} ${e.category}`.toLowerCase();
 	return /neve|snow/.test(t) ? "snow" : /areia|sand/.test(t) ? "sand" : /swamp|p[âa]ntano|água rasa|water/.test(t) ? "water" : /tapete|rug/.test(t) ? "rug" : /cascalho|gravel|pedrinha|pebble/.test(t) ? "gravel" : /madeira|wood|tábua/.test(t) ? "wood" : /pedra|stone|calçamento|cobble|ladrilho|tile|castelo|masmorra|mármore|piso/.test(t) ? "stone" : /grama|grass|trigo|capim|musgo/.test(t) ? "grass" : "dirt";
 }
 //#endregion
 //#region src/engine/scenes/WorldScene.ts
-var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
+var yi = "char:me", bi = 220, xi = .15, Si = 500, Ci = {
 	walk: [2, 6],
 	run: [0, 4]
-}, xi = class extends c.default.Scene {
+}, wi = class extends c.default.Scene {
 	player;
 	cfg;
 	armed = !1;
@@ -43737,11 +43811,14 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	ground;
 	clockAt = 0;
 	audio = null;
+	remotes;
+	netAt = 0;
+	netSent = "";
 	constructor() {
 		super("world");
 	}
 	init(e) {
-		this.cfg = e, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new rt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null;
+		this.cfg = e, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new rt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.remotes = void 0, this.netAt = 0, this.netSent = "";
 	}
 	async create() {
 		let { zone: e, assetBase: t, appearance: n, arrival: r } = this.cfg, i = e.width * 32, a = e.height * 32;
@@ -43749,16 +43826,16 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		for (let t of e.objects) this.occluders.add(Ye(this, t), t);
 		new Wt(this, e);
 		let o = this.lighting = new Rr(this, e);
-		o.timeOffset = this.cfg.timeOffset ?? 0, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = pi.create(this, e), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
+		o.timeOffset = this.cfg.timeOffset ?? 0, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = gi.create(this, e), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
 			this.events.off(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio?.destroy(), this.audio = null;
 		});
 		let s = this.physics.add.staticGroup();
 		for (let t of [...Te(e), ...Ut(e)]) s.add(this.add.zone(t.x + t.w / 2, t.y + t.h / 2, t.w, t.h));
 		$e(this, e.objects, s), this.physics.world.setBounds(0, 0, i, a);
 		let l = this.cameras.main;
-		l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(_i), this.cfg.onZone?.(e);
+		l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(bi), this.cfg.onZone?.(e);
 		try {
-			await Pt(this, gi, t, n);
+			await Pt(this, yi, t, n);
 		} catch (e) {
 			console.error("[vortable] boneco não carregou", e), this.add.text(l.midPoint.x, l.midPoint.y, "Não deu pra carregar o boneco.\nConfira a conexão e recarregue.", {
 				fontFamily: "system-ui",
@@ -43771,11 +43848,11 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 			return;
 		}
 		if (!this.sys.isActive()) return;
-		let u = r && e.portals.find((e) => e.id === r.portal), d = u ? {
+		let u = r && e.portals.find((e) => e.id === r.portal), d = this.cfg.at ?? (u ? {
 			x: u.x + u.w / 2,
 			y: u.y + u.h / 2 + 5
-		} : e.spawn;
-		this.player = new Jt(this, gi, d.x, d.y, r?.dir ?? "down"), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, Cr).setScale(.75, .6).setAlpha(.32);
+		} : e.spawn);
+		this.player = new Jt(this, yi, d.x, d.y, r?.dir ?? "down"), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, Cr).setScale(.75, .6).setAlpha(.32);
 		let f = this.player.sprite;
 		o.extraCasters = () => [{
 			key: f.texture.key,
@@ -43783,8 +43860,20 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 			x: f.x,
 			y: f.y,
 			originY: f.originY
-		}];
-		let p = (e) => {
+		}, ...(this.remotes?.sprites ?? []).map((e) => ({
+			key: e.texture.key,
+			frame: e.frame.name,
+			x: e.x,
+			y: e.y,
+			originY: e.originY
+		}))];
+		let p = this.cfg.hub;
+		if (p) {
+			this.remotes = new Jr(this, p, t, e.id), p.announce(this.cfg.appearance);
+			let n = p.onTeleport((e) => void this.teleportTo(e.zone, e.x, e.y));
+			this.events.once(c.default.Scenes.Events.SHUTDOWN, n);
+		}
+		let m = (e) => {
 			!Yt() && [
 				"ArrowUp",
 				"ArrowDown",
@@ -43793,10 +43882,10 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 				" "
 			].includes(e.key) && e.preventDefault();
 		};
-		window.addEventListener("keydown", p), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => window.removeEventListener("keydown", p)), this.input.keyboard.on("keydown-M", () => {
+		window.addEventListener("keydown", m), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => window.removeEventListener("keydown", m)), this.input.keyboard.on("keydown-M", () => {
 			if (Yt()) return;
-			let e = !Yr().muted;
-			Xr({ muted: e }), ei.of(this)?.applyPrefs(), this.toast(e ? "Som desligado (M liga de novo)" : "Som ligado");
+			let e = !Qr().muted;
+			$r({ muted: e }), ri.of(this)?.applyPrefs(), this.toast(e ? "Som desligado (M liga de novo)" : "Som ligado");
 		}), this.input.keyboard.on("keydown-C", () => {
 			if (Yt()) return;
 			let e = this.physics.world;
@@ -43805,7 +43894,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	}
 	syncFootsteps(e) {
 		let t = (t, n) => {
-			let r = t.key.split(":")[2], i = bi[r];
+			let r = t.key.split(":")[2], i = Ci[r];
 			if (!i || !this.audio || !this.lighting) return;
 			let a = r === "walk" ? 9 : 8;
 			i.includes(Number(n.textureFrame) % a) && this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow);
@@ -43816,10 +43905,35 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	setInputLocked(e) {
 		this.inputLocked = e, this.player && (this.player.locked = e);
 	}
+	async teleportTo(e, t, n) {
+		let r = this.player;
+		if (!r || this.travelling) return;
+		if (e === this.cfg.zone.id) {
+			r.sprite.setPosition(t, n), this.cameras.main.centerOn(t, n);
+			return;
+		}
+		this.travelling = !0, r.frozen = !0;
+		let i = await this.cfg.loadZone(e).catch(() => null);
+		if (this.sys.isActive()) {
+			if (!i) {
+				r.frozen = !1, this.travelling = !1, this.toast("O mestre tentou te levar a uma zona que não existe.");
+				return;
+			}
+			this.scene.restart({
+				...this.cfg,
+				zone: i,
+				arrival: void 0,
+				at: {
+					x: t,
+					y: n
+				}
+			});
+		}
+	}
 	async setAppearance(e) {
 		this.cfg.appearance = e;
 		try {
-			await Pt(this, gi, this.cfg.assetBase, e), this.player?.refresh();
+			await Pt(this, yi, this.cfg.assetBase, e), this.cfg.hub?.announce(e), this.player?.refresh();
 		} catch (e) {
 			console.error("[vortable] aparência não carregou", e);
 		}
@@ -43827,11 +43941,11 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	preRender() {
 		let e = this.player, t = this.cameras.main;
 		if (e) {
-			let n = e.sprite, r = t.scrollX + (n.x - t.width / 2 - t.scrollX) * vi, i = t.scrollY + (n.y - t.height / 2 - t.scrollY) * vi;
+			let n = e.sprite, r = t.scrollX + (n.x - t.width / 2 - t.scrollX) * xi, i = t.scrollY + (n.y - t.height / 2 - t.scrollY) * xi;
 			t.useBounds && (r = t.clampX(r), i = t.clampY(i)), t.setScroll(r, i), this.blob?.setPosition(n.x, n.y - 1).setDepth(n.depth - .5);
 		}
 		let n = e?.sprite, r = !!n && n.body.velocity.lengthSq() > 1;
-		this.ground?.tufts.update(t, this.game.loop.delta / 1e3, r ? [{
+		this.remotes?.update(this.game.loop.delta / 1e3), this.ground?.tufts.update(t, this.game.loop.delta / 1e3, r ? [{
 			x: n.x,
 			y: n.y - 2
 		}] : []);
@@ -43849,13 +43963,29 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 			});
 		}
 		let a = this.time.now;
-		this.cfg.onClock && a - this.clockAt > yi && (this.clockAt = a, this.cfg.onClock(i.hour));
+		this.cfg.onClock && a - this.clockAt > Si && (this.clockAt = a, this.cfg.onClock(i.hour));
 	}
 	update() {
 		let e = this.player;
-		if (!e || (e.update(), this.occluders.update(e.sprite.x, e.sprite.y), this.travelling)) return;
+		if (!e || (e.update(), this.publish(e), this.occluders.update(e.sprite.x, e.sprite.y), this.travelling)) return;
 		let t = this.portalUnder(e.foot);
 		t ? this.armed && t.to && this.travel(t) : this.armed = !0;
+	}
+	publish(e) {
+		let t = this.cfg.hub;
+		if (!t) return;
+		let n = this.time.now;
+		if (n - this.netAt < 100) return;
+		let r = e.sprite, i = `${Math.round(r.x)},${Math.round(r.y)},${e.facing},${e.animName}`;
+		i === this.netSent && n - this.netAt < 1e3 || (this.netAt = n, this.netSent = i, t.link.send({
+			t: "state",
+			id: t.link.selfId,
+			zone: this.cfg.zone.id,
+			x: Math.round(r.x * 10) / 10,
+			y: Math.round(r.y * 10) / 10,
+			dir: e.facing,
+			anim: e.animName
+		}));
 	}
 	portalUnder(e) {
 		for (let t of this.cfg.zone.portals) if (e.x < t.x + t.w && t.x < e.x + e.w && e.y < t.y + t.h && t.y < e.y + e.h) return t;
@@ -43865,11 +43995,11 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		let t = this.player, n = e.to;
 		this.travelling = !0, t.frozen = !0;
 		let r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));
-		r.fadeOut(_i);
+		r.fadeOut(bi);
 		let [a] = await Promise.all([this.cfg.loadZone(n.zone).catch(() => null), i]);
 		if (this.sys.isActive()) {
 			if (!a) {
-				console.warn("[vortable] saída leva pra uma zona que não existe:", n.zone), r.fadeIn(_i), this.toast("Essa passagem não leva a lugar nenhum (zona apagada ou não salva)."), t.frozen = !1, this.travelling = !1, this.armed = !1;
+				console.warn("[vortable] saída leva pra uma zona que não existe:", n.zone), r.fadeIn(bi), this.toast("Essa passagem não leva a lugar nenhum (zona apagada ou não salva)."), t.frozen = !1, this.travelling = !1, this.armed = !1;
 				return;
 			}
 			this.scene.restart({
@@ -43894,7 +44024,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		}).setOrigin(.5, 0).setDepth(1e9).setResolution(4).setScrollFactor(1);
 		this.time.delayedCall(3e3, () => n.destroy());
 	}
-}, Si = .1, Ci = .0015, wi = 700, Ti = 10474495, Ei = 8, Di = 180, Oi = class extends c.default.Scene {
+}, Ti = .1, Ei = .0015, Di = 700, Oi = 10474495, ki = 8, Ai = 180, ji = class extends c.default.Scene {
 	state;
 	ground;
 	fences;
@@ -43934,7 +44064,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		this.state = e.state;
 	}
 	create() {
-		this.ground = new Ce(this, this.state.zone), this.fences = new Wt(this, this.state.zone), this.gridGfx = this.add.graphics().setDepth(1e8), this.collisionGfx = this.add.graphics().setDepth(1e8 + 1), this.cursorGfx = this.add.graphics().setDepth(1e8 + 2), this.selectGfx = this.add.graphics().setDepth(1e8 + 2), this.portalGfx = this.add.graphics().setDepth(1e8 + 1), this.ghost = this.add.image(0, 0, "__WHITE").setOrigin(.5, 1).setAlpha(.6).setDepth(1e8 + 3).setVisible(!1), this.spawnMarker = this.makeSpawnMarker(), this.lightGfx = this.add.graphics().setDepth(1e8 + 1), this.rebuildObjects(), this.lighting = new Rr(this, this.state.zone), this.audio = pi.create(this, this.state.zone), this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.refreshOverlays();
+		this.ground = new Ce(this, this.state.zone), this.fences = new Wt(this, this.state.zone), this.gridGfx = this.add.graphics().setDepth(1e8), this.collisionGfx = this.add.graphics().setDepth(1e8 + 1), this.cursorGfx = this.add.graphics().setDepth(1e8 + 2), this.selectGfx = this.add.graphics().setDepth(1e8 + 2), this.portalGfx = this.add.graphics().setDepth(1e8 + 1), this.ghost = this.add.image(0, 0, "__WHITE").setOrigin(.5, 1).setAlpha(.6).setDepth(1e8 + 3).setVisible(!1), this.spawnMarker = this.makeSpawnMarker(), this.lightGfx = this.add.graphics().setDepth(1e8 + 1), this.rebuildObjects(), this.lighting = new Rr(this, this.state.zone), this.audio = gi.create(this, this.state.zone), this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.refreshOverlays();
 		let e = this.cameras.main;
 		this.zoomTarget = this.state.zoom, e.setBackgroundColor("#0b0f18").setZoom(this.state.zoom).setRoundPixels(!0), this.fitBounds();
 		let t = this.state.view ?? this.state.zone.spawn;
@@ -43972,7 +44102,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		if (this.keyboardFree()) {
 			let e = this.keys, t = !(this.state.tool === "select" && this.state.selected.length), i = 0, a = 0;
 			if ((e.a.isDown || t && e.left.isDown) && --i, (e.d.isDown || t && e.right.isDown) && (i += 1), (e.w.isDown || t && e.up.isDown) && --a, (e.s.isDown || t && e.down.isDown) && (a += 1), i || a) {
-				let t = wi * (e.shift.isDown ? 2.5 : 1) * r / n.zoom;
+				let t = Di * (e.shift.isDown ? 2.5 : 1) * r / n.zoom;
 				this.panBy(i * t, a * t);
 			}
 		}
@@ -43981,7 +44111,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		let e = this.lighting;
 		if (e.enabled = this.state.lightPreview, e.hourOverride = Xt(this.state.zone).hour ?? this.state.previewHour, e.render(this.game.loop.delta), this.ground.tufts.update(this.cameras.main, this.game.loop.delta / 1e3), this.audio) {
 			let t = this.cameras.main;
-			this.audio.enabled = Yr().editor, this.audio.update(this.game.loop.delta / 1e3, {
+			this.audio.enabled = Qr().editor, this.audio.update(this.game.loop.delta / 1e3, {
 				x: t.midPoint.x,
 				y: t.midPoint.y,
 				hour: e.hour,
@@ -43992,7 +44122,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		}
 	}
 	scheduleLights() {
-		this.lightTimer?.remove(), this.lightTimer = this.time.delayedCall(Di, () => {
+		this.lightTimer?.remove(), this.lightTimer = this.time.delayedCall(Ai, () => {
 			this.lighting.rebuild(), this.audio?.setZone(this.state.zone);
 		});
 	}
@@ -44023,7 +44153,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		this.zoomTo(this.zoomTarget * e, t);
 	}
 	zoomTo(e, t) {
-		this.zoomTarget = c.default.Math.Clamp(e, Si, 8);
+		this.zoomTarget = c.default.Math.Clamp(e, Ti, 8);
 		let n = this.cameras.main, r = t ?? {
 			x: n.width / 2,
 			y: n.height / 2
@@ -44032,7 +44162,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	}
 	fitZone() {
 		let e = this.state.zone, t = this.cameras.main, n = Math.min(t.width / (e.width * 32 + 96), t.height / (e.height * 32 + 96));
-		this.zoomTarget = c.default.Math.Clamp(n, Si, 8), this.zoomAnchor = null, this.applyZoom(this.zoomTarget, this.anchorAt(t.width / 2, t.height / 2)), this.centerOnZone();
+		this.zoomTarget = c.default.Math.Clamp(n, Ti, 8), this.zoomAnchor = null, this.applyZoom(this.zoomTarget, this.anchorAt(t.width / 2, t.height / 2)), this.centerOnZone();
 	}
 	updateCursorStyle() {
 		let e = this.spaceKey.isDown && this.keyboardFree();
@@ -44158,7 +44288,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	}
 	applySelection() {
 		let e = new Set(this.state.selected);
-		this.sprites.forEach((t, n) => e.has(n) ? t?.setTint(Ti) : t?.clearTint()), this.drawSelection();
+		this.sprites.forEach((t, n) => e.has(n) ? t?.setTint(Oi) : t?.clearTint()), this.drawSelection();
 	}
 	drawSelection() {
 		let e = this.selectGfx;
@@ -44411,10 +44541,10 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	onWheel(e, t, n, r) {
 		let i = e.event, a = i.deltaMode === 1 ? r * 16 : i.deltaMode === 2 ? r * 400 : r;
 		if (i.altKey) {
-			i.preventDefault(), a && this.state.set({ brush: c.default.Math.Clamp(this.state.brush + (a > 0 ? -1 : 1), 1, Ei) });
+			i.preventDefault(), a && this.state.set({ brush: c.default.Math.Clamp(this.state.brush + (a > 0 ? -1 : 1), 1, ki) });
 			return;
 		}
-		let o = Math.exp(c.default.Math.Clamp(-a * Ci, -.7, .7)), s = this.game.canvas.getBoundingClientRect(), l = this.cameras.main, u = s.width ? {
+		let o = Math.exp(c.default.Math.Clamp(-a * Ei, -.7, .7)), s = this.game.canvas.getBoundingClientRect(), l = this.cameras.main, u = s.width ? {
 			x: (i.clientX - s.left) * l.width / s.width,
 			y: (i.clientY - s.top) * l.height / s.height
 		} : {
@@ -44751,13 +44881,13 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		this.state.edited(), this.state.emit("objects");
 	}
 	brushBy(e) {
-		this.state.set({ brush: c.default.Math.Clamp(this.state.brush + e, 1, Ei) });
+		this.state.set({ brush: c.default.Math.Clamp(this.state.brush + e, 1, ki) });
 	}
 	centerOnZone() {
 		let e = this.state.zone;
 		this.cameras.main.centerOn(e.width * 32 / 2, e.height * 32 / 2), this.afterView();
 	}
-}, ki = 100, Ai = class {
+}, Mi = 100, Ni = class {
 	zone;
 	tool = "brush";
 	terrain = "dirt";
@@ -44804,7 +44934,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 		Object.assign(this, e), e.tool && e.tool !== "select" && (this.selected = []), e.tool && e.tool !== "portal" && (this.selectedPortal = null), e.tool && e.tool !== "light" && (this.selectedLight = null), this.emit("ui");
 	}
 	checkpoint() {
-		this.undoStack.push(JSON.stringify(this.zone)), this.undoStack.length > ki && this.undoStack.shift(), this.redoStack = [], this.dirty = !0;
+		this.undoStack.push(JSON.stringify(this.zone)), this.undoStack.length > Mi && this.undoStack.shift(), this.redoStack = [], this.dirty = !0;
 	}
 	edited() {
 		this.dirty = !0, this.emit("edit");
@@ -44844,7 +44974,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 	zoneName(e) {
 		return e === this.zone.id ? this.zone.name : this.zones.find((t) => t.id === e)?.name ?? "(zona apagada)";
 	}
-}, ji = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}@media (width<=720px){.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}";
+}, Pi = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}@media (width<=720px){.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}";
 //#endregion
 //#region src/engine/ui/dom.ts
 function X(e, t = {}, ...n) {
@@ -44853,13 +44983,13 @@ function X(e, t = {}, ...n) {
 	for (let e of n) e != null && e !== !1 && r.append(e);
 	return r;
 }
-var Mi = /* @__PURE__ */ new Set();
-function Ni(e, t) {
-	Mi.has(e) || (Mi.add(e), document.head.append(X("style", { "data-vortable": e }, t)));
+var Fi = /* @__PURE__ */ new Set();
+function Ii(e, t) {
+	Fi.has(e) || (Fi.add(e), document.head.append(X("style", { "data-vortable": e }, t)));
 }
 //#endregion
 //#region src/engine/ui/credits.ts
-var Pi = [
+var Li = [
 	{
 		title: "Personagens",
 		file: "credits/CREDITS-character.md"
@@ -44873,7 +45003,7 @@ var Pi = [
 		file: "credits/CREDITS-audio.txt"
 	}
 ];
-function Fi(e) {
+function Ri(e) {
 	let t = X("p", { class: "vt-credits-intro" }, "A arte do Vortable vem do projeto Liberated Pixel Cup (LPC) e de artistas que a publicaram com licenças livres ", "(CC-BY-SA 3.0, GPL 3.0, OGA-BY e outras indicadas abaixo). Obrigado a todos."), n = ({ title: t, file: n }) => {
 		let r = X("pre", { class: "vt-credits-text" }, "Carregando...");
 		return fetch(e + n).then((e) => e.ok ? e.text() : Promise.reject(Error(String(e.status)))).then((e) => {
@@ -44887,7 +45017,7 @@ function Fi(e) {
 	})));
 	return Ve().packs.length ? i(Ve().packs) : fetch(e + Ne).then((e) => e.ok ? e.json() : Promise.reject(Error(String(e.status)))).then((e) => i(e.packs ?? [])).catch(() => r.append(X("p", { class: "vt-credits-intro" }, "Não deu pra carregar a lista de pacotes de objetos."))), [
 		t,
-		...Pi.map(n),
+		...Li.map(n),
 		r
 	];
 }
@@ -44949,7 +45079,7 @@ var Z = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	download: Z("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M12 15V3\"/>"),
 	upload: Z("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M12 3v12\"/>"),
 	trash: Z("<path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/>")
-}, Ii = {
+}, zi = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -44957,7 +45087,7 @@ var Z = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	intensity: 1,
 	flicker: .2
 };
-function Li(e, t, n) {
+function Bi(e, t, n) {
 	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = X("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
@@ -44990,7 +45120,7 @@ function Li(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? Ii,
+			...o ?? zi,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -45049,7 +45179,7 @@ function Li(e, t, n) {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? Ii } : null, F(), m();
+			o = k.checked ? { ...o ?? zi } : null, F(), m();
 		}
 	}), A = X("input", {
 		class: "vt-input vt-num",
@@ -45149,7 +45279,7 @@ function Li(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function Ri(e) {
+function Vi(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -45157,14 +45287,14 @@ function Ri(e) {
 		return [];
 	}
 }
-function zi(e, t) {
+function Hi(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
 //#region src/engine/storage.ts
-function Bi(e, t = Date.now()) {
+function Ui(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -45178,7 +45308,7 @@ function Bi(e, t = Date.now()) {
 		}))
 	};
 }
-function Vi(e = "Meu mundo") {
+function Wi(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: P("mundo"),
@@ -45187,7 +45317,7 @@ function Vi(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var Hi = class {
+var Gi = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -45212,9 +45342,9 @@ var Hi = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Xi(JSON.parse(e));
+			if (e) return $i(JSON.parse(e));
 		} catch {}
-		return Vi();
+		return Wi();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -45225,19 +45355,19 @@ var Hi = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? Wi(JSON.parse(t)) : null;
+			return t ? qi(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Bi(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Ui(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function Ui() {
+function Ki() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -45246,7 +45376,7 @@ function Ui() {
 	}
 }
 var $ = (e) => typeof e == "number" && Number.isFinite(e);
-function Wi(e) {
+function qi(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
@@ -45274,9 +45404,9 @@ function Wi(e) {
 			...e.flip === !0 ? { flip: !0 } : {},
 			...$(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...qi(t.lighting),
-		...Ji(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: Yi(t.lights, a, o) } : {},
+		...Xi(t.lighting),
+		...Zi(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: Qi(t.lights, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -45295,22 +45425,22 @@ function Wi(e) {
 		}
 	};
 }
-var Gi = /^#[0-9a-f]{6}$/i, Ki = (e, t, n) => Math.max(t, Math.min(n, e));
-function qi(e) {
+var Ji = /^#[0-9a-f]{6}$/i, Yi = (e, t, n) => Math.max(t, Math.min(n, e));
+function Xi(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		hour: $(t.hour) ? Ki(t.hour, 0, 24) % 24 : null,
-		...$(t.dayMinutes) && t.dayMinutes > 0 ? { dayMinutes: Ki(t.dayMinutes, 1, 1440) } : {},
-		...typeof t.tint == "string" && Gi.test(t.tint) ? { tint: t.tint } : {},
+		hour: $(t.hour) ? Yi(t.hour, 0, 24) % 24 : null,
+		...$(t.dayMinutes) && t.dayMinutes > 0 ? { dayMinutes: Yi(t.dayMinutes, 1, 1440) } : {},
+		...typeof t.tint == "string" && Ji.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...$(t.wind) ? { wind: Ki(t.wind, 0, 1) } : {},
+		...$(t.wind) ? { wind: Yi(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {},
 		...typeof t.weather == "string" && t.weather in $n && t.weather !== "clear" ? { weather: t.weather } : {}
 	} };
 }
-function Ji(e) {
+function Zi(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -45332,7 +45462,7 @@ function Ji(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && $(i) && i > 0 && (n[t] = Ki(i, 0, 1));
+		r.includes(t) && $(i) && i > 0 && (n[t] = Yi(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -45340,18 +45470,18 @@ function Ji(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function Yi(e, t, n) {
+function Qi(e, t, n) {
 	return e.filter((e) => !!e && typeof e == "object" && $(e.x) && $(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : P("luz"),
-		x: Ki(Math.round(e.x), 0, t),
-		y: Ki(Math.round(e.y), 0, n),
-		radius: $(e.radius) ? Ki(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && Gi.test(e.color) ? e.color : "#ffb060",
-		intensity: $(e.intensity) ? Ki(e.intensity, 0, 1) : 1,
-		flicker: $(e.flicker) ? Ki(e.flicker, 0, 1) : 0
+		x: Yi(Math.round(e.x), 0, t),
+		y: Yi(Math.round(e.y), 0, n),
+		radius: $(e.radius) ? Yi(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && Ji.test(e.color) ? e.color : "#ffb060",
+		intensity: $(e.intensity) ? Yi(e.intensity, 0, 1) : 1,
+		flicker: $(e.flicker) ? Yi(e.flicker, 0, 1) : 0
 	}));
 }
-function Xi(e) {
+function $i(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
@@ -45369,7 +45499,7 @@ function Xi(e) {
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var Zi = [
+var ea = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -45415,15 +45545,15 @@ var Zi = [
 		label: "Ponto de início do jogador",
 		key: "P"
 	}
-], Qi = 8, $i = "vortable:objects:favorites", ea = "vortable:editor:drawer";
-function ta() {
+], ta = 8, na = "vortable:objects:favorites", ra = "vortable:editor:drawer";
+function ia() {
 	try {
-		return localStorage.getItem(ea) === "1";
+		return localStorage.getItem(ra) === "1";
 	} catch {
 		return !1;
 	}
 }
-var na = "vortable:objects:recent", ra = 24, ia = [
+var aa = "vortable:objects:recent", oa = 24, sa = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -45464,12 +45594,12 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		"#8ae8ff",
 		0
 	]
-], aa = [
+], ca = [
 	12,
 	24,
 	48,
 	96
-], oa = "★", sa = "⟲", ca = class {
+], la = "★", ua = "⟲", da = class {
 	state;
 	storage;
 	hooks;
@@ -45503,8 +45633,8 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = Ri($i);
-	recents = Ri(na);
+	favorites = Vi(na);
+	recents = Vi(aa);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
@@ -45517,7 +45647,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, Ni("editor", ji), this.stage = X("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick()), this.root = X("div", { class: `vt-root${ta() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), X("div", { class: "vt-testbar" }, this.testZoneEl = X("b", { class: "vt-testzone" }), this.testClockEl = X("span", { class: "vt-testclock" }), this.muteBtn = X("button", {
+		this.state = t, this.storage = n, this.hooks = r, Ii("editor", Pi), this.stage = X("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick()), this.root = X("div", { class: `vt-root${ia() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), X("div", { class: "vt-testbar" }, this.testZoneEl = X("b", { class: "vt-testzone" }), this.testClockEl = X("span", { class: "vt-testclock" }), this.muteBtn = X("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -45616,13 +45746,13 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e);
 		try {
-			localStorage.setItem(ea, e ? "1" : "0");
+			localStorage.setItem(ra, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
 		let e = X("aside", { class: "vt-tools" });
-		for (let t of Zi) {
+		for (let t of ea) {
 			let n = X("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
@@ -45653,7 +45783,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 				on: r
 			}), e.append(a);
 		};
-		return t(Q.grid, "Mostrar grade (H)", () => this.state.showGrid, () => this.state.set({ showGrid: !this.state.showGrid })), t(Q.collision, "Mostrar colisões (K)", () => this.state.showCollision, () => this.state.set({ showCollision: !this.state.showCollision })), t(Q.sun, "Ver iluminação: hora, luzes e sombras (I)", () => this.state.lightPreview, () => this.state.set({ lightPreview: !this.state.lightPreview })), t(Q.sound, "Ouvir os sons da zona no editor (U)", () => Yr().editor, () => this.toggleEditorSound()), t(Q.snap, "Encaixar objetos na grade (N)", () => this.state.snap, () => this.state.set({ snap: !this.state.snap })), e.append(X("button", {
+		return t(Q.grid, "Mostrar grade (H)", () => this.state.showGrid, () => this.state.set({ showGrid: !this.state.showGrid })), t(Q.collision, "Mostrar colisões (K)", () => this.state.showCollision, () => this.state.set({ showCollision: !this.state.showCollision })), t(Q.sun, "Ver iluminação: hora, luzes e sombras (I)", () => this.state.lightPreview, () => this.state.set({ lightPreview: !this.state.lightPreview })), t(Q.sound, "Ouvir os sons da zona no editor (U)", () => Qr().editor, () => this.toggleEditorSound()), t(Q.snap, "Encaixar objetos na grade (N)", () => this.state.snap, () => this.state.set({ snap: !this.state.snap })), e.append(X("button", {
 			class: "vt-tool",
 			title: "Centralizar a zona (Home)",
 			html: Q.center,
@@ -45661,7 +45791,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		})), e;
 	}
 	buildZoomBar() {
-		let e = 1e3, t = (t) => String(Math.round(Math.log(t / Si) / Math.log(8 / Si) * e)), n = (t) => Si * (8 / Si) ** (t / e);
+		let e = 1e3, t = (t) => String(Math.round(Math.log(t / Ti) / Math.log(8 / Ti) * e)), n = (t) => Ti * (8 / Ti) ** (t / e);
 		return this.zoomSlider = X("input", {
 			class: "vt-zoom-range",
 			type: "range",
@@ -45705,7 +45835,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			let r = X("button", {
 				class: "vt-tab",
 				onclick: () => {
-					this.tab = t, t === "rooms" && this.state.set({ tool: "room" }), t === "light" && this.state.set({ tool: "light" }), t === "sound" && (Yr().editor || Xr({ editor: !0 }), (this.state.tool === "light" || this.state.tool === "room") && this.state.set({ tool: "select" })), this.renderPane(), this.refresh();
+					this.tab = t, t === "rooms" && this.state.set({ tool: "room" }), t === "light" && this.state.set({ tool: "light" }), t === "sound" && (Qr().editor || $r({ editor: !0 }), (this.state.tool === "light" || this.state.tool === "room") && this.state.set({ tool: "select" })), this.renderPane(), this.refresh();
 				}
 			}, n);
 			this.tabButtons.set(t, r), e.append(r);
@@ -45815,7 +45945,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		});
 	}
 	renderTerrains() {
-		let e = la(this.terrainFilter.trim()), t = _.filter((t) => !e || la(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = fa(this.terrainFilter.trim()), t = _.filter((t) => !e || fa(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -45834,7 +45964,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = Ue(), t = la(this.objectFilter.trim()), n = (e) => !t || la(ua(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = Ue(), t = fa(this.objectFilter.trim()), n = (e) => !t || fa(pa(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -45874,14 +46004,14 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: oa,
+				id: la,
 				title: "Favoritos",
 				icon: Q.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: sa,
+				id: ua,
 				title: "Recentes",
 				icon: Q.clock,
 				count: u.length,
@@ -46050,7 +46180,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			"Hora fixa",
 			"Sempre a mesma hora (a taverna é sempre noite)"
 		]], n.hour === null ? "cycle" : "fixed", (t) => r({ hour: t === "cycle" ? null : e.previewHour }))), n.hour === null) {
-			let t = X("select", { class: "vt-select" }, ...aa.map((e) => X("option", {
+			let t = X("select", { class: "vt-select" }, ...ca.map((e) => X("option", {
 				value: e,
 				selected: (n.dayMinutes ?? 24) === e
 			}, `${e} min`)));
@@ -46114,7 +46244,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = X("div", { class: "vt-lightcolors" }, ...ia.map(([e, t, r]) => X("button", {
+		let l = X("div", { class: "vt-lightcolors" }, ...sa.map(([e, t, r]) => X("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -46135,14 +46265,14 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		})) : null);
 	}
 	toggleEditorSound() {
-		Xr({ editor: !Yr().editor }), this.tab === "sound" && this.renderPane(), this.refresh();
+		$r({ editor: !Qr().editor }), this.tab === "sound" && this.renderPane(), this.refresh();
 	}
 	toggleMute() {
-		Xr({ muted: !Yr().muted }), this.applySound();
+		$r({ muted: !Qr().muted }), this.applySound();
 	}
 	applySound() {
 		this.hooks.applySound?.();
-		let e = Yr().muted;
+		let e = Qr().muted;
 		this.muteBtn.innerHTML = e ? Q.mute : Q.sound, this.muteBtn.classList.toggle("vt-on", !e);
 	}
 	switchEl(e, t, n = "") {
@@ -46155,12 +46285,12 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		return r.addEventListener("change", () => t(r.checked)), r;
 	}
 	renderSound() {
-		let e = this.state, t = e.zone, n = fi(t), r = Yr(), i = !1, a = (n, r = !1) => {
+		let e = this.state, t = e.zone, n = hi(t), r = Qr(), i = !1, a = (n, r = !1) => {
 			i ||= (e.checkpoint(), !0);
 			let a = {
-				...fi(t),
+				...hi(t),
 				layers: {
-					...fi(t).layers,
+					...hi(t).layers,
 					...n
 				}
 			};
@@ -46168,7 +46298,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			Object.keys(a.layers).length || delete a.layers, Object.keys(a).length ? t.sound = a : delete t.sound, e.edited(), r || (i = !1, this.renderPane());
 		}, o = (n) => {
 			e.checkpoint();
-			let r = { ...fi(t) };
+			let r = { ...hi(t) };
 			n ? delete r.auto : r.auto = !1, Object.keys(r).length ? t.sound = r : delete t.sound, e.edited(), this.renderPane();
 		}, s = (e, t, n, r = "") => {
 			let i = X("input", {
@@ -46185,7 +46315,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			class: "vt-switchrow",
 			title: "Tocar os sons enquanto edita (U)"
 		}, this.switchEl(r.editor, () => this.toggleEditorSound()), X("span", {}, "Ouvir")), s(r.master, (e) => {
-			Xr({ master: e }), this.applySound();
+			$r({ master: e }), this.applySound();
 		}, () => this.applySound(), "Volume geral"), X("button", {
 			class: `vt-iconbtn${r.muted ? " vt-on" : ""}`,
 			title: r.muted ? "Ligar o som" : "Mudo",
@@ -46193,13 +46323,13 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			onclick: () => {
 				this.toggleMute(), this.renderPane();
 			}
-		})), l = n.layers ?? {}, u = this.soundPick && ni.some((e) => e.id === this.soundPick) ? this.soundPick : null, d = /* @__PURE__ */ new Map(), f = ni.map((e) => {
+		})), l = n.layers ?? {}, u = this.soundPick && ai.some((e) => e.id === this.soundPick) ? this.soundPick : null, d = /* @__PURE__ */ new Map(), f = ai.map((e) => {
 			let t = (l[e.id] ?? 0) > 0, n = X("span", { class: "vt-soundtile-meter" });
 			return d.set(e.id, n), X("button", {
 				class: `vt-soundtile${t ? " vt-on" : ""}${u === e.id ? " vt-picked" : ""}`,
 				title: e.label,
 				onclick: () => {
-					this.soundPick = e.id, Yr().editor || Xr({ editor: !0 }), u === e.id || !t ? a({ [e.id]: t ? 0 : .7 }) : this.renderPane();
+					this.soundPick = e.id, Qr().editor || $r({ editor: !0 }), u === e.id || !t ? a({ [e.id]: t ? 0 : .7 }) : this.renderPane();
 				}
 			}, X("span", {
 				class: "vt-soundtile-icon",
@@ -46212,7 +46342,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		p(), this.meterTimer = window.setInterval(p, 200);
 		let m = null;
 		if (u) {
-			let e = ni.find((e) => e.id === u), t = l[u] ?? 0, n = X("b", {}, t ? `${Math.round(t * 100)}%` : "auto");
+			let e = ai.find((e) => e.id === u), t = l[u] ?? 0, n = X("b", {}, t ? `${Math.round(t * 100)}%` : "auto");
 			m = X("div", { class: "vt-soundpick" }, X("span", {
 				class: "vt-soundtile-icon",
 				html: Q[e.icon] ?? Q.sound
@@ -46225,15 +46355,15 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 				onclick: () => this.hooks.scene()?.audio?.thunderNow()
 			}) : null);
 		}
-		let h = Object.keys(oi).map((e) => X("button", {
+		let h = Object.keys(li).map((e) => X("button", {
 			class: "vt-chipbtn",
 			title: "Ouvir",
 			onclick: () => this.hooks.scene()?.audio?.previewStep(e)
-		}, oi[e]));
+		}, li[e]));
 		this.paneEl.append(X("div", { class: "vt-group" }, c), X("div", { class: "vt-group" }, X("div", { class: "vt-grouphead" }, X("h4", {}, "Ambiente"), X("label", {
 			class: "vt-switchrow",
 			title: "Segue o tempo, a hora e o que há perto"
-		}, X("span", {}, "Automático"), this.switchEl(n.auto !== !1, o))), X("div", { class: "vt-soundtiles" }, ...f), m ?? X("small", { class: "vt-note" }, "Clique numa camada pra ligar e ajustar.")), X("div", { class: "vt-group" }, X("div", { class: "vt-grouphead" }, X("h4", {}, "Passos"), s(r.steps, (e) => Xr({ steps: e }), () => void 0, "Volume dos passos")), X("div", { class: "vt-chips" }, ...h)));
+		}, X("span", {}, "Automático"), this.switchEl(n.auto !== !1, o))), X("div", { class: "vt-soundtiles" }, ...f), m ?? X("small", { class: "vt-note" }, "Clique numa camada pra ligar e ajustar.")), X("div", { class: "vt-group" }, X("div", { class: "vt-grouphead" }, X("h4", {}, "Passos"), s(r.steps, (e) => $r({ steps: e }), () => void 0, "Volume dos passos")), X("div", { class: "vt-chips" }, ...h)));
 	}
 	openTerrainPicker(e, t) {
 		let n = [
@@ -46288,14 +46418,14 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		let t = Y(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, ra), zi(na, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, oa), Hi(aa, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], zi($i, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], Hi(na, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -46386,7 +46516,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(Ve().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = Li(t, this.hooks.textureImage(Pe(t.sheet)), n), i = X("button", {
+		let t = this.primary(e), n = [...new Set(Ve().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = Bi(t, this.hooks.textureImage(Pe(t.sheet)), n), i = X("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -46556,7 +46686,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Qi, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(ta, e)) });
 	}
 	async save() {
 		try {
@@ -46570,14 +46700,14 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 	exportZone() {
 		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = X("a", {
 			href: URL.createObjectURL(t),
-			download: `${da(e.name) || "zona"}.vortable.json`
+			download: `${ma(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
 	async importFile(e) {
 		let t = e.target, n = t.files?.[0];
 		if (t.value = "", n) try {
-			let e = Wi(JSON.parse(await n.text()));
+			let e = qi(JSON.parse(await n.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(e), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${e.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -46700,7 +46830,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		}, "Fechar")], void 0, !0);
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", Fi(this.hooks.assetBase), [X("button", {
+		let e = this.modal("Créditos da arte", Ri(this.hooks.assetBase), [X("button", {
 			class: "vt-btn",
 			onclick: () => e()
 		}, "Fechar")]);
@@ -46829,8 +46959,8 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? Bi(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(Bi(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? Ui(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(Ui(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -47010,7 +47140,7 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 			}
 			return;
 		}
-		let s = Zi.find((e) => e.key.toLowerCase() === i);
+		let s = ea.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -47018,10 +47148,10 @@ var na = "vortable:objects:recent", ra = 24, ia = [
 		i === "[" ? this.setBrush(this.state.brush - 1) : i === "]" ? this.setBrush(this.state.brush + 1) : i === "h" ? this.state.set({ showGrid: !this.state.showGrid }) : i === "k" ? this.state.set({ showCollision: !this.state.showCollision }) : i === "n" ? this.state.set({ snap: !this.state.snap }) : i === "i" ? this.state.set({ lightPreview: !this.state.lightPreview }) : i === "u" ? this.toggleEditorSound() : i === "f" ? this.flip() : e.key === "," || e.key === "<" ? a?.cycleVariant(-1) : e.key === "." || e.key === ">" ? a?.cycleVariant(1) : e.key === "?" || e.key === "F1" ? (e.preventDefault(), this.openShortcuts()) : i === "+" || i === "=" ? a?.zoomBy(1.25) : i === "-" ? a?.zoomBy(1 / 1.25) : e.key === "Home" ? this.hooks.centerOnZone() : e.key === "Delete" || e.key === "Backspace" ? this.hooks.deleteSelected() : e.key === "Escape" ? this.state.selected.length ? this.state.set({ selected: [] }) : this.state.set({ tool: "select" }) : e.key === " " && e.preventDefault();
 	}
 };
-function la(e) {
+function fa(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function ua(e) {
+function pa(e) {
 	return [
 		e.label,
 		e.category,
@@ -47030,15 +47160,129 @@ function ua(e) {
 		...He(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function da(e) {
+function ma(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
-//#region src/engine/character/creator.css?inline
-var fa = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}";
+//#region src/engine/net/hub.ts
+var ha = [
+	"up",
+	"left",
+	"down",
+	"right"
+], ga = [
+	"idle",
+	"walk",
+	"run"
+], _a = (e) => typeof e == "number" && Number.isFinite(e);
+function va(e) {
+	let t = e;
+	if (!t || typeof t != "object") return null;
+	switch (t.t) {
+		case "hello": {
+			let e = t.appearance;
+			return typeof t.id != "string" || !t.id || !e || e.version !== 2 || typeof e.slots != "object" ? null : {
+				t: "hello",
+				id: t.id,
+				name: typeof t.name == "string" ? t.name.slice(0, 60) : "Jogador",
+				appearance: e
+			};
+		}
+		case "who": return { t: "who" };
+		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !_a(t.x) || !_a(t.y) ? null : {
+			t: "state",
+			id: t.id,
+			zone: t.zone,
+			x: t.x,
+			y: t.y,
+			dir: ha.includes(t.dir) ? t.dir : "down",
+			anim: ga.includes(t.anim) ? t.anim : "idle"
+		};
+		case "bye": return typeof t.id == "string" ? {
+			t: "bye",
+			id: t.id
+		} : null;
+		case "teleport": return typeof t.zone == "string" && _a(t.x) && _a(t.y) ? {
+			t: "teleport",
+			zone: t.zone,
+			x: t.x,
+			y: t.y
+		} : null;
+		default: return null;
+	}
+}
+var ya = class {
+	link;
+	peers = /* @__PURE__ */ new Map();
+	roster = /* @__PURE__ */ new Set();
+	teleports = /* @__PURE__ */ new Set();
+	hello = null;
+	asked = !1;
+	constructor(e) {
+		this.link = e;
+	}
+	announce(e) {
+		this.hello = {
+			t: "hello",
+			id: this.link.selfId,
+			name: this.link.name,
+			appearance: e
+		}, this.link.send(this.hello), this.asked || (this.asked = !0, this.link.send({ t: "who" }));
+	}
+	resync() {
+		this.hello && (this.link.send(this.hello), this.link.send({ t: "who" }));
+	}
+	leave() {
+		this.link.send({
+			t: "bye",
+			id: this.link.selfId
+		}), this.peers.clear(), this.roster.clear(), this.teleports.clear();
+	}
+	receive(e) {
+		let t = va(e);
+		if (t) switch (t.t) {
+			case "who":
+				this.hello && this.link.send(this.hello);
+				break;
+			case "hello": {
+				if (t.id === this.link.selfId) break;
+				let e = this.peers.get(t.id);
+				this.peers.set(t.id, {
+					hello: t,
+					state: e?.state ?? null
+				}), this.roster.forEach((e) => e());
+				break;
+			}
+			case "state": {
+				if (t.id === this.link.selfId) break;
+				let e = this.peers.get(t.id);
+				if (!e) {
+					this.link.send({ t: "who" });
+					break;
+				}
+				e.state = t;
+				break;
+			}
+			case "bye":
+				this.peers.delete(t.id) && this.roster.forEach((e) => e());
+				break;
+			case "teleport": this.teleports.forEach((e) => e(t));
+		}
+	}
+	onRoster(e) {
+		return this.roster.add(e), () => {
+			this.roster.delete(e);
+		};
+	}
+	onTeleport(e) {
+		return this.teleports.add(e), () => {
+			this.teleports.delete(e);
+		};
+	}
+}, ba = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}";
 //#endregion
 //#region src/engine/character/storage.ts
-function pa(e, t) {
+function xa(e, t) {
 	return {
 		version: 1,
 		id: P("pers"),
@@ -47047,7 +47291,7 @@ function pa(e, t) {
 		updatedAt: Date.now()
 	};
 }
-function ma(e) {
+function Sa(e) {
 	let t = e, n = t?.appearance;
 	return !t || typeof t.id != "string" || !n || n.version !== 2 || n.body !== "male" && n.body !== "female" || typeof n.slots != "object" || !n.slots ? null : {
 		version: 1,
@@ -47062,7 +47306,7 @@ function ma(e) {
 		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
 	};
 }
-var ha = class {
+var Ca = class {
 	key;
 	activeKey;
 	constructor(e = "") {
@@ -47071,7 +47315,7 @@ var ha = class {
 	}
 	read() {
 		try {
-			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(ma).filter((e) => !!e);
+			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Sa).filter((e) => !!e);
 		} catch {
 			return [];
 		}
@@ -47099,11 +47343,11 @@ var ha = class {
 	async setActive(e) {
 		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
 	}
-}, ga = {
+}, wa = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, _a = 4, va = class {
+}, Ta = 4, Ea = class {
 	opts;
 	root;
 	data;
@@ -47133,7 +47377,7 @@ var ha = class {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
-		this.opts = t, Ni("editor", ji), Ni("creator", fa), this.character = pa("Novo personagem", gt()), this.nameInput = X("input", {
+		this.opts = t, Ii("editor", Pi), Ii("creator", ba), this.character = xa("Novo personagem", gt()), this.nameInput = X("input", {
 			class: "vt-name",
 			value: this.character.name,
 			title: "Nome do personagem",
@@ -47142,8 +47386,8 @@ var ha = class {
 			}
 		}), this.preview = X("canvas", {
 			class: "vt-preview-canvas",
-			width: 64 * _a,
-			height: 64 * _a
+			width: 64 * Ta,
+			height: 64 * Ta
 		}), this.tabsEl = X("div", { class: "vt-tabs vt-creator-tabs" }), this.slotsEl = X("div", { class: "vt-slots" }), this.optionsEl = X("div", { class: "vt-options" }), this.statusEl = X("footer", { class: "vt-status" });
 		let n = X("div", { class: "vt-chips vt-center" });
 		for (let e of [
@@ -47156,7 +47400,7 @@ var ha = class {
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, ga[e]);
+			}, wa[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
 		this.root = X("div", { class: "vt-root vt-creator" }, X("header", { class: "vt-top" }, X("span", { class: "vt-brand" }, "Vortable"), X("span", { class: "vt-top-title" }, t.single ? "Crie seu boneco" : "Personagem"), this.nameInput, X("span", { class: "vt-sep" }), t.single ? null : this.iconBtn(Q.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn(Q.open, "Personagens", () => this.openList()), this.iconBtn(Q.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), X("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Q.world, t.back.label, () => this.goBack(), "vt-primary") : null), X("main", { class: "vt-creator-body" }, X("section", { class: "vt-preview" }, X("div", { class: "vt-preview-stage" }, this.preview), X("div", { class: "vt-row vt-center" }, X("button", {
@@ -47291,7 +47535,7 @@ var ha = class {
 		try {
 			let [e, t] = await Promise.all([this.baseThumb ??= jt(this.opts.assetBase, {
 				...i,
-				slots: ya(i, ["body", "head"])
+				slots: Da(i, ["body", "head"])
 			}), jt(this.opts.assetBase, {
 				...i,
 				slots: { [this.slot]: a }
@@ -47379,7 +47623,7 @@ var ha = class {
 			this.raf = requestAnimationFrame(n);
 			let i = this.sheets?.[this.anim];
 			if (e.clearRect(0, 0, this.preview.width, this.preview.height), !i) return;
-			let { frames: a, rate: o } = St[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * _a;
+			let { frames: a, rate: o } = St[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * Ta;
 			e.drawImage(i, l * 64, this.dir * 64, 64, 64, 0, 0, u, u);
 		};
 		this.raf = requestAnimationFrame(n);
@@ -47395,13 +47639,13 @@ var ha = class {
 		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de voltar?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", Fi(this.opts.assetBase), [X("button", {
+		let e = this.modal("Créditos da arte", Ri(this.opts.assetBase), [X("button", {
 			class: "vt-btn",
 			onclick: () => e()
 		}, "Fechar")]);
 	}
 	newCharacter() {
-		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = pa("Novo personagem", gt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = xa("Novo personagem", gt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = _t(this.data, this.character.appearance), this.baseThumb = null, this.renderSlots(), this.renderOptions(), this.recompose();
@@ -47467,47 +47711,48 @@ var ha = class {
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function ya(e, t) {
+function Da(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
 }
 //#endregion
 //#region src/engine/index.ts
-var ba = "/__vortable/curate";
-function xa(e, t) {
+var Oa = "/__vortable/curate";
+function ka(e, t) {
 	let n = t.assetBase ?? "./assets/";
-	$r(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Hi(), a = t.appearance, o = !1, s = null, l = null, u = e, d = (e, t, r = 0) => ({
+	ni(n);
+	let r = t.mode ?? "play", i = t.storage ?? new Gi(), a = t.appearance, o = !1, s = t.net ? new ya(t.net) : void 0, l = null, u = null, d = e, f = (e, t, r = 0) => ({
 		zone: e,
 		appearance: a,
 		assetBase: n,
 		loadZone: t,
 		timeOffset: r,
-		onZone: (e) => s?.showTestZone(e.name),
-		onClock: (e) => s?.showTestClock(e),
-		inputLocked: () => o
-	}), f = (e, t) => {
+		onZone: (e) => l?.showTestZone(e.name),
+		onClock: (e) => l?.showTestClock(e),
+		inputLocked: () => o,
+		hub: s
+	}), p = (e, t) => {
 		let n = (Xt(e).dayMinutes ?? 24) * 6e4, r = Date.now();
 		return ((yn(t) - yn(xn(Xt(e).dayMinutes, r))) % 1 + 1) % 1 * n;
 	};
-	r === "edit" && (l = new Ai(t.zone ?? z("Nova zona", 40, 30)), s = new ca(e, l, i, {
+	r === "edit" && (u = new Ni(t.zone ?? z("Nova zona", 40, 30)), l = new da(e, u, i, {
 		assetBase: n,
-		textureImage: (e) => m.textures.get(e).getSourceImage(),
+		textureImage: (e) => h.textures.get(e).getSourceImage(),
 		startTest: () => {
-			m.scene.stop("editor"), m.scene.start("world", d(structuredClone(l.zone), async (e) => e === l.zone.id ? structuredClone(l.zone) : i.load(e), f(l.zone, l.previewHour)));
+			h.scene.stop("editor"), h.scene.start("world", f(structuredClone(u.zone), async (e) => e === u.zone.id ? structuredClone(u.zone) : i.load(e), p(u.zone, u.previewHour)));
 		},
 		stopTest: () => {
-			m.scene.stop("world"), m.scene.start("editor", { state: l });
+			h.scene.stop("world"), h.scene.start("editor", { state: u });
 		},
-		deleteSelected: () => h()?.deleteSelected(),
+		deleteSelected: () => g()?.deleteSelected(),
 		applySound: () => {
-			let e = m.scene.getScenes(!0)[0];
-			e && ei.of(e)?.applyPrefs();
+			let e = h.scene.getScenes(!0)[0];
+			e && ri.of(e)?.applyPrefs();
 		},
-		centerOnZone: () => h()?.centerOnZone(),
-		scene: () => h(),
+		centerOnZone: () => g()?.centerOnZone(),
+		scene: () => g(),
 		editCharacter: t.onEditCharacter,
 		curate: t.curate ? async (e, t, n) => {
-			let r = await fetch(ba, {
+			let r = await fetch(Oa, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -47517,10 +47762,10 @@ function xa(e, t) {
 				})
 			}), i = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
 			if (!r.ok) throw Error(i.error ?? `HTTP ${r.status}`);
-			Be(i), Je(m, i), l.emit("catalog");
+			Be(i), Je(h, i), u.emit("catalog");
 		} : void 0
-	}), u = s.stage);
-	async function p() {
+	}), d = l.stage);
+	async function m() {
 		if (t.zone) return t.zone;
 		try {
 			let e = await i.loadWorld(), t = e.start && await i.load(e.start);
@@ -47530,17 +47775,20 @@ function xa(e, t) {
 		} catch (e) {
 			console.error("[vortable] não deu pra ler o mundo", e);
 		}
-		return z("Vazio", 20, 15);
+		return {
+			...z("Vazio", 20, 15),
+			id: "vazio"
+		};
 	}
-	let m = new c.default.Game({
+	let h = new c.default.Game({
 		type: c.default.AUTO,
-		parent: u,
+		parent: d,
 		pixelArt: !0,
 		backgroundColor: "#07080c",
 		scale: {
 			mode: c.default.Scale.RESIZE,
-			width: u.clientWidth || 960,
-			height: u.clientHeight || 640
+			width: d.clientWidth || 960,
+			height: d.clientHeight || 640
 		},
 		physics: {
 			default: "arcade",
@@ -47548,26 +47796,32 @@ function xa(e, t) {
 		},
 		input: { mouse: { preventDefaultWheel: !0 } }
 	});
-	m.scene.add("world", xi), m.scene.add("editor", Oi), m.scene.add("boot", new it(n, async () => {
-		m.scene.stop("boot"), r === "edit" ? (m.scene.start("editor", { state: l }), s.assetsReady()) : m.scene.start("world", d(await p(), (e) => i.load(e)));
+	h.scene.add("world", wi), h.scene.add("editor", ji), h.scene.add("boot", new it(n, async () => {
+		h.scene.stop("boot"), r === "edit" ? (h.scene.start("editor", { state: u }), l.assetsReady()) : h.scene.start("world", f(await m(), (e) => i.load(e)));
 	}), !0);
-	let h = () => m.scene.isActive("editor") ? m.scene.getScene("editor") : null;
+	let g = () => h.scene.isActive("editor") ? h.scene.getScene("editor") : null;
 	return {
 		async setAppearance(e) {
-			a = e, m.scene.isActive("world") && await m.scene.getScene("world").setAppearance(e);
+			a = e, h.scene.isActive("world") && await h.scene.getScene("world").setAppearance(e);
+		},
+		receive(e) {
+			s?.receive(e);
+		},
+		resync() {
+			s?.resync();
 		},
 		setInputLocked(e) {
-			o = e, m.scene.isActive("world") && m.scene.getScene("world").setInputLocked(e);
+			o = e, h.scene.isActive("world") && h.scene.getScene("world").setInputLocked(e);
 		},
 		destroy() {
-			s?.destroy(), m.destroy(!0);
+			s?.leave(), l?.destroy(), h.destroy(!0);
 		}
 	};
 }
-function Sa(e, t = {}) {
-	let n = new va(e, {
+function Aa(e, t = {}) {
+	let n = new Ea(e, {
 		assetBase: t.assetBase ?? "./assets/",
-		storage: t.storage ?? new ha(),
+		storage: t.storage ?? new Ca(),
 		back: t.back,
 		single: t.single,
 		saveLabel: t.saveLabel,
@@ -47577,4 +47831,4 @@ function Sa(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { j as DAY_MINUTES, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, ha as LocalCharacterStorage, Hi as LocalWorldStorage, _ as TERRAINS, A as TILE, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, jt as characterFrame, R as clampZoneSize, gt as defaultAppearance, ot as loadCharacterData, Ui as localStorageAvailable, Sa as mountCharacterCreator, xa as mountVortable, pa as newCharacter, P as newId, Vi as newWorld, z as newZone, _t as normalizeAppearance, ma as parseCharacter, Xi as parseWorld, Wi as parseZone, bt as randomAppearance, Bi as summarize };
+export { j as DAY_MINUTES, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, Ca as LocalCharacterStorage, Gi as LocalWorldStorage, _ as TERRAINS, A as TILE, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, jt as characterFrame, R as clampZoneSize, gt as defaultAppearance, ot as loadCharacterData, Ki as localStorageAvailable, Aa as mountCharacterCreator, ka as mountVortable, xa as newCharacter, P as newId, Wi as newWorld, z as newZone, _t as normalizeAppearance, Sa as parseCharacter, va as parseNet, $i as parseWorld, qi as parseZone, bt as randomAppearance, Ui as summarize };

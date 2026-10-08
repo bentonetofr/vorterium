@@ -143,3 +143,13 @@
 
 .vortable-mesa__text { margin: var(--space-1, 4px) 0 0; color: var(--text-secondary); }
 .vortable-mesa__enter { padding-left: var(--space-6, 24px); padding-right: var(--space-6, 24px); }
+
+.vortable-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.vortable-dot--on { background: var(--success); box-shadow: 0 0 6px var(--success); }

@@ -10,6 +10,7 @@ import type { CampaignWithRole } from '../../../shared/types'
 import { MasterStage } from '../components/MasterStage'
 import { PlayerStage } from '../components/PlayerStage'
 import { VortableTools } from '../components/VortableTools'
+import { VortableNetProvider, useVortableNet } from '../net/VortableNetProvider'
 import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen } from '../fullscreen'
 import '../components/VortablePage.css'
 
@@ -24,7 +25,9 @@ export function VortablePage() {
         <CurrentCampaignProvider>
           {/* o mestre aqui avisa os jogadores e manda a cena (ver SceneBar) */}
           <MesaStreamProvider announce>
-            <VortablePageContent />
+            <VortableNetProvider>
+              <VortablePageContent />
+            </VortableNetProvider>
           </MesaStreamProvider>
         </CurrentCampaignProvider>
       </DiceRollerProvider>
@@ -38,6 +41,7 @@ function VortablePageContent() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const fullscreen = useIsFullscreen()
+  const vnet = useVortableNet()
   const [campaign, setCampaign] = useState<CampaignWithRole | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -71,6 +75,13 @@ function VortablePageContent() {
       <header className="vortable-page__bar">
         <button type="button" className="btn btn-ghost vortable-page__exit" onClick={exit}>← Sair</button>
         <span className="vortable-page__title">{campaign?.name ?? 'Vortable'}</span>
+        {campaign && (
+          <span className={`vortable-page__net vortable-page__net--${campaign.role === 'master' ? (vnet.peers.some((p) => p.connected) ? 'online' : 'off') : vnet.status}`}>
+            {campaign.role === 'master'
+              ? `${vnet.peers.filter((p) => p.connected).length} online`
+              : vnet.status === 'online' ? 'Conectado' : vnet.status === 'connecting' ? 'Conectando…' : 'Sozinho'}
+          </span>
+        )}
         {fullscreenSupported() && (
           <button
             type="button"

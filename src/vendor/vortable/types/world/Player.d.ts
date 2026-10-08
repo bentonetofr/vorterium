@@ -21,6 +21,9 @@ export declare class Player {
         h: number;
     };
     update(): void;
+    /** Animação em curso (a rede conta isso pros outros). */
+    get animName(): "idle" | "run" | "walk";
+    private current;
     private play;
 }
 /** O foco está num campo de texto? */

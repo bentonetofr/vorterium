@@ -5,6 +5,7 @@ import { createCharacterStorage, createWorldStorage, resolveAppearance, VORTABLE
 import { EngineStage } from './EngineStage'
 import { PlayersManager } from './PlayersManager'
 import { SceneBar } from './SceneBar'
+import { useVortableNet } from '../net/VortableNetProvider'
 
 type Tab = 'editar' | 'testar' | 'personagens' | 'jogadores'
 
@@ -16,6 +17,7 @@ const LABELS: Record<Tab, string> = {
 /** Mestre: editor do mundo, teste como boneco, criador de personagens e gerência dos jogadores. */
 export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
   const [tab, setTab] = useState<Tab>('editar')
+  const vnet = useVortableNet()
   const tabDir = useTabDirection(TABS, tab)
   const { tabsRef, selectTab } = useStableTabPanels<Tab>(setTab)
 
@@ -69,7 +71,7 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
       {tab === 'testar' && (
         <EngineStage
           key="testar"
-          deps={[campaign.id, userId]}
+          deps={[campaign.id, userId, vnet.net]}
           mount={async (engine, host, isDead) => {
             const [worlds, characters] = await Promise.all([
               createWorldStorage(campaign.id, campaign.name),
@@ -77,13 +79,23 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
             ])
             const appearance = await resolveAppearance(characters)
             if (isDead()) return () => {}
+            const net = vnet.net
             const game = engine.mountVortable(host, {
               mode: 'play',
               appearance,
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
+              // no teste o mestre anda no mundo junto com os jogadores
+              net: net ? { selfId: userId, name: vnet.name, send: (m) => net.send(m) } : undefined,
             })
-            return game.destroy
+            if (net) {
+              net.sink = (m) => game.receive(m)
+              net.onOpen = () => game.resync()
+            }
+            return () => {
+              if (net) { net.sink = null; net.onOpen = null }
+              game.destroy()
+            }
           }}
         />
       )}

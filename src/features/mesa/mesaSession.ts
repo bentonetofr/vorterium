@@ -108,6 +108,7 @@ export class MesaSession {
   private aviso:   RealtimeChannel | null = null
   private disposed = false
   private snap: MesaSnapshot = { ...EMPTY_SNAPSHOT }
+  private readonly signalHandlers = new Set<(payload: Payload) => void>()
 
   constructor(opts: SessionOptions) {
     this.opts = opts
@@ -142,6 +143,11 @@ export class MesaSession {
       config: { private: true, broadcast: { self: false } },
     })
     this.channel = channel
+
+    // conversa de conexão do multiplayer do Vortable (ver VortableNet)
+    channel.on('broadcast', { event: 'rtc' }, ({ payload }) => {
+      for (const handler of this.signalHandlers) handler((payload ?? {}) as Payload)
+    })
 
     if (this.opts.isMaster) {
       channel.on('broadcast', { event: 'viewer-join' }, () => this.sendState())
@@ -183,6 +189,17 @@ export class MesaSession {
     if (this.aviso) void supabase.removeChannel(this.aviso)
     this.channel = null
     this.aviso = null
+  }
+
+  // ── Sinalização do multiplayer (WebRTC) ────────────────
+
+  signal(payload: Payload) {
+    this.send('rtc', payload)
+  }
+
+  onSignal(handler: (payload: Payload) => void): () => void {
+    this.signalHandlers.add(handler)
+    return () => { this.signalHandlers.delete(handler) }
   }
 
   // ── Mestre: sessão e cena ──────────────────────────────

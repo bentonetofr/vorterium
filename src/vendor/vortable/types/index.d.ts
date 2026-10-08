@@ -1,5 +1,6 @@
 import { type WorldStorage } from './storage';
 import { type Appearance, type CharacterSave, type ZoneData } from './types';
+import { type NetLink } from './net/hub';
 import { type CharacterStorage } from './character/storage';
 export * from './types';
 export * from './storage';
@@ -7,6 +8,8 @@ export * from './character/storage';
 export { TERRAINS } from './assets/terrains';
 export { composeFrame as characterFrame } from './character/compose';
 export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppearance } from './character/catalog';
+export { parseNet } from './net/hub';
+export type { NetLink, NetMsg, NetHello, NetState, NetAnim } from './net/hub';
 export interface VortableOptions {
     mode?: 'play' | 'edit';
     /**
@@ -21,6 +24,8 @@ export interface VortableOptions {
     storage?: WorldStorage;
     /** Editor: mostra o botão "Personagem" e chama isto ao clicar. */
     onEditCharacter?: () => void;
+    /** Rede: com isto, os outros jogadores aparecem no mundo (sem, o jogo é solo). */
+    net?: NetLink;
     /**
      * Editor: liga a curadoria de peças (gravar ajustes nos pack.json). Só
      * funciona com o servidor de desenvolvimento do Vortable (npm run dev).
@@ -28,6 +33,10 @@ export interface VortableOptions {
     curate?: boolean;
 }
 export interface VortableHandle {
+    /** Entrega uma mensagem que chegou da rede (ver NetMsg). */
+    receive(msg: unknown): void;
+    /** A rede abriu depois do jogo: reanuncia o boneco e pergunta quem está na sala. */
+    resync(): void;
     setAppearance(appearance: Appearance): Promise<void>;
     /** Trava o teclado do boneco (o mestre cobriu a tela com uma cena). */
     setInputLocked(locked: boolean): void;
