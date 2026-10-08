@@ -225,6 +225,8 @@ export interface AltheriumSheet {
   pr_max:             number
   cards_current:      number
   hacksilvers:        number
+  /** Movimento por turno escolhido pelo jogador, em metros (null = automático, pelo Impulso). */
+  movement_override?: number | null
   db_pernas:          number
   db_bracos:          number
   db_tronco:          number

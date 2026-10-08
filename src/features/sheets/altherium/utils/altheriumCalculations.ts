@@ -81,10 +81,18 @@ export function runaskinUsesPerScene(prMaximum: number | null, level: number): n
 // Combate / deslocamento
 // ────────────────────────────────────────────────────────
 
-/** Movimento por turno: 5m com Impulso 0-8, 10m com 9-10. */
-export function movementMeters(impulso: number): number {
+/** Movimento automático por turno: 5m com Impulso 0-8, 10m com 9-10. */
+export function autoMovementMeters(impulso: number): number {
   return impulso >= 9 ? 10 : 5
 }
+
+/** Movimento por turno: o que o jogador escolheu na ficha; sem escolha, o automático (pelo Impulso). */
+export function movementMeters(impulso: number, override?: number | null): number {
+  return override == null ? autoMovementMeters(impulso) : override
+}
+
+/** Maior movimento que a ficha aceita (m). */
+export const MOVEMENT_MAX = 100
 
 /**
  * Dados de um teste de domínio: 1d10 padrão + 1d10 por ponto no domínio

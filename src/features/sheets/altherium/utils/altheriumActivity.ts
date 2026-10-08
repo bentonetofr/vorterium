@@ -57,6 +57,7 @@ const NUMBER_LABELS: Record<string, string> = {
   cards_current:       'Cartas',
   torre_current:       'Torre',
   hacksilvers:         'Hacksilvers',
+  movement_override:   'Movimento (m)',
   runaskin_scene_uses: 'Usos de runa na cena',
   vitality_roll:       'd10 de Vitalidade',
   equilibrio_roll:     'd10 de Equilíbrio',

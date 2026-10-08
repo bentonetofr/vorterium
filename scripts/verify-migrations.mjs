@@ -97,6 +97,7 @@ const expectedMigrations = [
   '20240192000000_vortable_base.sql',
   '20240193000000_vortable_controle.sql',
   '20240194000000_vortable_mundos.sql',
+  '20240195000000_altherium_movimento.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

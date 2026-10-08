@@ -22,6 +22,8 @@ import {
   domainTestDice,
   genesisBonusFor,
   movementMeters,
+  autoMovementMeters,
+  MOVEMENT_MAX,
   runaskinUsesPerScene,
   usesCards,
   usesFv,
@@ -106,6 +108,10 @@ type FormData = {
   pr_max:             number
   cards_current:      number
   hacksilvers:        number
+  /** Movimento escolhido (m); null = automático pelo Impulso. */
+  movement_override:  number | null
+  /** A coluna existe no banco (migration 20240195)? Sem ela, nada de movement_override no salvamento. */
+  movement_known:     boolean
   db_pernas:          number
   db_bracos:          number
   db_tronco:          number
@@ -148,6 +154,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     pr_max:             s.pr_max ?? 10,
     cards_current:      s.cards_current,
     hacksilvers:        s.hacksilvers,
+    movement_override:  s.movement_override ?? null,
+    movement_known:     'movement_override' in s,
     db_pernas:          s.db_pernas,
     db_bracos:          s.db_bracos,
     db_tronco:          s.db_tronco,
@@ -193,6 +201,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     pr_max:              f.pr_max,
     cards_current:       f.cards_current,
     hacksilvers:         f.hacksilvers,
+    ...(f.movement_known || f.movement_override !== null ? { movement_override: f.movement_override } : {}),
     db_pernas:           f.db_pernas,
     db_bracos:           f.db_bracos,
     db_tronco:           f.db_tronco,
@@ -849,7 +858,35 @@ export function AltheriumSheetForm({
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Anatomia &amp; Armadura</h4>
-            <span className="alth-counter">Movimento {movementMeters(form.attr_impulso)}m</span>
+            <div className="alth-movement">
+              <label className="alth-movement__label" htmlFor="alth-movement">Movimento</label>
+              <input
+                id="alth-movement"
+                type="number"
+                className="input alth-movement__input"
+                min={0}
+                max={MOVEMENT_MAX}
+                value={movementMeters(form.attr_impulso, form.movement_override)}
+                onChange={(e) => {
+                  const m = clamp(e.target.value, 0, MOVEMENT_MAX)
+                  // igual ao automático = volta pro automático (acompanha o Impulso de novo)
+                  set('movement_override', m === autoMovementMeters(form.attr_impulso) ? null : m)
+                }}
+                aria-describedby="alth-movement-hint"
+              />
+              <span className="alth-movement__unit">m</span>
+              {form.movement_override !== null && (
+                <button
+                  type="button"
+                  className="alth-movement__auto"
+                  onClick={() => set('movement_override', null)}
+                  title={`Voltar ao automático: ${autoMovementMeters(form.attr_impulso)} m (5 m com Impulso até 8, 10 m com 9 ou 10)`}
+                >
+                  automático
+                </button>
+              )}
+              <span id="alth-movement-hint" className="sr-only">Metros por turno. Automático: 5 com Impulso até 8, 10 com 9 ou 10.</span>
+            </div>
           </div>
 
           <div className="alth-anatomy">
