@@ -24,17 +24,26 @@ function useFitToWidth(open: boolean) {
       content.style.zoom = '1'
       const style = getComputedStyle(outer)
       const avail = outer.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
-      const need = content.scrollWidth
-      const zoom = need > avail + 1 ? Math.max(0.55, avail / need) : 1
+      // scrollWidth não vê o que está dentro de caixas com overflow cortado (as abas, o
+      // cabeçalho): mede o canto direito de cada elemento visível
+      const left = content.getBoundingClientRect().left
+      let need = content.scrollWidth
+      for (const el of content.querySelectorAll<HTMLElement>('*')) {
+        if (!el.offsetParent) continue
+        const r = el.getBoundingClientRect()
+        if (r.width > 0) need = Math.max(need, r.right - left)
+      }
+      const zoom = need > avail + 1 ? Math.max(0.5, avail / need) : 1
       content.style.zoom = zoom < 1 ? String(zoom) : ''
     }
-    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(fit) }
+    let timer = 0
+    const schedule = () => { window.clearTimeout(timer); timer = window.setTimeout(() => { cancelAnimationFrame(frame); frame = requestAnimationFrame(fit) }, 60) }
     fit()
     const resize = new ResizeObserver(schedule)
     resize.observe(outer)
     const mutate = new MutationObserver(schedule)
     mutate.observe(content, { childList: true, subtree: true })
-    return () => { cancelAnimationFrame(frame); resize.disconnect(); mutate.disconnect() }
+    return () => { window.clearTimeout(timer); cancelAnimationFrame(frame); resize.disconnect(); mutate.disconnect() }
   }, [open])
 
   return { body, inner }
