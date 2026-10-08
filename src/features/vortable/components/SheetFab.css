@@ -52,3 +52,7 @@
   overflow-y: auto;
   padding: var(--space-4);
 }
+
+/* o conteúdo é medido e encolhido (zoom) se não couber — nada vaza pro lado */
+.sheet-popup__body { overflow-x: hidden; }
+.sheet-popup__inner { width: 100%; }

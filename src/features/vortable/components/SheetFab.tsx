@@ -1,9 +1,44 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
 import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import './SheetFab.css'
+
+/**
+ * A ficha foi feita pra largura de uma página: numa janela mais estreita ela
+ * vazaria pela direita. Mede o quanto ela precisa e, se passar do espaço,
+ * encolhe (zoom) o suficiente pra caber. Reage a mudança de tamanho da janela
+ * e de conteúdo (trocar de aba da ficha muda a largura).
+ */
+function useFitToWidth(open: boolean) {
+  const body = useRef<HTMLDivElement>(null)
+  const inner = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const outer = body.current
+    const content = inner.current
+    if (!open || !outer || !content) return
+    let frame = 0
+    const fit = () => {
+      content.style.zoom = '1'
+      const style = getComputedStyle(outer)
+      const avail = outer.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      const need = content.scrollWidth
+      const zoom = need > avail + 1 ? Math.max(0.55, avail / need) : 1
+      content.style.zoom = zoom < 1 ? String(zoom) : ''
+    }
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(fit) }
+    fit()
+    const resize = new ResizeObserver(schedule)
+    resize.observe(outer)
+    const mutate = new MutationObserver(schedule)
+    mutate.observe(content, { childList: true, subtree: true })
+    return () => { cancelAnimationFrame(frame); resize.disconnect(); mutate.disconnect() }
+  }, [open])
+
+  return { body, inner }
+}
 
 function SheetIcon() {
   return (
@@ -25,6 +60,7 @@ export function SheetFab() {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
   const [open, setOpen] = useState(false)
+  const { body, inner } = useFitToWidth(open)
 
   useEffect(() => {
     if (!open) return
@@ -56,8 +92,10 @@ export function SheetFab() {
             <span className="sheet-popup__title">Ficha</span>
             <button type="button" className="sheet-popup__close" onClick={() => setOpen(false)} aria-label="Fechar a ficha">×</button>
           </header>
-          <div className="sheet-popup__body">
-            <CampaignSheetPanel campaign={campaign} currentUserId={user.id} />
+          <div ref={body} className="sheet-popup__body">
+            <div ref={inner} className="sheet-popup__inner">
+              <CampaignSheetPanel campaign={campaign} currentUserId={user.id} />
+            </div>
           </div>
         </aside>,
         document.body,
