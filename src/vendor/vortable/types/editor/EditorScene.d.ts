@@ -178,5 +178,14 @@ export declare class EditorScene extends Phaser.Scene {
     cycleVariant(dir: 1 | -1): void;
     /** Muda o tamanho do pincel (+1/−1). */
     brushBy(d: number): void;
+    private npcs;
+    private npcGhost?;
+    private npcGhostSig;
+    /** O boneco-fantasma que acompanha o mouse enquanto o NPC espera lugar. */
+    private refreshNpcGhost;
+    /** Põe o NPC do gerador onde o mestre clicou (a ferramenta volta pra seleção). */
+    private placeNpc;
+    /** Leva a câmera até um ponto (a lista de NPCs usa pra "ver"). */
+    focusAt(x: number, y: number): void;
     centerOnZone(): void;
 }

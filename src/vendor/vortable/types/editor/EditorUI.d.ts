@@ -64,6 +64,8 @@ export declare class EditorUI {
     private testing;
     private modals;
     private zoomLabel;
+    private npcPanel;
+    private npcButton;
     private zoomSlider;
     private offState;
     private onKey;

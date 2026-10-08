@@ -56,6 +56,7 @@ export declare class WorldScene extends Phaser.Scene {
     private clockAt;
     private audio;
     private remotes?;
+    private npcs?;
     private netAt;
     private netSent;
     /** Quanto andou desde o último passo, e onde estava no quadro anterior. */

@@ -1,7 +1,16 @@
-import type { WorldData, ZoneData, ZoneLight, ZoneObject } from '../types';
+import type { Appearance, Dir, WorldData, ZoneData, ZoneLight, ZoneObject } from '../types';
 import { type RoomStyle } from '../world/rooms';
 import type { ZoneSummary } from '../storage';
-export type Tool = 'brush' | 'fill' | 'erase' | 'object' | 'select' | 'room' | 'light' | 'portal' | 'spawn';
+export type Tool = 'brush' | 'fill' | 'erase' | 'object' | 'select' | 'room' | 'light' | 'portal' | 'spawn' | 'npc';
+/** NPC esperando lugar no mapa (gerador de NPCs): o clique seguinte o põe na zona. */
+export interface NpcDraft {
+    /** Só quando está sendo movido: mantém o id. */
+    id?: string;
+    name: string;
+    role: string;
+    appearance: Appearance;
+    dir?: Dir;
+}
 /** Jeito de uma luz solta (o que a ferramenta Luz põe; a selecionada é editada no lugar). */
 export type LightLook = Pick<ZoneLight, 'radius' | 'color' | 'intensity' | 'flicker'>;
 /**
@@ -13,8 +22,9 @@ export type LightLook = Pick<ZoneLight, 'radius' | 'color' | 'intensity' | 'flic
  * objects = objetos mudaram no lugar (espelhar, trocar variante) → reaplicar sprites
  * catalog = o catálogo de objetos mudou (curadoria) → refazer sprites e paleta
  * view   = a câmera mudou (zoom): só o indicador de zoom acompanha
+ * npcs   = a lista de NPCs da zona mudou (pôs, tirou, virou)
  */
-export type Change = 'zone' | 'edit' | 'ui' | 'cursor' | 'world' | 'objects' | 'catalog' | 'view';
+export type Change = 'zone' | 'edit' | 'ui' | 'cursor' | 'world' | 'objects' | 'catalog' | 'view' | 'npcs';
 export declare class EditorState {
     zone: ZoneData;
     tool: Tool;
@@ -34,6 +44,10 @@ export declare class EditorState {
     selected: number[];
     /** Objetos copiados (Ctrl C), com posição relativa ao centro do grupo. Vale entre zonas. */
     clipboard: ZoneObject[];
+    /** NPC esperando lugar no mapa (ferramenta npc). */
+    npcDraft: NpcDraft | null;
+    /** Pasta dos assets (os NPCs montam o boneco a partir dela). */
+    assetBase: string;
     /** Há uma janela aberta por cima do editor (o teclado é dela). */
     modalOpen: boolean;
     /** Id da saída selecionada (ferramenta de saída). */
@@ -67,7 +81,7 @@ export declare class EditorState {
     constructor(zone: ZoneData);
     on(fn: (c: Change) => void): () => boolean;
     emit(c: Change): void;
-    set(patch: Partial<Pick<EditorState, 'tool' | 'terrain' | 'brush' | 'objectKind' | 'flip' | 'roomStyle' | 'roomMode' | 'snap' | 'showGrid' | 'showCollision' | 'selected' | 'selectedPortal' | 'selectedLight' | 'lightLook' | 'lightPreview' | 'previewHour' | 'zoom'>>): void;
+    set(patch: Partial<Pick<EditorState, 'tool' | 'terrain' | 'brush' | 'objectKind' | 'flip' | 'roomStyle' | 'roomMode' | 'snap' | 'showGrid' | 'showCollision' | 'selected' | 'selectedPortal' | 'selectedLight' | 'lightLook' | 'lightPreview' | 'previewHour' | 'zoom' | 'npcDraft'>>): void;
     /** Guarda o estado atual ANTES de uma edição (uma pincelada inteira = 1 passo). */
     checkpoint(): void;
     /** Avisa que uma edição foi aplicada (a cena já desenhou). */
