@@ -46931,13 +46931,126 @@ function lo(e, t, n, r = Math.random) {
 	return eo(o, r);
 }
 //#endregion
+//#region src/engine/character/storage.ts
+function uo(e, t) {
+	return {
+		version: 1,
+		id: F("pers"),
+		name: e,
+		appearance: t,
+		updatedAt: Date.now()
+	};
+}
+function fo(e) {
+	let t = e, n = t?.appearance;
+	return !t || typeof t.id != "string" || !n || n.version !== 2 || n.body !== "male" && n.body !== "female" || typeof n.slots != "object" || !n.slots ? null : {
+		version: 1,
+		id: t.id,
+		name: typeof t.name == "string" ? t.name : "Sem nome",
+		appearance: {
+			version: 2,
+			body: n.body,
+			skin: typeof n.skin == "string" ? n.skin : "light",
+			slots: n.slots
+		},
+		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
+	};
+}
+var po = class {
+	key;
+	activeKey;
+	constructor(e = "") {
+		let t = e ? `vortable:${e}:` : "vortable:";
+		this.key = `${t}characters`, this.activeKey = `${t}activeCharacter`;
+	}
+	read() {
+		try {
+			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(fo).filter((e) => !!e);
+		} catch {
+			return [];
+		}
+	}
+	async list() {
+		return this.read().sort((e, t) => t.updatedAt - e.updatedAt);
+	}
+	async save(e) {
+		let t = this.read().filter((t) => t.id !== e.id);
+		localStorage.setItem(this.key, JSON.stringify([{
+			...e,
+			updatedAt: Date.now()
+		}, ...t]));
+	}
+	async remove(e) {
+		localStorage.setItem(this.key, JSON.stringify(this.read().filter((t) => t.id !== e))), await this.getActive() === e && await this.setActive(null);
+	}
+	async getActive() {
+		try {
+			return localStorage.getItem(this.activeKey);
+		} catch {
+			return null;
+		}
+	}
+	async setActive(e) {
+		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
+	}
+}, mo = "vortable-character";
+function ho(e) {
+	return JSON.stringify({
+		format: mo,
+		version: 1,
+		characters: e.map((e) => ({
+			name: e.name,
+			appearance: e.appearance
+		}))
+	}, null, 2);
+}
+function go(e) {
+	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
+}
+function _o(e, t) {
+	let n = e;
+	if (typeof e == "string") try {
+		n = JSON.parse(e);
+	} catch {
+		throw Error("O arquivo não é um JSON válido.");
+	}
+	let r = n;
+	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
+	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
+	for (let e of i) {
+		let n = e, r = fo({
+			id: "x",
+			name: n?.name,
+			appearance: n?.appearance
+		});
+		if (!r) continue;
+		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
+		a.push(uo(i, t ? xt(t, r.appearance) : r.appearance));
+	}
+	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
+	return a;
+}
+function vo(e, t, n = "application/json") {
+	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
+	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
+}
+function yo(e = ".json,application/json") {
+	return new Promise((t) => {
+		let n = document.createElement("input");
+		n.type = "file", n.accept = e, n.onchange = async () => {
+			let e = n.files?.[0];
+			t(e ? await e.text() : null);
+		}, n.oncancel = () => t(null), n.click();
+	});
+}
+//#endregion
 //#region src/engine/editor/NpcPanel.ts
-var uo = 6, fo = [
+var bo = 6, xo = [
 	"down",
 	"left",
 	"up",
 	"right"
-], po = class {
+], So = class {
 	state;
 	hooks;
 	el;
@@ -47004,7 +47117,7 @@ var uo = 6, fo = [
 		return this.style === "auto" ? this.analysis?.profile ?? "geral" : this.style;
 	}
 	newBatch() {
-		this.data && (this.drafts = lo(this.data, this.profile, uo), this.render());
+		this.data && (this.drafts = lo(this.data, this.profile, bo), this.render());
 	}
 	render() {
 		if (!this.analysis) return;
@@ -47021,6 +47134,11 @@ var uo = 6, fo = [
 			class: "vt-btn vt-primary",
 			html: `${Y.star}<span>Gerar novos</span>`,
 			onclick: () => this.newBatch()
+		}), q("button", {
+			class: "vt-btn",
+			title: "Usar um personagem salvo (arquivo) como NPC",
+			html: `${Y.upload}<span>Importar personagem</span>`,
+			onclick: () => void this.importCharacter()
 		})), n, q("h4", {}, "NPCs desta zona"), this.listEl), this.renderList();
 	}
 	listEl = null;
@@ -47053,6 +47171,20 @@ var uo = 6, fo = [
 	}
 	reroll(e) {
 		this.data && (this.drafts[e] = so(this.data, { profile: this.profile }), this.render());
+	}
+	async importCharacter() {
+		if (this.data) try {
+			let e = await yo();
+			if (e == null) return;
+			let [t] = _o(e, this.data);
+			this.pick({
+				name: t.name,
+				role: "",
+				appearance: t.appearance
+			});
+		} catch (e) {
+			this.hooks.toast(e.message, !0);
+		}
 	}
 	pick(e) {
 		this.state.set({
@@ -47110,7 +47242,7 @@ var uo = 6, fo = [
 		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
 	}
 	turn(e) {
-		this.state.checkpoint(), e.dir = fo[(fo.indexOf(e.dir) + 1) % fo.length], this.state.emit("npcs"), this.state.edited();
+		this.state.checkpoint(), e.dir = xo[(xo.indexOf(e.dir) + 1) % xo.length], this.state.emit("npcs"), this.state.edited();
 	}
 	move(e) {
 		this.state.set({
@@ -47131,7 +47263,7 @@ var uo = 6, fo = [
 			npcDraft: null
 		}), this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${e.name}" removido.`);
 	}
-}, mo = {
+}, Co = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -47139,7 +47271,7 @@ var uo = 6, fo = [
 	intensity: 1,
 	flicker: .2
 };
-function ho(e, t, n) {
+function wo(e, t, n) {
 	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = q("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
@@ -47172,7 +47304,7 @@ function ho(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? mo,
+			...o ?? Co,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -47231,7 +47363,7 @@ function ho(e, t, n) {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? mo } : null, F(), m();
+			o = k.checked ? { ...o ?? Co } : null, F(), m();
 		}
 	}), A = q("input", {
 		class: "vt-input vt-num",
@@ -47331,7 +47463,7 @@ function ho(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function go(e) {
+function To(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -47339,78 +47471,14 @@ function go(e) {
 		return [];
 	}
 }
-function _o(e, t) {
+function Eo(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
-//#region src/engine/character/storage.ts
-function vo(e, t) {
-	return {
-		version: 1,
-		id: F("pers"),
-		name: e,
-		appearance: t,
-		updatedAt: Date.now()
-	};
-}
-function yo(e) {
-	let t = e, n = t?.appearance;
-	return !t || typeof t.id != "string" || !n || n.version !== 2 || n.body !== "male" && n.body !== "female" || typeof n.slots != "object" || !n.slots ? null : {
-		version: 1,
-		id: t.id,
-		name: typeof t.name == "string" ? t.name : "Sem nome",
-		appearance: {
-			version: 2,
-			body: n.body,
-			skin: typeof n.skin == "string" ? n.skin : "light",
-			slots: n.slots
-		},
-		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
-	};
-}
-var bo = class {
-	key;
-	activeKey;
-	constructor(e = "") {
-		let t = e ? `vortable:${e}:` : "vortable:";
-		this.key = `${t}characters`, this.activeKey = `${t}activeCharacter`;
-	}
-	read() {
-		try {
-			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(yo).filter((e) => !!e);
-		} catch {
-			return [];
-		}
-	}
-	async list() {
-		return this.read().sort((e, t) => t.updatedAt - e.updatedAt);
-	}
-	async save(e) {
-		let t = this.read().filter((t) => t.id !== e.id);
-		localStorage.setItem(this.key, JSON.stringify([{
-			...e,
-			updatedAt: Date.now()
-		}, ...t]));
-	}
-	async remove(e) {
-		localStorage.setItem(this.key, JSON.stringify(this.read().filter((t) => t.id !== e))), await this.getActive() === e && await this.setActive(null);
-	}
-	async getActive() {
-		try {
-			return localStorage.getItem(this.activeKey);
-		} catch {
-			return null;
-		}
-	}
-	async setActive(e) {
-		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
-	}
-};
-//#endregion
 //#region src/engine/storage.ts
-function xo(e, t = Date.now()) {
+function Do(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -47424,7 +47492,7 @@ function xo(e, t = Date.now()) {
 		}))
 	};
 }
-function So(e = "Meu mundo") {
+function Oo(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: F("mundo"),
@@ -47433,7 +47501,7 @@ function So(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var Co = class {
+var ko = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -47458,9 +47526,9 @@ var Co = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Po(JSON.parse(e));
+			if (e) return Bo(JSON.parse(e));
 		} catch {}
-		return So();
+		return Oo();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -47471,19 +47539,19 @@ var Co = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? Eo(JSON.parse(t)) : null;
+			return t ? Mo(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([xo(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Do(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function wo() {
+function Ao() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -47491,14 +47559,14 @@ function wo() {
 		return !1;
 	}
 }
-var To = (e) => typeof e == "number" && Number.isFinite(e);
-function Eo(e) {
+var jo = (e) => typeof e == "number" && Number.isFinite(e);
+function Mo(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
 	if (!i(n) || !i(r)) throw Error("Tamanho de zona inválido (precisa ser de 8 a 128 tiles).");
 	if (!Array.isArray(t.corners) || t.corners.length !== (n + 1) * (r + 1)) throw Error("Zona corrompida: a grade de terrenos não bate com o tamanho.");
-	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && To(e.x) && To(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && To(e.x) && To(e.y) && To(e.w) && To(e.h) && e.w > 0 && e.h > 0), l = t.spawn && To(t.spawn.x) && To(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
+	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && jo(e.x) && jo(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && jo(e.x) && jo(e.y) && jo(e.w) && jo(e.h) && e.w > 0 && e.h > 0), l = t.spawn && jo(t.spawn.x) && jo(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
 		x: a / 2,
 		y: o / 2
 	};
@@ -47518,12 +47586,12 @@ function Eo(e) {
 			x: Math.round(e.x),
 			y: Math.round(e.y),
 			...e.flip === !0 ? { flip: !0 } : {},
-			...To(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
+			...jo(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...Ao(t.lighting),
-		...Mo(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: No(t.lights, a, o) } : {},
-		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: Do(t.npcs, a, o) } : {},
+		...Io(t.lighting),
+		...Ro(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: zo(t.lights, a, o) } : {},
+		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: No(t.npcs, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -47542,12 +47610,12 @@ function Eo(e) {
 		}
 	};
 }
-function Do(e, t, n) {
+function No(e, t, n) {
 	let r = [];
 	for (let i of e) {
 		let e = i;
-		if (!e || typeof e != "object" || !To(e.x) || !To(e.y)) continue;
-		let a = yo({
+		if (!e || typeof e != "object" || !jo(e.x) || !jo(e.y)) continue;
+		let a = fo({
 			id: "x",
 			name: e.name,
 			appearance: e.appearance
@@ -47557,37 +47625,37 @@ function Do(e, t, n) {
 			name: typeof e.name == "string" && e.name.trim() ? e.name.trim().slice(0, 60) : "NPC",
 			role: typeof e.role == "string" ? e.role.slice(0, 60) : "",
 			appearance: a.appearance,
-			x: ko(Math.round(e.x), 0, t),
-			y: ko(Math.round(e.y), 0, n),
+			x: Fo(Math.round(e.x), 0, t),
+			y: Fo(Math.round(e.y), 0, n),
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {}
 		});
 	}
 	return r;
 }
-var Oo = /^#[0-9a-f]{6}$/i, ko = (e, t, n) => Math.max(t, Math.min(n, e));
-function Ao(e) {
+var Po = /^#[0-9a-f]{6}$/i, Fo = (e, t, n) => Math.max(t, Math.min(n, e));
+function Io(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		...typeof t.tint == "string" && Oo.test(t.tint) ? { tint: t.tint } : {},
+		...typeof t.tint == "string" && Po.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...To(t.wind) ? { wind: ko(t.wind, 0, 1) } : {},
+		...jo(t.wind) ? { wind: Fo(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {}
 	} };
 }
-function jo(e) {
+function Lo(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {
-		hour: To(t.hour) ? ko(t.hour, 0, 24) % 24 : null,
-		...To(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: ko(t.dayMinutes, 1, 1440) } : {},
+		hour: jo(t.hour) ? Fo(t.hour, 0, 24) % 24 : null,
+		...jo(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Fo(t.dayMinutes, 1, 1440) } : {},
 		...typeof t.weather == "string" && t.weather in ar && t.weather !== "clear" ? { weather: t.weather } : {}
 	};
 	return n.hour === null && n.dayMinutes === void 0 && n.weather === void 0 ? {} : { sky: n };
 }
-function Mo(e) {
+function Ro(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -47609,7 +47677,7 @@ function Mo(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && To(i) && i > 0 && (n[t] = ko(i, 0, 1));
+		r.includes(t) && jo(i) && i > 0 && (n[t] = Fo(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -47617,22 +47685,22 @@ function Mo(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function No(e, t, n) {
-	return e.filter((e) => !!e && typeof e == "object" && To(e.x) && To(e.y)).map((e) => ({
+function zo(e, t, n) {
+	return e.filter((e) => !!e && typeof e == "object" && jo(e.x) && jo(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : F("luz"),
-		x: ko(Math.round(e.x), 0, t),
-		y: ko(Math.round(e.y), 0, n),
-		radius: To(e.radius) ? ko(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && Oo.test(e.color) ? e.color : "#ffb060",
-		intensity: To(e.intensity) ? ko(e.intensity, 0, 1) : 1,
-		flicker: To(e.flicker) ? ko(e.flicker, 0, 1) : 0
+		x: Fo(Math.round(e.x), 0, t),
+		y: Fo(Math.round(e.y), 0, n),
+		radius: jo(e.radius) ? Fo(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && Po.test(e.color) ? e.color : "#ffb060",
+		intensity: jo(e.intensity) ? Fo(e.intensity, 0, 1) : 1,
+		flicker: jo(e.flicker) ? Fo(e.flicker, 0, 1) : 0
 	}));
 }
-function Po(e) {
+function Bo(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
-	for (let [e, r] of Object.entries(t.layout ?? {})) r && To(r.x) && To(r.y) && (n[e] = {
+	for (let [e, r] of Object.entries(t.layout ?? {})) r && jo(r.x) && jo(r.y) && (n[e] = {
 		x: r.x,
 		y: r.y
 	});
@@ -47642,12 +47710,12 @@ function Po(e) {
 		name: typeof t.name == "string" ? t.name : "Meu mundo",
 		start: typeof t.start == "string" ? t.start : null,
 		layout: n,
-		...jo(t.sky)
+		...Lo(t.sky)
 	};
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var Fo = [
+var Vo = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -47698,15 +47766,15 @@ var Fo = [
 		label: "Régua: segure e arraste pra medir em metros (1 tile = 1 m)",
 		key: "R"
 	}
-], Io = 8, Lo = "vortable:objects:favorites", Ro = "vortable:editor:drawer";
-function zo() {
+], Ho = 8, Uo = "vortable:objects:favorites", Wo = "vortable:editor:drawer";
+function Go() {
 	try {
-		return localStorage.getItem(Ro) === "1";
+		return localStorage.getItem(Wo) === "1";
 	} catch {
 		return !1;
 	}
 }
-var Bo = "vortable:objects:recent", Vo = 24, Ho = [
+var Ko = "vortable:objects:recent", qo = 24, Jo = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -47747,12 +47815,12 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		"#8ae8ff",
 		0
 	]
-], Uo = [
+], Yo = [
 	12,
 	24,
 	48,
 	96
-], Wo = "★", Go = "⟲", Ko = class {
+], Xo = "★", Zo = "⟲", Qo = class {
 	state;
 	storage;
 	hooks;
@@ -47786,8 +47854,8 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = go(Lo);
-	recents = go(Bo);
+	favorites = To(Uo);
+	recents = To(Ko);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
@@ -47802,11 +47870,11 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, na("editor", ea), this.npcPanel = new po(t, {
+		this.state = t, this.storage = n, this.hooks = r, na("editor", ea), this.npcPanel = new So(t, {
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t)
-		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${zo() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
+		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Go() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -47905,13 +47973,13 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e);
 		try {
-			localStorage.setItem(Ro, e ? "1" : "0");
+			localStorage.setItem(Wo, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
 		let e = q("aside", { class: "vt-tools" });
-		for (let t of Fo) {
+		for (let t of Vo) {
 			let n = q("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
@@ -48111,7 +48179,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		});
 	}
 	renderTerrains() {
-		let e = qo(this.terrainFilter.trim()), t = _.filter((t) => !e || qo(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = $o(this.terrainFilter.trim()), t = _.filter((t) => !e || $o(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -48130,7 +48198,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = qe(), t = qo(this.objectFilter.trim()), n = (e) => !t || qo(Jo(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = qe(), t = $o(this.objectFilter.trim()), n = (e) => !t || $o(es(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -48170,14 +48238,14 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: Wo,
+				id: Xo,
 				title: "Favoritos",
 				icon: Y.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: Go,
+				id: Zo,
 				title: "Recentes",
 				icon: Y.clock,
 				count: u.length,
@@ -48361,7 +48429,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 			"Todas as zonas ficam sempre na mesma hora"
 		]], a.hour === null ? "cycle" : "fixed", (t) => s({ hour: t === "cycle" ? null : e.previewHour }))];
 		if (a.hour === null) {
-			let t = q("select", { class: "vt-select" }, ...Uo.map((e) => q("option", {
+			let t = q("select", { class: "vt-select" }, ...Yo.map((e) => q("option", {
 				value: e,
 				selected: (a.dayMinutes ?? 24) === e
 			}, `${e} min`)));
@@ -48419,7 +48487,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = q("div", { class: "vt-lightcolors" }, ...Ho.map(([e, t, r]) => q("button", {
+		let l = q("div", { class: "vt-lightcolors" }, ...Jo.map(([e, t, r]) => q("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -48593,14 +48661,14 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		let t = Ge(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Vo), _o(Bo, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, qo), Eo(Ko, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], _o(Lo, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], Eo(Uo, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -48691,7 +48759,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(We().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = ho(t, this.hooks.textureImage(Le(t.sheet)), n), i = q("button", {
+		let t = this.primary(e), n = [...new Set(We().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = wo(t, this.hooks.textureImage(Le(t.sheet)), n), i = q("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -48864,7 +48932,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Io, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(Ho, e)) });
 	}
 	async save() {
 		try {
@@ -48878,14 +48946,14 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 	exportZone() {
 		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = q("a", {
 			href: URL.createObjectURL(t),
-			download: `${Yo(e.name) || "zona"}.vortable.json`
+			download: `${ts(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
 	async importFile(e) {
 		let t = e.target, n = t.files?.[0];
 		if (t.value = "", n) try {
-			let e = Eo(JSON.parse(await n.text()));
+			let e = Mo(JSON.parse(await n.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(e), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${e.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -49138,8 +49206,8 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? xo(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(xo(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? Do(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(Do(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -49319,7 +49387,7 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 			}
 			return;
 		}
-		let s = Fo.find((e) => e.key.toLowerCase() === i);
+		let s = Vo.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -49330,10 +49398,10 @@ var Bo = "vortable:objects:recent", Vo = 24, Ho = [
 		}) : e.key === " " && e.preventDefault();
 	}
 };
-function qo(e) {
+function $o(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function Jo(e) {
+function es(e) {
 	return [
 		e.label,
 		e.category,
@@ -49342,12 +49410,12 @@ function Jo(e) {
 		...Ke(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function Yo(e) {
+function ts(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
 //#region src/engine/net/hub.ts
-var Xo = [
+var ns = [
 	"👏",
 	"😮",
 	"😂",
@@ -49356,17 +49424,17 @@ var Xo = [
 	"🎉",
 	"😱",
 	"🤔"
-], Zo = [
+], rs = [
 	"up",
 	"left",
 	"down",
 	"right"
-], Qo = [
+], is = [
 	"idle",
 	"walk",
 	"run"
-], $o = (e) => typeof e == "number" && Number.isFinite(e);
-function es(e) {
+], as = (e) => typeof e == "number" && Number.isFinite(e);
+function os(e) {
 	let t = e;
 	if (!t || typeof t != "object") return null;
 	switch (t.t) {
@@ -49380,14 +49448,14 @@ function es(e) {
 			};
 		}
 		case "who": return { t: "who" };
-		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !$o(t.x) || !$o(t.y) ? null : {
+		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !as(t.x) || !as(t.y) ? null : {
 			t: "state",
 			id: t.id,
 			zone: t.zone,
 			x: t.x,
 			y: t.y,
-			dir: Zo.includes(t.dir) ? t.dir : "down",
-			anim: Qo.includes(t.anim) ? t.anim : "idle"
+			dir: rs.includes(t.dir) ? t.dir : "down",
+			anim: is.includes(t.anim) ? t.anim : "idle"
 		};
 		case "bye": return typeof t.id == "string" ? {
 			t: "bye",
@@ -49400,11 +49468,11 @@ function es(e) {
 		case "env": return typeof t.zone != "string" || !t.zone ? null : {
 			t: "env",
 			zone: t.zone.slice(0, 80),
-			hour: $o(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
+			hour: as(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
 			weather: typeof t.weather == "string" ? t.weather.slice(0, 20) : null,
-			wind: $o(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null
+			wind: as(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null
 		};
-		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !$o(t.x) || !$o(t.y) || typeof t.emoji != "string" || !Xo.includes(t.emoji) ? null : {
+		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !as(t.x) || !as(t.y) || typeof t.emoji != "string" || !ns.includes(t.emoji) ? null : {
 			t: "react",
 			id: t.id,
 			name: typeof t.name == "string" ? t.name.slice(0, 60) : "",
@@ -49413,7 +49481,7 @@ function es(e) {
 			x: t.x,
 			y: t.y
 		};
-		case "teleport": return typeof t.zone == "string" && $o(t.x) && $o(t.y) ? {
+		case "teleport": return typeof t.zone == "string" && as(t.x) && as(t.y) ? {
 			t: "teleport",
 			zone: t.zone,
 			x: t.x,
@@ -49422,7 +49490,7 @@ function es(e) {
 		default: return null;
 	}
 }
-var ts = class {
+var ss = class {
 	link;
 	peers = /* @__PURE__ */ new Map();
 	envs = /* @__PURE__ */ new Map();
@@ -49473,7 +49541,7 @@ var ts = class {
 		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear(), this.zoneChanges.clear(), this.reactions.clear();
 	}
 	receive(e) {
-		let t = es(e);
+		let t = os(e);
 		if (t) switch (t.t) {
 			case "who":
 				this.hello && this.link.send(this.hello);
@@ -49528,7 +49596,7 @@ var ts = class {
 		};
 	}
 	react(e, t, n, r) {
-		if (!Xo.includes(e)) return;
+		if (!ns.includes(e)) return;
 		let i = {
 			t: "react",
 			id: this.link.selfId,
@@ -49545,59 +49613,7 @@ var ts = class {
 			this.teleports.delete(e);
 		};
 	}
-}, ns = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}", rs = "vortable-character";
-function is(e) {
-	return JSON.stringify({
-		format: rs,
-		version: 1,
-		characters: e.map((e) => ({
-			name: e.name,
-			appearance: e.appearance
-		}))
-	}, null, 2);
-}
-function as(e) {
-	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
-}
-function os(e, t) {
-	let n = e;
-	if (typeof e == "string") try {
-		n = JSON.parse(e);
-	} catch {
-		throw Error("O arquivo não é um JSON válido.");
-	}
-	let r = n;
-	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
-	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
-	for (let e of i) {
-		let n = e, r = yo({
-			id: "x",
-			name: n?.name,
-			appearance: n?.appearance
-		});
-		if (!r) continue;
-		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
-		a.push(vo(i, t ? xt(t, r.appearance) : r.appearance));
-	}
-	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
-	return a;
-}
-function ss(e, t, n = "application/json") {
-	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
-	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
-}
-function cs(e = ".json,application/json") {
-	return new Promise((t) => {
-		let n = document.createElement("input");
-		n.type = "file", n.accept = e, n.onchange = async () => {
-			let e = n.files?.[0];
-			t(e ? await e.text() : null);
-		}, n.oncancel = () => t(null), n.click();
-	});
-}
-//#endregion
-//#region src/engine/character/CreatorUI.ts
-var ls = {
+}, cs = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}", ls = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
@@ -49631,7 +49647,7 @@ var ls = {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
-		this.opts = t, na("editor", ea), na("creator", ns), this.character = vo("Novo personagem", bt()), this.nameInput = q("input", {
+		this.opts = t, na("editor", ea), na("creator", cs), this.character = uo("Novo personagem", bt()), this.nameInput = q("input", {
 			class: "vt-name",
 			value: this.character.name,
 			title: "Nome do personagem",
@@ -49891,15 +49907,15 @@ var ls = {
 	}
 	exportFile() {
 		let e = this.nameInput.value.trim() || "Sem nome";
-		ss(as(e), is([{
+		vo(go(e), ho([{
 			name: e,
 			appearance: this.appearance
 		}])), this.toast(`"${e}" exportado.`);
 	}
 	async importFile() {
-		let e = await cs();
+		let e = await yo();
 		if (e !== null) try {
-			let [t] = os(e, this.data);
+			let [t] = _o(e, this.data);
 			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
 			this.character = this.opts.single ? {
 				...t,
@@ -49919,7 +49935,7 @@ var ls = {
 		}, "Fechar")]);
 	}
 	newCharacter() {
-		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = vo("Novo personagem", bt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = uo("Novo personagem", bt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = xt(this.data, this.character.appearance), this.baseThumb = null, this.renderSlots(), this.renderOptions(), this.recompose();
@@ -49994,7 +50010,7 @@ var ps = "/__vortable/curate";
 function ms(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	ui(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Co(), a = t.appearance, o = !1, s = t.net ? new ts(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0, d) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new ko(), a = t.appearance, o = !1, s = t.net ? new ss(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0, d) => ({
 		zone: e,
 		...d ? {
 			at: {
@@ -50022,7 +50038,7 @@ function ms(e, t) {
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null;
-		u = new $i(r ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new Ko(e, u, i, {
+		u = new $i(r ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new Qo(e, u, i, {
 			assetBase: n,
 			textureImage: (e) => h.textures.get(e).getSourceImage(),
 			startTest: () => {
@@ -50191,7 +50207,7 @@ function ms(e, t) {
 function hs(e, t = {}) {
 	let n = new ds(e, {
 		assetBase: t.assetBase ?? "./assets/",
-		storage: t.storage ?? new bo(),
+		storage: t.storage ?? new po(),
 		back: t.back,
 		single: t.single,
 		saveLabel: t.saveLabel,
@@ -50201,4 +50217,4 @@ function hs(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { rs as CHARACTER_FORMAT, M as DAY_MINUTES, re as DEFAULT_WIND, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, bo as LocalCharacterStorage, Co as LocalWorldStorage, j as METERS_PER_TILE, Xo as REACTIONS, _ as TERRAINS, A as TILE, ar as WEATHERS, or as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, as as characterFileName, Ft as characterFrame, z as clampZoneSize, bt as defaultAppearance, ss as downloadText, is as exportCharacters, On as formatHour, ut as loadCharacterData, wo as localStorageAvailable, hs as mountCharacterCreator, ms as mountVortable, vo as newCharacter, F as newId, So as newWorld, B as newZone, xt as normalizeAppearance, yo as parseCharacter, os as parseCharacterFile, es as parseNet, Po as parseWorld, Eo as parseZone, cs as pickTextFile, wt as randomAppearance, xo as summarize };
+export { mo as CHARACTER_FORMAT, M as DAY_MINUTES, re as DEFAULT_WIND, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, po as LocalCharacterStorage, ko as LocalWorldStorage, j as METERS_PER_TILE, ns as REACTIONS, _ as TERRAINS, A as TILE, ar as WEATHERS, or as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, go as characterFileName, Ft as characterFrame, z as clampZoneSize, bt as defaultAppearance, vo as downloadText, ho as exportCharacters, On as formatHour, ut as loadCharacterData, Ao as localStorageAvailable, hs as mountCharacterCreator, ms as mountVortable, uo as newCharacter, F as newId, Oo as newWorld, B as newZone, xt as normalizeAppearance, fo as parseCharacter, _o as parseCharacterFile, os as parseNet, Bo as parseWorld, Mo as parseZone, yo as pickTextFile, wt as randomAppearance, Do as summarize };

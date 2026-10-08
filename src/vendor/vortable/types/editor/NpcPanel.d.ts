@@ -33,6 +33,8 @@ export declare class NpcPanel {
     private card;
     private paint;
     private reroll;
+    /** Personagem de um arquivo (o do criador de personagens) vira NPC: o clique seguinte no mapa o põe. */
+    private importCharacter;
     /** Escolheu: o NPC vai pro mouse e o próximo clique no mapa o põe na zona. */
     private pick;
     private renderList;
