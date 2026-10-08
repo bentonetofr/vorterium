@@ -124,7 +124,11 @@ export function watchWorlds(campaignId: string, onChange: () => void): () => voi
 }
 
 /** O armazenamento de UM mundo: as zonas dele e os dados do mundo. */
-export async function createWorldStorage(campaignId: string, worldId: string, worldName: string): Promise<WorldStorage> {
+export async function createWorldStorage(
+  campaignId: string, worldId: string, worldName: string,
+  /** Chamado depois de salvar uma zona (o mestre avisa os jogadores pra recarregarem). */
+  onZoneSaved?: (zoneId: string) => void,
+): Promise<WorldStorage> {
   const { parseWorld, parseZone, newWorld, summarize } = await loadEngine()
   const fresh = () => ({ ...newWorld(worldName), id: worldId })
 
@@ -184,6 +188,7 @@ export async function createWorldStorage(campaignId: string, worldId: string, wo
         data: zone,
       })
       if (error) fail('não deu pra salvar a zona', error)
+      onZoneSaved?.(zone.id)
     },
 
     async remove(id) {

@@ -22,7 +22,10 @@ export interface NetEnv {
     weather: string | null;
     wind: number | null;
 }
-export type NetMsg = NetEnv | NetHello | {
+export type NetMsg = NetEnv | {
+    t: 'zone';
+    id: string;
+} | NetHello | {
     t: 'who';
 } | NetState | {
     t: 'bye';
@@ -54,6 +57,7 @@ export declare class NetHub {
     readonly envs: Map<string, NetEnv>;
     /** Mudou quem está na sala (entrou, saiu, trocou de boneco). */
     private roster;
+    private zoneChanges;
     private teleports;
     private hello;
     private asked;
@@ -75,6 +79,8 @@ export declare class NetHub {
     /** Chegou uma mensagem da rede. */
     receive(raw: unknown): void;
     onRoster(fn: () => void): () => void;
+    /** O mestre salvou uma zona (o jogo recarrega se for a que está aberta). */
+    onZoneChanged(fn: (id: string) => void): () => void;
     onTeleport(fn: (m: {
         zone: string;
         x: number;

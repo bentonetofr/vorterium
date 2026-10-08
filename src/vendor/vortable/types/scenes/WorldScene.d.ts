@@ -27,6 +27,8 @@ export interface WorldSceneData {
         x: number;
         y: number;
     };
+    /** Aviso mostrado quando a cena abre (ex.: "o mestre atualizou o mapa"). */
+    notice?: string;
     /** Câmera do mestre: sem boneco, câmera livre, só observa os jogadores. */
     watch?: boolean;
 }
@@ -75,6 +77,9 @@ export declare class WorldScene extends Phaser.Scene {
         x: number;
         y: number;
     }[];
+    private reloading;
+    /** Relê a zona atual (o mestre salvou) e reabre a cena no mesmo ponto. */
+    private reloadZone;
     /** O mestre levou este jogador pra (x, y) de uma zona. */
     private teleportTo;
     /** Troca a aparência do jogador sem recarregar a cena. */

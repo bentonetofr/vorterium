@@ -46,7 +46,12 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   // o mestre trocou ou apagou o boneco: a tela acompanha
   useEffect(() => {
     void refresh()
-    return watchCharacters(campaign.id, () => { void refresh() })
+    const off = watchCharacters(campaign.id, () => { void refresh() })
+    // rede de segurança (tempo real que caiu e voltou)
+    const timer = window.setInterval(() => { void refresh() }, 20_000)
+    const onVisible = () => { if (document.visibilityState === 'visible') void refresh() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { off(); window.clearInterval(timer); document.removeEventListener('visibilitychange', onVisible) }
   }, [campaign.id, refresh])
 
   if (vnet.kicked) {

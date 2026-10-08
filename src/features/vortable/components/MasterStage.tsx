@@ -54,7 +54,8 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
           deps={[campaign.id, userId, vnet.net, editing.id]}
           mount={async (engine, host, isDead) => {
             const [worlds, characters] = await Promise.all([
-              createWorldStorage(campaign.id, editing.id, editing.name),
+              // salvou uma zona: quem está jogando nela recarrega na hora
+              createWorldStorage(campaign.id, editing.id, editing.name, (id) => vnet.net?.send({ t: 'zone', id })),
               createCharacterStorage(campaign.id, userId),
             ])
             const appearance = await resolveAppearance(characters)

@@ -41,6 +41,8 @@ export interface MesaDocRef {
 export interface MesaStage {
   /** Id da sessão do mestre (Vortable aberto); null = ninguém ao vivo. */
   liveId:   string | null
+  /** Mundo que o mestre abriu por último (muda: os jogadores relêem os mundos na hora). */
+  worldId:  string | null
   scene:    MesaScene
   document: MesaDocRef | null
 }
@@ -53,7 +55,7 @@ export interface MesaSnapshot {
 }
 
 export const GAME_SCENE: MesaScene = { kind: 'game' }
-export const EMPTY_STAGE: MesaStage = { liveId: null, scene: GAME_SCENE, document: null }
+export const EMPTY_STAGE: MesaStage = { liveId: null, worldId: null, scene: GAME_SCENE, document: null }
 
 export const EMPTY_SNAPSHOT: MesaSnapshot = { channelError: null, stage: EMPTY_STAGE, live: false }
 
@@ -98,6 +100,7 @@ function parseStage(raw: unknown): MesaStage | null {
   const s = raw as Payload
   return {
     liveId:   typeof s.liveId === 'string' ? s.liveId : null,
+    worldId:  typeof s.worldId === 'string' ? s.worldId : null,
     scene:    parseScene(s.scene),
     document: (s.document as MesaDocRef | null | undefined) ?? null,
   }
@@ -234,6 +237,11 @@ export class MesaSession {
   /** Troca o que os jogadores veem (vale na hora pra todos). */
   setScene(scene: MesaScene): void {
     this.setStage({ scene })
+  }
+
+  /** Mestre: abriu este mundo (avisa os jogadores além do banco). */
+  setWorldId(worldId: string | null): void {
+    this.setStage({ worldId })
   }
 
   showDocument(doc: MesaDocRef): void {

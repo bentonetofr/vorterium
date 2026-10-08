@@ -43823,7 +43823,7 @@ var vi = "char:me", yi = 220, bi = .15, xi = 500, Si = {
 		super("world");
 	}
 	init(e) {
-		this.cfg = e, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new nt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.remotes = void 0, this.netAt = 0, this.netSent = "";
+		this.cfg = e, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new nt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.remotes = void 0, this.netAt = 0, this.netSent = "";
 	}
 	async create() {
 		let { zone: e, assetBase: t, appearance: n, arrival: r } = this.cfg, i = e.width * 32, a = e.height * 32;
@@ -43838,7 +43838,13 @@ var vi = "char:me", yi = 220, bi = .15, xi = 500, Si = {
 		for (let t of [...we(e), ...Ht(e)]) s.add(this.add.zone(t.x + t.w / 2, t.y + t.h / 2, t.w, t.h));
 		Qe(this, e.objects, s), this.physics.world.setBounds(0, 0, i, a);
 		let l = this.cameras.main;
-		if (l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(yi), this.cfg.onZone?.(e), this.cfg.watch) return this.startWatch(e, i, a);
+		if (l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(yi), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
+			let t = this.cfg.hub.onZoneChanged((t) => {
+				t === e.id && this.reloadZone();
+			});
+			this.events.once(c.default.Scenes.Events.SHUTDOWN, t);
+		}
+		if (this.cfg.watch) return this.startWatch(e, i, a);
 		try {
 			await Nt(this, vi, t, n);
 		} catch (e) {
@@ -43939,7 +43945,8 @@ var vi = "char:me", yi = 220, bi = .15, xi = 500, Si = {
 		let t = await this.cfg.loadZone(e).catch(() => null);
 		t && this.sys.isActive() && this.scene.restart({
 			...this.cfg,
-			zone: t
+			zone: t,
+			notice: void 0
 		});
 	}
 	watchFit() {
@@ -43966,6 +43973,27 @@ var vi = "char:me", yi = 220, bi = .15, xi = 500, Si = {
 			y: e.state?.y ?? 0
 		})) : [];
 	}
+	reloading = !1;
+	async reloadZone() {
+		if (this.reloading || this.travelling) return;
+		this.reloading = !0;
+		let e = await this.cfg.loadZone(this.cfg.zone.id).catch(() => null);
+		if (!e || !this.sys.isActive()) {
+			this.reloading = !1;
+			return;
+		}
+		let t = this.player?.sprite;
+		this.scene.restart({
+			...this.cfg,
+			zone: e,
+			arrival: void 0,
+			at: t ? {
+				x: t.x,
+				y: t.y
+			} : void 0,
+			notice: this.cfg.watch ? void 0 : "O mestre atualizou o mapa."
+		});
+	}
 	async teleportTo(e, t, n) {
 		let r = this.player;
 		if (!r || this.travelling) return;
@@ -43987,7 +44015,8 @@ var vi = "char:me", yi = 220, bi = .15, xi = 500, Si = {
 				at: {
 					x: t,
 					y: n
-				}
+				},
+				notice: void 0
 			});
 		}
 	}
@@ -44073,7 +44102,9 @@ var vi = "char:me", yi = 220, bi = .15, xi = 500, Si = {
 				arrival: {
 					portal: n.portal,
 					dir: t.facing
-				}
+				},
+				at: void 0,
+				notice: void 0
 			});
 		}
 	}
@@ -47267,6 +47298,10 @@ function va(e) {
 			t: "bye",
 			id: t.id
 		} : null;
+		case "zone": return typeof t.id == "string" && t.id ? {
+			t: "zone",
+			id: t.id.slice(0, 80)
+		} : null;
 		case "env": return typeof t.zone != "string" || !t.zone ? null : {
 			t: "env",
 			zone: t.zone.slice(0, 80),
@@ -47288,6 +47323,7 @@ var ya = class {
 	peers = /* @__PURE__ */ new Map();
 	envs = /* @__PURE__ */ new Map();
 	roster = /* @__PURE__ */ new Set();
+	zoneChanges = /* @__PURE__ */ new Set();
 	teleports = /* @__PURE__ */ new Set();
 	hello = null;
 	asked = !1;
@@ -47325,7 +47361,7 @@ var ya = class {
 		this.link.send({
 			t: "bye",
 			id: this.link.selfId
-		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear();
+		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear(), this.zoneChanges.clear();
 	}
 	receive(e) {
 		let t = va(e);
@@ -47358,12 +47394,20 @@ var ya = class {
 			case "teleport":
 				this.teleports.forEach((e) => e(t));
 				break;
-			case "env": this.envs.set(t.zone, t);
+			case "env":
+				this.envs.set(t.zone, t);
+				break;
+			case "zone": this.zoneChanges.forEach((e) => e(t.id));
 		}
 	}
 	onRoster(e) {
 		return this.roster.add(e), () => {
 			this.roster.delete(e);
+		};
+	}
+	onZoneChanged(e) {
+		return this.zoneChanges.add(e), () => {
+			this.zoneChanges.delete(e);
 		};
 	}
 	onTeleport(e) {

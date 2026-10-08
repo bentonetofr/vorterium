@@ -55,7 +55,7 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaign?.id, userId, isMaster, mesa.signaling])
 
-  // nome do personagem na ficha: confere ao abrir, a cada poucos segundos e quando a janela da ficha fecha
+  // nome do personagem na ficha: confere ao abrir, a cada 5 segundos e quando a janela da ficha fecha
   useEffect(() => {
     if (!campaign || !userId) return
     let dead = false
@@ -65,7 +65,7 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
         .catch(() => { /* sem o nome da ficha, vale o da conta */ })
     }
     load()
-    const timer = window.setInterval(load, 15_000)
+    const timer = window.setInterval(load, 5_000)
     window.addEventListener(SHEET_CLOSED_EVENT, load)
     return () => { dead = true; window.clearInterval(timer); window.removeEventListener(SHEET_CLOSED_EVENT, load) }
   }, [campaign?.id, userId])

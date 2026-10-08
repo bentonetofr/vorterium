@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CampaignWorld } from '../services/vortableService'
 import { createWorld, deleteWorld, renameWorld, setActiveWorld } from '../services/vortableService'
 import { useVortableWorlds } from './VortableWorldProvider'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import './WorldsPanel.css'
 
 interface WorldsPanelProps {
@@ -17,6 +18,7 @@ interface WorldsPanelProps {
  */
 export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
   const { worlds, active, editing, setEditId, refresh } = useVortableWorlds()
+  const mesa = useMesaStream()
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,7 +47,10 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
   function open(w: CampaignWorld) {
     if (w.active) return
     if (!confirm(`Abrir "${w.name}"? Os jogadores que estão no Vortable vão para ele agora.`)) return
-    void run(`open:${w.id}`, () => setActiveWorld(campaignId, w.id))
+    void run(`open:${w.id}`, async () => {
+      await setActiveWorld(campaignId, w.id)
+      mesa.setWorldId(w.id) // os jogadores trocam de mundo na hora, mesmo se o tempo real do banco atrasar
+    })
   }
 
   function rename(w: CampaignWorld) {

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { ensureWorlds, watchWorlds, type CampaignWorld } from '../services/vortableService'
 
 interface WorldValue {
@@ -28,6 +29,7 @@ export function VortableWorldProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editId, setEditIdState] = useState<string | null>(null)
+  const mesa = useMesaStream()
 
   const refresh = useCallback(async () => {
     if (!campaignId) return
@@ -46,8 +48,18 @@ export function VortableWorldProvider({ children }: { children: ReactNode }) {
     try { setEditIdState(localStorage.getItem(editKey(campaignId))) } catch { setEditIdState(null) }
     void refresh()
     // o mestre abriu outro mundo (ou criou/apagou): todo mundo acompanha
-    return watchWorlds(campaignId, () => { void refresh() })
+    const off = watchWorlds(campaignId, () => { void refresh() })
+    // rede de segurança: se o tempo real caiu e voltou, nada se perde (confere de novo de vez em quando
+    // e quando a aba volta a ficar visível)
+    const timer = window.setInterval(() => { void refresh() }, 20_000)
+    const onVisible = () => { if (document.visibilityState === 'visible') void refresh() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { off(); window.clearInterval(timer); document.removeEventListener('visibilitychange', onVisible) }
   }, [campaignId, refresh])
+
+  // o mestre avisou pelo canal da Mesa que abriu um mundo: relê na hora
+  const announced = mesa.stage.worldId
+  useEffect(() => { if (announced) void refresh() }, [announced, refresh])
 
   const setEditId = useCallback((id: string) => {
     setEditIdState(id)
