@@ -18,6 +18,8 @@ interface MesaStreamValue extends MesaSnapshot {
   setViewing:   (v: boolean) => void
   /** Conversa de conexão do multiplayer (WebRTC) pelo canal da Mesa. */
   signaling:    { send: (payload: Record<string, unknown>) => void; subscribe: (handler: (payload: Record<string, unknown>) => void) => () => void }
+  /** Mestre: libera (true) ou encerra (false) o Vortable pros jogadores. */
+  setLive:      (on: boolean) => void
   /** Mestre: troca a cena que os jogadores veem (vale na hora pra todos). */
   setScene:     (scene: MesaScene) => void
   /** Mestre: põe uma imagem da galeria como cena (gera o link pros jogadores). */
@@ -88,6 +90,7 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
     },
   }), [])
 
+  const setLive = useCallback((on: boolean) => sessionRef.current?.setLive(on), [])
   const setScene = useCallback((scene: MesaScene) => sessionRef.current?.setScene(scene), [])
 
   const showImage = useCallback(async (image: { id: string; path: string; name: string }) => {
@@ -115,6 +118,7 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
     viewing,
     setViewing,
     signaling,
+    setLive,
     setScene,
     showImage,
     hideImage,

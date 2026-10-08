@@ -44,7 +44,7 @@ const TOPICS: Topic[] = [
   {
     id: 'mesa', icon: '▣', title: 'Mesa (Vortable)',
     steps: [
-      'Na sub-aba Mesa, "Entrar no Vortable" abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Jogador: na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre). Abaixo do botão ficam as artes recentes da mesa.',
+      'Na sub-aba Mesa, "Entrar no Vortable" abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Mestre: entre e clique em "Iniciar sessão" pra liberar os jogadores e avisar todos. Jogador: o botão fica bloqueado até o mestre iniciar; na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre).',
       'Mestre, Editar mundo: pinte terreno, ponha objetos, cômodos, luzes, clima e sons, e ligue as zonas por portas e saídas. Salva na campanha.',
       'Mestre, Testar: anda pelo mundo com o seu boneco. Personagens: cria bonecos, inclusive de NPCs.',
       'Mestre, Jogadores: veja o boneco de cada jogador, troque por outro (até um que você criou) ou apague pra ele criar de novo.',

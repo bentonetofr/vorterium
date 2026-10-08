@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import type { CampaignWithRole } from '../../../shared/types'
 import { MesaArts } from '../../mesa/components/MesaArts'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { enterFullscreen } from '../fullscreen'
 import './VortableMesa.css'
 
@@ -10,6 +11,9 @@ import './VortableMesa.css'
  */
 export function VortableMesa({ campaign }: { campaign: CampaignWithRole }) {
   const navigate = useNavigate()
+  const mesa = useMesaStream()
+  // jogador só entra depois que o mestre inicia a sessão
+  const locked = campaign.role !== 'master' && !mesa.live
 
   function enter() {
     enterFullscreen() // precisa vir do clique
@@ -22,10 +26,14 @@ export function VortableMesa({ campaign }: { campaign: CampaignWithRole }) {
         <div>
           <h3 className="vortable-mesa__title">Vortable</h3>
           <p className="vortable-mesa__text">
-            {campaign.role === 'master' ? 'Monte o mundo e acompanhe os jogadores.' : 'Entre no mundo com o seu boneco.'}
+            {campaign.role === 'master'
+              ? 'Monte o mundo. Os jogadores entram quando você inicia a sessão.'
+              : locked ? 'Aguardando o mestre liberar o Vortable.' : 'O mestre liberou! Entre no mundo com o seu boneco.'}
           </p>
         </div>
-        <button type="button" className="btn btn-primary vortable-mesa__enter" onClick={enter}>Entrar no Vortable</button>
+        <button type="button" className="btn btn-primary vortable-mesa__enter" onClick={enter} disabled={locked}>
+          {locked ? 'Bloqueado' : 'Entrar no Vortable'}
+        </button>
       </div>
       <MesaArts campaignId={campaign.id} />
     </section>

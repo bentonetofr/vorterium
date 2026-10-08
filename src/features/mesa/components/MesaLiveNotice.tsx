@@ -151,7 +151,7 @@ export function MesaLiveNotice() {
     <div key={current.liveId} className="mesa-notice" role="status" aria-live="polite">
       <span className="mesa-notice__live">Ao vivo</span>
       <div className="mesa-notice__body">
-        <p className="mesa-notice__message"><strong>{current.masterName}</strong> abriu o Vortable</p>
+        <p className="mesa-notice__message"><strong>{current.masterName}</strong> iniciou a sessão no Vortable</p>
         <p className="mesa-notice__campaign">{current.campaignName}</p>
       </div>
       <div className="mesa-notice__actions">

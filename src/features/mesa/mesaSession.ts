@@ -8,14 +8,16 @@ import { supabase } from '../../shared/lib/supabase'
 // só membros) leva o estado do mestre pros jogadores:
 //
 //   jogador → viewer-join {viewerId, name}   "estou aqui"
-//   mestre  → state {stage}                  a cena atual (e a resposta ao "estou aqui")
+//   mestre  → state {stage}                  a cena atual (e a resposta ao "estou aqui");
+//                                            liveId só existe depois que o mestre LIBERA o Vortable
 //
 // E no canal "mesa-aviso:<campanha>" (que os jogadores escutam de todas
-// as campanhas deles, em qualquer página), o mestre manda, enquanto está
-// com o Vortable aberto:
+// as campanhas deles, em qualquer página), o mestre manda, enquanto o
+// Vortable está liberado:
 //   live {liveId, masterName} / ended {liveId} — e responde "status?".
 //
-// Sem o mestre com o Vortable aberto, `liveId` é null e a cena volta pro jogo.
+// Sem o Vortable liberado pelo mestre, `liveId` é null (o botão de entrar dos
+// jogadores fica travado) e a cena volta pro jogo.
 // ────────────────────────────────────────────────────────
 
 /** O que os jogadores veem agora. */
@@ -164,9 +166,8 @@ export class MesaSession {
       if (status === 'SUBSCRIBED') {
         this.update({ channelError: null })
         if (this.opts.isMaster) {
-          // abriu (ou reconectou no meio): manda o estado e avisa
-          if (this.opts.announce && !this.snap.stage.liveId) this.open()
-          else if (this.snap.stage.liveId) this.sendState()
+          // reconectou no meio de uma sessão liberada: manda o estado de novo
+          if (this.snap.stage.liveId) this.sendState()
         } else {
           this.send('viewer-join', { viewerId: this.myId, name: this.opts.name })
         }
@@ -204,12 +205,24 @@ export class MesaSession {
 
   // ── Mestre: sessão e cena ──────────────────────────────
 
-  /** O Vortable do mestre abriu: os jogadores ficam sabendo e passam a ver a cena. */
-  private open() {
-    const stage = { ...this.snap.stage, liveId: newId() }
-    this.update({ stage })
-    this.sendState()
-    this.sendAviso('live', { liveId: stage.liveId, masterName: this.opts.name })
+  /**
+   * Mestre: libera (ou encerra) o Vortable pros jogadores. Liberado, o botão
+   * de entrar deles destrava e eles recebem o aviso "Ao vivo".
+   */
+  setLive(on: boolean): void {
+    if (!this.opts.isMaster || !this.opts.announce) return
+    const liveId = this.snap.stage.liveId
+    if (on === Boolean(liveId)) return
+    if (on) {
+      const stage = { ...this.snap.stage, liveId: newId() }
+      this.update({ stage })
+      this.sendState()
+      this.sendAviso('live', { liveId: stage.liveId, masterName: this.opts.name })
+    } else {
+      this.update({ stage: { ...this.snap.stage, liveId: null, scene: GAME_SCENE } })
+      this.sendState()
+      this.sendAviso('ended', { liveId })
+    }
   }
 
   private setStage(patch: Partial<MesaStage>) {
