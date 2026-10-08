@@ -8,6 +8,7 @@ import { LiveControl } from './LiveControl'
 import { SceneBar } from './SceneBar'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
+import { getResume, patchResume } from '../resume/resumeStore'
 
 type Tab = 'editar' | 'controle' | 'personagens' | 'jogadores'
 
@@ -18,7 +19,12 @@ const LABELS: Record<Tab, string> = {
 
 /** Mestre: editor do mundo, teste como boneco, criador de personagens e gerência dos jogadores. */
 export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: CampaignWithRole; userId: string; editSignal?: number }) {
-  const [tab, setTab] = useState<Tab>('editar')
+  // voltando ao Vortable: a mesma aba em que o mestre estava
+  const [tab, setTab] = useState<Tab>(() => {
+    const saved = getResume(campaign.id)?.masterTab as Tab | undefined
+    return saved && TABS.includes(saved) ? saved : 'editar'
+  })
+  useEffect(() => { patchResume(campaign.id, { masterTab: tab }) }, [campaign.id, tab])
   const vnet = useVortableNet()
   const { editing, ready } = useVortableWorlds()
 
@@ -64,8 +70,11 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
             const zone = last ? (await worlds.load(last.id)) ?? undefined : undefined
             if (isDead()) return () => {}
             const net = vnet.net
+            // voltando: a zona como estava (inclusive o que não foi salvo) e a câmera no mesmo lugar
+            const back = getResume(campaign.id)?.editor
             const game = engine.mountVortable(host, {
               mode: 'edit',
+              resume: back && back.worldId === editing.id ? back.snap : undefined,
               zone,
               appearance,
               assetBase: VORTABLE_ASSETS,
@@ -80,6 +89,8 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
             }
             return () => {
               if (net) { net.sink = null; net.onOpen = null }
+              const snap = game.snapshot()
+              if (snap) patchResume(campaign.id, { editor: { worldId: editing.id, snap } })
               game.destroy()
             }
           }}

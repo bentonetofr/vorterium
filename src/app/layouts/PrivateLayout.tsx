@@ -23,6 +23,7 @@ import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
 import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { VortableFab } from '../../features/vortable/components/VortableFab'
 import { VortablePip } from '../../features/vortable/components/VortablePip'
+import { usePip } from '../../features/vortable/pip/pipStore'
 import { Presence } from '../../shared/components/Presence'
 import { FabToasts } from '../../shared/components/FabToasts'
 import { Collapse } from '../../shared/components/Collapse'
@@ -31,11 +32,13 @@ import { SITE_NAV, TOOL_NAV, pageLabel, type NavItem } from '../navigation'
 import './PrivateLayout.css'
 
 export function PrivateLayout() {
+  // telinha do mestre aberta: é este layout que mantém a sessão ao vivo enquanto ele anda pelo site
+  const pip = usePip()
   return (
     <ActiveChatProvider>
     <DiceRollerProvider>
     <CurrentCampaignProvider>
-    <MesaStreamProvider>
+    <MesaStreamProvider announce={pip?.role === 'master'}>
     <RulebookHostProvider>
       <PrivateLayoutContent />
     </RulebookHostProvider>

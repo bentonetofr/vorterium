@@ -4,6 +4,7 @@ import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { getCharacterFaces } from '../../chat/services/chatService'
 import { VortableNet, type NetPeerInfo, type NetStatus, type Signaling } from './VortableNet'
+import { getResume, patchResume } from '../resume/resumeStore'
 
 interface NetValue {
   net: VortableNet | null
@@ -26,7 +27,7 @@ export const SHEET_CLOSED_EVENT = 'vortable:sheet-closed'
 const NetContext = createContext<NetValue | null>(null)
 
 /** Liga o multiplayer do Vortable (WebRTC) enquanto a página do Vortable está aberta. */
-export function VortableNetProvider({ children, startWatching = false }: { children: ReactNode; startWatching?: boolean }) {
+export function VortableNetProvider({ children, startWatching = false, remember = true }: { children: ReactNode; startWatching?: boolean; remember?: boolean }) {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
   const mesa = useMesaStream()
@@ -79,6 +80,16 @@ export function VortableNetProvider({ children, startWatching = false }: { child
   useEffect(() => {
     if (net) net.name = name
   }, [net, name])
+
+  // voltando ao Vortable: se a pessoa estava só assistindo, continua assistindo
+  useEffect(() => {
+    if (!remember || !campaign || isMaster) return
+    if (getResume(campaign.id)?.watching) setWatching(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaign?.id, isMaster])
+  useEffect(() => {
+    if (remember && campaign && !isMaster) patchResume(campaign.id, { watching })
+  }, [watching, remember, campaign?.id, isMaster])
 
   // o mestre vê quem está jogando e quem está só assistindo
   useEffect(() => {

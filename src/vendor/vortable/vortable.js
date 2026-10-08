@@ -43966,7 +43966,7 @@ var ji = "char:me", Mi = 220, Ni = .15, Pi = 500, Fi = {
 			x: u.x + u.w / 2,
 			y: u.y + u.h / 2 + 5
 		} : e.spawn);
-		this.player = new Qt(this, ji, d.x, d.y, r?.dir ?? "down"), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, kr).setScale(.75, .6).setAlpha(.32);
+		this.player = new Qt(this, ji, d.x, d.y, r?.dir ?? this.cfg.facing ?? "down"), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, kr).setScale(.75, .6).setAlpha(.32);
 		let f = this.player.sprite;
 		o.extraCasters = () => [{
 			key: f.texture.key,
@@ -44070,6 +44070,15 @@ var ji = "char:me", Mi = 220, Ni = .15, Pi = 500, Fi = {
 	}
 	watchFollow(e, t = 2) {
 		this.following = e, this.followZoom = t, e && this.cameras.main.setZoom(t);
+	}
+	snapshotPlay() {
+		let e = this.player?.sprite;
+		return !e || this.travelling ? null : {
+			zoneId: this.cfg.zone.id,
+			x: Math.round(e.x),
+			y: Math.round(e.y),
+			dir: this.player.facing
+		};
 	}
 	watchFollowing() {
 		return this.following;
@@ -49969,8 +49978,15 @@ var ps = "/__vortable/curate";
 function ms(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	ui(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Co(), a = t.appearance, o = !1, s = t.net ? new ts(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Co(), a = t.appearance, o = !1, s = t.net ? new ts(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0, d) => ({
 		zone: e,
+		...d ? {
+			at: {
+				x: d.x,
+				y: d.y
+			},
+			facing: d.dir
+		} : {},
 		appearance: a,
 		assetBase: n,
 		loadZone: i,
@@ -49988,44 +50004,59 @@ function ms(e, t) {
 		let n = (e.dayMinutes ?? 24) * 6e4, r = Date.now();
 		return ((wn(t) - wn(En(e.dayMinutes, r))) % 1 + 1) % 1 * n;
 	};
-	r === "edit" && (u = new $i(t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, l = new Ko(e, u, i, {
-		assetBase: n,
-		textureImage: (e) => h.textures.get(e).getSourceImage(),
-		startTest: () => {
-			h.scene.stop("editor");
-			let e = async (e) => e === u.zone.id ? structuredClone(u.zone) : i.load(e), t = tn(u.world);
-			h.scene.start("world", f(structuredClone(u.zone), e, t, p(t, u.previewHour)));
-		},
-		stopTest: () => {
-			h.scene.stop("world"), h.scene.start("editor", { state: u });
-		},
-		deleteSelected: () => _()?.deleteSelected(),
-		applySound: () => {
-			let e = h.scene.getScenes(!0)[0];
-			e && di.of(e)?.applyPrefs();
-		},
-		centerOnZone: () => _()?.centerOnZone(),
-		scene: () => _(),
-		editCharacter: t.onEditCharacter,
-		curate: t.curate ? async (e, t, n) => {
-			let r = await fetch(ps, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					pack: e,
-					id: t,
-					override: n
-				})
-			}), i = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
-			if (!r.ok) throw Error(i.error ?? `HTTP ${r.status}`);
-			Ue(i), Qe(h, i), u.emit("catalog");
-		} : void 0
-	}), d = l.stage);
+	if (r === "edit") {
+		let r = t.resume?.kind === "edit" ? t.resume : null;
+		u = new $i(r ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new Ko(e, u, i, {
+			assetBase: n,
+			textureImage: (e) => h.textures.get(e).getSourceImage(),
+			startTest: () => {
+				h.scene.stop("editor");
+				let e = async (e) => e === u.zone.id ? structuredClone(u.zone) : i.load(e), t = tn(u.world);
+				h.scene.start("world", f(structuredClone(u.zone), e, t, p(t, u.previewHour)));
+			},
+			stopTest: () => {
+				h.scene.stop("world"), h.scene.start("editor", { state: u });
+			},
+			deleteSelected: () => _()?.deleteSelected(),
+			applySound: () => {
+				let e = h.scene.getScenes(!0)[0];
+				e && di.of(e)?.applyPrefs();
+			},
+			centerOnZone: () => _()?.centerOnZone(),
+			scene: () => _(),
+			editCharacter: t.onEditCharacter,
+			curate: t.curate ? async (e, t, n) => {
+				let r = await fetch(ps, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						pack: e,
+						id: t,
+						override: n
+					})
+				}), i = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+				if (!r.ok) throw Error(i.error ?? `HTTP ${r.status}`);
+				Ue(i), Qe(h, i), u.emit("catalog");
+			} : void 0
+		}), d = l.stage;
+	}
 	async function m() {
 		let e = tn(null);
 		try {
 			let n = await i.loadWorld();
-			if (e = tn(n), t.zone) return {
+			if (e = tn(n), t.resume?.kind === "play") {
+				let n = t.resume, r = await i.load(n.zoneId);
+				if (r && n.x >= 0 && n.y >= 0 && n.x <= r.width * 32 && n.y <= r.height * 32) return {
+					zone: r,
+					sky: e,
+					start: {
+						x: n.x,
+						y: n.y,
+						dir: n.dir
+					}
+				};
+			}
+			if (t.zone) return {
 				zone: t.zone,
 				sky: e
 			};
@@ -50072,8 +50103,8 @@ function ms(e, t) {
 	h.scene.add("world", Ii), h.scene.add("editor", Zi), h.scene.add("boot", new ct(n, async () => {
 		if (h.scene.stop("boot"), r === "edit") h.scene.start("editor", { state: u }), l.assetsReady();
 		else {
-			let { zone: e, sky: t } = await m();
-			h.scene.start("world", f(e, (e) => i.load(e), t));
+			let { zone: e, sky: t, start: n } = await m();
+			h.scene.start("world", f(e, (e) => i.load(e), t, 0, n));
 		}
 	}), !0);
 	let g = () => h.scene.isActive("world") ? h.scene.getScene("world") : null, _ = () => h.scene.isActive("editor") ? h.scene.getScene("editor") : null;
@@ -50097,6 +50128,30 @@ function ms(e, t) {
 				wind: r
 			}))
 		} : void 0,
+		snapshot() {
+			if (r === "edit") {
+				if (!u) return null;
+				let e = _()?.cameras.main;
+				return {
+					kind: "edit",
+					zone: structuredClone(u.zone),
+					dirty: u.dirty,
+					view: e ? {
+						x: Math.round(e.midPoint.x),
+						y: Math.round(e.midPoint.y)
+					} : u.view,
+					zoom: e?.zoom ?? u.zoom
+				};
+			}
+			if (r === "play") {
+				let e = g()?.snapshotPlay();
+				return e ? {
+					kind: "play",
+					...e
+				} : null;
+			}
+			return null;
+		},
 		async setAppearance(e) {
 			a = e, h.scene.isActive("world") && await h.scene.getScene("world").setAppearance(e);
 		},

@@ -29,6 +29,8 @@ export interface WorldSceneData {
         x: number;
         y: number;
     };
+    /** Pra onde o boneco olha ao aparecer em `at` (voltar de onde parou). */
+    facing?: Dir;
     /** Aviso mostrado quando a cena abre (ex.: "o mestre atualizou o mapa"). */
     notice?: string;
     /** Câmera do mestre: sem boneco, câmera livre, só observa os jogadores. */
@@ -81,6 +83,13 @@ export declare class WorldScene extends Phaser.Scene {
     watchFocus(x: number, y: number): void;
     /** A câmera acompanha um jogador (null solta). */
     watchFollow(id: string | null, zoom?: number): void;
+    /** Onde o jogador está agora (pra voltar exatamente aí depois). */
+    snapshotPlay(): {
+        zoneId: string;
+        x: number;
+        y: number;
+        dir: Dir;
+    } | null;
     /** Quem a câmera acompanha agora. */
     watchFollowing(): string | null;
     /** Espectador reage: o emoji aparece no jogador acompanhado (ou no centro da câmera) pra todos. */

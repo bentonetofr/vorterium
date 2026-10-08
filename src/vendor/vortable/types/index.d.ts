@@ -1,5 +1,5 @@
 import { type WorldStorage } from './storage';
-import { type Appearance, type CharacterSave, type ZoneData } from './types';
+import { type Appearance, type CharacterSave, type Dir, type ZoneData } from './types';
 import { formatHour } from './world/daylight';
 import { type NetLink } from './net/hub';
 import { type CharacterStorage } from './character/storage';
@@ -34,6 +34,8 @@ export interface VortableOptions {
     onEditCharacter?: () => void;
     /** Rede: com isto, os outros jogadores aparecem no mundo (sem, o jogo é solo). */
     net?: NetLink;
+    /** Volta de onde a pessoa parou (ver `VortableHandle.snapshot`). Vale pro mesmo `mode` em que foi tirado. */
+    resume?: VortableSnapshot;
     /** Câmera de observador: também ouve os sons da zona (espectador). */
     listen?: boolean;
     /**
@@ -42,6 +44,26 @@ export interface VortableOptions {
      */
     curate?: boolean;
 }
+/**
+ * Onde a pessoa estava quando saiu (pra voltar exatamente aí): no jogo, a zona e o ponto
+ * em que o boneco parou; no editor, a zona aberta (com o que ainda não foi salvo) e a câmera.
+ */
+export type VortableSnapshot = {
+    kind: 'play';
+    zoneId: string;
+    x: number;
+    y: number;
+    dir: Dir;
+} | {
+    kind: 'edit';
+    zone: ZoneData;
+    dirty: boolean;
+    view: {
+        x: number;
+        y: number;
+    } | null;
+    zoom: number;
+};
 /** Controles da câmera do mestre (mode 'watch'). */
 export interface WatchControls {
     setZone(id: string): Promise<void>;
@@ -81,6 +103,8 @@ export interface WatchControls {
 export interface VortableHandle {
     /** Só no mode 'watch'. */
     watch?: WatchControls;
+    /** Onde a pessoa está agora, pra `resume` na próxima vez (null = sem o que guardar). */
+    snapshot(): VortableSnapshot | null;
     /** Entrega uma mensagem que chegou da rede (ver NetMsg). */
     receive(msg: unknown): void;
     /** A rede abriu depois do jogo: reanuncia o boneco e pergunta quem está na sala. */

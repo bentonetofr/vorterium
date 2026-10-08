@@ -4,7 +4,7 @@ import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { EMPTY_SNAPSHOT, GAME_SCENE, MesaSession, type MesaScene, type MesaSnapshot, type SpectateRules } from './mesaSession'
 import { getMesaImageShowUrl } from './services/mesaImagesService'
 import { setDocumentVisible } from './documents/documentsService'
-import { usePip } from '../vortable/pip/pipStore'
+import { peekHandoff, usePip } from '../vortable/pip/pipStore'
 
 // ────────────────────────────────────────────────────────
 // Estado da Mesa no nível do layout: a conexão vive enquanto a pessoa está
@@ -62,7 +62,11 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
 
   useEffect(() => {
     if (!campaignId || !userId) return
-    const session = new MesaSession({ campaignId, userId, name, isMaster, announce: announce && isMaster, onChange: setSnap })
+    const session = new MesaSession({
+      campaignId, userId, name, isMaster, announce: announce && isMaster, onChange: setSnap,
+      // o mestre que pega a sessão de quem a largou continua do mesmo estado (ao vivo, cena, regras)
+      resume: announce && isMaster ? peekHandoff(campaignId) ?? undefined : undefined,
+    })
     sessionRef.current = session
     void session.connect()
     return () => {

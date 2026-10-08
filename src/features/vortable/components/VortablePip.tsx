@@ -8,7 +8,7 @@ import { VortableNetProvider, useVortableNet } from '../net/VortableNetProvider'
 import { VortableWorldProvider, useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { createWorldStorage, VORTABLE_ASSETS } from '../services/vortableService'
 import { enterFullscreen } from '../fullscreen'
-import { closePip, usePip } from '../pip/pipStore'
+import { closePip, setHandoff, usePip } from '../pip/pipStore'
 import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import './SceneBar.css'
@@ -42,14 +42,14 @@ export function VortablePip() {
     return () => window.clearTimeout(timer)
   }, [campaign, live])
   // mestre desligou os espectadores, ou a pessoa foi pra outra campanha
-  useEffect(() => { if (campaign && !stage.spectate.allow) closePip() }, [campaign, stage.spectate.allow])
+  useEffect(() => { if (campaign && campaign.role !== 'master' && !stage.spectate.allow) closePip() }, [campaign, stage.spectate.allow])
   useEffect(() => { if (campaign && here && here.id !== campaign.id) closePip() }, [campaign, here])
 
   if (!campaign) return null
   return (
     <CurrentCampaignProvider key={campaign.id} initial={campaign}>
       <VortableWorldProvider>
-        <VortableNetProvider startWatching>
+        <VortableNetProvider startWatching remember={false}>
           <PipWindow campaign={campaign} />
         </VortableNetProvider>
       </VortableWorldProvider>
@@ -93,8 +93,18 @@ function PipWindow({ campaign }: { campaign: CampaignWithRole }) {
     setPicked(inGame[(i + delta + inGame.length) % inGame.length].id)
   }
 
+  const master = campaign.role === 'master'
+
+  /** Fechar a telinha do mestre encerra a sessão (é ela que mantém a sessão no ar). */
+  function close() {
+    if (master && !confirm('Fechar a telinha encerra a sessão pros jogadores. Encerrar?')) return
+    closePip()
+  }
+
   function expand() {
     enterFullscreen() // vem do clique
+    // mestre: a sessão ao vivo passa da telinha pra página do Vortable sem cair
+    if (master) setHandoff(campaign.id, stage)
     closePip()
     navigate(`/campanhas/${campaign.id}/vortable`)
   }
@@ -102,13 +112,13 @@ function PipWindow({ campaign }: { campaign: CampaignWithRole }) {
   return (
     <aside className={`vortable-pip${collapsed ? ' vortable-pip--collapsed' : ''}`} aria-label="Vortable ao vivo">
       <header className="vortable-pip__head">
-        <span className="vortable-pip__live">Ao vivo</span>
+        <span className="vortable-pip__live">{master ? 'No ar' : 'Ao vivo'}</span>
         <span className="vortable-pip__title">{zoneName || 'Vortable'}</span>
         <button type="button" className="vortable-pip__btn" onClick={() => setCollapsed((v) => !v)} aria-label={collapsed ? 'Mostrar a telinha' : 'Recolher a telinha'} title={collapsed ? 'Mostrar' : 'Recolher'}>
           {collapsed ? '▴' : '▾'}
         </button>
         <button type="button" className="vortable-pip__btn" onClick={expand} aria-label="Voltar ao Vortable" title="Voltar ao Vortable">⤢</button>
-        <button type="button" className="vortable-pip__btn" onClick={closePip} aria-label="Fechar a telinha" title="Fechar">✕</button>
+        <button type="button" className="vortable-pip__btn" onClick={close} aria-label="Fechar a telinha" title={master ? 'Encerrar a sessão e fechar' : 'Fechar'}>✕</button>
       </header>
 
       {/* recolhida, a janela mantém o jogo montado (só some de vista): reabrir é instantâneo */}

@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../shared/lib/supabase'
+import { peekHandoff } from '../vortable/pip/pipStore'
 
 // ────────────────────────────────────────────────────────
 // Mesa: a "cena" que os jogadores veem no Vortable, estilo OBS. O mestre
@@ -81,6 +82,8 @@ interface SessionOptions {
   isMaster:   boolean
   /** Mestre: avisa os jogadores que a Mesa está aberta (só a página do Vortable faz isso). */
   announce:   boolean
+  /** Mestre: continua de uma sessão que já estava no ar (a telinha e a página do Vortable se passam a sessão). */
+  resume?:    MesaStage
   onChange:   (snapshot: MesaSnapshot) => void
 }
 
@@ -143,6 +146,7 @@ export class MesaSession {
   constructor(opts: SessionOptions) {
     this.opts = opts
     this.myId = `${opts.userId}:${newId()}`
+    if (opts.resume && opts.isMaster) this.snap = { ...EMPTY_SNAPSHOT, stage: opts.resume, live: Boolean(opts.resume.liveId) }
   }
 
   get snapshot(): MesaSnapshot {
@@ -207,7 +211,8 @@ export class MesaSession {
 
   dispose(): void {
     if (this.disposed) return
-    if (this.opts.isMaster && this.snap.stage.liveId) {
+    // numa passagem (telinha ↔ página do Vortable) a sessão continua no ar: não avisa que acabou
+    if (this.opts.isMaster && this.snap.stage.liveId && !peekHandoff(this.opts.campaignId)) {
       const ended = this.snap.stage.liveId
       this.snap = { ...this.snap, stage: EMPTY_STAGE, live: false }
       this.sendState()

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { enterFullscreen, leaveFullscreen } from '../fullscreen'
-import { openPip } from '../pip/pipStore'
+import { getPip, openPip, setHandoff } from '../pip/pipStore'
 import './VortableFab.css'
 
 /** Mesa de jogo com o escudo do mestre (a tela dobrável) em cima. */
@@ -41,6 +41,8 @@ export function VortableFab({ mode }: { mode: 'enter' | 'leave' }) {
         className={`vortable-fab${live ? ' vortable-fab--live' : ''}`}
         onClick={() => {
           enterFullscreen() // vem do clique
+          // mestre com a telinha aberta: a sessão ao vivo passa da telinha pra página sem cair
+          if (getPip()?.role === 'master') setHandoff(campaign.id, stage)
           navigate(`/campanhas/${campaign.id}/vortable`)
         }}
         aria-label="Entrar no Vortable"
@@ -58,8 +60,12 @@ export function VortableFab({ mode }: { mode: 'enter' | 'leave' }) {
       className="vortable-fab vortable-fab--leave"
       onClick={() => {
         leaveFullscreen()
-        // jogador com a sessão no ar: uma telinha continua mostrando o jogo enquanto ele anda pelo site
-        if (!master && live && stage.spectate.allow) openPip(campaign)
+        // sessão no ar: uma telinha continua mostrando o jogo enquanto a pessoa anda pelo site
+        // (mestre: a sessão passa a ser mantida pela telinha, então não cai)
+        if (live && (master || stage.spectate.allow)) {
+          if (master) setHandoff(campaign.id, stage)
+          openPip(campaign)
+        }
         navigate(`/campanhas/${campaign.id}/mesa-sessao`, { state: { initialSessionSubTab: 'mesa' } })
       }}
       aria-label="Sair do Vortable"

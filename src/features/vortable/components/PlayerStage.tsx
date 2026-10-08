@@ -10,6 +10,7 @@ import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import { SpectatorStage } from './SpectatorStage'
+import { getResume, patchResume } from '../resume/resumeStore'
 import './SceneBar.css'
 import './SpectatorStage.css'
 
@@ -130,8 +131,11 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           const data = await engine.loadCharacterData(VORTABLE_ASSETS)
           if (isDead()) return () => {}
           const net = vnet.net
+          // voltando ao Vortable: o boneco reaparece onde parou (mesma zona e mesmo ponto)
+          const back = getResume(campaign.id)?.play
           const game = engine.mountVortable(host, {
             mode: 'play',
+            resume: back && back.worldId === active.id ? back.snap : undefined,
             appearance: engine.normalizeAppearance(data, mine.appearance),
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
@@ -147,6 +151,8 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           return () => {
             if (gameRef.current === game) gameRef.current = null
             if (net && net.sink) { net.sink = null; net.onOpen = null }
+            const snap = game.snapshot()
+            if (snap) patchResume(campaign.id, { play: { worldId: active.id, snap } })
             game.destroy()
           }
         }}
