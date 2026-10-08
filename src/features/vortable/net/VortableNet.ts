@@ -13,7 +13,9 @@ import { iceServers } from '../../mesa/mesaRtc'
 //   ambos   → ice {to | from, candidate}
 //
 // No DataChannel, cada mensagem é um JSON: ou uma mensagem do jogo (NetMsg do
-// motor: hello, who, state, bye, teleport) ou uma de sistema ({sys: 'kick'}).
+// motor: hello, who, state, bye, teleport, react) ou uma de sistema ({sys: 'kick'};
+// {sys: 'role', role} do jogador pro mestre: "estou jogando" ou "estou assistindo";
+// {sys: 'cmd', cmd: 'spectate' | 'play'} do mestre pro jogador: mandar assistir / pôr em jogo).
 // ────────────────────────────────────────────────────────
 
 export interface Signal {
@@ -30,10 +32,16 @@ export interface Signaling {
   subscribe(handler: (payload: Signal) => void): () => void
 }
 
+/** Quem está conectado: jogando (com boneco no mundo) ou só assistindo. */
+export type NetRole = 'player' | 'spectator'
+
+export type NetCommand = 'spectate' | 'play'
+
 export interface NetPeerInfo {
   id: string
   name: string
   connected: boolean
+  role: NetRole
 }
 
 export type NetStatus = 'off' | 'connecting' | 'online'
@@ -50,6 +58,7 @@ interface Peer {
   pc: RTCPeerConnection
   dc: RTCDataChannel | null
   name: string
+  role: NetRole
   pending: RTCIceCandidateInit[]
   dropTimer?: number
   createdAt: number
@@ -71,6 +80,8 @@ export class VortableNet {
   onChange: (() => void) | null = null
   /** O mestre me tirou da sessão. */
   onKicked: (() => void) | null = null
+  /** O mestre mandou eu assistir ou voltar a jogar. */
+  onCommand: ((cmd: NetCommand) => void) | null = null
 
   /** Nome mostrado sobre o boneco (o do personagem na ficha); pode mudar com o jogo aberto. */
   name: string
@@ -81,6 +92,7 @@ export class VortableNet {
   private link: Peer | null = null                    // jogador: a ligação com o mestre
   private live = false
   private kicked = false
+  private role: NetRole = 'player'
   private disposed = false
   private joinTimer: number | undefined
   private readonly off: () => void
@@ -120,6 +132,17 @@ export class VortableNet {
     for (const env of this.envs.values()) this.sendTo(id, env)
   }
 
+  /** Mestre: manda um jogador assistir (ou voltar a jogar). */
+  command(id: string, cmd: NetCommand) {
+    this.sendTo(id, { sys: 'cmd', cmd })
+  }
+
+  /** Jogador: conta ao mestre se está jogando ou só assistindo (reenviado ao reconectar). */
+  setRole(role: NetRole) {
+    this.role = role
+    if (!this.opts.isMaster && this.link?.dc?.readyState === 'open') this.link.dc.send(JSON.stringify({ sys: 'role', role }))
+  }
+
   /** Mestre: tira o jogador da sessão. */
   kick(id: string) {
     this.sendTo(id, { sys: 'kick' })
@@ -135,7 +158,7 @@ export class VortableNet {
 
   /** Mestre: quem está conectado agora. */
   get connected(): NetPeerInfo[] {
-    return [...this.peers.entries()].map(([id, p]) => ({ id, name: p.name, connected: p.dc?.readyState === 'open' }))
+    return [...this.peers.entries()].map(([id, p]) => ({ id, name: p.name, connected: p.dc?.readyState === 'open', role: p.role }))
   }
 
   /** O mestre está ao vivo? (jogador: liga/desliga a procura pela conexão) */
@@ -194,7 +217,7 @@ export class VortableNet {
   private async offerTo(id: string, name: string) {
     this.closePeer(id, false)
     const pc = new RTCPeerConnection({ iceServers: iceServers() })
-    const peer: Peer = { pc, dc: null, name: name.slice(0, 60), pending: [], createdAt: Date.now() }
+    const peer: Peer = { pc, dc: null, name: name.slice(0, 60), role: 'player', pending: [], createdAt: Date.now() }
     this.peers.set(id, peer)
 
     const dc = pc.createDataChannel('vortable')
@@ -246,7 +269,16 @@ export class VortableNet {
   private fromPeer(id: string, data: string) {
     let msg: unknown
     try { msg = JSON.parse(data) } catch { return }
-    if (typeof msg !== 'object' || msg === null || 'sys' in msg) return
+    if (typeof msg !== 'object' || msg === null) return
+    if ('sys' in msg) {
+      const sys = msg as { sys?: unknown; role?: unknown }
+      const peer = this.peers.get(id)
+      if (peer && sys.sys === 'role' && (sys.role === 'player' || sys.role === 'spectator') && peer.role !== sys.role) {
+        peer.role = sys.role
+        this.onChange?.()
+      }
+      return
+    }
     // jogo recém-montado perguntando quem está aí: ele também precisa da hora/tempo do mestre
     if ((msg as { t?: unknown }).t === 'who') this.sendEnvs(id)
     this.sink?.(msg)
@@ -308,7 +340,7 @@ export class VortableNet {
     if (old) { old.pc.onconnectionstatechange = null; old.pc.close() }
 
     const pc = new RTCPeerConnection({ iceServers: iceServers() })
-    const peer: Peer = { pc, dc: null, name: 'mestre', pending: early, createdAt: Date.now() }
+    const peer: Peer = { pc, dc: null, name: 'mestre', role: 'player', pending: early, createdAt: Date.now() }
     this.link = peer
 
     pc.ondatachannel = (e) => {
@@ -317,6 +349,7 @@ export class VortableNet {
       dc.onopen = () => {
         if (this.link !== peer) return
         window.clearInterval(this.joinTimer)
+        dc.send(JSON.stringify({ sys: 'role', role: this.role }))
         this.setStatus('online')
         this.onOpen?.()
       }
@@ -359,6 +392,9 @@ export class VortableNet {
         this.kicked = true
         this.stopLink()
         this.onKicked?.()
+      } else if ((msg as { sys: unknown }).sys === 'cmd') {
+        const cmd = (msg as { cmd?: unknown }).cmd
+        if (cmd === 'spectate' || cmd === 'play') this.onCommand?.(cmd)
       }
       return
     }

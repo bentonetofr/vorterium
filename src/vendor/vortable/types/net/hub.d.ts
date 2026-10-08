@@ -22,7 +22,18 @@ export interface NetEnv {
     weather: string | null;
     wind: number | null;
 }
-export type NetMsg = NetEnv | {
+/** Reações que o espectador pode mandar. */
+export declare const REACTIONS: readonly ['👏', '😮', '😂', '❤️', '🔥', '🎉', '😱', '🤔'];
+export interface NetReact {
+    t: 'react';
+    id: string;
+    name: string;
+    emoji: string;
+    zone: string;
+    x: number;
+    y: number;
+}
+export type NetMsg = NetEnv | NetReact | {
     t: 'zone';
     id: string;
 } | NetHello | {
@@ -59,6 +70,7 @@ export declare class NetHub {
     private roster;
     private zoneChanges;
     private teleports;
+    private reactions;
     private hello;
     private asked;
     constructor(link: NetLink);
@@ -81,6 +93,10 @@ export declare class NetHub {
     onRoster(fn: () => void): () => void;
     /** O mestre salvou uma zona (o jogo recarrega se for a que está aberta). */
     onZoneChanged(fn: (id: string) => void): () => void;
+    /** Chegou uma reação (de um espectador) pra mostrar no mapa. */
+    onReact(fn: (m: NetReact) => void): () => void;
+    /** Manda uma reação (de espectador) no ponto dado; também aparece pra quem mandou. */
+    react(emoji: string, zone: string, x: number, y: number): void;
     onTeleport(fn: (m: {
         zone: string;
         x: number;

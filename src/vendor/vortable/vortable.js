@@ -43845,7 +43845,7 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		super("world");
 	}
 	init(e) {
-		this.cfg = e, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new rt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.remotes = void 0, this.netAt = 0, this.netSent = "";
+		this.cfg = e, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new rt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.switching = !1, this.reactions = 0, this.remotes = void 0, this.netAt = 0, this.netSent = "";
 	}
 	async create() {
 		let { zone: e, assetBase: t, appearance: n, arrival: r } = this.cfg, i = e.width * 32, a = e.height * 32;
@@ -43853,7 +43853,7 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		for (let t of e.objects) this.occluders.add(Ye(this, t), t);
 		new Wt(this, e);
 		let o = this.lighting = new Br(this, e);
-		o.timeOffset = this.cfg.timeOffset ?? 0, o.sky = this.cfg.sky ?? { hour: null }, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = this.cfg.watch ? null : Si.create(this, e), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
+		o.timeOffset = this.cfg.timeOffset ?? 0, o.sky = this.cfg.sky ?? { hour: null }, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = this.cfg.watch && !this.cfg.listen ? null : Si.create(this, e), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
 			this.events.off(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio?.destroy(), this.audio = null;
 		});
 		let s = this.physics.add.staticGroup();
@@ -43863,6 +43863,12 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		if (l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(Ei), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
 			let t = this.cfg.hub.onZoneChanged((t) => {
 				t === e.id && this.reloadZone();
+			});
+			this.events.once(c.default.Scenes.Events.SHUTDOWN, t);
+		}
+		if (this.cfg.hub) {
+			let t = this.cfg.hub.onReact((t) => {
+				t.zone === e.id && this.showReaction(t.emoji, t.name, t.x, t.y);
 			});
 			this.events.once(c.default.Scenes.Events.SHUTDOWN, t);
 		}
@@ -43939,9 +43945,11 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		this.inputLocked = e, this.player && (this.player.locked = e);
 	}
 	following = null;
+	switching = !1;
+	reactions = 0;
 	startWatch(e, t, n) {
 		let r = this.cameras.main;
-		r.removeBounds(), this.watchFit(), r.setRoundPixels(!1);
+		r.removeBounds(), this.watchFit(), this.cfg.follow && (this.following = this.cfg.follow, r.setZoom(2)), r.setRoundPixels(!1);
 		let i = this.input;
 		i.on("pointermove", (e) => {
 			e.isDown && (this.following = null, r.scrollX -= (e.x - e.prevPosition.x) / r.zoom, r.scrollY -= (e.y - e.prevPosition.y) / r.zoom);
@@ -43968,6 +43976,7 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		t && this.sys.isActive() && this.scene.restart({
 			...this.cfg,
 			zone: t,
+			follow: this.following ?? void 0,
 			notice: void 0
 		});
 	}
@@ -43983,7 +43992,54 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		this.following = null, this.cameras.main.centerOn(e, t);
 	}
 	watchFollow(e) {
-		this.following = e;
+		this.following = e, e && this.cameras.main.setZoom(2);
+	}
+	watchFollowing() {
+		return this.following;
+	}
+	watchReact(e) {
+		let t = this.cfg.hub;
+		if (!t) return;
+		let n = this.following ? t.peers.get(this.following) : null, r = n?.state && n.state.zone === this.cfg.zone.id ? {
+			x: n.state.x,
+			y: n.state.y - 40
+		} : this.cameras.main.midPoint;
+		t.react(e, this.cfg.zone.id, r.x + (Math.random() - .5) * 70, r.y - Math.random() * 10);
+	}
+	showReaction(e, t, n, r) {
+		if (this.reactions >= 24) return;
+		this.reactions++;
+		let i = this.add.text(n, r, e, {
+			fontFamily: "\"Segoe UI Emoji\", \"Apple Color Emoji\", \"Noto Color Emoji\", system-ui",
+			fontSize: "20px"
+		}).setOrigin(.5, 1).setDepth(1e9).setResolution(4), a = t ? this.add.text(n, r + 1, t, {
+			fontFamily: "system-ui",
+			fontSize: "8px",
+			color: "#e9e2d0",
+			stroke: "#000",
+			strokeThickness: 3
+		}).setOrigin(.5, 0).setDepth(1e9).setResolution(4) : null;
+		this.tweens.add({
+			targets: a ? [i, a] : [i],
+			y: "-=44",
+			alpha: {
+				from: 1,
+				to: 0
+			},
+			duration: 1900,
+			ease: "Sine.easeOut",
+			onComplete: () => {
+				i.destroy(), a?.destroy(), this.reactions = Math.max(0, this.reactions - 1);
+			}
+		}), this.tweens.add({
+			targets: i,
+			scale: {
+				from: .6,
+				to: 1.15
+			},
+			duration: 260,
+			ease: "Back.easeOut"
+		});
 	}
 	watchPeers() {
 		let e = this.cfg.hub;
@@ -44059,7 +44115,9 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 		let n = e?.sprite, r = !!n && n.body.velocity.lengthSq() > 1;
 		if (this.remotes?.update(this.game.loop.delta / 1e3), this.following) {
 			let e = this.cfg.hub?.peers.get(this.following);
-			e?.state && e.state.zone === this.cfg.zone.id && (t.scrollX += (e.state.x - t.width / 2 - t.scrollX) * Di, t.scrollY += (e.state.y - t.height / 2 - t.scrollY) * Di);
+			e?.state && e.state.zone === this.cfg.zone.id ? (t.scrollX += (e.state.x - t.width / 2 - t.scrollX) * Di, t.scrollY += (e.state.y - t.height / 2 - t.scrollY) * Di) : e?.state && this.cfg.watch && !this.switching && (this.switching = !0, this.watchZone(e.state.zone).finally(() => {
+				this.switching = !1;
+			}));
 		}
 		this.lighting && (this.lighting.liveEnv = this.cfg.hub?.envFor(this.cfg.zone.id) ?? null), this.ground?.tufts.update(t, this.game.loop.delta / 1e3, r ? [{
 			x: n.x,
@@ -47301,16 +47359,25 @@ function xa(e) {
 //#endregion
 //#region src/engine/net/hub.ts
 var Sa = [
+	"👏",
+	"😮",
+	"😂",
+	"❤️",
+	"🔥",
+	"🎉",
+	"😱",
+	"🤔"
+], Ca = [
 	"up",
 	"left",
 	"down",
 	"right"
-], Ca = [
+], wa = [
 	"idle",
 	"walk",
 	"run"
-], wa = (e) => typeof e == "number" && Number.isFinite(e);
-function Ta(e) {
+], Ta = (e) => typeof e == "number" && Number.isFinite(e);
+function Ea(e) {
 	let t = e;
 	if (!t || typeof t != "object") return null;
 	switch (t.t) {
@@ -47324,14 +47391,14 @@ function Ta(e) {
 			};
 		}
 		case "who": return { t: "who" };
-		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !wa(t.x) || !wa(t.y) ? null : {
+		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !Ta(t.x) || !Ta(t.y) ? null : {
 			t: "state",
 			id: t.id,
 			zone: t.zone,
 			x: t.x,
 			y: t.y,
-			dir: Sa.includes(t.dir) ? t.dir : "down",
-			anim: Ca.includes(t.anim) ? t.anim : "idle"
+			dir: Ca.includes(t.dir) ? t.dir : "down",
+			anim: wa.includes(t.anim) ? t.anim : "idle"
 		};
 		case "bye": return typeof t.id == "string" ? {
 			t: "bye",
@@ -47344,11 +47411,20 @@ function Ta(e) {
 		case "env": return typeof t.zone != "string" || !t.zone ? null : {
 			t: "env",
 			zone: t.zone.slice(0, 80),
-			hour: wa(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
+			hour: Ta(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
 			weather: typeof t.weather == "string" ? t.weather.slice(0, 20) : null,
-			wind: wa(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null
+			wind: Ta(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null
 		};
-		case "teleport": return typeof t.zone == "string" && wa(t.x) && wa(t.y) ? {
+		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !Ta(t.x) || !Ta(t.y) || typeof t.emoji != "string" || !Sa.includes(t.emoji) ? null : {
+			t: "react",
+			id: t.id,
+			name: typeof t.name == "string" ? t.name.slice(0, 60) : "",
+			emoji: t.emoji,
+			zone: t.zone,
+			x: t.x,
+			y: t.y
+		};
+		case "teleport": return typeof t.zone == "string" && Ta(t.x) && Ta(t.y) ? {
 			t: "teleport",
 			zone: t.zone,
 			x: t.x,
@@ -47357,13 +47433,14 @@ function Ta(e) {
 		default: return null;
 	}
 }
-var Ea = class {
+var Da = class {
 	link;
 	peers = /* @__PURE__ */ new Map();
 	envs = /* @__PURE__ */ new Map();
 	roster = /* @__PURE__ */ new Set();
 	zoneChanges = /* @__PURE__ */ new Set();
 	teleports = /* @__PURE__ */ new Set();
+	reactions = /* @__PURE__ */ new Set();
 	hello = null;
 	asked = !1;
 	constructor(e) {
@@ -47394,16 +47471,20 @@ var Ea = class {
 		this.hello && this.announce(this.hello.appearance);
 	}
 	resync() {
-		this.hello && (this.link.send(this.hello), this.link.send({ t: "who" }));
+		if (!this.hello) {
+			this.link.send({ t: "who" });
+			return;
+		}
+		this.link.send(this.hello), this.link.send({ t: "who" });
 	}
 	leave() {
 		this.link.send({
 			t: "bye",
 			id: this.link.selfId
-		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear(), this.zoneChanges.clear();
+		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear(), this.zoneChanges.clear(), this.reactions.clear();
 	}
 	receive(e) {
-		let t = Ta(e);
+		let t = Ea(e);
 		if (t) switch (t.t) {
 			case "who":
 				this.hello && this.link.send(this.hello);
@@ -47433,6 +47514,9 @@ var Ea = class {
 			case "teleport":
 				this.teleports.forEach((e) => e(t));
 				break;
+			case "react":
+				this.reactions.forEach((e) => e(t));
+				break;
 			case "env":
 				this.envs.set(t.zone, t);
 				break;
@@ -47449,15 +47533,33 @@ var Ea = class {
 			this.zoneChanges.delete(e);
 		};
 	}
+	onReact(e) {
+		return this.reactions.add(e), () => {
+			this.reactions.delete(e);
+		};
+	}
+	react(e, t, n, r) {
+		if (!Sa.includes(e)) return;
+		let i = {
+			t: "react",
+			id: this.link.selfId,
+			name: this.link.name,
+			emoji: e,
+			zone: t,
+			x: Math.round(n),
+			y: Math.round(r)
+		};
+		this.link.send(i), this.reactions.forEach((e) => e(i));
+	}
 	onTeleport(e) {
 		return this.teleports.add(e), () => {
 			this.teleports.delete(e);
 		};
 	}
-}, Da = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}";
+}, Oa = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}";
 //#endregion
 //#region src/engine/character/storage.ts
-function Oa(e, t) {
+function ka(e, t) {
 	return {
 		version: 1,
 		id: P("pers"),
@@ -47466,7 +47568,7 @@ function Oa(e, t) {
 		updatedAt: Date.now()
 	};
 }
-function ka(e) {
+function Aa(e) {
 	let t = e, n = t?.appearance;
 	return !t || typeof t.id != "string" || !n || n.version !== 2 || n.body !== "male" && n.body !== "female" || typeof n.slots != "object" || !n.slots ? null : {
 		version: 1,
@@ -47481,7 +47583,7 @@ function ka(e) {
 		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
 	};
 }
-var Aa = class {
+var ja = class {
 	key;
 	activeKey;
 	constructor(e = "") {
@@ -47490,7 +47592,7 @@ var Aa = class {
 	}
 	read() {
 		try {
-			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(ka).filter((e) => !!e);
+			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Aa).filter((e) => !!e);
 		} catch {
 			return [];
 		}
@@ -47518,10 +47620,10 @@ var Aa = class {
 	async setActive(e) {
 		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
 	}
-}, ja = "vortable-character";
-function Ma(e) {
+}, Ma = "vortable-character";
+function Na(e) {
 	return JSON.stringify({
-		format: ja,
+		format: Ma,
 		version: 1,
 		characters: e.map((e) => ({
 			name: e.name,
@@ -47529,10 +47631,10 @@ function Ma(e) {
 		}))
 	}, null, 2);
 }
-function Na(e) {
+function Pa(e) {
 	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
 }
-function Pa(e, t) {
+function Fa(e, t) {
 	let n = e;
 	if (typeof e == "string") try {
 		n = JSON.parse(e);
@@ -47543,23 +47645,23 @@ function Pa(e, t) {
 	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
 	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
 	for (let e of i) {
-		let n = e, r = ka({
+		let n = e, r = Aa({
 			id: "x",
 			name: n?.name,
 			appearance: n?.appearance
 		});
 		if (!r) continue;
 		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
-		a.push(Oa(i, t ? _t(t, r.appearance) : r.appearance));
+		a.push(ka(i, t ? _t(t, r.appearance) : r.appearance));
 	}
 	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
 	return a;
 }
-function Fa(e, t, n = "application/json") {
+function Ia(e, t, n = "application/json") {
 	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
 	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function Ia(e = ".json,application/json") {
+function La(e = ".json,application/json") {
 	return new Promise((t) => {
 		let n = document.createElement("input");
 		n.type = "file", n.accept = e, n.onchange = async () => {
@@ -47570,11 +47672,11 @@ function Ia(e = ".json,application/json") {
 }
 //#endregion
 //#region src/engine/character/CreatorUI.ts
-var La = {
+var Ra = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, Ra = 4, za = class {
+}, za = 4, Ba = class {
 	opts;
 	root;
 	data;
@@ -47604,7 +47706,7 @@ var La = {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
-		this.opts = t, Hi("editor", Bi), Hi("creator", Da), this.character = Oa("Novo personagem", gt()), this.nameInput = X("input", {
+		this.opts = t, Hi("editor", Bi), Hi("creator", Oa), this.character = ka("Novo personagem", gt()), this.nameInput = X("input", {
 			class: "vt-name",
 			value: this.character.name,
 			title: "Nome do personagem",
@@ -47613,8 +47715,8 @@ var La = {
 			}
 		}), this.preview = X("canvas", {
 			class: "vt-preview-canvas",
-			width: 64 * Ra,
-			height: 64 * Ra
+			width: 64 * za,
+			height: 64 * za
 		}), this.tabsEl = X("div", { class: "vt-tabs vt-creator-tabs" }), this.slotsEl = X("div", { class: "vt-slots" }), this.optionsEl = X("div", { class: "vt-options" }), this.statusEl = X("footer", { class: "vt-status" });
 		let n = X("div", { class: "vt-chips vt-center" });
 		for (let e of [
@@ -47627,7 +47729,7 @@ var La = {
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, La[e]);
+			}, Ra[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
 		this.root = X("div", { class: "vt-root vt-creator" }, X("header", { class: "vt-top" }, X("span", { class: "vt-brand" }, "Vortable"), X("span", { class: "vt-top-title" }, t.single ? "Crie seu boneco" : "Personagem"), this.nameInput, X("span", { class: "vt-sep" }), t.single ? null : this.iconBtn(Q.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn(Q.open, "Personagens", () => this.openList()), this.iconBtn(Q.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), this.iconBtn(Q.download, "Exportar", () => this.exportFile()), this.iconBtn(Q.upload, "Importar", () => void this.importFile()), X("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Q.world, t.back.label, () => this.goBack(), "vt-primary") : null), X("main", { class: "vt-creator-body" }, X("section", { class: "vt-preview" }, X("div", { class: "vt-preview-stage" }, this.preview), X("div", { class: "vt-row vt-center" }, X("button", {
@@ -47762,7 +47864,7 @@ var La = {
 		try {
 			let [e, t] = await Promise.all([this.baseThumb ??= jt(this.opts.assetBase, {
 				...i,
-				slots: Ba(i, ["body", "head"])
+				slots: Va(i, ["body", "head"])
 			}), jt(this.opts.assetBase, {
 				...i,
 				slots: { [this.slot]: a }
@@ -47850,7 +47952,7 @@ var La = {
 			this.raf = requestAnimationFrame(n);
 			let i = this.sheets?.[this.anim];
 			if (e.clearRect(0, 0, this.preview.width, this.preview.height), !i) return;
-			let { frames: a, rate: o } = St[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * Ra;
+			let { frames: a, rate: o } = St[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * za;
 			e.drawImage(i, l * 64, this.dir * 64, 64, 64, 0, 0, u, u);
 		};
 		this.raf = requestAnimationFrame(n);
@@ -47864,15 +47966,15 @@ var La = {
 	}
 	exportFile() {
 		let e = this.nameInput.value.trim() || "Sem nome";
-		Fa(Na(e), Ma([{
+		Ia(Pa(e), Na([{
 			name: e,
 			appearance: this.appearance
 		}])), this.toast(`"${e}" exportado.`);
 	}
 	async importFile() {
-		let e = await Ia();
+		let e = await La();
 		if (e !== null) try {
-			let [t] = Pa(e, this.data);
+			let [t] = Fa(e, this.data);
 			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
 			this.character = this.opts.single ? {
 				...t,
@@ -47892,7 +47994,7 @@ var La = {
 		}, "Fechar")]);
 	}
 	newCharacter() {
-		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = Oa("Novo personagem", gt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = ka("Novo personagem", gt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = _t(this.data, this.character.appearance), this.baseThumb = null, this.renderSlots(), this.renderOptions(), this.recompose();
@@ -47958,16 +48060,16 @@ var La = {
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function Ba(e, t) {
+function Va(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
 }
 //#endregion
 //#region src/engine/index.ts
-var Va = "/__vortable/curate";
-function Ha(e, t) {
+var Ha = "/__vortable/curate";
+function Ua(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	ii(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Zi(), a = t.appearance, o = !1, s = t.net ? new Ea(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Zi(), a = t.appearance, o = !1, s = t.net ? new Da(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0) => ({
 		zone: e,
 		appearance: a,
 		assetBase: n,
@@ -47980,7 +48082,8 @@ function Ha(e, t) {
 		onClock: (e) => l?.showTestClock(e),
 		inputLocked: () => o,
 		hub: s,
-		watch: r === "watch"
+		watch: r === "watch",
+		listen: t.listen
 	}), p = (e, t) => {
 		let n = (e.dayMinutes ?? 24) * 6e4, r = Date.now();
 		return ((bn(t) - bn(Sn(e.dayMinutes, r))) % 1 + 1) % 1 * n;
@@ -48005,7 +48108,7 @@ function Ha(e, t) {
 		scene: () => _(),
 		editCharacter: t.onEditCharacter,
 		curate: t.curate ? async (e, t, n) => {
-			let r = await fetch(Va, {
+			let r = await fetch(Ha, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -48083,6 +48186,8 @@ function Ha(e, t) {
 			zoomBy: (e) => g()?.watchZoom(e),
 			focus: (e, t) => g()?.watchFocus(e, t),
 			follow: (e) => g()?.watchFollow(e),
+			following: () => g()?.watchFollowing() ?? null,
+			react: (e) => g()?.watchReact(e),
 			peers: () => g()?.watchPeers() ?? [],
 			setEnv: (e) => s?.setEnv(e),
 			envs: () => [...s?.envs.values() ?? []].map(({ zone: e, hour: t, weather: n, wind: r }) => ({
@@ -48112,10 +48217,10 @@ function Ha(e, t) {
 		}
 	};
 }
-function Ua(e, t = {}) {
-	let n = new za(e, {
+function Wa(e, t = {}) {
+	let n = new Ba(e, {
 		assetBase: t.assetBase ?? "./assets/",
-		storage: t.storage ?? new Aa(),
+		storage: t.storage ?? new ja(),
 		back: t.back,
 		single: t.single,
 		saveLabel: t.saveLabel,
@@ -48125,4 +48230,4 @@ function Ua(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { ja as CHARACTER_FORMAT, j as DAY_MINUTES, te as DEFAULT_WIND, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, Aa as LocalCharacterStorage, Zi as LocalWorldStorage, _ as TERRAINS, A as TILE, tr as WEATHERS, nr as WEATHER_ORDER, K as WIND_LEVELS, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, Na as characterFileName, jt as characterFrame, R as clampZoneSize, gt as defaultAppearance, Fa as downloadText, Ma as exportCharacters, wn as formatHour, ot as loadCharacterData, Qi as localStorageAvailable, Ua as mountCharacterCreator, Ha as mountVortable, Oa as newCharacter, P as newId, Xi as newWorld, z as newZone, _t as normalizeAppearance, ka as parseCharacter, Pa as parseCharacterFile, Ta as parseNet, oa as parseWorld, $i as parseZone, Ia as pickTextFile, bt as randomAppearance, Yi as summarize };
+export { Ma as CHARACTER_FORMAT, j as DAY_MINUTES, te as DEFAULT_WIND, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, ja as LocalCharacterStorage, Zi as LocalWorldStorage, Sa as REACTIONS, _ as TERRAINS, A as TILE, tr as WEATHERS, nr as WEATHER_ORDER, K as WIND_LEVELS, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, Pa as characterFileName, jt as characterFrame, R as clampZoneSize, gt as defaultAppearance, Ia as downloadText, Na as exportCharacters, wn as formatHour, ot as loadCharacterData, Qi as localStorageAvailable, Wa as mountCharacterCreator, Ua as mountVortable, ka as newCharacter, P as newId, Xi as newWorld, z as newZone, _t as normalizeAppearance, Aa as parseCharacter, Fa as parseCharacterFile, Ea as parseNet, oa as parseWorld, $i as parseZone, La as pickTextFile, bt as randomAppearance, Yi as summarize };

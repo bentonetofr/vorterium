@@ -33,6 +33,10 @@ export interface WorldSceneData {
     notice?: string;
     /** Câmera do mestre: sem boneco, câmera livre, só observa os jogadores. */
     watch?: boolean;
+    /** Câmera de observador: quem ela está acompanhando (guardado nas trocas de zona). */
+    follow?: string;
+    /** Observador que também ouve os sons da zona (espectador; o mestre não precisa). */
+    listen?: boolean;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;
@@ -62,6 +66,8 @@ export declare class WorldScene extends Phaser.Scene {
     /** Trava/destrava o teclado do boneco (cena do mestre por cima da tela). */
     setInputLocked(locked: boolean): void;
     private following;
+    private switching;
+    private reactions;
     private startWatch;
     /** Troca a zona que o observador está vendo. */
     watchZone(id: string): Promise<void>;
@@ -71,6 +77,12 @@ export declare class WorldScene extends Phaser.Scene {
     watchFocus(x: number, y: number): void;
     /** A câmera acompanha um jogador (null solta). */
     watchFollow(id: string | null): void;
+    /** Quem a câmera acompanha agora. */
+    watchFollowing(): string | null;
+    /** Espectador reage: o emoji aparece no jogador acompanhado (ou no centro da câmera) pra todos. */
+    watchReact(emoji: string): void;
+    /** Um emoji sobe e some (com o nome de quem reagiu embaixo). */
+    private showReaction;
     /** Quem está na sala e onde (pra lista do mestre). */
     watchPeers(): {
         id: string;

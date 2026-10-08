@@ -9,7 +9,9 @@ import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
+import { SpectatorStage } from './SpectatorStage'
 import './SceneBar.css'
+import './SpectatorStage.css'
 
 /**
  * Jogador: só a tela do jogo, com o boneco dele. Sem boneco ainda (a
@@ -24,6 +26,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   const vnet = useVortableNet()
   // o mundo que o mestre abriu: se ele abrir outro, o jogo recomeça nele
   const { active, ready } = useVortableWorlds()
+  const allowSpectate = stage.spectate.allow
   const covered = stage.scene.kind !== 'game'
   const coveredRef = useRef(covered)
   const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void } | null>(null)
@@ -31,6 +34,8 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
     coveredRef.current = covered
     gameRef.current?.setInputLocked(covered)
   }, [covered])
+  // o mestre desligou os espectadores: quem assistia volta pro jogo
+  useEffect(() => { if (!allowSpectate && vnet.watching) vnet.setWatching(false) }, [allowSpectate, vnet.watching])
   // o personagem da ficha mudou de nome: os outros veem o nome novo
   useEffect(() => { gameRef.current?.rename() }, [vnet.name])
 
@@ -78,8 +83,14 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
     )
   }
 
+  // só assistindo (escolha do jogador ou ordem do mestre)
+  if (vnet.watching && allowSpectate) {
+    return <SpectatorStage campaign={campaign} userId={userId} canPlay={mine !== null} onPlay={() => vnet.setWatching(false)} />
+  }
+
   if (mine === null) {
     return (
+      <div className="vortable-player-wrap">
       <EngineStage
         key="criar"
         scroll
@@ -96,6 +107,8 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           return creator.destroy
         }}
       />
+      {allowSpectate && <button type="button" className="spectator-skip" onClick={() => vnet.setWatching(true)}>Só assistir</button>}
+      </div>
     )
   }
 
@@ -138,6 +151,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           }
         }}
       />
+      {allowSpectate && <button type="button" className="spectator-skip" onClick={() => vnet.setWatching(true)}>Assistir</button>}
       <SceneOverlay scene={stage.scene} />
     </div>
   )

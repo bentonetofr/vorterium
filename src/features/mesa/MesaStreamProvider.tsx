@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
-import { EMPTY_SNAPSHOT, GAME_SCENE, MesaSession, type MesaScene, type MesaSnapshot } from './mesaSession'
+import { EMPTY_SNAPSHOT, GAME_SCENE, MesaSession, type MesaScene, type MesaSnapshot, type SpectateRules } from './mesaSession'
 import { getMesaImageShowUrl } from './services/mesaImagesService'
 import { setDocumentVisible } from './documents/documentsService'
 
@@ -24,6 +24,8 @@ interface MesaStreamValue extends MesaSnapshot {
   setLive:      (on: boolean) => void
   /** Mestre: troca a cena que os jogadores veem (vale na hora pra todos). */
   setScene:     (scene: MesaScene) => void
+  /** Mestre: regras dos espectadores (liga/desliga, câmera livre, foco da câmera do mestre). */
+  setSpectate:  (patch: Partial<SpectateRules>) => void
   /** Mestre: põe uma imagem da galeria como cena (gera o link pros jogadores). */
   showImage:    (image: { id: string; path: string; name: string }) => Promise<void>
   hideImage:    () => void
@@ -95,6 +97,7 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
   const setWorldId = useCallback((id: string | null) => sessionRef.current?.setWorldId(id), [])
   const setLive = useCallback((on: boolean) => sessionRef.current?.setLive(on), [])
   const setScene = useCallback((scene: MesaScene) => sessionRef.current?.setScene(scene), [])
+  const setSpectate = useCallback((patch: Partial<SpectateRules>) => sessionRef.current?.setSpectate(patch), [])
 
   const showImage = useCallback(async (image: { id: string; path: string; name: string }) => {
     const session = sessionRef.current
@@ -124,6 +127,7 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
     setWorldId,
     setLive,
     setScene,
+    setSpectate,
     showImage,
     hideImage,
     showDocument,

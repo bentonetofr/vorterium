@@ -13,6 +13,9 @@ interface NetValue {
   /** Jogador: o mestre tirou da sessão. */
   kicked: boolean
   retry: () => void
+  /** Jogador: está só assistindo (por escolha dele ou porque o mestre mandou). */
+  watching: boolean
+  setWatching: (v: boolean) => void
   /** Nome do jogador local (o mesmo que os outros veem sobre o boneco). */
   name: string
 }
@@ -37,6 +40,7 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
   const [net, setNet] = useState<VortableNet | null>(null)
   const [, bump] = useState(0)
   const [kicked, setKicked] = useState(false)
+  const [watching, setWatching] = useState(false)
 
   useEffect(() => {
     if (!campaign || !userId) return
@@ -45,6 +49,8 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
     })
     made.onChange = () => bump((n) => n + 1)
     made.onKicked = () => setKicked(true)
+    // o mestre manda assistir / volta a pôr em jogo
+    made.onCommand = (cmd) => setWatching(cmd === 'spectate')
     setNet(made)
     return () => {
       made.dispose()
@@ -74,6 +80,11 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
     if (net) net.name = name
   }, [net, name])
 
+  // o mestre vê quem está jogando e quem está só assistindo
+  useEffect(() => {
+    if (net && !isMaster) net.setRole(watching ? 'spectator' : 'player')
+  }, [net, isMaster, watching])
+
   // jogador: só procura o mestre enquanto ele está com o Vortable aberto
   useEffect(() => {
     if (net && !isMaster) net.setLive(mesa.live)
@@ -86,6 +97,8 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
     peers: net?.connected ?? [],
     kicked,
     retry: () => { setKicked(false); net?.retry() },
+    watching,
+    setWatching,
     name,
   }
 

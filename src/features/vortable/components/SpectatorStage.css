@@ -1,0 +1,133 @@
+/* ═══════════════════════════════════════════════════════
+   Espectador: câmera do Vortable com barra no topo e reações embaixo
+   ═══════════════════════════════════════════════════════ */
+
+.spectator { background: var(--bg-base); }
+
+.spectator__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3, 12px) var(--space-4, 16px) var(--space-5, 20px);
+  background: linear-gradient(to bottom, rgba(5, 7, 12, 0.78), rgba(5, 7, 12, 0));
+  pointer-events: none;
+}
+.spectator__bar > * { pointer-events: auto; }
+.spectator__row { display: flex; align-items: center; gap: var(--space-2, 8px); flex-wrap: wrap; }
+.spectator__spacer { flex: 1 1 auto; }
+
+.spectator__tag {
+  padding: 3px 10px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+}
+.spectator__zone { color: var(--text-primary); font-family: var(--font-display); text-shadow: 0 1px 3px #000; }
+.spectator__play { padding: 4px 14px; font-size: var(--text-sm); }
+
+.spectator__chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.spectator__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+}
+.spectator__chip:hover { color: var(--text-primary); border-color: var(--accent); }
+.spectator__chip--on { color: var(--accent-bright); border-color: var(--accent); background: var(--accent-glow); }
+.spectator__count {
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--bg-base);
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.spectator__row--players { gap: 4px; }
+.spectator__arrow {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-primary);
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+}
+.spectator__arrow:disabled { opacity: 0.4; cursor: default; }
+.spectator__arrow:hover:not(:disabled) { border-color: var(--accent); }
+.spectator__following {
+  padding: 0 var(--space-2, 8px);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-shadow: 0 1px 3px #000;
+}
+.spectator__following small { font-weight: 400; color: var(--text-secondary); }
+
+.spectator__react {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4, 16px);
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  transform: translateX(-50%);
+  background: rgba(14, 18, 28, 0.85);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+.spectator__emoji {
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+  transition: transform 0.12s, background 0.12s;
+}
+.spectator__emoji:hover:not(:disabled) { background: var(--bg-elevated, rgba(255, 255, 255, 0.08)); transform: scale(1.18); }
+.spectator__emoji:disabled { opacity: 0.45; cursor: default; }
+
+/* botões soltos sobre o jogo/criador: "Assistir" e "Só assistir" */
+.spectator-skip {
+  position: absolute;
+  top: var(--space-3, 12px);
+  left: var(--space-3, 12px);
+  z-index: 6;
+  padding: 4px 12px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+}
+.spectator-skip:hover { color: var(--accent-bright); border-color: var(--accent); }
+
+@media (max-width: 560px) {
+  .spectator__react { width: calc(100% - 24px); justify-content: space-between; }
+  .spectator__emoji { width: 34px; height: 34px; font-size: 20px; }
+}

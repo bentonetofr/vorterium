@@ -38,6 +38,20 @@ export interface MesaDocRef {
   page:  number
 }
 
+/**
+ * Espectadores (jogadores que não estão em jogo e só assistem): o mestre liga/desliga,
+ * libera ou não a câmera livre e escolhe o "foco" que a câmera do mestre mostra.
+ */
+export interface SpectateRules {
+  allow: boolean
+  /** Câmera livre liberada (ligada por padrão). */
+  free:  boolean
+  /** Id do jogador que os espectadores em "câmera do mestre" acompanham (null = nenhum). */
+  focus: string | null
+}
+
+export const DEFAULT_SPECTATE: SpectateRules = { allow: true, free: true, focus: null }
+
 export interface MesaStage {
   /** Id da sessão do mestre (Vortable aberto); null = ninguém ao vivo. */
   liveId:   string | null
@@ -45,6 +59,7 @@ export interface MesaStage {
   worldId:  string | null
   scene:    MesaScene
   document: MesaDocRef | null
+  spectate: SpectateRules
 }
 
 export interface MesaSnapshot {
@@ -55,7 +70,7 @@ export interface MesaSnapshot {
 }
 
 export const GAME_SCENE: MesaScene = { kind: 'game' }
-export const EMPTY_STAGE: MesaStage = { liveId: null, worldId: null, scene: GAME_SCENE, document: null }
+export const EMPTY_STAGE: MesaStage = { liveId: null, worldId: null, scene: GAME_SCENE, document: null, spectate: DEFAULT_SPECTATE }
 
 export const EMPTY_SNAPSHOT: MesaSnapshot = { channelError: null, stage: EMPTY_STAGE, live: false }
 
@@ -103,6 +118,16 @@ function parseStage(raw: unknown): MesaStage | null {
     worldId:  typeof s.worldId === 'string' ? s.worldId : null,
     scene:    parseScene(s.scene),
     document: (s.document as MesaDocRef | null | undefined) ?? null,
+    spectate: parseSpectate(s.spectate),
+  }
+}
+
+function parseSpectate(raw: unknown): SpectateRules {
+  const s = (raw ?? {}) as Payload
+  return {
+    allow: s.allow !== false,
+    free:  s.free !== false,
+    focus: typeof s.focus === 'string' && s.focus ? s.focus.slice(0, 80) : null,
   }
 }
 
@@ -242,6 +267,11 @@ export class MesaSession {
   /** Mestre: abriu este mundo (avisa os jogadores além do banco). */
   setWorldId(worldId: string | null): void {
     this.setStage({ worldId })
+  }
+
+  /** Mestre: regras dos espectadores (liga/desliga, câmera livre, foco). */
+  setSpectate(patch: Partial<SpectateRules>): void {
+    this.setStage({ spectate: { ...this.snap.stage.spectate, ...patch } })
   }
 
   showDocument(doc: MesaDocRef): void {

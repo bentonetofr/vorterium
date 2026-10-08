@@ -5,6 +5,7 @@ import {
   assignCharacter, createCharacterStorage, createWorldStorage, deleteCharacter, listCampaignCharacters, loadEngine, VORTABLE_ASSETS, watchCharacters,
   type CampaignCharacter,
 } from '../services/vortableService'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { CharacterFace } from './CharacterFace'
@@ -17,6 +18,8 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const vnet = useVortableNet()
+  const { stage, setSpectate } = useMesaStream()
+  const rules = stage.spectate
   const { active } = useVortableWorlds()
   const [zones, setZones] = useState<{ id: string; name: string }[]>([])
 
@@ -104,6 +107,9 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
 
   const controlledBy = (id: string) => characters.find((c) => c.controllerId === id) ?? null
   const free = characters.filter((c) => !c.controllerId)
+  const peerOf = (id: string) => vnet.peers.find((x) => x.id === id && x.connected)
+  const spectators = vnet.peers.filter((x) => x.connected && x.role === 'spectator')
+  const playing = vnet.peers.filter((x) => x.connected && x.role === 'player')
   const nameOf = (id: string) => players.find((p) => p.user_id === id)?.profile.display_name ?? 'o mestre'
 
   function remove(character: CampaignCharacter) {
@@ -115,6 +121,41 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
   return (
     <section className="vortable-players">
       {error && <p className="vortable-msg vortable-msg--error" role="alert">{error}</p>}
+
+      <div className="vortable-spectate">
+        <h3 className="vortable-players__title">Espectadores</h3>
+        <label className="vortable-spectate__opt">
+          <input type="checkbox" checked={rules.allow} onChange={(e) => setSpectate({ allow: e.target.checked })} />
+          Permitir espectadores
+        </label>
+        <label className="vortable-spectate__opt">
+          <input type="checkbox" checked={rules.free} disabled={!rules.allow} onChange={(e) => setSpectate({ free: e.target.checked })} />
+          Câmera livre
+        </label>
+        <label className="vortable-spectate__opt">
+          Foco da câmera do mestre
+          <select
+            className="vortable-player__select"
+            value={rules.focus && playing.some((x) => x.id === rules.focus) ? rules.focus : ''}
+            disabled={!rules.allow}
+            onChange={(e) => setSpectate({ focus: e.target.value || null })}
+          >
+            <option value="">Ninguém</option>
+            {playing.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+          </select>
+        </label>
+        {spectators.length > 0 && (
+          <ul className="vortable-spectate__list">
+            {spectators.map((x) => (
+              <li key={x.id}>
+                <span>👁 {x.name}</span>
+                <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(x.id, 'play')}>Colocar em jogo</button>
+                <button type="button" className="btn btn-ghost" onClick={() => { if (confirm(`Tirar ${x.name} da sessão?`)) vnet.net?.kick(x.id) }}>Tirar</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="vortable-players__head">
         <h3 className="vortable-players__title">Jogadores</h3>
@@ -147,7 +188,8 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
       <ul className="vortable-players__list">
         {players.map((p) => {
           const mine = controlledBy(p.user_id)
-          const online = vnet.peers.some((x) => x.id === p.user_id && x.connected)
+          const online = Boolean(peerOf(p.user_id))
+          const watching = peerOf(p.user_id)?.role === 'spectator'
           return (
             <li key={p.user_id} className="vortable-player">
               {mine ? <CharacterFace appearance={mine.appearance} /> : <span className="vortable-face vortable-face--empty" />}
@@ -156,9 +198,12 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
                   <span className={`vortable-dot${online ? ' vortable-dot--on' : ''}`} title={online ? 'Online no Vortable' : 'Fora do Vortable'} />
                   {p.profile.display_name}
                 </strong>
-                <span>{mine ? mine.name : 'Ainda sem boneco'}</span>
+                <span>{watching ? 'Assistindo' : mine ? mine.name : 'Ainda sem boneco'}</span>
               </div>
-              {online && (
+              {online && watching && (
+                <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.user_id, 'play')}>Colocar em jogo</button>
+              )}
+              {online && !watching && (
                 <>
                   <select
                     className="vortable-player__select"
@@ -169,6 +214,9 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
                     <option value="">Levar a…</option>
                     {zones.map((z) => <option key={z.id} value={z.id}>{z.name}</option>)}
                   </select>
+                  {rules.allow && (
+                    <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.user_id, 'spectate')}>Mandar assistir</button>
+                  )}
                   <button
                     type="button"
                     className="btn btn-ghost"
