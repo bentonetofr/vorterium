@@ -14,13 +14,15 @@ import {
 } from '../services/mesaImagesService'
 
 // ────────────────────────────────────────────────────────
-// Artes e referências (aba Mesa): mestre e jogadores enviam imagens pra
-// mostrar como referência — um retrato do personagem, um mapa, uma arte
-// que inspirou a cena. Todos veem. Nada entra na transmissão sozinho: só o
-// mestre põe uma imagem na mesa (clicando nela), inclusive as que os
-// jogadores enviaram. Cada um exclui o que enviou; o mestre, qualquer uma.
-// Todos podem pôr uma arte no Quadro da campanha (e elas aparecem na Galeria).
+// Artes recentes (aba Mesa): mestre e jogadores enviam imagens pra mostrar
+// como referência — um retrato do personagem, um mapa, uma arte que
+// inspirou a cena. Todos veem (clicar abre grande). Cada um exclui o que
+// enviou; o mestre, qualquer uma. Todos podem pôr uma arte no Quadro da
+// campanha (e elas aparecem na Galeria).
 // ────────────────────────────────────────────────────────
+
+/** Quantas artes aparecem antes do "Ver todas". */
+const RECENT = 8
 
 export function MesaArts({ campaignId }: { campaignId: string }) {
   const mesa = useMesaStream()
@@ -39,7 +41,7 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
   const [fresh, setFresh]         = useState<Set<string>>(new Set())
   const known = useRef<Set<string> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const shownId = mesa.stage.image?.id ?? null
+  const [showAll, setShowAll] = useState(false)
 
   const load = useCallback(async () => {
     const list = await listMesaArts(campaignId)
@@ -81,24 +83,10 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
     }
   }
 
-  async function handleShow(art: MesaArt) {
-    setError(null)
-    setBusyId(art.id)
-    try {
-      await mesa.showImage({ id: art.id, path: art.path, name: art.name })
-      setFresh((prev) => { const next = new Set(prev); next.delete(art.id); return next })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível mostrar a imagem.')
-    } finally {
-      setBusyId(null)
-    }
-  }
-
   async function handleDelete(art: MesaArt) {
     setError(null)
     setBusyId(art.id)
     try {
-      if (shownId === art.id) mesa.hideImage()
       await deleteMesaImage(art)
       setArts((list) => list.filter((a) => a.id !== art.id))
       setConfirmId(null)
@@ -129,12 +117,8 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
     <section className="mesa-gallery" aria-labelledby="mesa-arts-title">
       <header className="mesa-gallery__head">
         <div>
-          <h5 id="mesa-arts-title" className="mesa-gallery__title">Artes e referências</h5>
-          <p className="mesa-gallery__sub">
-            {isMaster
-              ? 'Imagens que você e os jogadores enviam pra mostrar como referência. Nada vai pra transmissão sozinho: clique numa imagem pra pôr na mesa.'
-              : 'Mande retratos, mapas e artes pra mostrar como referência. Todos da campanha veem; o mestre escolhe o que vai pra transmissão.'}
-          </p>
+          <h5 id="mesa-arts-title" className="mesa-gallery__title">Artes recentes</h5>
+          <p className="mesa-gallery__sub">Retratos, mapas e referências que todos da campanha veem.</p>
         </div>
         <button type="button" className="btn btn-ghost mesa-gallery__add" onClick={() => inputRef.current?.click()} disabled={uploading > 0}>
           {uploading > 0 ? `Enviando${uploading > 1 ? ` (${uploading})` : ''}…` : '+ Enviar imagens'}
@@ -162,28 +146,23 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
         <p className="mesa-gallery__empty">Nenhuma arte ou referência ainda. Envie imagens (JPG, PNG, WebP, GIF…); as grandes são reduzidas sozinhas.</p>
       ) : (
         <ul className="mesa-gallery__grid anim-stagger">
-          {arts.map((art) => {
-            const shown = shownId === art.id
+          {(showAll ? arts : arts.slice(0, RECENT)).map((art) => {
             const busy = busyId === art.id
             const mine = !!user && art.uploaded_by === user.id
             return (
-              <li key={art.id} className={`mesa-thumb${shown ? ' mesa-thumb--shown' : ''}${fresh.has(art.id) ? ' mesa-thumb--fresh' : ''}`}>
+              <li key={art.id} className={`mesa-thumb${fresh.has(art.id) ? ' mesa-thumb--fresh' : ''}`}>
                 <button
                   type="button"
                   className="mesa-thumb__preview"
-                  // Mestre: clicar põe/tira da mesa. Jogador: abre grande.
-                  onClick={() => (isMaster ? (shown ? mesa.hideImage() : void handleShow(art)) : setViewing(art))}
+                  onClick={() => setViewing(art)}
                   disabled={busy}
-                  aria-label={isMaster ? (shown ? `Tirar ${art.name} da mesa` : `Mostrar ${art.name} para a mesa`) : `Ver ${art.name}`}
+                  aria-label={`Ver ${art.name}`}
                 >
                   {art.url
                     ? <img src={art.url} alt="" loading="lazy" draggable={false} />
                     : <span className="mesa-thumb__missing">sem prévia</span>}
-                  {shown && <span className="mesa-thumb__tag">Na mesa</span>}
-                  {!shown && fresh.has(art.id) && <span className="mesa-thumb__tag mesa-thumb__tag--new">Nova</span>}
-                  <span className="mesa-thumb__hover">
-                    {busy ? 'Abrindo…' : isMaster ? (shown ? 'Tirar da mesa' : 'Pôr na mesa') : 'Ver'}
-                  </span>
+                  {fresh.has(art.id) && <span className="mesa-thumb__tag mesa-thumb__tag--new">Nova</span>}
+                  <span className="mesa-thumb__hover">Ver</span>
                 </button>
                 <div className="mesa-thumb__foot">
                   <span className="mesa-thumb__name" title={art.name}>
@@ -191,9 +170,6 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
                     <span className="mesa-thumb__by">{mine ? 'por você' : art.uploader_name ? `por ${art.uploader_name}` : 'do mestre'}</span>
                   </span>
                   <button type="button" className="mesa-thumb__link" onClick={() => void handleToBoard(art)} disabled={busy} aria-label={`Pôr ${art.name} no Quadro`} title="Pôr no Quadro">▦</button>
-                  {isMaster && (
-                    <button type="button" className="mesa-thumb__link" onClick={() => setViewing(art)} aria-label={`Ver ${art.name} grande`} title="Ver grande">⤢</button>
-                  )}
                   {canDelete(art) && (confirmId === art.id ? (
                     <span className="mesa-thumb__confirm">
                       <button type="button" className="mesa-thumb__link mesa-thumb__link--danger" onClick={() => void handleDelete(art)} disabled={busy}>
@@ -213,6 +189,12 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
             )
           })}
         </ul>
+      )}
+
+      {arts.length > RECENT && (
+        <button type="button" className="btn btn-ghost mesa-gallery__more" onClick={() => setShowAll((v) => !v)}>
+          {showAll ? 'Ver só as recentes' : `Ver todas (${arts.length})`}
+        </button>
       )}
 
       {viewing && <ArtViewer art={viewing} onClose={() => setViewing(null)} />}

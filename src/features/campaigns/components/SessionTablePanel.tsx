@@ -101,7 +101,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         hidden={activeSubTab !== 'mesa'}
         className="anim-tab-panel"
       >
-        {activeSubTab === 'mesa' && <VortableMesa campaign={campaign} currentUserId={currentUserId} />}
+        {activeSubTab === 'mesa' && <VortableMesa campaign={campaign} />}
       </div>
 
       <div

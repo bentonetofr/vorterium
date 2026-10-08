@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadEngine } from '../services/vortableService'
+import './VortableMesa.css'
 
 export type Engine = Awaited<ReturnType<typeof loadEngine>>
 

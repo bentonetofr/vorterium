@@ -521,3 +521,5 @@
 .mesa-diag__list dt { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
 .mesa-diag__list dd { margin: 2px 0 0; color: var(--text-primary); overflow-wrap: anywhere; }
 .mesa-diag__hint { margin: var(--space-3) 0 var(--space-1); color: var(--accent-bright); }
+
+.mesa-gallery__more { align-self: center; }

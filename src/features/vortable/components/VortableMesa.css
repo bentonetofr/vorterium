@@ -113,3 +113,33 @@
   .vortable-player { flex-wrap: wrap; }
   .vortable-player__select, .vortable-player__spacer { flex: 1 1 100%; }
 }
+
+/* ── Aba Mesa: entrada ── */
+
+.vortable-mesa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 20px);
+}
+
+.vortable-mesa__hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+  flex-wrap: wrap;
+  padding: var(--space-5, 20px) var(--space-6, 24px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+}
+
+.vortable-mesa__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+
+.vortable-mesa__text { margin: var(--space-1, 4px) 0 0; color: var(--text-secondary); }
+.vortable-mesa__enter { padding-left: var(--space-6, 24px); padding-right: var(--space-6, 24px); }

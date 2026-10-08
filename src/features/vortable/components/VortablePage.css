@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════
+   Vortable em tela cheia (página própria, sem o layout do site)
+   ═══════════════════════════════════════════════════════ */
+
+.vortable-page {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-void);
+  color: var(--text-primary);
+}
+
+.vortable-page__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  flex: none;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-base);
+}
+
+.vortable-page__bar .btn { padding: var(--space-1, 4px) var(--space-3, 12px); font-size: var(--text-sm); }
+
+.vortable-page__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  color: var(--text-secondary);
+}
+
+.vortable-page__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.vortable-page__loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* o palco ocupa o que sobra da tela */
+.vortable-page .vortable-master { flex: 1 1 auto; min-height: 0; gap: 0; }
+.vortable-page .vortable-master > .campaign-tabs { margin: var(--space-2, 8px) var(--space-3, 12px); }
+.vortable-page .vortable-stage {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+.vortable-page .vortable-msg { padding: var(--space-5, 20px); }
+.vortable-page .vortable-players { padding: var(--space-4, 16px) var(--space-5, 20px); overflow: auto; flex: 1; }

@@ -12,6 +12,7 @@ import { AuthCallbackPage } from '../../features/auth/pages/AuthCallbackPage'
 import { CampaignsPage }   from '../../features/campaigns/pages/CampaignsPage'
 import { NewCampaignPage } from '../../features/campaigns/pages/NewCampaignPage'
 import { CampaignAreaLayout } from '../../features/campaigns/pages/CampaignAreaLayout'
+import { VortablePage }       from '../../features/vortable/pages/VortablePage'
 import { ProfilePage }     from '../../features/users/pages/ProfilePage'
 import { MySheetsPage }        from '../../features/sheets/pages/MySheetsPage'
 import { GlobalActivityPage } from '../../features/activity/pages/GlobalActivityPage'
@@ -69,6 +70,9 @@ export function AppRouter() {
           <Route path="/dev/campanhas"             element={<DevCampaignsPage />} />
           <Route path="/dev/campanhas/:campaignId" element={<DevCampaignPage />} />
         </Route>
+
+        {/* ── Vortable em tela cheia: logado, mas sem o layout do site ── */}
+        <Route path="/campanhas/:campaignId/vortable" element={<ProtectedRoute><VortablePage /></ProtectedRoute>} />
 
         {/* ── Rotas privadas (requerem autenticação) ── */}
         <Route element={<ProtectedRoute><PrivateLayout /></ProtectedRoute>}>
