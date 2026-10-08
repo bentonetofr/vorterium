@@ -162,7 +162,7 @@ export async function getMyCharacter(campaignId: string, userId: string): Promis
 /** Todos os bonecos da campanha (o mestre vê e entrega). */
 export async function listCampaignCharacters(campaignId: string): Promise<CampaignCharacter[]> {
   const { data, error } = await supabase
-    .from('vortable_characters').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: true })
+    .from('vortable_characters').select('*').eq('campaign_id', campaignId).order('updated_at', { ascending: true })
   if (error) fail('não deu pra listar os bonecos', error)
   return ((data ?? []) as CharacterRow[]).map(toCharacter)
 }
