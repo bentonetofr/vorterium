@@ -47479,11 +47479,63 @@ var Ca = class {
 	async setActive(e) {
 		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
 	}
-}, wa = {
+}, wa = "vortable-character";
+function Ta(e) {
+	return JSON.stringify({
+		format: wa,
+		version: 1,
+		characters: e.map((e) => ({
+			name: e.name,
+			appearance: e.appearance
+		}))
+	}, null, 2);
+}
+function Ea(e) {
+	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
+}
+function Da(e, t) {
+	let n = e;
+	if (typeof e == "string") try {
+		n = JSON.parse(e);
+	} catch {
+		throw Error("O arquivo não é um JSON válido.");
+	}
+	let r = n;
+	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
+	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
+	for (let e of i) {
+		let n = e, r = Sa({
+			id: "x",
+			name: n?.name,
+			appearance: n?.appearance
+		});
+		if (!r) continue;
+		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
+		a.push(xa(i, t ? gt(t, r.appearance) : r.appearance));
+	}
+	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
+	return a;
+}
+function Oa(e, t, n = "application/json") {
+	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
+	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
+}
+function ka(e = ".json,application/json") {
+	return new Promise((t) => {
+		let n = document.createElement("input");
+		n.type = "file", n.accept = e, n.onchange = async () => {
+			let e = n.files?.[0];
+			t(e ? await e.text() : null);
+		}, n.oncancel = () => t(null), n.click();
+	});
+}
+//#endregion
+//#region src/engine/character/CreatorUI.ts
+var Aa = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, Ta = 4, Ea = class {
+}, ja = 4, Ma = class {
 	opts;
 	root;
 	data;
@@ -47522,8 +47574,8 @@ var Ca = class {
 			}
 		}), this.preview = Z("canvas", {
 			class: "vt-preview-canvas",
-			width: 64 * Ta,
-			height: 64 * Ta
+			width: 64 * ja,
+			height: 64 * ja
 		}), this.tabsEl = Z("div", { class: "vt-tabs vt-creator-tabs" }), this.slotsEl = Z("div", { class: "vt-slots" }), this.optionsEl = Z("div", { class: "vt-options" }), this.statusEl = Z("footer", { class: "vt-status" });
 		let n = Z("div", { class: "vt-chips vt-center" });
 		for (let e of [
@@ -47536,10 +47588,10 @@ var Ca = class {
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, wa[e]);
+			}, Aa[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
-		this.root = Z("div", { class: "vt-root vt-creator" }, Z("header", { class: "vt-top" }, Z("span", { class: "vt-brand" }, "Vortable"), Z("span", { class: "vt-top-title" }, t.single ? "Crie seu boneco" : "Personagem"), this.nameInput, Z("span", { class: "vt-sep" }), t.single ? null : this.iconBtn($.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn($.open, "Personagens", () => this.openList()), this.iconBtn($.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), Z("span", { class: "vt-spacer" }), t.back ? this.iconBtn($.world, t.back.label, () => this.goBack(), "vt-primary") : null), Z("main", { class: "vt-creator-body" }, Z("section", { class: "vt-preview" }, Z("div", { class: "vt-preview-stage" }, this.preview), Z("div", { class: "vt-row vt-center" }, Z("button", {
+		this.root = Z("div", { class: "vt-root vt-creator" }, Z("header", { class: "vt-top" }, Z("span", { class: "vt-brand" }, "Vortable"), Z("span", { class: "vt-top-title" }, t.single ? "Crie seu boneco" : "Personagem"), this.nameInput, Z("span", { class: "vt-sep" }), t.single ? null : this.iconBtn($.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn($.open, "Personagens", () => this.openList()), this.iconBtn($.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), this.iconBtn($.download, "Exportar", () => this.exportFile()), this.iconBtn($.upload, "Importar", () => void this.importFile()), Z("span", { class: "vt-spacer" }), t.back ? this.iconBtn($.world, t.back.label, () => this.goBack(), "vt-primary") : null), Z("main", { class: "vt-creator-body" }, Z("section", { class: "vt-preview" }, Z("div", { class: "vt-preview-stage" }, this.preview), Z("div", { class: "vt-row vt-center" }, Z("button", {
 			class: "vt-btn",
 			title: "Girar",
 			onclick: () => this.turn(-1)
@@ -47671,7 +47723,7 @@ var Ca = class {
 		try {
 			let [e, t] = await Promise.all([this.baseThumb ??= At(this.opts.assetBase, {
 				...i,
-				slots: Da(i, ["body", "head"])
+				slots: Na(i, ["body", "head"])
 			}), At(this.opts.assetBase, {
 				...i,
 				slots: { [this.slot]: a }
@@ -47759,7 +47811,7 @@ var Ca = class {
 			this.raf = requestAnimationFrame(n);
 			let i = this.sheets?.[this.anim];
 			if (e.clearRect(0, 0, this.preview.width, this.preview.height), !i) return;
-			let { frames: a, rate: o } = xt[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * Ta;
+			let { frames: a, rate: o } = xt[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * ja;
 			e.drawImage(i, l * 64, this.dir * 64, 64, 64, 0, 0, u, u);
 		};
 		this.raf = requestAnimationFrame(n);
@@ -47769,6 +47821,26 @@ var Ca = class {
 			return this.character.name = this.nameInput.value.trim() || "Sem nome", this.nameInput.value = this.character.name, await this.opts.storage.save(this.character), this.opts.activateOnSave !== !1 && await this.opts.storage.setActive(this.character.id), this.dirty = !1, this.refreshStatus(), this.toast(this.opts.single || this.opts.activateOnSave === !1 ? `"${this.character.name}" salvo.` : `"${this.character.name}" salvo. É ele que aparece quando você testar ou jogar.`), this.opts.onSaved?.(structuredClone(this.character)), !0;
 		} catch (e) {
 			return this.toast(`Não deu pra salvar: ${e.message}`, !0), !1;
+		}
+	}
+	exportFile() {
+		let e = this.nameInput.value.trim() || "Sem nome";
+		Oa(Ea(e), Ta([{
+			name: e,
+			appearance: this.appearance
+		}])), this.toast(`"${e}" exportado.`);
+	}
+	async importFile() {
+		let e = await ka();
+		if (e !== null) try {
+			let [t] = Da(e, this.data);
+			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
+			this.character = this.opts.single ? {
+				...t,
+				id: this.character.id
+			} : t, this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad(), this.refreshStatus(), this.toast(`"${this.character.name}" importado. Salve pra guardar.`);
+		} catch (e) {
+			this.toast(e.message, !0);
 		}
 	}
 	async goBack() {
@@ -47847,13 +47919,13 @@ var Ca = class {
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function Da(e, t) {
+function Na(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
 }
 //#endregion
 //#region src/engine/index.ts
-var Oa = "/__vortable/curate";
-function ka(e, t) {
+var Pa = "/__vortable/curate";
+function Fa(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	ti(n);
 	let r = t.mode ?? "play", i = t.storage ?? new Wi(), a = t.appearance, o = !1, s = t.net ? new ya(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c = 0) => ({
@@ -47891,7 +47963,7 @@ function ka(e, t) {
 		scene: () => _(),
 		editCharacter: t.onEditCharacter,
 		curate: t.curate ? async (e, t, n) => {
-			let r = await fetch(Oa, {
+			let r = await fetch(Pa, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -47977,8 +48049,8 @@ function ka(e, t) {
 		}
 	};
 }
-function Aa(e, t = {}) {
-	let n = new Ea(e, {
+function Ia(e, t = {}) {
+	let n = new Ma(e, {
 		assetBase: t.assetBase ?? "./assets/",
 		storage: t.storage ?? new Ca(),
 		back: t.back,
@@ -47990,4 +48062,4 @@ function Aa(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { j as DAY_MINUTES, ee as DEFAULT_WIND, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, Ca as LocalCharacterStorage, Wi as LocalWorldStorage, _ as TERRAINS, A as TILE, Qn as WEATHERS, $n as WEATHER_ORDER, q as WIND_LEVELS, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, At as characterFrame, R as clampZoneSize, ht as defaultAppearance, Sn as formatHour, at as loadCharacterData, Gi as localStorageAvailable, Aa as mountCharacterCreator, ka as mountVortable, xa as newCharacter, P as newId, Ui as newWorld, z as newZone, gt as normalizeAppearance, Sa as parseCharacter, va as parseNet, $i as parseWorld, qi as parseZone, yt as randomAppearance, Hi as summarize };
+export { wa as CHARACTER_FORMAT, j as DAY_MINUTES, ee as DEFAULT_WIND, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, Ca as LocalCharacterStorage, Wi as LocalWorldStorage, _ as TERRAINS, A as TILE, Qn as WEATHERS, $n as WEATHER_ORDER, q as WIND_LEVELS, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, Ea as characterFileName, At as characterFrame, R as clampZoneSize, ht as defaultAppearance, Oa as downloadText, Ta as exportCharacters, Sn as formatHour, at as loadCharacterData, Gi as localStorageAvailable, Ia as mountCharacterCreator, Fa as mountVortable, xa as newCharacter, P as newId, Ui as newWorld, z as newZone, gt as normalizeAppearance, Sa as parseCharacter, Da as parseCharacterFile, va as parseNet, $i as parseWorld, qi as parseZone, ka as pickTextFile, yt as randomAppearance, Hi as summarize };

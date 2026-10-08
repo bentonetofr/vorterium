@@ -106,7 +106,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
         />
       )}
 
-      {tab === 'jogadores' && <PlayersManager campaign={campaign} />}
+      {tab === 'jogadores' && <PlayersManager campaign={campaign} userId={userId} />}
     </div>
   )
 }

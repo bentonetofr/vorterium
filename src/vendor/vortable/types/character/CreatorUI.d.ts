@@ -72,6 +72,10 @@ export declare class CreatorUI {
     /** Prévia animada (desenha a folha da animação escolhida, quadro a quadro). */
     private loop;
     private save;
+    /** Baixa o personagem aberto como arquivo (vale em qualquer campanha). */
+    private exportFile;
+    /** Abre um arquivo de personagem na tela (sem salvar). No modo jogador, troca o boneco que já existe. */
+    private importFile;
     /** Voltar: com mudanças, pergunta se salva (OK) ou descarta (Cancelar). */
     private goBack;
     private openCredits;

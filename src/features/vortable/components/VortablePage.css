@@ -62,6 +62,9 @@
 .vortable-page .vortable-msg { padding: var(--space-5, 20px); }
 .vortable-page .vortable-players { padding: var(--space-4, 16px) var(--space-5, 20px); overflow: auto; flex: 1; }
 
+.vortable-page .vortable-players__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3, 12px); }
+.vortable-page .vortable-players__actions { display: flex; gap: var(--space-2, 8px); }
+
 .vortable-page__worlds small { color: var(--text-muted); }
 .vortable-page__worlds--on { border-color: var(--accent); color: var(--accent-bright); }
 
