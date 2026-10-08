@@ -50,7 +50,7 @@
 
 /* o palco ocupa o que sobra da tela */
 .vortable-page .vortable-master { flex: 1 1 auto; min-height: 0; gap: 0; }
-.vortable-page .vortable-master > .campaign-tabs { margin: var(--space-2, 8px) var(--space-3, 12px); }
+.vortable-page .vortable-master__top { margin: var(--space-2, 8px) var(--space-3, 12px); }
 .vortable-page .vortable-stage {
   flex: 1 1 auto;
   height: auto;

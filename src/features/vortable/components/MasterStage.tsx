@@ -4,6 +4,7 @@ import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shar
 import { createCharacterStorage, createWorldStorage, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
 import { EngineStage } from './EngineStage'
 import { PlayersManager } from './PlayersManager'
+import { SceneBar } from './SceneBar'
 
 type Tab = 'editar' | 'testar' | 'personagens' | 'jogadores'
 
@@ -20,6 +21,7 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
 
   return (
     <div className="vortable-master" style={{ '--tab-dir': tabDir } as CSSProperties}>
+      <div className="vortable-master__top">
       <nav ref={tabsRef} className="campaign-tabs" role="tablist" aria-label="Vortable">
         {TABS.map((t) => (
           <button
@@ -34,6 +36,8 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
         ))}
         <TabIndicator activeKey={tab} />
       </nav>
+      <SceneBar campaignId={campaign.id} />
+      </div>
 
       {tab === 'editar' && (
         <EngineStage

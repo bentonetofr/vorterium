@@ -17,6 +17,8 @@ export interface WorldSceneData {
     onClock?: (hour: number) => void;
     /** Deslocamento do relógio do mundo em ms (o teste do editor começa na hora da prévia). */
     timeOffset?: number;
+    /** O teclado do boneco está travado agora? (lido ao abrir a cena e a cada zona nova) */
+    inputLocked?: () => boolean;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;
@@ -39,6 +41,9 @@ export declare class WorldScene extends Phaser.Scene {
     create(): Promise<void>;
     /** Um passo a cada vez que o quadro da animação é o de um pé tocando o chão. */
     private syncFootsteps;
+    private inputLocked;
+    /** Trava/destrava o teclado do boneco (cena do mestre por cima da tela). */
+    setInputLocked(locked: boolean): void;
     /** Troca a aparência do jogador sem recarregar a cena. */
     setAppearance(appearance: Appearance): Promise<void>;
     /** Depois da física e antes de desenhar: câmera no jogador, sombra dos pés, luz. */

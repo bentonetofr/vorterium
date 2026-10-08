@@ -29,6 +29,8 @@ export interface VortableOptions {
 }
 export interface VortableHandle {
     setAppearance(appearance: Appearance): Promise<void>;
+    /** Trava o teclado do boneco (o mestre cobriu a tela com uma cena). */
+    setInputLocked(locked: boolean): void;
     destroy(): void;
 }
 export declare function mountVortable(parent: HTMLElement, opts: VortableOptions): VortableHandle;

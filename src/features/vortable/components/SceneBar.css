@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════════
+   Cenas (estilo OBS): barra do mestre e cobertura do jogador
+   ═══════════════════════════════════════════════════════ */
+
+.vortable-master__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  flex-wrap: wrap;
+}
+.vortable-master__top > .campaign-tabs { flex: 0 1 auto; }
+
+.scene-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+}
+
+.scene-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-2, 8px);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.scene-bar__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.scene-bar__dot--live { background: var(--danger-bright); box-shadow: 0 0 8px var(--danger-bright); }
+
+.scene-btn {
+  padding: 6px var(--space-3, 12px);
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.scene-btn:hover { color: var(--text-primary); background: var(--bg-elevated); }
+.scene-btn--on { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--accent); }
+
+.scene-bar__menu { position: relative; }
+
+.scene-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+.scene-pop--images { width: min(420px, 90vw); max-height: 60vh; overflow-y: auto; }
+.scene-pop--title { width: min(340px, 90vw); }
+.scene-pop__msg { margin: 0; color: var(--text-secondary); font-size: var(--text-sm); }
+.scene-pop__msg--error { color: var(--danger-bright); }
+.scene-pop__input {
+  padding: 8px 10px;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+.scene-pop__input:focus { outline: none; border-color: var(--accent); }
+.scene-pop__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.scene-thumb {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+  padding: 4px;
+  color: var(--text-secondary);
+  background: var(--bg-base);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+}
+.scene-thumb:hover:not(:disabled) { border-color: var(--accent); }
+.scene-thumb--on { border-color: var(--accent-bright); box-shadow: 0 0 0 1px var(--accent-bright); }
+.scene-thumb img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 2px; }
+.scene-thumb__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-xs); }
+
+/* ── Jogador: cena por cima do jogo ── */
+
+.vortable-player-wrap { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+.scene-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  opacity: 1;
+  transition: opacity 500ms ease;
+  animation: scene-in 500ms ease both;
+}
+.scene-overlay--off { opacity: 0; pointer-events: none; }
+@keyframes scene-in { from { opacity: 0; } to { opacity: 1; } }
+
+.scene-card { max-width: min(900px, 86%); text-align: center; color: #f3eee4; }
+.scene-card__sigil { display: block; margin-bottom: var(--space-3, 12px); font-size: 56px; color: var(--accent-bright); opacity: 0.8; }
+.scene-card__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); }
+.scene-card__title--big { font-size: clamp(32px, 6vw, 72px); line-height: 1.1; }
+.scene-card__sub { margin: var(--space-3, 12px) 0 0; font-size: var(--text-lg); color: var(--text-secondary); }
+.scene-figure { margin: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.scene-figure img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-overlay { animation: none; transition: none; }
+}

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
-import { EMPTY_SNAPSHOT, MesaSession, type MesaSnapshot } from './mesaSession'
+import { EMPTY_SNAPSHOT, GAME_SCENE, MesaSession, type MesaScene, type MesaSnapshot } from './mesaSession'
 import { getMesaImageShowUrl } from './services/mesaImagesService'
 import { setDocumentVisible } from './documents/documentsService'
 
@@ -16,7 +16,9 @@ interface MesaStreamValue extends MesaSnapshot {
   /** A aba Mesa está aberta agora (o aviso de "ao vivo" não aparece por cima dela). */
   viewing:      boolean
   setViewing:   (v: boolean) => void
-  /** Coloca uma imagem da galeria na mesa (gera o link pros jogadores). */
+  /** Mestre: troca a cena que os jogadores veem (vale na hora pra todos). */
+  setScene:     (scene: MesaScene) => void
+  /** Mestre: põe uma imagem da galeria como cena (gera o link pros jogadores). */
   showImage:    (image: { id: string; path: string; name: string }) => Promise<void>
   hideImage:    () => void
   /** Põe um documento na mesa (e libera pros jogadores, se ainda estava escondido). */
@@ -28,7 +30,11 @@ interface MesaStreamValue extends MesaSnapshot {
 
 const MesaStreamContext = createContext<MesaStreamValue | null>(null)
 
-export function MesaStreamProvider({ children }: { children: ReactNode }) {
+/**
+ * `announce`: o mestre desta página avisa os jogadores que a Mesa está aberta
+ * (só a página do Vortable liga isso; no resto do site o mestre só escuta).
+ */
+export function MesaStreamProvider({ children, announce = false }: { children: ReactNode; announce?: boolean }) {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
   const campaignId = campaign?.id ?? null
@@ -45,7 +51,7 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!campaignId || !userId) return
-    const session = new MesaSession({ campaignId, userId, name, isMaster, onChange: setSnap })
+    const session = new MesaSession({ campaignId, userId, name, isMaster, announce: announce && isMaster, onChange: setSnap })
     sessionRef.current = session
     void session.connect()
     return () => {
@@ -55,7 +61,7 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     }
     // O nome só vai no aviso de entrada — não reconecta se mudar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, userId, isMaster])
+  }, [campaignId, userId, isMaster, announce])
 
   // Fechou a aba/navegador: avisa os outros na hora.
   useEffect(() => {
@@ -64,11 +70,13 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('pagehide', onUnload)
   }, [])
 
+  const setScene = useCallback((scene: MesaScene) => sessionRef.current?.setScene(scene), [])
+
   const showImage = useCallback(async (image: { id: string; path: string; name: string }) => {
     const session = sessionRef.current
     if (!session) return
     const url = await getMesaImageShowUrl(image.path)
-    session.showImage({ id: image.id, url, name: image.name })
+    session.setScene({ kind: 'image', id: image.id, url, name: image.name })
   }, [])
 
   const showDocument = useCallback(async (doc: { id: string; title: string; visible: boolean }) => {
@@ -80,7 +88,7 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
   }, [])
   const hideDocument    = useCallback(() => sessionRef.current?.hideDocument(), [])
   const setDocumentPage = useCallback((page: number) => sessionRef.current?.setDocumentPage(page), [])
-  const hideImage       = useCallback(() => sessionRef.current?.hideImage(), [])
+  const hideImage       = useCallback(() => sessionRef.current?.setScene(GAME_SCENE), [])
 
   const value: MesaStreamValue = {
     ...snap,
@@ -88,6 +96,7 @@ export function MesaStreamProvider({ children }: { children: ReactNode }) {
     isMaster,
     viewing,
     setViewing,
+    setScene,
     showImage,
     hideImage,
     showDocument,

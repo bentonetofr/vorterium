@@ -41591,6 +41591,7 @@ var Wt = class {
 	sprite;
 	keys;
 	frozen = !1;
+	locked = !1;
 	constructor(e, t, n, r, i = "down") {
 		this.charKey = t, this.dir = i, this.sprite = e.physics.add.sprite(n, r, `${t}:idle`, 0), this.sprite.setOrigin(.5, qt / 64);
 		let a = this.sprite.body;
@@ -41624,7 +41625,7 @@ var Wt = class {
 		};
 	}
 	update() {
-		if (this.frozen) {
+		if (this.frozen || this.locked) {
 			this.sprite.setVelocity(0, 0), this.play("idle");
 			return;
 		}
@@ -43774,7 +43775,7 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 			x: u.x + u.w / 2,
 			y: u.y + u.h / 2 + 5
 		} : e.spawn;
-		this.player = new Jt(this, gi, d.x, d.y, r?.dir ?? "down"), this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, Cr).setScale(.75, .6).setAlpha(.32);
+		this.player = new Jt(this, gi, d.x, d.y, r?.dir ?? "down"), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, Cr).setScale(.75, .6).setAlpha(.32);
 		let f = this.player.sprite;
 		o.extraCasters = () => [{
 			key: f.texture.key,
@@ -43810,6 +43811,10 @@ var gi = "char:me", _i = 220, vi = .15, yi = 500, bi = {
 			i.includes(Number(n.textureFrame) % a) && this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow);
 		};
 		e.on(c.default.Animations.Events.ANIMATION_START, t), e.on(c.default.Animations.Events.ANIMATION_UPDATE, t);
+	}
+	inputLocked = !1;
+	setInputLocked(e) {
+		this.inputLocked = e, this.player && (this.player.locked = e);
 	}
 	async setAppearance(e) {
 		this.cfg.appearance = e;
@@ -47471,34 +47476,35 @@ var ba = "/__vortable/curate";
 function xa(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	$r(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Hi(), a = t.appearance, o = null, s = null, l = e, u = (e, t, r = 0) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Hi(), a = t.appearance, o = !1, s = null, l = null, u = e, d = (e, t, r = 0) => ({
 		zone: e,
 		appearance: a,
 		assetBase: n,
 		loadZone: t,
 		timeOffset: r,
-		onZone: (e) => o?.showTestZone(e.name),
-		onClock: (e) => o?.showTestClock(e)
-	}), d = (e, t) => {
+		onZone: (e) => s?.showTestZone(e.name),
+		onClock: (e) => s?.showTestClock(e),
+		inputLocked: () => o
+	}), f = (e, t) => {
 		let n = (Xt(e).dayMinutes ?? 24) * 6e4, r = Date.now();
 		return ((yn(t) - yn(xn(Xt(e).dayMinutes, r))) % 1 + 1) % 1 * n;
 	};
-	r === "edit" && (s = new Ai(t.zone ?? z("Nova zona", 40, 30)), o = new ca(e, s, i, {
+	r === "edit" && (l = new Ai(t.zone ?? z("Nova zona", 40, 30)), s = new ca(e, l, i, {
 		assetBase: n,
-		textureImage: (e) => p.textures.get(e).getSourceImage(),
+		textureImage: (e) => m.textures.get(e).getSourceImage(),
 		startTest: () => {
-			p.scene.stop("editor"), p.scene.start("world", u(structuredClone(s.zone), async (e) => e === s.zone.id ? structuredClone(s.zone) : i.load(e), d(s.zone, s.previewHour)));
+			m.scene.stop("editor"), m.scene.start("world", d(structuredClone(l.zone), async (e) => e === l.zone.id ? structuredClone(l.zone) : i.load(e), f(l.zone, l.previewHour)));
 		},
 		stopTest: () => {
-			p.scene.stop("world"), p.scene.start("editor", { state: s });
+			m.scene.stop("world"), m.scene.start("editor", { state: l });
 		},
-		deleteSelected: () => m()?.deleteSelected(),
+		deleteSelected: () => h()?.deleteSelected(),
 		applySound: () => {
-			let e = p.scene.getScenes(!0)[0];
+			let e = m.scene.getScenes(!0)[0];
 			e && ei.of(e)?.applyPrefs();
 		},
-		centerOnZone: () => m()?.centerOnZone(),
-		scene: () => m(),
+		centerOnZone: () => h()?.centerOnZone(),
+		scene: () => h(),
 		editCharacter: t.onEditCharacter,
 		curate: t.curate ? async (e, t, n) => {
 			let r = await fetch(ba, {
@@ -47511,10 +47517,10 @@ function xa(e, t) {
 				})
 			}), i = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
 			if (!r.ok) throw Error(i.error ?? `HTTP ${r.status}`);
-			Be(i), Je(p, i), s.emit("catalog");
+			Be(i), Je(m, i), l.emit("catalog");
 		} : void 0
-	}), l = o.stage);
-	async function f() {
+	}), u = s.stage);
+	async function p() {
 		if (t.zone) return t.zone;
 		try {
 			let e = await i.loadWorld(), t = e.start && await i.load(e.start);
@@ -47526,15 +47532,15 @@ function xa(e, t) {
 		}
 		return z("Vazio", 20, 15);
 	}
-	let p = new c.default.Game({
+	let m = new c.default.Game({
 		type: c.default.AUTO,
-		parent: l,
+		parent: u,
 		pixelArt: !0,
 		backgroundColor: "#07080c",
 		scale: {
 			mode: c.default.Scale.RESIZE,
-			width: l.clientWidth || 960,
-			height: l.clientHeight || 640
+			width: u.clientWidth || 960,
+			height: u.clientHeight || 640
 		},
 		physics: {
 			default: "arcade",
@@ -47542,16 +47548,19 @@ function xa(e, t) {
 		},
 		input: { mouse: { preventDefaultWheel: !0 } }
 	});
-	p.scene.add("world", xi), p.scene.add("editor", Oi), p.scene.add("boot", new it(n, async () => {
-		p.scene.stop("boot"), r === "edit" ? (p.scene.start("editor", { state: s }), o.assetsReady()) : p.scene.start("world", u(await f(), (e) => i.load(e)));
+	m.scene.add("world", xi), m.scene.add("editor", Oi), m.scene.add("boot", new it(n, async () => {
+		m.scene.stop("boot"), r === "edit" ? (m.scene.start("editor", { state: l }), s.assetsReady()) : m.scene.start("world", d(await p(), (e) => i.load(e)));
 	}), !0);
-	let m = () => p.scene.isActive("editor") ? p.scene.getScene("editor") : null;
+	let h = () => m.scene.isActive("editor") ? m.scene.getScene("editor") : null;
 	return {
 		async setAppearance(e) {
-			a = e, p.scene.isActive("world") && await p.scene.getScene("world").setAppearance(e);
+			a = e, m.scene.isActive("world") && await m.scene.getScene("world").setAppearance(e);
+		},
+		setInputLocked(e) {
+			o = e, m.scene.isActive("world") && m.scene.getScene("world").setInputLocked(e);
 		},
 		destroy() {
-			o?.destroy(), p.destroy(!0);
+			s?.destroy(), m.destroy(!0);
 		}
 	};
 }

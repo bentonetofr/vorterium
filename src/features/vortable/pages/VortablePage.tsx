@@ -5,6 +5,7 @@ import { getCampaignWithRole } from '../../campaigns/services/campaignService'
 import { CurrentCampaignProvider, useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { ActiveChatProvider } from '../../chat/ActiveChatContext'
 import { DiceRollerProvider } from '../../dice/DiceRollerProvider'
+import { MesaStreamProvider } from '../../mesa/MesaStreamProvider'
 import type { CampaignWithRole } from '../../../shared/types'
 import { MasterStage } from '../components/MasterStage'
 import { PlayerStage } from '../components/PlayerStage'
@@ -21,7 +22,10 @@ export function VortablePage() {
     <ActiveChatProvider>
       <DiceRollerProvider>
         <CurrentCampaignProvider>
-          <VortablePageContent />
+          {/* o mestre aqui avisa os jogadores e manda a cena (ver SceneBar) */}
+          <MesaStreamProvider announce>
+            <VortablePageContent />
+          </MesaStreamProvider>
         </CurrentCampaignProvider>
       </DiceRollerProvider>
     </ActiveChatProvider>

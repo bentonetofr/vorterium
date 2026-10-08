@@ -6,10 +6,11 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { getMyCampaigns } from '../../campaigns/services/campaignService'
 import { useMesaStream } from '../MesaStreamProvider'
+import { enterFullscreen } from '../../vortable/fullscreen'
 import './MesaLiveNotice.css'
 
 // ────────────────────────────────────────────────────────
-// Aviso "o mestre abriu a Mesa" em QUALQUER página do site. Escuta o
+// Aviso "o mestre abriu o Vortable" em QUALQUER página do site. Escuta o
 // canal "mesa-aviso:<campanha>" de todas as campanhas em que a pessoa é
 // jogadora; ao entrar, pergunta "status?" (quem abriu o site no meio da
 // transmissão também é avisado). Cada transmissão avisa uma vez só.
@@ -142,14 +143,15 @@ export function MesaLiveNotice() {
   function watch() {
     if (!current) return
     dismiss(current.liveId)
-    navigate(`/campanhas/${current.campaignId}/mesa-sessao`, { state: { initialSessionSubTab: 'mesa' } })
+    enterFullscreen() // vem do clique
+    navigate(`/campanhas/${current.campaignId}/vortable`)
   }
 
   return (
     <div key={current.liveId} className="mesa-notice" role="status" aria-live="polite">
       <span className="mesa-notice__live">Ao vivo</span>
       <div className="mesa-notice__body">
-        <p className="mesa-notice__message"><strong>{current.masterName}</strong> abriu a Mesa</p>
+        <p className="mesa-notice__message"><strong>{current.masterName}</strong> abriu o Vortable</p>
         <p className="mesa-notice__campaign">{current.campaignName}</p>
       </div>
       <div className="mesa-notice__actions">

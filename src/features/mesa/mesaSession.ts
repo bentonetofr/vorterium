@@ -2,29 +2,33 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../shared/lib/supabase'
 
 // ────────────────────────────────────────────────────────
-// Mesa: o que está "na mesa" (imagem da galeria ou documento) e o aviso de
-// "ao vivo". O Supabase Realtime (canal privado "mesa:<campanha>", só
-// membros) leva o estado do mestre pros jogadores:
+// Mesa: a "cena" que os jogadores veem no Vortable, estilo OBS. O mestre
+// escolhe (jogo ao vivo, tela preta, pausa, uma imagem/mapa, um título) e
+// todos veem na hora. O Supabase Realtime (canal privado "mesa:<campanha>",
+// só membros) leva o estado do mestre pros jogadores:
 //
 //   jogador → viewer-join {viewerId, name}   "estou aqui"
-//   mestre  → state {stage}                  o que está na mesa
+//   mestre  → state {stage}                  a cena atual (e a resposta ao "estou aqui")
 //
 // E no canal "mesa-aviso:<campanha>" (que os jogadores escutam de todas
-// as campanhas deles, em qualquer página), o mestre manda:
+// as campanhas deles, em qualquer página), o mestre manda, enquanto está
+// com o Vortable aberto:
 //   live {liveId, masterName} / ended {liveId} — e responde "status?".
 //
-// A transmissão de tela foi retirada: a Mesa agora é o Vortable. As artes
-// e os documentos ficam guardados aqui pra entrarem no Vortable depois.
+// Sem o mestre com o Vortable aberto, `liveId` é null e a cena volta pro jogo.
 // ────────────────────────────────────────────────────────
 
-export interface MesaImage {
-  /** Id na galeria do mestre (pra marcar qual está na mesa). */
-  id:   string
-  url:  string
-  name: string
-}
+/** O que os jogadores veem agora. */
+export type MesaScene =
+  | { kind: 'game' }
+  | { kind: 'black' }
+  | { kind: 'pause' }
+  | { kind: 'image'; id: string; url: string; name: string }
+  | { kind: 'title'; title: string; subtitle: string }
 
-/** Documento (carta ou livro) na mesa — e a página aberta, num livro. */
+export type SceneKind = MesaScene['kind']
+
+/** Documento (carta ou livro) na mesa — e a página aberta, num livro. (Guardado pra entrar no Vortable.) */
 export interface MesaDocRef {
   id:    string
   title: string
@@ -32,23 +36,22 @@ export interface MesaDocRef {
   page:  number
 }
 
-/** O que está na mesa agora — o mestre define e manda pra todos. */
 export interface MesaStage {
-  /** Id da "sessão ao vivo"; null = nada na mesa. */
+  /** Id da sessão do mestre (Vortable aberto); null = ninguém ao vivo. */
   liveId:   string | null
-  image:    MesaImage | null
-  /** Documento na mesa (no lugar da imagem). */
+  scene:    MesaScene
   document: MesaDocRef | null
 }
 
 export interface MesaSnapshot {
   channelError: string | null
   stage:        MesaStage
-  /** Tem algo na mesa. */
+  /** O mestre está com o Vortable aberto. */
   live:         boolean
 }
 
-export const EMPTY_STAGE: MesaStage = { liveId: null, image: null, document: null }
+export const GAME_SCENE: MesaScene = { kind: 'game' }
+export const EMPTY_STAGE: MesaStage = { liveId: null, scene: GAME_SCENE, document: null }
 
 export const EMPTY_SNAPSHOT: MesaSnapshot = { channelError: null, stage: EMPTY_STAGE, live: false }
 
@@ -57,17 +60,45 @@ interface SessionOptions {
   userId:     string
   name:       string
   isMaster:   boolean
+  /** Mestre: avisa os jogadores que a Mesa está aberta (só a página do Vortable faz isso). */
+  announce:   boolean
   onChange:   (snapshot: MesaSnapshot) => void
 }
 
 type Payload = Record<string, unknown>
 
+const MAX_TITLE = 120
+const MAX_SUBTITLE = 240
+
 function newId(): string {
   return crypto.randomUUID().slice(0, 8)
 }
 
-function isStage(value: unknown): value is MesaStage {
-  return typeof value === 'object' && value !== null && 'liveId' in value
+const text = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '')
+
+/** Confere uma cena vinda da rede (o canal é só de membros, mas a forma não é garantida). */
+function parseScene(raw: unknown): MesaScene {
+  const s = (raw ?? {}) as Payload
+  switch (s.kind) {
+    case 'black': return { kind: 'black' }
+    case 'pause': return { kind: 'pause' }
+    case 'image':
+      return typeof s.url === 'string' && s.url
+        ? { kind: 'image', id: text(s.id, 80), url: s.url, name: text(s.name, 200) }
+        : GAME_SCENE
+    case 'title': return { kind: 'title', title: text(s.title, MAX_TITLE), subtitle: text(s.subtitle, MAX_SUBTITLE) }
+    default: return GAME_SCENE
+  }
+}
+
+function parseStage(raw: unknown): MesaStage | null {
+  if (typeof raw !== 'object' || raw === null || !('liveId' in raw)) return null
+  const s = raw as Payload
+  return {
+    liveId:   typeof s.liveId === 'string' ? s.liveId : null,
+    scene:    parseScene(s.scene),
+    document: (s.document as MesaDocRef | null | undefined) ?? null,
+  }
 }
 
 export class MesaSession {
@@ -90,7 +121,7 @@ export class MesaSession {
   private update(patch: Partial<MesaSnapshot>) {
     if (this.disposed) return
     const next = { ...this.snap, ...patch }
-    next.live = Boolean(next.stage.image || next.stage.document)
+    next.live = Boolean(next.stage.liveId)
     this.snap = next
     this.opts.onChange(next)
   }
@@ -117,8 +148,8 @@ export class MesaSession {
       this.connectAviso()
     } else {
       channel.on('broadcast', { event: 'state' }, ({ payload }) => {
-        const stage = (payload as Payload | null)?.stage
-        if (isStage(stage)) this.update({ stage: { ...EMPTY_STAGE, ...stage } })
+        const stage = parseStage((payload as Payload | null)?.stage)
+        if (stage) this.update({ stage })
       })
     }
 
@@ -127,8 +158,9 @@ export class MesaSession {
       if (status === 'SUBSCRIBED') {
         this.update({ channelError: null })
         if (this.opts.isMaster) {
-          // Reconectou no meio: manda o estado de novo.
-          if (this.snap.live) this.sendState()
+          // abriu (ou reconectou no meio): manda o estado e avisa
+          if (this.opts.announce && !this.snap.stage.liveId) this.open()
+          else if (this.snap.stage.liveId) this.sendState()
         } else {
           this.send('viewer-join', { viewerId: this.myId, name: this.opts.name })
         }
@@ -140,10 +172,11 @@ export class MesaSession {
 
   dispose(): void {
     if (this.disposed) return
-    if (this.opts.isMaster && this.snap.live) {
-      this.snap = { ...this.snap, stage: EMPTY_STAGE }
+    if (this.opts.isMaster && this.snap.stage.liveId) {
+      const ended = this.snap.stage.liveId
+      this.snap = { ...this.snap, stage: EMPTY_STAGE, live: false }
       this.sendState()
-      this.sendAviso('ended', { liveId: null })
+      this.sendAviso('ended', { liveId: ended })
     }
     this.disposed = true
     if (this.channel) void supabase.removeChannel(this.channel)
@@ -152,19 +185,40 @@ export class MesaSession {
     this.aviso = null
   }
 
-  // ── Mestre: estado e aviso ─────────────────────────────
+  // ── Mestre: sessão e cena ──────────────────────────────
+
+  /** O Vortable do mestre abriu: os jogadores ficam sabendo e passam a ver a cena. */
+  private open() {
+    const stage = { ...this.snap.stage, liveId: newId() }
+    this.update({ stage })
+    this.sendState()
+    this.sendAviso('live', { liveId: stage.liveId, masterName: this.opts.name })
+  }
 
   private setStage(patch: Partial<MesaStage>) {
-    const prev = this.snap.stage
-    const next: MesaStage = { ...prev, ...patch }
-    const wasLive = Boolean(prev.image || prev.document)
-    const isLive  = Boolean(next.image || next.document)
-    if (!wasLive && isLive) next.liveId = newId()
-    if (!isLive) next.liveId = null
-    this.update({ stage: next })
+    if (!this.opts.isMaster) return
+    this.update({ stage: { ...this.snap.stage, ...patch } })
     this.sendState()
-    if (!wasLive && isLive) this.sendAviso('live', { liveId: next.liveId, masterName: this.opts.name })
-    if (wasLive && !isLive) this.sendAviso('ended', { liveId: prev.liveId })
+  }
+
+  /** Troca o que os jogadores veem (vale na hora pra todos). */
+  setScene(scene: MesaScene): void {
+    this.setStage({ scene })
+  }
+
+  showDocument(doc: MesaDocRef): void {
+    this.setStage({ document: doc })
+  }
+
+  hideDocument(): void {
+    this.setStage({ document: null })
+  }
+
+  /** Virou a página do livro na mesa: vira pra todos. */
+  setDocumentPage(page: number): void {
+    const doc = this.snap.stage.document
+    if (!doc || doc.page === page) return
+    this.setStage({ document: { ...doc, page } })
   }
 
   private sendState() {
@@ -178,7 +232,7 @@ export class MesaSession {
     this.aviso = aviso
     // Jogador que abriu o site agora pergunta se tem algo rolando.
     aviso.on('broadcast', { event: 'status?' }, () => {
-      if (this.snap.live) this.sendAviso('live', { liveId: this.snap.stage.liveId, masterName: this.opts.name })
+      if (this.snap.stage.liveId) this.sendAviso('live', { liveId: this.snap.stage.liveId, masterName: this.opts.name })
     })
     aviso.subscribe()
   }
@@ -186,36 +240,5 @@ export class MesaSession {
   private sendAviso(event: 'live' | 'ended', payload: Payload) {
     if (!this.aviso) return
     void this.aviso.send({ type: 'broadcast', event, payload: { ...payload, campaignId: this.opts.campaignId } })
-  }
-
-  // ── Mestre: imagem ─────────────────────────────────────
-
-  showImage(image: MesaImage): void {
-    if (!this.opts.isMaster) return
-    this.setStage({ image, document: null })
-  }
-
-  hideImage(): void {
-    if (!this.opts.isMaster) return
-    this.setStage({ image: null })
-  }
-
-  // ── Mestre: documento ──────────────────────────────────
-
-  showDocument(doc: MesaDocRef): void {
-    if (!this.opts.isMaster) return
-    this.setStage({ document: doc, image: null })
-  }
-
-  hideDocument(): void {
-    if (!this.opts.isMaster) return
-    this.setStage({ document: null })
-  }
-
-  /** Virou a página do livro na mesa: vira pra todos. */
-  setDocumentPage(page: number): void {
-    const doc = this.snap.stage.document
-    if (!this.opts.isMaster || !doc || doc.page === page) return
-    this.setStage({ document: { ...doc, page } })
   }
 }

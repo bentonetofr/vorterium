@@ -7,6 +7,8 @@ export declare class Player {
     private keys;
     /** Parado à força (trocando de zona, cutscene): ignora o teclado. */
     frozen: boolean;
+    /** Travado de fora (o mestre cobriu a tela do jogador): ignora o teclado, sem mexer no `frozen` das transições. */
+    locked: boolean;
     constructor(scene: Phaser.Scene, charKey: string, x: number, y: number, dir?: Dir);
     /** Troca a aparência (as texturas foram regeradas com a mesma chave). */
     refresh(): void;
