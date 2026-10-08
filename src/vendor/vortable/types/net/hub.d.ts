@@ -29,6 +29,7 @@ export type NetMsg = NetHello | {
 export interface NetLink {
     /** Id deste jogador na rede (único na sala). */
     selfId: string;
+    /** Pode ser um getter: o nome é lido a cada anúncio. */
     name: string;
     /** Manda uma mensagem pra sala; a ponte decide quem recebe. */
     send(msg: NetMsg): void;
@@ -50,6 +51,8 @@ export declare class NetHub {
     constructor(link: NetLink);
     /** Diz pra sala quem eu sou (e, na primeira vez, pede que todos digam quem são). */
     announce(appearance: Appearance): void;
+    /** O nome mudou (o NetLink.name é lido de novo): reanuncia o mesmo boneco com o nome novo. */
+    rename(): void;
     /** A rede acabou de abrir (ou reabriu): conta quem sou e pergunta quem está aí. */
     resync(): void;
     /** Saindo: avisa e esquece todo mundo. */

@@ -23,11 +23,13 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   const vnet = useVortableNet()
   const covered = stage.scene.kind !== 'game'
   const coveredRef = useRef(covered)
-  const gameRef = useRef<{ setInputLocked(locked: boolean): void } | null>(null)
+  const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void } | null>(null)
   useEffect(() => {
     coveredRef.current = covered
     gameRef.current?.setInputLocked(covered)
   }, [covered])
+  // o personagem da ficha mudou de nome: os outros veem o nome novo
+  useEffect(() => { gameRef.current?.rename() }, [vnet.name])
 
   const refresh = useCallback(async () => {
     try {
@@ -98,16 +100,17 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           const worlds = await createWorldStorage(campaign.id, campaign.name)
           const data = await engine.loadCharacterData(VORTABLE_ASSETS)
           if (isDead()) return () => {}
+          const net = vnet.net
           const game = engine.mountVortable(host, {
             mode: 'play',
             appearance: engine.normalizeAppearance(data, mine.appearance),
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
-            net: vnet.net ? { selfId: userId, name: vnet.name, send: (m) => vnet.net?.send(m) } : undefined,
+            // o nome é lido a cada anúncio: acompanha a ficha
+            net: vnet.net ? { selfId: userId, get name() { return net?.name ?? vnet.name }, send: (m) => net?.send(m) } : undefined,
           })
           game.setInputLocked(coveredRef.current)
           gameRef.current = game
-          const net = vnet.net
           if (net) {
             net.sink = (m) => game.receive(m)
             net.onOpen = () => game.resync()

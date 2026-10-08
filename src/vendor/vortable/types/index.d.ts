@@ -37,6 +37,8 @@ export interface VortableHandle {
     receive(msg: unknown): void;
     /** A rede abriu depois do jogo: reanuncia o boneco e pergunta quem está na sala. */
     resync(): void;
+    /** O nome do jogador mudou (NetLink.name): os outros passam a ver o nome novo. */
+    rename(): void;
     setAppearance(appearance: Appearance): Promise<void>;
     /** Trava o teclado do boneco (o mestre cobriu a tela com uma cena). */
     setInputLocked(locked: boolean): void;

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { CampaignSheetPanel } from '../../sheets/components/CampaignSheetPanel'
 import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
+import { SHEET_CLOSED_EVENT } from '../net/VortableNetProvider'
 import './SheetFab.css'
 
 /**
@@ -70,6 +71,13 @@ export function SheetFab() {
   const { campaign } = useCurrentCampaign()
   const [open, setOpen] = useState(false)
   const { body, inner } = useFitToWidth(open)
+
+  // fechou a ficha: o nome do personagem (sobre o boneco) pode ter mudado
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    if (wasOpen.current && !open) window.dispatchEvent(new Event(SHEET_CLOSED_EVENT))
+    wasOpen.current = open
+  }, [open])
 
   useEffect(() => {
     if (!open) return

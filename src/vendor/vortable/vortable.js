@@ -47229,6 +47229,9 @@ var ya = class {
 			appearance: e
 		}, this.link.send(this.hello), this.asked || (this.asked = !0, this.link.send({ t: "who" }));
 	}
+	rename() {
+		this.hello && this.announce(this.hello.appearance);
+	}
 	resync() {
 		this.hello && (this.link.send(this.hello), this.link.send({ t: "who" }));
 	}
@@ -47809,6 +47812,9 @@ function ka(e, t) {
 		},
 		resync() {
 			s?.resync();
+		},
+		rename() {
+			s?.rename();
 		},
 		setInputLocked(e) {
 			o = e, h.scene.isActive("world") && h.scene.getScene("world").setInputLocked(e);

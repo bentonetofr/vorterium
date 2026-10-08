@@ -72,6 +72,8 @@ export class VortableNet {
   /** O mestre me tirou da sessão. */
   onKicked: (() => void) | null = null
 
+  /** Nome mostrado sobre o boneco (o do personagem na ficha); pode mudar com o jogo aberto. */
+  name: string
   status: NetStatus = 'off'
   private readonly peers = new Map<string, Peer>()   // mestre: um por jogador
   private link: Peer | null = null                    // jogador: a ligação com o mestre
@@ -82,6 +84,7 @@ export class VortableNet {
   private readonly off: () => void
 
   constructor(private readonly opts: Options) {
+    this.name = opts.name
     this.off = opts.signaling.subscribe((p) => void this.onSignal(p))
   }
 
@@ -260,7 +263,7 @@ export class VortableNet {
     const ask = () => {
       if (this.disposed || !this.live || this.kicked) return
       if (this.link?.dc?.readyState === 'open') return
-      this.opts.signaling.send({ kind: 'join', from: this.opts.selfId, name: this.opts.name })
+      this.opts.signaling.send({ kind: 'join', from: this.opts.selfId, name: this.name })
     }
     ask()
     this.joinTimer = window.setInterval(ask, JOIN_RETRY_MS)

@@ -86,7 +86,7 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
               // no teste o mestre anda no mundo junto com os jogadores
-              net: net ? { selfId: userId, name: vnet.name, send: (m) => net.send(m) } : undefined,
+              net: net ? { selfId: userId, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
             })
             if (net) {
               net.sink = (m) => game.receive(m)
