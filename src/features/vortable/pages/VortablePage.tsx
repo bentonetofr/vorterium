@@ -2,14 +2,34 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../../campaigns/services/campaignService'
+import { CurrentCampaignProvider, useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
+import { ActiveChatProvider } from '../../chat/ActiveChatContext'
+import { DiceRollerProvider } from '../../dice/DiceRollerProvider'
 import type { CampaignWithRole } from '../../../shared/types'
 import { MasterStage } from '../components/MasterStage'
 import { PlayerStage } from '../components/PlayerStage'
+import { VortableTools } from '../components/VortableTools'
 import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen } from '../fullscreen'
 import '../components/VortablePage.css'
 
-/** O Vortable ocupando o navegador todo (fora do layout do site). */
+/**
+ * O Vortable ocupando o navegador todo (fora do layout do site), com os
+ * botões de dados, chat, notificações e caderno no canto inferior esquerdo.
+ */
 export function VortablePage() {
+  return (
+    <ActiveChatProvider>
+      <DiceRollerProvider>
+        <CurrentCampaignProvider>
+          <VortablePageContent />
+        </CurrentCampaignProvider>
+      </DiceRollerProvider>
+    </ActiveChatProvider>
+  )
+}
+
+function VortablePageContent() {
+  const { setCampaign: shareCampaign } = useCurrentCampaign()
   const { campaignId } = useParams<{ campaignId: string }>()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -23,12 +43,12 @@ export function VortablePage() {
     getCampaignWithRole(campaignId, user.id)
       .then((c) => {
         if (dead) return
-        if (c) setCampaign(c)
+        if (c) { setCampaign(c); shareCampaign(c) }
         else setError('Campanha não encontrada ou sem acesso.')
       })
       .catch((err) => { if (!dead) setError(err instanceof Error ? err.message : 'Não foi possível abrir a campanha.') })
     return () => { dead = true }
-  }, [campaignId, user])
+  }, [campaignId, user, shareCampaign])
 
   useEffect(() => {
     document.title = campaign ? `Vortable · ${campaign.name}` : 'Vortable'
@@ -65,6 +85,7 @@ export function VortablePage() {
           ? <MasterStage campaign={campaign} userId={user.id} />
           : <PlayerStage campaign={campaign} userId={user.id} />)}
       </main>
+      {campaign && <VortableTools />}
     </div>
   )
 }
