@@ -1,4 +1,5 @@
 import { type CharacterStorage } from './storage';
+import type { CharacterSave } from '../types';
 export interface CreatorOptions {
     assetBase: string;
     storage: CharacterStorage;
@@ -7,6 +8,15 @@ export interface CreatorOptions {
         label: string;
         onClick: () => void;
     };
+    /**
+     * Modo jogador: um boneco só, sem lista nem "Novo". Salvar guarda o boneco
+     * e chama `onSaved` (é como o jogador entra no jogo pela primeira vez).
+     */
+    single?: boolean;
+    saveLabel?: string;
+    /** Salvar também põe o boneco em uso (padrão: sim). O mestre cria NPCs sem tomar o lugar do dele. */
+    activateOnSave?: boolean;
+    onSaved?: (c: CharacterSave) => void;
 }
 export declare class CreatorUI {
     private opts;

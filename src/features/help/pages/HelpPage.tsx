@@ -42,13 +42,12 @@ const TOPICS: Topic[] = [
     ],
   },
   {
-    id: 'mesa', icon: '▣', title: 'Mesa ao vivo (transmissão)',
+    id: 'mesa', icon: '▣', title: 'Mesa (Vortable)',
     steps: [
-      'Mestre: na sub-aba Mesa, clique em "Transmitir tela" e escolha uma janela, aba ou a tela inteira. Pra ter som, marque "Compartilhar áudio" na escolha (funciona melhor escolhendo uma aba do navegador).',
-      'Clique na imagem pra apontar um lugar: todos veem o ponteiro.',
-      '"Pausar" congela a imagem pros jogadores enquanto você arruma algo; "Trocar tela" muda o que está sendo mostrado sem parar a transmissão.',
-      'Em "Imagens da mesa" o mestre envia mapas e retratos e clica em "Mostrar" pra pôr na mesa de todo mundo.',
-      'Jogador: quando a Mesa entra ao vivo, aparece um aviso em qualquer página do site com o botão "Assistir". Se o navegador bloquear o som, clique em "Ativar som".',
+      'A sub-aba Mesa é o mundo 2D da campanha. Jogador: na primeira vez, crie o seu boneco; depois é só andar pelo mundo (WASD ou setas, Shift corre).',
+      'Mestre, Editar mundo: pinte terreno, ponha objetos, cômodos, luzes, clima e sons, e ligue as zonas por portas e saídas. Salva na campanha.',
+      'Mestre, Testar: anda pelo mundo com o seu boneco. Personagens: cria bonecos, inclusive de NPCs.',
+      'Mestre, Jogadores: veja o boneco de cada jogador, troque por outro (até um que você criou) ou apague pra ele criar de novo.',
     ],
   },
   {

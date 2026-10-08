@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { addGalleryImageToBoard, imageSize } from '../../board/services/boardService'
 import { useAuth } from '../../auth/AuthProvider'
 import { useMesaStream } from '../MesaStreamProvider'
+import './MesaPanel.css'
 import {
   deleteMesaImage,
   listMesaArts,

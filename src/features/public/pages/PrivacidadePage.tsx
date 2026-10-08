@@ -82,17 +82,14 @@ export function PrivacidadePage() {
       </section>
 
       <section className="public-page__section">
-        <h2 className="public-page__section-title">4. Transmissão da Mesa</h2>
+        <h2 className="public-page__section-title">4. Mesa (Vortable)</h2>
         <p className="public-page__text">
-          A transmissão de tela da Mesa vai direto do navegador do mestre para o de
-          cada jogador (WebRTC) e <strong>não é gravada nem armazenada</strong> pelo
-          Vorterium. Para abrir essa conexão direta, os navegadores dos participantes
-          trocam entre si informações de rede, como o endereço IP, e podem consultar
-          servidores públicos de conexão (STUN), como os do Google.
+          O mundo da Mesa (zonas, objetos e configurações) e os bonecos dos jogadores
+          ficam guardados na campanha e só os membros dela os veem.
         </p>
         <p className="public-page__text">
           O navegador também guarda localmente algumas preferências, como o tema
-          escolhido e o volume da transmissão.
+          escolhido e o volume dos sons.
         </p>
       </section>
 

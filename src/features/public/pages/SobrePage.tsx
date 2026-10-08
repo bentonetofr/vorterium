@@ -25,7 +25,7 @@ export function SobrePage() {
           <li><strong>Campanhas:</strong> crie e gerencie campanhas nos sistemas Genérico, Altherium e Terra Devastada, com capa, descrição e status.</li>
           <li><strong>Membros e convites:</strong> adicione jogadores por e-mail ou por link de convite e controle quem é mestre ou jogador.</li>
           <li><strong>Fichas:</strong> ficha completa de Altherium (atributos, domínios, inventário, triunfos, retrato), ficha de Terra Devastada (características, condições, testes de pares, cenas de horror e Convicção) ou ficha simples no sistema Genérico.</li>
-          <li><strong>Mesa ao vivo:</strong> o mestre transmite a tela com som, mostra artes e referências (que os jogadores também podem enviar), aponta lugares e pausa a cena.</li>
+          <li><strong>Mesa (Vortable):</strong> um mundo 2D que o mestre monta (terrenos, objetos, luz, clima e sons) e onde cada jogador anda com o seu boneco.</li>
           <li><strong>Dados, chat e iniciativa:</strong> rolagens com histórico, chat da mesa com mensagens privadas e ordem de combate.</li>
           <li><strong>Quadro da campanha:</strong> um quadro infinito que a mesa monta junta e em tempo real (post-its, formas, setas, desenho, molduras, linhas do tempo e fotos), com um Escudo só do mestre.</li>
           <li><strong>Ferramentas do mestre:</strong> bestiário com inimigos calculados pelas fichas do grupo, criaturas direto na iniciativa, episódios e notas.</li>

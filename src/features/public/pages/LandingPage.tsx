@@ -6,7 +6,7 @@ const FEATURES = [
   { title: 'Campanhas e convites',  desc: 'Crie campanhas no Genérico, em Altherium ou em Terra Devastada e chame os jogadores por e-mail ou link de convite.' },
   { title: 'Quadro da campanha',    desc: 'Um quadro infinito que a mesa monta junta, em tempo real: post-its, setas, linhas do tempo e fotos.' },
   { title: 'Fichas',                desc: 'Fichas completas de Altherium e de Terra Devastada (com testes de pares, Horror e Convicção), ou ficha simples no Genérico.' },
-  { title: 'Mesa ao vivo',          desc: 'Transmita a tela com som, mostre mapas e imagens e aponte lugares para todos verem.' },
+  { title: 'Mesa em mundo 2D',       desc: 'Monte o mundo da campanha com terrenos, objetos, luz e clima, e cada jogador anda nele com o seu boneco.' },
   { title: 'Dados, chat e combate', desc: 'Role dados com histórico, converse no chat da mesa e conduza a ordem de iniciativa.' },
   { title: 'Ferramentas do mestre', desc: 'Bestiário com inimigos calculados pelas fichas do grupo, notas e o livro de regras à mão.' },
 ]
@@ -23,7 +23,7 @@ export function LandingPage() {
           Organize suas campanhas de RPG em um só lugar.
         </p>
         <p className="landing__subtitle">
-          Campanhas, fichas, dados, chat e uma mesa ao vivo com transmissão de tela:
+          Campanhas, fichas, dados, chat e uma mesa em mundo 2D:
           tudo o que a sessão precisa, em um só lugar.
         </p>
         <div className="landing__actions">
@@ -58,7 +58,7 @@ export function LandingPage() {
             <div className="landing__role-block">
               <h3 className="landing__role-title">Para mestres</h3>
               <p className="landing__role-desc">
-                Crie a campanha, convide jogadores, transmita a tela na Mesa, monte
+                Crie a campanha, convide jogadores, monte o mundo na Mesa, monte
                 inimigos no bestiário e acompanhe fichas, iniciativa e sessões em um
                 único painel.
               </p>

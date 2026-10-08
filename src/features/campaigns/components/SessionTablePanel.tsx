@@ -5,7 +5,7 @@ import { CampaignActivityPanel } from '../../activity/components/CampaignActivit
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPanel'
 import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
-import { MesaPanel } from '../../mesa/components/MesaPanel'
+import { VortableMesa } from '../../vortable/components/VortableMesa'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
@@ -101,7 +101,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         hidden={activeSubTab !== 'mesa'}
         className="anim-tab-panel"
       >
-        {activeSubTab === 'mesa' && <MesaPanel campaignId={campaign.id} />}
+        {activeSubTab === 'mesa' && <VortableMesa campaign={campaign} currentUserId={currentUserId} />}
       </div>
 
       <div

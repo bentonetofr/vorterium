@@ -1,10 +1,11 @@
 import { type WorldStorage } from './storage';
-import { type Appearance, type ZoneData } from './types';
+import { type Appearance, type CharacterSave, type ZoneData } from './types';
 import { type CharacterStorage } from './character/storage';
 export * from './types';
 export * from './storage';
 export * from './character/storage';
 export { TERRAINS } from './assets/terrains';
+export { composeFrame as characterFrame } from './character/compose';
 export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppearance } from './character/catalog';
 export interface VortableOptions {
     mode?: 'play' | 'edit';
@@ -41,6 +42,11 @@ export interface CreatorMountOptions {
         label: string;
         onClick: () => void;
     };
+    /** Modo jogador (um boneco só). Ver CreatorOptions. */
+    single?: boolean;
+    saveLabel?: string;
+    activateOnSave?: boolean;
+    onSaved?: (c: CharacterSave) => void;
 }
 /** Criador de personagem (não usa o Phaser: só DOM e canvas). */
 export declare function mountCharacterCreator(parent: HTMLElement, opts?: CreatorMountOptions): {

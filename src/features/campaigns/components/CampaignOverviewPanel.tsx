@@ -157,7 +157,7 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
       <div className="ov-stat__details">
         {mesa.live && (
           <span className="ov-stat__detail--live">
-            {mesa.stage.screenId ? 'Transmissão ao vivo na Mesa' : 'Imagem na Mesa'}
+            Ao vivo na Mesa
           </span>
         )}
         {combat && (

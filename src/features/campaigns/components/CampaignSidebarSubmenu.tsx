@@ -30,7 +30,7 @@ export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, 
         >
           <span className="campaign-submenu__label">{section.label}</span>
           {section.id === 'mesa-sessao' && live && (
-            <span className="campaign-submenu__live" title="Transmissão ao vivo na Mesa">ao vivo</span>
+            <span className="campaign-submenu__live" title="Ao vivo na Mesa">ao vivo</span>
           )}
           {section.id === 'mesa-sessao' && chatUnread > 0 && (
             <span className="campaign-submenu__badge">{chatUnread > 99 ? '99+' : chatUnread}</span>

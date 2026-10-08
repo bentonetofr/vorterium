@@ -18,7 +18,6 @@ import { CampaignNotesPanel }     from '../../notes/components/CampaignNotesPane
 import { SessionTablePanel }      from '../components/SessionTablePanel'
 import { PlayerNotesPanel }       from '../../notebook/components/PlayerNotesPanel'
 import { BoardPanel }             from '../../board/components/BoardPanel'
-import { VortablePanel }          from '../../vortable/components/VortablePanel'
 import './CampaignPages.css'
 
 // ────────────────────────────────────────────────────────
@@ -156,7 +155,7 @@ export function CampaignAreaLayout() {
   }
 
   return (
-    <div className={`page campaign-area-page${section === 'quadro' || section === 'vortable' ? ' campaign-area-page--wide' : ''}`}>
+    <div className={`page campaign-area-page${section === 'quadro' ? ' campaign-area-page--wide' : ''}`}>
       {/* ── Cabeçalho ── */}
       <header className="page__header campaign-area__page-header animate-fade-up">
         <div
@@ -228,10 +227,6 @@ export function CampaignAreaLayout() {
           <Route
             path="mesa-sessao"
             element={<SessionTablePanel campaign={campaign} currentUserId={user!.id} />}
-          />
-          <Route
-            path="vortable"
-            element={<VortablePanel campaign={campaign} currentUserId={user!.id} />}
           />
           <Route
             path="configuracoes"

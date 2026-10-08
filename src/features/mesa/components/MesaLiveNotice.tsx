@@ -9,7 +9,7 @@ import { useMesaStream } from '../MesaStreamProvider'
 import './MesaLiveNotice.css'
 
 // ────────────────────────────────────────────────────────
-// Aviso "o mestre está transmitindo" em QUALQUER página do site. Escuta o
+// Aviso "o mestre abriu a Mesa" em QUALQUER página do site. Escuta o
 // canal "mesa-aviso:<campanha>" de todas as campanhas em que a pessoa é
 // jogadora; ao entrar, pergunta "status?" (quem abriu o site no meio da
 // transmissão também é avisado). Cada transmissão avisa uma vez só.
@@ -149,7 +149,7 @@ export function MesaLiveNotice() {
     <div key={current.liveId} className="mesa-notice" role="status" aria-live="polite">
       <span className="mesa-notice__live">Ao vivo</span>
       <div className="mesa-notice__body">
-        <p className="mesa-notice__message"><strong>{current.masterName}</strong> está transmitindo na Mesa</p>
+        <p className="mesa-notice__message"><strong>{current.masterName}</strong> abriu a Mesa</p>
         <p className="mesa-notice__campaign">{current.campaignName}</p>
       </div>
       <div className="mesa-notice__actions">

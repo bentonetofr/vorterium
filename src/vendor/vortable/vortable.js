@@ -47111,7 +47111,7 @@ var pa = class {
 			}, ma[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
-		this.root = X("div", { class: "vt-root vt-creator" }, X("header", { class: "vt-top" }, X("span", { class: "vt-brand" }, "Vortable"), X("span", { class: "vt-top-title" }, "Personagem"), this.nameInput, X("span", { class: "vt-sep" }), this.iconBtn(Q.plus, "Novo", () => this.newCharacter()), this.iconBtn(Q.open, "Personagens", () => this.openList()), this.iconBtn(Q.save, "Salvar", () => this.save()), X("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Q.world, t.back.label, () => this.goBack(), "vt-primary") : null), X("main", { class: "vt-creator-body" }, X("section", { class: "vt-preview" }, X("div", { class: "vt-preview-stage" }, this.preview), X("div", { class: "vt-row vt-center" }, X("button", {
+		this.root = X("div", { class: "vt-root vt-creator" }, X("header", { class: "vt-top" }, X("span", { class: "vt-brand" }, "Vortable"), X("span", { class: "vt-top-title" }, t.single ? "Crie seu boneco" : "Personagem"), this.nameInput, X("span", { class: "vt-sep" }), t.single ? null : this.iconBtn(Q.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn(Q.open, "Personagens", () => this.openList()), this.iconBtn(Q.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), X("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Q.world, t.back.label, () => this.goBack(), "vt-primary") : null), X("main", { class: "vt-creator-body" }, X("section", { class: "vt-preview" }, X("div", { class: "vt-preview-stage" }, this.preview), X("div", { class: "vt-row vt-center" }, X("button", {
 			class: "vt-btn",
 			title: "Girar",
 			onclick: () => this.turn(-1)
@@ -47338,7 +47338,7 @@ var pa = class {
 	}
 	async save() {
 		try {
-			return this.character.name = this.nameInput.value.trim() || "Sem nome", this.nameInput.value = this.character.name, await this.opts.storage.save(this.character), await this.opts.storage.setActive(this.character.id), this.dirty = !1, this.refreshStatus(), this.toast(`"${this.character.name}" salvo. É ele que aparece quando você testar ou jogar.`), !0;
+			return this.character.name = this.nameInput.value.trim() || "Sem nome", this.nameInput.value = this.character.name, await this.opts.storage.save(this.character), this.opts.activateOnSave !== !1 && await this.opts.storage.setActive(this.character.id), this.dirty = !1, this.refreshStatus(), this.toast(this.opts.single || this.opts.activateOnSave === !1 ? `"${this.character.name}" salvo.` : `"${this.character.name}" salvo. É ele que aparece quando você testar ou jogar.`), this.opts.onSaved?.(structuredClone(this.character)), !0;
 		} catch (e) {
 			return this.toast(`Não deu pra salvar: ${e.message}`, !0), !1;
 		}
@@ -47516,9 +47516,13 @@ function ba(e, t = {}) {
 	let n = new ga(e, {
 		assetBase: t.assetBase ?? "./assets/",
 		storage: t.storage ?? new pa(),
-		back: t.back
+		back: t.back,
+		single: t.single,
+		saveLabel: t.saveLabel,
+		activateOnSave: t.activateOnSave,
+		onSaved: t.onSaved
 	});
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { j as DAY_MINUTES, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, pa as LocalCharacterStorage, Hi as LocalWorldStorage, _ as TERRAINS, A as TILE, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, R as clampZoneSize, gt as defaultAppearance, ot as loadCharacterData, Ui as localStorageAvailable, ba as mountCharacterCreator, ya as mountVortable, da as newCharacter, P as newId, Vi as newWorld, z as newZone, _t as normalizeAppearance, fa as parseCharacter, Xi as parseWorld, Wi as parseZone, bt as randomAppearance, Bi as summarize };
+export { j as DAY_MINUTES, N as LIGHT_RADIUS_MAX, M as LIGHT_RADIUS_MIN, pa as LocalCharacterStorage, Hi as LocalWorldStorage, _ as TERRAINS, A as TILE, L as ZONE_MAX, I as ZONE_MIN, F as Z_MAX, jt as characterFrame, R as clampZoneSize, gt as defaultAppearance, ot as loadCharacterData, Ui as localStorageAvailable, ba as mountCharacterCreator, ya as mountVortable, da as newCharacter, P as newId, Vi as newWorld, z as newZone, _t as normalizeAppearance, fa as parseCharacter, Xi as parseWorld, Wi as parseZone, bt as randomAppearance, Bi as summarize };
