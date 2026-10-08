@@ -49,8 +49,8 @@ export interface WatchControls {
     fit(): void;
     zoomBy(factor: number): void;
     focus(x: number, y: number): void;
-    /** A câmera acompanha um jogador (null solta). */
-    follow(id: string | null): void;
+    /** A câmera acompanha um jogador (null solta); `zoom` padrão 2 (o enquadramento do jogo). */
+    follow(id: string | null, zoom?: number): void;
     /** Quem a câmera acompanha agora (null = ninguém). */
     following(): string | null;
     /** Espectador: manda uma reação (emoji de REACTIONS) pra todos verem no mapa. */

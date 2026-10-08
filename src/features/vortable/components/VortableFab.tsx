@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { enterFullscreen, leaveFullscreen } from '../fullscreen'
+import { openPip } from '../pip/pipStore'
 import './VortableFab.css'
 
 /** Mesa de jogo com o escudo do mestre (a tela dobrável) em cima. */
@@ -27,7 +28,7 @@ export function TableScreenIcon({ size = 22 }: { size?: number }) {
  */
 export function VortableFab({ mode }: { mode: 'enter' | 'leave' }) {
   const { campaign } = useCurrentCampaign()
-  const { live } = useMesaStream()
+  const { live, stage } = useMesaStream()
   const navigate = useNavigate()
   if (!campaign) return null
   const master = campaign.role === 'master'
@@ -57,6 +58,8 @@ export function VortableFab({ mode }: { mode: 'enter' | 'leave' }) {
       className="vortable-fab vortable-fab--leave"
       onClick={() => {
         leaveFullscreen()
+        // jogador com a sessão no ar: uma telinha continua mostrando o jogo enquanto ele anda pelo site
+        if (!master && live && stage.spectate.allow) openPip(campaign)
         navigate(`/campanhas/${campaign.id}/mesa-sessao`, { state: { initialSessionSubTab: 'mesa' } })
       }}
       aria-label="Sair do Vortable"

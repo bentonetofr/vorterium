@@ -35,6 +35,8 @@ export interface WorldSceneData {
     watch?: boolean;
     /** Câmera de observador: quem ela está acompanhando (guardado nas trocas de zona). */
     follow?: string;
+    /** Zoom da câmera enquanto acompanha alguém (padrão 2, o do jogo). */
+    followZoom?: number;
     /** Observador que também ouve os sons da zona (espectador; o mestre não precisa). */
     listen?: boolean;
 }
@@ -67,6 +69,7 @@ export declare class WorldScene extends Phaser.Scene {
     setInputLocked(locked: boolean): void;
     private following;
     private switching;
+    private followZoom;
     private reactions;
     private startWatch;
     /** Troca a zona que o observador está vendo. */
@@ -76,7 +79,7 @@ export declare class WorldScene extends Phaser.Scene {
     watchZoom(factor: number): void;
     watchFocus(x: number, y: number): void;
     /** A câmera acompanha um jogador (null solta). */
-    watchFollow(id: string | null): void;
+    watchFollow(id: string | null, zoom?: number): void;
     /** Quem a câmera acompanha agora. */
     watchFollowing(): string | null;
     /** Espectador reage: o emoji aparece no jogador acompanhado (ou no centro da câmera) pra todos. */

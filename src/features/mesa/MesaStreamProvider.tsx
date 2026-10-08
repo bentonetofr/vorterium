@@ -4,6 +4,7 @@ import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { EMPTY_SNAPSHOT, GAME_SCENE, MesaSession, type MesaScene, type MesaSnapshot, type SpectateRules } from './mesaSession'
 import { getMesaImageShowUrl } from './services/mesaImagesService'
 import { setDocumentVisible } from './documents/documentsService'
+import { usePip } from '../vortable/pip/pipStore'
 
 // ────────────────────────────────────────────────────────
 // Estado da Mesa no nível do layout: a conexão vive enquanto a pessoa está
@@ -45,8 +46,10 @@ const MesaStreamContext = createContext<MesaStreamValue | null>(null)
 export function MesaStreamProvider({ children, announce = false }: { children: ReactNode; announce?: boolean }) {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
-  const campaignId = campaign?.id ?? null
-  const isMaster   = campaign?.role === 'master'
+  // a telinha do Vortable mantém a conexão com a campanha dela mesmo fora da área da campanha
+  const pip        = usePip()
+  const campaignId = campaign?.id ?? pip?.id ?? null
+  const isMaster   = (campaign ?? pip)?.role === 'master'
   const userId     = user?.id ?? null
   const name =
     (user?.user_metadata?.display_name as string | undefined) ??

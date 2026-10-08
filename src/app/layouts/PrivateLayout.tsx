@@ -22,6 +22,7 @@ import { RulebookHostProvider } from '../../features/rulebook/RulebookHost'
 import { MesaStreamProvider } from '../../features/mesa/MesaStreamProvider'
 import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { VortableFab } from '../../features/vortable/components/VortableFab'
+import { VortablePip } from '../../features/vortable/components/VortablePip'
 import { Presence } from '../../shared/components/Presence'
 import { FabToasts } from '../../shared/components/FabToasts'
 import { Collapse } from '../../shared/components/Collapse'
@@ -273,6 +274,7 @@ function PrivateLayoutContent() {
       </nav>
     </div>
     <CritWolf />
+    <VortablePip />
     <LivroHost />
     <TorreHost />
     <div className="dice-fab-wrapper">

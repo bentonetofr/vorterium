@@ -43946,10 +43946,11 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 	}
 	following = null;
 	switching = !1;
+	followZoom = 2;
 	reactions = 0;
 	startWatch(e, t, n) {
 		let r = this.cameras.main;
-		r.removeBounds(), this.watchFit(), this.cfg.follow && (this.following = this.cfg.follow, r.setZoom(2)), r.setRoundPixels(!1);
+		r.removeBounds(), this.watchFit(), this.cfg.follow && (this.following = this.cfg.follow, r.setZoom(this.cfg.followZoom ?? 2)), r.setRoundPixels(!1);
 		let i = this.input;
 		i.on("pointermove", (e) => {
 			e.isDown && (this.following = null, r.scrollX -= (e.x - e.prevPosition.x) / r.zoom, r.scrollY -= (e.y - e.prevPosition.y) / r.zoom);
@@ -43977,6 +43978,7 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 			...this.cfg,
 			zone: t,
 			follow: this.following ?? void 0,
+			followZoom: this.followZoom,
 			notice: void 0
 		});
 	}
@@ -43991,8 +43993,8 @@ var Ti = "char:me", Ei = 220, Di = .15, Oi = 500, ki = {
 	watchFocus(e, t) {
 		this.following = null, this.cameras.main.centerOn(e, t);
 	}
-	watchFollow(e) {
-		this.following = e, e && this.cameras.main.setZoom(2);
+	watchFollow(e, t = 2) {
+		this.following = e, this.followZoom = t, e && this.cameras.main.setZoom(t);
 	}
 	watchFollowing() {
 		return this.following;
@@ -48185,7 +48187,7 @@ function Ua(e, t) {
 			fit: () => g()?.watchFit(),
 			zoomBy: (e) => g()?.watchZoom(e),
 			focus: (e, t) => g()?.watchFocus(e, t),
-			follow: (e) => g()?.watchFollow(e),
+			follow: (e, t) => g()?.watchFollow(e, t),
 			following: () => g()?.watchFollowing() ?? null,
 			react: (e) => g()?.watchReact(e),
 			peers: () => g()?.watchPeers() ?? [],

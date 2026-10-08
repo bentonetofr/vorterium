@@ -24,10 +24,12 @@ const CurrentCampaignContext = createContext<CurrentCampaignContextValue | null>
 
 interface CurrentCampaignProviderProps {
   children: ReactNode
+  /** Campanha já aberta desde o início (a telinha do Vortable, fora da área da campanha). */
+  initial?: CampaignWithRole
 }
 
-export function CurrentCampaignProvider({ children }: CurrentCampaignProviderProps) {
-  const [campaign, setCampaign]           = useState<CampaignWithRole | null>(null)
+export function CurrentCampaignProvider({ children, initial }: CurrentCampaignProviderProps) {
+  const [campaign, setCampaign]           = useState<CampaignWithRole | null>(initial ?? null)
   const [chatUnread, setChatUnread]       = useState(0)
   const [privateUnread, setPrivateUnread] = useState(0)
 

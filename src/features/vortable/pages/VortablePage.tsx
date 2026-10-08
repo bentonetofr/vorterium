@@ -14,6 +14,7 @@ import { VortableNetProvider, useVortableNet } from '../net/VortableNetProvider'
 import { VortableWorldProvider, useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { WorldsPanel } from '../worlds/WorldsPanel'
 import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen } from '../fullscreen'
+import { closePip } from '../pip/pipStore'
 import '../components/VortablePage.css'
 
 /**
@@ -66,6 +67,9 @@ function VortablePageContent() {
       .catch((err) => { if (!dead) setError(err instanceof Error ? err.message : 'Não foi possível abrir a campanha.') })
     return () => { dead = true }
   }, [campaignId, user, shareCampaign])
+
+  // dentro do Vortable a telinha não faz sentido
+  useEffect(() => { closePip() }, [])
 
   useEffect(() => {
     document.title = campaign ? `Vortable · ${campaign.name}` : 'Vortable'

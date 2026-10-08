@@ -26,7 +26,7 @@ export const SHEET_CLOSED_EVENT = 'vortable:sheet-closed'
 const NetContext = createContext<NetValue | null>(null)
 
 /** Liga o multiplayer do Vortable (WebRTC) enquanto a página do Vortable está aberta. */
-export function VortableNetProvider({ children }: { children: ReactNode }) {
+export function VortableNetProvider({ children, startWatching = false }: { children: ReactNode; startWatching?: boolean }) {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
   const mesa = useMesaStream()
@@ -40,7 +40,7 @@ export function VortableNetProvider({ children }: { children: ReactNode }) {
   const [net, setNet] = useState<VortableNet | null>(null)
   const [, bump] = useState(0)
   const [kicked, setKicked] = useState(false)
-  const [watching, setWatching] = useState(false)
+  const [watching, setWatching] = useState(startWatching)
 
   useEffect(() => {
     if (!campaign || !userId) return

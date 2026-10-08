@@ -1,0 +1,82 @@
+/* Telinha do Vortable: janela flutuante no canto inferior esquerdo, enquanto a pessoa anda pelo site. */
+.vortable-pip {
+  position: fixed;
+  left: var(--space-4, 16px);
+  bottom: var(--space-4, 16px);
+  z-index: 450;
+  width: min(340px, calc(100vw - 2 * var(--space-4, 16px)));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.vortable-pip__head,
+.vortable-pip__foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--bg-elevated);
+}
+.vortable-pip__head { border-bottom: 1px solid var(--border-dim); }
+.vortable-pip--collapsed .vortable-pip__head { border-bottom: 0; }
+.vortable-pip__foot { border-top: 1px solid var(--border-dim); justify-content: space-between; }
+
+.vortable-pip__live {
+  padding: 1px 8px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg-base);
+  background: var(--danger, #d9534f);
+  border-radius: 999px;
+}
+.vortable-pip__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+.vortable-pip__who { flex: 1 1 auto; text-align: center; font-size: var(--text-sm); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.vortable-pip__btn {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: var(--cursor-hand);
+}
+.vortable-pip__btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
+.vortable-pip__btn:disabled { opacity: 0.35; cursor: default; }
+
+.vortable-pip__body[hidden] { display: none; }
+.vortable-pip__view { position: relative; height: 190px; }
+.vortable-pip__view .vortable-stage { height: 100%; border: 0; border-radius: 0; }
+.vortable-pip__view .scene-overlay { z-index: 5; }
+/* as cenas do mestre numa janela pequena */
+.vortable-pip__view .scene-card__title { font-size: var(--text-md, 15px); }
+.vortable-pip__view .scene-card__title--big { font-size: var(--text-lg, 18px); }
+.vortable-pip__view .scene-card__sigil { font-size: 28px; }
+
+@media (max-width: 960px) {
+  /* acima da barra de navegação inferior */
+  .vortable-pip { bottom: calc(60px + var(--space-4, 16px) + env(safe-area-inset-bottom, 0px)); width: min(300px, calc(100vw - 2 * var(--space-4, 16px))); }
+  .vortable-pip__view { height: 160px; }
+}
