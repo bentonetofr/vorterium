@@ -13,6 +13,8 @@ export interface CreatorOptions {
      * e chama `onSaved` (é como o jogador entra no jogo pela primeira vez).
      */
     single?: boolean;
+    /** Título da barra de cima (padrão: "Crie seu boneco" no modo jogador). */
+    title?: string;
     saveLabel?: string;
     /** Salvar também põe o boneco em uso (padrão: sim). O mestre cria NPCs sem tomar o lugar do dele. */
     activateOnSave?: boolean;

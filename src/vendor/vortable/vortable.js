@@ -43316,7 +43316,7 @@ var Qr = 160, $r = 8e3, ei = class {
 			console.error("[vortable] NPC não carregou", n), e.building = !1, e.sig = t;
 			return;
 		}
-		e.building = !1, this.scene.sys.isActive() && this.items.get(e.npc.id) === e && (e.sig = t, e.sprite || (e.sprite = this.scene.add.sprite(0, 0, `${e.texKey}:idle`, 0).setOrigin(.5, 62 / 64), e.shadow = this.scene.add.image(0, 0, kr).setScale(.75, .6).setAlpha(.32), e.label = this.scene.add.text(0, 0, e.npc.name, {
+		e.building = !1, this.scene.sys.isActive() && this.items.get(e.npc.id) === e && (e.sig = t, e.sprite ? e.sprite.setTexture(`${e.texKey}:idle`, 0) : (e.sprite = this.scene.add.sprite(0, 0, `${e.texKey}:idle`, 0).setOrigin(.5, 62 / 64), e.shadow = this.scene.add.image(0, 0, kr).setScale(.75, .6).setAlpha(.32), e.label = this.scene.add.text(0, 0, e.npc.name, {
 			fontFamily: "system-ui",
 			fontSize: "9px",
 			color: "#ffe9c2",
@@ -45419,7 +45419,7 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 	zoneName(e) {
 		return e === this.zone.id ? this.zone.name : this.zones.find((t) => t.id === e)?.name ?? "(zona apagada)";
 	}
-}, ea = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}@media (width<=720px){.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}.vt-npc{z-index:30;background:var(--vt-surface);border:1px solid var(--vt-border);-webkit-user-select:none;user-select:none;border-radius:10px;flex-direction:column;width:420px;max-width:calc(100% - 24px);max-height:calc(100% - 64px);display:flex;position:absolute;top:52px;left:12px;box-shadow:0 16px 40px #00000080}.vt-npc[hidden]{display:none}.vt-npc-head{border-bottom:1px solid var(--vt-border-dim);justify-content:space-between;align-items:center;padding:8px 10px;display:flex}.vt-npc-title{color:var(--vt-accent-bright);align-items:center;gap:8px;display:flex}.vt-npc-title svg{width:18px;height:18px}.vt-npc-body{flex-direction:column;gap:10px;padding:10px;display:flex;overflow-y:auto}.vt-npc-body h4{letter-spacing:.1em;text-transform:uppercase;color:var(--vt-muted);margin:4px 0 0;font-size:11px}.vt-npc-analysis{flex-direction:column;gap:4px;display:flex}.vt-npc-analysis b{color:var(--vt-text)}.vt-npc-analysis small{color:var(--vt-muted)}.vt-npc-analysis .vt-select{margin-top:4px}.vt-npc-actions{gap:6px;display:flex}.vt-npc-note{color:var(--vt-muted);margin:0}.vt-npc-note.vt-error{color:var(--vt-danger)}.vt-npc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;display:grid}.vt-npc-card>*{max-width:100%}.vt-npc-card{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);text-align:center;border-radius:8px;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;display:flex;position:relative}.vt-npc-thumb{width:96px;height:96px;image-rendering:pixelated}.vt-npc-reroll{width:26px;height:26px;padding:0;position:absolute;top:4px;right:4px}.vt-npc-reroll svg{width:14px;height:14px}.vt-npc-name{text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px;overflow:hidden}.vt-npc-card small{text-overflow:ellipsis;white-space:nowrap;max-width:100%;color:var(--vt-muted);overflow:hidden}.vt-npc-row{justify-content:center;gap:4px;width:100%;margin-top:4px;padding:0 2px;display:flex}.vt-npc-row .vt-btn{padding:4px 8px}.vt-npc-row .vt-primary{flex:auto;min-width:0}.vt-npc-list{flex-direction:column;gap:4px;display:flex}.vt-npc-item{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:6px;padding:3px 6px;display:flex}.vt-npc-item.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-npc-mini{width:36px;height:36px;image-rendering:pixelated;flex:none}.vt-npc-info{flex-direction:column;flex:auto;min-width:0;display:flex}.vt-npc-info b{text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.vt-npc-info small{color:var(--vt-muted)}";
+}, ea = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}@media (width<=720px){.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}.vt-npc{z-index:30;background:var(--vt-surface);border:1px solid var(--vt-border);-webkit-user-select:none;user-select:none;border-radius:10px;flex-direction:column;width:420px;max-width:calc(100% - 24px);max-height:calc(100% - 64px);display:flex;position:absolute;top:52px;left:12px;box-shadow:0 16px 40px #00000080}.vt-npc[hidden]{display:none}.vt-npc-head{border-bottom:1px solid var(--vt-border-dim);justify-content:space-between;align-items:center;padding:8px 10px;display:flex}.vt-npc-title{color:var(--vt-accent-bright);align-items:center;gap:8px;display:flex}.vt-npc-title svg{width:18px;height:18px}.vt-npc-body{flex-direction:column;gap:10px;padding:10px;display:flex;overflow-y:auto}.vt-npc-body h4{letter-spacing:.1em;text-transform:uppercase;color:var(--vt-muted);margin:4px 0 0;font-size:11px}.vt-npc-analysis{flex-direction:column;gap:4px;display:flex}.vt-npc-analysis b{color:var(--vt-text)}.vt-npc-analysis small{color:var(--vt-muted)}.vt-npc-analysis .vt-select{margin-top:4px}.vt-npc-actions{gap:6px;display:flex}.vt-npc-note{color:var(--vt-muted);margin:0}.vt-npc-note.vt-error{color:var(--vt-danger)}.vt-npc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;display:grid}.vt-npc-card>*{max-width:100%}.vt-npc-card{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);text-align:center;border-radius:8px;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;display:flex;position:relative}.vt-npc-thumb{width:96px;height:96px;image-rendering:pixelated}.vt-npc-reroll{width:26px;height:26px;padding:0;position:absolute;top:4px;right:4px}.vt-npc-reroll svg{width:14px;height:14px}.vt-npc-name{text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px;overflow:hidden}.vt-npc-card small{text-overflow:ellipsis;white-space:nowrap;max-width:100%;color:var(--vt-muted);overflow:hidden}.vt-npc-row{justify-content:center;gap:4px;width:100%;margin-top:4px;padding:0 2px;display:flex}.vt-npc-row .vt-btn{padding:4px 8px}.vt-npc-row .vt-primary{flex:auto;min-width:0}.vt-npc-list{flex-direction:column;gap:4px;display:flex}.vt-npc-item{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:6px;padding:3px 6px;display:flex}.vt-npc-item.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-npc-mini{width:36px;height:36px;image-rendering:pixelated;flex:none}.vt-npc-info{flex-direction:column;flex:auto;min-width:0;display:flex}.vt-npc-info b{text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.vt-npc-info small{color:var(--vt-muted)}.vt-npc-look{z-index:2000;position:fixed;inset:0}.vt-npc-look>.vt-root{position:absolute;inset:0}";
 //#endregion
 //#region src/engine/ui/dom.ts
 function q(e, t = {}, ...n) {
@@ -47044,13 +47044,406 @@ function yo(e = ".json,application/json") {
 	});
 }
 //#endregion
+//#region src/engine/character/creator.css?inline
+var bo = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}", xo = {
+	idle: "Parado",
+	walk: "Andando",
+	run: "Correndo"
+}, So = 4, Co = class {
+	opts;
+	root;
+	data;
+	character;
+	dirty = !1;
+	group = "Corpo";
+	slot = "body";
+	anim = "walk";
+	dir = 2;
+	sheets = null;
+	composeToken = 0;
+	raf = 0;
+	nameInput;
+	preview;
+	tabsEl;
+	slotsEl;
+	optionsEl;
+	statusEl;
+	animButtons = /* @__PURE__ */ new Map();
+	thumbObserver = null;
+	baseThumb = null;
+	modals = [];
+	onKey = (e) => {
+		e.key === "Escape" && this.modals.length && this.modals[this.modals.length - 1]();
+	};
+	onBeforeUnload = (e) => {
+		this.dirty && e.preventDefault();
+	};
+	constructor(e, t) {
+		this.opts = t, na("editor", ea), na("creator", bo), this.character = uo("Novo personagem", bt()), this.nameInput = q("input", {
+			class: "vt-name",
+			value: this.character.name,
+			title: "Nome do personagem",
+			oninput: () => {
+				this.character.name = this.nameInput.value, this.markDirty();
+			}
+		}), this.preview = q("canvas", {
+			class: "vt-preview-canvas",
+			width: 64 * So,
+			height: 64 * So
+		}), this.tabsEl = q("div", { class: "vt-tabs vt-creator-tabs" }), this.slotsEl = q("div", { class: "vt-slots" }), this.optionsEl = q("div", { class: "vt-options" }), this.statusEl = q("footer", { class: "vt-status" });
+		let n = q("div", { class: "vt-chips vt-center" });
+		for (let e of [
+			"idle",
+			"walk",
+			"run"
+		]) {
+			let t = q("button", {
+				class: "vt-chip",
+				onclick: () => {
+					this.anim = e, this.refreshAnimButtons();
+				}
+			}, xo[e]);
+			this.animButtons.set(e, t), n.append(t);
+		}
+		this.root = q("div", { class: "vt-root vt-creator" }, q("header", { class: "vt-top" }, q("span", { class: "vt-brand" }, "Vortable"), q("span", { class: "vt-top-title" }, t.title ?? (t.single ? "Crie seu boneco" : "Personagem")), this.nameInput, q("span", { class: "vt-sep" }), t.single ? null : this.iconBtn(Y.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn(Y.open, "Personagens", () => this.openList()), this.iconBtn(Y.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), this.iconBtn(Y.download, "Exportar", () => this.exportFile()), this.iconBtn(Y.upload, "Importar", () => void this.importFile()), q("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Y.world, t.back.label, () => this.goBack(), "vt-primary") : null), q("main", { class: "vt-creator-body" }, q("section", { class: "vt-preview" }, q("div", { class: "vt-preview-stage" }, this.preview), q("div", { class: "vt-row vt-center" }, q("button", {
+			class: "vt-btn",
+			title: "Girar",
+			onclick: () => this.turn(-1)
+		}, "⟲"), q("button", {
+			class: "vt-btn",
+			title: "Girar",
+			onclick: () => this.turn(1)
+		}, "⟳")), n, q("button", {
+			class: "vt-btn vt-random",
+			html: `${Y.star}<span>Aleatório</span>`,
+			onclick: () => this.randomize()
+		})), q("section", { class: "vt-custom" }, this.tabsEl, q("div", { class: "vt-custom-body" }, this.slotsEl, this.optionsEl))), this.statusEl), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload), this.statusEl.textContent = "Carregando o catálogo...", this.init();
+	}
+	async init() {
+		try {
+			this.data = await ut(this.opts.assetBase);
+		} catch (e) {
+			this.statusEl.textContent = `Não deu pra carregar o catálogo de personagem: ${e.message}`;
+			return;
+		}
+		let [e, t] = await Promise.all([this.opts.storage.list().catch(() => []), this.opts.storage.getActive().catch(() => null)]), n = e.find((e) => e.id === t) ?? e[0];
+		n && (this.character = structuredClone(n)), this.character.appearance = xt(this.data, this.character.appearance), this.nameInput.value = this.character.name, this.renderTabs(), this.renderSlots(), this.renderOptions(), this.refreshAnimButtons(), this.recompose(), this.loop();
+	}
+	destroy() {
+		cancelAnimationFrame(this.raf), this.thumbObserver?.disconnect(), window.removeEventListener("keydown", this.onKey), window.removeEventListener("beforeunload", this.onBeforeUnload), this.root.remove();
+	}
+	iconBtn(e, t, n, r = "") {
+		return q("button", {
+			class: `vt-btn ${r}`,
+			title: t,
+			html: `${e}<span class="vt-label">${t}</span>`,
+			onclick: n
+		});
+	}
+	get appearance() {
+		return this.character.appearance;
+	}
+	groups() {
+		return [...new Set(this.data.catalog.slots.map((e) => e.group))];
+	}
+	renderTabs() {
+		this.tabsEl.replaceChildren(...this.groups().map((e) => q("button", {
+			class: `vt-tab${e === this.group ? " vt-on" : ""}`,
+			onclick: () => {
+				this.group = e, this.slot = this.data.catalog.slots.find((t) => t.group === e).id, this.renderTabs(), this.renderSlots(), this.renderOptions();
+			}
+		}, e)));
+	}
+	renderSlots() {
+		let e = this.appearance, t = this.data.catalog.slots.filter((e) => e.group === this.group);
+		this.slotsEl.replaceChildren(...t.filter((t) => mt(this.data, t.id, e.body).length).map((t) => {
+			let n = e.slots[t.id], r = n && this.data.byId.get(n.id);
+			return q("button", {
+				class: `vt-slot${t.id === this.slot ? " vt-on" : ""}${r ? " vt-filled" : ""}`,
+				onclick: () => {
+					this.slot = t.id, this.renderSlots(), this.renderOptions();
+				}
+			}, q("b", {}, t.label), q("small", {}, r ? vt(r) : "nenhum"));
+		}));
+	}
+	renderOptions() {
+		let e = this.appearance, t = [];
+		this.slot === "body" && (t.push(q("h4", {}, "Tipo de corpo"), q("div", { class: "vt-chips" }, ...this.data.catalog.bodies.map((t) => q("button", {
+			class: `vt-chip${e.body === t ? " vt-on" : ""}`,
+			onclick: () => this.setBody(t)
+		}, ft[t])))), t.push(q("h4", {}, "Pele"), this.swatches("body", e.skin, (e) => this.update((t) => {
+			t.skin = e;
+		}))));
+		let n = this.data.catalog.slots.find((e) => e.id === this.slot), r = mt(this.data, this.slot, e.body), i = e.slots[this.slot], a = i && this.data.byId.get(i.id);
+		if (a) {
+			for (let e of a.colors ?? []) {
+				if (e.material === "body" && a.matchBody) continue;
+				let n = e.label ?? (a.colors.length > 1 ? `Cor (${e.material})` : "Cor");
+				t.push(q("h4", {}, n), this.swatches(e.material, i.colors?.[e.key] ?? null, (t) => this.update((n) => {
+					(n.slots[this.slot].colors ??= {})[e.key] = t;
+				})));
+			}
+			a.variants && a.variants.length > 1 && t.push(q("h4", {}, "Variante"), q("div", { class: "vt-chips" }, ...a.variants.map((e) => q("button", {
+				class: `vt-chip${i.variant === e ? " vt-on" : ""}`,
+				onclick: () => this.update((t) => {
+					t.slots[this.slot].variant = e;
+				})
+			}, e.replace(/_/g, " ")))));
+		}
+		t.push(q("h4", {}, `${n.label} — ${r.length} opç${r.length === 1 ? "ão" : "ões"}`));
+		let o = q("div", { class: "vt-grid vt-char-grid" });
+		n.required || o.append(q("button", {
+			class: `vt-cell vt-none${i ? "" : " vt-on"}`,
+			title: "Nenhum",
+			onclick: () => this.update((e) => {
+				delete e.slots[this.slot];
+			})
+		}, q("span", {}, "Nenhum"))), this.thumbObserver?.disconnect(), this.thumbObserver = new IntersectionObserver((e) => {
+			for (let t of e) t.isIntersecting && (this.thumbObserver.unobserve(t.target), this.drawThumb(t.target));
+		}, {
+			root: this.optionsEl,
+			rootMargin: "120px"
+		});
+		for (let e of r) {
+			let t = q("button", {
+				class: `vt-cell${i?.id === e.id ? " vt-on" : ""}`,
+				title: vt(e),
+				"data-item": e.id,
+				onclick: () => this.chooseItem(e)
+			}, q("canvas", {
+				width: 64,
+				height: 64
+			}), q("span", {}, vt(e)));
+			o.append(t), this.thumbObserver.observe(t);
+		}
+		t.push(o), this.optionsEl.replaceChildren(...t);
+	}
+	swatches(e, t, n) {
+		return q("div", { class: "vt-swatches" }, ...Object.keys(this.data.palettes[e] ?? {}).map((r) => q("button", {
+			class: `vt-swatch${r === t ? " vt-on" : ""}`,
+			title: r.replace(/_/g, " "),
+			style: `background:${pt(this.data.palettes, e, r)}`,
+			onclick: () => n(r)
+		})));
+	}
+	async drawThumb(e) {
+		let t = e.dataset.item, n = this.data.byId.get(t), r = e.querySelector("canvas");
+		if (!n || !r) return;
+		let i = this.appearance, a = i.slots[this.slot]?.id === t ? i.slots[this.slot] : {
+			id: t,
+			...n.variants ? { variant: n.variants[0] } : {},
+			colors: this.carryColors(n)
+		};
+		try {
+			let [e, t] = await Promise.all([this.baseThumb ??= Ft(this.opts.assetBase, {
+				...i,
+				slots: wo(i, ["body", "head"])
+			}), Ft(this.opts.assetBase, {
+				...i,
+				slots: { [this.slot]: a }
+			})]), n = r.getContext("2d");
+			n.clearRect(0, 0, 64, 64), this.slot !== "body" && this.slot !== "head" && (n.globalAlpha = .35, n.drawImage(e, 0, 0), n.globalAlpha = 1), n.drawImage(t, 0, 0);
+		} catch {}
+	}
+	carryColors(e) {
+		let t = this.appearance.slots[this.slot], n = t && this.data.byId.get(t.id), r = {};
+		for (let i of e.colors ?? []) {
+			let e = n?.colors?.find((e) => e.key === i.key && e.material === i.material), a = e && t.colors?.[e.key];
+			a && (r[i.key] = a);
+		}
+		return r;
+	}
+	update(e, t = !0) {
+		let n = structuredClone(this.appearance);
+		e(n), this.character.appearance = xt(this.data, n), this.markDirty(), this.baseThumb = null, t && this.renderSlots(), this.renderOptions(), this.recompose();
+	}
+	chooseItem(e) {
+		this.update((t) => {
+			t.slots[this.slot] = {
+				id: e.id,
+				...e.variants ? { variant: e.variants[0] } : {},
+				colors: this.carryColors(e)
+			};
+		});
+	}
+	setBody(e) {
+		e !== this.appearance.body && this.update((t) => {
+			t.body = e;
+			let n = t.slots.head?.id ?? "";
+			if (n.includes("/human/")) {
+				let r = e === "male" ? n.replace("_female", "_male") : n.replace(/_male/, "_female");
+				this.data.byId.has(r) && (t.slots.head = {
+					...t.slots.head,
+					id: r
+				});
+			}
+		});
+	}
+	randomize() {
+		this.update((e) => {
+			let t = wt(this.data);
+			e.body = t.body, e.skin = t.skin, e.slots = t.slots;
+		});
+	}
+	turn(e) {
+		let t = [
+			2,
+			1,
+			0,
+			3
+		];
+		this.dir = t[(t.indexOf(this.dir) + e + 4) % 4];
+	}
+	refreshAnimButtons() {
+		for (let [e, t] of this.animButtons) t.classList.toggle("vt-on", e === this.anim);
+	}
+	markDirty() {
+		this.dirty = !0, this.refreshStatus();
+	}
+	refreshStatus() {
+		if (!this.data) return;
+		let e = Object.keys(this.appearance.slots).length;
+		this.statusEl.replaceChildren(q("span", {}, `${this.data.catalog.items.length} itens no catálogo`), q("span", {}, `${e} peças neste personagem`), this.dirty ? q("span", { class: "vt-dirty" }, "● não salvo") : q("span", {}, "salvo"), q("span", { class: "vt-hint" }, "Arte: Liberated Pixel Cup (LPC) — CC-BY-SA / GPL / OGA-BY · ", q("button", {
+			class: "vt-link",
+			onclick: () => this.openCredits()
+		}, "ver créditos")));
+	}
+	async recompose() {
+		let e = ++this.composeToken;
+		try {
+			let t = await It(this.opts.assetBase, this.appearance);
+			e === this.composeToken && (this.sheets = t);
+		} catch (e) {
+			this.statusEl.textContent = `Erro montando o personagem: ${e.message}`;
+		}
+		this.refreshStatus();
+	}
+	loop() {
+		let e = this.preview.getContext("2d");
+		e.imageSmoothingEnabled = !1;
+		let t = performance.now(), n = (r) => {
+			this.raf = requestAnimationFrame(n);
+			let i = this.sheets?.[this.anim];
+			if (e.clearRect(0, 0, this.preview.width, this.preview.height), !i) return;
+			let { frames: a, rate: o } = Et[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * So;
+			e.drawImage(i, l * 64, this.dir * 64, 64, 64, 0, 0, u, u);
+		};
+		this.raf = requestAnimationFrame(n);
+	}
+	async save() {
+		try {
+			return this.character.name = this.nameInput.value.trim() || "Sem nome", this.nameInput.value = this.character.name, await this.opts.storage.save(this.character), this.opts.activateOnSave !== !1 && await this.opts.storage.setActive(this.character.id), this.dirty = !1, this.refreshStatus(), this.toast(this.opts.single || this.opts.activateOnSave === !1 ? `"${this.character.name}" salvo.` : `"${this.character.name}" salvo. É ele que aparece quando você testar ou jogar.`), this.opts.onSaved?.(structuredClone(this.character)), !0;
+		} catch (e) {
+			return this.toast(`Não deu pra salvar: ${e.message}`, !0), !1;
+		}
+	}
+	exportFile() {
+		let e = this.nameInput.value.trim() || "Sem nome";
+		vo(go(e), ho([{
+			name: e,
+			appearance: this.appearance
+		}])), this.toast(`"${e}" exportado.`);
+	}
+	async importFile() {
+		let e = await yo();
+		if (e !== null) try {
+			let [t] = _o(e, this.data);
+			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
+			this.character = this.opts.single ? {
+				...t,
+				id: this.character.id
+			} : t, this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad(), this.refreshStatus(), this.toast(`"${this.character.name}" importado. Salve pra guardar.`);
+		} catch (e) {
+			this.toast(e.message, !0);
+		}
+	}
+	async goBack() {
+		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de voltar?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
+	}
+	openCredits() {
+		let e = this.modal("Créditos da arte", ia(this.opts.assetBase), [q("button", {
+			class: "vt-btn",
+			onclick: () => e()
+		}, "Fechar")]);
+	}
+	newCharacter() {
+		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = uo("Novo personagem", bt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+	}
+	afterLoad() {
+		this.character.appearance = xt(this.data, this.character.appearance), this.baseThumb = null, this.renderSlots(), this.renderOptions(), this.recompose();
+	}
+	async openList() {
+		let e = q("div", { class: "vt-list" }), t = this.modal("Personagens", [e], [q("button", {
+			class: "vt-btn",
+			onclick: () => t()
+		}, "Fechar")]), n = async () => {
+			let r, i;
+			try {
+				[r, i] = await Promise.all([this.opts.storage.list(), this.opts.storage.getActive()]);
+			} catch (t) {
+				e.replaceChildren(q("div", { class: "vt-empty" }, `Não deu pra ler os personagens: ${t.message}`));
+				return;
+			}
+			e.replaceChildren(), r.length || e.append(q("div", { class: "vt-empty" }, "Nenhum personagem salvo ainda."));
+			for (let a of r) {
+				let r = q("canvas", {
+					class: "vt-item-thumb",
+					width: 64,
+					height: 64
+				});
+				Ft(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(q("div", { class: "vt-item" }, r, q("div", {}, q("b", {}, a.name), q("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), q("button", {
+					class: "vt-btn vt-primary",
+					onclick: async () => {
+						(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
+					}
+				}, "Usar"), q("button", {
+					class: "vt-btn vt-danger",
+					title: "Apagar",
+					html: Y.trash,
+					onclick: async () => {
+						if (confirm(`Apagar "${a.name}"? Não dá pra desfazer.`)) {
+							try {
+								await this.opts.storage.remove(a.id);
+							} catch (e) {
+								return this.toast(`Não deu pra apagar: ${e.message}`, !0);
+							}
+							a.id === this.character.id && this.markDirty(), n();
+						}
+					}
+				})));
+			}
+		};
+		n();
+	}
+	modal(e, t, n) {
+		let r = () => {
+			this.modals = this.modals.filter((e) => e !== r), i.remove();
+		};
+		this.modals.push(r);
+		let i = q("div", {
+			class: "vt-modal-bg",
+			onmousedown: (e) => {
+				e.target === i && r();
+			}
+		}, q("div", { class: "vt-modal" }, q("h3", {}, e), q("div", { class: "vt-modal-body" }, ...t), q("div", { class: "vt-modal-foot" }, ...n)));
+		return this.root.append(i), r;
+	}
+	toast(e, t = !1) {
+		let n = q("div", { class: `vt-toast${t ? " vt-error" : ""}` }, e);
+		this.root.append(n), setTimeout(() => n.remove(), 2500);
+	}
+};
+function wo(e, t) {
+	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
+}
+//#endregion
 //#region src/engine/editor/NpcPanel.ts
-var bo = 6, xo = [
+var To = 6, Eo = [
 	"down",
 	"left",
 	"up",
 	"right"
-], So = class {
+], Do = class {
 	state;
 	hooks;
 	el;
@@ -47104,7 +47497,7 @@ var bo = 6, xo = [
 		});
 	}
 	destroy() {
-		this.off(), this.el.remove();
+		this.look?.close(), this.off(), this.el.remove();
 	}
 	refreshAnalysis(e) {
 		if (!this.data) return;
@@ -47117,7 +47510,7 @@ var bo = 6, xo = [
 		return this.style === "auto" ? this.analysis?.profile ?? "geral" : this.style;
 	}
 	newBatch() {
-		this.data && (this.drafts = lo(this.data, this.profile, bo), this.render());
+		this.data && (this.drafts = lo(this.data, this.profile, To), this.render());
 	}
 	render() {
 		if (!this.analysis) return;
@@ -47223,6 +47616,11 @@ var bo = 6, xo = [
 			onclick: () => this.toggleName(e)
 		}), q("button", {
 			class: "vt-btn vt-icononly",
+			title: "Alterar a aparência (o mesmo criador do personagem)",
+			html: Y.person,
+			onclick: () => this.editLook(e)
+		}), q("button", {
+			class: "vt-btn vt-icononly",
 			title: "Virar (muda pra onde ele olha)",
 			html: Y.flip,
 			onclick: () => this.turn(e)
@@ -47238,11 +47636,50 @@ var bo = 6, xo = [
 			onclick: () => this.remove(e)
 		}));
 	}
+	editLook(e) {
+		if (this.look) return;
+		let t = [{
+			version: 1,
+			id: e.id,
+			name: e.name,
+			appearance: structuredClone(e.appearance),
+			updatedAt: Date.now()
+		}], n = {
+			list: async () => structuredClone(t),
+			save: async (e) => {
+				t = [structuredClone(e)];
+			},
+			remove: async () => {},
+			getActive: async () => e.id,
+			setActive: async () => {}
+		}, r = q("div", { class: "vt-npc-look" });
+		document.body.append(r);
+		let i = () => {
+			a.destroy(), r.remove(), this.look = null;
+		}, a = new Co(r, {
+			assetBase: this.hooks.assetBase,
+			storage: n,
+			single: !0,
+			title: "Aparência do NPC",
+			saveLabel: "Aplicar",
+			activateOnSave: !1,
+			back: {
+				label: "Voltar ao mapa",
+				onClick: i
+			},
+			onSaved: (t) => {
+				let n = (this.state.zone.npcs ?? []).find((t) => t.id === e.id);
+				n && (this.state.checkpoint(), n.name = t.name, n.appearance = t.appearance, this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${n.name}" atualizado.`)), i();
+			}
+		});
+		this.look = { close: i };
+	}
+	look = null;
 	toggleName(e) {
 		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
 	}
 	turn(e) {
-		this.state.checkpoint(), e.dir = xo[(xo.indexOf(e.dir) + 1) % xo.length], this.state.emit("npcs"), this.state.edited();
+		this.state.checkpoint(), e.dir = Eo[(Eo.indexOf(e.dir) + 1) % Eo.length], this.state.emit("npcs"), this.state.edited();
 	}
 	move(e) {
 		this.state.set({
@@ -47263,7 +47700,7 @@ var bo = 6, xo = [
 			npcDraft: null
 		}), this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${e.name}" removido.`);
 	}
-}, Co = {
+}, Oo = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -47271,7 +47708,7 @@ var bo = 6, xo = [
 	intensity: 1,
 	flicker: .2
 };
-function wo(e, t, n) {
+function ko(e, t, n) {
 	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = q("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
@@ -47304,7 +47741,7 @@ function wo(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? Co,
+			...o ?? Oo,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -47363,7 +47800,7 @@ function wo(e, t, n) {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? Co } : null, F(), m();
+			o = k.checked ? { ...o ?? Oo } : null, F(), m();
 		}
 	}), A = q("input", {
 		class: "vt-input vt-num",
@@ -47463,7 +47900,7 @@ function wo(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function To(e) {
+function Ao(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -47471,14 +47908,14 @@ function To(e) {
 		return [];
 	}
 }
-function Eo(e, t) {
+function jo(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
 //#region src/engine/storage.ts
-function Do(e, t = Date.now()) {
+function Mo(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -47492,7 +47929,7 @@ function Do(e, t = Date.now()) {
 		}))
 	};
 }
-function Oo(e = "Meu mundo") {
+function No(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: F("mundo"),
@@ -47501,7 +47938,7 @@ function Oo(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var ko = class {
+var Po = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -47526,9 +47963,9 @@ var ko = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Bo(JSON.parse(e));
+			if (e) return Go(JSON.parse(e));
 		} catch {}
-		return Oo();
+		return No();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -47539,19 +47976,19 @@ var ko = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? Mo(JSON.parse(t)) : null;
+			return t ? Lo(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Do(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Mo(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function Ao() {
+function Fo() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -47559,14 +47996,14 @@ function Ao() {
 		return !1;
 	}
 }
-var jo = (e) => typeof e == "number" && Number.isFinite(e);
-function Mo(e) {
+var Io = (e) => typeof e == "number" && Number.isFinite(e);
+function Lo(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
 	if (!i(n) || !i(r)) throw Error("Tamanho de zona inválido (precisa ser de 8 a 128 tiles).");
 	if (!Array.isArray(t.corners) || t.corners.length !== (n + 1) * (r + 1)) throw Error("Zona corrompida: a grade de terrenos não bate com o tamanho.");
-	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && jo(e.x) && jo(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && jo(e.x) && jo(e.y) && jo(e.w) && jo(e.h) && e.w > 0 && e.h > 0), l = t.spawn && jo(t.spawn.x) && jo(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
+	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && Io(e.x) && Io(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && Io(e.x) && Io(e.y) && Io(e.w) && Io(e.h) && e.w > 0 && e.h > 0), l = t.spawn && Io(t.spawn.x) && Io(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
 		x: a / 2,
 		y: o / 2
 	};
@@ -47586,12 +48023,12 @@ function Mo(e) {
 			x: Math.round(e.x),
 			y: Math.round(e.y),
 			...e.flip === !0 ? { flip: !0 } : {},
-			...jo(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
+			...Io(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...Io(t.lighting),
-		...Ro(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: zo(t.lights, a, o) } : {},
-		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: No(t.npcs, a, o) } : {},
+		...Vo(t.lighting),
+		...Uo(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: Wo(t.lights, a, o) } : {},
+		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: Ro(t.npcs, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -47610,11 +48047,11 @@ function Mo(e) {
 		}
 	};
 }
-function No(e, t, n) {
+function Ro(e, t, n) {
 	let r = [];
 	for (let i of e) {
 		let e = i;
-		if (!e || typeof e != "object" || !jo(e.x) || !jo(e.y)) continue;
+		if (!e || typeof e != "object" || !Io(e.x) || !Io(e.y)) continue;
 		let a = fo({
 			id: "x",
 			name: e.name,
@@ -47625,37 +48062,37 @@ function No(e, t, n) {
 			name: typeof e.name == "string" && e.name.trim() ? e.name.trim().slice(0, 60) : "NPC",
 			role: typeof e.role == "string" ? e.role.slice(0, 60) : "",
 			appearance: a.appearance,
-			x: Fo(Math.round(e.x), 0, t),
-			y: Fo(Math.round(e.y), 0, n),
+			x: Bo(Math.round(e.x), 0, t),
+			y: Bo(Math.round(e.y), 0, n),
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {}
 		});
 	}
 	return r;
 }
-var Po = /^#[0-9a-f]{6}$/i, Fo = (e, t, n) => Math.max(t, Math.min(n, e));
-function Io(e) {
+var zo = /^#[0-9a-f]{6}$/i, Bo = (e, t, n) => Math.max(t, Math.min(n, e));
+function Vo(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		...typeof t.tint == "string" && Po.test(t.tint) ? { tint: t.tint } : {},
+		...typeof t.tint == "string" && zo.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...jo(t.wind) ? { wind: Fo(t.wind, 0, 1) } : {},
+		...Io(t.wind) ? { wind: Bo(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {}
 	} };
 }
-function Lo(e) {
+function Ho(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {
-		hour: jo(t.hour) ? Fo(t.hour, 0, 24) % 24 : null,
-		...jo(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Fo(t.dayMinutes, 1, 1440) } : {},
+		hour: Io(t.hour) ? Bo(t.hour, 0, 24) % 24 : null,
+		...Io(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Bo(t.dayMinutes, 1, 1440) } : {},
 		...typeof t.weather == "string" && t.weather in ar && t.weather !== "clear" ? { weather: t.weather } : {}
 	};
 	return n.hour === null && n.dayMinutes === void 0 && n.weather === void 0 ? {} : { sky: n };
 }
-function Ro(e) {
+function Uo(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -47677,7 +48114,7 @@ function Ro(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && jo(i) && i > 0 && (n[t] = Fo(i, 0, 1));
+		r.includes(t) && Io(i) && i > 0 && (n[t] = Bo(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -47685,22 +48122,22 @@ function Ro(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function zo(e, t, n) {
-	return e.filter((e) => !!e && typeof e == "object" && jo(e.x) && jo(e.y)).map((e) => ({
+function Wo(e, t, n) {
+	return e.filter((e) => !!e && typeof e == "object" && Io(e.x) && Io(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : F("luz"),
-		x: Fo(Math.round(e.x), 0, t),
-		y: Fo(Math.round(e.y), 0, n),
-		radius: jo(e.radius) ? Fo(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && Po.test(e.color) ? e.color : "#ffb060",
-		intensity: jo(e.intensity) ? Fo(e.intensity, 0, 1) : 1,
-		flicker: jo(e.flicker) ? Fo(e.flicker, 0, 1) : 0
+		x: Bo(Math.round(e.x), 0, t),
+		y: Bo(Math.round(e.y), 0, n),
+		radius: Io(e.radius) ? Bo(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && zo.test(e.color) ? e.color : "#ffb060",
+		intensity: Io(e.intensity) ? Bo(e.intensity, 0, 1) : 1,
+		flicker: Io(e.flicker) ? Bo(e.flicker, 0, 1) : 0
 	}));
 }
-function Bo(e) {
+function Go(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
-	for (let [e, r] of Object.entries(t.layout ?? {})) r && jo(r.x) && jo(r.y) && (n[e] = {
+	for (let [e, r] of Object.entries(t.layout ?? {})) r && Io(r.x) && Io(r.y) && (n[e] = {
 		x: r.x,
 		y: r.y
 	});
@@ -47710,12 +48147,12 @@ function Bo(e) {
 		name: typeof t.name == "string" ? t.name : "Meu mundo",
 		start: typeof t.start == "string" ? t.start : null,
 		layout: n,
-		...Lo(t.sky)
+		...Ho(t.sky)
 	};
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var Vo = [
+var Ko = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -47766,15 +48203,15 @@ var Vo = [
 		label: "Régua: segure e arraste pra medir em metros (1 tile = 1 m)",
 		key: "R"
 	}
-], Ho = 8, Uo = "vortable:objects:favorites", Wo = "vortable:editor:drawer";
-function Go() {
+], qo = 8, Jo = "vortable:objects:favorites", Yo = "vortable:editor:drawer";
+function Xo() {
 	try {
-		return localStorage.getItem(Wo) === "1";
+		return localStorage.getItem(Yo) === "1";
 	} catch {
 		return !1;
 	}
 }
-var Ko = "vortable:objects:recent", qo = 24, Jo = [
+var Zo = "vortable:objects:recent", Qo = 24, $o = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -47815,12 +48252,12 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		"#8ae8ff",
 		0
 	]
-], Yo = [
+], es = [
 	12,
 	24,
 	48,
 	96
-], Xo = "★", Zo = "⟲", Qo = class {
+], ts = "★", ns = "⟲", rs = class {
 	state;
 	storage;
 	hooks;
@@ -47854,8 +48291,8 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = To(Uo);
-	recents = To(Ko);
+	favorites = Ao(Jo);
+	recents = Ao(Zo);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
@@ -47870,11 +48307,11 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, na("editor", ea), this.npcPanel = new So(t, {
+		this.state = t, this.storage = n, this.hooks = r, na("editor", ea), this.npcPanel = new Do(t, {
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t)
-		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Go() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
+		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Xo() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -47973,13 +48410,13 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e);
 		try {
-			localStorage.setItem(Wo, e ? "1" : "0");
+			localStorage.setItem(Yo, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
 		let e = q("aside", { class: "vt-tools" });
-		for (let t of Vo) {
+		for (let t of Ko) {
 			let n = q("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
@@ -48179,7 +48616,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		});
 	}
 	renderTerrains() {
-		let e = $o(this.terrainFilter.trim()), t = _.filter((t) => !e || $o(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = is(this.terrainFilter.trim()), t = _.filter((t) => !e || is(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -48198,7 +48635,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = qe(), t = $o(this.objectFilter.trim()), n = (e) => !t || $o(es(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = qe(), t = is(this.objectFilter.trim()), n = (e) => !t || is(as(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -48238,14 +48675,14 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: Xo,
+				id: ts,
 				title: "Favoritos",
 				icon: Y.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: Zo,
+				id: ns,
 				title: "Recentes",
 				icon: Y.clock,
 				count: u.length,
@@ -48429,7 +48866,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 			"Todas as zonas ficam sempre na mesma hora"
 		]], a.hour === null ? "cycle" : "fixed", (t) => s({ hour: t === "cycle" ? null : e.previewHour }))];
 		if (a.hour === null) {
-			let t = q("select", { class: "vt-select" }, ...Yo.map((e) => q("option", {
+			let t = q("select", { class: "vt-select" }, ...es.map((e) => q("option", {
 				value: e,
 				selected: (a.dayMinutes ?? 24) === e
 			}, `${e} min`)));
@@ -48487,7 +48924,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = q("div", { class: "vt-lightcolors" }, ...Jo.map(([e, t, r]) => q("button", {
+		let l = q("div", { class: "vt-lightcolors" }, ...$o.map(([e, t, r]) => q("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -48661,14 +49098,14 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		let t = Ge(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, qo), Eo(Ko, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Qo), jo(Zo, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], Eo(Uo, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], jo(Jo, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -48759,7 +49196,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(We().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = wo(t, this.hooks.textureImage(Le(t.sheet)), n), i = q("button", {
+		let t = this.primary(e), n = [...new Set(We().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = ko(t, this.hooks.textureImage(Le(t.sheet)), n), i = q("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -48932,7 +49369,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Ho, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(qo, e)) });
 	}
 	async save() {
 		try {
@@ -48946,14 +49383,14 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 	exportZone() {
 		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = q("a", {
 			href: URL.createObjectURL(t),
-			download: `${ts(e.name) || "zona"}.vortable.json`
+			download: `${os(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
 	async importFile(e) {
 		let t = e.target, n = t.files?.[0];
 		if (t.value = "", n) try {
-			let e = Mo(JSON.parse(await n.text()));
+			let e = Lo(JSON.parse(await n.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(e), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${e.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -49206,8 +49643,8 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? Do(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(Do(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? Mo(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(Mo(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -49387,7 +49824,7 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 			}
 			return;
 		}
-		let s = Vo.find((e) => e.key.toLowerCase() === i);
+		let s = Ko.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -49398,10 +49835,10 @@ var Ko = "vortable:objects:recent", qo = 24, Jo = [
 		}) : e.key === " " && e.preventDefault();
 	}
 };
-function $o(e) {
+function is(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function es(e) {
+function as(e) {
 	return [
 		e.label,
 		e.category,
@@ -49410,12 +49847,12 @@ function es(e) {
 		...Ke(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function ts(e) {
+function os(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
 //#region src/engine/net/hub.ts
-var ns = [
+var ss = [
 	"👏",
 	"😮",
 	"😂",
@@ -49424,17 +49861,17 @@ var ns = [
 	"🎉",
 	"😱",
 	"🤔"
-], rs = [
+], cs = [
 	"up",
 	"left",
 	"down",
 	"right"
-], is = [
+], ls = [
 	"idle",
 	"walk",
 	"run"
-], as = (e) => typeof e == "number" && Number.isFinite(e);
-function os(e) {
+], us = (e) => typeof e == "number" && Number.isFinite(e);
+function ds(e) {
 	let t = e;
 	if (!t || typeof t != "object") return null;
 	switch (t.t) {
@@ -49448,14 +49885,14 @@ function os(e) {
 			};
 		}
 		case "who": return { t: "who" };
-		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !as(t.x) || !as(t.y) ? null : {
+		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !us(t.x) || !us(t.y) ? null : {
 			t: "state",
 			id: t.id,
 			zone: t.zone,
 			x: t.x,
 			y: t.y,
-			dir: rs.includes(t.dir) ? t.dir : "down",
-			anim: is.includes(t.anim) ? t.anim : "idle"
+			dir: cs.includes(t.dir) ? t.dir : "down",
+			anim: ls.includes(t.anim) ? t.anim : "idle"
 		};
 		case "bye": return typeof t.id == "string" ? {
 			t: "bye",
@@ -49468,11 +49905,11 @@ function os(e) {
 		case "env": return typeof t.zone != "string" || !t.zone ? null : {
 			t: "env",
 			zone: t.zone.slice(0, 80),
-			hour: as(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
+			hour: us(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
 			weather: typeof t.weather == "string" ? t.weather.slice(0, 20) : null,
-			wind: as(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null
+			wind: us(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null
 		};
-		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !as(t.x) || !as(t.y) || typeof t.emoji != "string" || !ns.includes(t.emoji) ? null : {
+		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !us(t.x) || !us(t.y) || typeof t.emoji != "string" || !ss.includes(t.emoji) ? null : {
 			t: "react",
 			id: t.id,
 			name: typeof t.name == "string" ? t.name.slice(0, 60) : "",
@@ -49481,7 +49918,7 @@ function os(e) {
 			x: t.x,
 			y: t.y
 		};
-		case "teleport": return typeof t.zone == "string" && as(t.x) && as(t.y) ? {
+		case "teleport": return typeof t.zone == "string" && us(t.x) && us(t.y) ? {
 			t: "teleport",
 			zone: t.zone,
 			x: t.x,
@@ -49490,7 +49927,7 @@ function os(e) {
 		default: return null;
 	}
 }
-var ss = class {
+var fs = class {
 	link;
 	peers = /* @__PURE__ */ new Map();
 	envs = /* @__PURE__ */ new Map();
@@ -49541,7 +49978,7 @@ var ss = class {
 		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear(), this.zoneChanges.clear(), this.reactions.clear();
 	}
 	receive(e) {
-		let t = os(e);
+		let t = ds(e);
 		if (t) switch (t.t) {
 			case "who":
 				this.hello && this.link.send(this.hello);
@@ -49596,7 +50033,7 @@ var ss = class {
 		};
 	}
 	react(e, t, n, r) {
-		if (!ns.includes(e)) return;
+		if (!ss.includes(e)) return;
 		let i = {
 			t: "react",
 			id: this.link.selfId,
@@ -49613,404 +50050,11 @@ var ss = class {
 			this.teleports.delete(e);
 		};
 	}
-}, cs = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}", ls = {
-	idle: "Parado",
-	walk: "Andando",
-	run: "Correndo"
-}, us = 4, ds = class {
-	opts;
-	root;
-	data;
-	character;
-	dirty = !1;
-	group = "Corpo";
-	slot = "body";
-	anim = "walk";
-	dir = 2;
-	sheets = null;
-	composeToken = 0;
-	raf = 0;
-	nameInput;
-	preview;
-	tabsEl;
-	slotsEl;
-	optionsEl;
-	statusEl;
-	animButtons = /* @__PURE__ */ new Map();
-	thumbObserver = null;
-	baseThumb = null;
-	modals = [];
-	onKey = (e) => {
-		e.key === "Escape" && this.modals.length && this.modals[this.modals.length - 1]();
-	};
-	onBeforeUnload = (e) => {
-		this.dirty && e.preventDefault();
-	};
-	constructor(e, t) {
-		this.opts = t, na("editor", ea), na("creator", cs), this.character = uo("Novo personagem", bt()), this.nameInput = q("input", {
-			class: "vt-name",
-			value: this.character.name,
-			title: "Nome do personagem",
-			oninput: () => {
-				this.character.name = this.nameInput.value, this.markDirty();
-			}
-		}), this.preview = q("canvas", {
-			class: "vt-preview-canvas",
-			width: 64 * us,
-			height: 64 * us
-		}), this.tabsEl = q("div", { class: "vt-tabs vt-creator-tabs" }), this.slotsEl = q("div", { class: "vt-slots" }), this.optionsEl = q("div", { class: "vt-options" }), this.statusEl = q("footer", { class: "vt-status" });
-		let n = q("div", { class: "vt-chips vt-center" });
-		for (let e of [
-			"idle",
-			"walk",
-			"run"
-		]) {
-			let t = q("button", {
-				class: "vt-chip",
-				onclick: () => {
-					this.anim = e, this.refreshAnimButtons();
-				}
-			}, ls[e]);
-			this.animButtons.set(e, t), n.append(t);
-		}
-		this.root = q("div", { class: "vt-root vt-creator" }, q("header", { class: "vt-top" }, q("span", { class: "vt-brand" }, "Vortable"), q("span", { class: "vt-top-title" }, t.single ? "Crie seu boneco" : "Personagem"), this.nameInput, q("span", { class: "vt-sep" }), t.single ? null : this.iconBtn(Y.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn(Y.open, "Personagens", () => this.openList()), this.iconBtn(Y.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), this.iconBtn(Y.download, "Exportar", () => this.exportFile()), this.iconBtn(Y.upload, "Importar", () => void this.importFile()), q("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Y.world, t.back.label, () => this.goBack(), "vt-primary") : null), q("main", { class: "vt-creator-body" }, q("section", { class: "vt-preview" }, q("div", { class: "vt-preview-stage" }, this.preview), q("div", { class: "vt-row vt-center" }, q("button", {
-			class: "vt-btn",
-			title: "Girar",
-			onclick: () => this.turn(-1)
-		}, "⟲"), q("button", {
-			class: "vt-btn",
-			title: "Girar",
-			onclick: () => this.turn(1)
-		}, "⟳")), n, q("button", {
-			class: "vt-btn vt-random",
-			html: `${Y.star}<span>Aleatório</span>`,
-			onclick: () => this.randomize()
-		})), q("section", { class: "vt-custom" }, this.tabsEl, q("div", { class: "vt-custom-body" }, this.slotsEl, this.optionsEl))), this.statusEl), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload), this.statusEl.textContent = "Carregando o catálogo...", this.init();
-	}
-	async init() {
-		try {
-			this.data = await ut(this.opts.assetBase);
-		} catch (e) {
-			this.statusEl.textContent = `Não deu pra carregar o catálogo de personagem: ${e.message}`;
-			return;
-		}
-		let [e, t] = await Promise.all([this.opts.storage.list().catch(() => []), this.opts.storage.getActive().catch(() => null)]), n = e.find((e) => e.id === t) ?? e[0];
-		n && (this.character = structuredClone(n)), this.character.appearance = xt(this.data, this.character.appearance), this.nameInput.value = this.character.name, this.renderTabs(), this.renderSlots(), this.renderOptions(), this.refreshAnimButtons(), this.recompose(), this.loop();
-	}
-	destroy() {
-		cancelAnimationFrame(this.raf), this.thumbObserver?.disconnect(), window.removeEventListener("keydown", this.onKey), window.removeEventListener("beforeunload", this.onBeforeUnload), this.root.remove();
-	}
-	iconBtn(e, t, n, r = "") {
-		return q("button", {
-			class: `vt-btn ${r}`,
-			title: t,
-			html: `${e}<span class="vt-label">${t}</span>`,
-			onclick: n
-		});
-	}
-	get appearance() {
-		return this.character.appearance;
-	}
-	groups() {
-		return [...new Set(this.data.catalog.slots.map((e) => e.group))];
-	}
-	renderTabs() {
-		this.tabsEl.replaceChildren(...this.groups().map((e) => q("button", {
-			class: `vt-tab${e === this.group ? " vt-on" : ""}`,
-			onclick: () => {
-				this.group = e, this.slot = this.data.catalog.slots.find((t) => t.group === e).id, this.renderTabs(), this.renderSlots(), this.renderOptions();
-			}
-		}, e)));
-	}
-	renderSlots() {
-		let e = this.appearance, t = this.data.catalog.slots.filter((e) => e.group === this.group);
-		this.slotsEl.replaceChildren(...t.filter((t) => mt(this.data, t.id, e.body).length).map((t) => {
-			let n = e.slots[t.id], r = n && this.data.byId.get(n.id);
-			return q("button", {
-				class: `vt-slot${t.id === this.slot ? " vt-on" : ""}${r ? " vt-filled" : ""}`,
-				onclick: () => {
-					this.slot = t.id, this.renderSlots(), this.renderOptions();
-				}
-			}, q("b", {}, t.label), q("small", {}, r ? vt(r) : "nenhum"));
-		}));
-	}
-	renderOptions() {
-		let e = this.appearance, t = [];
-		this.slot === "body" && (t.push(q("h4", {}, "Tipo de corpo"), q("div", { class: "vt-chips" }, ...this.data.catalog.bodies.map((t) => q("button", {
-			class: `vt-chip${e.body === t ? " vt-on" : ""}`,
-			onclick: () => this.setBody(t)
-		}, ft[t])))), t.push(q("h4", {}, "Pele"), this.swatches("body", e.skin, (e) => this.update((t) => {
-			t.skin = e;
-		}))));
-		let n = this.data.catalog.slots.find((e) => e.id === this.slot), r = mt(this.data, this.slot, e.body), i = e.slots[this.slot], a = i && this.data.byId.get(i.id);
-		if (a) {
-			for (let e of a.colors ?? []) {
-				if (e.material === "body" && a.matchBody) continue;
-				let n = e.label ?? (a.colors.length > 1 ? `Cor (${e.material})` : "Cor");
-				t.push(q("h4", {}, n), this.swatches(e.material, i.colors?.[e.key] ?? null, (t) => this.update((n) => {
-					(n.slots[this.slot].colors ??= {})[e.key] = t;
-				})));
-			}
-			a.variants && a.variants.length > 1 && t.push(q("h4", {}, "Variante"), q("div", { class: "vt-chips" }, ...a.variants.map((e) => q("button", {
-				class: `vt-chip${i.variant === e ? " vt-on" : ""}`,
-				onclick: () => this.update((t) => {
-					t.slots[this.slot].variant = e;
-				})
-			}, e.replace(/_/g, " ")))));
-		}
-		t.push(q("h4", {}, `${n.label} — ${r.length} opç${r.length === 1 ? "ão" : "ões"}`));
-		let o = q("div", { class: "vt-grid vt-char-grid" });
-		n.required || o.append(q("button", {
-			class: `vt-cell vt-none${i ? "" : " vt-on"}`,
-			title: "Nenhum",
-			onclick: () => this.update((e) => {
-				delete e.slots[this.slot];
-			})
-		}, q("span", {}, "Nenhum"))), this.thumbObserver?.disconnect(), this.thumbObserver = new IntersectionObserver((e) => {
-			for (let t of e) t.isIntersecting && (this.thumbObserver.unobserve(t.target), this.drawThumb(t.target));
-		}, {
-			root: this.optionsEl,
-			rootMargin: "120px"
-		});
-		for (let e of r) {
-			let t = q("button", {
-				class: `vt-cell${i?.id === e.id ? " vt-on" : ""}`,
-				title: vt(e),
-				"data-item": e.id,
-				onclick: () => this.chooseItem(e)
-			}, q("canvas", {
-				width: 64,
-				height: 64
-			}), q("span", {}, vt(e)));
-			o.append(t), this.thumbObserver.observe(t);
-		}
-		t.push(o), this.optionsEl.replaceChildren(...t);
-	}
-	swatches(e, t, n) {
-		return q("div", { class: "vt-swatches" }, ...Object.keys(this.data.palettes[e] ?? {}).map((r) => q("button", {
-			class: `vt-swatch${r === t ? " vt-on" : ""}`,
-			title: r.replace(/_/g, " "),
-			style: `background:${pt(this.data.palettes, e, r)}`,
-			onclick: () => n(r)
-		})));
-	}
-	async drawThumb(e) {
-		let t = e.dataset.item, n = this.data.byId.get(t), r = e.querySelector("canvas");
-		if (!n || !r) return;
-		let i = this.appearance, a = i.slots[this.slot]?.id === t ? i.slots[this.slot] : {
-			id: t,
-			...n.variants ? { variant: n.variants[0] } : {},
-			colors: this.carryColors(n)
-		};
-		try {
-			let [e, t] = await Promise.all([this.baseThumb ??= Ft(this.opts.assetBase, {
-				...i,
-				slots: fs(i, ["body", "head"])
-			}), Ft(this.opts.assetBase, {
-				...i,
-				slots: { [this.slot]: a }
-			})]), n = r.getContext("2d");
-			n.clearRect(0, 0, 64, 64), this.slot !== "body" && this.slot !== "head" && (n.globalAlpha = .35, n.drawImage(e, 0, 0), n.globalAlpha = 1), n.drawImage(t, 0, 0);
-		} catch {}
-	}
-	carryColors(e) {
-		let t = this.appearance.slots[this.slot], n = t && this.data.byId.get(t.id), r = {};
-		for (let i of e.colors ?? []) {
-			let e = n?.colors?.find((e) => e.key === i.key && e.material === i.material), a = e && t.colors?.[e.key];
-			a && (r[i.key] = a);
-		}
-		return r;
-	}
-	update(e, t = !0) {
-		let n = structuredClone(this.appearance);
-		e(n), this.character.appearance = xt(this.data, n), this.markDirty(), this.baseThumb = null, t && this.renderSlots(), this.renderOptions(), this.recompose();
-	}
-	chooseItem(e) {
-		this.update((t) => {
-			t.slots[this.slot] = {
-				id: e.id,
-				...e.variants ? { variant: e.variants[0] } : {},
-				colors: this.carryColors(e)
-			};
-		});
-	}
-	setBody(e) {
-		e !== this.appearance.body && this.update((t) => {
-			t.body = e;
-			let n = t.slots.head?.id ?? "";
-			if (n.includes("/human/")) {
-				let r = e === "male" ? n.replace("_female", "_male") : n.replace(/_male/, "_female");
-				this.data.byId.has(r) && (t.slots.head = {
-					...t.slots.head,
-					id: r
-				});
-			}
-		});
-	}
-	randomize() {
-		this.update((e) => {
-			let t = wt(this.data);
-			e.body = t.body, e.skin = t.skin, e.slots = t.slots;
-		});
-	}
-	turn(e) {
-		let t = [
-			2,
-			1,
-			0,
-			3
-		];
-		this.dir = t[(t.indexOf(this.dir) + e + 4) % 4];
-	}
-	refreshAnimButtons() {
-		for (let [e, t] of this.animButtons) t.classList.toggle("vt-on", e === this.anim);
-	}
-	markDirty() {
-		this.dirty = !0, this.refreshStatus();
-	}
-	refreshStatus() {
-		if (!this.data) return;
-		let e = Object.keys(this.appearance.slots).length;
-		this.statusEl.replaceChildren(q("span", {}, `${this.data.catalog.items.length} itens no catálogo`), q("span", {}, `${e} peças neste personagem`), this.dirty ? q("span", { class: "vt-dirty" }, "● não salvo") : q("span", {}, "salvo"), q("span", { class: "vt-hint" }, "Arte: Liberated Pixel Cup (LPC) — CC-BY-SA / GPL / OGA-BY · ", q("button", {
-			class: "vt-link",
-			onclick: () => this.openCredits()
-		}, "ver créditos")));
-	}
-	async recompose() {
-		let e = ++this.composeToken;
-		try {
-			let t = await It(this.opts.assetBase, this.appearance);
-			e === this.composeToken && (this.sheets = t);
-		} catch (e) {
-			this.statusEl.textContent = `Erro montando o personagem: ${e.message}`;
-		}
-		this.refreshStatus();
-	}
-	loop() {
-		let e = this.preview.getContext("2d");
-		e.imageSmoothingEnabled = !1;
-		let t = performance.now(), n = (r) => {
-			this.raf = requestAnimationFrame(n);
-			let i = this.sheets?.[this.anim];
-			if (e.clearRect(0, 0, this.preview.width, this.preview.height), !i) return;
-			let { frames: a, rate: o } = Et[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * us;
-			e.drawImage(i, l * 64, this.dir * 64, 64, 64, 0, 0, u, u);
-		};
-		this.raf = requestAnimationFrame(n);
-	}
-	async save() {
-		try {
-			return this.character.name = this.nameInput.value.trim() || "Sem nome", this.nameInput.value = this.character.name, await this.opts.storage.save(this.character), this.opts.activateOnSave !== !1 && await this.opts.storage.setActive(this.character.id), this.dirty = !1, this.refreshStatus(), this.toast(this.opts.single || this.opts.activateOnSave === !1 ? `"${this.character.name}" salvo.` : `"${this.character.name}" salvo. É ele que aparece quando você testar ou jogar.`), this.opts.onSaved?.(structuredClone(this.character)), !0;
-		} catch (e) {
-			return this.toast(`Não deu pra salvar: ${e.message}`, !0), !1;
-		}
-	}
-	exportFile() {
-		let e = this.nameInput.value.trim() || "Sem nome";
-		vo(go(e), ho([{
-			name: e,
-			appearance: this.appearance
-		}])), this.toast(`"${e}" exportado.`);
-	}
-	async importFile() {
-		let e = await yo();
-		if (e !== null) try {
-			let [t] = _o(e, this.data);
-			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
-			this.character = this.opts.single ? {
-				...t,
-				id: this.character.id
-			} : t, this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad(), this.refreshStatus(), this.toast(`"${this.character.name}" importado. Salve pra guardar.`);
-		} catch (e) {
-			this.toast(e.message, !0);
-		}
-	}
-	async goBack() {
-		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de voltar?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
-	}
-	openCredits() {
-		let e = this.modal("Créditos da arte", ia(this.opts.assetBase), [q("button", {
-			class: "vt-btn",
-			onclick: () => e()
-		}, "Fechar")]);
-	}
-	newCharacter() {
-		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = uo("Novo personagem", bt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
-	}
-	afterLoad() {
-		this.character.appearance = xt(this.data, this.character.appearance), this.baseThumb = null, this.renderSlots(), this.renderOptions(), this.recompose();
-	}
-	async openList() {
-		let e = q("div", { class: "vt-list" }), t = this.modal("Personagens", [e], [q("button", {
-			class: "vt-btn",
-			onclick: () => t()
-		}, "Fechar")]), n = async () => {
-			let r, i;
-			try {
-				[r, i] = await Promise.all([this.opts.storage.list(), this.opts.storage.getActive()]);
-			} catch (t) {
-				e.replaceChildren(q("div", { class: "vt-empty" }, `Não deu pra ler os personagens: ${t.message}`));
-				return;
-			}
-			e.replaceChildren(), r.length || e.append(q("div", { class: "vt-empty" }, "Nenhum personagem salvo ainda."));
-			for (let a of r) {
-				let r = q("canvas", {
-					class: "vt-item-thumb",
-					width: 64,
-					height: 64
-				});
-				Ft(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(q("div", { class: "vt-item" }, r, q("div", {}, q("b", {}, a.name), q("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), q("button", {
-					class: "vt-btn vt-primary",
-					onclick: async () => {
-						(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
-					}
-				}, "Usar"), q("button", {
-					class: "vt-btn vt-danger",
-					title: "Apagar",
-					html: Y.trash,
-					onclick: async () => {
-						if (confirm(`Apagar "${a.name}"? Não dá pra desfazer.`)) {
-							try {
-								await this.opts.storage.remove(a.id);
-							} catch (e) {
-								return this.toast(`Não deu pra apagar: ${e.message}`, !0);
-							}
-							a.id === this.character.id && this.markDirty(), n();
-						}
-					}
-				})));
-			}
-		};
-		n();
-	}
-	modal(e, t, n) {
-		let r = () => {
-			this.modals = this.modals.filter((e) => e !== r), i.remove();
-		};
-		this.modals.push(r);
-		let i = q("div", {
-			class: "vt-modal-bg",
-			onmousedown: (e) => {
-				e.target === i && r();
-			}
-		}, q("div", { class: "vt-modal" }, q("h3", {}, e), q("div", { class: "vt-modal-body" }, ...t), q("div", { class: "vt-modal-foot" }, ...n)));
-		return this.root.append(i), r;
-	}
-	toast(e, t = !1) {
-		let n = q("div", { class: `vt-toast${t ? " vt-error" : ""}` }, e);
-		this.root.append(n), setTimeout(() => n.remove(), 2500);
-	}
-};
-function fs(e, t) {
-	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
-}
-//#endregion
-//#region src/engine/index.ts
-var ps = "/__vortable/curate";
+}, ps = "/__vortable/curate";
 function ms(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	ui(n);
-	let r = t.mode ?? "play", i = t.storage ?? new ko(), a = t.appearance, o = !1, s = t.net ? new ss(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0, d) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Po(), a = t.appearance, o = !1, s = t.net ? new fs(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0, d) => ({
 		zone: e,
 		...d ? {
 			at: {
@@ -50038,7 +50082,7 @@ function ms(e, t) {
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null;
-		u = new $i(r ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new Qo(e, u, i, {
+		u = new $i(r ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new rs(e, u, i, {
 			assetBase: n,
 			textureImage: (e) => h.textures.get(e).getSourceImage(),
 			startTest: () => {
@@ -50205,7 +50249,7 @@ function ms(e, t) {
 	};
 }
 function hs(e, t = {}) {
-	let n = new ds(e, {
+	let n = new Co(e, {
 		assetBase: t.assetBase ?? "./assets/",
 		storage: t.storage ?? new po(),
 		back: t.back,
@@ -50217,4 +50261,4 @@ function hs(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { mo as CHARACTER_FORMAT, M as DAY_MINUTES, re as DEFAULT_WIND, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, po as LocalCharacterStorage, ko as LocalWorldStorage, j as METERS_PER_TILE, ns as REACTIONS, _ as TERRAINS, A as TILE, ar as WEATHERS, or as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, go as characterFileName, Ft as characterFrame, z as clampZoneSize, bt as defaultAppearance, vo as downloadText, ho as exportCharacters, On as formatHour, ut as loadCharacterData, Ao as localStorageAvailable, hs as mountCharacterCreator, ms as mountVortable, uo as newCharacter, F as newId, Oo as newWorld, B as newZone, xt as normalizeAppearance, fo as parseCharacter, _o as parseCharacterFile, os as parseNet, Bo as parseWorld, Mo as parseZone, yo as pickTextFile, wt as randomAppearance, Do as summarize };
+export { mo as CHARACTER_FORMAT, M as DAY_MINUTES, re as DEFAULT_WIND, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, po as LocalCharacterStorage, Po as LocalWorldStorage, j as METERS_PER_TILE, ss as REACTIONS, _ as TERRAINS, A as TILE, ar as WEATHERS, or as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, go as characterFileName, Ft as characterFrame, z as clampZoneSize, bt as defaultAppearance, vo as downloadText, ho as exportCharacters, On as formatHour, ut as loadCharacterData, Fo as localStorageAvailable, hs as mountCharacterCreator, ms as mountVortable, uo as newCharacter, F as newId, No as newWorld, B as newZone, xt as normalizeAppearance, fo as parseCharacter, _o as parseCharacterFile, ds as parseNet, Go as parseWorld, Lo as parseZone, yo as pickTextFile, wt as randomAppearance, Mo as summarize };

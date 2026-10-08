@@ -39,6 +39,9 @@ export declare class NpcPanel {
     private pick;
     private renderList;
     private row;
+    /** Abre o criador de personagem (o mesmo do jogador) com a aparência do NPC; Aplicar muda o NPC na zona. */
+    private editLook;
+    private look;
     private toggleName;
     private turn;
     private move;
