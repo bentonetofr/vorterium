@@ -1,11 +1,15 @@
-import { type ZoneLighting } from '../types';
+import { type WorldSky, type ZoneLighting } from '../types';
 export type RGB = [number, number, number];
 export declare const UNDERGROUND_TINT = "#2a2e3c";
-/** Luz de uma zona que nunca foi ajustada: interior se o fundo é o vazio, senão ao ar livre; ciclo dia/noite. */
+/** Luz de uma zona que nunca foi ajustada: interior se o fundo é o vazio, senão ao ar livre. */
 export declare function lightingOf(zone: {
     lighting?: ZoneLighting;
     base?: string;
 }): ZoneLighting;
+/** Hora e tempo do mundo (iguais em todas as zonas); mundo sem ajuste = ciclo dia/noite, tempo limpo. */
+export declare function skyOf(world?: {
+    sky?: WorldSky;
+} | null): WorldSky;
 export declare function hexToRgb(hex: string): RGB;
 export declare function rgbToInt([r, g, b]: RGB): number;
 /** Quanto de sol há (0 = noite, 1 = dia pleno), suave na aurora e no pôr do sol. */
@@ -58,12 +62,18 @@ export declare function sunAt(hour: number): {
 /** Posição (0–1) da hora no ciclo do relógio real. */
 export declare function hourToCycle(hour: number): number;
 export declare function worldHour(dayMinutes?: number, now?: number): number;
-/** Hora da zona agora: a fixa, ou a do ciclo. */
-export declare function zoneHour(l: ZoneLighting, now?: number): number;
+/** Hora do mundo agora (a mesma em todas as zonas): a fixa, ou a do ciclo. */
+export declare function skyHour(sky: WorldSky, now?: number): number;
 export declare function formatHour(hour: number): string;
-/** Presets do painel Luz. */
+/** Presets de lugar do painel Luz (valem só pra zona aberta). */
 export declare const LIGHT_PRESETS: {
     id: string;
     label: string;
     lighting: ZoneLighting;
+}[];
+/** Presets de hora do painel Luz (valem pro mundo todo). */
+export declare const SKY_PRESETS: {
+    id: string;
+    label: string;
+    hour: number | null;
 }[];

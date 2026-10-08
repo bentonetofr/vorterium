@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { NetHub } from '../net/hub';
-import { type Appearance, type Dir, type ZoneData } from '../types';
+import { type Appearance, type Dir, type WorldSky, type ZoneData } from '../types';
 export interface WorldSceneData {
     zone: ZoneData;
     appearance: Appearance;
@@ -18,6 +18,8 @@ export interface WorldSceneData {
     onClock?: (hour: number) => void;
     /** Deslocamento do relógio do mundo em ms (o teste do editor começa na hora da prévia). */
     timeOffset?: number;
+    /** Hora e tempo do mundo, iguais em todas as zonas (acompanha a cena nas trocas de zona). */
+    sky?: WorldSky;
     /** O teclado do boneco está travado agora? (lido ao abrir a cena e a cada zona nova) */
     inputLocked?: () => boolean;
     /** Rede: os outros jogadores (sem isto, o jogo é solo). */

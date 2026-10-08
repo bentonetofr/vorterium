@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { type ZoneData } from '../types';
+import { type WorldSky, type ZoneData } from '../types';
 import { Wind } from './wind';
 export declare const BLOB = "light:blob";
 /** Quem mais faz sombra além dos objetos (os bonecos): quadro atual e os pés. */
@@ -58,6 +58,8 @@ export declare class Lighting {
     } | null;
     /** Deslocamento do relógio do mundo, em ms (o teste do editor começa na hora da prévia). */
     timeOffset: number;
+    /** Hora e tempo do mundo: os mesmos em todas as zonas. */
+    sky: WorldSky;
     /** Bonecos que fazem sombra. */
     extraCasters: () => ExtraCaster[];
     /** Relâmpagos que já caíram. */
