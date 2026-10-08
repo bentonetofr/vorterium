@@ -41,8 +41,8 @@ export function VortableFab({ mode }: { mode: 'enter' | 'leave' }) {
         className={`vortable-fab${live ? ' vortable-fab--live' : ''}`}
         onClick={() => {
           enterFullscreen() // vem do clique
-          // mestre com a telinha aberta: a sessão ao vivo passa da telinha pra página sem cair
-          if (getPip()?.role === 'master') setHandoff(campaign.id, stage)
+          // mestre: o palco (sessão ao vivo da telinha, documento na mesa) passa pra página sem cair
+          if (master || getPip()?.role === 'master') setHandoff(campaign.id, stage)
           navigate(`/campanhas/${campaign.id}/vortable`)
         }}
         aria-label="Entrar no Vortable"
