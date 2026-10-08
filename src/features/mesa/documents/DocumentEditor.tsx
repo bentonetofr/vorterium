@@ -6,7 +6,8 @@ import { MAX_PAGES, saveDocument, type DocPage, type MesaDocument } from './docu
 import { DocToolbar } from './DocToolbar'
 import { BookCover, PaperPage } from './DocViews'
 import { FontPicker } from './FontPicker'
-import { PageEditor, type ChangeKind, type PageEditorHandle } from './PageEditor'
+import { formatAllPages } from './formatAll'
+import { PageEditor, type ChangeKind, type DocCommand, type PageEditorHandle } from './PageEditor'
 import { overflows, reflow, reflowAll } from './pageFlow'
 import {
   COVERS, INKS, MAX_AUTHOR, PAPERS, pageSeed, pageStyle, type DocStyle,
@@ -46,6 +47,9 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   const [dirty, setDirty] = useState(false)
   /** O livro chegou ao limite de páginas e o texto que sobrou não aparece. */
   const [full, setFull] = useState(false)
+  /** Ctrl+A no livro: todas as páginas selecionadas (a formatação vale pro livro todo). */
+  const [allPages, setAllPages] = useState(false)
+  const formatting = useRef(false)
   /** Reescrever a folha editável (v muda) — com a marca do cursor, se `marked`. */
   const [ed, setEd] = useState<{ v: number; marked: string | null }>({ v: 0, marked: null })
   const editor = useRef<PageEditorHandle>(null)
@@ -63,6 +67,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
 
   const isBook = draft.kind === 'book'
   const onCover = isBook && pageIdx === COVER
+  const allMode = allPages && isBook && !onCover
   const at = Math.max(0, Math.min(pageIdx, draft.pages.length - 1))
   const page = draft.pages[at]
   const ownStyle = isBook && !!page?.style
@@ -107,6 +112,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     to.current.push({ draft: draftRef.current, pageIdx: pageIdxRef.current, marked: editor.current?.marked() ?? lastMarked.current })
     lastTyping.current = 0
     lastMarked.current = snap.marked
+    setAllPages(false)
     setDraft(snap.draft)
     setDirty(true)
     setFull(false)
@@ -119,6 +125,7 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   const redo = () => travel(redoStack, undoStack)
 
   function setKind(kind: 'paper' | 'book') {
+    setAllPages(false)
     change((d) => {
       d.kind = kind
       if (kind === 'book' && d.pages.length < 2) d.pages.push({ html: '' })
@@ -169,6 +176,37 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
     const target = k >= 0 ? k : at
     if (target !== at) openPage(target, markedPage)
     else if (markedPage !== marked) setEd((e) => ({ v: e.v + 1, marked: markedPage }))
+  }
+
+  /** Com todas as páginas selecionadas: o mesmo comando da barra, em cada página. */
+  async function formatAll(command: DocCommand, value?: string) {
+    if (formatting.current) return
+    formatting.current = true
+    try {
+      const prev = draftRef.current
+      const done = await formatAllPages(prev.pages, prev.style, command, value)
+      await Promise.all(done.map((p) => loadDocFonts(p.html)))
+      // a formatação muda o tamanho do texto: redistribui o que passou da página
+      const { pages, full: over } = reflowAll(done, prev.style)
+      // (a folha escondida tirou o foco da da tela: reescrever a folha seleciona tudo de novo)
+      if (!samePages(pages, prev.pages)) {
+        change((d) => { d.pages = pages }, 'format')
+        setFull(over)
+        lastMarked.current = null
+      }
+      setEd((e) => ({ v: e.v + 1, marked: null }))
+    } finally {
+      formatting.current = false
+    }
+  }
+
+  /** Com todas as páginas selecionadas, Delete apaga o texto de todas (o Ctrl+Z traz de volta). */
+  function clearAll() {
+    change((d) => { d.pages = d.pages.map((p) => ({ html: '', ...(p.style ? { style: p.style } : {}) })) }, 'format')
+    setAllPages(false)
+    setFull(false)
+    lastMarked.current = CARET_MARK
+    openPage(0, CARET_MARK)
   }
 
   // Mudou a letra, o tamanho ou o tipo: espera as fontes e redistribui o livro.
@@ -373,15 +411,15 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
           <div className="doc-editor__top">
             {isBook && (
               <div className="doc-editor__pages" role="tablist" aria-label="Capa e páginas">
-                <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => openPage(COVER)}>Capa</button>
+                <button type="button" role="tab" aria-selected={onCover} className={`doc-editor__chip${onCover ? ' is-on' : ''}`} onClick={() => { setAllPages(false); openPage(COVER) }}>Capa</button>
                 {draft.pages.map((p, i) => (
                   <button
                     key={i}
                     type="button"
                     role="tab"
                     aria-selected={!onCover && at === i}
-                    className={`doc-editor__chip${!onCover && at === i ? ' is-on' : ''}${p.cont ? ' doc-editor__chip--cont' : ''}`}
-                    onClick={() => openPage(i)}
+                    className={`doc-editor__chip${allMode || (!onCover && at === i) ? ' is-on' : ''}${p.cont ? ' doc-editor__chip--cont' : ''}`}
+                    onClick={() => { setAllPages(false); openPage(i) }}
                     title={[p.cont ? 'Continua a página anterior' : '', p.style ? 'Página com estilo próprio' : ''].filter(Boolean).join(' · ') || undefined}
                   >
                     {i + 1}{p.style ? '*' : ''}
@@ -423,8 +461,13 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
                     onChange={onPageChange}
                     onUndo={undo}
                     onRedo={redo}
+                    all={allMode}
+                    onAll={setAllPages}
+                    onFormatAll={(c, v) => void formatAll(c, v)}
+                    onClearAll={clearAll}
                   />
                 </div>
+                {allMode && <p className="doc-editor__hint">Todas as páginas selecionadas. Esc sai.</p>}
                 {sheetOverflow && <p className="doc-editor__hint doc-editor__warn">O texto passou do tamanho da folha. Diminua a letra ou troque pra Livro (aí o resto vai pra próxima página).</p>}
               </div>
             </>

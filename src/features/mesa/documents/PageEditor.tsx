@@ -56,6 +56,13 @@ interface Props {
   onChange:    (marked: string, kind: ChangeKind) => void
   onUndo:      () => void
   onRedo:      () => void
+  /** Todas as páginas do livro estão selecionadas (Ctrl+A). */
+  all:         boolean
+  onAll:       (on: boolean) => void
+  /** Com tudo selecionado, a formatação vale pro livro todo. */
+  onFormatAll: (command: DocCommand, value?: string) => void
+  /** Com tudo selecionado, Delete/Backspace apagam o texto de todas as páginas. */
+  onClearAll:  () => void
 }
 
 const isBlock = (n: Node) => n.nodeType === Node.ELEMENT_NODE && /^(DIV|P|UL|OL|LI)$/.test((n as Element).tagName)
@@ -116,14 +123,16 @@ export function sizeAtCaret(root: HTMLElement): number | null {
 }
 
 export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEditor(
-  { html, version, marked, style, seed, book, placeholder, onChange, onUndo, onRedo },
+  { html, version, marked, style, seed, book, placeholder, onChange, onUndo, onRedo, all, onAll, onFormatAll, onClearAll },
   handle,
 ) {
   const ref = useRef<HTMLDivElement>(null)
   const range = useRef<Range | null>(null)
   const [empty, setEmpty] = useState(isBlankHtml(html))
-  const cb = useRef({ onChange, onUndo, onRedo })
-  cb.current = { onChange, onUndo, onRedo }
+  const cb = useRef({ onChange, onUndo, onRedo, onAll, onFormatAll, onClearAll })
+  cb.current = { onChange, onUndo, onRedo, onAll, onFormatAll, onClearAll }
+  const allRef = useRef(all)
+  allRef.current = all
 
   // Conteúdo de fora (abrir a página, texto que correu, desfazer).
   useLayoutEffect(() => {
@@ -134,6 +143,7 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
     setEmpty(isBlankHtml(content.replace(CARET_MARK, '')))
     void loadDocFonts(content)
     if (marked != null) placeAtMark(el)
+    else if (allRef.current) selectAllIn(el)
   }, [version])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Parágrafo novo vira <div> em todos os navegadores (no Firefox seria <br>).
@@ -176,95 +186,14 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
     }
   }
 
-  /**
-   * Tamanho: o fontSize do navegador só conhece 7 tamanhos (e no Chrome sai
-   * vazio), então aplica uma "letra-marcador" com o número e troca pelo
-   * tamanho em cqw. Com o cursor parado, o marcador vale pro que for digitado.
-   */
-  function applySize(n: number) {
-    document.execCommand('fontName', false, `${SIZE_MARK}${n}`)
-    fixSizes(ref.current!)
-  }
-
   function format(command: DocCommand, value?: string) {
     const el = ref.current
     if (!el) return
+    // Todas as páginas selecionadas (Ctrl+A no livro): a mudança vale pro livro todo.
+    if (allRef.current) { cb.current.onFormatAll(command, value); return }
     restore()
     document.execCommand('styleWithCSS', false, 'true')
-    switch (command) {
-      case 'fontSize': {
-        const n = Number(value)
-        if (n > 0) applySize(n)
-        break
-      }
-      case 'grow':
-      case 'shrink': {
-        const now = sizeAtCaret(el) ?? style.size
-        const next = command === 'grow' ? FONT_SIZES.find((s) => s > now) : [...FONT_SIZES].reverse().find((s) => s < now)
-        if (next) applySize(next)
-        break
-      }
-      case 'fontName':
-      case 'foreColor': {
-        if (value === 'default') {
-          // "Padrão da página": aplica um valor-marcador e tira ele dos trechos.
-          const MARK = command === 'fontName' ? 'vorterium-marcador' : 'rgb(1, 2, 3)'
-          document.execCommand(command, false, MARK)
-          const prop = command === 'foreColor' ? 'color' : 'font-family'
-          const isMark = (v: string) => (command === 'fontName' ? v.includes('vorterium-marcador') : v.replace(/\s/g, '') === 'rgb(1,2,3)')
-          for (const node of [...el.querySelectorAll<HTMLElement>('[style], font')]) {
-            if (node.tagName === 'FONT') {
-              if (isMark(node.getAttribute('face') ?? '')) node.removeAttribute('face')
-              if (isMark(node.getAttribute('color') ?? '')) node.removeAttribute('color')
-            }
-            if (isMark(node.style.getPropertyValue(prop))) node.style.removeProperty(prop)
-            const bare = !node.getAttribute('style')?.trim() && !node.getAttribute('face') && !node.getAttribute('color') && !node.getAttribute('size')
-            if (bare && (node.tagName === 'SPAN' || node.tagName === 'FONT')) node.replaceWith(...node.childNodes)
-          }
-        } else if (command === 'fontName') {
-          if (!value || !fontStack(value)) return
-          void loadBoardFont(value)
-          document.execCommand('fontName', false, fontStack(value))
-        } else {
-          document.execCommand('foreColor', false, value)
-        }
-        break
-      }
-      case 'indent':
-      case 'outdent':
-        if (inList(el)) {
-          // Lista: o nível vira uma lista dentro da outra.
-          document.execCommand('styleWithCSS', false, 'false')
-          document.execCommand(command)
-        } else {
-          for (const b of selectedBlocks(el)) {
-            const now = parseFloat(b.style.marginLeft) || 0
-            const next = Math.max(0, Math.min(MAX_INDENT, now + (command === 'indent' ? INDENT_STEP : -INDENT_STEP)))
-            if (next) b.style.marginLeft = `${next}cqw`
-            else b.style.removeProperty('margin-left')
-          }
-        }
-        break
-      case 'justifyLeft':
-      case 'justifyCenter':
-      case 'justifyRight':
-      case 'justifyFull': {
-        const align = { justifyLeft: '', justifyCenter: 'center', justifyRight: 'right', justifyFull: 'justify' }[command]
-        for (const b of selectedBlocks(el)) {
-          if (align) b.style.textAlign = align
-          else b.style.removeProperty('text-align')
-        }
-        break
-      }
-      case 'lineHeight':
-        for (const b of selectedBlocks(el)) {
-          if (value && value !== 'default') b.style.lineHeight = value
-          else b.style.removeProperty('line-height')
-        }
-        break
-      default:
-        document.execCommand(command, false)
-    }
+    if (!applyFormat(el, command, value, style)) return
     emit('format')
   }
 
@@ -306,7 +235,19 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
             if (e.nativeEvent.isComposing) return
             const mod = e.ctrlKey || e.metaKey
             const k = e.key.toLowerCase()
+            if (allRef.current) {
+              // Todas as páginas selecionadas: Delete apaga tudo; Esc, setas ou digitar saem da seleção.
+              if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); cb.current.onClearAll(); return }
+              if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); window.getSelection()?.collapseToEnd(); cb.current.onAll(false); return }
+              if (/^(Arrow(Left|Right|Up|Down)|Home|End|Page(Up|Down))$/.test(e.key)) cb.current.onAll(false)
+              else if (mod ? k === 'x' : !e.altKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Tab')) {
+                window.getSelection()?.collapseToEnd()
+                cb.current.onAll(false)
+              }
+            }
             if (mod && !e.altKey) {
+              // Ctrl+A num livro: seleciona todas as páginas (a formatação passa a valer pro livro todo).
+              if (k === 'a' && !e.shiftKey && book) { e.preventDefault(); selectAllIn(ref.current!); cb.current.onAll(true); return }
               if (k === 'z' && !e.shiftKey) { e.preventDefault(); cb.current.onUndo(); return }
               if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); cb.current.onRedo(); return }
               // Atalhos do Word: Ctrl+E/L/R/J alinham; Ctrl+] / Ctrl+[ (ou Ctrl+Shift+> / <) mudam o tamanho.
@@ -332,7 +273,9 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
             else { format('outdent'); return }
             emit('type')
           }}
+          onMouseDown={() => { if (allRef.current) cb.current.onAll(false) }}
           onPaste={(e) => {
+            if (allRef.current) { window.getSelection()?.collapseToEnd(); cb.current.onAll(false) }
             // Colar mantém a formatação básica (negrito, listas, alinhamento…), já limpa.
             e.preventDefault()
             const rich = e.clipboardData.getData('text/html')
@@ -381,6 +324,17 @@ function withCaret(root: HTMLElement): string {
   return copy.innerHTML
 }
 
+/** Seleciona todo o texto da folha (com o foco nela). */
+function selectAllIn(el: HTMLElement) {
+  el.focus({ preventScroll: true })
+  const sel = window.getSelection()
+  if (!sel) return
+  const r = document.createRange()
+  r.selectNodeContents(el)
+  sel.removeAllRanges()
+  sel.addRange(r)
+}
+
 /** Tira a marca da folha e põe o cursor onde ela estava. */
 function placeAtMark(root: HTMLElement) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
@@ -416,6 +370,106 @@ function keepContOnFirst(root: HTMLElement) {
 }
 
 const SIZE_MARK = 'vorterium-tamanho-'
+
+/**
+ * Tamanho: o fontSize do navegador só conhece 7 tamanhos (e no Chrome sai
+ * vazio), então aplica uma "letra-marcador" com o número e troca pelo
+ * tamanho em cqw. Com o cursor parado, o marcador vale pro que for digitado.
+ */
+function applySize(el: HTMLElement, n: number) {
+  document.execCommand('fontName', false, `${SIZE_MARK}${n}`)
+  fixSizes(el)
+}
+
+/**
+ * Aplica um comando de formatação ao que está selecionado dentro de `el` (a folha
+ * da tela, ou a folha escondida de formatAll). false = nada a fazer.
+ */
+export function applyFormat(el: HTMLElement, command: DocCommand, value: string | undefined, style: DocStyle): boolean {
+  switch (command) {
+    case 'fontSize': {
+      const n = Number(value)
+      if (n > 0) applySize(el, n)
+      break
+    }
+    case 'grow':
+    case 'shrink': {
+      const now = sizeAtCaret(el) ?? style.size
+      const next = command === 'grow' ? FONT_SIZES.find((s) => s > now) : [...FONT_SIZES].reverse().find((s) => s < now)
+      if (next) applySize(el, next)
+      break
+    }
+    case 'fontName':
+    case 'foreColor': {
+      if (value === 'default') {
+        // "Padrão da página": aplica um valor-marcador e tira ele dos trechos.
+        const MARK = command === 'fontName' ? 'vorterium-marcador' : 'rgb(1, 2, 3)'
+        document.execCommand(command, false, MARK)
+        const prop = command === 'foreColor' ? 'color' : 'font-family'
+        const isMark = (v: string) => (command === 'fontName' ? v.includes('vorterium-marcador') : v.replace(/\s/g, '') === 'rgb(1,2,3)')
+        for (const node of [...el.querySelectorAll<HTMLElement>('[style], font')]) {
+          if (node.tagName === 'FONT') {
+            if (isMark(node.getAttribute('face') ?? '')) node.removeAttribute('face')
+            if (isMark(node.getAttribute('color') ?? '')) node.removeAttribute('color')
+          }
+          if (isMark(node.style.getPropertyValue(prop))) node.style.removeProperty(prop)
+          const bare = !node.getAttribute('style')?.trim() && !node.getAttribute('face') && !node.getAttribute('color') && !node.getAttribute('size')
+          if (bare && (node.tagName === 'SPAN' || node.tagName === 'FONT')) node.replaceWith(...node.childNodes)
+        }
+      } else if (command === 'fontName') {
+        if (!value || !fontStack(value)) return false
+        void loadBoardFont(value)
+        document.execCommand('fontName', false, fontStack(value))
+      } else {
+        document.execCommand('foreColor', false, value)
+      }
+      break
+    }
+    case 'indent':
+    case 'outdent':
+      if (inList(el)) {
+        // Lista: o nível vira uma lista dentro da outra.
+        document.execCommand('styleWithCSS', false, 'false')
+        document.execCommand(command)
+        document.execCommand('styleWithCSS', false, 'true')
+      } else {
+        for (const b of selectedBlocks(el)) {
+          const now = parseFloat(b.style.marginLeft) || 0
+          const next = Math.max(0, Math.min(MAX_INDENT, now + (command === 'indent' ? INDENT_STEP : -INDENT_STEP)))
+          if (next) b.style.marginLeft = `${next}cqw`
+          else b.style.removeProperty('margin-left')
+        }
+      }
+      break
+    case 'justifyLeft':
+    case 'justifyCenter':
+    case 'justifyRight':
+    case 'justifyFull': {
+      const align = { justifyLeft: '', justifyCenter: 'center', justifyRight: 'right', justifyFull: 'justify' }[command]
+      for (const b of selectedBlocks(el)) {
+        if (align) b.style.textAlign = align
+        else b.style.removeProperty('text-align')
+      }
+      break
+    }
+    case 'lineHeight':
+      for (const b of selectedBlocks(el)) {
+        if (value && value !== 'default') b.style.lineHeight = value
+        else b.style.removeProperty('line-height')
+      }
+      break
+    default:
+      document.execCommand(command, false)
+  }
+  return true
+}
+
+/** O que se limpa depois de formatar (o mesmo de cada mudança na folha da tela). */
+export function tidyEdit(el: HTMLElement, baseSize: number) {
+  fixSizes(el)
+  dropInherited(el, baseSize)
+  keepContOnFirst(el)
+}
 
 /** Troca a letra-marcador de tamanho pelo tamanho em cqw (e tira tamanhos de dentro dela). */
 function fixSizes(root: HTMLElement) {
