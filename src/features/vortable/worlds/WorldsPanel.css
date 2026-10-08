@@ -1,0 +1,84 @@
+/* ═══════════════════════════════════════════════════════
+   Mundos do mestre (cobre a área do Vortable)
+   ═══════════════════════════════════════════════════════ */
+
+.worlds {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  padding: var(--space-5, 20px);
+  overflow-y: auto;
+  background: var(--bg-base);
+}
+
+.worlds__head { display: flex; align-items: center; justify-content: space-between; }
+.worlds__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--accent-bright); }
+.worlds__error { margin: 0; color: var(--danger-bright); }
+.worlds__hint { margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
+
+.worlds__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3, 12px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.world {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  height: 100%;
+  padding: var(--space-4, 16px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+}
+.world--open { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
+
+.world__top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.world__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+.world__badge {
+  flex: none;
+  padding: 2px 8px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg-base);
+  background: var(--success);
+  border-radius: 999px;
+}
+.world__badge--edit { color: var(--accent-bright); background: var(--accent-glow); border: 1px solid var(--accent); }
+.world__meta { color: var(--text-secondary); font-size: var(--text-sm); }
+
+.world__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.world__actions .btn { padding: 4px 12px; font-size: var(--text-sm); }
+.world__actions .btn-primary { flex: 1 1 100%; }
+
+.world--new {
+  width: 100%;
+  min-height: 150px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  background: transparent;
+  border-style: dashed;
+  cursor: var(--cursor-hand);
+}
+.world--new:hover:not(:disabled) { color: var(--accent-bright); border-color: var(--accent); }
+.world__plus { font-size: 44px; line-height: 1; }

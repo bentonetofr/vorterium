@@ -6,6 +6,7 @@ import {
 } from '../services/vortableService'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useVortableNet } from '../net/VortableNetProvider'
+import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import './SceneBar.css'
@@ -21,6 +22,8 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   // cena do mestre por cima do jogo (preto, pausa, imagem, título)
   const { stage } = useMesaStream()
   const vnet = useVortableNet()
+  // o mundo que o mestre abriu: se ele abrir outro, o jogo recomeça nele
+  const { active, ready } = useVortableWorlds()
   const covered = stage.scene.kind !== 'game'
   const coveredRef = useRef(covered)
   const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void } | null>(null)
@@ -91,13 +94,21 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
     )
   }
 
+  if (!ready || !active) {
+    return (
+      <div className="vortable-stage"><div className="vortable-stage__cover">
+        {ready ? <span>O mestre ainda não abriu nenhum mundo.</span> : <><div className="spinner" /><span>Carregando o mundo...</span></>}
+      </div></div>
+    )
+  }
+
   return (
     <div className="vortable-player-wrap">
       <EngineStage
-        key={mine.id}
-        deps={[campaign.id, userId, mine.id, JSON.stringify(mine.appearance), vnet.net]}
+        key={`${mine.id}:${active.id}`}
+        deps={[campaign.id, userId, mine.id, JSON.stringify(mine.appearance), vnet.net, active.id]}
         mount={async (engine, host, isDead) => {
-          const worlds = await createWorldStorage(campaign.id, campaign.name)
+          const worlds = await createWorldStorage(campaign.id, active.id, active.name)
           const data = await engine.loadCharacterData(VORTABLE_ASSETS)
           if (isDead()) return () => {}
           const net = vnet.net

@@ -48,6 +48,7 @@ const TOPICS: Topic[] = [
       'Mestre, Editar mundo: pinte terreno, ponha objetos, cômodos, luzes, clima e sons, e ligue as zonas por portas e saídas. Salva na campanha.',
       'Mestre, Testar (botão amarelo do editor): anda pelo mundo com o seu boneco, junto com os jogadores. Personagens: cria bonecos, inclusive de NPCs.',
       'Mestre, Controle (durante a sessão): veja o mapa como os jogadores, troque de zona, enquadre o mapa inteiro, siga um jogador e mude hora, tempo e vento ao vivo pra todos, sem recarregar.',
+      'Mestre, Mundos (botão na barra de cima): cada mundo é um conjunto de zonas. "Abrir pros jogadores" coloca todos nele na hora; "Editar" leva o editor pra ele; o "+" cria um mundo novo.',
       'Mestre, Jogadores: veja o boneco de cada jogador, troque por outro (até um que você criou) ou apague pra ele criar de novo.',
     ],
   },

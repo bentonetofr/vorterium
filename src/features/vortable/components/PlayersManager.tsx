@@ -5,6 +5,7 @@ import {
   assignCharacter, createWorldStorage, deleteCharacter, listCampaignCharacters, watchCharacters, type CampaignCharacter,
 } from '../services/vortableService'
 import { useVortableNet } from '../net/VortableNetProvider'
+import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { CharacterFace } from './CharacterFace'
 
 /** Mestre: quem joga com qual boneco, troca, apaga e bonecos sem dono. */
@@ -14,24 +15,27 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const vnet = useVortableNet()
+  const { active } = useVortableWorlds()
   const [zones, setZones] = useState<{ id: string; name: string }[]>([])
 
   // zonas do mundo (pra levar um jogador até uma delas)
   useEffect(() => {
+    if (!active) return
     let dead = false
-    createWorldStorage(campaign.id, campaign.name)
+    createWorldStorage(campaign.id, active.id, active.name)
       .then((worlds) => worlds.list())
       .then((list) => { if (!dead) setZones(list.map((z) => ({ id: z.id, name: z.name }))) })
       .catch(() => {})
     return () => { dead = true }
-  }, [campaign.id, campaign.name])
+  }, [campaign.id, active?.id, active?.name])
 
   /** Leva o jogador (conectado) ao início de uma zona. */
   async function teleport(playerId: string, zoneId: string) {
     if (!zoneId) return
     setError(null)
     try {
-      const worlds = await createWorldStorage(campaign.id, campaign.name)
+      if (!active) throw new Error('Nenhum mundo aberto.')
+      const worlds = await createWorldStorage(campaign.id, active.id, active.name)
       const zone = await worlds.load(zoneId)
       if (!zone) throw new Error('Essa zona não existe mais.')
       vnet.net?.sendTo(playerId, { t: 'teleport', zone: zone.id, x: zone.spawn.x, y: zone.spawn.y })

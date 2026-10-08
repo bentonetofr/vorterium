@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
 import { createCharacterStorage, createWorldStorage, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
@@ -7,6 +7,7 @@ import { PlayersManager } from './PlayersManager'
 import { LiveControl } from './LiveControl'
 import { SceneBar } from './SceneBar'
 import { useVortableNet } from '../net/VortableNetProvider'
+import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 
 type Tab = 'editar' | 'controle' | 'personagens' | 'jogadores'
 
@@ -16,9 +17,13 @@ const LABELS: Record<Tab, string> = {
 }
 
 /** Mestre: editor do mundo, teste como boneco, criador de personagens e gerência dos jogadores. */
-export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
+export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: CampaignWithRole; userId: string; editSignal?: number }) {
   const [tab, setTab] = useState<Tab>('editar')
   const vnet = useVortableNet()
+  const { editing, ready } = useVortableWorlds()
+
+  // "Editar" num mundo (painel Mundos): vai pra aba do editor
+  useEffect(() => { if (editSignal > 0) setTab('editar') }, [editSignal])
   const tabDir = useTabDirection(TABS, tab)
   const { tabsRef, selectTab } = useStableTabPanels<Tab>(setTab)
 
@@ -42,13 +47,14 @@ export function MasterStage({ campaign, userId }: { campaign: CampaignWithRole; 
       <SceneBar campaignId={campaign.id} />
       </div>
 
-      {tab === 'editar' && (
+      {tab === 'editar' && !ready && <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>}
+      {tab === 'editar' && ready && editing && (
         <EngineStage
-          key="editar"
-          deps={[campaign.id, userId, vnet.net]}
+          key={`editar:${editing.id}`}
+          deps={[campaign.id, userId, vnet.net, editing.id]}
           mount={async (engine, host, isDead) => {
             const [worlds, characters] = await Promise.all([
-              createWorldStorage(campaign.id, campaign.name),
+              createWorldStorage(campaign.id, editing.id, editing.name),
               createCharacterStorage(campaign.id, userId),
             ])
             const appearance = await resolveAppearance(characters)

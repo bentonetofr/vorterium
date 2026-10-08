@@ -96,6 +96,7 @@ const expectedMigrations = [
   '20240191000000_tirar_raiz_mestre.sql',
   '20240192000000_vortable_base.sql',
   '20240193000000_vortable_controle.sql',
+  '20240194000000_vortable_mundos.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

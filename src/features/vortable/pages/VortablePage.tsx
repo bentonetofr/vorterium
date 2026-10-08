@@ -11,6 +11,8 @@ import { MasterStage } from '../components/MasterStage'
 import { PlayerStage } from '../components/PlayerStage'
 import { VortableTools } from '../components/VortableTools'
 import { VortableNetProvider, useVortableNet } from '../net/VortableNetProvider'
+import { VortableWorldProvider, useVortableWorlds } from '../worlds/VortableWorldProvider'
+import { WorldsPanel } from '../worlds/WorldsPanel'
 import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen } from '../fullscreen'
 import '../components/VortablePage.css'
 
@@ -25,9 +27,11 @@ export function VortablePage() {
         <CurrentCampaignProvider>
           {/* o mestre aqui avisa os jogadores e manda a cena (ver SceneBar) */}
           <MesaStreamProvider announce>
-            <VortableNetProvider>
-              <VortablePageContent />
-            </VortableNetProvider>
+            <VortableWorldProvider>
+              <VortableNetProvider>
+                <VortablePageContent />
+              </VortableNetProvider>
+            </VortableWorldProvider>
           </MesaStreamProvider>
         </CurrentCampaignProvider>
       </DiceRollerProvider>
@@ -43,6 +47,10 @@ function VortablePageContent() {
   const fullscreen = useIsFullscreen()
   const vnet = useVortableNet()
   const mesa = useMesaStream()
+  const { active, editing, error: worldsError } = useVortableWorlds()
+  const [showWorlds, setShowWorlds] = useState(false)
+  // o mestre escolheu "Editar" num mundo: o MasterStage vai pra aba do editor
+  const [editSignal, setEditSignal] = useState(0)
   const [campaign, setCampaign] = useState<CampaignWithRole | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,6 +85,11 @@ function VortablePageContent() {
         <button type="button" className="btn btn-ghost vortable-page__exit" onClick={exit}>← Sair</button>
         <span className="vortable-page__title">{campaign?.name ?? 'Vortable'}</span>
         {campaign?.role === 'master' && (
+          <button type="button" className={`btn btn-ghost vortable-page__worlds${showWorlds ? ' vortable-page__worlds--on' : ''}`} onClick={() => setShowWorlds((v) => !v)}>
+            Mundos{(editing ?? active) && <small> · {(editing ?? active)!.name}</small>}
+          </button>
+        )}
+        {campaign?.role === 'master' && (
           <button
             type="button"
             className={`btn ${mesa.live ? 'btn-danger' : 'btn-primary'} vortable-page__live`}
@@ -106,8 +119,16 @@ function VortablePageContent() {
 
       <main className="vortable-page__body">
         {error && <p className="vortable-msg vortable-msg--error" role="alert">{error}</p>}
+        {worldsError && !error && <p className="vortable-msg vortable-msg--error" role="alert">{worldsError} (a migration 20240194 já foi aplicada no Supabase?)</p>}
         {!error && !campaign && <div className="vortable-page__loading"><div className="spinner" /></div>}
-        {campaign && user && campaign.role === 'master' && <MasterStage campaign={campaign} userId={user.id} />}
+        {campaign && user && campaign.role === 'master' && <MasterStage campaign={campaign} userId={user.id} editSignal={editSignal} />}
+        {campaign?.role === 'master' && showWorlds && (
+          <WorldsPanel
+            campaignId={campaign.id}
+            onClose={() => setShowWorlds(false)}
+            onEdit={() => { setShowWorlds(false); setEditSignal((n) => n + 1) }}
+          />
+        )}
         {campaign && user && campaign.role === 'player' && (mesa.live
           ? <PlayerStage campaign={campaign} userId={user.id} />
           : (

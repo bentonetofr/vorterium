@@ -3,6 +3,7 @@ import type { CampaignWithRole } from '../../../shared/types'
 import type { WatchControls } from '../../../vendor/vortable/vortable'
 import { createWorldStorage, VORTABLE_ASSETS } from '../services/vortableService'
 import { useVortableNet } from '../net/VortableNetProvider'
+import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage, type Engine } from './EngineStage'
 import './LiveControl.css'
 
@@ -18,6 +19,8 @@ const HOUR_PRESETS: [string, number][] = [['Amanhecer', 6], ['Dia', 12], ['Entar
  */
 export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
   const vnet = useVortableNet()
+  // o controle mostra o mundo onde os jogadores estão
+  const { active, ready } = useVortableWorlds()
   const watch = useRef<WatchControls | null>(null)
   const engine = useRef<Engine | null>(null)
   const [zones, setZones] = useState<{ id: string; name: string }[]>([])
@@ -29,13 +32,14 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
 
   // lista de zonas do mundo
   useEffect(() => {
+    if (!active) return
     let dead = false
-    createWorldStorage(campaign.id, campaign.name)
+    createWorldStorage(campaign.id, active.id, active.name)
       .then((worlds) => worlds.list())
       .then((list) => { if (!dead) setZones(list.map((z) => ({ id: z.id, name: z.name }))) })
       .catch(() => {})
     return () => { dead = true }
-  }, [campaign.id, campaign.name])
+  }, [campaign.id, active?.id, active?.name])
 
   // quem está na sala e o ajuste atual: confere duas vezes por segundo
   useEffect(() => {
@@ -77,14 +81,19 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
   const elsewhere = peers.filter((p) => p.zone !== zoneId)
   const zoneName = (id: string | null) => zones.find((z) => z.id === id)?.name ?? 'outra zona'
 
+  if (!ready || !active) {
+    return <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>
+  }
+
   return (
     <div className="live">
       <div className="live__view">
         <EngineStage
-          deps={[campaign.id, userId, vnet.net]}
+          key={active.id}
+          deps={[campaign.id, userId, vnet.net, active.id]}
           mount={async (eng, host) => {
             engine.current = eng
-            const worlds = await createWorldStorage(campaign.id, campaign.name)
+            const worlds = await createWorldStorage(campaign.id, active.id, active.name)
             const net = vnet.net
             const game = eng.mountVortable(host, {
               mode: 'watch',

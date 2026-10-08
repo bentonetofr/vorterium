@@ -19,31 +19,138 @@ function fail(action: string, error: { message: string }): never {
   throw new Error(`Vortable: ${action} (${error.message})`)
 }
 
-export async function createWorldStorage(campaignId: string, campaignName: string): Promise<WorldStorage> {
+/** Um mundo da campanha (um conjunto de zonas). `active` = o mundo onde os jogadores estão. */
+export interface CampaignWorld {
+  id:        string
+  name:      string
+  active:    boolean
+  zones:     number
+  updatedAt: number
+}
+
+interface WorldRow { id: string; name: string; active: boolean; updated_at: string }
+
+/** Os mundos da campanha, com quantas zonas cada um tem. */
+export async function listWorlds(campaignId: string): Promise<CampaignWorld[]> {
+  const [worlds, zones] = await Promise.all([
+    supabase.from('vortable_worlds').select('id, name, active, updated_at').eq('campaign_id', campaignId),
+    supabase.from('vortable_zones').select('world_id').eq('campaign_id', campaignId),
+  ])
+  if (worlds.error) fail('não deu pra listar os mundos', worlds.error)
+  if (zones.error) fail('não deu pra contar as zonas', zones.error)
+  const count = new Map<string, number>()
+  for (const z of (zones.data ?? []) as { world_id: string | null }[]) {
+    if (z.world_id) count.set(z.world_id, (count.get(z.world_id) ?? 0) + 1)
+  }
+  return ((worlds.data ?? []) as WorldRow[])
+    .map((w) => ({ id: w.id, name: w.name, active: w.active, zones: count.get(w.id) ?? 0, updatedAt: Date.parse(w.updated_at) }))
+    .sort((a, b) => a.updatedAt - b.updatedAt)
+}
+
+/**
+ * Garante que a campanha tem pelo menos um mundo (as zonas antigas, sem mundo,
+ * entram nele) e que um deles está aberto. Devolve a lista já certa.
+ */
+export async function ensureWorlds(campaignId: string, isMaster: boolean): Promise<CampaignWorld[]> {
+  let list = await listWorlds(campaignId)
+  if (list.length === 0 && isMaster) {
+    const { newWorld } = await loadEngine()
+    await createWorld(campaignId, 'Mundo principal', newWorld)
+    const created = await listWorlds(campaignId)
+    // zonas salvas antes dos mundos existirem (sem world_id) passam pro primeiro
+    if (created[0]) {
+      await supabase.from('vortable_zones').update({ world_id: created[0].id }).eq('campaign_id', campaignId).is('world_id', null)
+      await setActiveWorld(campaignId, created[0].id)
+    }
+    list = await listWorlds(campaignId)
+  }
+  return list
+}
+
+/** Cria um mundo novo (vazio, fechado). */
+export async function createWorld(
+  campaignId: string, name: string, make?: (name: string) => WorldData,
+): Promise<CampaignWorld> {
+  const world = (make ?? (await loadEngine()).newWorld)(name)
+  const { error } = await supabase.from('vortable_worlds').insert({
+    campaign_id: campaignId, id: world.id, name, active: false, data: world,
+  })
+  if (error) fail('não deu pra criar o mundo', error)
+  return { id: world.id, name, active: false, zones: 0, updatedAt: Date.now() }
+}
+
+export async function renameWorld(campaignId: string, worldId: string, name: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('vortable_worlds').select('data').eq('campaign_id', campaignId).eq('id', worldId).maybeSingle()
+  if (error) fail('não deu pra renomear o mundo', error)
+  const update = await supabase
+    .from('vortable_worlds').update({ name, data: { ...((data?.data as object) ?? {}), name } })
+    .eq('campaign_id', campaignId).eq('id', worldId)
+  if (update.error) fail('não deu pra renomear o mundo', update.error)
+}
+
+/** Apaga o mundo e as zonas dele. */
+export async function deleteWorld(campaignId: string, worldId: string): Promise<void> {
+  const zones = await supabase.from('vortable_zones').delete().eq('campaign_id', campaignId).eq('world_id', worldId)
+  if (zones.error) fail('não deu pra apagar as zonas do mundo', zones.error)
+  const world = await supabase.from('vortable_worlds').delete().eq('campaign_id', campaignId).eq('id', worldId)
+  if (world.error) fail('não deu pra apagar o mundo', world.error)
+}
+
+/** Abre o mundo pros jogadores (só um fica aberto por vez). */
+export async function setActiveWorld(campaignId: string, worldId: string): Promise<void> {
+  // o índice único aceita um aberto só: fecha o atual antes de abrir o novo
+  const off = await supabase.from('vortable_worlds').update({ active: false }).eq('campaign_id', campaignId).eq('active', true)
+  if (off.error) fail('não deu pra abrir o mundo', off.error)
+  const on = await supabase.from('vortable_worlds').update({ active: true }).eq('campaign_id', campaignId).eq('id', worldId)
+  if (on.error) fail('não deu pra abrir o mundo', on.error)
+}
+
+/** O id do mundo aberto (ou o primeiro, se nenhum estiver). */
+export async function getActiveWorldId(campaignId: string): Promise<string | null> {
+  const list = await listWorlds(campaignId)
+  return (list.find((w) => w.active) ?? list[0])?.id ?? null
+}
+
+/** Chama `onChange` quando um mundo é criado, apagado ou aberto. */
+export function watchWorlds(campaignId: string, onChange: () => void): () => void {
+  const channel = supabase
+    .channel(uniqueChannel(`vortable-mundos:${campaignId}`))
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'vortable_worlds', filter: `campaign_id=eq.${campaignId}`,
+    }, onChange)
+    .subscribe()
+  return () => { void supabase.removeChannel(channel) }
+}
+
+/** O armazenamento de UM mundo: as zonas dele e os dados do mundo. */
+export async function createWorldStorage(campaignId: string, worldId: string, worldName: string): Promise<WorldStorage> {
   const { parseWorld, parseZone, newWorld, summarize } = await loadEngine()
+  const fresh = () => ({ ...newWorld(worldName), id: worldId })
 
   return {
     async loadWorld(): Promise<WorldData> {
       const { data, error } = await supabase
-        .from('vortable_worlds').select('data').eq('campaign_id', campaignId).maybeSingle()
+        .from('vortable_worlds').select('data').eq('campaign_id', campaignId).eq('id', worldId).maybeSingle()
       if (error) fail('não deu pra abrir o mundo', error)
-      if (!data) return newWorld(campaignName)
+      if (!data) return fresh()
       try {
         return parseWorld(data.data)
       } catch {
-        return newWorld(campaignName)
+        return fresh()
       }
     },
 
     async saveWorld(world) {
       const { error } = await supabase
-        .from('vortable_worlds').upsert({ campaign_id: campaignId, data: world })
+        .from('vortable_worlds').update({ data: { ...world, id: worldId } })
+        .eq('campaign_id', campaignId).eq('id', worldId)
       if (error) fail('não deu pra salvar o mundo', error)
     },
 
     async list(): Promise<ZoneSummary[]> {
       const { data, error } = await supabase
-        .from('vortable_zones').select('id, summary, updated_at').eq('campaign_id', campaignId)
+        .from('vortable_zones').select('id, summary, updated_at').eq('campaign_id', campaignId).eq('world_id', worldId)
       if (error) fail('não deu pra listar as zonas', error)
       return (data ?? [])
         .map((row) => ({
@@ -71,6 +178,7 @@ export async function createWorldStorage(campaignId: string, campaignName: strin
       const { error } = await supabase.from('vortable_zones').upsert({
         campaign_id: campaignId,
         id: zone.id,
+        world_id: worldId,
         name: zone.name,
         summary: summarize(zone),
         data: zone,
