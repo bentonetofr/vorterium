@@ -61,6 +61,12 @@ export declare class WorldScene extends Phaser.Scene {
     private npcs?;
     private netAt;
     private netSent;
+    /** Os "calços" dos NPCs parados (somem enquanto o mestre controla o NPC; mudam de lugar quando ele o larga). */
+    private npcSolids;
+    private solids?;
+    /** NPC que o mestre (câmera) controla agora, como se fosse um jogador. */
+    private npcCtl;
+    private hiddenNpcs;
     /** Quanto andou desde o último passo, e onde estava no quadro anterior. */
     constructor();
     init(data: WorldSceneData): void;
@@ -116,6 +122,37 @@ export declare class WorldScene extends Phaser.Scene {
     update(): void;
     /** Conta pra sala onde estou: ~10×/s, e só quando mudou (com um sinal de vida por segundo). */
     private publish;
+    private npcNoScroll;
+    /** NPCs parados desta zona (pra lista do mestre). */
+    watchNpcs(): {
+        id: string;
+        name: string;
+        role: string;
+    }[];
+    /** O NPC que o mestre controla agora (null = nenhum). */
+    controllingNpc(): string | null;
+    /**
+     * Câmera do mestre: passa a andar com este NPC (teclado, colisão e animação como um jogador).
+     * Os jogadores o veem andar. Não atravessa saídas: fica na zona.
+     */
+    controlNpc(id: string): Promise<boolean>;
+    /**
+     * Solta o NPC: ele fica onde está. Todos atualizam na hora; `persist` guarda o ponto na zona
+     * (pra quem entrar depois) e roda em segundo plano.
+     */
+    releaseNpc(persist?: (r: {
+        id: string;
+        zone: string;
+        x: number;
+        y: number;
+        dir: Dir;
+    }) => Promise<void>): Promise<void>;
+    /** O NPC parado passa pra este ponto (e o "calço" dele junto). */
+    private applyNpcMove;
+    /** Quem está sendo controlado pelo mestre some do lugar parado (e o "calço" dele deixa de barrar). */
+    private syncHiddenNpcs;
+    /** Conta pra sala onde o NPC controlado está (como um jogador de id `npc:<id>`). */
+    private publishNpc;
     private portalUnder;
     private travel;
     private toast;

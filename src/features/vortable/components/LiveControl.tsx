@@ -8,6 +8,7 @@ import { EngineStage, type Engine } from './EngineStage'
 import './LiveControl.css'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
+type Npc = ReturnType<WatchControls['npcs']>[number]
 type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null }
 
 const HOUR_PRESETS: [string, number][] = [['Amanhecer', 6], ['Dia', 12], ['Entardecer', 18.5], ['Noite', 22]]
@@ -28,6 +29,9 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
   const [peers, setPeers] = useState<Peer[]>([])
   const [scope, setScope] = useState<'all' | 'zone'>('all')
   const [following, setFollowing] = useState<string | null>(null)
+  // NPCs da zona e o que o mestre controla agora
+  const [npcs, setNpcs] = useState<Npc[]>([])
+  const [controlling, setControlling] = useState<string | null>(null)
   const [, tick] = useState(0)
 
   // lista de zonas do mundo
@@ -47,6 +51,8 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
       const w = watch.current
       if (!w) return
       setPeers(w.peers())
+      setNpcs(w.npcs())
+      setControlling(w.controllingNpc())
       tick((n) => n + 1)
     }, 500)
     return () => window.clearInterval(timer)
@@ -61,6 +67,17 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
     const now = w.envs().find((e) => e.zone === key) ?? { hour: null, weather: null, wind: null }
     w.setEnv({ zone: key, hour: now.hour, weather: now.weather, wind: now.wind, ...patch })
     tick((n) => n + 1)
+  }
+
+  /** Controlar um NPC como um jogador (clicar de novo, ou em outro, solta). */
+  async function control(id: string) {
+    const w = watch.current
+    if (!w) return
+    const now = w.controllingNpc()
+    if (now) await w.releaseNpc()
+    if (now !== id) await w.controlNpc(id)
+    setFollowing(null)
+    setControlling(w.controllingNpc())
   }
 
   function goTo(id: string) {
@@ -153,6 +170,22 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="live__block">
+          <h4>NPCs desta zona</h4>
+          {npcs.length === 0 && <p className="live__empty">Nenhum NPC aqui.</p>}
+          <ul className="live__players">
+            {npcs.map((n) => (
+              <li key={n.id}>
+                <button type="button" className={`live__player${controlling === n.id ? ' live__player--on' : ''}`} onClick={() => void control(n.id)}>
+                  <span>{n.name}</span>
+                  <small>{controlling === n.id ? 'controlando' : n.role || 'controlar'}</small>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {controlling && <p className="live__empty">Setas ou WASD andam, Shift corre. Clique de novo pra soltar.</p>}
         </section>
 
         <section className="live__block">

@@ -85,6 +85,18 @@ export interface WatchControls {
         x: number;
         y: number;
     }[];
+    /** NPCs parados da zona que a câmera está vendo. */
+    npcs(): {
+        id: string;
+        name: string;
+        role: string;
+    }[];
+    /** O NPC que o mestre controla agora (null = nenhum). */
+    controllingNpc(): string | null;
+    /** Passa a controlar este NPC como um jogador (teclado WASD/setas, Shift corre). false = não deu. */
+    controlNpc(id: string): Promise<boolean>;
+    /** Solta o NPC onde ele está: todos o veem parado ali, e o ponto fica guardado na zona. */
+    releaseNpc(): Promise<void>;
     /** Muda hora/tempo/vento ao vivo pra todos (zone '*' = todas as zonas; null = padrão da zona). */
     setEnv(env: {
         zone: string;

@@ -1,11 +1,27 @@
 import type { Appearance, Dir } from '../types';
 export type NetAnim = 'idle' | 'walk' | 'run';
+/**
+ * `npc`: NPC que o mestre está controlando (id `npc:<id do NPC>`). Aparece como um jogador, mas o NPC
+ * parado da zona some enquanto isso, e o nome só aparece se `showName`.
+ */
 export interface NetHello {
     t: 'hello';
     id: string;
     name: string;
     appearance: Appearance;
+    npc?: boolean;
+    showName?: boolean;
 }
+export interface NetNpcMove {
+    t: 'npcmove';
+    zone: string;
+    id: string;
+    x: number;
+    y: number;
+    dir: Dir;
+}
+/** Prefixo do id de um NPC controlado pelo mestre na rede. */
+export declare const NPC_PEER = "npc:";
 export interface NetState {
     t: 'state';
     id: string;
@@ -33,7 +49,7 @@ export interface NetReact {
     x: number;
     y: number;
 }
-export type NetMsg = NetEnv | NetReact | {
+export type NetMsg = NetEnv | NetNpcMove | NetReact | {
     t: 'zone';
     id: string;
 } | NetHello | {
@@ -71,6 +87,9 @@ export declare class NetHub {
     private zoneChanges;
     private teleports;
     private reactions;
+    private npcMoves;
+    /** NPCs que ESTE mestre está controlando agora (vistos pela sala como jogadores). */
+    private hosted;
     private hello;
     private asked;
     constructor(link: NetLink);
@@ -78,6 +97,17 @@ export declare class NetHub {
     announce(appearance: Appearance): void;
     /** Observador (a câmera do mestre): só pergunta quem está na sala, sem aparecer. */
     observe(): void;
+    /** Mestre: começa a controlar um NPC (a sala o vê como um jogador de id `npc:<id>`). */
+    hostNpc(npc: {
+        id: string;
+        name: string;
+        appearance: Appearance;
+        showName: boolean;
+    }): void;
+    /** Mestre: largou o NPC (some da sala como jogador). */
+    unhostNpc(peerId: string): void;
+    /** Mestre: o NPC largado fica neste ponto (todos atualizam o NPC parado da zona). */
+    moveNpc(m: Omit<NetNpcMove, 't'>): void;
     /** Mestre: muda hora/tempo/vento ao vivo (vale pra mim e pra sala). */
     setEnv(env: Omit<NetEnv, 't'>): void;
     /** O que vale numa zona: o ajuste dela, senão o de todas. */
@@ -93,6 +123,8 @@ export declare class NetHub {
     onRoster(fn: () => void): () => void;
     /** O mestre salvou uma zona (o jogo recarrega se for a que está aberta). */
     onZoneChanged(fn: (id: string) => void): () => void;
+    /** O mestre largou um NPC num ponto novo. */
+    onNpcMove(fn: (m: NetNpcMove) => void): () => void;
     /** Chegou uma reação (de um espectador) pra mostrar no mapa. */
     onReact(fn: (m: NetReact) => void): () => void;
     /** Manda uma reação (de espectador) no ponto dado; também aparece pra quem mandou. */

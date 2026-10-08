@@ -5,10 +5,14 @@ export declare class NpcLayer {
     private assetBase;
     private names;
     private items;
+    /** NPCs escondidos agora (o mestre está controlando: ele aparece como jogador). */
+    private hidden;
     /** `names`: 'near' mostra o nome de quem está perto do foco; 'always' sempre (editor). */
     constructor(scene: Phaser.Scene, assetBase: string, names?: 'near' | 'always');
     /** Sprites visíveis agora (pra sombra do sol e luzes). */
     get sprites(): Phaser.GameObjects.Sprite[];
+    /** Esconde (ou mostra de volta) os NPCs parados com estes ids. */
+    setHidden(ids: Set<string>): void;
     /** Põe a lista de NPCs da zona na cena (cria os novos, move os que mudaram, tira os que saíram). */
     set(npcs: ZoneNpc[]): void;
     private build;
