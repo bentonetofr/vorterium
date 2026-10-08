@@ -1,0 +1,58 @@
+/* Botão de entrar/sair do Vortable: redondo, 44px, centralizado em cima do dado (56px). */
+.vortable-fab {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--gilded);
+  color: var(--accent-bright);
+  cursor: var(--cursor-hand);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-base);
+}
+.vortable-fab:hover { color: var(--text-primary); border-color: var(--gilded-bright); transform: translateY(-2px); }
+.vortable-fab:active { transform: scale(0.9); transition-duration: 80ms; }
+
+/* sessão ao vivo: anel que pulsa e um ponto verde */
+.vortable-fab--live { box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.22), 0 6px 18px rgba(0, 0, 0, 0.3); animation: vortable-fab-pulse 2.4s ease-in-out infinite; }
+.vortable-fab__dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--success, #3fbf72);
+  border: 2px solid var(--bg-elevated);
+}
+@keyframes vortable-fab-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.18), 0 6px 18px rgba(0, 0, 0, 0.3); }
+  50% { box-shadow: 0 0 0 7px rgba(212, 175, 55, 0.05), 0 6px 18px rgba(0, 0, 0, 0.3); }
+}
+@media (prefers-reduced-motion: reduce) { .vortable-fab--live { animation: none; } }
+
+/* sair: o mesmo ícone com uma setinha de porta no canto */
+.vortable-fab__exit {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-inverse);
+  background: var(--accent);
+  border: 1px solid var(--gilded-bright);
+  border-radius: 50%;
+}
+
+@media (max-width: 480px) {
+  .vortable-fab { width: 38px; height: 38px; margin-right: 5px; }
+}

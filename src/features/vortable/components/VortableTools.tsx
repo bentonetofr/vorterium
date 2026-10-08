@@ -9,6 +9,7 @@ import { NotificationBell } from '../../activity/components/NotificationBell'
 import { NotificationPopup } from '../../activity/components/NotificationPopup'
 import { NotebookFab } from '../../notebook/components/NotebookFab'
 import { SheetFab } from './SheetFab'
+import { VortableFab } from './VortableFab'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { FabToasts } from '../../../shared/components/FabToasts'
 
@@ -57,6 +58,7 @@ export function VortableTools() {
           <NotificationPopup />
         </FabToasts>
         <NotificationBell />
+        <VortableFab mode="leave" />
         <SheetFab />
         <DiceFab />
         <ChatFab />
