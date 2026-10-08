@@ -6,6 +6,7 @@ export declare const ICONS: {
     select: string;
     portal: string;
     world: string;
+    ruler: string;
     npc: string;
     flip: string;
     person: string;
