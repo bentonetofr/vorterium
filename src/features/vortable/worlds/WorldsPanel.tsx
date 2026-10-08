@@ -1,9 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { CampaignWorld } from '../services/vortableService'
-import { createWorld, deleteWorld, renameWorld, setActiveWorld } from '../services/vortableService'
+import { createWorld, deleteWorld, importWorldBundle, renameWorld, setActiveWorld } from '../services/vortableService'
 import { useVortableWorlds } from './VortableWorldProvider'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import './WorldsPanel.css'
+
+/** Mundos prontos que vêm com o site (viram um mundo seu ao importar). */
+const TEMPLATES = [
+  { id: 'torvallen', label: 'TORVALLEN', text: 'Grande Biblioteca do palácio (1 zona)', url: `${import.meta.env.BASE_URL}vortable/maps/torvallen.mundo.json` },
+]
 
 interface WorldsPanelProps {
   campaignId: string
@@ -19,6 +24,7 @@ interface WorldsPanelProps {
 export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
   const { worlds, active, editing, setEditId, refresh } = useVortableWorlds()
   const mesa = useMesaStream()
+  const fileInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,6 +46,24 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
     if (!name) return
     void run('new', async () => {
       const world = await createWorld(campaignId, name.slice(0, 80))
+      setEditId(world.id)
+    })
+  }
+
+  async function importFile(file: File) {
+    await run('import', async () => {
+      let json: unknown
+      try { json = JSON.parse(await file.text()) } catch { throw new Error('O arquivo não é um JSON válido.') }
+      const world = await importWorldBundle(campaignId, json)
+      setEditId(world.id)
+    })
+  }
+
+  async function importTemplate(t: (typeof TEMPLATES)[number]) {
+    await run(`tpl:${t.id}`, async () => {
+      const res = await fetch(t.url)
+      if (!res.ok) throw new Error(`Não deu pra baixar o mundo pronto (${res.status}).`)
+      const world = await importWorldBundle(campaignId, await res.json())
       setEditId(world.id)
     })
   }
@@ -74,7 +98,23 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
     <div className="worlds" role="dialog" aria-label="Mundos">
       <header className="worlds__head">
         <h3 className="worlds__title">Mundos</h3>
-        <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
+        <div className="worlds__head-actions">
+          <button type="button" className="btn btn-ghost" onClick={() => fileInput.current?.click()} disabled={busy !== null}>
+            {busy === 'import' ? 'Importando…' : 'Importar mundo'}
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
+        </div>
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".json,application/json"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            if (file) void importFile(file)
+          }}
+        />
       </header>
       {error && <p className="worlds__error" role="alert">{error}</p>}
 
@@ -104,6 +144,19 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
           </button>
         </li>
       </ul>
+      <section className="worlds__templates">
+        <h4 className="worlds__sub">Mundos prontos</h4>
+        <ul className="worlds__tpl-list">
+          {TEMPLATES.map((t) => (
+            <li key={t.id} className="worlds__tpl">
+              <div><strong>{t.label}</strong><span>{t.text}</span></div>
+              <button type="button" className="btn btn-ghost" onClick={() => void importTemplate(t)} disabled={busy !== null}>
+                {busy === `tpl:${t.id}` ? 'Criando…' : 'Criar este mundo'}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
       {active && <p className="worlds__hint">Aberto agora: {active.name}</p>}
     </div>
   )

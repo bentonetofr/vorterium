@@ -89,6 +89,45 @@ export async function renameWorld(campaignId: string, worldId: string, name: str
   if (update.error) fail('não deu pra renomear o mundo', update.error)
 }
 
+/**
+ * Importa um mundo inteiro de um arquivo (`format: 'vortable-world'`): cria o mundo
+ * com as zonas dele. Zonas com id já usado na campanha ganham id novo (e as saídas
+ * que levam a elas são religadas), então importar duas vezes não sobrescreve nada.
+ */
+export async function importWorldBundle(campaignId: string, raw: unknown): Promise<CampaignWorld> {
+  const { parseZone, parseWorld } = await loadEngine()
+  const bundle = raw as { format?: unknown; world?: unknown; zones?: unknown } | null
+  if (!bundle || bundle.format !== 'vortable-world' || !Array.isArray(bundle.zones) || !bundle.world) {
+    throw new Error('Este arquivo não é um mundo do Vortable.')
+  }
+  const zones: ZoneData[] = bundle.zones.map((z) => parseZone(z))
+  if (zones.length === 0) throw new Error('O mundo do arquivo não tem nenhuma zona.')
+  const world = parseWorld(bundle.world)
+
+  const used = await supabase.from('vortable_zones').select('id').eq('campaign_id', campaignId)
+  if (used.error) fail('não deu pra conferir as zonas da campanha', used.error)
+  const taken = new Set((used.data ?? []).map((r) => r.id as string))
+
+  // ids novos onde já existe (e religa as saídas)
+  const remap = new Map<string, string>()
+  for (const z of zones) remap.set(z.id, taken.has(z.id) ? `${z.id}-${Date.now().toString(36)}` : z.id)
+  for (const z of zones) {
+    z.id = remap.get(z.id)!
+    for (const p of z.portals) if (p.to && remap.has(p.to.zone)) p.to = { ...p.to, zone: remap.get(p.to.zone)! }
+  }
+
+  const created = await createWorld(campaignId, world.name.slice(0, 80))
+  const storage = await createWorldStorage(campaignId, created.id, created.name)
+  for (const z of zones) await storage.save(z)
+  await storage.saveWorld({
+    ...world,
+    id: created.id,
+    start: (world.start && remap.get(world.start)) || zones[0].id,
+    layout: Object.fromEntries(Object.entries(world.layout).map(([id, pos]) => [remap.get(id) ?? id, pos])),
+  })
+  return { ...created, zones: zones.length }
+}
+
 /** Apaga o mundo e as zonas dele. */
 export async function deleteWorld(campaignId: string, worldId: string): Promise<void> {
   const zones = await supabase.from('vortable_zones').delete().eq('campaign_id', campaignId).eq('world_id', worldId)

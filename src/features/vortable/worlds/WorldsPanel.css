@@ -15,6 +15,7 @@
 }
 
 .worlds__head { display: flex; align-items: center; justify-content: space-between; }
+.worlds__head-actions { display: flex; gap: var(--space-2, 8px); }
 .worlds__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--accent-bright); }
 .worlds__error { margin: 0; color: var(--danger-bright); }
 .worlds__hint { margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
@@ -82,3 +83,28 @@
 }
 .world--new:hover:not(:disabled) { color: var(--accent-bright); border-color: var(--accent); }
 .world__plus { font-size: 44px; line-height: 1; }
+
+.worlds__templates { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
+.worlds__sub {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.worlds__tpl-list { display: flex; flex-direction: column; gap: var(--space-2, 8px); margin: 0; padding: 0; list-style: none; }
+.worlds__tpl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+}
+.worlds__tpl div { display: flex; flex-direction: column; }
+.worlds__tpl strong { font-family: var(--font-display); color: var(--text-primary); }
+.worlds__tpl span { color: var(--text-secondary); font-size: var(--text-sm); }
