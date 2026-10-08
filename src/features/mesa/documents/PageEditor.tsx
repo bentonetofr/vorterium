@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, us
 import { fontStack, loadBoardFont } from '../../../shared/lib/googleFonts'
 import { CARET_MARK, isBlankHtml, loadDocFonts, sanitizeDocHtml } from './docHtml'
 import { PaperFrame, textCss } from './DocViews'
-import { selectionOffsets, setSelectionOffsets } from './pageFlow'
+import { joinPages, selectionOffsets, setSelectionOffsets } from './pageFlow'
 import type { DocStyle } from './paperStyles'
 
 // ────────────────────────────────────────────────────────
@@ -280,8 +280,13 @@ export const PageEditor = forwardRef<PageEditorHandle, Props>(function PageEdito
             e.preventDefault()
             const rich = e.clipboardData.getData('text/html')
             const clean = rich ? sanitizeDocHtml(rich.replace(/<!--[\s\S]*?-->/g, '')) : ''
-            if (clean && !isBlankHtml(clean)) document.execCommand('insertHTML', false, clean)
-            else document.execCommand('insertText', false, e.clipboardData.getData('text/plain'))
+            const plain = e.clipboardData.getData('text/plain')
+            const payload = clean && !isBlankHtml(clean) ? clean : plainToHtml(plain)
+            // Texto grande: o navegador demora minutos pra inserir (e trava a tela); aqui entra de uma vez
+            // e o texto corre sozinho pelas páginas seguintes.
+            if (payload.length > BIG_PASTE && fastInsert(ref.current!, payload)) { emit('format'); return }
+            if (payload === clean) document.execCommand('insertHTML', false, clean)
+            else document.execCommand('insertText', false, plain)
             emit('format')
           }}
           onDrop={(e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault() }}
@@ -322,6 +327,53 @@ function withCaret(root: HTMLElement): string {
   if (at.nodeType === Node.TEXT_NODE) (at as Text).insertData(sel.focusOffset, CARET_MARK)
   else at.insertBefore(document.createTextNode(CARET_MARK), at.childNodes[sel.focusOffset] ?? null)
   return copy.innerHTML
+}
+
+/** A partir de quantas letras uma colagem é "grande" (insere direto no texto, sem o navegador). */
+const BIG_PASTE = 1500
+
+const escapeText = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/** Texto puro → um parágrafo (div) por linha; linha vazia vira um parágrafo em branco. */
+function plainToHtml(text: string): string {
+  const lines = text.replace(/\r\n?/g, '\n').replace(/\n$/, '').split('\n')
+  return lines.map((l) => (l ? `<div>${escapeText(l)}</div>` : '<div><br></div>')).join('')
+}
+
+/**
+ * Cola `html` (já limpo) no cursor sem o execCommand do navegador, que fica quadrático com
+ * muitas linhas. Parte a folha no cursor, emenda a primeira linha colada no parágrafo de antes
+ * e a última no de depois (como no Word) e deixa o cursor no fim do colado. false = não deu
+ * (sem cursor na folha, ou dentro de lista): quem chamou usa o jeito normal.
+ */
+function fastInsert(el: HTMLElement, html: string): boolean {
+  const first = window.getSelection()
+  if (!first?.rangeCount || !el.contains(first.anchorNode) || !el.contains(first.focusNode) || inList(el)) return false
+  ensureBlocks(el)
+  const sel = window.getSelection()
+  if (!sel?.rangeCount) return false
+  const r = sel.getRangeAt(0)
+  r.deleteContents()
+  const part = (from: Range) => { const d = document.createElement('div'); d.appendChild(from.cloneContents()); return d.innerHTML }
+  const before = document.createRange()
+  before.setStart(el, 0)
+  before.setEnd(r.startContainer, r.startOffset)
+  const after = document.createRange()
+  after.setStart(r.startContainer, r.startOffset)
+  after.setEnd(el, el.childNodes.length)
+  const paste = document.createElement('template')
+  paste.innerHTML = html
+  // a marca do cursor no fim do colado: o cursor volta pra ela
+  ;(paste.content.lastElementChild ?? paste.content).append(document.createTextNode(CARET_MARK))
+  const pasted = document.createElement('div')
+  pasted.appendChild(paste.content)
+  el.innerHTML = joinPages([
+    { html: part(before) },
+    { html: pasted.innerHTML, join: 1 },
+    { html: part(after), join: 1 },
+  ])
+  placeAtMark(el)
+  return true
 }
 
 /** Seleciona todo o texto da folha (com o foco nela). */

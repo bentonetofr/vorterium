@@ -202,7 +202,11 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
 
   /** Com todas as páginas selecionadas, Delete apaga o texto de todas (o Ctrl+Z traz de volta). */
   function clearAll() {
-    change((d) => { d.pages = d.pages.map((p) => ({ html: '', ...(p.style ? { style: p.style } : {}) })) }, 'format')
+    // as páginas que só existiam porque o texto corria até elas somem; as que o mestre criou ficam, em branco
+    change((d) => {
+      const kept = d.pages.filter((p) => !p.cont).map((p) => ({ html: '', ...(p.style ? { style: p.style } : {}) }))
+      d.pages = kept.length ? kept : [{ html: '' }]
+    }, 'format')
     setAllPages(false)
     setFull(false)
     lastMarked.current = CARET_MARK
