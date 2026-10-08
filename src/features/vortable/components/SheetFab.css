@@ -1,0 +1,54 @@
+/* Janela da ficha dentro do Vortable: cobre o lado esquerdo da tela. */
+
+.sheet-fab--open { background: var(--accent-bright); }
+
+.sheet-popup {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 400;
+  width: min(820px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border-base);
+  box-shadow: 16px 0 40px rgba(0, 0, 0, 0.5);
+  transform-origin: left center;
+}
+
+.sheet-popup__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.sheet-popup__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--accent-bright);
+}
+
+.sheet-popup__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-dim);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: var(--cursor-hand);
+}
+.sheet-popup__close:hover { color: var(--text-primary); border-color: var(--border-bright); }
+
+.sheet-popup__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
