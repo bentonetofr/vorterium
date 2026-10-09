@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
 import { useIsDeveloper } from '../dev/services/devService'
+import { Loader } from '../../shared/components/Loader'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -26,7 +27,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           background: 'var(--bg-base)',
         }}
       >
-        <div className="spinner" />
+        <Loader />
       </div>
     )
   }

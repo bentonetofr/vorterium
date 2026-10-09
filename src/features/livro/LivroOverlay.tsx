@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Loader } from '../../shared/components/Loader'
 import { gm, type LivroRoomRow } from './livroService'
 import { connectLivro, type LivroNet, type NetPeer } from './livroNet'
 import { LivroGameView } from './LivroGameView'
@@ -261,7 +262,7 @@ function TitleCard({ ready, error, role, onEnter }: { ready: boolean; error: str
       {role && <span className="lb-title-card__role">{role}</span>}
       {error
         ? <span className="lb-flash">{error}</span>
-        : <span className="lb-title-card__go">{ready ? 'Clique para entrar' : 'Abrindo…'}</span>}
+        : <span className="lb-title-card__go">{ready ? 'Clique para entrar' : <Loader small />}</span>}
     </button>
   )
 }

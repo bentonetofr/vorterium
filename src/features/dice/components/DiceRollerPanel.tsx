@@ -12,6 +12,7 @@ import { getCampaignMembers } from '../../members/services/memberService'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import type { DiceRoll, DiceRollWithProfile } from '../../../shared/types'
 import './DiceRollerPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -334,8 +335,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
 
         {histLoading && (
           <div className="dice-history__loading">
-            <div className="spinner spinner--sm" />
-            <span>Carregando...</span>
+            <Loader small />
           </div>
         )}
 

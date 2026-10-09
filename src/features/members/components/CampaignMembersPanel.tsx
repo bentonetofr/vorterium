@@ -19,6 +19,7 @@ import type { CampaignMemberWithProfile } from '../../../shared/types'
 import { formatRole } from '../../../shared/utils/campaign'
 import { Collapse } from '../../../shared/components/Collapse'
 import './CampaignMembersPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 interface MemberPresence {
   member:     CampaignMemberWithProfile
@@ -274,8 +275,7 @@ function MembersPresenceCard({ campaignId }: { campaignId: string }) {
 
       {loading ? (
         <div className="members-block__loading">
-          <div className="spinner spinner--sm" />
-          <span>Carregando...</span>
+          <Loader small />
         </div>
       ) : presenceList.length > 0 ? (
         <ul className="members-presence-list" role="list">
@@ -390,8 +390,7 @@ function InviteCard({ campaignId }: { campaignId: string }) {
 
       {initLoading ? (
         <div className="members-block__loading">
-          <div className="spinner spinner--sm" />
-          <span>Carregando...</span>
+          <Loader small />
         </div>
       ) : !inviteUrl ? (
         <button
@@ -598,8 +597,7 @@ export function CampaignMembersPanel({
       {/* ── Lista de membros ── */}
       {loading ? (
         <div className="members-panel__state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando membros...</span>
+          <Loader small />
         </div>
       ) : listError ? (
         <div className="members-panel__feedback members-panel__feedback--error" role="alert">

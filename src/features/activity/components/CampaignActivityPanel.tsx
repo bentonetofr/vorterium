@@ -14,6 +14,7 @@ import { changeRank, describeChange, type RawSheetChange, type SheetChangeLine }
 import { Select } from '../../../shared/components/Select'
 import type { CampaignActivity, CampaignMemberWithProfile, CampaignPresenceRecord } from '../../../shared/types'
 import './CampaignActivityPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Aba Atividade. O mestre vê também as mudanças detalhadas das fichas
@@ -220,8 +221,7 @@ export function CampaignActivityPanel({ campaignId, userRole }: CampaignActivity
 
       {loading ? (
         <div className="act-state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando atividade...</span>
+          <Loader small />
         </div>
       ) : error ? (
         <div className="act-state act-state--error" role="alert">{error}</div>

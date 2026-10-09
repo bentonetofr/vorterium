@@ -9,6 +9,7 @@ import { DocumentEditor } from './DocumentEditor'
 import { BookCover, DocumentView, PaperPage } from './DocViews'
 import { pageSeed, pageStyle } from './paperStyles'
 import './Documents.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Documentos (aba Mesa): cartas e livros que o mestre escreve em papel
@@ -83,7 +84,7 @@ export function MesaDocuments({ campaignId }: { campaignId: string }) {
       {error && <p className="mesa-msg mesa-msg--error" role="alert">{error}</p>}
 
       {loading ? (
-        <div className="mesa-gallery__state"><div className="spinner spinner--sm" /> Carregando…</div>
+        <div className="mesa-gallery__state"><Loader small /></div>
       ) : visibleDocs.length === 0 ? (
         <p className="mesa-gallery__empty">{isMaster ? 'Nenhum documento ainda. Crie uma folha ou um livro.' : 'O mestre ainda não entregou nenhum documento.'}</p>
       ) : (
@@ -213,7 +214,7 @@ export function DocumentStage({ campaignId, docId, page }: { campaignId: string;
   }, [campaignId, docId])
 
   if (!doc) {
-    return <div className="mesa-doc-stage"><p className="mesa-gallery__empty">{missing ? 'Documento indisponível.' : 'Abrindo o documento…'}</p></div>
+    return <div className="mesa-doc-stage"><p className="mesa-gallery__empty">{missing ? 'Documento indisponível.' : <Loader />}</p></div>
   }
   return (
     <div className="mesa-doc-stage" onClick={(e) => e.stopPropagation()}>

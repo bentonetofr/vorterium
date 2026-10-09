@@ -2,6 +2,7 @@ import { memo, useLayoutEffect, useRef, type CSSProperties } from 'react'
 import type { BoardItem } from '../services/boardService'
 import { connectorCurve, inkColor, OUTLINE, type Point } from '../boardGeometry'
 import { alignOf, fontStack, useBoardFont } from '../boardFonts'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Desenho de cada item do Quadro (no "mundo": posição e tamanho em
@@ -259,7 +260,7 @@ function ImageView({ item, imageUrl }: ItemViewProps) {
     <div className={`board-item board-image${item.locked ? ' is-locked' : ''}`} data-board-id={item.id} style={box(item)}>
       {imageUrl
         ? <img src={imageUrl} alt={item.data.name ?? ''} draggable={false} />
-        : <span className="board-image__missing">{imageUrl === null ? 'Imagem indisponível' : 'Carregando…'}</span>}
+        : <span className="board-image__missing">{imageUrl === null ? 'Imagem indisponível' : <Loader small />}</span>}
     </div>
   )
 }

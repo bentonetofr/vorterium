@@ -13,6 +13,7 @@ import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import './SceneBar.css'
 import './VortablePip.css'
+import { Loader } from '../../../shared/components/Loader'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 
@@ -125,7 +126,7 @@ function PipWindow({ campaign }: { campaign: CampaignWithRole }) {
       <div className="vortable-pip__body" hidden={collapsed}>
         <div className="vortable-pip__view">
           {!ready || !active ? (
-            <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>
+            <div className="vortable-stage"><div className="vortable-stage__cover"><Loader /></div></div>
           ) : (
             <EngineStage
               key={active.id}

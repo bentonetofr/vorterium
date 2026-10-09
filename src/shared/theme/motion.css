@@ -304,4 +304,6 @@
     scroll-behavior: auto !important;
   }
   .spinner { animation: spin 1.2s linear infinite !important; }
+  .loader__run { animation: loader-orbit 3.8s linear infinite !important; }
+  .loader__knight { animation: none !important; }
 }

@@ -16,6 +16,7 @@ import { WorldsPanel } from '../worlds/WorldsPanel'
 import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen } from '../fullscreen'
 import { closePip } from '../pip/pipStore'
 import '../components/VortablePage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 /**
  * O Vortable ocupando o navegador todo (fora do layout do site), com os
@@ -124,7 +125,7 @@ function VortablePageContent() {
       <main className="vortable-page__body">
         {error && <p className="vortable-msg vortable-msg--error" role="alert">{error}</p>}
         {worldsError && !error && <p className="vortable-msg vortable-msg--error" role="alert">{worldsError} (a migration 20240194 já foi aplicada no Supabase?)</p>}
-        {!error && !campaign && <div className="vortable-page__loading"><div className="spinner" /></div>}
+        {!error && !campaign && <div className="vortable-page__loading"><Loader /></div>}
         {campaign && user && campaign.role === 'master' && <MasterStage campaign={campaign} userId={user.id} editSignal={editSignal} />}
         {campaign?.role === 'master' && showWorlds && (
           <WorldsPanel
@@ -137,7 +138,7 @@ function VortablePageContent() {
           ? <PlayerStage campaign={campaign} userId={user.id} />
           : (
             <div className="vortable-page__wait" role="status">
-              <div className="spinner" />
+              <Loader />
               <p>Aguardando o mestre liberar o Vortable…</p>
               <button type="button" className="btn btn-ghost" onClick={exit}>Voltar à Mesa</button>
             </div>

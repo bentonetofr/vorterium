@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../../shared/lib/supabase'
 import { processPendingInvite } from '../../invites/services/inviteService'
+import { Loader } from '../../../shared/components/Loader'
 
 /**
  * Rota: /auth/callback
@@ -82,7 +83,7 @@ export function AuthCallbackPage() {
         padding: 'var(--space-8)',
       }}
     >
-      <div className="spinner" />
+      <Loader />
       <p
         style={{
           fontFamily: 'var(--font-display)',

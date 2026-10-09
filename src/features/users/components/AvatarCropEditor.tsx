@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import './AvatarCropEditor.css'
+import { Loader } from '../../../shared/components/Loader'
 
 const PREVIEW_SIZE = 240
 const OUTPUT_SIZE = 512
@@ -143,7 +144,7 @@ export function AvatarCropEditor({
         </div>
 
         <div className="avatar-crop-editor__preview-wrap">
-          {loading && <span className="spinner" />}
+          {loading && <Loader />}
           <canvas
             ref={canvasRef}
             width={PREVIEW_SIZE}

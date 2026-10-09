@@ -16,6 +16,7 @@ import { Select } from '../../../shared/components/Select'
 import type { CampaignWithRole, PersonalCreature } from '../../../shared/types'
 import '../../../shared/theme/toolPage.css'
 import './MyBestiaryPage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Meu bestiário — criaturas da pessoa, fora das campanhas. Entram por
@@ -106,7 +107,7 @@ export function MyBestiaryPage() {
       {notice && <p className="tool-page__notice" role="status">{notice}</p>}
 
       {loading ? (
-        <div className="tool-page__state"><div className="spinner spinner--sm" /> Carregando…</div>
+        <div className="tool-page__state"><Loader small /></div>
       ) : error ? (
         <p className="tool-page__error" role="alert">{error}</p>
       ) : creatures.length === 0 ? (

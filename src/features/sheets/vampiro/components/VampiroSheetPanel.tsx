@@ -16,6 +16,7 @@ import { clampTrack, healthMax, ordinal, trackState, willpowerMax } from '../uti
 import type { VtmSheet, VtmSheetWithProfile } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
 import './VampiroSheet.css'
+import { Loader } from '../../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Ficha de Vampiro na campanha: o jogador vê e edita a sua; o mestre vê
@@ -134,7 +135,7 @@ function PlayerView({ campaignId }: { campaignId: string }) {
   }, [campaignId])
 
   if (loading) {
-    return <div className="sheet-loading"><div className="spinner spinner--sm" /><span>Carregando ficha...</span></div>
+    return <div className="sheet-loading"><Loader small /></div>
   }
   if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
   if (!sheet) return null
@@ -183,7 +184,7 @@ function MasterView({ campaignId }: { campaignId: string }) {
   }
 
   if (loading) {
-    return <div className="sheet-loading"><div className="spinner spinner--sm" /><span>Carregando fichas...</span></div>
+    return <div className="sheet-loading"><Loader small /></div>
   }
   if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
   if (sheets.length === 0) return <p className="sheet-empty">Nenhum jogador criou ficha de Vampiro ainda.</p>

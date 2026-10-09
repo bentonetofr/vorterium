@@ -8,6 +8,7 @@ import {
 } from '../services/activityService'
 import { Select } from '../../../shared/components/Select'
 import './GlobalActivityPage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 export function GlobalActivityPage() {
   const navigate = useNavigate()
@@ -92,8 +93,7 @@ export function GlobalActivityPage() {
       {/* ── Loading ── */}
       {loading && (
         <div className="gact-state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando atividades...</span>
+          <Loader small />
         </div>
       )}
 

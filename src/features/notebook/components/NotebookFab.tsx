@@ -28,6 +28,7 @@ import { NoteImages } from './NoteImages'
 import { EmojiPickerButton } from '../../../shared/components/EmojiPicker'
 import { NoteFormatBar } from './NoteFormatBar'
 import './Notebook.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Caderno do jogador — bolinha à esquerda do chat, só pra quem tem caderno
@@ -353,7 +354,7 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
       </div>
 
       {loading ? (
-        <div className="notebook-panel__loading"><div className="spinner spinner--sm" /></div>
+        <div className="notebook-panel__loading"><Loader small /></div>
       ) : (
         <>
           <div className="notebook-panel__bar">

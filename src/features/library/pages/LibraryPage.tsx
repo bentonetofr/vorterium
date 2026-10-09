@@ -22,6 +22,7 @@ import { getSystemEntry, getSystemLabel, type CampaignSystem } from '../../../sh
 import type { CampaignWithRole } from '../../../shared/types'
 import '../../../shared/theme/toolPage.css'
 import './LibraryPage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Biblioteca — uma estante (card em forma de livro) por campanha, mais a
@@ -140,7 +141,7 @@ export function LibraryPage() {
 
   let content: ReactNode
   if (loading) {
-    content = <div className="tool-page__state"><div className="spinner spinner--sm" /> Tirando o pó das estantes…</div>
+    content = <div className="tool-page__state"><Loader small /></div>
   } else if (error) {
     content = <p className="tool-page__error" role="alert">{error}</p>
   } else if (shelf && item) {
@@ -564,7 +565,7 @@ function DocumentBody({ doc, isMaster, onChanged, onDeleted }: DocumentBodyProps
   if (error) {
     body = <p className="tool-page__error" role="alert">{error}</p>
   } else if (!url || (kind === 'text' && text == null)) {
-    body = <div className="tool-page__state"><div className="spinner spinner--sm" /> Abrindo…</div>
+    body = <div className="tool-page__state"><Loader small /></div>
   } else if (kind === 'image') {
     body = <div className="doc-viewer__image"><img src={url} alt={doc.name} /></div>
   } else if (kind === 'text') {

@@ -9,6 +9,7 @@ import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import './SceneBar.css'
 import './SpectatorStage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Camera = 'seguir' | 'mestre' | 'livre'
@@ -106,7 +107,7 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
   }
 
   if (!ready || !active) {
-    return <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>
+    return <div className="vortable-stage"><div className="vortable-stage__cover"><Loader /></div></div>
   }
 
   const followed = inGame.find((p) => p.id === followId)

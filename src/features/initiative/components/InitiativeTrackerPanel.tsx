@@ -19,6 +19,7 @@ import { Select } from '../../../shared/components/Select'
 import type { AltheriumCreature, InitiativeParticipant, InitiativeState } from '../../../shared/types'
 import type { CampaignSystem } from '../../../shared/constants/systems'
 import './InitiativeTrackerPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 interface InitiativeTrackerPanelProps {
   campaignId:     string
@@ -236,8 +237,7 @@ export function InitiativeTrackerPanel({ campaignId, currentUserId, userRole, ca
   if (loading) {
     return (
       <div className="initiative-panel__state">
-        <div className="spinner spinner--sm" />
-        <span>Carregando combate...</span>
+        <Loader small />
       </div>
     )
   }

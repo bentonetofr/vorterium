@@ -13,6 +13,7 @@ import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import { Presence } from '../../../shared/components/Presence'
 import { Select } from '../../../shared/components/Select'
 import './CampaignSessionsPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -468,8 +469,7 @@ export function CampaignSessionsPanel({
       {/* ── Lista ── */}
       {loading ? (
         <div className="sessions-panel__state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando sessões...</span>
+          <Loader small />
         </div>
       ) : listError ? (
         <div className="sessions-panel__feedback sessions-panel__feedback--error" role="alert">

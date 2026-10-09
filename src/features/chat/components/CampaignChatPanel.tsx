@@ -17,6 +17,7 @@ import { getCampaignMembers } from '../../members/services/memberService'
 import { useActiveChat } from '../ActiveChatContext'
 import type { CampaignMemberWithProfile } from '../../../shared/types'
 import './CampaignChatPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -532,14 +533,13 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole, compact
         <div className="chat-panel__list" ref={listRef} onScroll={handleScroll}>
           {loadingMore && (
             <div className="chat-panel__loading-more">
-              <div className="spinner spinner--sm" />
+              <Loader small />
             </div>
           )}
 
           {loading && (
             <div className="chat-panel__state">
-              <div className="spinner spinner--sm" />
-              <span>Carregando mensagens...</span>
+              <Loader small />
             </div>
           )}
 

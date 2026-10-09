@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import type { DevRecord } from '../services/devService'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Peças do painel do desenvolvedor: carregamento, erro, tabela de
@@ -31,7 +32,7 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
 }
 
 export function DevState({ loading, error, children }: { loading: boolean; error: string | null; children: ReactNode }) {
-  if (loading) return <div className="dev-state"><div className="spinner spinner--sm" /> carregando…</div>
+  if (loading) return <div className="dev-state"><Loader small /></div>
   if (error) return <p className="dev-error" role="alert">{error}</p>
   return <>{children}</>
 }

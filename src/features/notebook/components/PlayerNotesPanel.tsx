@@ -17,6 +17,7 @@ import { noteToHtml, notePlainText } from '../noteHtml'
 import { QuillIcon } from './NotebookFab'
 import { NoteImages } from './NoteImages'
 import './Notebook.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Seção do mestre: as anotações dos jogadores com caderno (hoje, a Bruna),
@@ -123,7 +124,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
       {error && <p className="player-notes__error" role="alert">{error}</p>}
 
       {loading ? (
-        <div className="notebook-panel__loading"><div className="spinner spinner--sm" /></div>
+        <div className="notebook-panel__loading"><Loader small /></div>
       ) : groups.length === 0 ? (
         <div className="player-notes__empty">
           <QuillIcon size={28} />

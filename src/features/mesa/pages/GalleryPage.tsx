@@ -16,6 +16,7 @@ import { getSystemLabel } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
 import '../../../shared/theme/toolPage.css'
 import './GalleryPage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Galeria — um mural com um card por campanha (pilha de polaroides que se
@@ -100,7 +101,7 @@ export function GalleryPage() {
       </div>
 
       {loading ? (
-        <div className="tool-page__state"><div className="spinner spinner--sm" /> Abrindo os álbuns…</div>
+        <div className="tool-page__state"><Loader small /></div>
       ) : error ? (
         <p className="tool-page__error" role="alert">{error}</p>
       ) : campaigns.length === 0 ? (

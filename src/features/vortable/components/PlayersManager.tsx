@@ -9,6 +9,7 @@ import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { CharacterFace } from './CharacterFace'
+import { Loader } from '../../../shared/components/Loader'
 
 /** Mestre: quem joga com qual boneco, troca, apaga e bonecos sem dono. */
 export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
@@ -102,7 +103,7 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
   if (!players) {
     return error
       ? <p className="vortable-msg vortable-msg--error" role="alert">{error}</p>
-      : <div className="vortable-stage__cover vortable-players__loading"><div className="spinner" /></div>
+      : <div className="vortable-stage__cover vortable-players__loading"><Loader /></div>
   }
 
   const controlledBy = (id: string) => characters.find((c) => c.controllerId === id) ?? null

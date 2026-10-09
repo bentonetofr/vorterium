@@ -6,6 +6,7 @@ import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../.
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
 import './CampaignPages.css'
+import { Loader } from '../../../shared/components/Loader'
 
 export function CampaignsPage() {
   const { user } = useAuth()
@@ -51,8 +52,7 @@ export function CampaignsPage() {
 
       {loading && (
         <div className="page__loading animate-fade-in">
-          <div className="spinner" />
-          <span>Carregando campanhas...</span>
+          <Loader />
         </div>
       )}
 

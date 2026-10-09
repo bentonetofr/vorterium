@@ -36,6 +36,7 @@ import type {
 } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
 import './AltheriumSheet.css'
+import { Loader } from '../../../../shared/components/Loader'
 
 interface AltheriumSheetPanelProps {
   campaignId: string
@@ -294,8 +295,7 @@ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
   if (loading) {
     return (
       <div className="sheet-loading">
-        <div className="spinner spinner--sm" />
-        <span>Carregando ficha...</span>
+        <Loader small />
       </div>
     )
   }
@@ -359,8 +359,7 @@ function MasterAltheriumView({ campaignId }: { campaignId: string }) {
   if (loading) {
     return (
       <div className="sheet-loading">
-        <div className="spinner spinner--sm" />
-        <span>Carregando fichas...</span>
+        <Loader small />
       </div>
     )
   }

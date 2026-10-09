@@ -10,6 +10,7 @@ import { CampaignSheetsList } from './CampaignSheetsList'
 import { NpcSection } from './NpcSection'
 import type { CharacterSheet } from '../../../shared/types'
 import './SheetPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -128,8 +129,7 @@ function PlayerSheetView({ campaignId, onSheetChange }: PlayerSheetViewProps) {
   if (loading) {
     return (
       <div className="sheet-loading">
-        <div className="spinner spinner--sm" />
-        <span>Carregando ficha...</span>
+        <Loader small />
       </div>
     )
   }

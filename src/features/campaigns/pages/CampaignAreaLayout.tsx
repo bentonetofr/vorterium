@@ -19,6 +19,7 @@ import { SessionTablePanel }      from '../components/SessionTablePanel'
 import { PlayerNotesPanel }       from '../../notebook/components/PlayerNotesPanel'
 import { BoardPanel }             from '../../board/components/BoardPanel'
 import './CampaignPages.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Componente
@@ -134,8 +135,7 @@ export function CampaignAreaLayout() {
     return (
       <div className="page">
         <div className="page__loading animate-fade-in">
-          <div className="spinner" />
-          <span>Carregando campanha...</span>
+          <Loader />
         </div>
       </div>
     )

@@ -26,6 +26,7 @@ import {
 } from './services/dndSheetService'
 import { formatModifier, getAbilityModifier } from './utils/dndCalculations'
 import { Select } from '../../../shared/components/Select'
+import { Loader } from '../../../shared/components/Loader'
 
 const SPELL_LEVEL_OPTIONS = Array.from({ length: 10 }, (_, level) => ({
   value: String(level),
@@ -52,7 +53,7 @@ function metadataText(entry: DndRuleCatalogEntry, key: string): string {
 }
 
 function CatalogStatus({ loading, count }: { loading: boolean; count: number }) {
-  if (loading) return <span className="dnd-catalog-status">Carregando catálogo…</span>
+  if (loading) return <span className="dnd-catalog-status"><Loader small /></span>
   if (!count) return <span className="dnd-catalog-status">Catálogo não aplicado no Supabase</span>
   return <span className="dnd-catalog-status">{count} opções do livro</span>
 }

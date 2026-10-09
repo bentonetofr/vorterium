@@ -7,6 +7,7 @@ import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage, type Engine } from './EngineStage'
 import { SoundPanel } from './SoundPanel'
 import './LiveControl.css'
+import { Loader } from '../../../shared/components/Loader'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
@@ -141,7 +142,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const zoneName = (id: string | null) => zones.find((z) => z.id === id)?.name ?? 'outra zona'
 
   if (!ready || !active) {
-    return <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>
+    return <div className="vortable-stage"><div className="vortable-stage__cover"><Loader /></div></div>
   }
 
   return (

@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { SITE_FEATURES, setFeature, useIsSiteOwner, useSiteFeatures, type FeatureContext, type SiteFeature } from './siteFeatures'
 import './ControlFab.css'
+import { Loader } from '../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Painel de controle do dono do site: o livro vinho em cima do sino. Só
@@ -66,7 +67,7 @@ export function ControlFab() {
 
 function ControlList() {
   const { loaded, rows } = useSiteFeatures()
-  if (!loaded) return <div className="control-panel__state"><div className="spinner spinner--sm" /> Carregando…</div>
+  if (!loaded) return <div className="control-panel__state"><Loader small /></div>
   if (SITE_FEATURES.length === 0) {
     return (
       <div className="control-panel__state control-panel__state--empty">

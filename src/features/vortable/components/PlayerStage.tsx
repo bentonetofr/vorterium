@@ -13,6 +13,7 @@ import { SpectatorStage } from './SpectatorStage'
 import { getResume, patchResume } from '../resume/resumeStore'
 import './SceneBar.css'
 import './SpectatorStage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 /**
  * Jogador: só a tela do jogo, com o boneco dele. Sem boneco ainda (a
@@ -79,7 +80,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   if (mine === undefined) {
     return (
       <div className="vortable-stage"><div className="vortable-stage__cover">
-        <div className="spinner" /><span>Carregando o mundo...</span>
+        <Loader />
       </div></div>
     )
   }
@@ -116,7 +117,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   if (!ready || !active) {
     return (
       <div className="vortable-stage"><div className="vortable-stage__cover">
-        {ready ? <span>O mestre ainda não abriu nenhum mundo.</span> : <><div className="spinner" /><span>Carregando o mundo...</span></>}
+        {ready ? <span>O mestre ainda não abriu nenhum mundo.</span> : <Loader />}
       </div></div>
     )
   }

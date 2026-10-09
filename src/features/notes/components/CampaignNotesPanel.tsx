@@ -9,6 +9,7 @@ import {
 import type { CampaignNote } from '../../../shared/types'
 import { Collapse } from '../../../shared/components/Collapse'
 import './CampaignNotesPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -340,8 +341,7 @@ export function CampaignNotesPanel({
       {/* ── Loading ── */}
       {loading && (
         <div className="notes-panel__state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando notas...</span>
+          <Loader small />
         </div>
       )}
 

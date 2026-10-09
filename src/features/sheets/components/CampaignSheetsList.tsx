@@ -7,6 +7,7 @@ import {
 } from '../services/sheetService'
 import { SimpleSheetForm } from './SimpleSheetForm'
 import type { SheetWithProfile } from '../../../shared/types'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -73,8 +74,7 @@ export function CampaignSheetsList({ campaignId }: CampaignSheetsListProps) {
   if (loading) {
     return (
       <div className="sheet-loading">
-        <div className="spinner spinner--sm" />
-        <span>Carregando fichas...</span>
+        <Loader small />
       </div>
     )
   }

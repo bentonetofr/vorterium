@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useIsDeveloper } from './services/devService'
+import { Loader } from '../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Guarda do painel /dev: sem sessão → login de dev; conta comum → aviso
@@ -13,7 +14,7 @@ export function DevRoute({ children }: { children: ReactNode }) {
   const isDev = useIsDeveloper(user?.id)
 
   if (loading || (session && isDev === undefined)) {
-    return <div className="dev-gate"><div className="spinner" /></div>
+    return <div className="dev-gate"><Loader /></div>
   }
   if (!session) return <Navigate to="/dev/entrar" replace />
   if (!isDev) {

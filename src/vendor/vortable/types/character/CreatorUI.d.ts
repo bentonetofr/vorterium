@@ -39,6 +39,8 @@ export declare class CreatorUI {
     private slotsEl;
     private optionsEl;
     private statusEl;
+    /** O cavaleiro correndo, por cima do criador enquanto o catálogo carrega. */
+    private loading?;
     private animButtons;
     private thumbObserver;
     private baseThumb;

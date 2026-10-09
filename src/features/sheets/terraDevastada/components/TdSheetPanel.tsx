@@ -13,6 +13,7 @@ import { horrorBand } from '../utils/tdRules'
 import type { TdSheet, TdSheetWithProfile } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
 import './TerraDevastadaSheet.css'
+import { Loader } from '../../../../shared/components/Loader'
 
 interface TdSheetPanelProps {
   campaignId: string
@@ -103,8 +104,7 @@ function PlayerView({ campaignId }: { campaignId: string }) {
   if (loading) {
     return (
       <div className="sheet-loading">
-        <div className="spinner spinner--sm" />
-        <span>Carregando ficha...</span>
+        <Loader small />
       </div>
     )
   }
@@ -158,8 +158,7 @@ function MasterView({ campaignId }: { campaignId: string }) {
   if (loading) {
     return (
       <div className="sheet-loading">
-        <div className="spinner spinner--sm" />
-        <span>Carregando fichas...</span>
+        <Loader small />
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadEngine } from '../services/vortableService'
 import './VortableMesa.css'
+import { Loader } from '../../../shared/components/Loader'
 
 export type Engine = Awaited<ReturnType<typeof loadEngine>>
 
@@ -58,8 +59,7 @@ export function EngineStage({ mount, deps, scroll }: EngineStageProps) {
       <div ref={host} className="vortable-stage__host" />
       {status === 'loading' && (
         <div className="vortable-stage__cover">
-          <div className="spinner" />
-          <span>Carregando o mundo...</span>
+          <Loader />
         </div>
       )}
       {status === 'error' && (

@@ -22,6 +22,7 @@ import {
 import { BoardFontPanel } from './BoardFontPanel'
 import { ALIGN_KINDS, FONT_KINDS } from '../boardFonts'
 import './Board.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Quadro da campanha — um quadro infinito no estilo do Miro, que a mesa
@@ -1535,7 +1536,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         }}
       >
         {loading ? (
-          <div className="board-loading"><span className="spinner spinner--sm" /> Abrindo o quadro…</div>
+          <div className="board-loading"><Loader small /></div>
         ) : (<>
         {snapOn.current && dragRef.current?.type === 'move' && (
           <div

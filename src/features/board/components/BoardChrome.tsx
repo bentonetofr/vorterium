@@ -9,6 +9,7 @@ import {
   INK_COLORS, NOTE_COLORS, OUTLINE, SHAPE_COLORS, SHAPE_LABEL, curvePoints, inkColor, newId,
 } from '../boardGeometry'
 import { ALIGN_KINDS, FONT_KINDS, alignOf, fontStack, type TextAlign } from '../boardFonts'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Peças em volta do Quadro: barra de ferramentas, zoom, barra da seleção,
@@ -512,7 +513,7 @@ export function LibraryPicker({ campaignId, onPick, onUpload, onClose }: Library
         </header>
         <div className="board-modal__body">
           {error && <p className="board-modal__error" role="alert">{error}</p>}
-          {!docs && !error && <div className="board-modal__loading"><div className="spinner spinner--sm" /></div>}
+          {!docs && !error && <div className="board-modal__loading"><Loader small /></div>}
           {docs && docs.length === 0 && <p className="board-modal__hint">A estante desta campanha ainda está vazia.</p>}
           {docs && docs.length > 0 && (
             <div className="board-lib-grid">
@@ -571,7 +572,7 @@ export function ArtsPicker({ campaignId, onPick, onClose }: ArtsPickerProps) {
         </header>
         <div className="board-modal__body">
           {error && <p className="board-modal__error" role="alert">{error}</p>}
-          {!arts && !error && <div className="board-modal__loading"><div className="spinner spinner--sm" /></div>}
+          {!arts && !error && <div className="board-modal__loading"><Loader small /></div>}
           {arts && arts.length === 0 && (
             <p className="board-modal__hint">Ainda não há artes nem referências. Envie imagens na aba Mesa da Sessão.</p>
           )}

@@ -18,6 +18,7 @@ import {
 import type { DndCharacterSheet, DndCharacterSheetUpdateInput, DndDerivedField, DndSheetDetails } from '../../../shared/types'
 import { DndAttacksEditor, DndInventoryEditor, DndSkillsEditor, DndSpellsEditor } from './DndDetailsEditors'
 import './DndCharacterSheet.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -1054,8 +1055,7 @@ export function DndCharacterSheetPanel({ campaignId }: DndCharacterSheetPanelPro
     return (
       <div className="dnd-sheet">
         <div className="dnd-panel-state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando ficha…</span>
+          <Loader small />
         </div>
       </div>
     )

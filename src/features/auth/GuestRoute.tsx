@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
 import { processPendingInvite } from '../invites/services/inviteService'
+import { Loader } from '../../shared/components/Loader'
 
 interface GuestRouteProps {
   children: ReactNode
@@ -42,7 +43,7 @@ export function GuestRoute({ children }: GuestRouteProps) {
           background: 'var(--bg-base)',
         }}
       >
-        <div className="spinner" />
+        <Loader />
       </div>
     )
   }

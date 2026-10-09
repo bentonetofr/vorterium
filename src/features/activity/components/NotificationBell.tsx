@@ -10,6 +10,7 @@ import {
 import { Presence } from '../../../shared/components/Presence'
 import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
 import './NotificationBell.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // Cadência do selo — mais devagar que o pop-up ao vivo, é só o "de fundo".
 const POLL_INTERVAL_MS = 75_000
@@ -103,8 +104,7 @@ export function NotificationBell() {
           <div className="notification-bell__list">
             {loading && (
               <div className="notification-bell__loading">
-                <div className="spinner spinner--sm" />
-                <span>Carregando...</span>
+                <Loader small />
               </div>
             )}
 

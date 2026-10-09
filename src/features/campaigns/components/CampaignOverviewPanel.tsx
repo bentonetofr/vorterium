@@ -20,6 +20,7 @@ import type { TabId, SessionSubTabId } from '../campaignSections'
 import { AnimatedNumber } from '../../../shared/components/AnimatedNumber'
 import './CampaignOverviewPanel.css'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -470,8 +471,7 @@ function PlayerDashboard({
 function OverviewLoading() {
   return (
     <div className="overview-state">
-      <div className="spinner spinner--sm" />
-      <span>Carregando visão geral...</span>
+      <Loader small />
     </div>
   )
 }

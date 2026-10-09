@@ -10,6 +10,7 @@ import { EditorBar, type EditorBarHandle } from './EditorBar'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { getResume, patchResume } from '../resume/resumeStore'
+import { Loader } from '../../../shared/components/Loader'
 
 /** Duas telas: as ferramentas (editar o mundo) e o controle ao vivo (ver a cena como os jogadores e mudar tudo na hora). */
 type Mode = 'editar' | 'controle'
@@ -72,7 +73,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
         </div>
       )}
 
-      {!extra && mode === 'editar' && !ready && <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>}
+      {!extra && mode === 'editar' && !ready && <div className="vortable-stage"><div className="vortable-stage__cover"><Loader /></div></div>}
       {!extra && mode === 'editar' && ready && editing && (
         <EngineStage
           key={`editar:${editing.id}`}

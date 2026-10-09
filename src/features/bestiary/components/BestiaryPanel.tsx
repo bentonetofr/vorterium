@@ -30,6 +30,7 @@ import {
 } from '../utils/bestiaryCalculations'
 import type { AltheriumCreature, CampaignWithRole } from '../../../shared/types'
 import './BestiaryPanel.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Bestiário — aba da Mesa da Sessão só do mestre (campanhas Altherium).
@@ -564,7 +565,7 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
         {partyError ? (
           <p className="bestiary__error" role="alert">{partyError}</p>
         ) : partyLoading && party.length === 0 ? (
-          <div className="bestiary__state"><div className="spinner spinner--sm" /> Carregando fichas…</div>
+          <div className="bestiary__state"><Loader small /></div>
         ) : party.length === 0 ? (
           <p className="bestiary__empty">Nenhum jogador criou ficha ainda.</p>
         ) : (
@@ -629,7 +630,7 @@ export function BestiaryPanel({ campaign }: { campaign: CampaignWithRole }) {
 
       {/* ── Criaturas ── */}
       {loading ? (
-        <div className="bestiary__state"><div className="spinner spinner--sm" /> Carregando bestiário…</div>
+        <div className="bestiary__state"><Loader small /></div>
       ) : loadError ? (
         <p className="bestiary__error" role="alert">{loadError}</p>
       ) : creatures.length === 0 ? (

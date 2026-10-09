@@ -12,6 +12,7 @@ import {
   uploadMesaArt,
   type MesaArt,
 } from '../services/mesaImagesService'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Artes recentes (aba Mesa): mestre e jogadores enviam imagens pra mostrar
@@ -141,7 +142,7 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
       )}
 
       {loading ? (
-        <div className="mesa-gallery__state"><div className="spinner spinner--sm" /> Carregando…</div>
+        <div className="mesa-gallery__state"><Loader small /></div>
       ) : arts.length === 0 ? (
         <p className="mesa-gallery__empty">Nenhuma arte ou referência ainda. Envie imagens (JPG, PNG, WebP, GIF…); as grandes são reduzidas sozinhas.</p>
       ) : (

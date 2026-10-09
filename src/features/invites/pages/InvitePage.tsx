@@ -8,6 +8,7 @@ import {
 } from '../services/inviteService'
 import type { CampaignInvitePublic } from '../../../shared/types'
 import './InvitePage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 type Status =
   | 'loading'
@@ -115,8 +116,7 @@ export function InvitePage() {
 
         {status === 'loading' && (
           <>
-            <div className="spinner" />
-            <p className="invite-page__text">Carregando convite...</p>
+            <Loader />
           </>
         )}
 
@@ -140,7 +140,7 @@ export function InvitePage() {
 
         {status === 'accepting' && (
           <>
-            <div className="spinner" />
+            <Loader />
             <p className="invite-page__text">Entrando na campanha...</p>
           </>
         )}

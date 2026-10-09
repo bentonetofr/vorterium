@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import './EmojiPicker.css'
+import { Loader } from './Loader'
 
 // ────────────────────────────────────────────────────────
 // Seletor de emojis do site (chat e caderno) — a biblioteca inteira do
@@ -146,7 +147,7 @@ export function EmojiPickerButton({ onPick, className, label = 'Emojis', keepFoc
       </button>
       {open && createPortal(
         <div ref={pop} className="emoji-pop" style={style ?? { visibility: 'hidden' }} role="dialog" aria-label="Emojis">
-          {loading && <div className="emoji-pop__loading"><span className="spinner spinner--sm" /> Carregando emojis…</div>}
+          {loading && <div className="emoji-pop__loading"><Loader small /></div>}
           <div ref={host} />
         </div>,
         document.body,

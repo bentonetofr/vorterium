@@ -9,6 +9,7 @@ import { getClan } from '../vampiro/constants/vampiro'
 import { healthMax } from '../vampiro/utils/vampiroRules'
 import { getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import './MySheetsPage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
 // Minhas fichas — os personagens da pessoa em todas as campanhas, de
@@ -168,8 +169,7 @@ export function MySheetsPage() {
 
       {loading && (
         <div className="my-sheets-page__state">
-          <div className="spinner spinner--sm" />
-          <span>Carregando fichas...</span>
+          <Loader small />
         </div>
       )}
 

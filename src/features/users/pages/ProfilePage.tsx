@@ -15,6 +15,7 @@ import type { Profile } from '../../../shared/types'
 import { useTheme } from '../../../shared/theme/ThemeProvider'
 import '../../../features/campaigns/pages/CampaignPages.css'
 import './ProfilePage.css'
+import { Loader } from '../../../shared/components/Loader'
 
 function formatProvider(provider: string | null | undefined): string {
   if (!provider) return '-'
@@ -159,8 +160,7 @@ export function ProfilePage() {
     return (
       <div className="page">
         <div className="page__loading animate-fade-in">
-          <div className="spinner" />
-          <span>Carregando perfil...</span>
+          <Loader />
         </div>
       </div>
     )

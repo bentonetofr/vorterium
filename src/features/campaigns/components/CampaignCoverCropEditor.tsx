@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './CampaignCoverCropEditor.css'
+import { Loader } from '../../../shared/components/Loader'
 
 const PREVIEW_WIDTH = 720
 const PREVIEW_HEIGHT = 240
@@ -132,7 +133,7 @@ export function CampaignCoverCropEditor({ file, saving, onCancel, onSave }: Camp
       </div>
 
       <div className="campaign-cover-crop-editor__preview-wrap">
-        {loading && <span className="spinner" />}
+        {loading && <Loader />}
         <canvas
           ref={canvasRef}
           width={PREVIEW_WIDTH}
