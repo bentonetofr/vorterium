@@ -31,6 +31,7 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
   // NPCs da zona e o que o mestre controla agora
   const [npcs, setNpcs] = useState<Npc[]>([])
   const [controlling, setControlling] = useState<string | null>(null)
+  const [npcForm, setNpcForm] = useState<'rat' | null>(null)
   // calibrando a hora com a barrinha (enquanto arrasta, ela mostra o valor escolhido; senão, o relógio da cena)
   const [calib, setCalib] = useState<number | null>(null)
   const [, tick] = useState(0)
@@ -54,6 +55,7 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
       setPeers(w.peers())
       setNpcs(w.npcs())
       setControlling(w.controllingNpc())
+      setNpcForm(w.npcForm())
       tick((n) => n + 1)
     }, 500)
     return () => window.clearInterval(timer)
@@ -192,7 +194,18 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
               </li>
             ))}
           </ul>
-          {controlling && <p className="live__empty">Setas ou WASD andam, Shift corre. Clique de novo pra soltar.</p>}
+          {controlling && (
+            <>
+              <button
+                type="button" className={`live__chip${npcForm === 'rat' ? ' live__chip--on' : ''}`}
+                title="O NPC vira um ratinho azul, bem pequeno; ao soltar, volta ao normal"
+                onClick={() => { const w = watch.current; if (w) void w.transformNpc(npcForm === 'rat' ? null : 'rat').then(() => setNpcForm(w.npcForm())) }}
+              >
+                {npcForm === 'rat' ? 'Voltar ao normal' : 'Transformar em rato'}
+              </button>
+              <p className="live__empty">Setas ou WASD andam, Shift corre. Clique de novo no NPC pra soltar.</p>
+            </>
+          )}
         </section>
 
         <section className="live__block">

@@ -100,6 +100,10 @@ export interface WatchControls {
     controllingNpc(): string | null;
     /** Passa a controlar este NPC como um jogador (teclado WASD/setas, Shift corre). false = não deu. */
     controlNpc(id: string): Promise<boolean>;
+    /** Forma do NPC controlado: 'rat' = transformado em rato (null = ele mesmo). */
+    npcForm(): 'rat' | null;
+    /** Transforma o NPC controlado num rato (pequeno, azul), ou volta ao normal (null). Ao soltar, ele volta ao normal. */
+    transformNpc(form: 'rat' | null): Promise<void>;
     /** Solta o NPC onde ele está: todos o veem parado ali, e o ponto fica guardado na zona. */
     releaseNpc(): Promise<void>;
     /**

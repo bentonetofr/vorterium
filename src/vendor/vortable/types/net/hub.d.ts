@@ -4,6 +4,8 @@ export type NetAnim = 'idle' | 'walk' | 'run';
  * `npc`: NPC que o mestre está controlando (id `npc:<id do NPC>`). Aparece como um jogador, mas o NPC
  * parado da zona some enquanto isso, e o nome só aparece se `showName`.
  */
+/** Forma do NPC controlado: `rat` = o mestre o transformou num rato. */
+export type NpcForm = 'rat';
 export interface NetHello {
     t: 'hello';
     id: string;
@@ -11,6 +13,7 @@ export interface NetHello {
     appearance: Appearance;
     npc?: boolean;
     showName?: boolean;
+    form?: NpcForm;
 }
 /**
  * `from`: o NPC mudou de zona (saiu dela); `npc`: os dados dele pra quem ainda não o tem na zona de destino.
@@ -121,6 +124,7 @@ export declare class NetHub {
         name: string;
         appearance: Appearance;
         showName: boolean;
+        form?: NpcForm;
     }): void;
     /** Mestre: largou o NPC (some da sala como jogador). */
     unhostNpc(peerId: string): void;

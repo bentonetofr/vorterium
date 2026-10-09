@@ -32,3 +32,9 @@ export declare function composeAll(assetBase: string, a: Appearance): Promise<Re
  * Texturas: `${key}:walk`, `${key}:idle`...  Animações: `${key}:walk:down`...
  */
 export declare function buildCharacter(scene: Phaser.Scene, key: string, assetBase: string, appearance: Appearance): Promise<void>;
+/** A chave já está montada com esta assinatura? (o rato usa 'rato' no lugar da aparência) */
+export declare function isBuilt(scene: Phaser.Scene, key: string, sig: string): boolean;
+/** Anota o que está montado em `key` (assim buildCharacter sabe quando precisa refazer). */
+export declare function markBuilt(scene: Phaser.Scene, key: string, sig: string): void;
+/** Põe as folhas (parado, andando, correndo) no Phaser como texturas e animações de `key`. */
+export declare function registerSheets(scene: Phaser.Scene, key: string, sheets: Record<AnimName, HTMLCanvasElement>): void;

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { type NpcForm } from '../net/hub';
 import type { NetHub } from '../net/hub';
 import { ZoneAudio } from '../audio/ZoneAudio';
 import { type Appearance, type Dir, type WorldSky, type ZoneData, type ZoneNpc } from '../types';
@@ -46,6 +47,8 @@ export interface WorldSceneData {
     audioOn?: () => boolean;
     /** Câmera do mestre: id do NPC que atravessou uma saída e continua controlado na zona nova. */
     carryNpc?: string;
+    /** Forma do NPC que atravessou a saída (continua rato se era rato). */
+    carryForm?: NpcForm;
     /** O NPC controlado trocou de zona: avisa a sala e guarda a mudança (sai de uma zona, entra na outra). */
     onNpcTransfer?: (t: {
         npc: ZoneNpc;
@@ -170,6 +173,10 @@ export declare class WorldScene extends Phaser.Scene {
         y: number;
         dir: Dir;
     }) => Promise<void>): Promise<void>;
+    /** Forma do NPC controlado agora (null = ele mesmo). */
+    controllingForm(): NpcForm | null;
+    /** Transforma o NPC controlado em rato (ou volta ao normal com null). A sala vê na hora. */
+    transformNpc(form: NpcForm | null): Promise<void>;
     /** O NPC parado passa pra este ponto (e o "calço" dele junto). */
     private applyNpcMove;
     /** O "calço" (colisão) de um NPC parado. */
