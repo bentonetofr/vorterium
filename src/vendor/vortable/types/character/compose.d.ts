@@ -18,6 +18,8 @@ export declare const ANIMS: {
     };
 };
 export type AnimName = keyof typeof ANIMS;
+/** Linhas do quadro que usam o desenho masculino: tronco liso (despeitada) e/ou quadril reto (desbundada). */
+export declare function flatRanges(a: Appearance): [number, number][];
 /** Folha de uma animação com a aparência inteira (ou só de um espaço, pras miniaturas). */
 export declare function composeAnim(assetBase: string, a: Appearance, anim: AnimName, only?: string): Promise<HTMLCanvasElement>;
 /**

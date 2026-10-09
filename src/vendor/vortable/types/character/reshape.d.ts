@@ -1,5 +1,5 @@
 import type { Appearance } from '../types';
-/** Níveis -1 (menor), 0 (como o LPC desenha) e 1 (maior). */
+/** Níveis -2 (nenhum: tronco liso / quadril reto, só feminino), -1 (menor), 0 (como o LPC desenha) e 1 (maior). */
 export interface Shape {
     bust?: number;
     hips?: number;
