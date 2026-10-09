@@ -13,7 +13,7 @@ export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppear
 export { parseNet, REACTIONS } from './net/hub';
 export type { LiveSound } from './net/hub';
 export { ICONS as EDITOR_ICONS } from './editor/icons';
-export { DAY_LENGTHS, SKY_PRESETS, skySwatch } from './world/daylight';
+export { DAY_LENGTHS, SKY_PRESETS, skySwatch, shiftForHour } from './world/daylight';
 export { SURFACE_LABELS } from './audio/steps';
 export { LAYERS as SOUND_LAYERS } from './audio/ambience';
 export type { NetLink, NetMsg, NetHello, NetState, NetAnim, NetEnv, NetReact } from './net/hub';
@@ -113,6 +113,7 @@ export interface WatchControls {
         wind: number | null;
         sound?: LiveSound | null;
         dayMinutes?: number | null;
+        timeShift?: number | null;
     }): void;
     /** Ajuste que está valendo agora (pra a interface mostrar). */
     envs(): {
@@ -122,6 +123,7 @@ export interface WatchControls {
         wind: number | null;
         sound: LiveSound | null;
         dayMinutes: number | null;
+        timeShift: number | null;
     }[];
     /** Som da zona que o mestre ouve no Controle (os jogadores ouvem o deles). */
     audio: {
@@ -145,6 +147,8 @@ export interface WatchControls {
         /** Ouvir um trovão. */
         thunderNow(): void;
     };
+    /** Hora que a cena do mestre está mostrando agora (0–24). */
+    clock(): number;
     /** Hora do mundo definida no editor: fixa (número) ou ciclo (null), e a duração do dia em minutos. */
     sky(): {
         hour: number | null;

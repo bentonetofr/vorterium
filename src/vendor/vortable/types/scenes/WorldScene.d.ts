@@ -126,6 +126,8 @@ export declare class WorldScene extends Phaser.Scene {
     /** Conta pra sala onde estou: ~10×/s, e só quando mudou (com um sinal de vida por segundo). */
     private publish;
     private npcNoScroll;
+    /** Hora que a cena está mostrando agora (0–24), pro relógio do Controle. */
+    watchClock(): number;
     /** O som da zona (pra o painel Sons do mestre: níveis, passos, trovão). */
     watchAudio(): ZoneAudio | null;
     /** Hora do mundo definida no editor (fixa ou ciclo). */

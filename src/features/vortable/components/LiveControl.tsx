@@ -10,7 +10,7 @@ import './LiveControl.css'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null }
+type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null; timeShift?: number | null }
 
 /**
  * Controle do mestre durante a sessão: vê a cena como os jogadores (câmera livre,
@@ -31,6 +31,8 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
   // NPCs da zona e o que o mestre controla agora
   const [npcs, setNpcs] = useState<Npc[]>([])
   const [controlling, setControlling] = useState<string | null>(null)
+  // calibrando a hora com a barrinha (enquanto arrasta, ela mostra o valor escolhido; senão, o relógio da cena)
+  const [calib, setCalib] = useState<number | null>(null)
   const [, tick] = useState(0)
 
   // lista de zonas do mundo
@@ -59,7 +61,8 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
 
   const key = scope === 'all' ? '*' : zoneId ?? '*'
   // sem ajuste do mestre, vale o que o mundo tem (hora fixa ou ciclo); "automática" = o tempo passa
-  const base = { hour: watch.current?.sky().hour ?? null, weather: null, wind: null, sound: null, dayMinutes: null }
+  const base = { hour: watch.current?.sky().hour ?? null, weather: null, wind: null, sound: null, dayMinutes: null, timeShift: null }
+  const clock = watch.current?.clock() ?? 12
   const dayMinutes = watch.current ? (watch.current.envs().find((e) => e.zone === key)?.dayMinutes ?? watch.current.sky().dayMinutes) : 24
   const env = watch.current?.envs().find((e) => e.zone === key) ?? { zone: key, ...base }
 
@@ -67,7 +70,7 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
     const w = watch.current
     if (!w) return
     const now = w.envs().find((e) => e.zone === key) ?? base
-    w.setEnv({ zone: key, hour: now.hour, weather: now.weather, wind: now.wind, sound: now.sound, dayMinutes: now.dayMinutes, ...patch })
+    w.setEnv({ zone: key, hour: now.hour, weather: now.weather, wind: now.wind, sound: now.sound, dayMinutes: now.dayMinutes, timeShift: now.timeShift, ...patch })
     tick((n) => n + 1)
   }
 
@@ -223,12 +226,35 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
                 >Hora fixa</button>
               </div>
               {env.hour == null ? (
-                <div className="live__field">
-                  <label htmlFor="live-day-length">Um dia dura</label>
-                  <select id="live-day-length" className="live__select" value={dayMinutes} onChange={(e) => change({ dayMinutes: Number(e.target.value) === (watch.current?.sky().dayMinutes ?? 24) ? null : Number(e.target.value) })}>
-                    {engine.current.DAY_LENGTHS.map((m) => <option key={m} value={m}>{m} min</option>)}
-                  </select>
-                </div>
+                <>
+                  <div className="live__field">
+                    <label htmlFor="live-day-length">Um dia dura</label>
+                    <select
+                      id="live-day-length" className="live__select" value={dayMinutes}
+                      onChange={(e) => {
+                        const m = Number(e.target.value)
+                        // trocar a duração não pula a hora: o ciclo continua de onde estava
+                        change({ dayMinutes: m === (watch.current?.sky().dayMinutes ?? 24) ? null : m, timeShift: engine.current!.shiftForHour(clock, m) })
+                      }}
+                    >
+                      {engine.current.DAY_LENGTHS.map((m) => <option key={m} value={m}>{m} min</option>)}
+                    </select>
+                  </div>
+                  <label className="live__sublabel" htmlFor="live-calibrate">Acertar a hora agora (o tempo segue passando)</label>
+                  <div className="live__hourrow">
+                    <input
+                      id="live-calibrate" className="live__range" type="range" min={0} max={23.9} step={0.1}
+                      value={calib ?? clock}
+                      onChange={(e) => { const hr = Number(e.target.value); setCalib(hr); change({ timeShift: engine.current!.shiftForHour(hr, dayMinutes) }) }}
+                      onPointerUp={() => setCalib(null)} onPointerCancel={() => setCalib(null)} onBlur={() => setCalib(null)} onKeyUp={() => setCalib(null)}
+                      aria-label="Acertar a hora do ciclo"
+                    />
+                    <b className="live__hourout">
+                      <span dangerouslySetInnerHTML={{ __html: (engine.current.EDITOR_ICONS as Record<string, string>)[engine.current.daylight(calib ?? clock) > 0.5 ? 'sun' : 'moon'] }} />
+                      <span>{engine.current.formatHour(calib ?? clock)}</span>
+                    </b>
+                  </div>
+                </>
               ) : (
                 <div className="live__hourrow">
                   <input

@@ -44,6 +44,7 @@ export interface NetEnv {
     wind: number | null;
     sound?: LiveSound | null;
     dayMinutes?: number | null;
+    timeShift?: number | null;
 }
 /** Reações que o espectador pode mandar. */
 export declare const REACTIONS: readonly ['👏', '😮', '😂', '❤️', '🔥', '🎉', '😱', '🤔'];

@@ -62,6 +62,11 @@ export declare function sunAt(hour: number): {
 /** Posição (0–1) da hora no ciclo do relógio real. */
 export declare function hourToCycle(hour: number): number;
 export declare function worldHour(dayMinutes?: number, now?: number): number;
+/**
+ * Quanto (ms) somar ao relógio pro ciclo marcar `hour` agora, e seguir correndo dali (calibrar a hora
+ * sem parar o tempo). Vale pro ciclo de `dayMinutes` minutos.
+ */
+export declare function shiftForHour(hour: number, dayMinutes?: number, now?: number): number;
 /** Hora do mundo agora (a mesma em todas as zonas): a fixa, ou a do ciclo. */
 export declare function skyHour(sky: WorldSky, now?: number): number;
 export declare function formatHour(hour: number): string;
