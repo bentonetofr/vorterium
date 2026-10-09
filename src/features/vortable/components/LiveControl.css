@@ -14,17 +14,84 @@
 .live__view { position: relative; flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .live__view .vortable-stage { flex: 1 1 auto; height: auto; border-radius: var(--radius-lg); }
 
-.live__panel {
+/* ── Menu flutuante (estilo barra de ferramentas): ícones em cima da cena; cada um abre um painel ── */
+.live { position: relative; }
+.live__menu {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.live__menu > * { pointer-events: auto; }
+
+.live__bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 5px 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+}
+.live__bar::-webkit-scrollbar { display: none; }
+.live__bar-sep { flex: none; width: 1px; height: 24px; margin: 0 5px; background: rgba(255, 255, 255, 0.16); }
+
+.live-tool {
+  position: relative;
   flex: none;
-  width: 300px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 40px;
+  height: 38px;
+  padding: 0 9px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: var(--cursor-hand);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.live-tool:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.09); }
+.live-tool--open { color: var(--text-primary); background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.85); }
+.live-tool__icon { display: inline-flex; }
+.live-tool__icon svg { width: 20px; height: 20px; }
+.live-tool__chev { opacity: 0.7; transition: transform var(--transition-fast); }
+.live-tool--open .live-tool__chev { transform: rotate(180deg); }
+.live-tool--wide { padding: 0 12px; }
+.live-tool__text { font-family: var(--font-label); font-size: var(--text-sm); font-weight: 600; white-space: nowrap; }
+.live-tool__badge {
+  position: absolute; top: -2px; right: -2px; min-width: 16px; padding: 0 4px; font-size: 10px; font-weight: 700;
+  line-height: 16px; text-align: center; color: var(--bg-base); background: var(--accent-bright); border-radius: 999px;
+}
+.live-tool__dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--success, #3fbf72); border: 2px solid var(--bg-surface); }
+
+.live__pop {
+  width: min(340px, calc(100vw - 32px));
+  max-height: min(70vh, 640px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
   padding: var(--space-3, 12px);
-  background: var(--bg-surface);
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
   border: 1px solid var(--border-base);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
 }
 
 .live__block { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
@@ -131,7 +198,7 @@
 /* ── Sons (o mesmo jeito do painel Sons do editor) ── */
 .live__soundbar { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-md); background: var(--bg-base); border: 1px solid var(--border-dim); }
 .live__soundbar .live__range { flex: 1; min-width: 0; }
-.live__range--short { width: 110px; flex: none; }
+.live__range.live__range--short { width: 110px; flex: none; }
 .live__grouphead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .live__grouphead h4 { margin: 0; }
 .live__switchrow { display: inline-flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); cursor: var(--cursor-hand); user-select: none; }
@@ -173,5 +240,4 @@
 @media (max-width: 900px) {
   .live { flex-direction: column; height: auto; }
   .live__view { min-height: 360px; }
-  .live__panel { width: auto; }
 }
