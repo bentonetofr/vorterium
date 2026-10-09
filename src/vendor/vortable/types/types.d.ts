@@ -202,6 +202,12 @@ export interface Appearance {
     slots: Record<string, AppearanceItem>;
     /** Altura: escala do boneco (ver HEIGHTS). Sem ela, 1. */
     height?: number;
+    /** Porte: peito e bunda (só corpo feminino) e peso, cada um -1 (menor), 0 (normal) ou 1 (maior). */
+    shape?: {
+        bust?: number;
+        hips?: number;
+        weight?: number;
+    };
 }
 /** Um personagem salvo. */
 export interface CharacterSave {

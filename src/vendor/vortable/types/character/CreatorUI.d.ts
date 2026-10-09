@@ -79,7 +79,12 @@ export declare class CreatorUI {
     /** Linhas da aba: uma por peça (◀ valor ▶); a escolhida mostra as cores embaixo. */
     private renderRows;
     private arrow;
+    /** Uma linha de escolha com ◀ valor ▶ (sem peça do catálogo). */
+    private choiceRow;
+    /** Corpo: masculino, feminino, jovem esguio ou pequeno. (O musculoso é um porte do masculino.) */
     private bodyRow;
+    /** Porte do corpo: peito, bunda e peso no feminino; magro, normal, musculoso ou gordo no masculino. */
+    private shapeRows;
     private heightRow;
     private skinRow;
     private slotRow;
@@ -97,6 +102,8 @@ export declare class CreatorUI {
     /** Passa pra a peça anterior/seguinte do espaço (volta ao começo no fim; "Nenhum" conta, se puder). */
     private cycle;
     private setBody;
+    /** Troca o corpo da aparência `a`: as peças que não existem pro corpo novo viram uma parecida (mesmo nome) ou, nas roupas de baixo, a primeira da lista. */
+    private swapBody;
     private randomize;
     private turn;
     private refreshAnimButtons;
