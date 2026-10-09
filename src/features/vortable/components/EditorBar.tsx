@@ -22,10 +22,10 @@ export function EditorBar({ editor }: { editor: EditorBarHandle }) {
     return controls.subscribe(() => setSt(controls.state()))
   }, [controls])
 
-  const btn = (icon: string, label: string, onClick: () => void, opts: { primary?: boolean; on?: boolean; disabled?: boolean; iconOnly?: boolean; dot?: boolean } = {}) => (
+  const btn = (icon: string, label: string, onClick: () => void, opts: { primary?: boolean; on?: boolean; disabled?: boolean; iconOnly?: boolean; dot?: boolean; right?: boolean } = {}) => (
     <button
       type="button"
-      className={`editor-bar__btn${opts.primary ? ' editor-bar__btn--primary' : ''}${opts.on ? ' editor-bar__btn--on' : ''}`}
+      className={`editor-bar__btn${opts.primary ? ' editor-bar__btn--primary' : ''}${opts.on ? ' editor-bar__btn--on' : ''}${opts.right ? ' editor-bar__btn--right' : ''}`}
       onClick={onClick}
       disabled={opts.disabled || st.testing}
       title={label}
@@ -51,7 +51,6 @@ export function EditorBar({ editor }: { editor: EditorBarHandle }) {
       {btn('plus', 'Nova', controls.newZone)}
       {btn('open', 'Abrir', controls.open)}
       {btn('world', 'Mundo', controls.world)}
-      {btn('save', 'Salvar', controls.save, { dot: st.dirty })}
       {btn('download', 'Exportar', controls.exportZone)}
       {btn('upload', 'Importar', () => file.current?.click())}
       <input
@@ -68,6 +67,7 @@ export function EditorBar({ editor }: { editor: EditorBarHandle }) {
       {btn('undo', 'Desfazer (Ctrl+Z)', controls.undo, { iconOnly: true, disabled: !st.canUndo })}
       {btn('redo', 'Refazer (Ctrl+Y)', controls.redo, { iconOnly: true, disabled: !st.canRedo })}
       {st.character && btn('person', 'Personagem', controls.character)}
+      {btn('save', 'Salvar', controls.save, { dot: st.dirty, right: true })}
       {btn('play', 'Testar', controls.test, { primary: true })}
     </div>
   )

@@ -46,8 +46,9 @@
 .editor-bar__btn:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-elevated); }
 .editor-bar__btn:disabled { opacity: 0.4; cursor: default; }
 .editor-bar__btn--on { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--accent); }
-.editor-bar__btn--primary { color: var(--text-inverse); background: var(--accent); border-color: var(--accent); margin-left: auto; }
+.editor-bar__btn--primary { color: var(--text-inverse); background: var(--accent); border-color: var(--accent); }
 .editor-bar__btn--primary:hover:not(:disabled) { color: var(--text-inverse); background: var(--accent-bright); }
+.editor-bar__btn--right { margin-left: auto; }
 .editor-bar__icon { display: inline-flex; }
 .editor-bar__icon svg { width: 16px; height: 16px; flex: none; }
 .editor-bar__dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-bright); }
