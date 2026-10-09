@@ -56,3 +56,12 @@
 @media (max-width: 480px) {
   .vortable-fab { width: 38px; height: 38px; margin-right: 5px; }
 }
+
+/* sair do Vortable: avermelhado */
+.vortable-fab--leave {
+  color: var(--danger-bright);
+  background: color-mix(in srgb, #8a1c1c 30%, var(--bg-elevated));
+  border-color: color-mix(in srgb, var(--danger-bright) 65%, transparent);
+}
+.vortable-fab--leave:hover { color: #fff; border-color: var(--danger-bright); }
+.vortable-fab--leave .vortable-fab__exit { color: #fff; background: #d03a3a; border-color: var(--danger-bright); }
