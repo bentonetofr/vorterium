@@ -194,6 +194,8 @@ export interface CreatorMountOptions {
     };
     /** Modo jogador (um boneco só). Ver CreatorOptions. */
     single?: boolean;
+    /** Título no alto da tela (padrão: "Definir aparência"). */
+    title?: string;
     saveLabel?: string;
     activateOnSave?: boolean;
     onSaved?: (c: CharacterSave) => void;

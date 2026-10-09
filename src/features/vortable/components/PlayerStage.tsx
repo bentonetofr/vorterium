@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import {
-  createCharacterStorage, createWorldStorage, getMyCharacter, VORTABLE_ASSETS, watchCharacters,
+  createWorldStorage, getMyCharacter, VORTABLE_ASSETS, watchCharacters,
   type CampaignCharacter,
 } from '../services/vortableService'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
@@ -14,15 +14,17 @@ import { getResume, patchResume } from '../resume/resumeStore'
 import './SceneBar.css'
 import './SpectatorStage.css'
 import { Loader } from '../../../shared/components/Loader'
+import { CharacterStudio } from './CharacterStudio'
 
 /**
- * Jogador: só a tela do jogo, com o boneco dele. Sem boneco ainda (a
- * primeira vez, ou o mestre apagou o dele), abre o criador; salvou, entra.
+ * Jogador: só a tela do jogo, com o personagem que ele criou na ficha (fixo nesta campanha).
+ * Sem personagem ainda, oferece o atalho pro criador; salvou, entra.
  */
 export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
   // undefined = carregando · null = ainda não tem boneco
   const [mine, setMine] = useState<CampaignCharacter | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   // cena do mestre por cima do jogo (preto, pausa, imagem, título)
   const { stage } = useMesaStream()
   const vnet = useVortableNet()
@@ -91,25 +93,16 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   }
 
   if (mine === null) {
+    // cada jogador cria o personagem dele na ficha; aqui é o atalho pra quem ainda não criou
     return (
       <div className="vortable-player-wrap">
-      <EngineStage
-        key="criar"
-        scroll
-        deps={[campaign.id, userId]}
-        mount={async (engine, host) => {
-          const characters = await createCharacterStorage(campaign.id, userId)
-          const creator = engine.mountCharacterCreator(host, {
-            assetBase: VORTABLE_ASSETS,
-            storage: characters,
-            single: true,
-            saveLabel: 'Entrar no jogo',
-            onSaved: () => { void refresh() },
-          })
-          return creator.destroy
-        }}
-      />
-      {allowSpectate && <button type="button" className="spectator-skip" onClick={() => vnet.setWatching(true)}>Só assistir</button>}
+        <div className="vortable-stage"><div className="vortable-stage__cover">
+          <span>Você ainda não criou o seu personagem.</span>
+          <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>Criar personagem</button>
+          <small>Também dá pra criar na sua ficha, no botão embaixo do retrato.</small>
+        </div></div>
+        {creating && <CharacterStudio campaignId={campaign.id} userId={userId} onClose={() => setCreating(false)} onSaved={() => { void refresh() }} />}
+        {allowSpectate && <button type="button" className="spectator-skip" onClick={() => vnet.setWatching(true)}>Só assistir</button>}
       </div>
     )
   }

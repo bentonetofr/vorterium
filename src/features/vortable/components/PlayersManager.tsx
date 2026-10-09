@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { CampaignMemberWithProfile, CampaignWithRole } from '../../../shared/types'
 import { getCampaignMembers } from '../../members/services/memberService'
 import {
-  assignCharacter, createCharacterStorage, createWorldStorage, deleteCharacter, listCampaignCharacters, loadEngine, VORTABLE_ASSETS, watchCharacters,
+  createWorldStorage, deleteCharacter, listCampaignCharacters, loadEngine, watchCharacters,
   type CampaignCharacter,
 } from '../services/vortableService'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
@@ -11,9 +11,8 @@ import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { CharacterFace } from './CharacterFace'
 import { Loader } from '../../../shared/components/Loader'
 
-/** Mestre: quem joga com qual boneco, troca, apaga e bonecos sem dono. */
-export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
-  const fileInput = useRef<HTMLInputElement>(null)
+/** Mestre: os jogadores, o personagem que cada um criou na ficha (o mestre não troca nem entrega), espectadores e teleporte. */
+export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userId: string }) {
   const [players, setPlayers] = useState<CampaignMemberWithProfile[] | null>(null)
   const [characters, setCharacters] = useState<CampaignCharacter[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -89,17 +88,6 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
     }
   }
 
-  /** Lê um arquivo de boneco e cria os bonecos na campanha (sem jogador: o mestre entrega depois). */
-  async function importFile(file: File) {
-    await run('import', async () => {
-      const engine = await loadEngine()
-      const data = await engine.loadCharacterData(VORTABLE_ASSETS)
-      const imported = engine.parseCharacterFile(await file.text(), data)
-      const storage = await createCharacterStorage(campaign.id, userId)
-      for (const c of imported) await storage.save(c)
-    })
-  }
-
   if (!players) {
     return error
       ? <p className="vortable-msg vortable-msg--error" role="alert">{error}</p>
@@ -107,14 +95,13 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
   }
 
   const controlledBy = (id: string) => characters.find((c) => c.controllerId === id) ?? null
-  const free = characters.filter((c) => !c.controllerId)
   const peerOf = (id: string) => vnet.peers.find((x) => x.id === id && x.connected)
   const spectators = vnet.peers.filter((x) => x.connected && x.role === 'spectator')
   const playing = vnet.peers.filter((x) => x.connected && x.role === 'player')
   const nameOf = (id: string) => players.find((p) => p.user_id === id)?.profile.display_name ?? 'o mestre'
 
   function remove(character: CampaignCharacter) {
-    const who = character.controllerId ? ` ${nameOf(character.controllerId)} volta a criar o dele.` : ''
+    const who = character.controllerId ? ` ${nameOf(character.controllerId)} vai precisar criar outro na ficha.` : ''
     if (!confirm(`Apagar "${character.name}"?${who}`)) return
     void run(`del:${character.id}`, () => deleteCharacter(campaign.id, character.id))
   }
@@ -161,9 +148,6 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
       <div className="vortable-players__head">
         <h3 className="vortable-players__title">Jogadores</h3>
         <span className="vortable-players__actions">
-          <button type="button" className="btn btn-ghost" disabled={busy !== null} onClick={() => fileInput.current?.click()}>
-            {busy === 'import' ? 'Importando…' : 'Importar boneco'}
-          </button>
           <button
             type="button"
             className="btn btn-ghost"
@@ -173,17 +157,6 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
             Exportar todos
           </button>
         </span>
-        <input
-          ref={fileInput}
-          type="file"
-          accept=".json,application/json"
-          hidden
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            e.target.value = ''
-            if (file) void importFile(file)
-          }}
-        />
       </div>
       {players.length === 0 && <p className="vortable-msg">Nenhum jogador na campanha ainda.</p>}
       <ul className="vortable-players__list">
@@ -199,7 +172,7 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
                   <span className={`vortable-dot${online ? ' vortable-dot--on' : ''}`} title={online ? 'Online no Vortable' : 'Fora do Vortable'} />
                   {p.profile.display_name}
                 </strong>
-                <span>{watching ? 'Assistindo' : mine ? mine.name : 'Ainda sem boneco'}</span>
+                <span>{watching ? 'Assistindo' : mine ? mine.name : 'Ainda não criou o personagem'}</span>
               </div>
               {online && watching && (
                 <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.user_id, 'play')}>Colocar em jogo</button>
@@ -227,23 +200,6 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
                   </button>
                 </>
               )}
-              <select
-                className="vortable-player__select"
-                aria-label={`Boneco de ${p.profile.display_name}`}
-                value={mine?.id ?? ''}
-                disabled={busy !== null}
-                onChange={(e) => {
-                  const id = e.target.value || null
-                  void run(`give:${p.user_id}`, () => assignCharacter(campaign.id, p.user_id, id))
-                }}
-              >
-                <option value="">Sem boneco</option>
-                {characters.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}{c.controllerId && c.controllerId !== p.user_id ? ` (de ${nameOf(c.controllerId)})` : ''}
-                  </option>
-                ))}
-              </select>
               <button type="button" className="btn btn-ghost" disabled={!mine} onClick={() => mine && void exportCharacters([mine])}>
                 Exportar
               </button>
@@ -253,32 +209,13 @@ export function PlayersManager({ campaign, userId }: { campaign: CampaignWithRol
                 disabled={!mine || busy !== null}
                 onClick={() => mine && remove(mine)}
               >
-                Apagar boneco
+                Apagar personagem
               </button>
             </li>
           )
         })}
       </ul>
 
-      {free.length > 0 && (
-        <>
-          <h3 className="vortable-players__title">Bonecos sem jogador</h3>
-          <ul className="vortable-players__list">
-            {free.map((c) => (
-              <li key={c.id} className="vortable-player">
-                <CharacterFace appearance={c.appearance} />
-                <div className="vortable-player__info">
-                  <strong>{c.name}</strong>
-                  <span>Escolha-o no jogador acima</span>
-                </div>
-                <span className="vortable-player__spacer" />
-                <button type="button" className="btn btn-ghost" onClick={() => void exportCharacters([c])}>Exportar</button>
-                <button type="button" className="btn btn-danger" disabled={busy !== null} onClick={() => remove(c)}>Apagar</button>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
     </section>
   )
 }

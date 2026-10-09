@@ -47652,11 +47652,98 @@ function $o(e = ".json,application/json") {
 }
 //#endregion
 //#region src/engine/character/creator.css?inline
-var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px/1fr}.vt-top-title{font-family:var(--vt-font-display);color:var(--vt-text-2);margin-right:6px;font-size:16px}.vt-creator-body{grid-area:body;grid-template-columns:minmax(280px,340px) 1fr;min-height:0;display:grid}.vt-preview{border-right:1px solid var(--vt-border);background:var(--vt-surface);flex-direction:column;align-items:center;gap:12px;padding:20px 16px;display:flex;overflow-y:auto}.vt-preview-stage{aspect-ratio:1;border:1px solid var(--vt-border-dim);background:radial-gradient(ellipse 40% 10% at 50% 86%, #00000059, transparent 70%), linear-gradient(180deg, var(--vt-bg), var(--vt-elevated));border-radius:12px;place-items:center;width:100%;max-width:300px;display:grid}.vt-preview-canvas{width:100%;height:auto;image-rendering:pixelated}.vt-center{justify-content:center}.vt-random{justify-content:center;width:100%;max-width:300px}.vt-random svg{width:14px;height:14px}.vt-custom{background:var(--vt-bg);flex-direction:column;min-width:0;min-height:0;display:flex}.vt-creator-tabs{background:var(--vt-surface)}.vt-custom-body{flex:1;grid-template-columns:200px 1fr;min-height:0;display:grid}.vt-slots{border-right:1px solid var(--vt-border-dim);background:var(--vt-surface);flex-direction:column;gap:2px;padding:8px;display:flex;overflow-y:auto}.vt-slot{color:var(--vt-text-2);font:inherit;text-align:left;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 10px;display:flex}.vt-slot b{font-size:13px;font-weight:600}.vt-slot small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px;overflow:hidden}.vt-slot.vt-filled small{color:var(--vt-text-2)}.vt-slot:hover{background:var(--vt-overlay)}.vt-slot.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent)}.vt-slot.vt-on b{color:var(--vt-accent-bright)}.vt-options{min-height:0;padding:12px 16px 24px;overflow-y:auto}.vt-options h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:14px 0 8px;font-size:11px;font-weight:600}.vt-options h4:first-child{margin-top:0}.vt-char-grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.vt-char-grid .vt-cell canvas{width:100%;height:100%}.vt-cell.vt-none span{color:var(--vt-muted);background:0 0;font-size:12px;position:static}.vt-swatches{flex-wrap:wrap;gap:5px;display:flex}.vt-swatch{border:2px solid var(--vt-border-dim);cursor:pointer;border-radius:50%;width:24px;height:24px;padding:0;box-shadow:inset 0 -3px #00000040}.vt-swatch:hover{transform:scale(1.12)}.vt-swatch.vt-on{border-color:var(--vt-accent-bright);box-shadow:0 0 0 2px var(--vt-accent-glow), inset 0 -3px 0 #00000040}.vt-item-thumb{width:48px;height:48px;image-rendering:pixelated;flex:none}@media (width<=900px){.vt-creator-body{grid-template-rows:auto 1fr;grid-template-columns:1fr}.vt-preview{border-right:0;border-bottom:1px solid var(--vt-border);flex-flow:wrap;justify-content:center;padding:10px}.vt-preview-stage{max-width:160px}.vt-custom-body{grid-template-columns:140px 1fr}}", ts = {
+var es = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);scrollbar-width:none;display:flex;overflow-x:auto}.cp-tabs::-webkit-scrollbar{display:none}.cp-tab{color:var(--cp-dim);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:1 0 auto;padding:13px 12px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}";
+//#endregion
+//#region src/engine/ui/scale2x.ts
+function ts(e, t, n) {
+	let r = new Uint32Array(t * 2 * n * 2), i = t * 2;
+	for (let a = 0; a < n; a++) {
+		let o = (a > 0 ? a - 1 : a) * t, s = (a < n - 1 ? a + 1 : a) * t, c = a * t;
+		for (let n = 0; n < t; n++) {
+			let l = n > 0 ? n - 1 : n, u = n < t - 1 ? n + 1 : n, d = e[c + n], f = e[o + n], p = e[s + n], m = e[c + l], h = e[c + u], g = d, _ = d, v = d, y = d;
+			m !== p && f !== h && (m === f && (g = f), f === h && (_ = h), p === m && (v = m), h === p && (y = p));
+			let b = a * 2 * i + n * 2;
+			r[b] = g, r[b + 1] = _, r[b + i] = v, r[b + i + 1] = y;
+		}
+	}
+	return r;
+}
+function ns(e, t) {
+	let n = e.width, r = e.height, i = document.createElement("canvas");
+	i.width = n, i.height = r;
+	let a = i.getContext("2d", { willReadFrequently: !0 });
+	a.drawImage(e, 0, 0);
+	let o = a.getImageData(0, 0, n, r), s = new Uint32Array(o.data.buffer.slice(0));
+	for (let e = 0; e < s.length; e++) s[e] >>> 24 || (s[e] = 0);
+	for (let e = 0; e < t; e++) s = ts(s, n, r), n *= 2, r *= 2;
+	let c = document.createElement("canvas");
+	c.width = n, c.height = r;
+	let l = new ImageData(new Uint8ClampedArray(s.buffer), n, r);
+	return c.getContext("2d").putImageData(l, 0, 0), c;
+}
+//#endregion
+//#region src/engine/character/CreatorUI.ts
+var rs = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, ns = 4, rs = class {
+}, is = [
+	"Corpo",
+	"Rosto",
+	"Cabelo",
+	"Roupa",
+	"Acessórios",
+	"Marcas"
+], as = {
+	body: "Corpo",
+	tail: "Corpo",
+	wings: "Corpo",
+	horns: "Corpo",
+	head: "Rosto",
+	ears: "Rosto",
+	nose: "Rosto",
+	eyebrows: "Rosto",
+	eyes: "Rosto",
+	wrinkles: "Rosto",
+	hair: "Cabelo",
+	ponytail: "Cabelo",
+	beard: "Cabelo",
+	mustache: "Cabelo"
+}, os = /* @__PURE__ */ new Set([
+	"head",
+	"ears",
+	"nose",
+	"eyebrows",
+	"eyes",
+	"wrinkles",
+	"hair",
+	"ponytail",
+	"beard",
+	"mustache",
+	"horns",
+	"hat",
+	"bandana",
+	"facial",
+	"mask",
+	"earrings",
+	"scar_eye_l",
+	"scar_eye_r",
+	"scar_mouth",
+	"wound_head"
+]), ss = /* @__PURE__ */ new Set(["Rosto", "Cabelo"]), cs = {
+	face: {
+		cx: 32,
+		cy: 27,
+		h: 42,
+		minW: 40
+	},
+	body: {
+		cx: 32,
+		cy: 35,
+		h: 70,
+		minW: 46
+	}
+}, ls = 3, us = 2 ** ls, ds = class {
 	opts;
 	root;
 	data;
@@ -47664,68 +47751,106 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 	dirty = !1;
 	group = "Corpo";
 	slot = "body";
-	anim = "walk";
+	anim = "idle";
 	dir = 2;
 	sheets = null;
 	composeToken = 0;
+	rev = 0;
 	raf = 0;
+	cam = {
+		cx: 32,
+		cy: 34,
+		h: 68
+	};
+	camOverride = null;
+	upCache = /* @__PURE__ */ new Map();
+	stageEl;
+	canvas;
+	resizeObs = null;
 	nameInput;
-	preview;
 	tabsEl;
-	slotsEl;
-	optionsEl;
+	rowsEl;
 	statusEl;
+	camBtn;
+	nextBtn;
+	prevBtn;
 	loading;
 	animButtons = /* @__PURE__ */ new Map();
 	thumbObserver = null;
 	baseThumb = null;
 	modals = [];
-	onKey = (e) => {
-		e.key === "Escape" && this.modals.length && this.modals[this.modals.length - 1]();
-	};
+	drag = null;
+	onKey = (e) => this.handleKey(e);
 	onBeforeUnload = (e) => {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
 		this.opts = t, lt("editor", Ia), lt("creator", es), this.character = Go("Novo personagem", Tt()), this.nameInput = q("input", {
-			class: "vt-name",
+			class: "cp-name",
 			value: this.character.name,
 			title: "Nome do personagem",
+			maxlength: 60,
+			placeholder: "Nome do personagem",
 			oninput: () => {
 				this.character.name = this.nameInput.value, this.markDirty();
 			}
-		}), this.preview = q("canvas", {
-			class: "vt-preview-canvas",
-			width: 64 * ns,
-			height: 64 * ns
-		}), this.tabsEl = q("div", { class: "vt-tabs vt-creator-tabs" }), this.slotsEl = q("div", { class: "vt-slots" }), this.optionsEl = q("div", { class: "vt-options" }), this.statusEl = q("footer", { class: "vt-status" });
-		let n = q("div", { class: "vt-chips vt-center" });
+		}), this.canvas = q("canvas", { class: "cp-canvas" }), this.tabsEl = q("div", {
+			class: "cp-tabs",
+			role: "tablist"
+		}), this.rowsEl = q("div", { class: "cp-rows" }), this.statusEl = q("footer", { class: "cp-status" }), this.camBtn = q("button", {
+			class: "cp-chip",
+			title: "Aproximar no rosto ou ver o corpo inteiro",
+			onclick: () => this.toggleCamera()
+		}), this.prevBtn = q("button", {
+			class: "cp-btn cp-ghost",
+			onclick: () => this.stepGroup(-1)
+		}, "‹ Anterior"), this.nextBtn = q("button", {
+			class: "cp-btn",
+			onclick: () => this.stepGroup(1)
+		}, "Próximo ›");
+		let n = q("div", { class: "cp-chips" });
 		for (let e of [
 			"idle",
 			"walk",
 			"run"
 		]) {
 			let t = q("button", {
-				class: "vt-chip",
+				class: "cp-chip",
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, ts[e]);
+			}, rs[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
-		this.root = q("div", { class: "vt-root vt-creator" }, q("header", { class: "vt-top" }, q("span", { class: "vt-brand" }, "Vortable"), q("span", { class: "vt-top-title" }, t.title ?? (t.single ? "Crie seu boneco" : "Personagem")), this.nameInput, q("span", { class: "vt-sep" }), t.single ? null : this.iconBtn(Y.plus, "Novo", () => this.newCharacter()), t.single ? null : this.iconBtn(Y.open, "Personagens", () => this.openList()), this.iconBtn(Y.save, t.saveLabel ?? "Salvar", () => this.save(), t.single ? "vt-primary" : ""), this.iconBtn(Y.download, "Exportar", () => this.exportFile()), this.iconBtn(Y.upload, "Importar", () => void this.importFile()), q("span", { class: "vt-spacer" }), t.back ? this.iconBtn(Y.world, t.back.label, () => this.goBack(), "vt-primary") : null), q("main", { class: "vt-creator-body" }, q("section", { class: "vt-preview" }, q("div", { class: "vt-preview-stage" }, this.preview), q("div", { class: "vt-row vt-center" }, q("button", {
-			class: "vt-btn",
-			title: "Girar",
+		this.stageEl = q("section", { class: "cp-stage" }, this.canvas, q("div", {
+			class: "cp-stage__fx",
+			"aria-hidden": "true"
+		}), q("header", { class: "cp-stage__head" }, q("span", { class: "cp-kicker" }, t.title ?? "Definir aparência"), this.nameInput, q("div", { class: "cp-tools" }, t.single ? null : this.tool(Y.plus, "Novo personagem", () => this.newCharacter()), t.single ? null : this.tool(Y.open, "Meus personagens", () => this.openList()), this.tool(Y.upload, "Importar de um arquivo", () => void this.importFile()), this.tool(Y.download, "Exportar para um arquivo", () => this.exportFile()))), q("footer", { class: "cp-stage__foot" }, q("div", { class: "cp-rotate" }, q("button", {
+			class: "cp-round",
+			title: "Girar (Q)",
 			onclick: () => this.turn(-1)
-		}, "⟲"), q("button", {
-			class: "vt-btn",
-			title: "Girar",
+		}, "⟲"), q("span", {}, "Arraste pra girar"), q("button", {
+			class: "cp-round",
+			title: "Girar (E)",
 			onclick: () => this.turn(1)
-		}, "⟳")), n, q("button", {
-			class: "vt-btn vt-random",
+		}, "⟳")), q("div", { class: "cp-stage__opts" }, n, this.camBtn))), this.root = q("div", { class: "cp-root" }, this.stageEl, q("section", { class: "cp-panel" }, q("header", { class: "cp-panel__head" }, q("div", { class: "cp-panel__title" }, q("span", {
+			class: "cp-panel__icon",
+			html: Y.person
+		}), q("div", {}, q("b", {}, "Personagem"), q("small", {}, "A aparência é tudo"))), q("div", { class: "cp-panel__actions" }, q("button", {
+			class: "cp-btn cp-primary",
+			onclick: () => void this.save()
+		}, t.saveLabel ?? "Salvar"), t.back ? q("button", {
+			class: "cp-btn cp-ghost cp-x",
+			title: t.back.label,
+			"aria-label": t.back.label,
+			html: Y.close,
+			onclick: () => void this.goBack()
+		}) : null)), this.tabsEl, this.rowsEl, q("footer", { class: "cp-panel__foot" }, q("button", {
+			class: "cp-btn cp-ghost",
+			title: "Sortear um personagem inteiro",
 			html: `${Y.star}<span>Aleatório</span>`,
 			onclick: () => this.randomize()
-		})), q("section", { class: "vt-custom" }, this.tabsEl, q("div", { class: "vt-custom-body" }, this.slotsEl, this.optionsEl))), this.statusEl), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload), this.loading = ft(t.assetBase), this.root.append(this.loading), this.init();
+		}), q("span", { class: "cp-spacer" }), this.prevBtn, this.nextBtn), this.statusEl)), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload), this.setupStageInput(), this.loading = ft(t.assetBase), this.root.append(this.loading), this.init();
 	}
 	async init() {
 		try {
@@ -47735,147 +47860,210 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 			return;
 		}
 		let [e, t] = await Promise.all([this.opts.storage.list().catch(() => []), this.opts.storage.getActive().catch(() => null)]), n = e.find((e) => e.id === t) ?? e[0];
-		n && (this.character = structuredClone(n)), this.character.appearance = Et(this.data, this.character.appearance), this.nameInput.value = this.character.name, this.renderTabs(), this.renderSlots(), this.renderOptions(), this.refreshAnimButtons(), this.recompose(), this.loop(), this.loading?.remove();
+		n && (this.character = structuredClone(n)), this.character.appearance = Et(this.data, this.character.appearance), this.nameInput.value = this.character.name, this.renderTabs(), this.renderRows(), this.refreshAnimButtons(), this.recompose(), this.loop(), this.loading?.remove();
 	}
 	destroy() {
-		cancelAnimationFrame(this.raf), this.thumbObserver?.disconnect(), window.removeEventListener("keydown", this.onKey), window.removeEventListener("beforeunload", this.onBeforeUnload), this.root.remove();
+		cancelAnimationFrame(this.raf), this.resizeObs?.disconnect(), this.thumbObserver?.disconnect(), window.removeEventListener("keydown", this.onKey), window.removeEventListener("beforeunload", this.onBeforeUnload), this.root.remove();
 	}
-	iconBtn(e, t, n, r = "") {
+	tool(e, t, n) {
 		return q("button", {
-			class: `vt-btn ${r}`,
+			class: "cp-tool",
 			title: t,
-			html: `${e}<span class="vt-label">${t}</span>`,
+			"aria-label": t,
+			html: e,
 			onclick: n
 		});
 	}
 	get appearance() {
 		return this.character.appearance;
 	}
+	groupOf(e) {
+		return as[e.id] ?? e.group;
+	}
 	groups() {
-		return [...new Set(this.data.catalog.slots.map((e) => e.group))];
+		let e = new Set(this.data.catalog.slots.filter((e) => yt(this.data, e.id, this.appearance.body).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !is.includes(e));
+		return [...is, ...t].filter((t) => e.has(t));
+	}
+	slotsOfGroup(e = this.group) {
+		return this.data.catalog.slots.filter((t) => this.groupOf(t) === e && yt(this.data, t.id, this.appearance.body).length);
 	}
 	renderTabs() {
-		this.tabsEl.replaceChildren(...this.groups().map((e) => q("button", {
-			class: `vt-tab${e === this.group ? " vt-on" : ""}`,
-			onclick: () => {
-				this.group = e, this.slot = this.data.catalog.slots.find((t) => t.group === e).id, this.renderTabs(), this.renderSlots(), this.renderOptions();
-			}
-		}, e)));
+		let e = this.groups();
+		e.includes(this.group) || this.setGroup(e[0] ?? "Corpo", !1), this.tabsEl.replaceChildren(...e.map((e, t) => q("button", {
+			class: `cp-tab${e === this.group ? " cp-on" : ""}`,
+			role: "tab",
+			"aria-selected": e === this.group ? "true" : "false",
+			onclick: () => this.setGroup(e)
+		}, q("i", {}, String(t + 1)), e)));
+		let t = e.indexOf(this.group);
+		this.prevBtn.disabled = t <= 0, this.nextBtn.disabled = t >= e.length - 1;
 	}
-	renderSlots() {
-		let e = this.appearance, t = this.data.catalog.slots.filter((e) => e.group === this.group);
-		this.slotsEl.replaceChildren(...t.filter((t) => yt(this.data, t.id, e.body).length).map((t) => {
-			let n = e.slots[t.id], r = n && this.data.byId.get(n.id);
-			return q("button", {
-				class: `vt-slot${t.id === this.slot ? " vt-on" : ""}${r ? " vt-filled" : ""}`,
-				onclick: () => {
-					this.slot = t.id, this.renderSlots(), this.renderOptions();
-				}
-			}, q("b", {}, t.label), q("small", {}, r ? Ct(r) : "nenhum"));
-		}));
+	setGroup(e, t = !0) {
+		this.group = e, this.slot = this.slotsOfGroup(e)[0]?.id ?? this.slot, this.camOverride = null, t && (this.renderTabs(), this.renderRows(), this.rowsEl.scrollTop = 0);
 	}
-	renderOptions() {
-		let e = this.appearance, t = [];
-		this.slot === "body" && (t.push(q("h4", {}, "Tipo de corpo"), q("div", { class: "vt-chips" }, ...this.data.catalog.bodies.map((t) => q("button", {
-			class: `vt-chip${e.body === t ? " vt-on" : ""}`,
-			onclick: () => this.setBody(t)
-		}, _t[t])))), t.push(q("h4", {}, "Pele"), this.swatches("body", e.skin, (e) => this.update((t) => {
+	stepGroup(e) {
+		let t = this.groups(), n = t.indexOf(this.group) + e;
+		n >= 0 && n < t.length && this.setGroup(t[n]);
+	}
+	focusSlot(e) {
+		this.slot !== e && (this.slot = e, this.camOverride = null, this.renderRows());
+	}
+	renderRows() {
+		let e = this.rowsEl.scrollTop, t = [];
+		this.group === "Corpo" && t.push(this.bodyRow(), this.skinRow());
+		for (let e of this.slotsOfGroup()) t.push(this.slotRow(e));
+		this.rowsEl.replaceChildren(...t), this.rowsEl.scrollTop = e, this.refreshStatus();
+	}
+	arrow(e, t) {
+		return q("button", {
+			class: "cp-arrow",
+			title: e < 0 ? "Anterior" : "Próximo",
+			"aria-label": e < 0 ? "Anterior" : "Próximo",
+			onclick: t
+		}, e < 0 ? "◀" : "▶");
+	}
+	bodyRow() {
+		let e = this.data.catalog.bodies, t = this.appearance, n = e.indexOf(t.body), r = (t) => this.setBody(e[(n + t + e.length) % e.length]);
+		return q("div", { class: "cp-row cp-plain" }, q("div", { class: "cp-row__head" }, q("span", { class: "cp-row__label" }, "Tipo de corpo"), q("span", { class: "cp-row__count" }, `${n + 1}/${e.length}`)), q("div", { class: "cp-row__ctl" }, this.arrow(-1, () => r(-1)), q("span", { class: "cp-row__value" }, _t[t.body] ?? t.body), this.arrow(1, () => r(1))));
+	}
+	skinRow() {
+		return q("div", { class: "cp-row cp-plain" }, q("div", { class: "cp-row__head" }, q("span", { class: "cp-row__label" }, "Tom de pele")), this.swatches("body", this.appearance.skin, (e) => this.update((t) => {
 			t.skin = e;
-		}))));
-		let n = this.data.catalog.slots.find((e) => e.id === this.slot), r = yt(this.data, this.slot, e.body), i = e.slots[this.slot], a = i && this.data.byId.get(i.id);
-		if (a) {
-			for (let e of a.colors ?? []) {
-				if (e.material === "body" && a.matchBody) continue;
-				let n = e.label ?? (a.colors.length > 1 ? `Cor (${e.material})` : "Cor");
-				t.push(q("h4", {}, n), this.swatches(e.material, i.colors?.[e.key] ?? null, (t) => this.update((n) => {
-					(n.slots[this.slot].colors ??= {})[e.key] = t;
-				})));
+		})));
+	}
+	slotRow(e) {
+		let t = this.appearance, n = yt(this.data, e.id, t.body), r = t.slots[e.id], i = r && this.data.byId.get(r.id), a = e.id === this.slot, o = n.length + +!e.required, s = (i ? n.findIndex((e) => e.id === i.id) + 1 : 0) + +!!e.required, c = q("div", {
+			class: `cp-row${a ? " cp-on" : ""}${i ? " cp-filled" : ""}`,
+			"data-slot": e.id
+		}, q("button", {
+			class: "cp-row__head",
+			onclick: () => this.focusSlot(e.id)
+		}, q("span", { class: "cp-row__label" }, e.label), q("span", { class: "cp-row__count" }, `${s}/${o}`)), q("div", { class: "cp-row__ctl" }, this.arrow(-1, () => this.cycle(e, -1)), q("button", {
+			class: "cp-row__value",
+			title: "Ver todas as opções",
+			onclick: () => {
+				this.focusSlot(e.id), this.openGrid(e);
 			}
-			a.variants && a.variants.length > 1 && t.push(q("h4", {}, "Variante"), q("div", { class: "vt-chips" }, ...a.variants.map((e) => q("button", {
-				class: `vt-chip${i.variant === e ? " vt-on" : ""}`,
-				onclick: () => this.update((t) => {
-					t.slots[this.slot].variant = e;
-				})
-			}, e.replace(/_/g, " ")))));
+		}, i ? Ct(i) : "Nenhum"), this.arrow(1, () => this.cycle(e, 1)), q("button", {
+			class: "cp-arrow cp-grid",
+			title: "Ver todas as opções",
+			"aria-label": "Ver todas as opções",
+			html: Y.grid,
+			onclick: () => {
+				this.focusSlot(e.id), this.openGrid(e);
+			}
+		})));
+		return a && i && c.append(...this.detail(e, r, i)), c;
+	}
+	detail(e, t, n) {
+		let r = [];
+		for (let i of n.colors ?? []) {
+			if (i.material === "body" && n.matchBody) continue;
+			let a = i.label ?? (n.colors.length > 1 ? `Cor (${i.material})` : "Cor");
+			r.push(q("div", { class: "cp-sub" }, a), this.swatches(i.material, t.colors?.[i.key] ?? null, (t) => this.update((n) => {
+				(n.slots[e.id].colors ??= {})[i.key] = t;
+			})));
 		}
-		t.push(q("h4", {}, `${n.label} — ${r.length} opç${r.length === 1 ? "ão" : "ões"}`));
-		let o = q("div", { class: "vt-grid vt-char-grid" });
-		n.required || o.append(q("button", {
-			class: `vt-cell vt-none${i ? "" : " vt-on"}`,
-			title: "Nenhum",
-			onclick: () => this.update((e) => {
-				delete e.slots[this.slot];
+		return n.variants && n.variants.length > 1 && r.push(q("div", { class: "cp-sub" }, "Versão"), q("div", { class: "cp-chips cp-wrap" }, ...n.variants.map((n) => q("button", {
+			class: `cp-chip${t.variant === n ? " cp-on" : ""}`,
+			onclick: () => this.update((t) => {
+				t.slots[e.id].variant = n;
 			})
-		}, q("span", {}, "Nenhum"))), this.thumbObserver?.disconnect(), this.thumbObserver = new IntersectionObserver((e) => {
-			for (let t of e) t.isIntersecting && (this.thumbObserver.unobserve(t.target), this.drawThumb(t.target));
-		}, {
-			root: this.optionsEl,
-			rootMargin: "120px"
-		});
-		for (let e of r) {
-			let t = q("button", {
-				class: `vt-cell${i?.id === e.id ? " vt-on" : ""}`,
-				title: Ct(e),
-				"data-item": e.id,
-				onclick: () => this.chooseItem(e)
-			}, q("canvas", {
-				width: 64,
-				height: 64
-			}), q("span", {}, Ct(e)));
-			o.append(t), this.thumbObserver.observe(t);
-		}
-		t.push(o), this.optionsEl.replaceChildren(...t);
+		}, n.replace(/_/g, " "))))), r;
 	}
 	swatches(e, t, n) {
-		return q("div", { class: "vt-swatches" }, ...Object.keys(this.data.palettes[e] ?? {}).map((r) => q("button", {
-			class: `vt-swatch${r === t ? " vt-on" : ""}`,
+		return q("div", { class: "cp-swatches" }, ...Object.keys(this.data.palettes[e] ?? {}).map((r) => q("button", {
+			class: `cp-swatch${r === t ? " cp-on" : ""}`,
 			title: r.replace(/_/g, " "),
 			style: `background:${vt(this.data.palettes, e, r)}`,
 			onclick: () => n(r)
 		})));
 	}
-	async drawThumb(e) {
-		let t = e.dataset.item, n = this.data.byId.get(t), r = e.querySelector("canvas");
-		if (!n || !r) return;
-		let i = this.appearance, a = i.slots[this.slot]?.id === t ? i.slots[this.slot] : {
-			id: t,
-			...n.variants ? { variant: n.variants[0] } : {},
-			colors: this.carryColors(n)
+	openGrid(e) {
+		let t = this.appearance, n = yt(this.data, e.id, t.body), r = t.slots[e.id], i = q("div", { class: "cp-grid-list" }), a = q("div", { class: "cp-modal-body" }, i), o = () => {};
+		e.required || i.append(q("button", {
+			class: `cp-cell cp-none${r ? "" : " cp-on"}`,
+			title: "Nenhum",
+			onclick: () => {
+				this.update((t) => {
+					delete t.slots[e.id];
+				}), o();
+			}
+		}, q("span", {}, "Nenhum"))), this.thumbObserver?.disconnect();
+		let s = new IntersectionObserver((t) => {
+			for (let n of t) n.isIntersecting && (s.unobserve(n.target), this.drawThumb(n.target, e.id));
+		}, {
+			root: a,
+			rootMargin: "120px"
+		});
+		this.thumbObserver = s;
+		for (let t of n) {
+			let n = q("button", {
+				class: `cp-cell${r?.id === t.id ? " cp-on" : ""}`,
+				title: Ct(t),
+				"data-item": t.id,
+				onclick: () => {
+					this.chooseItem(e.id, t), o();
+				}
+			}, q("canvas", {
+				width: 64,
+				height: 64
+			}), q("span", {}, Ct(t)));
+			i.append(n), s.observe(n);
+		}
+		o = this.modal(`${e.label} — ${n.length} opç${n.length === 1 ? "ão" : "ões"}`, [a], [q("button", {
+			class: "cp-btn cp-ghost",
+			onclick: () => o()
+		}, "Fechar")]);
+	}
+	async drawThumb(e, t) {
+		let n = e.dataset.item, r = this.data.byId.get(n), i = e.querySelector("canvas");
+		if (!r || !i) return;
+		let a = this.appearance, o = a.slots[t]?.id === n ? a.slots[t] : {
+			id: n,
+			...r.variants ? { variant: r.variants[0] } : {},
+			colors: this.carryColors(t, r)
 		};
 		try {
-			let [e, t] = await Promise.all([this.baseThumb ??= Bt(this.opts.assetBase, {
-				...i,
-				slots: is(i, ["body", "head"])
+			let [e, n] = await Promise.all([this.baseThumb ??= Bt(this.opts.assetBase, {
+				...a,
+				slots: fs(a, ["body", "head"])
 			}), Bt(this.opts.assetBase, {
-				...i,
-				slots: { [this.slot]: a }
-			})]), n = r.getContext("2d");
-			n.clearRect(0, 0, 64, 64), this.slot !== "body" && this.slot !== "head" && (n.globalAlpha = .35, n.drawImage(e, 0, 0), n.globalAlpha = 1), n.drawImage(t, 0, 0);
+				...a,
+				slots: { [t]: o }
+			})]), r = i.getContext("2d");
+			r.clearRect(0, 0, 64, 64), t !== "body" && t !== "head" && (r.globalAlpha = .35, r.drawImage(e, 0, 0), r.globalAlpha = 1), r.drawImage(n, 0, 0);
 		} catch {}
 	}
-	carryColors(e) {
-		let t = this.appearance.slots[this.slot], n = t && this.data.byId.get(t.id), r = {};
-		for (let i of e.colors ?? []) {
-			let e = n?.colors?.find((e) => e.key === i.key && e.material === i.material), a = e && t.colors?.[e.key];
-			a && (r[i.key] = a);
+	carryColors(e, t) {
+		let n = this.appearance.slots[e], r = n && this.data.byId.get(n.id), i = {};
+		for (let e of t.colors ?? []) {
+			let t = r?.colors?.find((t) => t.key === e.key && t.material === e.material), a = t && n.colors?.[t.key];
+			a && (i[e.key] = a);
 		}
-		return r;
+		return i;
 	}
-	update(e, t = !0) {
-		let n = structuredClone(this.appearance);
-		e(n), this.character.appearance = Et(this.data, n), this.markDirty(), this.baseThumb = null, t && this.renderSlots(), this.renderOptions(), this.recompose();
+	update(e) {
+		let t = structuredClone(this.appearance);
+		e(t), this.character.appearance = Et(this.data, t), this.markDirty(), this.baseThumb = null, this.renderRows(), this.recompose();
 	}
-	chooseItem(e) {
-		this.update((t) => {
-			t.slots[this.slot] = {
-				id: e.id,
-				...e.variants ? { variant: e.variants[0] } : {},
-				colors: this.carryColors(e)
+	chooseItem(e, t) {
+		this.update((n) => {
+			n.slots[e] = {
+				id: t.id,
+				...t.variants ? { variant: t.variants[0] } : {},
+				colors: this.carryColors(e, t)
 			};
 		});
 	}
+	cycle(e, t) {
+		let n = yt(this.data, e.id, this.appearance.body), r = this.appearance.slots[e.id], i = e.required ? [...n] : [null, ...n], a = i[(Math.max(0, i.findIndex((e) => (e?.id ?? null) === (r?.id ?? null))) + t + i.length) % i.length];
+		this.slot = e.id, this.camOverride = null, a ? this.chooseItem(e.id, a) : this.update((t) => {
+			delete t.slots[e.id];
+		});
+	}
 	setBody(e) {
-		e !== this.appearance.body && this.update((t) => {
+		e !== this.appearance.body && (this.update((t) => {
 			t.body = e;
 			let n = t.slots.head?.id ?? "";
 			if (n.includes("/human/")) {
@@ -47885,7 +48073,7 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 					id: r
 				});
 			}
-		});
+		}), this.renderTabs());
 	}
 	randomize() {
 		this.update((e) => {
@@ -47903,7 +48091,7 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 		this.dir = t[(t.indexOf(this.dir) + e + 4) % 4];
 	}
 	refreshAnimButtons() {
-		for (let [e, t] of this.animButtons) t.classList.toggle("vt-on", e === this.anim);
+		for (let [e, t] of this.animButtons) t.classList.toggle("cp-on", e === this.anim);
 	}
 	markDirty() {
 		this.dirty = !0, this.refreshStatus();
@@ -47911,32 +48099,108 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 	refreshStatus() {
 		if (!this.data) return;
 		let e = Object.keys(this.appearance.slots).length;
-		this.statusEl.replaceChildren(q("span", {}, `${this.data.catalog.items.length} itens no catálogo`), q("span", {}, `${e} peças neste personagem`), this.dirty ? q("span", { class: "vt-dirty" }, "● não salvo") : q("span", {}, "salvo"), q("span", { class: "vt-hint" }, "Arte: Liberated Pixel Cup (LPC) — CC-BY-SA / GPL / OGA-BY · ", q("button", {
-			class: "vt-link",
+		this.statusEl.replaceChildren(q("span", {}, `${this.data.catalog.items.length} peças no catálogo · ${e} neste personagem`), this.dirty ? q("span", { class: "cp-dirty" }, "● não salvo") : q("span", {}, "salvo"), q("button", {
+			class: "cp-link",
 			onclick: () => this.openCredits()
-		}, "ver créditos")));
+		}, "Créditos da arte"));
+	}
+	cameraMode() {
+		return this.camOverride ? this.camOverride : os.has(this.slot) || ss.has(this.group) ? "face" : "body";
+	}
+	toggleCamera() {
+		this.camOverride = this.cameraMode() === "face" ? "body" : "face";
+	}
+	setupStageInput() {
+		let e = this.stageEl;
+		e.addEventListener("pointerdown", (t) => {
+			t.target.closest("button, input") || (this.drag = {
+				x: t.clientX,
+				acc: 0
+			}, e.setPointerCapture(t.pointerId), e.classList.add("cp-dragging"));
+		}), e.addEventListener("pointermove", (e) => {
+			if (this.drag) {
+				for (this.drag.acc += e.clientX - this.drag.x, this.drag.x = e.clientX; this.drag.acc > 70;) this.turn(-1), this.drag.acc -= 70;
+				for (; this.drag.acc < -70;) this.turn(1), this.drag.acc += 70;
+			}
+		});
+		let t = () => {
+			this.drag = null, e.classList.remove("cp-dragging");
+		};
+		e.addEventListener("pointerup", t), e.addEventListener("pointercancel", t), this.resizeObs = new ResizeObserver(() => this.fitCanvas()), this.resizeObs.observe(e);
+	}
+	fitCanvas() {
+		let e = Math.min(window.devicePixelRatio || 1, 2), t = Math.max(1, Math.round(this.stageEl.clientWidth * e)), n = Math.max(1, Math.round(this.stageEl.clientHeight * e));
+		this.canvas.width !== t && (this.canvas.width = t), this.canvas.height !== n && (this.canvas.height = n);
+	}
+	upscaled(e, t, n, r) {
+		let i = `${this.rev}:${e}:${t}:${n}`, a = this.upCache.get(i);
+		if (!a) {
+			let e = document.createElement("canvas");
+			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = ns(e, ls), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
+		}
+		return a;
+	}
+	loop() {
+		let e = this.canvas.getContext("2d");
+		e.imageSmoothingEnabled = !0, e.imageSmoothingQuality = "high";
+		let t = performance.now(), n = t, r = (i) => {
+			this.raf = requestAnimationFrame(r);
+			let a = Math.min(.1, (i - n) / 1e3);
+			n = i, this.fitCanvas();
+			let o = this.canvas.width, s = this.canvas.height;
+			e.clearRect(0, 0, o, s);
+			let c = cs[this.cameraMode()], l = Math.max(c.h, c.minW / (o / s)), u = 1 - Math.exp(-a * 7);
+			this.cam.cx += (c.cx - this.cam.cx) * u, this.cam.cy += (c.cy - this.cam.cy) * u, this.cam.h += (l - this.cam.h) * u, this.camBtn.textContent = this.cameraMode() === "face" ? "Ver o corpo" : "Ver o rosto";
+			let d = this.sheets?.[this.anim];
+			if (!d) return;
+			let { frames: f, rate: p } = jt[this.anim], m = +(this.anim === "walk"), h = f - m, g = m + Math.floor((i - t) / 1e3 * p) % h, _ = this.upscaled(this.anim, this.dir, g, d), v = this.cam.h, y = o / s * v, b = this.cam.cx - y / 2, x = this.cam.cy - v / 2, S = o / y, C = (32 - b) * S, w = (61.5 - x) * S;
+			e.save(), e.translate(C, w), e.scale(1, .22);
+			let T = 17 * S, E = e.createRadialGradient(0, 0, 0, 0, 0, T);
+			E.addColorStop(0, "rgba(0,0,0,0.55)"), E.addColorStop(.7, "rgba(0,0,0,0.25)"), E.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = E, e.beginPath(), e.arc(0, 0, T, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, S * .35), e.beginPath(), e.arc(0, 0, T * .82, 0, Math.PI * 2), e.stroke(), e.restore(), ps(e, _, b * us, x * us, y * us, v * us, 0, 0, o, s);
+		};
+		this.raf = requestAnimationFrame(r);
 	}
 	async recompose() {
 		let e = ++this.composeToken;
 		try {
 			let t = await Vt(this.opts.assetBase, this.appearance);
-			e === this.composeToken && (this.sheets = t);
+			e === this.composeToken && (this.sheets = t, this.rev++, this.upCache.clear());
 		} catch (e) {
 			this.statusEl.textContent = `Erro montando o personagem: ${e.message}`;
+			return;
 		}
 		this.refreshStatus();
 	}
-	loop() {
-		let e = this.preview.getContext("2d");
-		e.imageSmoothingEnabled = !1;
-		let t = performance.now(), n = (r) => {
-			this.raf = requestAnimationFrame(n);
-			let i = this.sheets?.[this.anim];
-			if (e.clearRect(0, 0, this.preview.width, this.preview.height), !i) return;
-			let { frames: a, rate: o } = jt[this.anim], s = +(this.anim === "walk"), c = a - s, l = s + Math.floor((r - t) / 1e3 * o) % c, u = 64 * ns;
-			e.drawImage(i, l * 64, this.dir * 64, 64, 64, 0, 0, u, u);
-		};
-		this.raf = requestAnimationFrame(n);
+	handleKey(e) {
+		if (e.key === "Escape" && this.modals.length) {
+			this.modals[this.modals.length - 1]();
+			return;
+		}
+		let t = e.target;
+		if (this.modals.length || t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || e.ctrlKey || e.metaKey || e.altKey || !this.data || !this.root.isConnected) return;
+		let n = this.slotsOfGroup(), r = n.findIndex((e) => e.id === this.slot);
+		switch (e.key) {
+			case "ArrowUp":
+				n.length && this.focusSlot(n[(Math.max(0, r) - 1 + n.length) % n.length].id);
+				break;
+			case "ArrowDown":
+				n.length && this.focusSlot(n[(r + 1) % n.length].id);
+				break;
+			case "ArrowLeft":
+			case "ArrowRight":
+				r >= 0 && this.cycle(n[r], e.key === "ArrowRight" ? 1 : -1);
+				break;
+			case "q":
+			case "Q":
+				this.turn(-1);
+				return;
+			case "e":
+			case "E":
+				this.turn(1);
+				return;
+			default: return;
+		}
+		e.preventDefault();
 	}
 	async save() {
 		try {
@@ -47966,11 +48230,11 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 		}
 	}
 	async goBack() {
-		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de voltar?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
+		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
 		let e = this.modal("Créditos da arte", Ra(this.opts.assetBase), [q("button", {
-			class: "vt-btn",
+			class: "cp-btn cp-ghost",
 			onclick: () => e()
 		}, "Fechar")]);
 	}
@@ -47978,34 +48242,34 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = Go("Novo personagem", Tt(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
-		this.character.appearance = Et(this.data, this.character.appearance), this.baseThumb = null, this.renderSlots(), this.renderOptions(), this.recompose();
+		this.character.appearance = Et(this.data, this.character.appearance), this.baseThumb = null, this.renderTabs(), this.renderRows(), this.recompose();
 	}
 	async openList() {
-		let e = q("div", { class: "vt-list" }), t = this.modal("Personagens", [e], [q("button", {
-			class: "vt-btn",
+		let e = q("div", { class: "cp-list" }), t = this.modal("Personagens", [e], [q("button", {
+			class: "cp-btn cp-ghost",
 			onclick: () => t()
 		}, "Fechar")]), n = async () => {
 			let r, i;
 			try {
 				[r, i] = await Promise.all([this.opts.storage.list(), this.opts.storage.getActive()]);
 			} catch (t) {
-				e.replaceChildren(q("div", { class: "vt-empty" }, `Não deu pra ler os personagens: ${t.message}`));
+				e.replaceChildren(q("div", { class: "cp-empty" }, `Não deu pra ler os personagens: ${t.message}`));
 				return;
 			}
-			e.replaceChildren(), r.length || e.append(q("div", { class: "vt-empty" }, "Nenhum personagem salvo ainda."));
+			e.replaceChildren(), r.length || e.append(q("div", { class: "cp-empty" }, "Nenhum personagem salvo ainda."));
 			for (let a of r) {
 				let r = q("canvas", {
-					class: "vt-item-thumb",
+					class: "cp-item-thumb",
 					width: 64,
 					height: 64
 				});
-				Bt(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(q("div", { class: "vt-item" }, r, q("div", {}, q("b", {}, a.name), q("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), q("button", {
-					class: "vt-btn vt-primary",
+				Bt(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(q("div", { class: "cp-item" }, r, q("div", {}, q("b", {}, a.name), q("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), q("button", {
+					class: "cp-btn cp-primary",
 					onclick: async () => {
 						(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
 					}
 				}, "Usar"), q("button", {
-					class: "vt-btn vt-danger",
+					class: "cp-btn cp-ghost",
 					title: "Apagar",
 					html: Y.trash,
 					onclick: async () => {
@@ -48029,29 +48293,33 @@ var es = ".vt-root.vt-creator{grid-template:\"top\"48px\"body\"1fr\"status\"26px
 		};
 		this.modals.push(r);
 		let i = q("div", {
-			class: "vt-modal-bg",
+			class: "cp-modal-bg",
 			onmousedown: (e) => {
 				e.target === i && r();
 			}
-		}, q("div", { class: "vt-modal" }, q("h3", {}, e), q("div", { class: "vt-modal-body" }, ...t), q("div", { class: "vt-modal-foot" }, ...n)));
+		}, q("div", { class: "cp-modal" }, q("h3", {}, e), ...t, q("div", { class: "cp-modal-foot" }, ...n)));
 		return this.root.append(i), r;
 	}
 	toast(e, t = !1) {
-		let n = q("div", { class: `vt-toast${t ? " vt-error" : ""}` }, e);
+		let n = q("div", { class: `cp-toast${t ? " cp-error" : ""}` }, e);
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function is(e, t) {
+function fs(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
+}
+function ps(e, t, n, r, i, a, o, s, c, l) {
+	let u = c / i, d = l / a, f = Math.max(0, n), p = Math.max(0, r), m = Math.min(t.width, n + i), h = Math.min(t.height, r + a);
+	m <= f || h <= p || e.drawImage(t, f, p, m - f, h - p, o + (f - n) * u, s + (p - r) * d, (m - f) * u, (h - p) * d);
 }
 //#endregion
 //#region src/engine/editor/NpcPanel.ts
-var as = 6, os = [
+var ms = 6, hs = [
 	"down",
 	"left",
 	"up",
 	"right"
-], ss = class {
+], gs = class {
 	state;
 	hooks;
 	el;
@@ -48121,7 +48389,7 @@ var as = 6, os = [
 		return this.style === "auto" ? this.analysis?.profile ?? "geral" : this.style;
 	}
 	newBatch() {
-		this.data && (this.drafts = Wo(this.data, this.profile, as), this.render());
+		this.data && (this.drafts = Wo(this.data, this.profile, ms), this.render());
 	}
 	render() {
 		if (!this.analysis) return;
@@ -48267,7 +48535,7 @@ var as = 6, os = [
 		document.body.append(r);
 		let i = () => {
 			a.destroy(), r.remove(), this.look = null;
-		}, a = new rs(r, {
+		}, a = new ds(r, {
 			assetBase: this.hooks.assetBase,
 			storage: n,
 			single: !0,
@@ -48290,7 +48558,7 @@ var as = 6, os = [
 		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
 	}
 	turn(e) {
-		this.state.checkpoint(), e.dir = os[(os.indexOf(e.dir) + 1) % os.length], this.state.emit("npcs"), this.state.edited();
+		this.state.checkpoint(), e.dir = hs[(hs.indexOf(e.dir) + 1) % hs.length], this.state.emit("npcs"), this.state.edited();
 	}
 	move(e) {
 		this.state.set({
@@ -48311,7 +48579,7 @@ var as = 6, os = [
 			npcDraft: null
 		}), this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${e.name}" removido.`);
 	}
-}, cs = {
+}, _s = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -48319,7 +48587,7 @@ var as = 6, os = [
 	intensity: 1,
 	flicker: .2
 };
-function ls(e, t, n) {
+function vs(e, t, n) {
 	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = q("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
@@ -48352,7 +48620,7 @@ function ls(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? cs,
+			...o ?? _s,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -48411,7 +48679,7 @@ function ls(e, t, n) {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? cs } : null, F(), m();
+			o = k.checked ? { ...o ?? _s } : null, F(), m();
 		}
 	}), A = q("input", {
 		class: "vt-input vt-num",
@@ -48511,7 +48779,7 @@ function ls(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function us(e) {
+function ys(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -48519,14 +48787,14 @@ function us(e) {
 		return [];
 	}
 }
-function ds(e, t) {
+function bs(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
 //#region src/engine/storage.ts
-function fs(e, t = Date.now()) {
+function xs(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -48540,7 +48808,7 @@ function fs(e, t = Date.now()) {
 		}))
 	};
 }
-function ps(e = "Meu mundo") {
+function Ss(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: F("mundo"),
@@ -48549,7 +48817,7 @@ function ps(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var ms = class {
+var Cs = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -48574,9 +48842,9 @@ var ms = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Ts(JSON.parse(e));
+			if (e) return Ps(JSON.parse(e));
 		} catch {}
-		return ps();
+		return Ss();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -48587,19 +48855,19 @@ var ms = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? _s(JSON.parse(t)) : null;
+			return t ? Es(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([fs(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([xs(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function hs() {
+function ws() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -48607,14 +48875,14 @@ function hs() {
 		return !1;
 	}
 }
-var gs = (e) => typeof e == "number" && Number.isFinite(e);
-function _s(e) {
+var Ts = (e) => typeof e == "number" && Number.isFinite(e);
+function Es(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
 	if (!i(n) || !i(r)) throw Error("Tamanho de zona inválido (precisa ser de 8 a 128 tiles).");
 	if (!Array.isArray(t.corners) || t.corners.length !== (n + 1) * (r + 1)) throw Error("Zona corrompida: a grade de terrenos não bate com o tamanho.");
-	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && gs(e.x) && gs(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && gs(e.x) && gs(e.y) && gs(e.w) && gs(e.h) && e.w > 0 && e.h > 0), l = t.spawn && gs(t.spawn.x) && gs(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
+	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && Ts(e.x) && Ts(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && Ts(e.x) && Ts(e.y) && Ts(e.w) && Ts(e.h) && e.w > 0 && e.h > 0), l = t.spawn && Ts(t.spawn.x) && Ts(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
 		x: a / 2,
 		y: o / 2
 	};
@@ -48634,12 +48902,12 @@ function _s(e) {
 			x: Math.round(e.x),
 			y: Math.round(e.y),
 			...e.flip === !0 ? { flip: !0 } : {},
-			...gs(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
+			...Ts(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...xs(t.lighting),
-		...Cs(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: ws(t.lights, a, o) } : {},
-		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: vs(t.npcs, a, o) } : {},
+		...As(t.lighting),
+		...Ms(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: Ns(t.lights, a, o) } : {},
+		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: Ds(t.npcs, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -48658,11 +48926,11 @@ function _s(e) {
 		}
 	};
 }
-function vs(e, t, n) {
+function Ds(e, t, n) {
 	let r = [];
 	for (let i of e) {
 		let e = i;
-		if (!e || typeof e != "object" || !gs(e.x) || !gs(e.y)) continue;
+		if (!e || typeof e != "object" || !Ts(e.x) || !Ts(e.y)) continue;
 		let a = Ko({
 			id: "x",
 			name: e.name,
@@ -48673,37 +48941,37 @@ function vs(e, t, n) {
 			name: typeof e.name == "string" && e.name.trim() ? e.name.trim().slice(0, 60) : "NPC",
 			role: typeof e.role == "string" ? e.role.slice(0, 60) : "",
 			appearance: a.appearance,
-			x: bs(Math.round(e.x), 0, t),
-			y: bs(Math.round(e.y), 0, n),
+			x: ks(Math.round(e.x), 0, t),
+			y: ks(Math.round(e.y), 0, n),
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {}
 		});
 	}
 	return r;
 }
-var ys = /^#[0-9a-f]{6}$/i, bs = (e, t, n) => Math.max(t, Math.min(n, e));
-function xs(e) {
+var Os = /^#[0-9a-f]{6}$/i, ks = (e, t, n) => Math.max(t, Math.min(n, e));
+function As(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		...typeof t.tint == "string" && ys.test(t.tint) ? { tint: t.tint } : {},
+		...typeof t.tint == "string" && Os.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...gs(t.wind) ? { wind: bs(t.wind, 0, 1) } : {},
+		...Ts(t.wind) ? { wind: ks(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {}
 	} };
 }
-function Ss(e) {
+function js(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {
-		hour: gs(t.hour) ? bs(t.hour, 0, 24) % 24 : null,
-		...gs(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: bs(t.dayMinutes, 1, 1440) } : {},
+		hour: Ts(t.hour) ? ks(t.hour, 0, 24) % 24 : null,
+		...Ts(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: ks(t.dayMinutes, 1, 1440) } : {},
 		...typeof t.weather == "string" && t.weather in Mr && t.weather !== "clear" ? { weather: t.weather } : {}
 	};
 	return n.hour === null && n.dayMinutes === void 0 && n.weather === void 0 ? {} : { sky: n };
 }
-function Cs(e) {
+function Ms(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -48725,7 +48993,7 @@ function Cs(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && gs(i) && i > 0 && (n[t] = bs(i, 0, 1));
+		r.includes(t) && Ts(i) && i > 0 && (n[t] = ks(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -48733,22 +49001,22 @@ function Cs(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function ws(e, t, n) {
-	return e.filter((e) => !!e && typeof e == "object" && gs(e.x) && gs(e.y)).map((e) => ({
+function Ns(e, t, n) {
+	return e.filter((e) => !!e && typeof e == "object" && Ts(e.x) && Ts(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : F("luz"),
-		x: bs(Math.round(e.x), 0, t),
-		y: bs(Math.round(e.y), 0, n),
-		radius: gs(e.radius) ? bs(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && ys.test(e.color) ? e.color : "#ffb060",
-		intensity: gs(e.intensity) ? bs(e.intensity, 0, 1) : 1,
-		flicker: gs(e.flicker) ? bs(e.flicker, 0, 1) : 0
+		x: ks(Math.round(e.x), 0, t),
+		y: ks(Math.round(e.y), 0, n),
+		radius: Ts(e.radius) ? ks(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && Os.test(e.color) ? e.color : "#ffb060",
+		intensity: Ts(e.intensity) ? ks(e.intensity, 0, 1) : 1,
+		flicker: Ts(e.flicker) ? ks(e.flicker, 0, 1) : 0
 	}));
 }
-function Ts(e) {
+function Ps(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
-	for (let [e, r] of Object.entries(t.layout ?? {})) r && gs(r.x) && gs(r.y) && (n[e] = {
+	for (let [e, r] of Object.entries(t.layout ?? {})) r && Ts(r.x) && Ts(r.y) && (n[e] = {
 		x: r.x,
 		y: r.y
 	});
@@ -48758,12 +49026,12 @@ function Ts(e) {
 		name: typeof t.name == "string" ? t.name : "Meu mundo",
 		start: typeof t.start == "string" ? t.start : null,
 		layout: n,
-		...Ss(t.sky)
+		...js(t.sky)
 	};
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var Es = [
+var Fs = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -48814,16 +49082,16 @@ var Es = [
 		label: "Régua: segure e arraste pra medir em metros (1 tile = 1 m)",
 		key: "R"
 	}
-], Ds = 8, Os = "vortable:objects:favorites", ks = "vortable:editor:drawer";
-function As(e) {
+], Is = 8, Ls = "vortable:objects:favorites", Rs = "vortable:editor:drawer";
+function zs(e) {
 	try {
-		let t = localStorage.getItem(ks);
+		let t = localStorage.getItem(Rs);
 		return e ? t !== "0" : t === "1";
 	} catch {
 		return e;
 	}
 }
-var js = "vortable:objects:recent", Ms = 24, Ns = [
+var Bs = "vortable:objects:recent", Vs = 24, Hs = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -48864,7 +49132,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		"#8ae8ff",
 		0
 	]
-], Ps = "★", Fs = "⟲", Is = class {
+], Us = "★", Ws = "⟲", Gs = class {
 	state;
 	storage;
 	hooks;
@@ -48899,8 +49167,8 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = us(Os);
-	recents = us(js);
+	favorites = ys(Ls);
+	recents = ys(Bs);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
@@ -48915,11 +49183,11 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, lt("editor", Ia), this.npcPanel = new ss(t, {
+		this.state = t, this.storage = n, this.hooks = r, lt("editor", Ia), this.npcPanel = new gs(t, {
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t)
-		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${As(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
+		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${zs(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -49053,13 +49321,13 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e), this.notifyBar();
 		try {
-			localStorage.setItem(ks, e ? "1" : "0");
+			localStorage.setItem(Rs, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
 		let e = q("aside", { class: "vt-tools" });
-		for (let t of Es) {
+		for (let t of Fs) {
 			let n = q("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
@@ -49259,7 +49527,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		});
 	}
 	renderTerrains() {
-		let e = Ls(this.terrainFilter.trim()), t = _.filter((t) => !e || Ls(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = Ks(this.terrainFilter.trim()), t = _.filter((t) => !e || Ks(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -49278,7 +49546,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = qe(), t = Ls(this.objectFilter.trim()), n = (e) => !t || Ls(Rs(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = qe(), t = Ks(this.objectFilter.trim()), n = (e) => !t || Ks(qs(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -49318,14 +49586,14 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: Ps,
+				id: Us,
 				title: "Favoritos",
 				icon: Y.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: Fs,
+				id: Ws,
 				title: "Recentes",
 				icon: Y.clock,
 				count: u.length,
@@ -49567,7 +49835,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = q("div", { class: "vt-lightcolors" }, ...Ns.map(([e, t, r]) => q("button", {
+		let l = q("div", { class: "vt-lightcolors" }, ...Hs.map(([e, t, r]) => q("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -49741,14 +50009,14 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		let t = Ge(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Ms), ds(js, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Vs), bs(Bs, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], ds(Os, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], bs(Ls, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -49839,7 +50107,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(We().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = ls(t, this.hooks.textureImage(Le(t.sheet)), n), i = q("button", {
+		let t = this.primary(e), n = [...new Set(We().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = vs(t, this.hooks.textureImage(Le(t.sheet)), n), i = q("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -50012,7 +50280,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Ds, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(Is, e)) });
 	}
 	async save() {
 		try {
@@ -50026,7 +50294,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 	exportZone() {
 		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = q("a", {
 			href: URL.createObjectURL(t),
-			download: `${zs(e.name) || "zona"}.vortable.json`
+			download: `${Js(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
@@ -50036,7 +50304,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 	}
 	async importZone(e) {
 		try {
-			let t = _s(JSON.parse(await e.text()));
+			let t = Es(JSON.parse(await e.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(t), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${t.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -50289,8 +50557,8 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? fs(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(fs(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? xs(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(xs(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -50470,7 +50738,7 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 			}
 			return;
 		}
-		let s = Es.find((e) => e.key.toLowerCase() === i);
+		let s = Fs.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -50481,10 +50749,10 @@ var js = "vortable:objects:recent", Ms = 24, Ns = [
 		}) : e.key === " " && e.preventDefault();
 	}
 };
-function Ls(e) {
+function Ks(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function Rs(e) {
+function qs(e) {
 	return [
 		e.label,
 		e.category,
@@ -50493,16 +50761,16 @@ function Rs(e) {
 		...Ke(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function zs(e) {
+function Js(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
 //#region src/engine/index.ts
-var Bs = "/__vortable/curate";
-function Vs(e, t) {
+var Ys = "/__vortable/curate";
+function Xs(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	Ki(n);
-	let r = t.mode ?? "play", i = t.storage ?? new ms(), a = t.appearance, o = !1, s = !0, l = t.net ? new Ii(t.net) : void 0, u = null, d = null, f = e, p = (e, i, c, d = 0, f) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Cs(), a = t.appearance, o = !1, s = !0, l = t.net ? new Ii(t.net) : void 0, u = null, d = null, f = e, p = (e, i, c, d = 0, f) => ({
 		zone: e,
 		...f ? {
 			at: {
@@ -50547,7 +50815,7 @@ function Vs(e, t) {
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null, a = r && !r.dirty && t.zone?.id === r.zone.id;
-		d = new Fa(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), d.assetBase = n, r && (d.dirty = r.dirty, d.view = r.view, d.zoom = r.zoom), u = new Is(e, d, i, {
+		d = new Fa(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), d.assetBase = n, r && (d.dirty = r.dirty, d.view = r.view, d.zoom = r.zoom), u = new Gs(e, d, i, {
 			assetBase: n,
 			textureImage: (e) => g.textures.get(e).getSourceImage(),
 			startTest: () => {
@@ -50568,7 +50836,7 @@ function Vs(e, t) {
 			editCharacter: t.onEditCharacter,
 			externalBar: t.externalToolbar,
 			curate: t.curate ? async (e, t, n) => {
-				let r = await fetch(Bs, {
+				let r = await fetch(Ys, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -50768,12 +51036,13 @@ function Vs(e, t) {
 		}
 	};
 }
-function Hs(e, t = {}) {
-	let n = new rs(e, {
+function Zs(e, t = {}) {
+	let n = new ds(e, {
 		assetBase: t.assetBase ?? "./assets/",
 		storage: t.storage ?? new qo(),
 		back: t.back,
 		single: t.single,
+		title: t.title,
 		saveLabel: t.saveLabel,
 		activateOnSave: t.activateOnSave,
 		onSaved: t.onSaved
@@ -50781,4 +51050,4 @@ function Hs(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { Jo as CHARACTER_FORMAT, tr as DAY_LENGTHS, M as DAY_MINUTES, re as DEFAULT_WIND, Y as EDITOR_ICONS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, qo as LocalCharacterStorage, ms as LocalWorldStorage, j as METERS_PER_TILE, ki as REACTIONS, rr as SKY_PRESETS, Yi as SOUND_LAYERS, ra as SURFACE_LABELS, _ as TERRAINS, A as TILE, Mr as WEATHERS, Nr as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, Xo as characterFileName, Bt as characterFrame, z as clampZoneSize, Pn as daylight, Tt as defaultAppearance, Qo as downloadText, Yo as exportCharacters, $n as formatHour, ht as loadCharacterData, hs as localStorageAvailable, Hs as mountCharacterCreator, Vs as mountVortable, Go as newCharacter, F as newId, ps as newWorld, B as newZone, Et as normalizeAppearance, Ko as parseCharacter, Zo as parseCharacterFile, Ni as parseNet, Ts as parseWorld, _s as parseZone, $o as pickTextFile, kt as randomAppearance, Zn as shiftForHour, nr as skySwatch, fs as summarize, Xn as worldHour };
+export { Jo as CHARACTER_FORMAT, tr as DAY_LENGTHS, M as DAY_MINUTES, re as DEFAULT_WIND, Y as EDITOR_ICONS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, qo as LocalCharacterStorage, Cs as LocalWorldStorage, j as METERS_PER_TILE, ki as REACTIONS, rr as SKY_PRESETS, Yi as SOUND_LAYERS, ra as SURFACE_LABELS, _ as TERRAINS, A as TILE, Mr as WEATHERS, Nr as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, Xo as characterFileName, Bt as characterFrame, z as clampZoneSize, Pn as daylight, Tt as defaultAppearance, Qo as downloadText, Yo as exportCharacters, $n as formatHour, ht as loadCharacterData, ws as localStorageAvailable, Zs as mountCharacterCreator, Xs as mountVortable, Go as newCharacter, F as newId, Ss as newWorld, B as newZone, Et as normalizeAppearance, Ko as parseCharacter, Zo as parseCharacterFile, Ni as parseNet, Ps as parseWorld, Es as parseZone, $o as pickTextFile, kt as randomAppearance, Zn as shiftForHour, nr as skySwatch, xs as summarize, Xn as worldHour };

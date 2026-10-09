@@ -1,0 +1,35 @@
+/* Criador de personagem em tela cheia (por cima de tudo) */
+.char-studio {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: #07080d;
+}
+.char-studio__loading { position: absolute; inset: 0; display: grid; place-items: center; }
+.char-studio__host { position: absolute; inset: 0; }
+
+/* Botão pequeno embaixo do retrato da ficha: não ocupa lugar no card */
+.char-btn {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: max-content;
+  max-width: 150px;
+  padding: 4px 10px;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  background: var(--bg-void);
+  border: 1px solid var(--gilded);
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.char-btn:hover { color: var(--text-primary); border-color: var(--gilded-bright); background: var(--bg-elevated); }

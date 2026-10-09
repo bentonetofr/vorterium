@@ -3,17 +3,17 @@ import type { CharacterSave } from '../types';
 export interface CreatorOptions {
     assetBase: string;
     storage: CharacterStorage;
-    /** Botão "voltar" (ex.: pro editor). Sem ele, o botão não aparece. */
+    /** Botão de fechar/voltar (ex.: pro editor). Sem ele, o botão não aparece. */
     back?: {
         label: string;
         onClick: () => void;
     };
     /**
      * Modo jogador: um boneco só, sem lista nem "Novo". Salvar guarda o boneco
-     * e chama `onSaved` (é como o jogador entra no jogo pela primeira vez).
+     * e chama `onSaved` (é como o jogador fixa o personagem dele na campanha).
      */
     single?: boolean;
-    /** Título da barra de cima (padrão: "Crie seu boneco" no modo jogador). */
+    /** Título no alto da tela (padrão: "Definir aparência"). */
     title?: string;
     saveLabel?: string;
     /** Salvar também põe o boneco em uso (padrão: sim). O mestre cria NPCs sem tomar o lugar do dele. */
@@ -32,55 +32,86 @@ export declare class CreatorUI {
     private dir;
     private sheets;
     private composeToken;
+    /** Sobe a cada folha nova (a ampliação guardada vale só pra versão dela). */
+    private rev;
     private raf;
+    private cam;
+    private camOverride;
+    private upCache;
+    private stageEl;
+    private canvas;
+    private resizeObs;
     private nameInput;
-    private preview;
     private tabsEl;
-    private slotsEl;
-    private optionsEl;
+    private rowsEl;
     private statusEl;
+    private camBtn;
+    private nextBtn;
+    private prevBtn;
     /** O cavaleiro correndo, por cima do criador enquanto o catálogo carrega. */
     private loading?;
     private animButtons;
     private thumbObserver;
     private baseThumb;
     private modals;
+    private drag;
     private onKey;
     private onBeforeUnload;
     constructor(parent: HTMLElement, opts: CreatorOptions);
     private init;
     destroy(): void;
-    private iconBtn;
+    private tool;
     private get appearance();
+    private groupOf;
+    /** Abas com peças pra escolher (na ordem do criador). */
     private groups;
+    private slotsOfGroup;
     private renderTabs;
-    /** Lista de espaços da aba, com o item escolhido em cada um. */
-    private renderSlots;
-    /** Opções do espaço escolhido: corpo/pele (no Corpo), itens, cores e variantes. */
-    private renderOptions;
+    private setGroup;
+    private stepGroup;
+    private focusSlot;
+    /** Linhas da aba: uma por peça (◀ valor ▶); a escolhida mostra as cores embaixo. */
+    private renderRows;
+    private arrow;
+    private bodyRow;
+    private skinRow;
+    private slotRow;
+    /** Cores e variantes da peça escolhida. */
+    private detail;
     private swatches;
+    /** Janela com todas as opções de uma peça, com miniaturas. */
+    private openGrid;
     /** Miniatura: o item sobre o corpo e a cabeça atuais (meio apagados). */
     private drawThumb;
     /** Ao trocar de item, mantém as cores que fazem sentido (mesmo canal e material). */
     private carryColors;
     private update;
     private chooseItem;
+    /** Passa pra a peça anterior/seguinte do espaço (volta ao começo no fim; "Nenhum" conta, se puder). */
+    private cycle;
     private setBody;
     private randomize;
     private turn;
     private refreshAnimButtons;
     private markDirty;
     private refreshStatus;
+    private cameraMode;
+    private toggleCamera;
+    private setupStageInput;
+    private fitCanvas;
+    /** O quadro (anim, direção, coluna) já ampliado 8×, guardado enquanto a folha for a mesma. */
+    private upscaled;
+    /** Prévia animada: desenha o quadro ampliado, com a câmera chegando no rosto ou no corpo todo. */
+    private loop;
     /** Remonta as folhas da prévia (a mais recente vence se clicarem rápido). */
     private recompose;
-    /** Prévia animada (desenha a folha da animação escolhida, quadro a quadro). */
-    private loop;
+    private handleKey;
     private save;
     /** Baixa o personagem aberto como arquivo (vale em qualquer campanha). */
     private exportFile;
     /** Abre um arquivo de personagem na tela (sem salvar). No modo jogador, troca o boneco que já existe. */
     private importFile;
-    /** Voltar: com mudanças, pergunta se salva (OK) ou descarta (Cancelar). */
+    /** Fechar: com mudanças, pergunta se salva (OK) ou descarta (Cancelar). */
     private goBack;
     private openCredits;
     private newCharacter;

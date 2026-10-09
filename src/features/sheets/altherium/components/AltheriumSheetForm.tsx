@@ -56,6 +56,7 @@ import {
 } from '../services/altheriumSheetService'
 import { Select } from '../../../../shared/components/Select'
 import './AltheriumSheet.css'
+import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 
 const NOTES_MAX = 2000
 /** Nomes que deixam o manequim sem pernas (comparados em minúsculas). */
@@ -666,6 +667,7 @@ export function AltheriumSheetForm({
             {portraitPickError && (
               <p className="alth-hero__portrait-error" role="alert">{portraitPickError}</p>
             )}
+            <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />
           </div>
 
           <div className="alth-hero__identity-main">

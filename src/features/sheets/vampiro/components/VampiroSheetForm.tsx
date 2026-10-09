@@ -23,6 +23,7 @@ import { VtmXpTab } from './VtmXpTab'
 import { VtmPredatorCard } from './VtmPredatorCard'
 import type { VtmForm } from './vtmForm'
 import './VampiroSheet.css'
+import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 
 // ────────────────────────────────────────────────────────
 // Ficha de Vampiro: A Máscara (5ª edição). Cabeçalho com retrato,
@@ -350,6 +351,7 @@ export function VampiroSheetForm({
               <button type="button" className="vtm-portrait__remove" onClick={onPortraitRemove} aria-label="Remover o retrato">×</button>
             )}
             <input ref={fileRef} type="file" accept={VTM_PORTRAIT_TYPES.join(',')} hidden onChange={onFile} />
+            <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />
           </div>
 
           <div className="vtm-hero__fields">
