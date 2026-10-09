@@ -1,6 +1,13 @@
 /* Janela da ficha dentro do Vortable: cobre o lado esquerdo da tela. */
 
-.sheet-fab--open { background: var(--accent-bright); }
+/* botão da ficha: azul claro (o tom do texto do site) */
+.dice-fab.sheet-fab {
+  background: #8db8f5;
+  border-color: #c4dcff;
+  color: var(--bg-base);
+}
+.dice-fab.sheet-fab:hover:not(:disabled),
+.dice-fab.sheet-fab--open { background: #b3d2fb; }
 
 .sheet-popup {
   position: fixed;
