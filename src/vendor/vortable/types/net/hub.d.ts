@@ -12,6 +12,9 @@ export interface NetHello {
     npc?: boolean;
     showName?: boolean;
 }
+/**
+ * `from`: o NPC mudou de zona (saiu dela); `npc`: os dados dele pra quem ainda não o tem na zona de destino.
+ */
 export interface NetNpcMove {
     t: 'npcmove';
     zone: string;
@@ -19,6 +22,13 @@ export interface NetNpcMove {
     x: number;
     y: number;
     dir: Dir;
+    from?: string;
+    npc?: {
+        name: string;
+        role: string;
+        appearance: Appearance;
+        showName: boolean;
+    };
 }
 /** Prefixo do id de um NPC controlado pelo mestre na rede. */
 export declare const NPC_PEER = "npc:";

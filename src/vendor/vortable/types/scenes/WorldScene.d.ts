@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { NetHub } from '../net/hub';
 import { ZoneAudio } from '../audio/ZoneAudio';
-import { type Appearance, type Dir, type WorldSky, type ZoneData } from '../types';
+import { type Appearance, type Dir, type WorldSky, type ZoneData, type ZoneNpc } from '../types';
 export interface WorldSceneData {
     zone: ZoneData;
     appearance: Appearance;
@@ -44,6 +44,17 @@ export interface WorldSceneData {
     listen?: boolean;
     /** Observador que ouve: o "Ouvir" está ligado? (lido a cada zona nova) */
     audioOn?: () => boolean;
+    /** Câmera do mestre: id do NPC que atravessou uma saída e continua controlado na zona nova. */
+    carryNpc?: string;
+    /** O NPC controlado trocou de zona: avisa a sala e guarda a mudança (sai de uma zona, entra na outra). */
+    onNpcTransfer?: (t: {
+        npc: ZoneNpc;
+        from: string;
+        to: string;
+        x: number;
+        y: number;
+        dir: Dir;
+    }) => void;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;
@@ -161,6 +172,12 @@ export declare class WorldScene extends Phaser.Scene {
     }) => Promise<void>): Promise<void>;
     /** O NPC parado passa pra este ponto (e o "calço" dele junto). */
     private applyNpcMove;
+    /** O "calço" (colisão) de um NPC parado. */
+    private addNpcBlock;
+    /** O NPC saiu desta zona (foi controlado por uma saída): some daqui. */
+    private removeNpc;
+    /** O NPC controlado pisou numa saída: leva ele e a câmera pra zona de destino, e segue controlado lá. */
+    private travelNpc;
     /** Quem está sendo controlado pelo mestre some do lugar parado (e o "calço" dele deixa de barrar). */
     private syncHiddenNpcs;
     /** Conta pra sala onde o NPC controlado está (como um jogador de id `npc:<id>`). */
