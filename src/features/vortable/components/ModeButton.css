@@ -1,0 +1,49 @@
+/* Botão redondo que alterna entre o controle ao vivo (olho) e as ferramentas de edição (martelo e chave de fenda). */
+.mode-btn {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--gilded);
+  color: var(--accent-bright);
+  cursor: var(--cursor-hand);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: color var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
+}
+.mode-btn:hover { color: var(--text-primary); border-color: var(--gilded-bright); transform: translateY(-1px); }
+.mode-btn:active { transform: scale(0.92); transition-duration: 80ms; }
+
+/* os dois ícones ficam empilhados; o de agora gira e aparece, o outro some */
+.mode-btn__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.22s ease, transform 0.28s ease;
+}
+.mode-btn__icon--eye { opacity: 1; transform: none; }
+.mode-btn__icon--tools { opacity: 0; transform: rotate(-70deg) scale(0.6); }
+.mode-btn--tools .mode-btn__icon--eye { opacity: 0; transform: rotate(70deg) scale(0.6); }
+.mode-btn--tools .mode-btn__icon--tools { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) { .mode-btn, .mode-btn__icon { transition: none; } }
+
+/* telas secundárias (Personagens, Jogadores): barra com "Voltar" */
+.vortable-extra { display: flex; flex-direction: column; gap: var(--space-3, 12px); min-height: 0; }
+.vortable-extra__bar { display: flex; align-items: center; gap: var(--space-3, 12px); }
+.vortable-extra__title {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.vortable-page .vortable-extra { flex: 1 1 auto; }

@@ -17,7 +17,7 @@ type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number |
  * qualquer zona, o mapa inteiro) e muda hora, tempo e vento ao vivo pra todos.
  * Diferente do Editar mundo, que é a criação antes da sessão.
  */
-export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; userId: string }) {
+export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWithRole; userId: string; onOpen: (screen: 'personagens' | 'jogadores') => void }) {
   const vnet = useVortableNet()
   // o controle mostra o mundo onde os jogadores estão
   const { active, ready } = useVortableWorlds()
@@ -167,7 +167,13 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
         </section>
 
         <section className="live__block">
-          <h4>Jogadores</h4>
+          <div className="live__grouphead">
+            <h4>Jogadores</h4>
+            <span className="live__row">
+              <button type="button" className="btn btn-ghost" onClick={() => onOpen('jogadores')} title="Quem joga com qual boneco, espectadores, levar a uma zona">Gerenciar</button>
+              <button type="button" className="btn btn-ghost" onClick={() => onOpen('personagens')} title="Criar e editar personagens">Personagens</button>
+            </span>
+          </div>
           {peers.length === 0 && <p className="live__empty">Ninguém conectado.</p>}
           <ul className="live__players">
             {[...here, ...elsewhere].map((p) => (

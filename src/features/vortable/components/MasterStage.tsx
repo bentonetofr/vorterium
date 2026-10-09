@@ -1,60 +1,75 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
-import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
 import { createCharacterStorage, createWorldStorage, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
 import { EngineStage } from './EngineStage'
 import { PlayersManager } from './PlayersManager'
 import { LiveControl } from './LiveControl'
 import { SceneBar } from './SceneBar'
+import { ModeButton } from './ModeButton'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { getResume, patchResume } from '../resume/resumeStore'
 
-type Tab = 'editar' | 'controle' | 'personagens' | 'jogadores'
+/** Duas telas: as ferramentas (editar o mundo) e o controle ao vivo (ver a cena como os jogadores e mudar tudo na hora). */
+type Mode = 'editar' | 'controle'
+/** Telas secundárias, abertas de dentro de uma das duas (têm um "Voltar"). */
+type Extra = 'personagens' | 'jogadores'
 
-const TABS: Tab[] = ['editar', 'controle', 'personagens', 'jogadores']
-const LABELS: Record<Tab, string> = {
-  editar: 'Editar mundo', controle: 'Controle', personagens: 'Personagens', jogadores: 'Jogadores',
-}
+const EXTRA_TITLE: Record<Extra, string> = { personagens: 'Personagens', jogadores: 'Jogadores' }
 
-/** Mestre: editor do mundo, teste como boneco, criador de personagens e gerência dos jogadores. */
+/** Mestre: editor do mundo, controle ao vivo, criador de personagens e gerência dos jogadores. */
 export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: CampaignWithRole; userId: string; editSignal?: number }) {
-  // voltando ao Vortable: a mesma aba em que o mestre estava
-  const [tab, setTab] = useState<Tab>(() => {
-    const saved = getResume(campaign.id)?.masterTab as Tab | undefined
-    return saved && TABS.includes(saved) ? saved : 'editar'
-  })
-  useEffect(() => { patchResume(campaign.id, { masterTab: tab }) }, [campaign.id, tab])
+  // voltando ao Vortable: a mesma tela em que o mestre estava
+  const [mode, setMode] = useState<Mode>(() => (getResume(campaign.id)?.masterTab === 'controle' ? 'controle' : 'editar'))
+  const [extra, setExtra] = useState<Extra | null>(null)
+  useEffect(() => { patchResume(campaign.id, { masterTab: mode }) }, [campaign.id, mode])
   const vnet = useVortableNet()
   const { editing, ready } = useVortableWorlds()
 
-  // "Editar" num mundo (painel Mundos): vai pra aba do editor
-  useEffect(() => { if (editSignal > 0) setTab('editar') }, [editSignal])
-  const tabDir = useTabDirection(TABS, tab)
-  const { tabsRef, selectTab } = useStableTabPanels<Tab>(setTab)
+  // "Editar" num mundo (painel Mundos): vai pro editor
+  useEffect(() => { if (editSignal > 0) { setExtra(null); setMode('editar') } }, [editSignal])
+
+  function toggle() {
+    setExtra(null)
+    setMode((m) => (m === 'editar' ? 'controle' : 'editar'))
+  }
 
   return (
-    <div className="vortable-master" style={{ '--tab-dir': tabDir } as CSSProperties}>
+    <div className="vortable-master">
       <div className="vortable-master__top">
-      <nav ref={tabsRef} className="campaign-tabs" role="tablist" aria-label="Vortable">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            role="tab"
-            aria-selected={tab === t}
-            className={`campaign-tab ${tab === t ? 'campaign-tab--active' : ''}`}
-            onClick={() => selectTab(t)}
-          >
-            <span className="campaign-tab__label">{LABELS[t]}</span>
-          </button>
-        ))}
-        <TabIndicator activeKey={tab} />
-      </nav>
-      <SceneBar campaignId={campaign.id} />
+        <ModeButton mode={mode} onClick={toggle} />
+        <SceneBar campaignId={campaign.id} />
       </div>
 
-      {tab === 'editar' && !ready && <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>}
-      {tab === 'editar' && ready && editing && (
+      {extra && (
+        <div className="vortable-extra">
+          <div className="vortable-extra__bar">
+            <button type="button" className="btn btn-ghost" onClick={() => setExtra(null)}>← Voltar</button>
+            <h3 className="vortable-extra__title">{EXTRA_TITLE[extra]}</h3>
+          </div>
+          {extra === 'personagens' && (
+            <EngineStage
+              key="personagens"
+              scroll
+              deps={[campaign.id, userId]}
+              mount={async (engine, host) => {
+                const characters = await createCharacterStorage(campaign.id, userId)
+                const creator = engine.mountCharacterCreator(host, {
+                  assetBase: VORTABLE_ASSETS,
+                  storage: characters,
+                  // criar um NPC não tira o boneco de teste do mestre ("Usar" faz isso)
+                  activateOnSave: false,
+                })
+                return creator.destroy
+              }}
+            />
+          )}
+          {extra === 'jogadores' && <PlayersManager campaign={campaign} userId={userId} />}
+        </div>
+      )}
+
+      {!extra && mode === 'editar' && !ready && <div className="vortable-stage"><div className="vortable-stage__cover"><div className="spinner" /></div></div>}
+      {!extra && mode === 'editar' && ready && editing && (
         <EngineStage
           key={`editar:${editing.id}`}
           deps={[campaign.id, userId, vnet.net, editing.id]}
@@ -81,7 +96,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               appearance,
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
-              onEditCharacter: () => selectTab('personagens'),
+              onEditCharacter: () => setExtra('personagens'),
               // o botão Testar do editor põe o mestre no mundo, junto com os jogadores
               net: net ? { selfId: userId, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
             })
@@ -99,27 +114,9 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
         />
       )}
 
-      {tab === 'controle' && <LiveControl key="controle" campaign={campaign} userId={userId} />}
-
-      {tab === 'personagens' && (
-        <EngineStage
-          key="personagens"
-          scroll
-          deps={[campaign.id, userId]}
-          mount={async (engine, host) => {
-            const characters = await createCharacterStorage(campaign.id, userId)
-            const creator = engine.mountCharacterCreator(host, {
-              assetBase: VORTABLE_ASSETS,
-              storage: characters,
-              // criar um NPC não tira o boneco de teste do mestre ("Usar" faz isso)
-              activateOnSave: false,
-            })
-            return creator.destroy
-          }}
-        />
+      {!extra && mode === 'controle' && (
+        <LiveControl key="controle" campaign={campaign} userId={userId} onOpen={setExtra} />
       )}
-
-      {tab === 'jogadores' && <PlayersManager campaign={campaign} userId={userId} />}
     </div>
   )
 }

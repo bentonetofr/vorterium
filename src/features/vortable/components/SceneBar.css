@@ -9,7 +9,6 @@
   gap: var(--space-3, 12px);
   flex-wrap: wrap;
 }
-.vortable-master__top > .campaign-tabs { flex: 0 1 auto; }
 
 .scene-bar {
   position: relative;
