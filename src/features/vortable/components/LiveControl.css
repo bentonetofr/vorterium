@@ -246,3 +246,12 @@
 @media (max-width: 1100px) {
   .live__menu { top: 68px; }
 }
+
+/* ── Espectadores ── */
+.live__spec { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: var(--bg-base); border: 1px solid var(--border-dim); border-radius: var(--radius-sm); }
+.live__spec-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+.live__spec-name small { flex: none; color: var(--text-muted); }
+.live__spec-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.live__spec-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--success, #3fbf72); }
+.live__spec-dot--tv { background: var(--accent-bright); }
+.live__spec .btn { padding: 3px 9px; font-size: var(--text-xs); }

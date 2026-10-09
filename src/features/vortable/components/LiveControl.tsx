@@ -3,6 +3,7 @@ import type { CampaignWithRole } from '../../../shared/types'
 import type { LiveSound, WatchControls } from '../../../vendor/vortable/vortable'
 import { createWorldStorage, VORTABLE_ASSETS } from '../services/vortableService'
 import { useVortableNet } from '../net/VortableNetProvider'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage, type Engine } from './EngineStage'
 import { SoundPanel } from './SoundPanel'
@@ -11,8 +12,8 @@ import { Loader } from '../../../shared/components/Loader'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type Pane = 'zonas' | 'jogadores' | 'npcs' | 'hora' | 'tempo' | 'vento' | 'sons'
-const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', npcs: 'NPCs desta zona', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
+type Pane = 'zonas' | 'jogadores' | 'npcs' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
+const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', npcs: 'NPCs desta zona', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
 type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null; timeShift?: number | null }
 
 /**
@@ -20,6 +21,9 @@ type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number |
  * qualquer zona, o mapa inteiro) e muda hora, tempo e vento ao vivo pra todos.
  * Diferente do Editar mundo, que é a criação antes da sessão.
  */
+/** Uma tevê (o botão e o painel de espectadores). */
+const TV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="m8 3 4 4 4-4"/><path d="M7 16.5h.01M17 12.5v4"/></svg>'
+
 export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWithRole; userId: string; onOpen: (screen: 'personagens' | 'jogadores') => void }) {
   const vnet = useVortableNet()
   // o controle mostra o mundo onde os jogadores estão
@@ -103,7 +107,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     setControlling(w.controllingNpc())
   }
 
-  const icon = (name: string) => (engine.current ? (engine.current.EDITOR_ICONS as Record<string, string>)[name] ?? '' : '')
+  const icon = (name: string) => (name.startsWith('<svg') ? name : engine.current ? (engine.current.EDITOR_ICONS as Record<string, string>)[name] ?? '' : '')
 
   /** Botão redondo-quadrado do menu: abre/fecha um painel. */
   const tool = (id: Pane, iconName: string, label: string, opts: { badge?: number; dot?: boolean } = {}) => (
@@ -187,6 +191,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
           {tool('zonas', 'world', 'Zonas e câmera')}
           {tool('jogadores', 'person', 'Jogadores', { badge: peers.length || undefined })}
           {tool('npcs', 'npc', 'NPCs desta zona', { dot: controlling != null })}
+          {tool('espectadores', TV_ICON, 'Espectadores', { badge: vnet.peers.filter((p) => p.connected && p.role === 'spectator').length || undefined })}
           <span className="live__bar-sep" aria-hidden="true" />
           <button
             type="button"
@@ -281,6 +286,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
               </section>
               </>
             )}
+            {open === 'espectadores' && <SpectatorsPane />}
             {open === 'hora' && (
               <>
               <section className="live__block">
@@ -404,5 +410,76 @@ function WindPicker({ engine, value, onPick }: { engine: Engine | null; value: n
         <button key={label} type="button" className={`live__chip${value === level ? ' live__chip--on' : ''}`} onClick={() => onPick(level)}>{label}</button>
       ))}
     </div>
+  )
+}
+
+/**
+ * Quem está online no Vortable, e o mestre decide quem joga e quem assiste: "Mandar assistir" tira o jogador
+ * do boneco e deixa só a câmera; "Colocar em jogo" devolve. As regras valem pra todos os espectadores.
+ */
+function SpectatorsPane() {
+  const vnet = useVortableNet()
+  const { stage, setSpectate } = useMesaStream()
+  const rules = stage.spectate
+  const online = vnet.peers.filter((p) => p.connected)
+  const playing = online.filter((p) => p.role === 'player')
+
+  return (
+    <>
+      <section className="live__block">
+        <h4>Espectadores</h4>
+        <label className="live__switchrow">
+          <input type="checkbox" className="live__switch" checked={rules.allow} onChange={(e) => setSpectate({ allow: e.target.checked })} />
+          Permitir espectadores
+        </label>
+        <label className="live__switchrow">
+          <input type="checkbox" className="live__switch" checked={rules.free} disabled={!rules.allow} onChange={(e) => setSpectate({ free: e.target.checked })} />
+          Câmera livre
+        </label>
+        <div className="live__field">
+          <label htmlFor="spec-focus">Foco da câmera</label>
+          <select
+            id="spec-focus" className="live__select" disabled={!rules.allow}
+            value={rules.focus && playing.some((p) => p.id === rules.focus) ? rules.focus : ''}
+            onChange={(e) => setSpectate({ focus: e.target.value || null })}
+          >
+            <option value="">Ninguém</option>
+            {playing.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+      </section>
+
+      <section className="live__block">
+        <h4>Online no Vortable ({online.length})</h4>
+        {online.length === 0 && <p className="live__empty">Ninguém online no Vortable.</p>}
+        <ul className="live__players">
+          {online.map((p) => {
+            const watching = p.role === 'spectator'
+            return (
+              <li key={p.id} className="live__spec">
+                <span className="live__spec-name">
+                  <span className={`live__spec-dot${watching ? ' live__spec-dot--tv' : ''}`} aria-hidden="true" />
+                  <span className="live__spec-n">{p.name}</span>
+                  <small>{watching ? 'assistindo' : 'jogando'}</small>
+                </span>
+                {watching
+                  ? <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.id, 'play')}>Colocar em jogo</button>
+                  : (
+                    <button
+                      type="button" className="btn btn-ghost" disabled={!rules.allow}
+                      title={rules.allow ? 'Ele vira espectador: fica só com a câmera' : 'Ligue "Permitir espectadores" primeiro'}
+                      onClick={() => vnet.net?.command(p.id, 'spectate')}
+                    >Mandar assistir</button>
+                  )}
+                <button
+                  type="button" className="live__iconbtn" title={`Tirar ${p.name} da sessão`} aria-label={`Tirar ${p.name} da sessão`}
+                  onClick={() => { if (confirm(`Tirar ${p.name} da sessão?`)) vnet.net?.kick(p.id) }}
+                >✕</button>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+    </>
   )
 }
