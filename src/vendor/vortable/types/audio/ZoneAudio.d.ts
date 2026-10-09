@@ -33,6 +33,8 @@ export declare class ZoneAudio {
     private nearCache;
     /** Silencia tudo (editor com a prévia de som desligada). */
     enabled: boolean;
+    /** Sons ao vivo do mestre (Controle): valem no lugar do som salvo da zona. null = o da zona. */
+    live: ZoneSound | null;
     constructor(engine: AudioEngine, zone: ZoneData);
     static create(scene: Phaser.Scene, zone: ZoneData): ZoneAudio | null;
     setZone(zone: ZoneData): void;

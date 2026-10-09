@@ -123,6 +123,11 @@ export declare class WorldScene extends Phaser.Scene {
     /** Conta pra sala onde estou: ~10×/s, e só quando mudou (com um sinal de vida por segundo). */
     private publish;
     private npcNoScroll;
+    /** Hora do mundo definida no editor (fixa ou ciclo). */
+    watchSky(): {
+        hour: number | null;
+        dayMinutes: number;
+    };
     /** NPCs parados desta zona (pra lista do mestre). */
     watchNpcs(): {
         id: string;

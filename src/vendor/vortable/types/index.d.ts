@@ -1,7 +1,7 @@
 import { type WorldStorage } from './storage';
 import { type Appearance, type CharacterSave, type Dir, type ZoneData } from './types';
 import { formatHour } from './world/daylight';
-import { type NetLink } from './net/hub';
+import { type LiveSound, type NetLink } from './net/hub';
 import { type CharacterStorage } from './character/storage';
 export * from './types';
 export * from './storage';
@@ -11,6 +11,8 @@ export { TERRAINS } from './assets/terrains';
 export { composeFrame as characterFrame } from './character/compose';
 export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppearance } from './character/catalog';
 export { parseNet, REACTIONS } from './net/hub';
+export type { LiveSound } from './net/hub';
+export { LAYERS as SOUND_LAYERS } from './audio/ambience';
 export type { NetLink, NetMsg, NetHello, NetState, NetAnim, NetEnv, NetReact } from './net/hub';
 export { formatHour };
 export { WEATHERS, WEATHER_ORDER } from './world/weather';
@@ -97,12 +99,16 @@ export interface WatchControls {
     controlNpc(id: string): Promise<boolean>;
     /** Solta o NPC onde ele está: todos o veem parado ali, e o ponto fica guardado na zona. */
     releaseNpc(): Promise<void>;
-    /** Muda hora/tempo/vento ao vivo pra todos (zone '*' = todas as zonas; null = padrão da zona). */
+    /**
+     * Muda hora/tempo/vento/sons ao vivo pra todos (zone '*' = todas as zonas). `hour: null` = ciclo dia/noite
+     * (o tempo passa); `weather`/`wind`/`sound` null = o padrão do mundo e da zona.
+     */
     setEnv(env: {
         zone: string;
         hour: number | null;
         weather: string | null;
         wind: number | null;
+        sound?: LiveSound | null;
     }): void;
     /** Ajuste que está valendo agora (pra a interface mostrar). */
     envs(): {
@@ -110,7 +116,13 @@ export interface WatchControls {
         hour: number | null;
         weather: string | null;
         wind: number | null;
+        sound: LiveSound | null;
     }[];
+    /** Hora do mundo definida no editor: fixa (número) ou ciclo (null), e a duração do dia em minutos. */
+    sky(): {
+        hour: number | null;
+        dayMinutes: number;
+    };
 }
 export interface VortableHandle {
     /** Só no mode 'watch'. */

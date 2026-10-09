@@ -31,12 +31,18 @@ export interface NetState {
     dir: Dir;
     anim: NetAnim;
 }
+/** Sons ao vivo do mestre: `auto` = as camadas seguem o mundo; `layers` = camadas postas à mão (volume 0–1). */
+export interface LiveSound {
+    auto: boolean;
+    layers: Record<string, number>;
+}
 export interface NetEnv {
     t: 'env';
     zone: string;
     hour: number | null;
     weather: string | null;
     wind: number | null;
+    sound?: LiveSound | null;
 }
 /** Reações que o espectador pode mandar. */
 export declare const REACTIONS: readonly ['👏', '😮', '😂', '❤️', '🔥', '🎉', '😱', '🤔'];
