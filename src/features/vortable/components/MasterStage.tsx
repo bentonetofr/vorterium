@@ -6,6 +6,7 @@ import { PlayersManager } from './PlayersManager'
 import { LiveControl } from './LiveControl'
 import { SceneBar } from './SceneBar'
 import { ModeButton } from './ModeButton'
+import { EditorBar, type EditorBarHandle } from './EditorBar'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { getResume, patchResume } from '../resume/resumeStore'
@@ -22,6 +23,8 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   // voltando ao Vortable: a mesma tela em que o mestre estava
   const [mode, setMode] = useState<Mode>(() => (getResume(campaign.id)?.masterTab === 'controle' ? 'controle' : 'editar'))
   const [extra, setExtra] = useState<Extra | null>(null)
+  // ações do editor (nome, Nova, Salvar, Testar…), mostradas na faixa de cima enquanto o editor está aberto
+  const [editor, setEditor] = useState<EditorBarHandle | null>(null)
   useEffect(() => { patchResume(campaign.id, { masterTab: mode }) }, [campaign.id, mode])
   const vnet = useVortableNet()
   const { editing, ready } = useVortableWorlds()
@@ -38,6 +41,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
     <div className="vortable-master">
       <div className="vortable-master__top">
         <ModeButton mode={mode} onClick={toggle} />
+        {mode === 'editar' && !extra && editor && <EditorBar editor={editor} />}
         <SceneBar campaignId={campaign.id} />
       </div>
 
@@ -97,6 +101,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
               onEditCharacter: () => setExtra('personagens'),
+              externalToolbar: true,
               // o botão Testar do editor põe o mestre no mundo, junto com os jogadores
               net: net ? { selfId: userId, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
             })
@@ -104,7 +109,9 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               net.sink = (m) => game.receive(m)
               net.onOpen = () => game.resync()
             }
+            if (game.editor) setEditor({ controls: game.editor, icons: engine.EDITOR_ICONS as Record<string, string> })
             return () => {
+              setEditor(null)
               if (net) { net.sink = null; net.onOpen = null }
               const snap = game.snapshot()
               if (snap) patchResume(campaign.id, { editor: { worldId: editing.id, snap } })

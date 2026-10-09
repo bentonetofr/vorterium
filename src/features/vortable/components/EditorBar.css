@@ -1,0 +1,59 @@
+/* Ações do editor na faixa de cima do mestre */
+.editor-bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+}
+
+.editor-bar__name {
+  width: 190px;
+  min-width: 0;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+.editor-bar__name:focus { outline: none; border-color: var(--accent); }
+
+.editor-bar__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.editor-bar__btn:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-elevated); }
+.editor-bar__btn:disabled { opacity: 0.4; cursor: default; }
+.editor-bar__btn--on { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--accent); }
+.editor-bar__btn--primary { color: var(--text-inverse); background: var(--accent); border-color: var(--accent); margin-left: auto; }
+.editor-bar__btn--primary:hover:not(:disabled) { color: var(--text-inverse); background: var(--accent-bright); }
+.editor-bar__icon { display: inline-flex; }
+.editor-bar__icon svg { width: 16px; height: 16px; flex: none; }
+.editor-bar__dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-bright); }
+
+/* faixa estreita: só os ícones */
+@media (max-width: 1280px) {
+  .editor-bar__label { display: none; }
+  .editor-bar__btn { padding: 0 8px; }
+}

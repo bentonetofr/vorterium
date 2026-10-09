@@ -15,10 +15,41 @@ export interface EditorHooks {
     scene(): EditorScene | null;
     /** Abrir o criador de personagem (se quem montou o editor oferecer). */
     editCharacter?: () => void;
+    /** As ações do topo (nome, Nova, Abrir, Salvar, Testar…) ficam numa barra de fora (`controls()`), não na gaveta. */
+    externalBar?: boolean;
     /** O volume mudou (o motor de som relê as preferências). */
     applySound?: () => void;
     /** Curadoria (só no desenvolvimento): grava o ajuste de uma peça no pacote e recarrega o catálogo. */
     curate?: (pack: string, id: string, override: CurateOverride) => Promise<void>;
+}
+/** O que a barra de fora mostra do editor. */
+export interface EditorBarState {
+    name: string;
+    canUndo: boolean;
+    canRedo: boolean;
+    dirty: boolean;
+    testing: boolean;
+    panel: boolean;
+    character: boolean;
+}
+/** Ações do editor pra uma barra de fora (o Vorterium põe na faixa de cima). */
+export interface EditorControls {
+    state(): EditorBarState;
+    /** Avisa a cada mudança (nome, desfazer, salvo, teste, painel). Devolve quem cancela. */
+    subscribe(fn: () => void): () => void;
+    setName(name: string): void;
+    newZone(): void;
+    open(): void;
+    world(): void;
+    save(): void;
+    exportZone(): void;
+    importZone(file: File): void;
+    undo(): void;
+    redo(): void;
+    character(): void;
+    test(): void;
+    /** Abre/fecha o painel de terrenos e objetos. */
+    togglePanel(): void;
 }
 export declare class EditorUI {
     private state;
@@ -26,12 +57,13 @@ export declare class EditorUI {
     private hooks;
     readonly root: HTMLDivElement;
     readonly stage: HTMLDivElement;
-    private nameInput;
+    private nameInput?;
     private toolButtons;
     private toggles;
     private brushLabel;
-    private undoBtn;
-    private redoBtn;
+    private undoBtn?;
+    private redoBtn?;
+    private barListeners;
     private statusEl;
     private tab;
     /** Atualiza as barrinhas de nível do painel Sons. */
@@ -86,6 +118,10 @@ export declare class EditorUI {
     private buildDrawer;
     /** Canto do palco com a gaveta fechada: abre o painel, salva e testa. */
     private buildQuick;
+    private setName;
+    private notifyBar;
+    /** As ações do editor pra uma barra de fora (ver `EditorHooks.externalBar`). */
+    controls(): EditorControls;
     private setDrawer;
     private buildTools;
     /** Controle de zoom no canto do palco: −, régua, porcentagem (volta a 100%), +, enquadrar. */
@@ -157,6 +193,7 @@ export declare class EditorUI {
     private save;
     private exportZone;
     private importFile;
+    private importZone;
     /**
      * Antes de trocar de zona: se há mudanças, pergunta se salva, descarta ou
      * cancela. Devolve true quando pode seguir.

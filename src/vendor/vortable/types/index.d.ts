@@ -1,3 +1,4 @@
+import { type EditorControls } from './editor/EditorUI';
 import { type WorldStorage } from './storage';
 import { type Appearance, type CharacterSave, type Dir, type ZoneData } from './types';
 import { daylight, formatHour, worldHour } from './world/daylight';
@@ -12,6 +13,7 @@ export { composeFrame as characterFrame } from './character/compose';
 export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppearance } from './character/catalog';
 export { parseNet, REACTIONS } from './net/hub';
 export type { LiveSound } from './net/hub';
+export type { EditorControls, EditorBarState } from './editor/EditorUI';
 export { ICONS as EDITOR_ICONS } from './editor/icons';
 export { DAY_LENGTHS, SKY_PRESETS, skySwatch, shiftForHour } from './world/daylight';
 export { SURFACE_LABELS } from './audio/steps';
@@ -37,6 +39,8 @@ export interface VortableOptions {
     onZone?: (zone: ZoneData) => void;
     /** Editor: mostra o botão "Personagem" e chama isto ao clicar. */
     onEditCharacter?: () => void;
+    /** Editor: as ações do topo (nome, Nova, Abrir, Salvar, Testar…) saem do painel e ficam em `VortableHandle.editor`, pra quem monta pôr numa barra própria. */
+    externalToolbar?: boolean;
     /** Rede: com isto, os outros jogadores aparecem no mundo (sem, o jogo é solo). */
     net?: NetLink;
     /** Volta de onde a pessoa parou (ver `VortableHandle.snapshot`). Vale pro mesmo `mode` em que foi tirado. */
@@ -162,6 +166,8 @@ export interface WatchControls {
 export interface VortableHandle {
     /** Só no mode 'watch'. */
     watch?: WatchControls;
+    /** Só no mode 'edit' com `externalToolbar`. */
+    editor?: EditorControls;
     /** Onde a pessoa está agora, pra `resume` na próxima vez (null = sem o que guardar). */
     snapshot(): VortableSnapshot | null;
     /** Entrega uma mensagem que chegou da rede (ver NetMsg). */

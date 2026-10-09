@@ -48790,11 +48790,12 @@ var Cs = [
 		key: "R"
 	}
 ], ws = 8, Ts = "vortable:objects:favorites", Es = "vortable:editor:drawer";
-function Ds() {
+function Ds(e) {
 	try {
-		return localStorage.getItem(Es) === "1";
+		let t = localStorage.getItem(Es);
+		return e ? t !== "0" : t === "1";
 	} catch {
-		return !1;
+		return e;
 	}
 }
 var Os = "vortable:objects:recent", ks = 24, As = [
@@ -48850,6 +48851,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 	brushLabel;
 	undoBtn;
 	redoBtn;
+	barListeners = /* @__PURE__ */ new Set();
 	statusEl;
 	tab = "terrains";
 	meterTimer = 0;
@@ -48892,7 +48894,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t)
-		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Ds() ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
+		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Ds(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -48903,7 +48905,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 		}))), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), this.offState = t.on((e) => {
 			if (e === "view") return this.updateZoomBar();
 			if (e === "cursor") return this.refresh();
-			e === "zone" && (this.nameInput.value = t.zone.name), (e === "zone" || e === "edit") && this.renderZoneProps(), (e === "zone" || e === "world" || t.selectedPortal !== this.shownPortal) && this.renderPortal(), this.tab === "light" && (e === "zone" || e === "world" || t.selectedLight !== this.shownLight) && this.renderPane(), this.tab === "sound" && e === "zone" && this.renderPane(), e === "catalog" && (this.catalogVersion++, this.renderPane()), this.refresh();
+			e === "zone" && this.nameInput && (this.nameInput.value = t.zone.name), (e === "zone" || e === "edit") && this.renderZoneProps(), (e === "zone" || e === "world" || t.selectedPortal !== this.shownPortal) && this.renderPortal(), this.tab === "light" && (e === "zone" || e === "world" || t.selectedLight !== this.shownLight) && this.renderPane(), this.tab === "sound" && e === "zone" && this.renderPane(), e === "catalog" && (this.catalogVersion++, this.renderPane()), this.refresh();
 		}), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload);
 	}
 	assetsReady() {
@@ -48940,9 +48942,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 			class: "vt-name",
 			value: this.state.zone.name,
 			title: "Nome da zona",
-			oninput: () => {
-				this.state.zone.name = this.nameInput.value, this.state.dirty = !0, this.refresh();
-			}
+			oninput: () => this.setName(this.nameInput.value)
 		}), this.undoBtn = q("button", {
 			class: "vt-btn",
 			title: "Desfazer (Ctrl+Z)",
@@ -48968,7 +48968,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 		})), this.nameInput, q("div", { class: "vt-drawer-actions" }, this.iconBtn(Y.plus, "Nova", () => this.openNewModal()), this.iconBtn(Y.open, "Abrir", () => this.openOpenModal()), this.iconBtn(Y.world, "Mundo", () => this.openWorldModal()), this.iconBtn(Y.save, "Salvar", () => this.save()), this.iconBtn(Y.download, "Exportar", () => this.exportZone()), this.iconBtn(Y.upload, "Importar", () => e.click()), e, this.undoBtn, this.redoBtn, this.hooks.editCharacter ? this.iconBtn(Y.person, "Personagem", () => this.openCharacter()) : null, this.iconBtn(Y.play, "Testar", () => this.startTest(), "vt-primary")));
 	}
 	buildDrawer() {
-		return q("aside", { class: "vt-drawer" }, this.buildTop(), this.buildPanel());
+		return q("aside", { class: "vt-drawer" }, this.hooks.externalBar ? null : this.buildTop(), this.buildPanel());
 	}
 	buildQuick() {
 		return q("div", { class: "vt-quick" }, q("button", {
@@ -48988,8 +48988,45 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 			onclick: () => this.startTest()
 		}));
 	}
+	setName(e) {
+		this.state.zone.name = e, this.state.dirty = !0, this.refresh();
+	}
+	notifyBar() {
+		for (let e of this.barListeners) e();
+	}
+	controls() {
+		let e = this.state;
+		return {
+			state: () => ({
+				name: e.zone.name,
+				canUndo: e.canUndo,
+				canRedo: e.canRedo,
+				dirty: e.dirty,
+				testing: this.testing,
+				panel: this.root.classList.contains("vt-drawer-open"),
+				character: !!this.hooks.editCharacter
+			}),
+			subscribe: (e) => (this.barListeners.add(e), () => {
+				this.barListeners.delete(e);
+			}),
+			setName: (e) => this.setName(e),
+			newZone: () => this.openNewModal(),
+			open: () => void this.openOpenModal(),
+			world: () => void this.openWorldModal(),
+			save: () => void this.save(),
+			exportZone: () => this.exportZone(),
+			importZone: (e) => void this.importZone(e),
+			undo: () => e.undo(),
+			redo: () => e.redo(),
+			character: () => void this.openCharacter(),
+			test: () => {
+				this.testing || this.startTest();
+			},
+			togglePanel: () => this.setDrawer(!this.root.classList.contains("vt-drawer-open"))
+		};
+	}
 	setDrawer(e) {
-		this.root.classList.toggle("vt-drawer-open", e);
+		this.root.classList.toggle("vt-drawer-open", e), this.notifyBar();
 		try {
 			localStorage.setItem(Es, e ? "1" : "0");
 		} catch {}
@@ -49917,7 +49954,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 		for (let [t, n] of this.terrainCells) n.classList.toggle("vt-on", e.terrain === t && (e.tool === "brush" || e.tool === "fill"));
 		let t = e.tool === "object" && e.objectKind ? Ge(e.objectKind) : void 0, n = t && this.primary(t).id;
 		for (let [e, t] of this.objectCells) t.classList.toggle("vt-on", n === e);
-		this.renderObjectInfo(), this.brushLabel.textContent = String(e.brush), this.undoBtn.disabled = !e.canUndo, this.redoBtn.disabled = !e.canRedo;
+		this.renderObjectInfo(), this.brushLabel.textContent = String(e.brush), this.undoBtn && (this.undoBtn.disabled = !e.canUndo), this.redoBtn && (this.redoBtn.disabled = !e.canRedo), this.notifyBar();
 		let r = e.zone, i = [];
 		e.cursor && i.push(q("span", {}, `Tile ${e.cursor.tx}, ${e.cursor.ty}`)), i.push(q("span", {}, `${r.width}×${r.height} tiles`)), i.push(q("span", {}, `${r.objects.length} objetos`)), i.push(e.dirty ? q("span", { class: "vt-dirty" }, "● não salvo") : q("span", {}, "salvo"));
 		let a = v.get(e.terrain), o = !!a && S(a), s = !!a && C(a), c = o ? " (camada de cima)" : s ? " (cerca: pinta tiles e liga sozinha)" : "", l = {
@@ -49968,12 +50005,15 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
-	async importFile(e) {
+	importFile(e) {
 		let t = e.target, n = t.files?.[0];
-		if (t.value = "", n) try {
-			let e = ms(JSON.parse(await n.text()));
+		t.value = "", n && this.importZone(n);
+	}
+	async importZone(e) {
+		try {
+			let t = ms(JSON.parse(await e.text()));
 			if (!await this.resolveUnsaved()) return;
-			this.state.load(e), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${e.name}" importada. Salve pra guardar.`);
+			this.state.load(t), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${t.name}" importada. Salve pra guardar.`);
 		} catch (e) {
 			this.toast(e.message, !0);
 		}
@@ -50104,7 +50144,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 		await this.resolveUnsaved() && this.hooks.editCharacter?.();
 	}
 	startTest() {
-		this.spawnBlocked() && this.toast("Atenção: o ponto de início está dentro de algo sólido — o boneco pode ficar preso.", !0), this.testing = !0, this.root.classList.add("vt-testing"), this.applySound(), this.hooks.startTest();
+		this.spawnBlocked() && this.toast("Atenção: o ponto de início está dentro de algo sólido — o boneco pode ficar preso.", !0), this.testing = !0, this.root.classList.add("vt-testing"), this.applySound(), this.hooks.startTest(), this.notifyBar();
 	}
 	spawnBlocked() {
 		let e = this.state.zone, t = {
@@ -50119,7 +50159,7 @@ var Os = "vortable:objects:recent", ks = 24, As = [
 		});
 	}
 	stopTest() {
-		this.testing && (this.testing = !1, this.root.classList.remove("vt-testing"), this.hooks.stopTest());
+		this.testing && (this.testing = !1, this.root.classList.remove("vt-testing"), this.hooks.stopTest(), this.notifyBar());
 	}
 	modal(e, t, n, r, i = !1) {
 		let a = () => {
@@ -50501,6 +50541,7 @@ function Rs(e, t) {
 			centerOnZone: () => v()?.centerOnZone(),
 			scene: () => v(),
 			editCharacter: t.onEditCharacter,
+			externalBar: t.externalToolbar,
 			curate: t.curate ? async (e, t, n) => {
 				let r = await fetch(Ls, {
 					method: "POST",
@@ -50657,6 +50698,7 @@ function Rs(e, t) {
 				thunderNow: () => _()?.watchAudio()?.thunderNow()
 			}
 		} : void 0,
+		editor: u?.controls(),
 		snapshot() {
 			if (r === "edit") {
 				if (!d) return null;
