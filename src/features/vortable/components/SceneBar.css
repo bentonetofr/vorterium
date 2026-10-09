@@ -82,3 +82,19 @@
 @media (prefers-reduced-motion: reduce) {
   .scene-overlay { animation: none; transition: none; }
 }
+
+/* controle ao vivo: sem faixa, os botões (modo e cena) flutuam nos cantos da cena */
+.vortable-master--float { position: relative; }
+.vortable-master__top--float {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 25;
+  margin: 0;
+  flex-wrap: nowrap;
+  pointer-events: none;
+}
+.vortable-master__top--float > * { pointer-events: auto; }
+.vortable-page .vortable-master__top.vortable-master__top--float { margin: 0; left: 24px; right: 24px; }
+.vortable-master__top--float .scene-bar { background: color-mix(in srgb, var(--bg-surface) 82%, transparent); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }

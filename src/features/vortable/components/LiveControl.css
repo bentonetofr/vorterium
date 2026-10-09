@@ -241,3 +241,8 @@
   .live { flex-direction: column; height: auto; }
   .live__view { min-height: 360px; }
 }
+
+/* o menu do controle divide o topo com os botões de cantos: em telas estreitas, desce um pouco */
+@media (max-width: 1100px) {
+  .live__menu { top: 68px; }
+}

@@ -33,14 +33,17 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   // "Editar" num mundo (painel Mundos): vai pro editor
   useEffect(() => { if (editSignal > 0) { setExtra(null); setMode('editar') } }, [editSignal])
 
+  const floating = mode === 'controle' && !extra
+
   function toggle() {
     setExtra(null)
     setMode((m) => (m === 'editar' ? 'controle' : 'editar'))
   }
 
   return (
-    <div className="vortable-master">
-      <div className="vortable-master__top">
+    <div className={`vortable-master${floating ? ' vortable-master--float' : ''}`}>
+      {/* no controle ao vivo a faixa some: os botões flutuam por cima da cena */}
+      <div className={`vortable-master__top${floating ? ' vortable-master__top--float' : ''}`}>
         <ModeButton mode={mode} onClick={toggle} />
         {mode === 'editar' && !extra && editor && <EditorBar editor={editor} />}
         <SceneBar campaignId={campaign.id} />
