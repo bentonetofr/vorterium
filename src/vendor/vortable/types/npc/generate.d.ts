@@ -7,6 +7,8 @@ export interface NpcDraft {
     name: string;
     role: string;
     appearance: Appearance;
+    /** NPC especial: a ficha a que pertence (o gerador não usa). */
+    sheet?: string;
 }
 /** Famílias de tom de pele aceitas, cada uma com as cores da paleta que a representam. */
 export declare const SKIN_FAMILIES: {

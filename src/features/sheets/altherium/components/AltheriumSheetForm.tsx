@@ -667,7 +667,7 @@ export function AltheriumSheetForm({
             {portraitPickError && (
               <p className="alth-hero__portrait-error" role="alert">{portraitPickError}</p>
             )}
-            <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />
+            {!(sheet as { is_npc?: boolean }).is_npc && <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />}
           </div>
 
           <div className="alth-hero__identity-main">

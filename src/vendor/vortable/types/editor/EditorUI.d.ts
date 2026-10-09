@@ -2,6 +2,7 @@ import type { EditorState } from './EditorState';
 import { type EditorScene } from './EditorScene';
 import { type CurateOverride } from './curate';
 import { type WorldStorage } from '../storage';
+import { type SpecialNpc } from '../types';
 export interface EditorHooks {
     /** Pasta de assets (pros créditos). */
     assetBase: string;
@@ -15,6 +16,8 @@ export interface EditorHooks {
     scene(): EditorScene | null;
     /** Abrir o criador de personagem (se quem montou o editor oferecer). */
     editCharacter?: () => void;
+    /** Os NPCs especiais (com ficha) que o mestre criou, pra pôr nas zonas. */
+    npcLibrary?: () => Promise<SpecialNpc[]>;
     /** As ações do topo (nome, Nova, Abrir, Salvar, Testar…) ficam numa barra de fora (`controls()`), não na gaveta. */
     externalBar?: boolean;
     /** O volume mudou (o motor de som relê as preferências). */

@@ -1,17 +1,21 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader } from '../../../shared/components/Loader'
-import { assignCharacter, createCharacterStorage, VORTABLE_ASSETS } from '../services/vortableService'
+import { assignCharacter, createCharacterStorage, createNpcCharacterStorage, VORTABLE_ASSETS } from '../services/vortableService'
 import { loadEngine } from '../services/vortableService'
 import './CharacterStudio.css'
 
 /**
  * O criador de personagem em tela cheia. Cada jogador cria o seu, na ficha: ao salvar, o personagem vira
  * o boneco fixo dele nesta campanha (é com ele que entra no Vortable).
+ * Com `npc`, é o mestre criando o personagem de um NPC especial (com ficha): fica guardado na ficha do NPC,
+ * sem virar o boneco de ninguém, e aparece na lista de NPCs especiais do editor.
  */
-export function CharacterStudio({ campaignId, userId, onClose, onSaved }: {
+export function CharacterStudio({ campaignId, userId, npc, onClose, onSaved }: {
   campaignId: string
   userId: string
+  /** NPC especial: chave do personagem dele e o nome da ficha. */
+  npc?: { key: string; name: string }
   onClose: () => void
   onSaved?: () => void
 }) {
@@ -27,18 +31,19 @@ export function CharacterStudio({ campaignId, userId, onClose, onSaved }: {
     let destroy: (() => void) | null = null
     let closeTimer = 0
     ;(async () => {
-      const [engine, storage] = await Promise.all([loadEngine(), createCharacterStorage(campaignId, userId)])
+      const [engine, storage] = await Promise.all([loadEngine(), npc ? createNpcCharacterStorage(campaignId, userId, npc.key) : createCharacterStorage(campaignId, userId)])
       if (dead) return
       const creator = engine.mountCharacterCreator(el, {
         assetBase: VORTABLE_ASSETS,
         storage,
         single: true,
-        title: 'Seu personagem',
-        saveLabel: 'Salvar personagem',
+        title: npc ? 'Personagem do NPC' : 'Seu personagem',
+        ...(npc ? { name: npc.name } : {}),
+        saveLabel: npc ? 'Salvar NPC' : 'Salvar personagem',
         back: { label: 'Fechar', onClick: () => cb.current.onClose() },
         onSaved: (c) => {
-          // o personagem salvo é o que a pessoa joga nesta campanha
-          void assignCharacter(campaignId, userId, c.id)
+          // o personagem salvo é o que a pessoa joga nesta campanha (o do NPC não vira boneco de ninguém)
+          void (npc ? Promise.resolve() : assignCharacter(campaignId, userId, c.id))
             .catch(() => {})
             .finally(() => {
               cb.current.onSaved?.()
@@ -50,7 +55,7 @@ export function CharacterStudio({ campaignId, userId, onClose, onSaved }: {
       else destroy = creator.destroy
     })().catch((err) => console.error('[vortable] o criador de personagem não abriu', err))
     return () => { dead = true; window.clearTimeout(closeTimer); destroy?.() }
-  }, [campaignId, userId])
+  }, [campaignId, userId, npc?.key])
 
   // a página de trás não rola enquanto o criador está aberto
   useEffect(() => {

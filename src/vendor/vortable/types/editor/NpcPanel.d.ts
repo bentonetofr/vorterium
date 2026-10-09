@@ -1,9 +1,12 @@
+import type { SpecialNpc } from '../types';
 import type { EditorState } from './EditorState';
 export interface NpcPanelHooks {
     assetBase: string;
     /** Leva a câmera do editor até um ponto da zona. */
     focus(x: number, y: number): void;
     toast(msg: string, error?: boolean): void;
+    /** Os NPCs especiais (com ficha) do mestre; sem isto, a seção não aparece. */
+    specials?: () => Promise<SpecialNpc[]>;
 }
 export declare class NpcPanel {
     private state;
@@ -15,6 +18,9 @@ export declare class NpcPanel {
     private style;
     private drafts;
     private zoneId;
+    /** Os NPCs especiais (a última leitura); null = ainda não leu. */
+    private specials;
+    private specialsEl;
     private body;
     private opened;
     private off;
@@ -29,6 +35,13 @@ export declare class NpcPanel {
     private get profile();
     private newBatch;
     private render;
+    /** Lê a lista da ficha do mestre e acerta a aparência dos NPCs especiais que já estão na zona. */
+    private loadSpecials;
+    /** Os NPCs da zona ligados a uma ficha seguem o personagem dela (nome e aparência). */
+    private syncLinked;
+    private renderSpecials;
+    /** Um NPC especial só aparece uma vez por zona: se já está, leva a câmera até ele. */
+    private pickSpecial;
     private listEl;
     private card;
     private paint;

@@ -1,6 +1,6 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import type {
-  Appearance, CharacterSave, CharacterStorage, WorldData, WorldStorage, ZoneData, ZoneSummary,
+  Appearance, CharacterSave, CharacterStorage, SpecialNpc, WorldData, WorldStorage, ZoneData, ZoneSummary,
 } from '../../../vendor/vortable/vortable'
 
 // ────────────────────────────────────────────────────────
@@ -238,6 +238,10 @@ export async function createWorldStorage(
   }
 }
 
+/** Prefixo do id do personagem de um NPC especial (com ficha): `npc:<tabela da ficha>:<id da ficha>`. */
+export const NPC_PREFIX = 'npc:'
+export const npcCharacterKey = (table: string, sheetId: string) => `${NPC_PREFIX}${table}:${sheetId}`
+
 /** Boneco como o banco guarda: criado por `createdBy`, jogado por `controllerId`. */
 export interface CampaignCharacter {
   id:           string
@@ -262,7 +266,8 @@ const toCharacter = (row: CharacterRow): CampaignCharacter => ({
 /** Bonecos que a pessoa criou — e qual deles ela joga (o `controller_id` dela). */
 export async function createCharacterStorage(campaignId: string, userId: string): Promise<CharacterStorage> {
   const { parseCharacter } = await loadEngine()
-  const created = () => supabase.from('vortable_characters').select('*').eq('campaign_id', campaignId).eq('user_id', userId)
+  // os personagens dos NPCs especiais (id `npc:…`) ficam fora da lista pessoal
+  const created = () => supabase.from('vortable_characters').select('*').eq('campaign_id', campaignId).eq('user_id', userId).not('id', 'like', `${NPC_PREFIX}%`)
 
   return {
     async list(): Promise<CharacterSave[]> {
@@ -303,6 +308,54 @@ export async function createCharacterStorage(campaignId: string, userId: string)
   }
 }
 
+/**
+ * O personagem de UM NPC especial (o mestre o cria na ficha do NPC): sempre o mesmo id, sem "controlador".
+ * `name` é o nome da ficha (o personagem nasce com ele).
+ */
+export async function createNpcCharacterStorage(campaignId: string, masterId: string, key: string): Promise<CharacterStorage> {
+  const { parseCharacter } = await loadEngine()
+  return {
+    async list(): Promise<CharacterSave[]> {
+      const { data, error } = await supabase
+        .from('vortable_characters').select('*').eq('campaign_id', campaignId).eq('user_id', masterId).eq('id', key)
+      if (error) fail('não deu pra ler o personagem do NPC', error)
+      return (data ?? [])
+        .map((row) => parseCharacter({ id: row.id, name: row.name, appearance: row.appearance, updatedAt: Date.parse(row.updated_at as string) }))
+        .filter((c): c is CharacterSave => !!c)
+    },
+    async save(c) {
+      // o NPC tem um personagem só: o id é sempre o da ficha
+      const { error } = await supabase.from('vortable_characters').upsert({
+        campaign_id: campaignId, user_id: masterId, id: key, name: c.name, appearance: c.appearance,
+      })
+      if (error) fail('não deu pra salvar o personagem do NPC', error)
+    },
+    async remove() { await deleteNpcCharacter(campaignId, key) },
+    async getActive() { return key },
+    async setActive() {},
+  }
+}
+
+/** Os personagens dos NPCs especiais da campanha (pra pôr nas zonas e mostrar nas fichas). */
+export async function listNpcCharacters(campaignId: string): Promise<SpecialNpc[]> {
+  const { parseCharacter } = await loadEngine()
+  const { data, error } = await supabase
+    .from('vortable_characters').select('*').eq('campaign_id', campaignId).like('id', `${NPC_PREFIX}%`)
+  if (error) fail('não deu pra listar os NPCs especiais', error)
+  return (data ?? [])
+    .map((row) => {
+      const c = parseCharacter({ id: row.id, name: row.name, appearance: row.appearance })
+      return c ? { key: row.id as string, name: c.name, appearance: c.appearance } : null
+    })
+    .filter((n): n is SpecialNpc => !!n)
+}
+
+/** Apaga o personagem de um NPC especial (a ficha foi apagada, ou o mestre quer recomeçar). */
+export async function deleteNpcCharacter(campaignId: string, key: string): Promise<void> {
+  const { error } = await supabase.from('vortable_characters').delete().eq('campaign_id', campaignId).eq('id', key)
+  if (error) fail('não deu pra apagar o personagem do NPC', error)
+}
+
 /** O boneco que a pessoa joga agora (null = ainda não tem). */
 export async function getMyCharacter(campaignId: string, userId: string): Promise<CampaignCharacter | null> {
   const { data, error } = await supabase
@@ -314,7 +367,7 @@ export async function getMyCharacter(campaignId: string, userId: string): Promis
 /** Todos os bonecos da campanha (o mestre vê e entrega). */
 export async function listCampaignCharacters(campaignId: string): Promise<CampaignCharacter[]> {
   const { data, error } = await supabase
-    .from('vortable_characters').select('*').eq('campaign_id', campaignId).order('updated_at', { ascending: true })
+    .from('vortable_characters').select('*').eq('campaign_id', campaignId).not('id', 'like', `${NPC_PREFIX}%`).order('updated_at', { ascending: true })
   if (error) fail('não deu pra listar os bonecos', error)
   return ((data ?? []) as CharacterRow[]).map(toCharacter)
 }

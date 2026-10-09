@@ -10,6 +10,11 @@ import {
   type NpcSheetBase,
   type SheetTable,
 } from '../services/npcService'
+import { CharacterFace } from '../../vortable/components/CharacterFace'
+import { CharacterStudio } from '../../vortable/components/CharacterStudio'
+import { deleteNpcCharacter, listNpcCharacters, npcCharacterKey, watchCharacters } from '../../vortable/services/vortableService'
+import type { SpecialNpc } from '../../../vendor/vortable/vortable'
+import { useAuth } from '../../auth/AuthProvider'
 import './SheetPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -47,9 +52,21 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
   // Realtime, a ficha aberta só muda com os saves de quem está editando.
   const [open, setOpen]       = useState<T | null>(null)
   const feed    = useRef<NpcFeed | null>(null)
+  // personagens do Vortable dos NPCs (o mestre cria na ficha de cada NPC; aparecem na lista de NPCs especiais do editor)
+  const { user } = useAuth()
+  const [chars, setChars]     = useState<Map<string, SpecialNpc>>(new Map())
+  const [studio, setStudio]   = useState<T | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { void npcReady().then(setReady) }, [])
+
+  // (só o mestre vê isso) os personagens do Vortable dos NPCs
+  useEffect(() => {
+    if (!isMaster) return
+    const reload = () => { listNpcCharacters(campaignId).then((list) => setChars(new Map(list.map((c) => [c.key, c])))).catch(() => {}) }
+    reload()
+    return watchCharacters(campaignId, reload)
+  }, [isMaster, campaignId])
 
   const load = useCallback(async () => {
     try {
@@ -108,6 +125,8 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
     if (!window.confirm(`Apagar a ficha de ${name}? Não dá pra desfazer.`)) return
     void run(npc.id, async () => {
       await deleteNpc(table, npc.id)
+      // o personagem dele no Vortable vai junto (os NPCs já postos nas zonas ficam como estão)
+      void deleteNpcCharacter(campaignId, npcCharacterKey(table, npc.id)).catch(() => {})
       setNpcs((prev) => prev.filter((n) => n.id !== npc.id))
       setOpen((prev) => (prev?.id === npc.id ? null : prev))
       feed.current?.ping()
@@ -156,7 +175,11 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
                   <button type="button" className="npc-card__open" onClick={() => setOpen(active ? null : npc)} aria-pressed={active}>
                     <div className="sheet-card__top">
                       <span className="sheet-card__avatar" aria-hidden={sum.portrait ? undefined : true}>
-                        {sum.portrait ? <img src={sum.portrait} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}
+                        {sum.portrait
+                          ? <img src={sum.portrait} alt="" loading="lazy" />
+                          : isMaster && chars.get(npcCharacterKey(table, npc.id))
+                            ? <CharacterFace appearance={chars.get(npcCharacterKey(table, npc.id))!.appearance} size={32} />
+                            : name.charAt(0).toUpperCase()}
                       </span>
                       <span className="sheet-card__player">{name}</span>
                     </div>
@@ -174,6 +197,14 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
                       >
                         {npc.npc_visible ? '◉ Visível pros jogadores' : '◌ Escondido'}
                       </button>
+                      <button
+                        type="button"
+                        className={`npc-card__eye npc-card__char${chars.has(npcCharacterKey(table, npc.id)) ? ' is-on' : ''}`}
+                        onClick={() => setStudio(npc)}
+                        title="O personagem deste NPC no Vortable (criado por você, com o mesmo criador dos jogadores). Depois, ponha no mapa pela lista de NPCs especiais do editor."
+                      >
+                        {chars.has(npcCharacterKey(table, npc.id)) ? '✎ Editar personagem' : '+ Criar personagem'}
+                      </button>
                       <button type="button" className="npc-card__del" onClick={() => remove(npc)} disabled={busy === npc.id} aria-label={`Apagar a ficha de ${name}`} title="Apagar">
                         ✕
                       </button>
@@ -184,6 +215,15 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
             })}
           </div>
         )}
+
+      {studio && user && (
+        <CharacterStudio
+          campaignId={campaignId}
+          userId={user.id}
+          npc={{ key: npcCharacterKey(table, studio.id), name: studio.character_name?.trim() || 'NPC' }}
+          onClose={() => setStudio(null)}
+        />
+      )}
 
       {open && (
         <div className="sheets-list__form" ref={formRef}>

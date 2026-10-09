@@ -1,6 +1,6 @@
 import { type EditorControls } from './editor/EditorUI';
 import { type WorldStorage } from './storage';
-import { type Appearance, type CharacterSave, type Dir, type ZoneData } from './types';
+import { type Appearance, type CharacterSave, type Dir, type ZoneData, type SpecialNpc } from './types';
 import { daylight, formatHour, worldHour } from './world/daylight';
 import { type LiveSound, type NetLink } from './net/hub';
 import { type CharacterStorage } from './character/storage';
@@ -39,6 +39,8 @@ export interface VortableOptions {
     onZone?: (zone: ZoneData) => void;
     /** Editor: mostra o botão "Personagem" e chama isto ao clicar. */
     onEditCharacter?: () => void;
+    /** Editor: os NPCs especiais (os que têm ficha e personagem criado pelo mestre), pra pôr nas zonas. */
+    npcLibrary?: () => Promise<SpecialNpc[]>;
     /** Editor: as ações do topo (nome, Nova, Abrir, Salvar, Testar…) saem do painel e ficam em `VortableHandle.editor`, pra quem monta pôr numa barra própria. */
     externalToolbar?: boolean;
     /** Rede: com isto, os outros jogadores aparecem no mundo (sem, o jogo é solo). */
@@ -196,6 +198,8 @@ export interface CreatorMountOptions {
     single?: boolean;
     /** Título no alto da tela (padrão: "Definir aparência"). */
     title?: string;
+    /** Nome do personagem novo (padrão: "Novo personagem"). */
+    name?: string;
     saveLabel?: string;
     activateOnSave?: boolean;
     onSaved?: (c: CharacterSave) => void;

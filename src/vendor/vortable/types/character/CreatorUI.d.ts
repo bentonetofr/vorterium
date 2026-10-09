@@ -15,6 +15,8 @@ export interface CreatorOptions {
     single?: boolean;
     /** Título no alto da tela (padrão: "Definir aparência"). */
     title?: string;
+    /** Nome do personagem novo (padrão: "Novo personagem"). */
+    initialName?: string;
     saveLabel?: string;
     /** Salvar também põe o boneco em uso (padrão: sim). O mestre cria NPCs sem tomar o lugar do dele. */
     activateOnSave?: boolean;

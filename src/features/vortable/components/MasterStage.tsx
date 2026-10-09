@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
-import { createCharacterStorage, createWorldStorage, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
+import { createCharacterStorage, createWorldStorage, listNpcCharacters, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
 import { EngineStage } from './EngineStage'
 import { PlayersManager } from './PlayersManager'
 import { LiveControl } from './LiveControl'
@@ -105,6 +105,8 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
               onEditCharacter: () => setExtra('personagens'),
+              // NPCs especiais: os que o mestre criou nas fichas de NPC (o editor os põe nas zonas)
+              npcLibrary: () => listNpcCharacters(campaign.id),
               externalToolbar: true,
               // o botão Testar do editor põe o mestre no mundo, junto com os jogadores
               net: net ? { selfId: userId, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
