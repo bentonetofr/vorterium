@@ -1,4 +1,4 @@
-import type { Appearance, BodyType } from '../types';
+import { type Appearance, type BodyType } from '../types';
 export interface CharLayer {
     z: number;
     /** Pasta da folha por tipo de corpo (relativa a `sheets`). */
@@ -23,6 +23,10 @@ export interface CharItem {
     colors?: CharColorChannel[];
     /** Pele acompanha a cor do corpo (cabeça, orelhas, nariz...). */
     matchBody?: boolean;
+    /** Só vale com certas cabeças (as expressões pedem cabeça humana). */
+    requiresHead?: 'human';
+    /** Peça desenhada por código (ver proc.ts), sem folhas de imagem. */
+    proc?: boolean;
 }
 export interface CharSlot {
     id: string;
@@ -46,9 +50,11 @@ export interface CharacterData {
 }
 export declare function loadCharacterData(assetBase: string): Promise<CharacterData>;
 export declare const BODY_LABELS: Record<BodyType, string>;
+/** Nomes das alturas, da mais baixa à mais alta (mesma ordem de HEIGHTS). */
+export declare const HEIGHT_LABELS: string[];
 /** Cor representativa de uma rampa (pra amostras). */
 export declare function swatch(palettes: CharPalettes, material: string, color: string): string;
-export declare function itemsForSlot(data: CharacterData, slot: string, body: BodyType): CharItem[];
+export declare function itemsForSlot(data: CharacterData, slot: string, body: BodyType, a?: Appearance): CharItem[];
 /** Pasta de uma camada pro corpo pedido (cai no outro corpo se faltar). */
 export declare function layerDir(layer: CharLayer, body: BodyType): string;
 export declare function itemLabel(item: CharItem): string;

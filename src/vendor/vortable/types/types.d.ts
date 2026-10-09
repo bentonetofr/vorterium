@@ -170,7 +170,10 @@ export declare const ZONE_MAX = 128;
 /** Tamanho válido de zona: inteiro entre ZONE_MIN e ZONE_MAX (vazio/inválido → `fallback`). */
 export declare function clampZoneSize(n: number, fallback: number): number;
 export declare function newZone(name: string, width: number, height: number, base?: string): ZoneData;
-export type BodyType = 'male' | 'female';
+/** Corpos do LPC: masculino, feminino, musculoso (forte), jovem esguio (`teen`) e pequeno (`child`). */
+export type BodyType = 'male' | 'female' | 'muscular' | 'teen' | 'child';
+/** Alturas (escala do boneco no jogo): 1 = normal. */
+export declare const HEIGHTS: readonly [0.84, 0.92, 1, 1.08, 1.16];
 /** Um item escolhido num espaço do personagem (cabelo, camisa...). */
 export interface AppearanceItem {
     /** Id no catálogo do personagem. */
@@ -188,6 +191,8 @@ export interface Appearance {
     skin: string;
     /** id do espaço → item. */
     slots: Record<string, AppearanceItem>;
+    /** Altura: escala do boneco (ver HEIGHTS). Sem ela, 1. */
+    height?: number;
 }
 /** Um personagem salvo. */
 export interface CharacterSave {

@@ -132,6 +132,8 @@ export declare class WorldScene extends Phaser.Scene {
     private reloadZone;
     /** O mestre levou este jogador pra (x, y) de uma zona. */
     private teleportTo;
+    /** Altura do boneco (Appearance.height): escala do sprite, e a sombra acompanha. */
+    private applyHeight;
     /** Troca a aparência do jogador sem recarregar a cena. */
     setAppearance(appearance: Appearance): Promise<void>;
     /** Depois da física e antes de desenhar: câmera no jogador, sombra dos pés, luz. */

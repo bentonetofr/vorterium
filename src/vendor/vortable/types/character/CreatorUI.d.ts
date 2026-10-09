@@ -1,5 +1,5 @@
 import { type CharacterStorage } from './storage';
-import type { CharacterSave } from '../types';
+import { type CharacterSave } from '../types';
 export interface CreatorOptions {
     assetBase: string;
     storage: CharacterStorage;
@@ -36,6 +36,8 @@ export declare class CreatorUI {
     private rev;
     private raf;
     private cam;
+    /** Altura mostrada agora (anima até a escolhida). */
+    private hs;
     private camOverride;
     private upCache;
     private stageEl;
@@ -62,6 +64,8 @@ export declare class CreatorUI {
     destroy(): void;
     private tool;
     private get appearance();
+    /** As peças de um espaço que servem pro corpo e pra cabeça de agora. */
+    private itemsFor;
     private groupOf;
     /** Abas com peças pra escolher (na ordem do criador). */
     private groups;
@@ -74,6 +78,7 @@ export declare class CreatorUI {
     private renderRows;
     private arrow;
     private bodyRow;
+    private heightRow;
     private skinRow;
     private slotRow;
     /** Cores e variantes da peça escolhida. */
