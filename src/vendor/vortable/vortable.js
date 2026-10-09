@@ -44199,7 +44199,7 @@ var zi = "char:me", Bi = 220, Vi = .15, Hi = 500, Ui = {
 		for (let t of e.objects) this.occluders.add($e(this, t), t);
 		new Jt(this, e);
 		let o = this.lighting = new Wr(this, e);
-		o.timeOffset = this.cfg.timeOffset ?? 0, o.sky = this.cfg.sky ?? { hour: null }, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = this.cfg.watch && !this.cfg.listen ? null : Ii.create(this, e), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
+		o.timeOffset = this.cfg.timeOffset ?? 0, o.sky = this.cfg.sky ?? { hour: null }, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = this.cfg.watch && !this.cfg.listen ? null : Ii.create(this, e), this.audio && (this.audio.enabled = this.cfg.audioOn?.() ?? !0), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
 			this.events.off(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio?.destroy(), this.audio = null;
 		});
 		let s = this.physics.add.staticGroup();
@@ -44541,6 +44541,9 @@ var zi = "char:me", Bi = 220, Vi = .15, Hi = 500, Ui = {
 			" "
 		].includes(e.key) && e.preventDefault();
 	};
+	watchAudio() {
+		return this.audio;
+	}
 	watchSky() {
 		let e = this.cfg.sky ?? { hour: null };
 		return {
@@ -50243,52 +50246,53 @@ var hs = "/__vortable/curate";
 function gs(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	vi(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Ho(), a = t.appearance, o = !1, s = t.net ? new ci(t.net) : void 0, l = null, u = null, d = e, f = (e, i, c, u = 0, d) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Ho(), a = t.appearance, o = !1, s = !0, l = t.net ? new ci(t.net) : void 0, u = null, d = null, f = e, p = (e, i, c, d = 0, f) => ({
 		zone: e,
-		...d ? {
+		...f ? {
 			at: {
-				x: d.x,
-				y: d.y
+				x: f.x,
+				y: f.y
 			},
-			facing: d.dir
+			facing: f.dir
 		} : {},
 		appearance: a,
 		assetBase: n,
 		loadZone: i,
 		sky: c,
-		timeOffset: u,
+		timeOffset: d,
 		onZone: (e) => {
-			l?.showTestZone(e.name), t.onZone?.(e);
+			u?.showTestZone(e.name), t.onZone?.(e);
 		},
-		onClock: (e) => l?.showTestClock(e),
+		onClock: (e) => u?.showTestClock(e),
 		inputLocked: () => o,
-		hub: s,
+		hub: l,
 		watch: r === "watch",
-		listen: t.listen
-	}), p = (e, t) => {
+		listen: t.listen,
+		audioOn: () => s
+	}), m = (e, t) => {
 		let n = (e.dayMinutes ?? 24) * 6e4, r = Date.now();
 		return ((wn(t) - wn(En(e.dayMinutes, r))) % 1 + 1) % 1 * n;
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null, a = r && !r.dirty && t.zone?.id === r.zone.id;
-		u = new sa(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new ds(e, u, i, {
+		d = new sa(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), d.assetBase = n, r && (d.dirty = r.dirty, d.view = r.view, d.zoom = r.zoom), u = new ds(e, d, i, {
 			assetBase: n,
-			textureImage: (e) => h.textures.get(e).getSourceImage(),
+			textureImage: (e) => g.textures.get(e).getSourceImage(),
 			startTest: () => {
-				h.scene.stop("editor");
-				let e = async (e) => e === u.zone.id ? structuredClone(u.zone) : i.load(e), t = tn(u.world);
-				h.scene.start("world", f(structuredClone(u.zone), e, t, p(t, u.previewHour)));
+				g.scene.stop("editor");
+				let e = async (e) => e === d.zone.id ? structuredClone(d.zone) : i.load(e), t = tn(d.world);
+				g.scene.start("world", p(structuredClone(d.zone), e, t, m(t, d.previewHour)));
 			},
 			stopTest: () => {
-				h.scene.stop("world"), h.scene.start("editor", { state: u });
+				g.scene.stop("world"), g.scene.start("editor", { state: d });
 			},
-			deleteSelected: () => _()?.deleteSelected(),
+			deleteSelected: () => v()?.deleteSelected(),
 			applySound: () => {
-				let e = h.scene.getScenes(!0)[0];
+				let e = g.scene.getScenes(!0)[0];
 				e && yi.of(e)?.applyPrefs();
 			},
-			centerOnZone: () => _()?.centerOnZone(),
-			scene: () => _(),
+			centerOnZone: () => v()?.centerOnZone(),
+			scene: () => v(),
 			editCharacter: t.onEditCharacter,
 			curate: t.curate ? async (e, t, n) => {
 				let r = await fetch(hs, {
@@ -50301,11 +50305,11 @@ function gs(e, t) {
 					})
 				}), i = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
 				if (!r.ok) throw Error(i.error ?? `HTTP ${r.status}`);
-				Ue(i), Qe(h, i), u.emit("catalog");
+				Ue(i), Qe(g, i), d.emit("catalog");
 			} : void 0
-		}), d = l.stage;
+		}), f = u.stage;
 	}
-	async function m() {
+	async function h() {
 		let e = tn(null);
 		try {
 			let n = await i.loadWorld();
@@ -50349,15 +50353,15 @@ function gs(e, t) {
 			sky: e
 		};
 	}
-	let h = new c.default.Game({
+	let g = new c.default.Game({
 		type: c.default.AUTO,
-		parent: d,
+		parent: f,
 		pixelArt: !0,
 		backgroundColor: "#07080c",
 		scale: {
 			mode: c.default.Scale.RESIZE,
-			width: d.clientWidth || 960,
-			height: d.clientHeight || 640
+			width: f.clientWidth || 960,
+			height: f.clientHeight || 640
 		},
 		physics: {
 			default: "arcade",
@@ -50365,65 +50369,89 @@ function gs(e, t) {
 		},
 		input: { mouse: { preventDefaultWheel: !0 } }
 	});
-	h.scene.add("world", Wi), h.scene.add("editor", aa), h.scene.add("boot", new ct(n, async () => {
-		if (h.scene.stop("boot"), r === "edit") h.scene.start("editor", { state: u }), l.assetsReady();
+	g.scene.add("world", Wi), g.scene.add("editor", aa), g.scene.add("boot", new ct(n, async () => {
+		if (g.scene.stop("boot"), r === "edit") g.scene.start("editor", { state: d }), u.assetsReady();
 		else {
-			let { zone: e, sky: t, start: n } = await m();
-			h.scene.start("world", f(e, (e) => i.load(e), t, 0, n));
+			let { zone: e, sky: t, start: n } = await h();
+			g.scene.start("world", p(e, (e) => i.load(e), t, 0, n));
 		}
 	}), !0);
-	let g = () => h.scene.isActive("world") ? h.scene.getScene("world") : null, _ = () => h.scene.isActive("editor") ? h.scene.getScene("editor") : null, v = async (e) => {
+	let _ = () => g.scene.isActive("world") ? g.scene.getScene("world") : null, v = () => g.scene.isActive("editor") ? g.scene.getScene("editor") : null, y = async (e) => {
 		let t = await i.load(e.zone), n = t?.npcs?.find((t) => t.id === e.id);
 		t && n && (n.x = e.x, n.y = e.y, n.dir = e.dir, await i.save(t));
 	};
 	return {
 		watch: r === "watch" ? {
 			setZone: async (e) => {
-				await g()?.releaseNpc(v), await g()?.watchZone(e);
+				await _()?.releaseNpc(y), await _()?.watchZone(e);
 			},
-			npcs: () => g()?.watchNpcs() ?? [],
-			controllingNpc: () => g()?.controllingNpc() ?? null,
-			controlNpc: async (e) => await g()?.controlNpc(e) ?? !1,
+			npcs: () => _()?.watchNpcs() ?? [],
+			controllingNpc: () => _()?.controllingNpc() ?? null,
+			controlNpc: async (e) => await _()?.controlNpc(e) ?? !1,
 			releaseNpc: async () => {
-				await g()?.releaseNpc(v);
+				await _()?.releaseNpc(y);
 			},
-			fit: () => g()?.watchFit(),
-			zoomBy: (e) => g()?.watchZoom(e),
-			focus: (e, t) => g()?.watchFocus(e, t),
-			follow: (e, t) => g()?.watchFollow(e, t),
-			following: () => g()?.watchFollowing() ?? null,
-			react: (e) => g()?.watchReact(e),
-			peers: () => g()?.watchPeers() ?? [],
-			setEnv: (e) => s?.setEnv(e),
-			envs: () => [...s?.envs.values() ?? []].map(({ zone: e, hour: t, weather: n, wind: r, sound: i }) => ({
+			fit: () => _()?.watchFit(),
+			zoomBy: (e) => _()?.watchZoom(e),
+			focus: (e, t) => _()?.watchFocus(e, t),
+			follow: (e, t) => _()?.watchFollow(e, t),
+			following: () => _()?.watchFollowing() ?? null,
+			react: (e) => _()?.watchReact(e),
+			peers: () => _()?.watchPeers() ?? [],
+			setEnv: (e) => l?.setEnv(e),
+			envs: () => [...l?.envs.values() ?? []].map(({ zone: e, hour: t, weather: n, wind: r, sound: i }) => ({
 				zone: e,
 				hour: t,
 				weather: n,
 				wind: r,
 				sound: i ?? null
 			})),
-			sky: () => g()?.watchSky() ?? {
+			sky: () => _()?.watchSky() ?? {
 				hour: null,
 				dayMinutes: 24
+			},
+			audio: {
+				levels: () => _()?.watchAudio()?.levels() ?? {},
+				listening: () => s,
+				listen: (e) => {
+					s = e;
+					let t = _()?.watchAudio();
+					t && (t.enabled = e);
+				},
+				prefs: () => {
+					let e = mi();
+					return {
+						master: e.master,
+						muted: e.muted,
+						steps: e.steps
+					};
+				},
+				setPrefs: (e) => {
+					hi(e);
+					let t = g.scene.getScenes(!0)[0];
+					t && yi.of(t)?.applyPrefs();
+				},
+				previewStep: (e) => _()?.watchAudio()?.previewStep(e),
+				thunderNow: () => _()?.watchAudio()?.thunderNow()
 			}
 		} : void 0,
 		snapshot() {
 			if (r === "edit") {
-				if (!u) return null;
-				let e = _()?.cameras.main;
+				if (!d) return null;
+				let e = v()?.cameras.main;
 				return {
 					kind: "edit",
-					zone: structuredClone(u.zone),
-					dirty: u.dirty,
+					zone: structuredClone(d.zone),
+					dirty: d.dirty,
 					view: e ? {
 						x: Math.round(e.midPoint.x),
 						y: Math.round(e.midPoint.y)
-					} : u.view,
-					zoom: e?.zoom ?? u.zoom
+					} : d.view,
+					zoom: e?.zoom ?? d.zoom
 				};
 			}
 			if (r === "play") {
-				let e = g()?.snapshotPlay();
+				let e = _()?.snapshotPlay();
 				return e ? {
 					kind: "play",
 					...e
@@ -50432,22 +50460,22 @@ function gs(e, t) {
 			return null;
 		},
 		async setAppearance(e) {
-			a = e, h.scene.isActive("world") && await h.scene.getScene("world").setAppearance(e);
+			a = e, g.scene.isActive("world") && await g.scene.getScene("world").setAppearance(e);
 		},
 		receive(e) {
-			s?.receive(e);
+			l?.receive(e);
 		},
 		resync() {
-			s?.resync();
+			l?.resync();
 		},
 		rename() {
-			s?.rename();
+			l?.rename();
 		},
 		setInputLocked(e) {
-			o = e, h.scene.isActive("world") && h.scene.getScene("world").setInputLocked(e);
+			o = e, g.scene.isActive("world") && g.scene.getScene("world").setInputLocked(e);
 		},
 		destroy() {
-			r === "watch" && g()?.releaseNpc(v), s?.leave(), l?.destroy(), h.destroy(!0);
+			r === "watch" && _()?.releaseNpc(y), l?.leave(), u?.destroy(), g.destroy(!0);
 		}
 	};
 }
@@ -50464,4 +50492,4 @@ function _s(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { So as CHARACTER_FORMAT, M as DAY_MINUTES, re as DEFAULT_WIND, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, xo as LocalCharacterStorage, Ho as LocalWorldStorage, j as METERS_PER_TILE, ni as REACTIONS, xi as SOUND_LAYERS, _ as TERRAINS, A as TILE, ar as WEATHERS, or as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, wo as characterFileName, Ft as characterFrame, z as clampZoneSize, bt as defaultAppearance, Eo as downloadText, Co as exportCharacters, On as formatHour, ut as loadCharacterData, Uo as localStorageAvailable, _s as mountCharacterCreator, gs as mountVortable, yo as newCharacter, F as newId, Vo as newWorld, B as newZone, xt as normalizeAppearance, bo as parseCharacter, To as parseCharacterFile, oi as parseNet, $o as parseWorld, Go as parseZone, Do as pickTextFile, wt as randomAppearance, Bo as summarize };
+export { So as CHARACTER_FORMAT, M as DAY_MINUTES, re as DEFAULT_WIND, Y as EDITOR_ICONS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, xo as LocalCharacterStorage, Ho as LocalWorldStorage, j as METERS_PER_TILE, ni as REACTIONS, xi as SOUND_LAYERS, ki as SURFACE_LABELS, _ as TERRAINS, A as TILE, ar as WEATHERS, or as WEATHER_ORDER, ne as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, wo as characterFileName, Ft as characterFrame, z as clampZoneSize, bt as defaultAppearance, Eo as downloadText, Co as exportCharacters, On as formatHour, ut as loadCharacterData, Uo as localStorageAvailable, _s as mountCharacterCreator, gs as mountVortable, yo as newCharacter, F as newId, Vo as newWorld, B as newZone, xt as normalizeAppearance, bo as parseCharacter, To as parseCharacterFile, oi as parseNet, $o as parseWorld, Go as parseZone, Do as pickTextFile, wt as randomAppearance, Bo as summarize };

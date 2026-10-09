@@ -100,6 +100,48 @@
 .live__player small { color: var(--text-muted); }
 .live__player--on { border-color: var(--accent); background: var(--accent-glow); }
 
+/* ── Sons (o mesmo jeito do painel Sons do editor) ── */
+.live__soundbar { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-md); background: var(--bg-base); border: 1px solid var(--border-dim); }
+.live__soundbar .live__range { flex: 1; min-width: 0; }
+.live__range--short { width: 110px; flex: none; }
+.live__grouphead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.live__grouphead h4 { margin: 0; }
+.live__switchrow { display: inline-flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); cursor: var(--cursor-hand); user-select: none; }
+.live__switch {
+  appearance: none; -webkit-appearance: none; position: relative; flex: none;
+  width: 30px; height: 17px; margin: 0; border-radius: 999px; cursor: var(--cursor-hand);
+  background: var(--border-base); transition: background 0.15s;
+}
+.live__switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--text-secondary); transition: transform 0.15s, background 0.15s; }
+.live__switch:checked { background: var(--accent); }
+.live__switch:checked::after { transform: translateX(13px); background: var(--text-inverse); }
+.live__iconbtn {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;
+  color: var(--text-secondary); background: var(--bg-base); border: 1px solid var(--border-dim); border-radius: var(--radius-sm); cursor: var(--cursor-hand);
+}
+.live__iconbtn:hover { color: var(--text-primary); border-color: var(--border-bright); }
+.live__iconbtn--on { color: var(--accent-bright); border-color: var(--accent); background: var(--accent-glow); }
+.live__iconbtn svg, .live__tile-icon svg { width: 18px; height: 18px; }
+.live__tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.live__tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 2px 8px;
+  font-size: var(--text-xs); color: var(--text-secondary); background: var(--bg-base);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-sm); cursor: var(--cursor-hand); overflow: hidden;
+}
+.live__tile:hover { color: var(--text-primary); border-color: var(--border-bright); }
+.live__tile--on { color: var(--accent-bright); border-color: var(--accent); background: var(--accent-glow); }
+.live__tile--picked { box-shadow: 0 0 0 1px var(--accent-bright) inset; }
+.live__tile-icon { display: flex; }
+.live__tile-meter { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--accent); transition: width 0.2s; }
+.live__soundpick {
+  display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: var(--radius-md);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); color: var(--accent-bright);
+}
+.live__soundpick label { min-width: 64px; font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+.live__soundpick .live__range { flex: 1; min-width: 0; }
+.live__soundpick b { min-width: 34px; text-align: right; font-size: var(--text-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.live__note { color: var(--text-muted); font-size: var(--text-xs); }
+
 @media (max-width: 900px) {
   .live { flex-direction: column; height: auto; }
   .live__view { min-height: 360px; }

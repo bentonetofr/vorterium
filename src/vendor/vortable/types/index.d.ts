@@ -12,6 +12,8 @@ export { composeFrame as characterFrame } from './character/compose';
 export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppearance } from './character/catalog';
 export { parseNet, REACTIONS } from './net/hub';
 export type { LiveSound } from './net/hub';
+export { ICONS as EDITOR_ICONS } from './editor/icons';
+export { SURFACE_LABELS } from './audio/steps';
 export { LAYERS as SOUND_LAYERS } from './audio/ambience';
 export type { NetLink, NetMsg, NetHello, NetState, NetAnim, NetEnv, NetReact } from './net/hub';
 export { formatHour };
@@ -118,6 +120,28 @@ export interface WatchControls {
         wind: number | null;
         sound: LiveSound | null;
     }[];
+    /** Som da zona que o mestre ouve no Controle (os jogadores ouvem o deles). */
+    audio: {
+        /** Nível de cada camada agora (0–1). */
+        levels(): Record<string, number>;
+        /** "Ouvir" ligado? */
+        listening(): boolean;
+        listen(on: boolean): void;
+        prefs(): {
+            master: number;
+            muted: boolean;
+            steps: number;
+        };
+        setPrefs(patch: {
+            master?: number;
+            muted?: boolean;
+            steps?: number;
+        }): void;
+        /** Ouvir o passo num chão. */
+        previewStep(surface: string): void;
+        /** Ouvir um trovão. */
+        thunderNow(): void;
+    };
     /** Hora do mundo definida no editor: fixa (número) ou ciclo (null), e a duração do dia em minutos. */
     sky(): {
         hour: number | null;

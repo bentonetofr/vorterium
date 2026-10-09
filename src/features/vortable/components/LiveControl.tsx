@@ -5,6 +5,7 @@ import { createWorldStorage, VORTABLE_ASSETS } from '../services/vortableService
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage, type Engine } from './EngineStage'
+import { SoundPanel } from './SoundPanel'
 import './LiveControl.css'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
@@ -120,6 +121,8 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
               appearance: eng.defaultAppearance(),
               assetBase: VORTABLE_ASSETS,
               storage: worlds,
+              // o mestre ouve o som da zona que está vendo (o painel Sons liga, desliga e ajusta)
+              listen: true,
               onZone: (z) => setZoneId(z.id),
               net: net ? { selfId: `watch:${userId}`, name: 'Mestre', send: (m) => net.send(m) } : undefined,
             })
@@ -225,10 +228,7 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
           <WindPicker engine={engine.current} value={env.wind} onPick={(w) => change({ wind: w })} />
         </section>
 
-        <section className="live__block">
-          <h4>Sons {env.sound ? '· do mestre' : '· da zona'}</h4>
-          <SoundPicker engine={engine.current} value={env.sound} onPick={(sound) => change({ sound })} />
-        </section>
+        <SoundPanel engine={engine.current} watch={watch.current} value={env.sound} onPick={(sound) => change({ sound })} />
       </aside>
     </div>
   )
@@ -262,53 +262,5 @@ function WindPicker({ engine, value, onPick }: { engine: Engine | null; value: n
         <button key={label} type="button" className={`live__chip${value === level ? ' live__chip--on' : ''}`} onClick={() => onPick(level)}>{label}</button>
       ))}
     </div>
-  )
-}
-
-/**
- * Sons ao vivo pra todos: "Da zona" deixa o som que está salvo em cada zona; senão o mestre liga o
- * automático (as camadas seguem o mundo) e/ou camadas à mão, cada uma com seu volume.
- */
-function SoundPicker({ engine, value, onPick }: { engine: Engine | null; value: LiveSound | null; onPick: (s: LiveSound | null) => void }) {
-  const [picked, setPicked] = useState<string | null>(null)
-  if (!engine) return null
-  const cur: LiveSound = value ?? { auto: true, layers: {} }
-  const set = (patch: Partial<LiveSound>) => onPick({ ...cur, ...patch })
-  const toggle = (id: string) => {
-    const layers = { ...cur.layers }
-    if (layers[id]) { delete layers[id]; if (picked === id) setPicked(null) }
-    else { layers[id] = 0.7; setPicked(id) }
-    set({ layers })
-  }
-  const pick = picked && cur.layers[picked] ? picked : null
-  return (
-    <>
-      <div className="live__chips">
-        <button type="button" className={`live__chip${value == null ? ' live__chip--on' : ''}`} onClick={() => onPick(null)}>Da zona</button>
-        <button type="button" className={`live__chip${value && cur.auto ? ' live__chip--on' : ''}`} onClick={() => set({ auto: !cur.auto })} title="As camadas seguem o tempo, a hora e o que há perto">Automático</button>
-      </div>
-      <div className="live__chips">
-        {engine.SOUND_LAYERS.map((l) => (
-          <button
-            key={l.id}
-            type="button"
-            className={`live__chip${cur.layers[l.id] ? ' live__chip--on' : ''}`}
-            onClick={() => (cur.layers[l.id] && picked !== l.id ? setPicked(l.id) : toggle(l.id))}
-            title={cur.layers[l.id] ? 'Clique de novo pra desligar' : 'Ligar'}
-          >
-            {l.label}
-          </button>
-        ))}
-      </div>
-      {pick && (
-        <input
-          className="live__range"
-          type="range" min={5} max={100} step={5}
-          value={Math.round((cur.layers[pick] ?? 0.7) * 100)}
-          onChange={(e) => set({ layers: { ...cur.layers, [pick]: Number(e.target.value) / 100 } })}
-          aria-label={`Volume: ${engine.SOUND_LAYERS.find((l) => l.id === pick)?.label ?? ''}`}
-        />
-      )}
-    </>
   )
 }

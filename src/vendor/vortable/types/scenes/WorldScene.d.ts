@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { NetHub } from '../net/hub';
+import { ZoneAudio } from '../audio/ZoneAudio';
 import { type Appearance, type Dir, type WorldSky, type ZoneData } from '../types';
 export interface WorldSceneData {
     zone: ZoneData;
@@ -39,8 +40,10 @@ export interface WorldSceneData {
     follow?: string;
     /** Zoom da câmera enquanto acompanha alguém (padrão 2, o do jogo). */
     followZoom?: number;
-    /** Observador que também ouve os sons da zona (espectador; o mestre não precisa). */
+    /** Observador que também ouve os sons da zona (espectador; o mestre no Controle). */
     listen?: boolean;
+    /** Observador que ouve: o "Ouvir" está ligado? (lido a cada zona nova) */
+    audioOn?: () => boolean;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;
@@ -123,6 +126,8 @@ export declare class WorldScene extends Phaser.Scene {
     /** Conta pra sala onde estou: ~10×/s, e só quando mudou (com um sinal de vida por segundo). */
     private publish;
     private npcNoScroll;
+    /** O som da zona (pra o painel Sons do mestre: níveis, passos, trovão). */
+    watchAudio(): ZoneAudio | null;
     /** Hora do mundo definida no editor (fixa ou ciclo). */
     watchSky(): {
         hour: number | null;
