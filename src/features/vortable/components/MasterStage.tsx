@@ -65,16 +65,18 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               createCharacterStorage(campaign.id, userId),
             ])
             const appearance = await resolveAppearance(characters)
-            // abre a zona mais recente; sem nenhuma, uma zona nova
+            // voltando: a zona como estava (com o que não foi salvo; sem alterações, a versão fresca do banco) e a câmera no mesmo lugar
+            const back = getResume(campaign.id)?.editor
+            const resumeSnap = back && back.worldId === editing.id ? back.snap : undefined
+            // abre a zona em que estava ao sair; senão a mais recente; sem nenhuma, uma zona nova
             const [last] = await worlds.list()
-            const zone = last ? (await worlds.load(last.id)) ?? undefined : undefined
+            const wantId = resumeSnap?.kind === 'edit' ? resumeSnap.zone.id : last?.id
+            const zone = wantId ? (await worlds.load(wantId)) ?? undefined : undefined
             if (isDead()) return () => {}
             const net = vnet.net
-            // voltando: a zona como estava (inclusive o que não foi salvo) e a câmera no mesmo lugar
-            const back = getResume(campaign.id)?.editor
             const game = engine.mountVortable(host, {
               mode: 'edit',
-              resume: back && back.worldId === editing.id ? back.snap : undefined,
+              resume: resumeSnap,
               zone,
               appearance,
               assetBase: VORTABLE_ASSETS,

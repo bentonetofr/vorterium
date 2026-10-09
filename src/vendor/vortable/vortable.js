@@ -50250,8 +50250,8 @@ function hs(e, t) {
 		return ((wn(t) - wn(En(e.dayMinutes, r))) % 1 + 1) % 1 * n;
 	};
 	if (r === "edit") {
-		let r = t.resume?.kind === "edit" ? t.resume : null;
-		u = new oa(r ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new us(e, u, i, {
+		let r = t.resume?.kind === "edit" ? t.resume : null, a = r && !r.dirty && t.zone?.id === r.zone.id;
+		u = new oa(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), u.assetBase = n, r && (u.dirty = r.dirty, u.view = r.view, u.zoom = r.zoom), l = new us(e, u, i, {
 			assetBase: n,
 			textureImage: (e) => h.textures.get(e).getSourceImage(),
 			startTest: () => {
