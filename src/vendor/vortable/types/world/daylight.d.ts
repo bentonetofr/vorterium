@@ -72,6 +72,10 @@ export declare const LIGHT_PRESETS: {
     lighting: ZoneLighting;
 }[];
 /** Presets de hora do painel Luz (valem pro mundo todo). */
+/** Durações do dia no ciclo (minutos reais). */
+export declare const DAY_LENGTHS: number[];
+/** Amostra de cor de uma hora do mundo (no ciclo, dois tons: dia e noite). */
+export declare function skySwatch(hour: number | null): string;
 export declare const SKY_PRESETS: {
     id: string;
     label: string;

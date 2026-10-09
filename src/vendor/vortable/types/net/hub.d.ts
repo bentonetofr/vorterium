@@ -43,6 +43,7 @@ export interface NetEnv {
     weather: string | null;
     wind: number | null;
     sound?: LiveSound | null;
+    dayMinutes?: number | null;
 }
 /** Reações que o espectador pode mandar. */
 export declare const REACTIONS: readonly ['👏', '😮', '😂', '❤️', '🔥', '🎉', '😱', '🤔'];

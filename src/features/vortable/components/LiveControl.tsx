@@ -10,9 +10,7 @@ import './LiveControl.css'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null }
-
-const HOUR_PRESETS: [string, number][] = [['Amanhecer', 6], ['Dia', 12], ['Entardecer', 18.5], ['Noite', 22]]
+type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null }
 
 /**
  * Controle do mestre durante a sessão: vê a cena como os jogadores (câmera livre,
@@ -61,14 +59,15 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
 
   const key = scope === 'all' ? '*' : zoneId ?? '*'
   // sem ajuste do mestre, vale o que o mundo tem (hora fixa ou ciclo); "automática" = o tempo passa
-  const base = { hour: watch.current?.sky().hour ?? null, weather: null, wind: null, sound: null }
+  const base = { hour: watch.current?.sky().hour ?? null, weather: null, wind: null, sound: null, dayMinutes: null }
+  const dayMinutes = watch.current ? (watch.current.envs().find((e) => e.zone === key)?.dayMinutes ?? watch.current.sky().dayMinutes) : 24
   const env = watch.current?.envs().find((e) => e.zone === key) ?? { zone: key, ...base }
 
   function change(patch: EnvPatch) {
     const w = watch.current
     if (!w) return
     const now = w.envs().find((e) => e.zone === key) ?? base
-    w.setEnv({ zone: key, hour: now.hour, weather: now.weather, wind: now.wind, sound: now.sound, ...patch })
+    w.setEnv({ zone: key, hour: now.hour, weather: now.weather, wind: now.wind, sound: now.sound, dayMinutes: now.dayMinutes, ...patch })
     tick((n) => n + 1)
   }
 
@@ -202,20 +201,51 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
         </section>
 
         <section className="live__block">
-          <h4>Hora {env.hour == null ? '· automática (o tempo passa)' : `· ${formatHour(env.hour)}`}</h4>
-          <input
-            className="live__range"
-            type="range" min={0} max={24} step={0.25}
-            value={env.hour ?? 12}
-            onChange={(e) => change({ hour: Number(e.target.value) })}
-            aria-label="Hora do dia"
-          />
-          <div className="live__chips">
-            <button type="button" className={`live__chip${env.hour == null ? ' live__chip--on' : ''}`} onClick={() => change({ hour: null })}>Auto</button>
-            {HOUR_PRESETS.map(([label, h]) => (
-              <button key={label} type="button" className={`live__chip${env.hour === h ? ' live__chip--on' : ''}`} onClick={() => change({ hour: h })}>{label}</button>
-            ))}
-          </div>
+          <h4>Hora ({scope === 'all' ? 'todas as zonas' : 'só esta zona'})</h4>
+          {engine.current && (
+            <>
+              <div className="live__climates">
+                {engine.current.SKY_PRESETS.map((p) => (
+                  <button key={p.id} type="button" className={`live__climate${env.hour === p.hour ? ' live__climate--on' : ''}`} onClick={() => change({ hour: p.hour })}>
+                    <span className="live__climate-sw" style={{ background: engine.current!.skySwatch(p.hour) }} />
+                    <span>{p.label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="live__segmented">
+                <button
+                  type="button" className={`live__seg${env.hour == null ? ' live__seg--on' : ''}`} title="A hora corre sozinha, igual em todas as zonas"
+                  onClick={() => env.hour != null && change({ hour: null })}
+                >Ciclo dia/noite</button>
+                <button
+                  type="button" className={`live__seg${env.hour != null ? ' live__seg--on' : ''}`} title="As zonas ficam sempre na mesma hora"
+                  onClick={() => env.hour == null && change({ hour: Math.round(engine.current!.worldHour(dayMinutes) * 4) / 4 })}
+                >Hora fixa</button>
+              </div>
+              {env.hour == null ? (
+                <div className="live__field">
+                  <label htmlFor="live-day-length">Um dia dura</label>
+                  <select id="live-day-length" className="live__select" value={dayMinutes} onChange={(e) => change({ dayMinutes: Number(e.target.value) === (watch.current?.sky().dayMinutes ?? 24) ? null : Number(e.target.value) })}>
+                    {engine.current.DAY_LENGTHS.map((m) => <option key={m} value={m}>{m} min</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div className="live__hourrow">
+                  <input
+                    className="live__range"
+                    type="range" min={0} max={23.9} step={0.1}
+                    value={env.hour}
+                    onChange={(e) => change({ hour: Number(e.target.value) })}
+                    aria-label="Hora do dia"
+                  />
+                  <b className="live__hourout">
+                    <span dangerouslySetInnerHTML={{ __html: (engine.current.EDITOR_ICONS as Record<string, string>)[engine.current.daylight(env.hour) > 0.5 ? 'sun' : 'moon'] }} />
+                    <span>{engine.current.formatHour(env.hour)}</span>
+                  </b>
+                </div>
+              )}
+            </>
+          )}
         </section>
 
         <section className="live__block">
@@ -232,11 +262,6 @@ export function LiveControl({ campaign, userId }: { campaign: CampaignWithRole; 
       </aside>
     </div>
   )
-}
-
-function formatHour(hour: number) {
-  const h = Math.floor(hour), m = Math.round((hour - h) * 60)
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
 function WeatherPicker({ engine, value, onPick }: { engine: Engine | null; value: string | null; onPick: (w: string | null) => void }) {

@@ -1,6 +1,6 @@
 import { type WorldStorage } from './storage';
 import { type Appearance, type CharacterSave, type Dir, type ZoneData } from './types';
-import { formatHour } from './world/daylight';
+import { daylight, formatHour, worldHour } from './world/daylight';
 import { type LiveSound, type NetLink } from './net/hub';
 import { type CharacterStorage } from './character/storage';
 export * from './types';
@@ -13,10 +13,11 @@ export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppear
 export { parseNet, REACTIONS } from './net/hub';
 export type { LiveSound } from './net/hub';
 export { ICONS as EDITOR_ICONS } from './editor/icons';
+export { DAY_LENGTHS, SKY_PRESETS, skySwatch } from './world/daylight';
 export { SURFACE_LABELS } from './audio/steps';
 export { LAYERS as SOUND_LAYERS } from './audio/ambience';
 export type { NetLink, NetMsg, NetHello, NetState, NetAnim, NetEnv, NetReact } from './net/hub';
-export { formatHour };
+export { formatHour, worldHour, daylight };
 export { WEATHERS, WEATHER_ORDER } from './world/weather';
 export { WIND_LEVELS, DEFAULT_WIND } from './world/wind';
 export interface VortableOptions {
@@ -111,6 +112,7 @@ export interface WatchControls {
         weather: string | null;
         wind: number | null;
         sound?: LiveSound | null;
+        dayMinutes?: number | null;
     }): void;
     /** Ajuste que está valendo agora (pra a interface mostrar). */
     envs(): {
@@ -119,6 +121,7 @@ export interface WatchControls {
         weather: string | null;
         wind: number | null;
         sound: LiveSound | null;
+        dayMinutes: number | null;
     }[];
     /** Som da zona que o mestre ouve no Controle (os jogadores ouvem o deles). */
     audio: {

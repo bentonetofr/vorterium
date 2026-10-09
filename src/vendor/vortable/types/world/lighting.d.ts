@@ -55,6 +55,7 @@ export declare class Lighting {
         hour: number | null;
         weather: string | null;
         wind: number | null;
+        dayMinutes?: number | null;
     } | null;
     /** Deslocamento do relógio do mundo, em ms (o teste do editor começa na hora da prévia). */
     timeOffset: number;
