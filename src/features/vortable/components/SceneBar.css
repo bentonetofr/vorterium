@@ -52,60 +52,6 @@
 .scene-btn:hover { color: var(--text-primary); background: var(--bg-elevated); }
 .scene-btn--on { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--accent); }
 
-.scene-bar__menu { position: relative; }
-
-.scene-pop {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2, 8px);
-  padding: var(--space-3, 12px);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-base);
-  border-radius: var(--radius-md);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-}
-.scene-pop--images { width: min(420px, 90vw); max-height: 60vh; overflow-y: auto; }
-.scene-pop--title { width: min(340px, 90vw); }
-.scene-pop__msg { margin: 0; color: var(--text-secondary); font-size: var(--text-sm); }
-.scene-pop__msg--error { color: var(--danger-bright); }
-.scene-pop__input {
-  padding: 8px 10px;
-  color: var(--text-primary);
-  background: var(--bg-base);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--radius-sm);
-  font: inherit;
-}
-.scene-pop__input:focus { outline: none; border-color: var(--accent); }
-.scene-pop__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: var(--space-2, 8px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.scene-thumb {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 4px;
-  padding: 4px;
-  color: var(--text-secondary);
-  background: var(--bg-base);
-  border: 1px solid var(--border-dim);
-  border-radius: var(--radius-sm);
-  cursor: var(--cursor-hand);
-}
-.scene-thumb:hover:not(:disabled) { border-color: var(--accent); }
-.scene-thumb--on { border-color: var(--accent-bright); box-shadow: 0 0 0 1px var(--accent-bright); }
-.scene-thumb img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 2px; }
-.scene-thumb__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-xs); }
-
 /* ── Jogador: cena por cima do jogo ── */
 
 .vortable-player-wrap { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
