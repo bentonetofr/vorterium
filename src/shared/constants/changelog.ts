@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.43',
+    date:    '2026-10-10',
+    title:   'Arrastar inimigos do painel para o mapa (Vortable)',
+    items: [
+      'Painel Inimigos do Controle ao vivo: agora é só arrastar o inimigo (Corredor, Espreitador, Estalador, Trôpego ou Baiacu) e soltar no mapa. Ele aparece exatamente onde o mouse soltou, qualquer que seja o zoom ou o lugar da câmera, e uma moldura tracejada mostra onde dá para soltar.',
+      'Se "Quantos" estiver em mais de um, o primeiro cai no ponto solto e os outros em volta, conforme o espalhamento escolhido. O botão Colocar continua funcionando, e depois de colocado dá para clicar em Controlar e andar com ele.',
+      'Por baixo: o motor ganhou uma remenda pequena (watch.worldAt, que converte um ponto da tela em um ponto do mapa). Se o motor for sincronizado de novo, rode node scripts/patch-vortable-camera.mjs para recolocar a remenda; sem ela o arrastar avisa e o botão Colocar continua.',
+    ],
+  },
+  {
     version: '1.42',
     date:    '2026-10-10',
     title:   'Vortable: o controle do mestre mostra o mundo certo',

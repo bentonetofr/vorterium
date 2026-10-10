@@ -104,6 +104,8 @@ export interface PlaceOptions {
   anchor: Anchor
   /** Quão espalhados (tiles). */
   spread: number
+  /** O primeiro fica exatamente no ponto (solto com o mouse); os outros, em volta. */
+  exact?: boolean
   net: VortableNet | null
 }
 
@@ -131,7 +133,7 @@ export async function placeEnemies(o: PlaceOptions): Promise<string[]> {
   const added: ZoneNpc[] = []
   for (let i = 0; i < o.count; i++) {
     const angle = Math.random() * Math.PI * 2
-    const r = o.count === 1 && o.spread <= 1.5 ? 56 : (o.spread * 32) * (0.45 + Math.random() * 0.55)
+    const r = o.exact && i === 0 ? 0 : o.count === 1 && o.spread <= 1.5 && !o.exact ? 56 : (Math.max(o.spread, 1.5) * 32) * (0.45 + Math.random() * 0.55)
     const x = Math.max(20, Math.min(maxX, Math.round(base.x + Math.cos(angle) * r)))
     const y = Math.max(40, Math.min(maxY, Math.round(base.y + Math.sin(angle) * r)))
     added.push({

@@ -45,3 +45,25 @@
 }
 .creature-sfx:hover { color: var(--accent-bright); border-color: var(--accent); transform: scale(1.08); }
 .creature-sfx--off { opacity: 0.6; }
+
+/* arrastar o inimigo do painel para o mapa */
+.enemy__card--drag { cursor: grab; }
+.enemy__card--drag:active { cursor: grabbing; }
+.live__view--drop::after {
+  content: 'Solte aqui para colocar o inimigo';
+  position: absolute;
+  inset: 8px;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 18px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-bright);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg, 12px);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  pointer-events: none;
+  z-index: 15;
+}

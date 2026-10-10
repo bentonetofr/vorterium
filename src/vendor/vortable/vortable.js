@@ -52413,6 +52413,12 @@ function Pc(e, t) {
 			fit: () => _()?.watchFit(),
 			zoomBy: (e) => _()?.watchZoom(e),
 			focus: (e, t) => _()?.watchFocus(e, t),
+			worldAt: (e, t) => {
+				let n = _();
+				if (!n) return null;
+				let r = n.cameras.main.getWorldPoint(n.scale.transformX(e), n.scale.transformY(t));
+				return { x: r.x, y: r.y };
+			},
 			follow: (e, t) => _()?.watchFollow(e, t),
 			following: () => _()?.watchFollowing() ?? null,
 			react: (e) => _()?.watchReact(e),

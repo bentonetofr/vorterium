@@ -14,6 +14,9 @@ type Peer = ReturnType<WatchControls['peers']>[number]
 type Tab = 'colocar' | 'zona' | 'sons'
 
 interface Props {
+  /** A área do mapa (onde se solta o inimigo arrastado) e os controles da câmera (pra achar o ponto do mapa). */
+  viewEl: HTMLElement | null
+  watch: WatchControls | null
   campaignId: string
   worldId: string
   worldName: string
@@ -37,6 +40,7 @@ const DISTANCES: { label: string; value: SoundDistance; title: string }[] = [
 ]
 const REPEATS = [{ label: 'Uma vez', every: 0 }, { label: 'A cada 4 s', every: 4 }, { label: 'A cada 8 s', every: 8 }, { label: 'A cada 15 s', every: 15 }]
 
+const DRAG_TYPE = 'application/x-vortable-enemy'
 const appearanceCache = new Map<string, Promise<Appearance>>()
 function appearanceOf(def: CreatureDef): Promise<Appearance> {
   let p = appearanceCache.get(def.id)
@@ -54,7 +58,7 @@ function Portrait({ def, size = 56 }: { def: CreatureDef; size?: number }) {
  * Painel "Inimigos" do controle ao vivo: o mestre põe infectados na cena (Corredor, Espreitador, Estalador, Trôpego e Baiacu)
  * e toca os sons deles pra todos na mesa.
  */
-export function EnemiesPane({ campaignId, worldId, worldName, zoneId, net, peers, npcs, controlling, onControl }: Props) {
+export function EnemiesPane({ viewEl, watch, campaignId, worldId, worldName, zoneId, net, peers, npcs, controlling, onControl }: Props) {
   const [tab, setTab] = useState<Tab>('colocar')
   const [count, setCount] = useState(1)
   const [spread, setSpread] = useState(1)
@@ -73,6 +77,48 @@ export function EnemiesPane({ campaignId, worldId, worldName, zoneId, net, peers
   useEffect(() => { unlockCreatureAudio() }, [])
   useEffect(() => () => window.clearTimeout(loopTimer.current), [])
   useEffect(() => { try { localStorage.setItem('vortable:enemy-vol', String(volume)) } catch { /* sem armazenamento */ } }, [volume])
+
+  // arrastar um inimigo do painel e soltar no mapa: ele aparece exatamente onde o mouse soltou
+  const dropRef = useRef<(def: CreatureDef, pageX: number, pageY: number) => void>(() => {})
+  dropRef.current = (def, pageX, pageY) => {
+    const at = (watch as (WatchControls & { worldAt?: (x: number, y: number) => { x: number; y: number } | null }) | null)?.worldAt
+    const point = at ? at.call(watch, pageX, pageY) : null
+    if (!zoneId) return
+    if (!point) { setNote('Pra arrastar, o motor do Vortable precisa da remenda da câmera (node scripts/patch-vortable-camera.mjs). Use o botão Colocar.'); return }
+    setBusy(def.id); setNote(null)
+    placeEnemies({ campaignId, worldId, worldName, zoneId, net, creature: def, count, spread: SPREADS[spread].tiles, anchor: point, exact: true })
+      .then(() => setNote(`${count > 1 ? `${count} ` : ''}${def.name}${count > 1 ? 's' : ''} no mapa.`))
+      .catch((err) => setNote(err instanceof Error ? err.message : 'Não deu pra colocar.'))
+      .finally(() => setBusy(null))
+  }
+  useEffect(() => {
+    if (!viewEl) return
+    const kind = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes(DRAG_TYPE)
+    const over = (e: DragEvent) => { if (!kind(e)) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; viewEl.classList.add('live__view--drop') }
+    const leave = (e: DragEvent) => { if (e.relatedTarget && viewEl.contains(e.relatedTarget as Node)) return; viewEl.classList.remove('live__view--drop') }
+    const drop = (e: DragEvent) => {
+      viewEl.classList.remove('live__view--drop')
+      if (!kind(e)) return
+      e.preventDefault()
+      const def = CREATURES.find((c) => c.id === e.dataTransfer?.getData(DRAG_TYPE))
+      if (def) dropRef.current(def, e.pageX, e.pageY)
+    }
+    const end = () => viewEl.classList.remove('live__view--drop')
+    viewEl.addEventListener('dragover', over); viewEl.addEventListener('dragenter', over); viewEl.addEventListener('dragleave', leave)
+    viewEl.addEventListener('drop', drop); window.addEventListener('dragend', end)
+    return () => {
+      viewEl.removeEventListener('dragover', over); viewEl.removeEventListener('dragenter', over); viewEl.removeEventListener('dragleave', leave)
+      viewEl.removeEventListener('drop', drop); window.removeEventListener('dragend', end); viewEl.classList.remove('live__view--drop')
+    }
+  }, [viewEl])
+
+  function startDrag(e: React.DragEvent, def: CreatureDef) {
+    e.dataTransfer.setData(DRAG_TYPE, def.id)
+    e.dataTransfer.setData('text/plain', def.name)
+    e.dataTransfer.effectAllowed = 'copy'
+    const face = (e.currentTarget as HTMLElement).querySelector('canvas')
+    if (face) e.dataTransfer.setDragImage(face, face.clientWidth / 2, face.clientHeight - 4)
+  }
 
   const here = peers.filter((p) => p.zone === zoneId)
   const enemies = npcs.filter((n) => n.id.startsWith('inim-'))
@@ -152,9 +198,10 @@ export function EnemiesPane({ campaignId, worldId, worldName, zoneId, net, peers
               ))}
             </div>
           </div>
+          <p className="live__empty">Arraste um inimigo para o mapa, ou use o botão Colocar.</p>
           <ul className="enemy__list">
             {CREATURES.map((c) => (
-              <li key={c.id} className="enemy__card">
+              <li key={c.id} className="enemy__card enemy__card--drag" draggable onDragStart={(e) => startDrag(e, c)} title="Arraste para o mapa e solte onde quiser">
                 <Portrait def={c} />
                 <div className="enemy__info">
                   <strong>{c.name}</strong>

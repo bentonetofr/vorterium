@@ -52,6 +52,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   // menu flutuante: qual painel está aberto (um por vez)
   const [open, setOpen] = useState<Pane | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const viewRef = useRef<HTMLDivElement>(null)
 
   // clicar fora (na cena, por exemplo) ou Esc fecha o painel
   useEffect(() => {
@@ -177,7 +178,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
           <button type="button" className="btn btn-primary" disabled={opening} onClick={() => void openEdited()}>{opening ? 'Abrindo…' : `Abrir "${other.name}"`}</button>
         </div>
       )}
-      <div className="live__view">
+      <div className="live__view" ref={viewRef}>
         <EngineStage
           key={active.id}
           deps={[campaign.id, userId, vnet.net, active.id]}
@@ -316,6 +317,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
             {open === 'inimigos' && (
               <EnemiesPane
                 campaignId={campaign.id} worldId={active.id} worldName={active.name} zoneId={zoneId} net={vnet.net}
+                viewEl={viewRef.current} watch={watch.current}
                 peers={peers} npcs={npcs} controlling={controlling} onControl={(id) => void control(id)}
               />
             )}

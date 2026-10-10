@@ -82,6 +82,8 @@ export interface WatchControls {
     fit(): void;
     zoomBy(factor: number): void;
     focus(x: number, y: number): void;
+    /** Ponto do mapa sob um ponto da tela (coordenadas de página: pageX, pageY). null = sem cena. (remenda do Vorterium) */
+    worldAt(pageX: number, pageY: number): { x: number; y: number } | null;
     /** A câmera acompanha um jogador (null solta); `zoom` padrão 2 (o enquadramento do jogo). */
     follow(id: string | null, zoom?: number): void;
     /** Quem a câmera acompanha agora (null = ninguém). */
