@@ -55,6 +55,8 @@ import { TdaHorrorModal } from './TdaHorrorModal'
 import { TdaCombatModal, type TdaCombatMode } from './TdaCombatModal'
 import { TdaSuppliesTab } from './TdaSuppliesTab'
 import { TdaStealthModal, type TdaStealthMode } from './TdaStealthModal'
+import { TdaSearchModal } from './TdaSearchModal'
+import { applyLoot, type LootFind } from '../utils/tdaLoot'
 import { alertLevel } from '../constants/tdaStealth'
 import { useTdaScene } from '../utils/useTdaScene'
 import './TerraDevastadaAdaptadaSheet.css'
@@ -186,6 +188,7 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
   useTdaFonts()
   const [scene] = useTdaScene(sheet.campaign_id)
   const [stealth, setStealth] = useState<TdaStealthMode | null>(null)
+  const [searching, setSearching] = useState(false)
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('personagem')
@@ -338,6 +341,21 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
     announceTda(sheet.campaign_id, `${who} melhorou ${item?.name.trim() || 'uma arma'} na bancada.`)
   }
 
+  /** Guarda os achados do Revistar (em ordem, cada um com o que cabe) e conta como foi. */
+  function takeLoot(entries: { find: LootFind; weaponId?: string }[]): { ok: boolean; text: string }[] {
+    let supplies = form.supplies
+    let inventory = form.inventory
+    const out = entries.map((e) => {
+      const res = applyLoot(e.find, supplies, inventory, form.backpack, e.weaponId)
+      if ('error' in res) return { ok: false, text: res.error }
+      supplies = res.supplies
+      inventory = res.inventory
+      return { ok: true, text: res.text }
+    })
+    setForm((prev) => ({ ...prev, supplies, inventory }))
+    return out
+  }
+
   function changeKind(id: string, kind: TdaInventoryItem['kind']) {
     setForm((prev) => ({
       ...prev,
@@ -476,6 +494,9 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
             </button>
             <button type="button" className="tda-btn tda-btn--big" onClick={() => setStealth('furtividade')}>
               Furtividade
+            </button>
+            <button type="button" className="tda-btn tda-btn--big" onClick={() => setSearching(true)}>
+              Revistar
             </button>
             <button type="button" className="tda-btn tda-btn--primary tda-btn--big" onClick={() => setTesting('teste')}>
               Fazer um teste
@@ -792,6 +813,24 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
           <button type="submit" className="tda-btn">{saveState === 'error' ? 'Tentar de novo' : 'Salvar agora'}</button>
         )}
       </footer>
+
+      <Presence show={searching} exitMs={220}>
+        {() => searching && (
+          <TdaSearchModal
+            campaignId={sheet.campaign_id}
+            who={who}
+            traits={form.traits} conditions={form.conditions} inventory={form.inventory}
+            backpack={form.backpack}
+            horror={form.horror} conviction={form.conviction}
+            onConviction={(delta) => setForm((prev) => ({
+              ...prev, conviction: Math.max(0, Math.min(CONVICTION_MAX, prev.conviction + delta)),
+            }))}
+            onLoot={takeLoot}
+            onAnnounce={(msg) => announceTda(sheet.campaign_id, msg)}
+            onClose={() => setSearching(false)}
+          />
+        )}
+      </Presence>
 
       <Presence show={stealth !== null} exitMs={220}>
         {() => stealth && (

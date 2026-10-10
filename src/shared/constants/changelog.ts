@@ -18,13 +18,15 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '1.28',
     date:    '2026-10-10',
-    title:   'Materiais em pedaços e furtividade na Terra Devastada Adaptada',
+    title:   'Materiais em pedaços, furtividade e revista na Terra Devastada Adaptada',
     items: [
       'Terra Devastada Adaptada: trapos, álcool, lâminas e explosivos agora se acham em pedaços (meio trapo, 60% de um frasco...). 100% é um inteiro, e cabem até 3 de cada. Só dá pra fabricar com 100% de cada ingrediente, então os pedaços vão se somando pelo caminho; o que sobra continua guardado.',
       'Sucata e peças continuam sempre inteiras (de 1 em 1, até 3). A Mochila agora só aumenta as balas, os kits médicos e os explosivos de arremesso.',
       'Furtividade (Terra Devastada Adaptada): o mestre controla o Alerta da cena (Oculto, Suspeito, Alertado, Caçado) e a Atenção do lugar numa barra no topo das Fichas; os jogadores veem o Alerta na própria ficha, ao vivo.',
       'Novo botão Furtividade na ficha: passar despercebido (teste contra a Atenção do lugar, com bônus de mato alto e agachado e penalidade de correr, luz forte e cão rastreando), escutar (cada ponto revela uma informação) e distrair (jogar um tijolo ou garrafa).',
       'Golpe furtivo no Atacar: com o alvo sem ter visto você e o Alerta até Suspeito, o ataque corpo a corpo não rola dado e derruba em silêncio quem tem Resistência até 2. A faca improvisada, que se gasta, derruba até Resistência 3 (o Estalador). Arma de fogo faz barulho demais pra isso.',
+      'Novo botão Revistar na ficha (Terra Devastada Adaptada): teste contra a meta do Narrador (quão escondido está o que há) e a riqueza do lugar (Escasso, Comum, Rico). Falha não acha nada, sucesso parcial 1 achado, sucesso 2 (e mais um a cada 2 pares além da meta, até 4).',
+      'Cada achado sai de uma tabela de d6: nada, trapos, álcool, lâminas ou explosivos, sucata ou munição, e o raro (peça de arma, kit médico ou suplemento). Trapos, álcool, lâminas e explosivos vêm em pedaços de 25%, 50%, 75% ou 100%. Você escolhe guardar ou deixar cada achado, e só cabe o que a Mochila e o teto de 3 permitem. Revistar faz barulho: o Narrador pode subir o Alerta.',
     ],
   },
   {
