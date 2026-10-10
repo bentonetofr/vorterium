@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.54',
+    date:    '2026-10-10',
+    title:   'Zoom do Controle ao vivo mais sensível (Vortable)',
+    items: [
+      'O zoom da roda do mouse na câmera do mestre ficou o dobro de sensível: cada clique da rodinha aproxima ou afasta cerca de 38% (antes 17%), e no touchpad responde mais rápido. Continua ancorado no cursor.',
+    ],
+  },
+  {
     version: '1.53',
     date:    '2026-10-10',
     title:   'Dias de 3 e 5 horas (Vortable)',

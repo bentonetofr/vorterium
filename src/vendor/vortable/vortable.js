@@ -45652,7 +45652,7 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 		i.on("pointermove", (e) => {
 			e.isDown && (this.following = null, r.scrollX -= (e.x - e.prevPosition.x) / r.zoom, r.scrollY -= (e.y - e.prevPosition.y) / r.zoom);
 		}), i.on("wheel", (e, t, n, i) => {
-			let wheelZoom = r.zoom, nz = c.default.Math.Clamp(wheelZoom * Math.exp(-c.default.Math.Clamp(i, -240, 240) * .0016), .2, 6);
+			let wheelZoom = r.zoom, nz = c.default.Math.Clamp(wheelZoom * Math.exp(-c.default.Math.Clamp(i, -300, 300) * .0032), .2, 6);
 			if (nz === wheelZoom) return;
 			let w = r.width, h = r.height, sx = e.x - r.x - w / 2, sy = e.y - r.y - h / 2, wx = sx / wheelZoom + r.scrollX + w / 2, wy = sy / wheelZoom + r.scrollY + h / 2;
 			r.setZoom(nz), this.following || (r.scrollX = wx - w / 2 - sx / nz, r.scrollY = wy - h / 2 - sy / nz);
