@@ -5,6 +5,8 @@ import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { getCharacterFaces } from '../../chat/services/chatService'
 import { VortableNet, type NetPeerInfo, type NetStatus, type Signaling } from './VortableNet'
 import { getResume, patchResume } from '../resume/resumeStore'
+import { creatureSfxEnabled, playCreatureSound, unlockCreatureAudio, type SoundDistance } from '../enemies/creatureSounds'
+import { getLocalZone } from '../enemies/localZone'
 
 interface NetValue {
   net: VortableNet | null
@@ -52,6 +54,14 @@ export function VortableNetProvider({ children, startWatching = false, remember 
     made.onKicked = () => setKicked(true)
     // o mestre manda assistir / volta a pôr em jogo
     made.onCommand = (cmd) => setWatching(cmd === 'spectate')
+    // o mestre toca o som de uma criatura (quem está em outra zona não ouve, se ele escolheu assim)
+    made.onSfx = (m) => {
+      if (!creatureSfxEnabled()) return
+      const here = getLocalZone()
+      if (m.zone && here && m.zone !== here) return
+      playCreatureSound(m.s, m.v, m.d as SoundDistance)
+    }
+    unlockCreatureAudio()
     setNet(made)
     return () => {
       made.dispose()

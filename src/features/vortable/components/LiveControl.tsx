@@ -7,13 +7,15 @@ import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage, type Engine } from './EngineStage'
 import { SoundPanel } from './SoundPanel'
+import { EnemiesPane } from '../enemies/EnemiesPane'
+import { setLocalZone } from '../enemies/localZone'
 import './LiveControl.css'
 import { Loader } from '../../../shared/components/Loader'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type Pane = 'zonas' | 'jogadores' | 'npcs' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
-const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', npcs: 'NPCs desta zona', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
+type Pane = 'zonas' | 'jogadores' | 'npcs' | 'inimigos' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
+const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', npcs: 'NPCs desta zona', inimigos: 'Inimigos', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
 type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null; timeShift?: number | null }
 
 /**
@@ -21,6 +23,9 @@ type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number |
  * qualquer zona, o mapa inteiro) e muda hora, tempo e vento ao vivo pra todos.
  * Diferente do Editar mundo, que é a criação antes da sessão.
  */
+/** Uma caveira (o botão e o painel de inimigos). */
+const SKULL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-4.4 0-8 3.1-8 7.2 0 2.3 1.1 4.2 2.8 5.5V19a1 1 0 0 0 1 1h8.4a1 1 0 0 0 1-1v-3.3c1.7-1.3 2.8-3.200 2.800-5.500C20 6.100 16.400 3 12 3Z"/><circle cx="9" cy="11" r="1.600"/><circle cx="15" cy="11" r="1.600"/><path d="M12 13.500v2M10 20v-2.200M14 20v-2.200"/></svg>'
+
 /** Uma tevê (o botão e o painel de espectadores). */
 const TV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="m8 3 4 4 4-4"/><path d="M7 16.5h.01M17 12.5v4"/></svg>'
 
@@ -167,7 +172,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
               storage: worlds,
               // o mestre ouve o som da zona que está vendo (o painel Sons liga, desliga e ajusta)
               listen: true,
-              onZone: (z) => setZoneId(z.id),
+              onZone: (z) => { setLocalZone(z.id); setZoneId(z.id) },
               net: net ? { selfId: `watch:${userId}`, name: 'Mestre', send: (m) => net.send(m) } : undefined,
             })
             watch.current = game.watch ?? null
@@ -191,6 +196,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
           {tool('zonas', 'world', 'Zonas e câmera')}
           {tool('jogadores', 'person', 'Jogadores', { badge: peers.length || undefined })}
           {tool('npcs', 'npc', 'NPCs desta zona', { dot: controlling != null })}
+          {tool('inimigos', SKULL_ICON, 'Inimigos e sons de criaturas', { badge: npcs.filter((n) => n.id.startsWith('inim-')).length || undefined })}
           {tool('espectadores', TV_ICON, 'Espectadores', { badge: vnet.peers.filter((p) => p.connected && p.role === 'spectator').length || undefined })}
           <span className="live__bar-sep" aria-hidden="true" />
           <button
@@ -285,6 +291,12 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
                 )}
               </section>
               </>
+            )}
+            {open === 'inimigos' && (
+              <EnemiesPane
+                campaignId={campaign.id} worldId={active.id} worldName={active.name} zoneId={zoneId} net={vnet.net}
+                peers={peers} npcs={npcs} controlling={controlling} onControl={(id) => void control(id)}
+              />
             )}
             {open === 'espectadores' && <SpectatorsPane />}
             {open === 'hora' && (

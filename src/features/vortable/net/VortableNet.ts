@@ -82,6 +82,8 @@ export class VortableNet {
   onKicked: (() => void) | null = null
   /** O mestre mandou eu assistir ou voltar a jogar. */
   onCommand: ((cmd: NetCommand) => void) | null = null
+  /** O mestre mandou tocar o som de uma criatura (s = id do som, v = volume 0 a 1, d = distância 0 a 2, zone = só quem está nela). */
+  onSfx: ((msg: { s: string; v: number; d: number; zone: string | null }) => void) | null = null
 
   /** Nome mostrado sobre o boneco (o do personagem na ficha); pode mudar com o jogo aberto. */
   name: string
@@ -130,6 +132,13 @@ export class VortableNet {
 
   private sendEnvs(id: string) {
     for (const env of this.envs.values()) this.sendTo(id, env)
+  }
+
+  /** Mestre: toca o som de uma criatura em todos os jogadores. */
+  sfx(s: string, v: number, d: number, zone: string | null) {
+    if (!this.opts.isMaster) return
+    const data = JSON.stringify({ sys: 'sfx', s, v, d, zone })
+    for (const p of this.peers.values()) if (p.dc?.readyState === 'open') p.dc.send(data)
   }
 
   /** Mestre: manda um jogador assistir (ou voltar a jogar). */
@@ -395,6 +404,16 @@ export class VortableNet {
       } else if ((msg as { sys: unknown }).sys === 'cmd') {
         const cmd = (msg as { cmd?: unknown }).cmd
         if (cmd === 'spectate' || cmd === 'play') this.onCommand?.(cmd)
+      } else if ((msg as { sys: unknown }).sys === 'sfx') {
+        const m = msg as { s?: unknown; v?: unknown; d?: unknown; zone?: unknown }
+        if (typeof m.s === 'string') {
+          this.onSfx?.({
+            s: m.s,
+            v: typeof m.v === 'number' ? Math.max(0, Math.min(1, m.v)) : 0.8,
+            d: m.d === 1 || m.d === 2 ? m.d : 0,
+            zone: typeof m.zone === 'string' ? m.zone : null,
+          })
+        }
       }
       return
     }

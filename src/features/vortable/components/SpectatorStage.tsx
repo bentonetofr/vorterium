@@ -1,3 +1,4 @@
+import { setLocalZone } from '../enemies/localZone'
 import { useEffect, useRef, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { WatchControls } from '../../../vendor/vortable/vortable'
@@ -129,7 +130,7 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
             appearance: engine.defaultAppearance(),
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
-            onZone: (z) => setZone({ id: z.id, name: z.name }),
+            onZone: (z) => { setLocalZone(z.id); setZone({ id: z.id, name: z.name }) },
             net: net ? { selfId: `spec:${userId}`, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
           })
           watch.current = game.watch ?? null

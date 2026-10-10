@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.41',
+    date:    '2026-10-10',
+    title:   'Inimigos e sons de criaturas no controle do mestre (Vortable)',
+    items: [
+      'Controle ao vivo do Vortable: novo botão de caveira na barra do mestre (depois de NPCs), "Inimigos e sons de criaturas".',
+      'Aba "Colocar": Corredor (dano 1), Espreitador (2), Estalador (3), Trôpego (4) e Baiacu (6), cada um com o próprio boneco. Escolha onde (no ponto de partida da zona ou perto de um jogador), quantos (1 a 8) e quão espalhados, e clique em Colocar: eles aparecem na hora no mapa para o mestre e para quem está na zona.',
+      'Aba "Na zona": lista os inimigos de lá, com sons rápidos de cada um, "Controlar" (anda com ele como um jogador, setas ou WASD), "Tirar" e "Tirar todos desta zona".',
+      'Aba "Sons": 24 sons sintetizados na hora, sem arquivos: Corredor (grunhido, grito, ofegante, rosnado), Espreitador (respiração, sussurro, rosnado, estalo de língua), Estalador (cliques, cliques rápidos, grito, agonia), Trôpego (gemido, gargarejo, bolsa estourando, passos arrastados), Baiacu (rugido, grunhido, passos pesados, arremesso de esporos) e Zumbi comum (gemido, grunhido, grito rouco, mastigando).',
+      'Cada som tem volume, distância (perto, longe e muito longe, que abafa e põe eco), repetição automática (a cada 4, 8 ou 15 segundos), e dá para tocar só para quem está na zona ou para a mesa toda. Os jogadores ouvem junto, e cada um liga ou desliga os sons de criaturas no botão de alto-falante no canto da tela do jogo.',
+      'Personagem: três peças novas de infectado no criador (aba Infecção): Espreitador (pele morta e veias), Trôpego (bolsas de esporos) e Baiacu (placas de fungo).',
+    ],
+  },
+  {
     version: '1.40',
     date:    '2026-10-10',
     title:   'Mundo pronto: Nova York — Zona Morta (Vortable)',

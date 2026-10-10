@@ -11,6 +11,8 @@ import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import { SpectatorStage } from './SpectatorStage'
 import { getResume, patchResume } from '../resume/resumeStore'
+import { setLocalZone } from '../enemies/localZone'
+import { CreatureSfxToggle } from '../enemies/CreatureSfxToggle'
 import './SceneBar.css'
 import './SpectatorStage.css'
 import { Loader } from '../../../shared/components/Loader'
@@ -133,6 +135,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
             appearance: engine.normalizeAppearance(data, mine.appearance),
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
+            onZone: (z) => setLocalZone(z.id),
             // o nome é lido a cada anúncio: acompanha a ficha
             net: vnet.net ? { selfId: userId, get name() { return net?.name ?? vnet.name }, send: (m) => net?.send(m) } : undefined,
           })
@@ -152,6 +155,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
         }}
       />
       {allowSpectate && <button type="button" className="spectator-skip" onClick={() => vnet.setWatching(true)}>Assistir</button>}
+      <CreatureSfxToggle />
       <SceneOverlay scene={stage.scene} />
     </div>
   )

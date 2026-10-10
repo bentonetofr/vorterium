@@ -1,0 +1,47 @@
+/* Painel de inimigos do controle ao vivo e o botão de som das criaturas */
+.enemy { display: flex; flex-direction: column; gap: var(--space-3, 12px); min-width: 0; }
+.enemy__opts { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
+.enemy__list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: min(52vh, 420px); overflow-y: auto; }
+.enemy__card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md, 8px);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.enemy__card:hover { border-color: var(--border-bright); background: var(--bg-surface, var(--bg-base)); }
+.enemy__card--row { grid-template-columns: auto 1fr; }
+.enemy__card--row .enemy__actions { grid-column: 1 / -1; }
+.enemy__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.enemy__info strong { color: var(--text-primary); font-size: var(--text-sm); }
+.enemy__info small { color: var(--accent-bright); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.enemy__info span { color: var(--text-muted); font-size: var(--text-xs); line-height: 1.35; }
+.enemy__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.enemy__ph { display: inline-block; border-radius: 6px; background: var(--bg-void, #0b0e14); }
+.enemy__sounds { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.enemy__sounds .live__player { width: 100%; }
+@media (max-width: 560px) { .enemy__sounds { grid-template-columns: 1fr; } .enemy__card { grid-template-columns: auto 1fr; } .enemy__card .btn { grid-column: 1 / -1; } }
+
+.creature-sfx {
+  position: absolute;
+  bottom: var(--space-3, 12px);
+  left: var(--space-3, 12px);
+  z-index: 6;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  color: var(--text-secondary);
+  background: rgba(14, 18, 28, 0.82);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms var(--ease-spring, ease);
+}
+.creature-sfx:hover { color: var(--accent-bright); border-color: var(--accent); transform: scale(1.08); }
+.creature-sfx--off { opacity: 0.6; }
