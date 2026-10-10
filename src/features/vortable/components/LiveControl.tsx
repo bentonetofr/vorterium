@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { LiveSound, WatchControls } from '../../../vendor/vortable/vortable'
-import { createWorldStorage, VORTABLE_ASSETS } from '../services/vortableService'
+import { createWorldStorage, setActiveWorld, VORTABLE_ASSETS } from '../services/vortableService'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
@@ -32,7 +32,9 @@ const TV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWithRole; userId: string; onOpen: (screen: 'personagens' | 'jogadores') => void }) {
   const vnet = useVortableNet()
   // o controle mostra o mundo onde os jogadores estão
-  const { active, ready } = useVortableWorlds()
+  const { active, editing, ready, refresh } = useVortableWorlds()
+  const mesa = useMesaStream()
+  const [opening, setOpening] = useState(false)
   const watch = useRef<WatchControls | null>(null)
   const engine = useRef<Engine | null>(null)
   const [zones, setZones] = useState<{ id: string; name: string }[]>([])
@@ -154,8 +156,27 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     return <div className="vortable-stage"><div className="vortable-stage__cover"><Loader /></div></div>
   }
 
+  /** O mundo que o mestre edita não é o aberto: o controle mostra o aberto, e aqui dá pra abrir o editado. */
+  const other = editing && editing.id !== active.id ? editing : null
+  async function openEdited() {
+    if (!other) return
+    if (!confirm(`Abrir "${other.name}" pros jogadores? Quem está no Vortable vai para ele agora.`)) return
+    setOpening(true)
+    try {
+      await setActiveWorld(campaign.id, other.id)
+      mesa.setWorldId(other.id)
+      await refresh()
+    } finally { setOpening(false) }
+  }
+
   return (
     <div className="live">
+      {other && (
+        <div className="live__worldwarn" role="status">
+          <span>Você está vendo <b>{active.name}</b>, o mundo aberto pros jogadores. O mundo que você edita, <b>{other.name}</b>, não está aberto.</span>
+          <button type="button" className="btn btn-primary" disabled={opening} onClick={() => void openEdited()}>{opening ? 'Abrindo…' : `Abrir "${other.name}"`}</button>
+        </div>
+      )}
       <div className="live__view">
         <EngineStage
           key={active.id}

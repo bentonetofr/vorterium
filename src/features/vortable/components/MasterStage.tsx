@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
-import { createCharacterStorage, createWorldStorage, listNpcCharacters, resolveAppearance, VORTABLE_ASSETS } from '../services/vortableService'
+import { createCharacterStorage, createWorldStorage, listNpcCharacters, resolveAppearance, setActiveWorld, VORTABLE_ASSETS } from '../services/vortableService'
+import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { EngineStage } from './EngineStage'
 import { PlayersManager } from './PlayersManager'
 import { LiveControl } from './LiveControl'
@@ -28,15 +29,33 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   const [editor, setEditor] = useState<EditorBarHandle | null>(null)
   useEffect(() => { patchResume(campaign.id, { masterTab: mode }) }, [campaign.id, mode])
   const vnet = useVortableNet()
-  const { editing, ready } = useVortableWorlds()
+  const { editing, active, ready, refresh } = useVortableWorlds()
+  const mesa = useMesaStream()
 
   // "Editar" num mundo (painel Mundos): vai pro editor
   useEffect(() => { if (editSignal > 0) { setExtra(null); setMode('editar') } }, [editSignal])
 
   const floating = mode === 'controle' && !extra
 
+  /**
+   * O editor mexe no mundo "em edição" e o controle ao vivo mostra o mundo "aberto pros jogadores". Se forem
+   * mundos diferentes, ir pro controle mostraria outro mapa: pergunta se abre o editado pros jogadores.
+   */
   function toggle() {
     setExtra(null)
+    if (mode === 'editar' && editing && active && editing.id !== active.id) {
+      const ok = confirm(
+        `Você está editando "${editing.name}", mas os jogadores estão em "${active.name}" (o controle ao vivo mostra o mundo aberto).\n\n` +
+        `Abrir "${editing.name}" pros jogadores agora? Quem está no Vortable vai para ele na hora.`,
+      )
+      if (ok) {
+        void setActiveWorld(campaign.id, editing.id)
+          .then(() => { mesa.setWorldId(editing.id); return refresh() })
+          .catch(() => { /* ficou no mundo de antes: o aviso do controle oferece de novo */ })
+          .finally(() => setMode('controle'))
+        return
+      }
+    }
     setMode((m) => (m === 'editar' ? 'controle' : 'editar'))
   }
 

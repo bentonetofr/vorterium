@@ -255,3 +255,29 @@
 .live__spec-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--success, #3fbf72); }
 .live__spec-dot--tv { background: var(--accent-bright); }
 .live__spec .btn { padding: 3px 9px; font-size: var(--text-xs); }
+
+/* Aviso: o mundo que o mestre edita não é o aberto pros jogadores */
+.live__worldwarn {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 21;
+  width: min(560px, calc(100% - 24px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+.live__worldwarn b { color: var(--text-primary); }
+.live__worldwarn .btn { flex: 0 0 auto; }
+@media (max-width: 560px) { .live__worldwarn { flex-direction: column; align-items: stretch; } }

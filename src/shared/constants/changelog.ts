@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.42',
+    date:    '2026-10-10',
+    title:   'Vortable: o controle do mestre mostra o mundo certo',
+    items: [
+      'Corrigido: o mundo que o mestre cria, importa ou edita no Editor podia não ser o mundo "aberto pros jogadores", e o Controle ao vivo (que mostra o mundo aberto) aparecia com outro mapa, parecido com um de teste.',
+      'Ao sair do Editor para o Controle com um mundo diferente do aberto, o Vortable pergunta se quer abrir o mundo editado pros jogadores agora. Se escolher não, o Controle avisa embaixo qual mundo está sendo mostrado e deixa um botão para abrir o mundo editado a qualquer momento.',
+    ],
+  },
+  {
     version: '1.41',
     date:    '2026-10-10',
     title:   'Inimigos e sons de criaturas no controle do mestre (Vortable)',
