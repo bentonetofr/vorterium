@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.44',
+    date:    '2026-10-10',
+    title:   'Gerador de NPCs no controle do mestre (Vortable)',
+    items: [
+      'Controle ao vivo do Vortable: novo botão de pessoa com um mais na barra do mestre (depois de NPCs), "Gerador de NPCs".',
+      'Sorteia 6 pessoas por vez, prontas para o cenário de The Last of Us: Sobrevivente, Soldado da FEDRA, Oficial da FEDRA, Vagalume, Saqueador, Caçador, Médico e Contrabandista (ou "Qualquer", que mistura). Cada uma vem com nome, função, roupa, cabelo, barba, chapéu, mochila e armas, e "Sortear de novo" troca todas.',
+      'Roupas que fazem sentido: farda camuflada com colete tático e capacete ou máscara de gás para os soldados, boina para oficiais, xadrez com boné ou bandana para Vagalumes, bandana e roupa suja para saqueadores, chapéu de aba e barba para caçadores, jaleco branco com máscara e óculos para médicos.',
+      'Armas: cada pessoa sai armada conforme o tipo (rifle, escopeta, pistola, revólver, arco, taco, cano de ferro, machadinha, facão, faca, coquetel molotov, granada), na mão, nas costas e na cintura, ou desarmada. O botão "Armamento" escolhe entre conforme o tipo, sempre armado e desarmado.',
+      'Para colocar: arraste a pessoa para o mapa e solte onde quiser, ou clique em Colocar (ou "Colocar todos", que usa "Onde" e o espalhamento). Dá para mostrar o nome sobre a cabeça. A aba "Na zona" lista as pessoas geradas, com Controlar e Tirar.',
+      'Personagem: cinco chapéus novos no criador (aba Acessórios): boné, gorro de lã, capacete militar, boina e chapéu de aba larga, em várias cores (inclusive camuflado).',
+    ],
+  },
+  {
     version: '1.43',
     date:    '2026-10-10',
     title:   'Arrastar inimigos do painel para o mapa (Vortable)',

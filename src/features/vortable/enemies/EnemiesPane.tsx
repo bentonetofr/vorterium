@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Appearance, WatchControls } from '../../../vendor/vortable/vortable'
 import type { VortableNet } from '../net/VortableNet'
 import './enemies.css'
+import { mapPoint, useMapDrop } from './useMapDrop'
 import { CharacterFace } from '../components/CharacterFace'
 import { CREATURES, creatureAppearance, creatureOfNpc, placeEnemies, removeEnemies, type CreatureDef } from './enemies'
 import {
@@ -79,38 +80,17 @@ export function EnemiesPane({ viewEl, watch, campaignId, worldId, worldName, zon
   useEffect(() => { try { localStorage.setItem('vortable:enemy-vol', String(volume)) } catch { /* sem armazenamento */ } }, [volume])
 
   // arrastar um inimigo do painel e soltar no mapa: ele aparece exatamente onde o mouse soltou
-  const dropRef = useRef<(def: CreatureDef, pageX: number, pageY: number) => void>(() => {})
-  dropRef.current = (def, pageX, pageY) => {
-    const at = (watch as (WatchControls & { worldAt?: (x: number, y: number) => { x: number; y: number } | null }) | null)?.worldAt
-    const point = at ? at.call(watch, pageX, pageY) : null
-    if (!zoneId) return
+  useMapDrop(viewEl, DRAG_TYPE, (id, pageX, pageY) => {
+    const def = CREATURES.find((c) => c.id === id)
+    if (!def || !zoneId) return
+    const point = mapPoint(watch, pageX, pageY)
     if (!point) { setNote('Pra arrastar, o motor do Vortable precisa da remenda da câmera (node scripts/patch-vortable-camera.mjs). Use o botão Colocar.'); return }
     setBusy(def.id); setNote(null)
     placeEnemies({ campaignId, worldId, worldName, zoneId, net, creature: def, count, spread: SPREADS[spread].tiles, anchor: point, exact: true })
       .then(() => setNote(`${count > 1 ? `${count} ` : ''}${def.name}${count > 1 ? 's' : ''} no mapa.`))
       .catch((err) => setNote(err instanceof Error ? err.message : 'Não deu pra colocar.'))
       .finally(() => setBusy(null))
-  }
-  useEffect(() => {
-    if (!viewEl) return
-    const kind = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes(DRAG_TYPE)
-    const over = (e: DragEvent) => { if (!kind(e)) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; viewEl.classList.add('live__view--drop') }
-    const leave = (e: DragEvent) => { if (e.relatedTarget && viewEl.contains(e.relatedTarget as Node)) return; viewEl.classList.remove('live__view--drop') }
-    const drop = (e: DragEvent) => {
-      viewEl.classList.remove('live__view--drop')
-      if (!kind(e)) return
-      e.preventDefault()
-      const def = CREATURES.find((c) => c.id === e.dataTransfer?.getData(DRAG_TYPE))
-      if (def) dropRef.current(def, e.pageX, e.pageY)
-    }
-    const end = () => viewEl.classList.remove('live__view--drop')
-    viewEl.addEventListener('dragover', over); viewEl.addEventListener('dragenter', over); viewEl.addEventListener('dragleave', leave)
-    viewEl.addEventListener('drop', drop); window.addEventListener('dragend', end)
-    return () => {
-      viewEl.removeEventListener('dragover', over); viewEl.removeEventListener('dragenter', over); viewEl.removeEventListener('dragleave', leave)
-      viewEl.removeEventListener('drop', drop); window.removeEventListener('dragend', end); viewEl.classList.remove('live__view--drop')
-    }
-  }, [viewEl])
+  })
 
   function startDrag(e: React.DragEvent, def: CreatureDef) {
     e.dataTransfer.setData(DRAG_TYPE, def.id)

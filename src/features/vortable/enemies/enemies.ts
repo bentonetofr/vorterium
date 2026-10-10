@@ -109,7 +109,7 @@ export interface PlaceOptions {
   net: VortableNet | null
 }
 
-function storage(o: { campaignId: string; worldId: string; worldName: string; net: VortableNet | null }) {
+export function zoneStorage(o: { campaignId: string; worldId: string; worldName: string; net: VortableNet | null }) {
   return createWorldStorage(o.campaignId, o.worldId, o.worldName, (id) => {
     // quem joga nesta zona recarrega; a câmera do mestre também
     const msg = { t: 'zone', id }
@@ -122,7 +122,7 @@ const code = () => Math.random().toString(36).slice(2, 7)
 
 /** Põe os inimigos na zona (grava na zona e avisa os jogadores). Devolve os ids. */
 export async function placeEnemies(o: PlaceOptions): Promise<string[]> {
-  const worlds = await storage(o)
+  const worlds = await zoneStorage(o)
   const zone = await worlds.load(o.zoneId)
   if (!zone) throw new Error('Não achei esta zona.')
   const appearance = await creatureAppearance(o.creature)
@@ -152,7 +152,7 @@ export async function placeEnemies(o: PlaceOptions): Promise<string[]> {
 
 /** Tira inimigos da zona (os ids dados; sem ids, todos os inimigos). */
 export async function removeEnemies(o: { campaignId: string; worldId: string; worldName: string; zoneId: string; net: VortableNet | null; ids?: string[] }): Promise<number> {
-  const worlds = await storage(o)
+  const worlds = await zoneStorage(o)
   const zone = await worlds.load(o.zoneId)
   if (!zone) throw new Error('Não achei esta zona.')
   const keep = (zone.npcs ?? []).filter((n) => !(o.ids ? o.ids.includes(n.id) : n.id.startsWith('inim-')))
