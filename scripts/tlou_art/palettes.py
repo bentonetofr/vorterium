@@ -1,0 +1,32 @@
+"""Cores do pós-apocalipse: concreto, ferrugem, musgo, madeira velha, fungo."""
+from .px import ramp, rgb
+
+CONCRETE = ramp('#34362f', '#4d5048', '#686b62', '#868880', '#a3a59a')
+CONCRETE_DARK = ramp('#25261f', '#363830', '#4a4d44', '#5e6157', '#74776b')
+ASPHALT = ramp('#1f201d', '#2b2d29', '#383a35', '#474a43', '#585b53')
+RUST = ramp('#2a1710', '#47271a', '#693b23', '#8b5230', '#af6e3c')
+IRON = ramp('#1b1d1f', '#2c3033', '#434a4f', '#5d666c', '#7a858b')
+IRON_LIGHT = ramp('#33383b', '#4c5358', '#677177', '#84909a', '#a2aeb6')
+WOOD = ramp('#251c14', '#3d2f22', '#574432', '#735c45', '#92795c')
+WOOD_PALE = ramp('#3a3025', '#54463a', '#6f5d4b', '#8c7762', '#a99480')
+BRICK = ramp('#2e1812', '#4a2a20', '#6b3c2d', '#8c5340', '#a96d55')
+MOSS = ramp('#1f2a14', '#33441f', '#4b6129', '#668038', '#85a04d')
+MOSS_DRY = ramp('#2c2a17', '#463f20', '#665a2c', '#877a3c', '#a89b54')
+LEAF_DEAD = ramp('#2e2010', '#4c3314', '#6f4a1d', '#94662a', '#b8863c')
+OLIVE = ramp('#1d2316', '#2f3a22', '#46552f', '#5f7240', '#7b9055')
+OLIVE_DRAB = ramp('#262a1b', '#3a4128', '#515a37', '#6b7549', '#88945f')
+CANVAS = ramp('#3d3a2c', '#57543f', '#726e54', '#908b6b', '#aea888')
+TARP_BLUE = ramp('#1b2a3a', '#2a4157', '#3d5b78', '#547796', '#7096b3')
+GLASS = ramp('#1c2b30', '#2c4349', '#3f5f66', '#5a8088', '#86a8ac')
+FUNGUS = ramp('#3b2a1c', '#5c4126', '#82603a', '#a98250', '#cfae74')       # cordyceps: bege e laranja queimado
+FUNGUS_PALE = ramp('#6a5a44', '#8d7a5c', '#b09c76', '#cfbd96', '#e7dcb9')
+FUNGUS_DEEP = ramp('#2a1d14', '#43301f', '#5f4429', '#7f5a35', '#a37846')
+SPORE = [rgb('#e8e0c4', 60), rgb('#f0e9d2', 90), rgb('#fff8e0', 130)]
+BLOOD = ramp('#2a0d0b', '#4a1411', '#6d1d17', '#8f2a20', '#b33a2b')
+CAR_RED = ramp('#2c1311', '#4c1f1b', '#6e2b25', '#8d3a32', '#a94c42')
+CAR_BLUE = ramp('#14202c', '#223548', '#32506a', '#46708f', '#5f8fae')
+CAR_WHITE = ramp('#555a58', '#74797a', '#929898', '#b0b5b2', '#cfd3cf')
+CAR_YELLOW = ramp('#4a3a10', '#6e5818', '#937a22', '#b89c30', '#d6bb48')
+CAR_GREEN = ramp('#19251c', '#27392b', '#385040', '#4b6a54', '#62876c')
+PLASTIC_GREEN = ramp('#14261a', '#1f3b28', '#2c553a', '#3d724e', '#52946a')
+SKIN_DEAD = ramp('#3e332c', '#5a4a3e', '#78655a', '#96826f', '#b39f8c')

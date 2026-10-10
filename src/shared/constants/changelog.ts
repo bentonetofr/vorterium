@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.33',
+    date:    '2026-10-10',
+    title:   'Vortable: pacote Apocalipse',
+    items: [
+      'Vortable: novo pacote de arte de pós-apocalipse (natureza retomando a cidade), disponível no editor de qualquer campanha: 95 objetos novos e 17 terrenos, todos desenhados do zero.',
+      'Ruínas e cidade: entulho, lajes e pilares quebrados, pilha de pneus, caçamba, carrinho de supermercado, carros e uma van abandonados (cinco cores), poste, semáforo, hidrante, caixa de correio, banco e muro desabado.',
+      'Quarentena: barreira de concreto, barricada de madeira, muro de sacos de areia, cerca e rolo de arame farpado, placas ("Zona de quarentena", "Perigo", "Estrada fechada"), caixotes militares, barraca, gerador, holofote com luz, cone, cavalete, janela e porta tapadas com tábuas e pichações.',
+      'Infecção: fungo (cordyceps) na parede, no teto e no chão, tentáculos, corpo tomado pelo fungo, casulos, troncos e uma árvore cobertos de fungo, bulbos de esporos que soltam baforadas e nuvens de esporos que se movem.',
+      'Natureza invasora: mato alto e denso, arbustos, hera na parede, árvore morta, tronco quebrado, poças, folhas secas, raízes e ervas rachando o asfalto.',
+      'Sobrevivência: mochila, kit médico, bancada de trabalho, fogueira animada com luz, saco de dormir, lanterna e lampião com luz, rádio, cofre com teclado, armário de ferro, barris, abrigo de lona, mesa com mapa, cama de hospital e suporte de soro.',
+      'Terrenos novos (categoria "Apocalipse"): asfalto novo, rachado e tomado pelo musgo, calçada, concreto sujo, entulho, terra batida, lama, grama seca, mato invasor, chão de micélio, piso de hospital, madeira podre, carpete sujo, folhas secas, cinzas e neve suja.',
+    ],
+  },
+  {
     version: '1.32',
     date:    '2026-10-10',
     title:   'Criar personagem direto da ficha adaptada',
