@@ -67,51 +67,97 @@ def patch_mix(img: Image.Image, other: Image.Image, seed: int, threshold: float,
 
 # ── Tiles ────────────────────────────────────────────────
 
+ROAD = ramp('#323c49', '#363f4d', '#3a4553', '#3e4958', '#434f5e')          # asfalto liso, azul-acinzentado
+ROAD_SPECK = [rgb('#4c596a'), rgb('#556377')]
+ROAD_CRACK = rgb('#1f262e')
+GRASS = ramp('#1f4a1a', '#2e6a22', '#3f8a2c', '#58aa3a', '#7cc454')           # mato vivo, bem verde
+STONE = ramp('#7d8993', '#8f9ba4', '#a1acb4', '#b3bcc3', '#c4cbd0')
+JOINT = rgb('#4f5a63')
+
+
+def thick_crack(img: Image.Image, r, c: RGBA, ln: int = 20, branch: bool = True) -> None:
+    """Rachadura de 2 px, como nos desenhos limpos."""
+    x, y = r.randint(0, T - 1), r.randint(0, T - 1)
+    dx, dy = r.choice((-1, 1)), r.choice((-1, 1))
+    for i in range(ln):
+        dot(img, x, y, c); dot(img, x + 1, y, c)
+        if r.random() < 0.6:
+            x += dx
+        if r.random() < 0.55 or i % 3 == 0:
+            y += dy
+        if r.random() < 0.2:
+            dx = r.choice((-1, 0, 1)) or dx
+        if branch and r.random() < 0.07 and ln > 6:
+            thick_crack(img, r, c, ln // 3, False)
+
+
+def tuft(img: Image.Image, x: int, y: int, r) -> None:
+    """Tufo de mato: três a cinco folhas pontudas saindo de uma rachadura."""
+    for k in range(r.randint(3, 5)):
+        h = r.randint(2, 5)
+        lean = r.choice((-1, 0, 1))
+        for i in range(h):
+            dot(img, x + k - 2 + (i * lean) // 2, y - i, GRASS[min(4, 1 + i)])
+        dot(img, x + k - 2, y + 1, GRASS[0])
+
+
 def asphalt(seed: int = 1) -> Image.Image:
-    img = base(ASPHALT, seed, 4, 3, 0.3)
+    img = base(ROAD, seed, 8, 2, 0.1)
     r = rng(seed)
-    specks(img, r, 40, [ASPHALT[4], ASPHALT[0], rgb('#6a6c64')])
+    specks(img, r, 9, ROAD_SPECK)
+    specks(img, r, 6, [rgb('#2a323d')])
     return img
 
 
 def asphalt_cracked(seed: int = 2) -> Image.Image:
-    img = base(ASPHALT, seed, 4, 3, 0.3)
+    img = base(ROAD, seed, 8, 2, 0.1)
     r = rng(seed)
-    specks(img, r, 30, [ASPHALT[4], ASPHALT[0]])
-    for _ in range(3):
-        crack(img, r, rgb('#0d0d0b'), 24)
-    specks(img, r, 7, [MOSS[2], MOSS[3]])
+    specks(img, r, 8, ROAD_SPECK)
+    for _ in range(2):
+        thick_crack(img, r, ROAD_CRACK, 22)
+    for _ in range(2):
+        tuft(img, r.randint(2, T - 3), r.randint(6, T - 2), r)
     return img
 
 
 def asphalt_moss(seed: int = 3) -> Image.Image:
-    img = base(ASPHALT, seed, 4, 3, 0.3)
-    patch_mix(img, base(MOSS, seed + 5, 4, 3, 0.35), seed, 0.58)
+    img = base(ROAD, seed, 8, 2, 0.1)
+    patch_mix(img, base(GRASS, seed + 5, 4, 2, 0.3), seed, 0.6)
     r = rng(seed)
-    crack(img, r, rgb('#0d0d0b'), 18)
-    blades(img, r, 12, MOSS, (2, 4))
+    blades(img, r, 10, GRASS, (2, 4))
     return img
 
 
 def sidewalk(seed: int = 4) -> Image.Image:
-    img = base(CONCRETE_DARK, seed, 8, 2, 0.18, 0.16)
-    for i in range(T):
-        dot(img, i, 0, CONCRETE_DARK[0]); dot(img, 0, i, CONCRETE_DARK[0])
-        dot(img, i, 16, CONCRETE_DARK[0]); dot(img, 16, i, CONCRETE_DARK[0])
-        dot(img, i, 1, CONCRETE[3]); dot(img, 1, i, CONCRETE[3])
-        dot(img, i, 17, CONCRETE[3]); dot(img, 17, i, CONCRETE[3])
+    """Lajotas de pedra clara com juntas escuras e mato nas frestas."""
+    img = Image.new('RGBA', (T, T))
     r = rng(seed)
-    crack(img, r, CONCRETE_DARK[0], 14)
-    specks(img, r, 16, [CONCRETE[0], CONCRETE[4]])
-    specks(img, r, 4, [MOSS[2]])
+    for sy in range(2):
+        for sx in range(2):
+            tone = STONE[1 + r.randint(0, 2)]
+            for y in range(16):
+                for x in range(16):
+                    c = tone
+                    if _hash(sx * 16 + x, sy * 16 + y, seed) > 0.93:
+                        c = STONE[max(0, STONE.index(tone) - 1)]
+                    img.putpixel((sx * 16 + x, sy * 16 + y), c)
+            for i in range(16):                                    # luz em cima e à esquerda, junta embaixo e à direita
+                dot(img, sx * 16 + i, sy * 16 + 1, STONE[4]); dot(img, sx * 16 + 1, sy * 16 + i, STONE[4])
+                dot(img, sx * 16 + i, sy * 16, JOINT); dot(img, sx * 16, sy * 16 + i, JOINT)
+    for _ in range(2):
+        thick_crack(img, r, JOINT, 9, False)
+    x, y = r.choice((0, 16)) + r.randint(1, 14), r.choice((0, 16))
+    tuft(img, x, y + 1, r)
     return img
 
 
 def concrete(seed: int = 5) -> Image.Image:
-    img = base(CONCRETE_DARK, seed, 8, 3, 0.2)
+    rp = ramp('#5c6775', '#606b7a', '#657080', '#6a7585', '#707b8b')
+    img = base(rp, seed, 8, 2, 0.1)
     r = rng(seed)
-    crack(img, r, rgb('#14150f'), 16)
-    patch_mix(img, base([rgb('#1d1c17'), rgb('#26241d'), rgb('#302d24')], seed + 9, 8, 2, 0.2), seed, 0.62, 8)   # manchas de óleo
+    thick_crack(img, r, rgb('#3d4753'), 14)
+    patch_mix(img, base([rgb('#4b5562'), rgb('#525c6a'), rgb('#5a6472')], seed + 9, 8, 2, 0.12), seed, 0.62, 8)   # manchas
+    specks(img, r, 8, [rgb('#7b8696'), rgb('#4f5967')])
     return img
 
 

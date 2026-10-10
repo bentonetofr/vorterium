@@ -86,6 +86,16 @@ class Zone:
             o['flip'] = True
         self.objects.append(o)
 
+    def paint_line(self, base_kind: str, axis: str, fixed: int, a: int, b: int, skip=None) -> None:
+        """Emenda faixas pintadas, um ladrilho por vez. axis 'h': linha na horizontal na fileira `fixed`, de a a b;
+        'v': na vertical na coluna `fixed`. Alterna a versão gasta pra não repetir."""
+        for i in range(a, b + 1):
+            tx, ty = (i, fixed) if axis == 'h' else (fixed, i)
+            if skip and skip(tx, ty):
+                continue
+            tag = '-b' if self.rng.random() < 0.5 else ''
+            self.put(f'{base_kind}-{axis}{tag}', tx + 0.5, ty + 1)
+
     def scatter(self, kinds: list[str], n: int, box: tuple[float, float, float, float], avoid: list[tuple] | None = None) -> None:
         x0, y0, x1, y1 = box
         placed = 0
@@ -216,6 +226,35 @@ def street() -> Zone:
     z.put('abrigo-lona', 16, 8.9); z.put('fogueira', 12.4, 9.6); z.put('mochila-chao', 14.2, 10.3)
     z.put('saco-dormir', 17.8, 10.4); z.put('barril-agua', 9.4, 9.6)
 
+
+    # ── asfalto pintado e peças dos EUA ──
+    def rubble(tx: int, ty: int) -> bool:
+        return (tx + 0.5 - 25) ** 2 + (ty + 0.5 - 19) ** 2 < 4.6 ** 2
+    def cross(tx: int, ty: int) -> bool:
+        return tx in (31, 32)
+    z.paint_line('amarela-dupla', 'h', 19, 0, 55, lambda x, y: rubble(x, y) or cross(x, y))
+    z.paint_line('faixa-branca', 'h', 15, 0, 55, lambda x, y: rubble(x, y) or cross(x, y))
+    z.paint_line('faixa-branca', 'h', 24, 0, 55, lambda x, y: rubble(x, y) or cross(x, y))
+    z.paint_line('amarela-borda', 'h', 11, 0, 55)
+    z.paint_line('amarela-borda', 'h', 28, 0, 55)
+    for ty in range(12, 28):
+        if ty != 19:
+            z.put('faixa-pedestre-ns', 31.5, ty + 1); z.put('faixa-pedestre-ns', 32.5, ty + 1)
+    for ty in range(20, 28):
+        z.put('linha-parada-v', 29.5, ty + 1)
+    for ty in range(12, 19):
+        z.put('linha-parada-v', 34.5, ty + 1)
+    z.put('seta-chao', 12.5, 22.5 + 0.5); z.put('seta-chao', 44.5, 16.5 + 0.5, True); z.put('seta-chao', 20.5, 22.5 + 0.5)
+    z.put('bueiro', 18.5, 17 + 1); z.put('bueiro', 38.5, 22 + 1); z.put('bueiro', 8.5, 13 + 1)
+    # placas e peças americanas nas calçadas
+    z.put('placa-hospital', 3.6, 10.9); z.put('bandeira-eua', 22.4, 10.9); z.put('placa-velocidade', 26.4, 10.9)
+    z.put('placa-rua', 33.9, 10.9); z.put('placa-mao-unica', 39.6, 10.9); z.put('poste-eletrico', 52.8, 10.95)
+    z.put('placa-escola', 6.8, 31.2); z.put('placa-estacionar', 25.6, 31.3); z.put('placa-pare', 32.4, 31.1)
+    z.put('parquimetro', 16.6, 30.7); z.put('placa-proibido-entrar', 47.8, 31.1); z.put('outdoor-fedra', 36.5, 33.95)
+    z.put('poste-eletrico', 1.6, 31.2); z.put('placa-posto', 23.0, 33.4)
+    z.put('onibus-escolar', 40.6, 13.3)
+    z.put('pichacao-luz', 17.4, 4.1)
+
     # luzes: janelas frias, fogueira e o brilho doente do fungo
     z.light('rua-fogueira', 12.4, 8.8, 150, '#ff9a4a', 0.65, 0.35)
     z.light('rua-micelio', 46.8, 9.2, 120, '#9bd96a', 0.3, 0.1)
@@ -281,6 +320,19 @@ def checkpoint() -> Zone:
     z.scatter(['mato-alto-1', 'mato-alto-2', 'arbusto-invasor', 'arbusto-seco'], 12, (15, 21, 43, 31.5),
               avoid=[(20, 23, 33, 29.5)])
     z.scatter(['papeis', 'latas-garrafas', 'vidro-quebrado', 'rachadura-ervas', 'folhas-secas'], 14, (1, 1, 43, 31))
+
+
+    # ── estrada pintada e placas dos EUA ──
+    z.paint_line('amarela-dupla', 'v', 4, 0, 31)
+    z.paint_line('faixa-branca', 'v', 1, 0, 31)
+    z.paint_line('faixa-branca', 'v', 7, 0, 31)
+    z.paint_line('amarela-borda', 'v', 9, 0, 31)
+    for tx in (4,):
+        z.put('linha-parada-h', tx + 0.5, 15 + 1)
+    z.put('seta-chao', 2.5, 8 + 0.5); z.put('seta-chao', 6.5, 26 + 0.5)
+    z.put('bueiro', 6.5, 14 + 1); z.put('bueiro', 2.5, 20 + 1)
+    z.put('placa-velocidade', 9.5, 3.4); z.put('placa-pare', 9.6, 29.4); z.put('placa-trem', 1.8, 28.2)
+    z.put('poste-eletrico', 9.6, 22.6); z.put('caixa-correio-rural', 9.4, 16.4); z.put('placa-saida', 3.0, 3.2)
 
     z.light('quar-holofote-1', 17.4, 5.2, 200, '#dfeeff', 0.55, 0.05)
     z.light('quar-holofote-2', 41, 4.4, 200, '#dfeeff', 0.55, 0.05)

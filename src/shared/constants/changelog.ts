@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.37',
+    date:    '2026-10-10',
+    title:   'Ruas no estilo dos EUA (Vortable)',
+    items: [
+      'Texturas novas: asfalto liso azul-acinzentado com rachaduras grossas e mato nascendo nas frestas, asfalto tomado pelo mato, calçada de lajotas de pedra clara com juntas escuras e concreto liso.',
+      'Faixas pintadas (objetos de chão de um ladrilho, é só emendar): amarela dupla no meio, amarela simples na borda, branca tracejada, faixa de pedestres, linha de parada, seta no chão e tampa de bueiro, todas na horizontal e na vertical e com a tinta gasta.',
+      'Placas dos EUA: velocidade (SPEED LIMIT 35), PARE (STOP), mão única (ONE WAY), entrada proibida, proibido estacionar, hospital (H azul), zona escolar, nome de rua (MAIN ST), passagem de trem e a placa verde de saída de estrada (EXIT).',
+      'Peças americanas: poste elétrico de madeira com transformador, mastro com bandeira rasgada, caixa de correio rural, letreiro de posto de gasolina, parquímetro, ônibus escolar amarelo abandonado, outdoor da FEDRA e a pichação "LOOK FOR THE LIGHT".',
+      'A Cidade em Ruínas foi refeita com a rua nova: faixas, faixa de pedestres, setas, bueiros, placas e peças americanas na rua e na estrada do Posto de Quarentena. Carros e o resto continuam como estavam.',
+    ],
+  },
+  {
     version: '1.36',
     date:    '2026-10-10',
     title:   'Mundo pronto: Cidade em Ruínas (Vortable)',
