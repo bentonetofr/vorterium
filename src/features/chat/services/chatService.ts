@@ -256,7 +256,7 @@ export async function getCharacterFaces(campaignId: string): Promise<Map<string,
     supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('vtm_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
-    supabase.from('tda_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
+    supabase.from('tda_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
   ])
 

@@ -2,6 +2,7 @@ import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
 import { pcOnly } from '../../services/npcService'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
+import { PORTRAIT_MAX_BYTES, PORTRAIT_TYPES } from '../constants/terraDevastadaAdaptada'
 import type { ProfilePublic, TdaSheet, TdaSheetWithProfile } from '../../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ interface RawSheetWithProfile extends TdaSheet {
 }
 
 const TABLE = 'tda_character_sheets'
+const BUCKET = 'tda-portraits'
 
 /** Ficha do usuário autenticado na campanha — null se ainda não existir. */
 export async function getMyTdaSheet(campaignId: string): Promise<TdaSheet | null> {
@@ -72,6 +74,28 @@ export async function updateTdaSheet(sheetId: string, data: TdaSheetUpdate): Pro
     charName ? `Ficha de "${charName}" atualizada.` : 'Ficha atualizada.',
   )
   return sheet
+}
+
+/** Envia (ou troca) o retrato e grava a URL na ficha. Caminho: "<id da ficha>/portrait". */
+export async function uploadTdaPortrait(sheetId: string, file: File): Promise<TdaSheet> {
+  if (!PORTRAIT_TYPES.includes(file.type as (typeof PORTRAIT_TYPES)[number])) {
+    throw new Error('Escolha uma imagem JPG, PNG ou WebP.')
+  }
+  if (file.size > PORTRAIT_MAX_BYTES) throw new Error('A imagem deve ter no máximo 2 MB.')
+
+  const path = `${sheetId}/portrait`
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
+  if (error) throw new Error(`Não foi possível enviar a imagem: ${error.message}`)
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+  return updateTdaSheet(sheetId, { portrait_url: `${data.publicUrl}?v=${Date.now()}` })
+}
+
+/** Remove o retrato e limpa a URL da ficha. */
+export async function removeTdaPortrait(sheetId: string): Promise<TdaSheet> {
+  const { error } = await supabase.storage.from(BUCKET).remove([`${sheetId}/portrait`])
+  if (error) throw new Error(`Não foi possível remover a imagem: ${error.message}`)
+  return updateTdaSheet(sheetId, { portrait_url: null })
 }
 
 /**

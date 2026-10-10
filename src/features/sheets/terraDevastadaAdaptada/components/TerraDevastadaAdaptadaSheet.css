@@ -1147,6 +1147,90 @@
 .tda-loot__actions { display: flex; gap: var(--space-2); flex-shrink: 0; }
 .tda-loot__info .tda-loot__gun { max-width: 240px; }
 
+/* ── Retrato: o quadro da foto ── */
+.tda-hero__id { display: flex; align-items: flex-start; gap: var(--space-5); min-width: 0; }
+.tda-hero__fields { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.tda-portrait { position: relative; flex-shrink: 0; width: 148px; padding-top: 8px; }
+/* Fita adesiva segurando a foto. */
+.tda-portrait::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  width: 58px;
+  height: 18px;
+  transform: translateX(-50%) rotate(2deg);
+  background: rgba(226, 176, 95, 0.5);
+  border-left: 1px dashed rgba(0, 0, 0, 0.25);
+  border-right: 1px dashed rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+.tda-portrait__frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  padding: 7px 7px 22px;
+  overflow: hidden;
+  background: var(--tda-grain), var(--bg-elevated);
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  transform: rotate(-1.5deg);
+  cursor: var(--cursor-hand);
+  transition: transform 200ms var(--ease-out), border-color var(--transition-fast);
+}
+.tda-portrait__frame:hover:not(:disabled) { transform: rotate(0deg) scale(1.02); border-color: var(--accent-bright); }
+.tda-portrait__frame--static { cursor: default; }
+.tda-portrait__frame--static:hover:not(:disabled) { transform: rotate(-1.5deg); border-color: var(--border-bright); }
+.tda-portrait__frame--drag { border-color: var(--accent-bright); box-shadow: 0 0 0 2px var(--accent-glow), 0 8px 20px rgba(0, 0, 0, 0.45); }
+.tda-portrait__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.85) contrast(1.05);
+}
+.tda-portrait__frame:has(img)::after {
+  content: '';
+  position: absolute;
+  inset: 7px 7px 22px;
+  background: radial-gradient(circle at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.4)), var(--tda-grain);
+  pointer-events: none;
+}
+.tda-portrait__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-2);
+  text-align: center;
+  background: var(--bg-void);
+  border: 1px dashed var(--border-base);
+}
+.tda-portrait__silhouette { font-size: 44px; line-height: 1; color: var(--border-bright); }
+.tda-portrait__hint { font-family: var(--tda-hand); font-size: 1.25rem; line-height: 1; color: var(--tda-rust); }
+.tda-portrait__busy { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, 0.55); }
+.tda-portrait__remove {
+  position: absolute;
+  top: 14px;
+  right: 4px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-primary);
+  background: var(--bg-void);
+  border: 1px solid var(--border-bright);
+  cursor: var(--cursor-hand);
+}
+.tda-portrait__remove:hover { color: var(--bg-void); background: var(--tda-blood); border-color: var(--tda-blood); }
+
 /* ── Celular ── */
 @media (max-width: 900px) {
   .tda-hero { grid-template-columns: minmax(0, 1fr); }
@@ -1165,6 +1249,8 @@
   .tda-track__box--gap { margin-right: 4px; }
   .tda-die { width: 42px; height: 42px; }
   .tda-item__extras { padding-left: 0; }
+  .tda-hero__id { flex-direction: column; align-items: stretch; }
+  .tda-portrait { width: 140px; align-self: center; }
   .tda-recipe { flex-direction: column; align-items: stretch; }
   .tda-loot__row { flex-direction: column; align-items: stretch; }
   .tda-modal__body { padding: var(--space-3); }

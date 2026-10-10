@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type DragEvent, type FormEvent } from 'react'
 import { Presence } from '../../../../shared/components/Presence'
 import { Select } from '../../../../shared/components/Select'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../shared/components/TabIndicator'
@@ -20,6 +20,7 @@ import {
   HORROR_MAX,
   INVENTORY_MAX,
   ITEM_KINDS,
+  PORTRAIT_TYPES,
   PROTECTION_LEVELS,
   WEAPON_LEVELS,
   WEAPON_PRESETS,
@@ -73,6 +74,10 @@ interface TdaSheetFormProps {
   showScene?: boolean
   onSave:     (data: TdaSheetUpdate) => Promise<void>
   saveError:  string | null
+  /** Envio do retrato: sem estas funções o quadro só mostra a imagem (ex.: NPC aberto por jogador). */
+  portraitBusy?:     boolean
+  onPortraitChange?: (file: File) => void
+  onPortraitRemove?: () => void
 }
 
 type FormData = {
@@ -183,8 +188,12 @@ const TAG_OPTIONS = [
   { value: 'desmotiva', label: 'Desmotivação' },
 ]
 
-export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, saveError }: TdaSheetFormProps) {
+export function TdaSheetForm({
+  sheet, ownerName, showScene = false, onSave, saveError, portraitBusy = false, onPortraitChange, onPortraitRemove,
+}: TdaSheetFormProps) {
   useTdaFonts()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
   const [scene] = useTdaScene(sheet.campaign_id)
   const [stealth, setStealth] = useState<TdaStealthMode | null>(null)
   const [searching, setSearching] = useState(false)
@@ -399,6 +408,19 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
     )
   }
 
+  function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (f && onPortraitChange) onPortraitChange(f)
+  }
+
+  function onDrop(e: DragEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    setDragging(false)
+    const f = e.dataTransfer.files?.[0]
+    if (f && onPortraitChange && !portraitBusy) onPortraitChange(f)
+  }
+
   const who = form.character_name.trim() || ownerName || 'Um sobrevivente'
   const band = horrorBand(form.horror)
   const hband = healthBand(form.health)
@@ -429,19 +451,50 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
       {/* ── Cabeçalho: identidade + Horror/Convicção ── */}
       <header className="tda-hero">
         <div className="tda-hero__identity">
-          <input
-            type="text" className="tda-hero__name" placeholder="Nome do sobrevivente"
-            maxLength={TEXT_LIMITS.name} value={form.character_name}
-            onChange={(e) => set('character_name', e.target.value)} aria-label="Nome"
-          />
-          <label className="tda-field">
-            <span className="tda-label">Conceito</span>
-            <input
-              type="text" className="input" maxLength={TEXT_LIMITS.concept}
-              placeholder="Quem é você em poucas palavras. Ex.: Andarilho solitário"
-              value={form.concept} onChange={(e) => set('concept', e.target.value)}
-            />
-          </label>
+          <div className="tda-hero__id">
+            <div className="tda-portrait">
+              <button
+                type="button"
+                className={`tda-portrait__frame${dragging ? ' tda-portrait__frame--drag' : ''}${onPortraitChange ? '' : ' tda-portrait__frame--static'}`}
+                onClick={() => { if (onPortraitChange) fileRef.current?.click() }}
+                disabled={portraitBusy}
+                onDragOver={(e) => { if (onPortraitChange) { e.preventDefault(); setDragging(true) } }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={onDrop}
+                aria-label={sheet.portrait_url ? 'Trocar a imagem do personagem' : 'Escolher uma imagem para o personagem'}
+              >
+                {sheet.portrait_url
+                  ? <img src={sheet.portrait_url} alt="" />
+                  : (
+                    <span className="tda-portrait__empty">
+                      <span className="tda-portrait__silhouette" aria-hidden="true">☣</span>
+                      {onPortraitChange && <span className="tda-portrait__hint">Clique ou arraste uma imagem</span>}
+                    </span>
+                  )}
+                {portraitBusy && <span className="tda-portrait__busy"><span className="spinner spinner--sm" /></span>}
+              </button>
+              {sheet.portrait_url && onPortraitRemove && !portraitBusy && (
+                <button type="button" className="tda-portrait__remove" onClick={onPortraitRemove} aria-label="Remover a imagem">×</button>
+              )}
+              <input ref={fileRef} type="file" accept={PORTRAIT_TYPES.join(',')} hidden onChange={onFile} />
+            </div>
+
+            <div className="tda-hero__fields">
+              <input
+                type="text" className="tda-hero__name" placeholder="Nome do sobrevivente"
+                maxLength={TEXT_LIMITS.name} value={form.character_name}
+                onChange={(e) => set('character_name', e.target.value)} aria-label="Nome"
+              />
+              <label className="tda-field">
+                <span className="tda-label">Conceito</span>
+                <input
+                  type="text" className="input" maxLength={TEXT_LIMITS.concept}
+                  placeholder="Quem é você em poucas palavras. Ex.: Andarilho solitário"
+                  value={form.concept} onChange={(e) => set('concept', e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
           <label className="tda-field">
             <span className="tda-label">Descrição</span>
             <textarea

@@ -488,6 +488,8 @@ export interface TdaSheet {
   health:         number
   /** Materiais e kits (jsonb; pode faltar chave). */
   supplies?:      Partial<TdaSupplies> | null
+  /** Retrato do personagem (bucket tda-portraits). */
+  portrait_url?:  string | null
   /** Nível da Mochila (0 a 3). */
   backpack?:      number
   horror:         number

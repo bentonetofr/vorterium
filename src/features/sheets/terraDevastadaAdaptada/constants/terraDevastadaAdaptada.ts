@@ -15,6 +15,10 @@ export const CONDITIONS_MAX = 40
 export const TRUNFOS_MAX = 40
 export const INVENTORY_MAX = 120
 
+/** Retrato: JPG, PNG ou WebP de até 2 MB. */
+export const PORTRAIT_MAX_BYTES = 2 * 1024 * 1024
+export const PORTRAIT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+
 /** Vida: de 0 (caído) a 6. Cada golpe de infectado tira de 1 a 6. */
 export const HEALTH_MAX = 6
 

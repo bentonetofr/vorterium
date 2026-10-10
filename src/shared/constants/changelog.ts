@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.30',
+    date:    '2026-10-10',
+    title:   'Retrato na Terra Devastada Adaptada',
+    items: [
+      'Terra Devastada Adaptada: a ficha ganhou um quadro de foto, preso com fita, no topo, pra escolher a imagem do personagem (clique ou arraste uma imagem JPG, PNG ou WebP de até 2 MB). Dá pra trocar ou remover quando quiser.',
+      'A imagem do personagem aparece nos cards do mestre e nas conversas do chat da campanha.',
+    ],
+  },
+  {
     version: '1.29',
     date:    '2026-10-10',
     title:   'Qualidades e defeitos na Terra Devastada Adaptada',

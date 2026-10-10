@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getCampaignTdaSheets,
   getOrCreateMyTdaSheet,
+  removeTdaPortrait,
   subscribeToCampaignTdaSheets,
   updateTdaSheet,
+  uploadTdaPortrait,
   type TdaSheetUpdate,
 } from '../services/tdaSheetService'
 import { TdaSheetForm } from './TdaSheetForm'
@@ -77,6 +79,7 @@ interface SheetEditorProps {
 
 function SheetEditor({ sheet, ownerName, readOnly = false, showScene = false, onSheetUpdated }: SheetEditorProps) {
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [portraitBusy, setPortraitBusy] = useState(false)
 
   async function handleSave(data: TdaSheetUpdate) {
     if (readOnly) return
@@ -89,7 +92,22 @@ function SheetEditor({ sheet, ownerName, readOnly = false, showScene = false, on
     }
   }
 
-  return <TdaSheetForm key={sheet.id} sheet={sheet} ownerName={ownerName} showScene={showScene} onSave={handleSave} saveError={saveError} />
+  async function portrait(run: () => Promise<TdaSheet>) {
+    setSaveError(null)
+    setPortraitBusy(true)
+    try { onSheetUpdated(await run()) } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Não foi possível atualizar a imagem.')
+    } finally { setPortraitBusy(false) }
+  }
+
+  return (
+    <TdaSheetForm
+      key={sheet.id} sheet={sheet} ownerName={ownerName} showScene={showScene} onSave={handleSave} saveError={saveError}
+      portraitBusy={portraitBusy}
+      onPortraitChange={readOnly ? undefined : (file) => void portrait(() => uploadTdaPortrait(sheet.id, file))}
+      onPortraitRemove={readOnly ? undefined : () => void portrait(() => removeTdaPortrait(sheet.id))}
+    />
+  )
 }
 
 // ── Jogador — própria ficha ─────────────────────────────
@@ -190,7 +208,9 @@ function MasterView({ campaignId }: { campaignId: string }) {
               aria-pressed={editing?.id === s.id}
             >
               <div className="sheet-card__top">
-                <span className="sheet-card__avatar" aria-hidden="true">{ownerLabel.charAt(0).toUpperCase()}</span>
+                <span className="sheet-card__avatar" aria-hidden={s.portrait_url ? undefined : true}>
+                  {s.portrait_url ? <img src={s.portrait_url} alt="" loading="lazy" /> : ownerLabel.charAt(0).toUpperCase()}
+                </span>
                 <span className="sheet-card__player">{ownerLabel}</span>
               </div>
 
