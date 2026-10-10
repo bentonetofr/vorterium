@@ -43119,7 +43119,9 @@ var Ar = [
 	12,
 	24,
 	48,
-	96
+	96,
+	180,
+	300
 ];
 function Mr(e) {
 	let t = (e) => `#${ir(fr({ place: "outdoor" }, e)).toString(16).padStart(6, "0")}`;
@@ -51280,7 +51282,7 @@ var wc = "vortable:objects:recent", Tc = 24, Ec = [
 			let t = K("select", { class: "vt-select" }, ...jr.map((e) => K("option", {
 				value: e,
 				selected: (a.dayMinutes ?? 24) === e
-			}, `${e} min`)));
+			}, e >= 120 ? `${e / 60} h` : `${e} min`)));
 			t.addEventListener("change", () => s({ dayMinutes: Number(t.value) === 24 ? void 0 : Number(t.value) })), _.push(K("div", { class: "vt-row" }, K("label", {}, "Um dia dura"), t), K("label", { class: "vt-sublabel" }, "Ver no editor às"), h(e.previewHour, (t) => e.set({ previewHour: t })));
 		} else _.push(h(a.hour, (t) => {
 			s({ hour: t }, !1), e.previewHour = t;

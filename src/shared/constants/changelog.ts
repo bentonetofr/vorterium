@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.53',
+    date:    '2026-10-10',
+    title:   'Dias de 3 e 5 horas (Vortable)',
+    items: [
+      'Na Hora do Controle ao vivo, "Um dia dura" ganhou duas opções novas: 3 horas e 5 horas (além de 12, 24, 48 e 96 minutos). Os dias de 2 horas pra cima aparecem escritos em horas.',
+      'A mesma lista vale no editor de zonas (Mundo > Hora do mundo), e o ciclo continua de onde estava ao trocar a duração.',
+      'Por baixo: mais uma remenda no motor (node scripts/patch-vortable-camera.mjs depois de sincronizar o motor de novo).',
+    ],
+  },
+  {
     version: '1.52',
     date:    '2026-10-10',
     title:   'Zoom do Controle ao vivo no lugar certo (Vortable)',

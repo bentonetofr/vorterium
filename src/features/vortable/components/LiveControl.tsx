@@ -448,7 +448,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
                               change({ dayMinutes: m === (watch.current?.sky().dayMinutes ?? 24) ? null : m, timeShift: engine.current!.shiftForHour(clock, m) })
                             }}
                           >
-                            {engine.current.DAY_LENGTHS.map((m) => <option key={m} value={m}>{m} min</option>)}
+                            {engine.current.DAY_LENGTHS.map((m) => <option key={m} value={m}>{m >= 120 ? `${m / 60} h` : `${m} min`}</option>)}
                           </select>
                         </div>
                         <label className="live__sublabel" htmlFor="live-calibrate">Acertar a hora agora (o tempo segue passando)</label>

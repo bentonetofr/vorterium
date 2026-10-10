@@ -5,6 +5,7 @@
 //     (o motor só tocava o passo do próprio boneco), mais baixo quanto mais longe do centro da câmera.
 //  6. Roupa que descolava do corpo ao correr: peça sem a animação faz o boneco inteiro usar os quadros de caminhar nela.
 //  7. Zoom da roda na câmera do mestre (âncora no mouse calculada certo).
+//  8. Duração do dia de 3 h e 5 h (DAY_LENGTHS).
 //  5. `gate`: licença do mestre pra o jogador atravessar uma saída (ver a remenda 5 no fim).
 //
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
@@ -189,4 +190,19 @@ if (code.includes('wheelZoom')) {
   code = code.replace(old, next)
   writeFileSync(js, code)
   console.log('motor: zoom da roda remendado')
+}
+
+// ── Remenda 8: durações de dia de 3 h e 5 h (a lista `DAY_LENGTHS` do motor vale pro editor e pro Controle ao vivo); as de 2 h pra cima aparecem em horas ──
+code = readFileSync(js, 'utf8')
+if (code.includes('\t96,\n\t180,')) {
+  console.log('motor: durações de dia já remendadas')
+} else {
+  const lenOld = '], jr = [\n\t12,\n\t24,\n\t48,\n\t96\n];'
+  const lenNew = '], jr = [\n\t12,\n\t24,\n\t48,\n\t96,\n\t180,\n\t300\n];'
+  const labOld = '}, `${e} min`)));\n\t\t\tt.addEventListener("change", () => s({ dayMinutes:'
+  const labNew = '}, e >= 120 ? `${e / 60} h` : `${e} min`)));\n\t\t\tt.addEventListener("change", () => s({ dayMinutes:'
+  for (const x of [lenOld, labOld]) if (!code.includes(x)) throw new Error('motor: não achei a lista de durações do dia (o motor mudou?): ' + x.slice(0, 40))
+  code = code.replace(lenOld, lenNew).replace(labOld, labNew)
+  writeFileSync(js, code)
+  console.log('motor: durações de dia remendadas')
 }
