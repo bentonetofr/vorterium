@@ -33,6 +33,7 @@ import { useTdaFonts } from '../utils/tdaFonts'
 import {
   KIT_HEAL,
   RECIPES,
+  UNIT,
   UPGRADE_MAX,
   WEAPON_TYPES,
   ammoCap,
@@ -287,10 +288,10 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
       : { ...prev, conditions: [...prev.conditions, { id: newId(), name, duration }] })
   }
 
-  function setSupply(key: SupplyKey, delta: number) {
+  function setSupply(key: SupplyKey, value: number) {
     setForm((prev) => ({
       ...prev,
-      supplies: { ...prev.supplies, [key]: Math.max(0, Math.min(Math.max(supplyCap(key, prev.backpack), prev.supplies[key]), prev.supplies[key] + delta)) },
+      supplies: { ...prev.supplies, [key]: Math.max(0, Math.min(Math.max(supplyCap(key, prev.backpack), prev.supplies[key]), Math.round(value) || 0)) },
     }))
   }
 
@@ -878,7 +879,7 @@ interface WeaponExtrasProps {
 function WeaponExtras({ item, backpack, supplies, onChange, onUpgrade }: WeaponExtrasProps) {
   const type = weaponType(item)
   const up = item.up ?? 0
-  const canUpgrade = up < UPGRADE_MAX && supplies.pecas >= 1 && supplies.sucata >= 1
+  const canUpgrade = up < UPGRADE_MAX && supplies.pecas >= UNIT && supplies.sucata >= UNIT
   const typeOptions = WEAPON_TYPES.map((t) => ({ value: t.id, label: t.label }))
 
   function changeType(next: string) {

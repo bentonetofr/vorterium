@@ -7,23 +7,42 @@ import { newId } from './tdaRules'
 // desgaste das armas e fabricação. Tudo em funções puras (a ficha só
 // aplica o resultado).
 //
-// Escassez: cada coisa que se carrega tem um limite. Material e as balas
-// de cada arma de fogo cabem até CAPACIDADE (6, +3 por nível de Mochila,
-// 0 a 3); kits médicos até 2 + nível; explosivos de arremesso (molotov,
-// granada...) até 3 + nível. Melhorar uma arma na bancada (1 Peça + 1
-// Sucata) dá +2 balas ou +2 usos, e nunca mexe no dano.
+// Materiais são achados em pedaços: Trapos, Álcool, Lâminas e Explosivos
+// guardados em PORCENTAGEM (100% = 1 inteiro, até 3 de cada = 300%); só
+// serve pra fabricar com 100% de cada ingrediente. Sucata e Peças são
+// sempre achadas inteiras (de 1 em 1, até 3). Kits médicos e suplementos
+// são unidades. A Mochila (0 a 3) aumenta as balas de cada arma de fogo
+// (6, +3 por nível), os kits (2 + nível) e os arremessos (3 + nível).
+// Melhorar uma arma na bancada (1 Peça + 1 Sucata) dá +2 balas ou +2
+// usos, e nunca mexe no dano.
 // ────────────────────────────────────────────────────────
 
 export type SupplyKey = keyof TdaSupplies
 
-export const SUPPLY_LIST: { key: SupplyKey; label: string; hint: string }[] = [
-  { key: 'trapos',      label: 'Trapos',      hint: 'Curativos e pavios' },
-  { key: 'alcool',      label: 'Álcool',      hint: 'Limpa feridas ou vira fogo' },
-  { key: 'sucata',      label: 'Sucata',      hint: 'Metal, fita, parafusos' },
-  { key: 'laminas',     label: 'Lâminas',     hint: 'Facas e cacos afiados' },
-  { key: 'explosivos',  label: 'Explosivos',  hint: 'Pólvora e pavio' },
-  { key: 'pecas',       label: 'Peças',       hint: 'Pra melhorar armas na bancada' },
+/** 100% = 1 material inteiro. */
+export const UNIT = 100
+/** Cabem até 3 inteiros de cada material (300%), com ou sem Mochila. */
+export const MATERIAL_CAP = 3 * UNIT
+
+export const SUPPLY_LIST: { key: SupplyKey; label: string; hint: string; whole: boolean }[] = [
+  { key: 'trapos',      label: 'Trapos',      hint: 'Curativos e pavios',            whole: false },
+  { key: 'alcool',      label: 'Álcool',      hint: 'Limpa feridas ou vira fogo',    whole: false },
+  { key: 'laminas',     label: 'Lâminas',     hint: 'Facas e cacos afiados',         whole: false },
+  { key: 'explosivos',  label: 'Explosivos',  hint: 'Pólvora e pavio',               whole: false },
+  { key: 'sucata',      label: 'Sucata',      hint: 'Metal, fita, parafusos (inteira)', whole: true },
+  { key: 'pecas',       label: 'Peças',       hint: 'Pra melhorar armas (inteira)',  whole: true },
 ]
+
+/** Chaves guardadas em unidades (o resto dos materiais é em porcentagem). */
+const COUNTED: SupplyKey[] = ['kits', 'suplementos']
+
+/** "60%", "1" ou "1 e 60%" (100% = 1). */
+export function amountLabel(percent: number): string {
+  const whole = Math.floor(percent / UNIT)
+  const rest = percent % UNIT
+  if (rest === 0) return String(whole)
+  return whole === 0 ? `${rest}%` : `${whole} e ${rest}%`
+}
 
 export const MAX_BACKPACK = 3
 export const KIT_HEAL = 3
@@ -39,7 +58,8 @@ export function normalizeSupplies(raw: Partial<TdaSupplies> | null | undefined):
   const base = emptySupplies()
   for (const key of Object.keys(base) as SupplyKey[]) {
     const v = Number(raw?.[key])
-    base[key] = Number.isFinite(v) ? Math.max(0, Math.min(99, Math.round(v))) : 0
+    const max = COUNTED.includes(key) ? 99 : MATERIAL_CAP
+    base[key] = Number.isFinite(v) ? Math.max(0, Math.min(max, Math.round(v))) : 0
   }
   return base
 }
@@ -55,7 +75,7 @@ export function clampBackpack(n: number): number {
 export function supplyCap(key: SupplyKey, backpack: number): number {
   if (key === 'kits') return kitCap(backpack)
   if (key === 'suplementos') return SUPPLEMENT_MAX
-  return capacity(backpack)
+  return MATERIAL_CAP
 }
 
 // ── Armas ───────────────────────────────────────────────
@@ -125,9 +145,9 @@ export function upgradeWeapon(
   const item = inventory.find((i) => i.id === id)
   if (!item || item.kind !== 'arma') return { error: 'Arma não encontrada.' }
   if ((item.up ?? 0) >= UPGRADE_MAX) return { error: 'Essa arma já está no máximo de melhorias.' }
-  if (supplies.pecas < 1 || supplies.sucata < 1) return { error: 'Faltam materiais (1 Peça e 1 Sucata).' }
+  if (supplies.pecas < UNIT || supplies.sucata < UNIT) return { error: 'Faltam materiais (1 Peça e 1 Sucata inteiras).' }
   return {
-    supplies: { ...supplies, pecas: supplies.pecas - 1, sucata: supplies.sucata - 1 },
+    supplies: { ...supplies, pecas: supplies.pecas - UNIT, sucata: supplies.sucata - UNIT },
     inventory: inventory.map((i) => (i.id === id ? { ...i, up: (i.up ?? 0) + 1 } : i)),
   }
 }
@@ -152,15 +172,15 @@ export interface Recipe {
  * Álcool). Efeitos de fumaça e faca ficam a cargo do Narrador.
  */
 export const RECIPES: Recipe[] = [
-  { id: 'kit', name: 'Kit médico', cost: { trapos: 1, alcool: 1 }, result: { kind: 'kit' },
+  { id: 'kit', name: 'Kit médico', cost: { trapos: UNIT, alcool: UNIT }, result: { kind: 'kit' },
     hint: `Cura ${KIT_HEAL} de Vida quando usado.` },
-  { id: 'molotov', name: 'Coquetel molotov', cost: { trapos: 1, alcool: 1 }, result: { kind: 'weapon', name: 'Coquetel molotov', level: 5 },
+  { id: 'molotov', name: 'Coquetel molotov', cost: { trapos: UNIT, alcool: UNIT }, result: { kind: 'weapon', name: 'Coquetel molotov', level: 5 },
     hint: 'Arremesso de dano 5. Gasta o mesmo que um kit.' },
-  { id: 'pregos', name: 'Bomba de pregos', cost: { explosivos: 1, laminas: 1 }, result: { kind: 'weapon', name: 'Bomba de pregos', level: 5 },
+  { id: 'pregos', name: 'Bomba de pregos', cost: { explosivos: UNIT, laminas: UNIT }, result: { kind: 'weapon', name: 'Bomba de pregos', level: 5 },
     hint: 'Arremesso de dano 5.' },
-  { id: 'fumaca', name: 'Bomba de fumaça', cost: { explosivos: 1, sucata: 1 }, result: { kind: 'item', name: 'Bomba de fumaça' },
+  { id: 'fumaca', name: 'Bomba de fumaça', cost: { explosivos: UNIT, sucata: UNIT }, result: { kind: 'item', name: 'Bomba de fumaça' },
     hint: 'Cobre uma fuga ou um golpe furtivo. O efeito é do Narrador.' },
-  { id: 'faca', name: 'Faca improvisada', cost: { laminas: 1, trapos: 1 }, result: { kind: 'item', name: 'Faca improvisada' },
+  { id: 'faca', name: 'Faca improvisada', cost: { laminas: UNIT, trapos: UNIT }, result: { kind: 'item', name: 'Faca improvisada' },
     hint: 'Uso único contra Estalador e portas trancadas. O efeito é do Narrador.' },
 ]
 
@@ -170,13 +190,13 @@ export function canAfford(cost: Recipe['cost'], supplies: TdaSupplies): boolean 
 
 export function costLabel(cost: Recipe['cost']): string {
   return (Object.entries(cost) as [SupplyKey, number][])
-    .map(([k, n]) => `${n} ${SUPPLY_LIST.find((s) => s.key === k)?.label ?? k}`).join(' + ')
+    .map(([k, n]) => `${n / UNIT} ${SUPPLY_LIST.find((s) => s.key === k)?.label ?? k}`).join(' + ')
 }
 
 export function craft(
   recipe: Recipe, supplies: TdaSupplies, inventory: TdaInventoryItem[], backpack: number,
 ): { supplies: TdaSupplies; inventory: TdaInventoryItem[] } | { error: string } {
-  if (!canAfford(recipe.cost, supplies)) return { error: `Faltam materiais: ${costLabel(recipe.cost)}.` }
+  if (!canAfford(recipe.cost, supplies)) return { error: `Faltam materiais inteiros: ${costLabel(recipe.cost)}. Pedaços de material não bastam.` }
 
   const spent = { ...supplies }
   for (const [k, n] of Object.entries(recipe.cost) as [SupplyKey, number][]) spent[k] -= n

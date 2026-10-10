@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.28',
+    date:    '2026-10-10',
+    title:   'Materiais em pedaços na Terra Devastada Adaptada',
+    items: [
+      'Terra Devastada Adaptada: trapos, álcool, lâminas e explosivos agora se acham em pedaços (meio trapo, 60% de um frasco...). 100% é um inteiro, e cabem até 3 de cada. Só dá pra fabricar com 100% de cada ingrediente, então os pedaços vão se somando pelo caminho; o que sobra continua guardado.',
+      'Sucata e peças continuam sempre inteiras (de 1 em 1, até 3). A Mochila agora só aumenta as balas, os kits médicos e os explosivos de arremesso.',
+    ],
+  },
+  {
     version: '1.27',
     date:    '2026-10-10',
     title:   'Suprimentos na Terra Devastada Adaptada',
