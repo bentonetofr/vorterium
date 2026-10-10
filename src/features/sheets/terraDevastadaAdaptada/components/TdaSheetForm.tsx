@@ -54,6 +54,9 @@ import { TdaTestModal, type TdaTestPurpose } from './TdaTestModal'
 import { TdaHorrorModal } from './TdaHorrorModal'
 import { TdaCombatModal, type TdaCombatMode } from './TdaCombatModal'
 import { TdaSuppliesTab } from './TdaSuppliesTab'
+import { TdaStealthModal, type TdaStealthMode } from './TdaStealthModal'
+import { alertLevel } from '../constants/tdaStealth'
+import { useTdaScene } from '../utils/useTdaScene'
 import './TerraDevastadaAdaptadaSheet.css'
 
 // ────────────────────────────────────────────────────────
@@ -65,6 +68,8 @@ import './TerraDevastadaAdaptadaSheet.css'
 interface TdaSheetFormProps {
   sheet:      TdaSheet
   ownerName?: string
+  /** Mostra o Alerta da cena no topo (jogador; o mestre vê a barra da cena na lista). */
+  showScene?: boolean
   onSave:     (data: TdaSheetUpdate) => Promise<void>
   saveError:  string | null
 }
@@ -177,8 +182,10 @@ const TAG_OPTIONS = [
   { value: 'desmotiva', label: 'Desmotivação' },
 ]
 
-export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFormProps) {
+export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, saveError }: TdaSheetFormProps) {
   useTdaFonts()
+  const [scene] = useTdaScene(sheet.campaign_id)
+  const [stealth, setStealth] = useState<TdaStealthMode | null>(null)
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('personagem')
@@ -360,6 +367,14 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
     >
       {ownerName && <p className="tda-sheet__owner">Ficha de <strong>{ownerName}</strong></p>}
 
+      {showScene && (
+        <div className={`tda-alert-strip tda-alert-strip--${scene.alert}`} role="status">
+          <span className="tda-alert-strip__label">Alerta</span>
+          <strong className="tda-alert-strip__level">{alertLevel(scene.alert).label}</strong>
+          <span className="tda-alert-strip__effect">{alertLevel(scene.alert).effect}</span>
+        </div>
+      )}
+
       {/* ── Cabeçalho: identidade + Horror/Convicção ── */}
       <header className="tda-hero">
         <div className="tda-hero__identity">
@@ -458,6 +473,9 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
             </button>
             <button type="button" className="tda-btn tda-btn--big" onClick={() => setCombat('esquivar')}>
               Esquivar
+            </button>
+            <button type="button" className="tda-btn tda-btn--big" onClick={() => setStealth('furtividade')}>
+              Furtividade
             </button>
             <button type="button" className="tda-btn tda-btn--primary tda-btn--big" onClick={() => setTesting('teste')}>
               Fazer um teste
@@ -775,6 +793,24 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
         )}
       </footer>
 
+      <Presence show={stealth !== null} exitMs={220}>
+        {() => stealth && (
+          <TdaStealthModal
+            campaignId={sheet.campaign_id}
+            who={who}
+            traits={form.traits} conditions={form.conditions}
+            horror={form.horror} conviction={form.conviction}
+            attention={scene.attention} alert={scene.alert}
+            initialMode={stealth}
+            onConviction={(delta) => setForm((prev) => ({
+              ...prev, conviction: Math.max(0, Math.min(CONVICTION_MAX, prev.conviction + delta)),
+            }))}
+            onAnnounce={(msg) => announceTda(sheet.campaign_id, msg)}
+            onClose={() => setStealth(null)}
+          />
+        )}
+      </Presence>
+
       <Presence show={combat !== null} exitMs={220}>
         {() => combat && (
           <TdaCombatModal
@@ -788,6 +824,11 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
               ...prev, conviction: Math.max(0, Math.min(CONVICTION_MAX, prev.conviction + delta)),
             }))}
             onUseWeapon={(id) => setForm((prev) => ({ ...prev, inventory: spendWeaponUse(prev.inventory, id) }))}
+            onUseItem={(id) => setForm((prev) => ({
+              ...prev,
+              inventory: prev.inventory.flatMap((i) => (i.id !== id ? [i] : i.qty > 1 ? [{ ...i, qty: i.qty - 1 }] : [])),
+            }))}
+            alertLevel={scene.alert}
             onAnnounce={(msg) => announceTda(sheet.campaign_id, msg)}
             onClose={() => setCombat(null)}
           />

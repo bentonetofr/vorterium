@@ -27,6 +27,9 @@ import { playRollSound } from './TdaTestModal'
 //              inteiro, que dá pra aplicar na Vida daqui mesmo.
 // Convicção compra pontos de desempenho como em qualquer teste; e, num golpe
 // que derrubaria, "Última chance" gasta Convicção pra ficar com 1 de Vida.
+// Golpe furtivo (Atacar, alvo que não viu você, Alerta até 1, corpo a corpo):
+// sem rolagem. Derruba em silêncio quem tem Resistência até 2, ou até 3 com
+// a faca improvisada (que se gasta); mais que isso, só causa o dano.
 // ────────────────────────────────────────────────────────
 
 export type TdaCombatMode = 'atacar' | 'esquivar'
@@ -53,6 +56,10 @@ interface TdaCombatModalProps {
   onConviction: (delta: number) => void
   /** Um ataque com a arma gasta uma bala, um uso ou uma unidade. */
   onUseWeapon:  (weaponId: string) => void
+  /** Gasta uma unidade de um item (a faca improvisada do golpe furtivo). */
+  onUseItem?:   (itemId: string) => void
+  /** Alerta da cena (0 a 3): a partir de 2 não dá mais pra surpreender. */
+  alertLevel?:  number
   onAnnounce:   (message: string) => void
   onClose:      () => void
 }
@@ -69,9 +76,17 @@ interface Rolled {
   weaponDamage: number
 }
 
+interface SneakResult {
+  weaponName: string
+  damage:     number
+  kills:      boolean
+  remaining:  number
+  usedShiv:   boolean
+}
+
 export function TdaCombatModal({
   campaignId, who, traits, conditions, inventory, health, horror, conviction,
-  initialMode = 'atacar', onHealth, onConviction, onUseWeapon, onAnnounce, onClose,
+  initialMode = 'atacar', onHealth, onConviction, onUseWeapon, onUseItem, alertLevel = 0, onAnnounce, onClose,
 }: TdaCombatModalProps) {
   const [mode, setMode]           = useState<TdaCombatMode>(initialMode)
   const [targetId, setTargetId]   = useState(PRESET_CREATURES[0].id)
@@ -87,6 +102,9 @@ export function TdaCombatModal({
   const [rolled, setRolled]       = useState<Rolled | null>(null)
   const [postBoost, setPostBoost] = useState(0)
   const [applied, setApplied]     = useState(false)
+  const [sneak, setSneak]         = useState(false)
+  const [useShiv, setUseShiv]     = useState(false)
+  const [sneakResult, setSneakResult] = useState<SneakResult | null>(null)
 
   const cost = convictionCost(horror)
   const pool = poolSize(picksNet(picks, situation))
@@ -99,6 +117,13 @@ export function TdaCombatModal({
   const ready = weapon ? weaponReady(weapon) : { ok: true, reason: null }
   const shownDamage = rolled?.weaponDamage ?? weaponDamage
   const shownWeapon = rolled?.weaponName ?? weaponName
+  const weaponKind = weapon ? weaponType(weapon) : 'corpo'
+  const shivItem = inventory.find((i) => i.kind === 'item' && i.qty > 0 && /faca improvisada/i.test(i.name))
+  const sneakBlock = alertLevel >= 2 ? 'O Alerta está alto: não dá mais pra surpreender.'
+    : weaponKind !== 'corpo' ? 'Arma de fogo ou arremesso faz barulho demais.'
+    : !ready.ok ? ready.reason
+    : null
+  const sneakOn = mode === 'atacar' && sneak && !sneakBlock
 
   const meta = mode === 'atacar' ? stats.defense : stats.ferocity
   const performance = rolled ? rolled.evens + rolled.preBoost + postBoost : 0
@@ -216,7 +241,21 @@ export function TdaCombatModal({
     setApplied(true)
   }
 
+  function sneakStrike() {
+    if (!sneakOn) return
+    const usedShiv = useShiv && !!shivItem
+    const silentLimit = usedShiv ? 3 : 2
+    const kills = stats.toughness <= silentLimit || hit.kills
+    const remaining = Math.max(0, stats.toughness - weaponDamage)
+    if (weapon) onUseWeapon(weapon.id)
+    if (usedShiv && shivItem && onUseItem) onUseItem(shivItem.id)
+    setSneakResult({ weaponName: usedShiv ? 'a faca improvisada' : weaponName, damage: weaponDamage, kills, remaining, usedShiv })
+    const how = usedShiv ? 'a faca improvisada' : weaponName
+    onAnnounce(truncate(`${who} atacou ${targetName} pelas costas com ${how}: ${kills ? 'abatido em silêncio' : `${weaponDamage} de dano, mas ele não cai (resistência ${remaining})`}.`, 500))
+  }
+
   function reset() {
+    setSneakResult(null)
     setRolled(null)
     setPostBoost(0)
     setApplied(false)
@@ -242,7 +281,7 @@ export function TdaCombatModal({
         </header>
 
         <div className="tda-modal__body">
-          {!rolled && (
+          {!rolled && !sneakResult && (
             <>
               <div className="tda-segmented" role="radiogroup" aria-label="Tipo de ação">
                 {MODES.map((m) => (
@@ -287,6 +326,29 @@ export function TdaCombatModal({
                     <Stepper value={stats.toughness} min={1} max={12} label="Resistência" onChange={(v) => setStat('toughness', v, 1, 12)} />
                     <span className="tda-hint">O dano da arma ({weaponDamage}) é comparado com a Resistência: igual ou maior mata de um golpe.</span>
                   </div>
+                  <div className="tda-field">
+                    <label className="tda-check">
+                      <input type="checkbox" checked={sneak} disabled={!!sneakBlock && !sneak}
+                        onChange={(e) => setSneak(e.target.checked)} />
+                      Golpe furtivo (o alvo não viu você)
+                    </label>
+                    {sneak && sneakBlock && <span className="tda-warn">{sneakBlock} Vale o ataque normal.</span>}
+                    {!sneak && sneakBlock && <span className="tda-hint">{sneakBlock}</span>}
+                    {sneakOn && (
+                      <>
+                        <span className="tda-hint">
+                          Sem rolagem: derruba em silêncio quem tem Resistência até 2 (ou até 3 com a faca improvisada).
+                          Mais forte que isso, só leva o dano da arma.
+                        </span>
+                        {shivItem && (
+                          <label className="tda-check">
+                            <input type="checkbox" checked={useShiv} onChange={(e) => setUseShiv(e.target.checked)} />
+                            Usar a faca improvisada (gasta 1; você tem {shivItem.qty})
+                          </label>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </>
               ) : (
                 <div className="tda-field">
@@ -295,6 +357,7 @@ export function TdaCombatModal({
                 </div>
               )}
 
+              {!sneakOn && (<>
               <div className="tda-field">
                 <span className="tda-label">{mode === 'atacar' ? 'Defesa do alvo (meta)' : 'Ferocidade (meta)'}</span>
                 <div className="tda-meta" role="radiogroup" aria-label="Meta">
@@ -349,14 +412,37 @@ export function TdaCombatModal({
                 Rolagem privada (só você e o Narrador veem, sem aviso no chat)
               </label>
 
+              </>)}
+
               {error && <p className="tda-warn" role="alert">{error}</p>}
 
               <div className="tda-actions">
                 <button type="button" className="tda-btn" onClick={onClose} disabled={rolling}>Cancelar</button>
-                <button type="button" className="tda-btn tda-btn--primary" onClick={() => void roll()}
-                  disabled={rolling || (mode === 'atacar' && !ready.ok)}>
-                  {rolling ? 'Rolando…' : `Rolar ${pool.dice}d`}
-                </button>
+                {sneakOn ? (
+                  <button type="button" className="tda-btn tda-btn--primary" onClick={sneakStrike}>Golpe furtivo</button>
+                ) : (
+                  <button type="button" className="tda-btn tda-btn--primary" onClick={() => void roll()}
+                    disabled={rolling || (mode === 'atacar' && !ready.ok)}>
+                    {rolling ? 'Rolando…' : `Rolar ${pool.dice}d`}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
+          {sneakResult && (
+            <>
+              <div className="tda-result tda-result--sucesso" role="status">
+                <span className="tda-result__label">Golpe furtivo</span>
+                <strong className="tda-result__outcome">
+                  {sneakResult.kills
+                    ? `${capitalize(targetName)} cai em silêncio${sneakResult.usedShiv ? ' (a faca foi gasta)' : ''}.`
+                    : `${sneakResult.damage} de dano com ${sneakResult.weaponName}, mas ${targetName} não cai: resistência de ${stats.toughness} vai a ${sneakResult.remaining}. Ele reage e o Alerta pode subir.`}
+                </strong>
+              </div>
+              <div className="tda-actions">
+                <button type="button" className="tda-btn" onClick={reset}>Nova ação</button>
+                <button type="button" className="tda-btn tda-btn--primary" onClick={onClose}>Fechar</button>
               </div>
             </>
           )}
@@ -477,6 +563,10 @@ function stockText(w: TdaInventoryItem): string {
   if (type === 'fogo') return `Cada ataque gasta 1 bala. Restam ${plural(w.ammo ?? 0, 'bala', 'balas')}.`
   if (type === 'corpo') return `Cada ataque gasta 1 uso. Restam ${plural(w.dur ?? 0, 'uso', 'usos')} antes de quebrar.`
   return `Cada uso gasta 1 unidade. Você tem ${w.qty}.`
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 function clampDamage(value: number): number {

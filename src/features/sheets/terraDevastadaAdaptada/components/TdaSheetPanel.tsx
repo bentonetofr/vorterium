@@ -7,6 +7,7 @@ import {
   type TdaSheetUpdate,
 } from '../services/tdaSheetService'
 import { TdaSheetForm } from './TdaSheetForm'
+import { TdaSceneBar } from './TdaSceneBar'
 import { NpcSection } from '../../components/NpcSection'
 import { CONVICTION_MAX, HEALTH_MAX, HORROR_MAX } from '../constants/terraDevastadaAdaptada'
 import { healthBand, horrorBand } from '../utils/tdaRules'
@@ -34,6 +35,7 @@ export function TdaSheetPanel({ campaignId, userRole }: TdaSheetPanelProps) {
       </header>
 
       <div className="sheet-panel__body">
+        {userRole === 'master' && <TdaSceneBar campaignId={campaignId} />}
         {userRole === 'player'
           ? <PlayerView campaignId={campaignId} />
           : <MasterView campaignId={campaignId} />
@@ -68,10 +70,12 @@ interface SheetEditorProps {
   ownerName?:     string
   /** NPC aberto por um jogador: mostra tudo e não salva nada. */
   readOnly?:      boolean
+  /** Mostra o Alerta da cena no topo da ficha (a ficha do próprio jogador). */
+  showScene?:     boolean
   onSheetUpdated: (sheet: TdaSheet) => void
 }
 
-function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: SheetEditorProps) {
+function SheetEditor({ sheet, ownerName, readOnly = false, showScene = false, onSheetUpdated }: SheetEditorProps) {
   const [saveError, setSaveError] = useState<string | null>(null)
 
   async function handleSave(data: TdaSheetUpdate) {
@@ -85,7 +89,7 @@ function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: She
     }
   }
 
-  return <TdaSheetForm key={sheet.id} sheet={sheet} ownerName={ownerName} onSave={handleSave} saveError={saveError} />
+  return <TdaSheetForm key={sheet.id} sheet={sheet} ownerName={ownerName} showScene={showScene} onSave={handleSave} saveError={saveError} />
 }
 
 // ── Jogador — própria ficha ─────────────────────────────
@@ -115,7 +119,7 @@ function PlayerView({ campaignId }: { campaignId: string }) {
   if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
   if (!sheet) return null
 
-  return <SheetEditor sheet={sheet} onSheetUpdated={setSheet} />
+  return <SheetEditor sheet={sheet} showScene onSheetUpdated={setSheet} />
 }
 
 // ── Mestre — cards de resumo + ficha selecionada ────────
