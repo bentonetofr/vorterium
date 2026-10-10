@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.49',
+    date:    '2026-10-10',
+    title:   'Interiores de Nova York bem mais detalhados (Vortable)',
+    items: [
+      'Todos os interiores do mundo NOVA YORK: ZONA MORTA foram refeitos do zero, com várias salas por prédio, paredes e portas entre elas, e muito mais móveis do jeito de cada estabelecimento.',
+      'Corrigido o bloqueio que deixava uma parte do ambiente (a sala menor) impossível de alcançar por causa de uma parede: agora toda sala tem passagem e o mundo inteiro foi conferido sala por sala, sem nenhuma área fechada.',
+      'Farmácia com balcão, prateleiras, consultório de vacina, escritório, estoque e banheiro; bodega com geladeiras, gôndolas, câmara fria, estoque e escritório; lanchonete com cozinha, despensa e banheiro; loja de roupas com araras, manequins, provadores e estoque; posto com loja, oficina, escritório e banheiro.',
+      'Prédio de apartamentos com saguão, apartamentos completos (cama, cozinha, sala, banheiro) e corredores; delegacia com recepção, investigação, interrogatório, arquivo, armeiro, celas, alojamento e comando; escritórios com baias, salas de reunião, copa e diretoria.',
+      'Escola com salas de aula, laboratórios, biblioteca, refeitório, sala dos professores, diretoria, música, vestiários e o porão com caldeira e depósitos; restaurante com salão, bar, banheiros, despensa, cozinha industrial, câmara fria e os andares de cima; motel, cabana e galpão também ganharam vários cômodos.',
+      'Cerca de 45 móveis e objetos novos numa folha própria (pia, vaso, banheira, chuveiro, geladeira, fogão industrial, araras, carteiras escolares, grades de cela, balcões, elevador, quadros e mais), na categoria "Apocalipse: Interiores" do editor.',
+      'Para ver no seu Vortable: importe de novo o arquivo nova-york.mundo.json (mundos já criados continuam com os interiores antigos).',
+    ],
+  },
+  {
     version: '1.48',
     date:    '2026-10-10',
     title:   'Passos do NPC que o mestre controla (Vortable)',

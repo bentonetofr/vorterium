@@ -13,7 +13,8 @@ import os
 
 from .nyc_buildings import *  # noqa: F401,F403
 from .nyc_buildings import H3, NZ, Style, front, hlane_cars, link, vcar, vlane_cars
-from .nyc_inner import entry, fashion_store, motel, metro_zone, offices, police, restaurant, school, stair_pair, cabin_home, gas_station, warehouse
+from .nyc_inner import metro_zone, restaurant as _old_restaurant, school as _old_school
+from .nyc_interiors import apartment, cabin_home, corner_store, diner, fashion_store, gas_station, motel, offices, police, restaurant, school, warehouse
 from .nyc_kit import check_ids
 from .nyc_surface import build_estrada1, build_mata, build_rua2, river_zone
 
@@ -105,66 +106,16 @@ def build_rua1() -> tuple[NZ, dict]:
     return z, info
 
 
-# ── Interiores: apartamentos (3 andares), bodega, farmácia, lanchonete ──────────
+# ── Ligações dos interiores (as portas e as escadas vêm do próprio andar: `entry` e `stair`) ──
 
-def apartment(prefix: str, name: str, seed: int, floors: int = 3) -> list[NZ]:
-    """Prédio residencial: cada andar é uma zona com três apartamentos em cima e o corredor embaixo."""
-    out = []
-    for f in range(floors):
-        z = interior(f'{prefix}-{f + 1}', f'{name} — {f + 1}º andar' if f else f'{name} — térreo', 44, 28, seed + f)
-        st = APT
-        box(z, st, 1, 1, 13, 13); box(z, st, 16, 1, 28, 13); box(z, st, 31, 1, 42, 13)
-        cx0, cy0, cx1, cy1 = 1, 14, 42, 25
-        box(z, st, cx0, cy0, cx1, cy1)
-        for cx in (7, 22, 36):
-            doorway(z, st, cx, 14, 17)
-        furnish_unit(z, 16, 1, 28, 13, seed + 10 * f + 1, 0.5 + 0.2 * f)
-        furnish_unit(z, 31, 1, 42, 13, seed + 10 * f + 2, 0.7)
-        if f == 0:
-            furnish_lobby(z, 1, 1, 13, 13, seed + 3)
-        else:
-            furnish_unit(z, 1, 1, 13, 13, seed + 10 * f + 3, 0.6)
-        furnish_corridor(z, cx0, cy0, cx1, cy1, seed + f)
-        z.put('hera-parede-1', 20.0, 18.4); z.put('hera-parede-2', 30.0, 18.4)
-        z.lighting = {'place': 'indoor', 'particles': True, 'clouds': False}
-        z.spawn = {'x': 22 * TILE, 'y': 22 * TILE}
-        out.append(z)
-    return out
+def entry(z: NZ, street: NZ, spid: str, door: tuple[float, float], street_name: str, name: str) -> None:
+    cx, y, w, h = z.entry                                              # type: ignore[attr-defined]
+    link(street, spid, (door[0], door[1], 3, 1.6), f'Entrar: {name}', z, f'saida-{spid}', (cx, y, w, h), f'Sair: {street_name}')
 
 
-def link_apartment(zs: list[NZ], street: NZ, street_pid: str, door: tuple[float, float], street_name: str) -> None:
-    a1 = zs[0]
-    link(street, street_pid, (door[0], door[1], 3, 1.6), f'Entrar: {street_name}', a1, 'saida', (8, 23.6, 4, 1.6), 'Sair para a rua')
-    for i, z in enumerate(zs):
-        stairs(z, 40.5, 22.3, up=True) if i < len(zs) - 1 else stairs(z, 40.5, 22.3, up=False)
-    for i in range(len(zs) - 1):
-        link(zs[i], 'sobe', (40.5, 19.4, 3, 1.4), 'Subir a escada', zs[i + 1], 'desce', (40.5, 22.3, 3, 1.4), 'Descer a escada')
-
-
-def corner_store(zid: str, name: str, seed: int, kind: str) -> NZ:
-    z = interior(zid, name, 40, 28, seed)
-    st = SHOP if kind == 'deli' else PHARM
-    box(z, st, 1, 1, 27, 25); box(z, st, 30, 1, 38, 13)
-    box(z, st, 30, 14, 38, 25)
-    side_door(z, st, 28, 29, 8, 11)
-    furnish_shop(z, 1, 1, 27, 25, seed, kind)
-    doorway(z, st, 34, 14, 17)
-    furnish_storage(z, 30, 1, 38, 13, seed + 1)
-    furnish_office(z, 30, 14, 38, 25, seed + 2) if kind == 'pharmacy' else furnish_storage(z, 30, 14, 38, 25, seed + 2)
-    z.spawn = {'x': 14 * TILE, 'y': 22 * TILE}
-    return z
-
-
-def diner(zid: str, name: str, seed: int) -> NZ:
-    z = interior(zid, name, 46, 30, seed)
-    st = DINER
-    box(z, st, 1, 1, 31, 27); box(z, st, 34, 1, 44, 27)
-    side_door(z, st, 32, 33, 12, 16)
-    furnish_restaurant_hall(z, 1, 1, 31, 27, seed)
-    furnish_kitchen(z, 34, 1, 44, 27, seed + 1)
-    z.row(MCOUNTER, 4.0, 12.0, 11.2, 0.0)
-    z.spawn = {'x': 15 * TILE, 'y': 24 * TILE}
-    return z
+def stair_pair(lo: NZ, hi: NZ, key: str, name_lo: str, name_hi: str) -> None:
+    up, dn = lo.stair['up'], hi.stair['dn']                           # type: ignore[attr-defined]
+    link(lo, f'sobe-{key}', up, f'Subir: {name_hi}', hi, f'desce-{key}', dn, f'Descer: {name_lo}')
 
 
 # ── Montagem ────────────────────────────────────────────────────────
@@ -191,48 +142,53 @@ def build() -> dict:
     apt = apartment('nyc-apt-a', 'Edifício Brooks', 3000)
     for i, z in enumerate(apt):
         add(z, -2, i)
-    link_apartment(apt, rua1, 'porta-apt', d1['apt'], 'Edifício Brooks')
+    entry(apt[0], rua1, 'porta-apt', d1['apt'], 'a rua', 'Edifício Brooks')
+    for i in range(len(apt) - 1):
+        stair_pair(apt[i], apt[i + 1], f'apt{i + 1}', apt[i].name, apt[i + 1].name)
     farm = add(corner_store('nyc-farmacia', 'Farmácia Duane Reade', 3100, 'pharmacy'), -1, -1)
-    entry(farm, rua1, 'porta-farmacia', d1['farm'], 'a rua', 14, 'a farmácia')
+    entry(farm, rua1, 'porta-farmacia', d1['farm'], 'a rua', 'a farmácia')
     deli = add(corner_store('nyc-bodega', 'Bodega do Sal', 3200, 'deli'), -1, 0)
-    entry(deli, rua1, 'porta-bodega', d1['deli'], 'a rua', 14, 'a bodega')
+    entry(deli, rua1, 'porta-bodega', d1['deli'], 'a rua', 'a bodega')
     dn = add(diner('nyc-diner', 'Lanchonete Empire Diner', 3300), 1, 0)
-    entry(dn, rua1, 'porta-diner', d1['diner'], 'a rua', 15, 'a lanchonete', y=25.6)
+    entry(dn, rua1, 'porta-diner', d1['diner'], 'a rua', 'a lanchonete')
 
     # ── rua 2: delegacia, escritórios, loja de roupas ──
     pol = police()
     for i, z in enumerate(pol):
         add(z, -2, -1 - i)
-    entry(pol[0], rua2, 'porta-delegacia', d2['police'], 'a avenida', 24, 'a delegacia')
+    entry(pol[0], rua2, 'porta-delegacia', d2['police'], 'a avenida', 'a delegacia')
+    stair_pair(pol[0], pol[1], 'del', pol[0].name, pol[1].name)
     off = offices()
     for i, z in enumerate(off):
         add(z, -1, -2 - i)
-    entry(off[0], rua2, 'porta-escritorios', d2['offices'], 'a avenida', 30, 'o edifício Hudson')
+    entry(off[0], rua2, 'porta-escritorios', d2['offices'], 'a avenida', 'o edifício Hudson')
+    stair_pair(off[0], off[1], 'esc', off[0].name, off[1].name)
     mod = add(fashion_store(), -3, -1)
-    entry(mod, rua2, 'porta-moda', d2['moda'], 'o beco', 15, 'a loja de roupas')
+    entry(mod, rua2, 'porta-moda', d2['moda'], 'o beco', 'a loja de roupas')
 
     # ── estrada: motel e posto ──
     mo = add(motel(), 1, -2)
-    entry(mo, est1, 'porta-motel', d3['motel'], 'a estrada', 30, 'o motel')
+    entry(mo, est1, 'porta-motel', d3['motel'], 'a estrada', 'o motel')
     gs = add(gas_station(), 1, -3)
-    entry(gs, est1, 'porta-posto', d3['garage'], 'a estrada', 12, 'o posto', y=25.6)
+    entry(gs, est1, 'porta-posto', d3['garage'], 'a estrada', 'o posto')
 
     # ── mata: cabana, galpão, escola ──
     cab = add(cabin_home(), 2, -2)
-    entry(cab, mata, 'porta-cabana', d4['cabin'], 'a mata', 15, 'a cabana', y=19.6)
+    entry(cab, mata, 'porta-cabana', d4['cabin'], 'a mata', 'a cabana')
     gal = add(warehouse(), 3, -2)
-    entry(gal, mata, 'porta-galpao', d4['shed'], 'a mata', 22, 'o galpão')
+    entry(gal, mata, 'porta-galpao', d4['shed'], 'a mata', 'o galpão')
     esc = school()
+    esc['b2'] = _old_school()['b2']
     add(esc['t'], 2, -3); add(esc['f2'], 2, -4); add(esc['f3'], 2, -5)
-    entry(esc['t'], mata, 'porta-escola', d4['school'], 'o pátio', 30.5, 'a escola', y=43.6)
-    stair_pair(esc['t'], esc['f2'], 57.5, 'e12', 'Escola — térreo', 'Escola — 2º andar')
-    stair_pair(esc['f2'], esc['f3'], 57.5, 'e23', 'Escola — 2º andar', 'Escola — 3º andar')
+    entry(esc['t'], mata, 'porta-escola', d4['school'], 'o pátio', 'a escola')
+    stair_pair(esc['t'], esc['f2'], 'e12', 'Escola — térreo', 'Escola — 2º andar')
+    stair_pair(esc['f2'], esc['f3'], 'e23', 'Escola — 2º andar', 'Escola — 3º andar')
 
     # ── subsolo da escola e o metrô ──
     add(esc['b1'], 3, -3); add(esc['b2'], 4, -3)
-    stairs(esc['t'], 4.0, 42.6, up=False); stairs(esc['b1'], 4.0, 30.4, up=True)
-    link(esc['t'], 'porao', (4.0, 41.6, 3, 1.4), 'Descer para o porão', esc['b1'], 'sobe-escola', (4.0, 29.6, 3, 1.4), 'Subir para a escola')
-    link(esc['b1'], 'desce-tunel', (52.0, 27.0, 3, 1.4), 'Descer ao túnel de serviço', esc['b2'], 'sobe-tunel', (5.5, 8.0, 3, 1.4), 'Subir ao porão')
+    link(esc['t'], 'porao', esc['t'].stair['dn'], 'Descer para o porão', esc['b1'], 'sobe-escola', esc['b1'].stair['up'], 'Subir para a escola')
+    link(esc['b1'], 'desce-tunel', esc['b1'].stair['dn'], 'Descer ao túnel de serviço', esc['b2'], 'sobe-tunel', (5.5, 8.0, 3, 1.4), 'Subir ao porão')
+    stairs(esc['b2'], 5.5, 8.6, up=True)
     m1 = add(metro_zone('nyc-metro-1', 'Metrô — Estação P.S. 114', 90, 36, 7001, 70, True, 2, 2, 1), 5, -3)
     m2 = add(metro_zone('nyc-metro-2', 'Metrô — túnel norte', 120, 28, 7002, 60, False, 3, 2, 2), 6, -3)
     m3 = add(metro_zone('nyc-metro-3', 'Metrô — Estação Houston St', 100, 40, 7003, 80, True, 3, 3, 1), 7, -3)
@@ -260,12 +216,14 @@ def build() -> dict:
 
     # ── restaurante: o fim do mapa ──
     rs = restaurant()
+    rs['r'] = _old_restaurant()['r']
     add(rs['t'], 13, -3); add(rs['k'], 13, -2); add(rs['f2'], 13, -4); add(rs['f3'], 13, -5); add(rs['r'], 13, -6)
-    entry(rs['t'], r3, 'porta-restaurante', (40.0, 8 + 4.9), 'a margem', 21.5, 'o restaurante', y=39.6)
-    link(rs['t'], 'cozinha', (54.5, 36.0, 4, 1.6), 'Ir para a cozinha', rs['k'], 'despensa', (45.5, 28.0, 4, 1.6), 'Voltar ao salão')
-    stair_pair(rs['t'], rs['f2'], 60.5, 'r12', 'Restaurante — salão', 'Restaurante — 2º andar', y_up=9.4, y_dn=12.4)
-    stair_pair(rs['f2'], rs['f3'], 60.5, 'r23', 'Restaurante — 2º andar', 'Restaurante — eventos', y_up=9.4, y_dn=12.4)
-    stair_pair(rs['f3'], rs['r'], 60.5, 'r3t', 'Restaurante — eventos', 'o terraço', y_up=9.4, y_dn=12.4)
+    entry(rs['t'], r3, 'porta-restaurante', (40.0, 8 + 4.9), 'a margem', 'o restaurante')
+    link(rs['t'], 'cozinha', rs['t'].kitchen, 'Ir para a cozinha', rs['k'], 'despensa', rs['k'].entry, 'Voltar ao salão')   # type: ignore[attr-defined]
+    stair_pair(rs['t'], rs['f2'], 'r12', 'Restaurante — salão', 'Restaurante — 2º andar')
+    stair_pair(rs['f2'], rs['f3'], 'r23', 'Restaurante — 2º andar', 'Restaurante — eventos')
+    stairs(rs['r'], 60.5, 12.4, up=False)
+    link(rs['f3'], 'sobe-r3t', rs['f3'].stair['up'], 'Subir: o terraço', rs['r'], 'desce-r3t', (60.5, 12.4, 3, 1.4), 'Descer: Restaurante — eventos')
     return finish(zones, layout, rua1.id)
 
 

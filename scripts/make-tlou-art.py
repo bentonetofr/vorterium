@@ -18,7 +18,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from tlou_art import objects_city, objects_infection, objects_nature, objects_quarantine, objects_roads, objects_ruins, objects_survival  # noqa: E402
+from tlou_art import objects_city, objects_infection, objects_interior, objects_nature, objects_quarantine, objects_roads, objects_ruins, objects_survival  # noqa: E402
 from tlou_art import chars, creatures, faces, garments, hats, terrains, weapons, worlds, world_nyc  # noqa: E402
 from tlou_art.preview import contact  # noqa: E402
 from tlou_art.sheet import Sheet, merge_objects, write_credits  # noqa: E402
@@ -50,6 +50,9 @@ def object_sheets() -> dict[str, Sheet]:
     city = Sheet('tlou-cidade')
     objects_city.build(city)
     sheets['tlou-cidade'] = city
+    interior = Sheet('tlou-interior')
+    objects_interior.build(interior)
+    sheets['tlou-interior'] = interior
     return sheets
 
 
