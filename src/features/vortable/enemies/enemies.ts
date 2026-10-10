@@ -109,13 +109,34 @@ export interface PlaceOptions {
   net: VortableNet | null
 }
 
+/**
+ * O armazenamento da zona, SEM avisar "zona salva": esse aviso faz todo mundo recarregar a zona (a tela pisca e a câmera
+ * volta). Quem entra ou sai de cena é anunciado ao vivo, um por um, com `announceAdd` e `announceRemove`.
+ */
 export function zoneStorage(o: { campaignId: string; worldId: string; worldName: string; net: VortableNet | null }) {
-  return createWorldStorage(o.campaignId, o.worldId, o.worldName, (id) => {
-    // quem joga nesta zona recarrega; a câmera do mestre também
-    const msg = { t: 'zone', id }
-    o.net?.send(msg)
-    o.net?.sink?.(msg)
-  })
+  return createWorldStorage(o.campaignId, o.worldId, o.worldName)
+}
+
+type Net = VortableNet | null
+
+function broadcast(net: Net, msg: unknown) {
+  net?.send(msg)          // os jogadores
+  net?.sink?.(msg)        // e a câmera do mestre (a rede não devolve o que o mestre manda)
+}
+
+/** Mostra os NPCs na hora, sem recarregar nada: o motor já sabe criar um NPC que chega por uma mensagem de movimento. */
+export function announceAdd(net: Net, zoneId: string, npcs: ZoneNpc[]): void {
+  for (const n of npcs) {
+    broadcast(net, {
+      t: 'npcmove', zone: zoneId, id: n.id, x: n.x, y: n.y, dir: n.dir,
+      npc: { name: n.name, role: n.role, appearance: n.appearance, showName: n.showName === true },
+    })
+  }
+}
+
+/** Some com os NPCs na hora (o motor tira da zona o NPC que "saiu" dela pra outra). */
+export function announceRemove(net: Net, zoneId: string, ids: string[]): void {
+  for (const id of ids) broadcast(net, { t: 'npcmove', zone: '__fora', id, x: 0, y: 0, dir: 'down', from: zoneId })
 }
 
 const code = () => Math.random().toString(36).slice(2, 7)
@@ -146,6 +167,7 @@ export async function placeEnemies(o: PlaceOptions): Promise<string[]> {
     })
   }
   const next: ZoneData = { ...zone, npcs: [...(zone.npcs ?? []), ...added] }
+  announceAdd(o.net, o.zoneId, added)      // aparece na hora; a gravação vem em seguida
   await worlds.save(next)
   return added.map((n) => n.id)
 }
@@ -156,7 +178,7 @@ export async function removeEnemies(o: { campaignId: string; worldId: string; wo
   const zone = await worlds.load(o.zoneId)
   if (!zone) throw new Error('Não achei esta zona.')
   const keep = (zone.npcs ?? []).filter((n) => !(o.ids ? o.ids.includes(n.id) : n.id.startsWith('inim-')))
-  const removed = (zone.npcs ?? []).length - keep.length
-  if (removed > 0) await worlds.save({ ...zone, npcs: keep })
-  return removed
+  const gone = (zone.npcs ?? []).filter((n) => !keep.includes(n)).map((n) => n.id)
+  if (gone.length > 0) { announceRemove(o.net, o.zoneId, gone); await worlds.save({ ...zone, npcs: keep }) }
+  return gone.length
 }

@@ -2,7 +2,7 @@ import type { Appearance, ZoneNpc } from '../../../vendor/vortable/vortable'
 import { loadEngine, VORTABLE_ASSETS } from '../services/vortableService'
 import type { VortableNet } from '../net/VortableNet'
 import { applyWeaponLook, type WeaponKind, type WeaponLook } from '../../sheets/terraDevastadaAdaptada/utils/tdaWeaponLook'
-import { zoneStorage } from '../enemies/enemies'
+import { announceAdd, announceRemove, zoneStorage } from '../enemies/enemies'
 
 // ────────────────────────────────────────────────────────
 // Gerador de pessoas (NPCs) do Vortable no clima de The Last of Us: sobreviventes, soldados da FEDRA, Vagalumes,
@@ -276,6 +276,7 @@ export async function placePeople(o: PlacePeopleOptions): Promise<string[]> {
       showName: o.showName,
     }
   })
+  announceAdd(o.net, o.zoneId, added)      // aparece na hora; a gravação vem em seguida
   await worlds.save({ ...zone, npcs: [...(zone.npcs ?? []), ...added] })
   return added.map((n) => n.id)
 }
@@ -286,7 +287,7 @@ export async function removePeople(o: { campaignId: string; worldId: string; wor
   const zone = await worlds.load(o.zoneId)
   if (!zone) throw new Error('Não achei esta zona.')
   const keep = (zone.npcs ?? []).filter((n) => !(o.ids ? o.ids.includes(n.id) : n.id.startsWith('pess-')))
-  const removed = (zone.npcs ?? []).length - keep.length
-  if (removed > 0) await worlds.save({ ...zone, npcs: keep })
-  return removed
+  const gone = (zone.npcs ?? []).filter((n) => !keep.includes(n)).map((n) => n.id)
+  if (gone.length > 0) { announceRemove(o.net, o.zoneId, gone); await worlds.save({ ...zone, npcs: keep }) }
+  return gone.length
 }

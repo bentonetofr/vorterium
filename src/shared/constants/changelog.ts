@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.45',
+    date:    '2026-10-10',
+    title:   'Vortable: inimigos e NPCs em tempo real, e fim do preso nas fachadas',
+    items: [
+      'Colocar um inimigo ou um NPC gerado (arrastando ou pelo botão) não recarrega mais a zona: ele aparece na hora para você e para os jogadores, sem piscar e sem a câmera voltar. Tirar também some na hora. Tudo continua sendo gravado na zona, então quem entrar depois também vê.',
+      'Corrigido: ao sair de um prédio para a rua, o jogador chegava dentro de uma caixa de parede invisível e não conseguia sair. O motor trata a borda de todo cômodo como parede sólida, e as fachadas eram cômodos inteiros, com o alpendre dentro. Agora só a faixa da parede é cômodo, e o alpendre é chão aberto para a rua. Vale para Nova York (ruas, estrada, mata, escola, rio) e para a Cidade em Ruínas.',
+      'Corrigido: as passagens laterais entre salas dos interiores (fundos de farmácia, bodega, lanchonete, loja de roupas, posto, restaurante) também ficavam bloqueadas pela mesma regra. Agora dá para passar.',
+      'Quem já criou o mundo Nova York ou Cidade em Ruínas na campanha precisa criar de novo (ou importar o arquivo novo) para receber a correção: o que já foi criado continua como estava.',
+    ],
+  },
+  {
     version: '1.44',
     date:    '2026-10-10',
     title:   'Gerador de NPCs no controle do mestre (Vortable)',

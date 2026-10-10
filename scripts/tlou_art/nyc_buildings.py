@@ -48,7 +48,14 @@ def doorway(z: NZ, st: Style, cx: int, y_top: int, y_bot: int, half: int = 2) ->
 
 
 def side_door(z: NZ, st: Style, gx0: int, gx1: int, ytop: int, ybot: int) -> None:
+    """Passagem lateral entre duas salas: os vértices da porta entram no cômodo (senão a borda de cômodo bloqueia), com a
+    coluna da direita começando uma linha abaixo (senão o motor lê os dois vértices como parede)."""
     z.door(gx0, gx1, ytop, ybot, st.floor)
+    style = z.rooms[z.at(gx0 - 1, ytop)]
+    for y in range(ytop, ybot + 1):
+        z.rooms[z.at(gx0, y)] = style
+        if y > ytop:
+            z.rooms[z.at(gx1, y)] = style
 
 
 def decay(z: NZ, fb: tuple[float, float, float, float], n: int, weeds: int = 0) -> None:

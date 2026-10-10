@@ -171,8 +171,9 @@ def street() -> Zone:
     z.paint('tlou-calcada', 0, 8, W - 1, 10)
     z.paint('tlou-calcada', 0, 29, W - 1, H - 1)
     # prédios na frente: hospital (esquerda) e mercadinho (direita)
-    z.room(3, 0, 27, 7, 'tlou-concreto', 'wall-49', 'ceil-25', 4)
-    z.room(33, 0, 53, 7, 'tlou-concreto', 'wall-177', 'ceil-30', 4)
+    # (só a faixa da parede é cômodo: a borda de cômodo é sólida pro motor e o alpendre não pode ficar preso dentro dela)
+    z.room(3, 0, 27, 4, 'tlou-concreto', 'wall-49', 'ceil-25', 4); z.paint('tlou-concreto', 3, 5, 27, 7)
+    z.room(33, 0, 53, 4, 'tlou-concreto', 'wall-177', 'ceil-30', 4); z.paint('tlou-concreto', 33, 5, 53, 7)
     # desgaste da rua: asfalto rachado, musgo, lama, entulho e mato nas frestas
     z.noise('tlou-asfalto-rachado', 5.0, 0.56, 11, (0, 11, W - 1, 28), only='tlou-asfalto')
     z.noise('tlou-asfalto-musgo', 4.0, 0.64, 17, (0, 11, W - 1, 28), only='tlou-asfalto')

@@ -167,7 +167,10 @@ class NZ(Zone):
     # ── Fachadas (prédios vistos de frente, face sul) ──────────────
     def facade(self, x0: int, x1: int, y0: int, wall: str, ceil: str, floor: str = 'tlou-concreto', porch: int = 3, height: int = 4) -> tuple[float, float]:
         """Fachada: faixa de parede + calçada coberta embaixo. Devolve (y do pé da parede, y do fim do alpendre) em tiles."""
-        self.room(x0, y0, x1, y0 + height + porch, floor, wall, ceil, height)
+        # só a faixa da parede entra como cômodo: o motor trata a borda de qualquer cômodo como parede sólida, e um alpendre
+        # dentro do cômodo prende quem sai do prédio. O alpendre é só chão, aberto pra rua.
+        self.room(x0, y0, x1, y0 + height, floor, wall, ceil, height)
+        self.paint(floor, x0, y0 + height + 1, x1, y0 + height + porch)
         return y0 + height + 0.55, y0 + height + porch
 
     def windows(self, x0: float, x1: float, wall_y: float, every: float = 5.0, skip: tuple[float, float] | None = None, kind: str | None = None) -> None:
