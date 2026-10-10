@@ -45615,6 +45615,13 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 			e.drawDebug = !e.drawDebug, e.debugGraphic || e.createDebugGraphic(), e.debugGraphic.clear().setDepth(1e9).setVisible(e.drawDebug);
 		});
 	}
+	stepsFor(e) {
+		let t = (t, n) => {
+			let a = t.key.split(":"), r = a[a.length - 2], i = qa[r];
+			i && this.audio && i.includes(Number(n.textureFrame) % (r === "walk" ? 9 : 8)) && this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow);
+		};
+		e.on(c.default.Animations.Events.ANIMATION_START, t), e.on(c.default.Animations.Events.ANIMATION_UPDATE, t);
+	}
 	syncFootsteps(e) {
 		let t = (t, n) => {
 			let r = t.key.split(":")[2], i = qa[r];
@@ -45911,7 +45918,7 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 		}
 		if (!this.sys.isActive() || this.npcCtl || !this.solids) return !1;
 		let r = new Ln(this, n, t.x, t.y, t.dir);
-		this.applyHeight(r, t.appearance), r.locked = this.inputLocked, this.physics.add.collider(r.sprite, this.solids);
+		this.applyHeight(r, t.appearance), this.stepsFor(r.sprite), r.locked = this.inputLocked, this.physics.add.collider(r.sprite, this.solids);
 		let i = this.add.image(t.x, t.y, Mi).setScale(.75, .6).setAlpha(.32);
 		return this.npcCtl = {
 			id: e,

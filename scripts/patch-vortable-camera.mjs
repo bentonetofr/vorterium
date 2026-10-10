@@ -87,3 +87,26 @@ if (!types.includes('role: string;\n        x?: number;')) {
   writeFileSync(dts, types)
   console.log('tipos: posição dos NPCs remendada')
 }
+
+// ── Remenda 4: passos do NPC que o mestre controla (ele é um boneco local da cena, sem o som de passos do próprio boneco) ──
+code = readFileSync(js, 'utf8')
+if (code.includes('stepsFor(e) {')) {
+  console.log('motor: passos do NPC controlado já remendados')
+} else {
+  const syncOld = '\tsyncFootsteps(e) {'
+  const method = [
+    '\tstepsFor(e) {',
+    '\t\tlet t = (t, n) => {',
+    '\t\t\tlet a = t.key.split(":"), r = a[a.length - 2], i = qa[r];',
+    '\t\t\ti && this.audio && i.includes(Number(n.textureFrame) % (r === "walk" ? 9 : 8)) && this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow);',
+    '\t\t};',
+    '\t\te.on(c.default.Animations.Events.ANIMATION_START, t), e.on(c.default.Animations.Events.ANIMATION_UPDATE, t);',
+    '\t}',
+  ].join('\n')
+  const ctlOld = 'this.applyHeight(r, t.appearance), r.locked = this.inputLocked, this.physics.add.collider(r.sprite, this.solids);'
+  const ctlNew = 'this.applyHeight(r, t.appearance), this.stepsFor(r.sprite), r.locked = this.inputLocked, this.physics.add.collider(r.sprite, this.solids);'
+  for (const a of [syncOld, ctlOld]) if (!code.includes(a)) throw new Error('motor: não achei onde remendar os passos do NPC controlado: ' + a.slice(0, 40))
+  code = code.replace(syncOld, method + '\n' + syncOld).replace(ctlOld, ctlNew)
+  writeFileSync(js, code)
+  console.log('motor: passos do NPC controlado remendados')
+}

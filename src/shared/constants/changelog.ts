@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.48',
+    date:    '2026-10-10',
+    title:   'Passos do NPC que o mestre controla (Vortable)',
+    items: [
+      'Corrigido: o NPC que o mestre controla no Controle ao vivo (Controlar, setas ou WASD) andava sem som de passos. Ele é um boneco local da cena, e o som de passos só estava ligado ao boneco do próprio jogador. Agora anda com o som do chão onde pisa, no ritmo da caminhada e da corrida, igual a um jogador.',
+      'Os passos dos jogadores que aparecem na câmera do mestre (entrada anterior) continuam valendo, com o volume pela distância. Se ainda ficar mudo, confira no painel Sons se "Ouvir" está ligado e o volume dos passos não está no zero.',
+    ],
+  },
+  {
     version: '1.47',
     date:    '2026-10-10',
     title:   'Tirar NPCs do mapa (Vortable)',
