@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════════════════════
+   Avisos da Terra Devastada Adaptada: pop-up de notificação e de chat,
+   lista do sino e resultado dos dados. Mesmo visual da ficha (The Last of
+   Us Parte II): carvão com granulado, tarja vermelha, letras condensadas.
+   As cores são redefinidas aqui porque os avisos aparecem fora da ficha
+   (em qualquer página), onde o CSS dela pode nem ter sido carregado.
+   ═══════════════════════════════════════════════════════ */
+
+.notification-popup--tda,
+.notification-bell__item--tda,
+.dice-toast--tda {
+  --n-bg:      #151712;
+  --n-bg-void: #0b0c0a;
+  --n-border:  #3b3e33;
+  --n-edge:    #6e7161;
+  --n-text:    #ece7d6;
+  --n-soft:    #bfbaa6;
+  --n-muted:   #878471;
+  --n-blood:   #d65a45;
+  --n-rust:    #c9803a;
+  --n-amber:   #e2b05f;
+  --n-hand:    'Reenie Beanie', 'Caveat', cursive;
+  --n-cond:    'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --n-body:    'Barlow', system-ui, sans-serif;
+  --n-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 .9  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/></svg>");
+}
+[data-theme="light"] .notification-popup--tda,
+[data-theme="light"] .notification-bell__item--tda,
+[data-theme="light"] .dice-toast--tda {
+  --n-bg:      #f4eedc;
+  --n-bg-void: #ebe3cd;
+  --n-border:  #c2b793;
+  --n-edge:    #8f8462;
+  --n-text:    #24211a;
+  --n-soft:    #4b4636;
+  --n-muted:   #7b745a;
+  --n-blood:   #9a2e1d;
+  --n-rust:    #8a4b12;
+  --n-amber:   #94581a;
+  --n-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.1'/></svg>");
+}
+
+/* ── Pop-up (notificação e mensagem de chat) ── */
+.notification-popup--tda {
+  background: var(--n-grain), var(--n-bg);
+  border: 1px solid var(--n-border);
+  border-left: 3px solid var(--n-blood);
+  border-radius: 2px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.notification-popup--tda .notification-popup__icon { color: var(--n-blood); }
+.notification-popup--tda .notification-popup__message {
+  font-family: var(--n-body);
+  font-size: var(--text-sm);
+  color: var(--n-text);
+}
+.notification-popup--tda .notification-popup__campaign {
+  font-family: var(--n-cond);
+  font-size: var(--text-sm);
+  letter-spacing: 0.2em;
+  color: var(--n-muted);
+}
+.notification-popup--tda .notification-popup__progress { height: 2px; background: var(--n-text); opacity: 0.7; }
+
+/* ── Lista do sino ── */
+.notification-bell__item--tda {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--n-blood);
+}
+.notification-bell__item--tda .notification-bell__item-message {
+  font-family: var(--n-body);
+  color: var(--text-primary);
+}
+.notification-bell__item--tda .notification-bell__item-meta {
+  font-family: var(--n-cond);
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Resultado dos dados ── */
+.dice-toast--tda {
+  background: var(--n-grain), var(--n-bg);
+  border: 1px solid var(--n-border);
+  border-left: 3px solid var(--n-blood);
+  border-radius: 2px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.dice-toast--tda .dice-toast__label {
+  font-family: var(--n-cond);
+  font-size: var(--text-sm);
+  letter-spacing: 0.2em;
+  color: var(--n-muted);
+}
+.dice-toast--tda .dice-toast__formula {
+  font-family: var(--n-cond);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--n-rust);
+}
+.dice-toast--tda .dice-toast__total {
+  font-family: var(--n-cond);
+  font-size: var(--text-4xl);
+  color: var(--n-text);
+  background: var(--n-bg-void);
+  border: 1px solid var(--n-edge);
+  border-radius: 2px;
+}
+.dice-toast--tda .dice-toast__total--max {
+  border-color: var(--n-amber);
+  color: var(--n-amber);
+  box-shadow: 0 0 16px rgba(226, 176, 95, 0.28);
+}
+.dice-toast--tda .dice-toast__total--min { border-color: var(--n-blood); color: var(--n-blood); }
+.dice-toast--tda .dice-toast__total--spinning { font-family: var(--n-cond); color: var(--n-muted); }
+.dice-toast--tda .dice-toast__unit {
+  margin: 0;
+  text-align: center;
+  font-family: var(--n-hand);
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--n-rust);
+}

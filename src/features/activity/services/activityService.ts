@@ -324,15 +324,23 @@ export interface LiveNotification {
   id: string
   message: string
   campaignName: string
+  /** Sistema da campanha (pra o aviso ganhar o visual dele, ex.: Terra Devastada Adaptada). */
+  campaignSystem?: string
   createdAt: string
+}
+
+/** A campanha usa a Terra Devastada Adaptada? (avisos no visual de The Last of Us). */
+export function isAdaptedSystem(system: string | undefined): boolean {
+  return system === 'terra_devastada_adaptada'
 }
 
 const POPUP_ACTIVITY_TYPES: ActivityType[] = ['note_created', 'session_created']
 
-type ActivityRow = { id: string; message: string; created_at: string; campaigns: { name: string } | null }
-type DiceRow = { id: string; formula: string | null; die_type: string; result: number; created_at: string; campaigns: { name: string } | null; profiles: { display_name: string } | null }
-type MemberRow = { id: string; created_at: string; campaigns: { name: string } | null }
-type MessageRow = { id: string; content: string; recipient_id: string | null; created_at: string; campaigns: { name: string } | null; profiles: { display_name: string } | null }
+type CampaignRef = { name: string; system?: string } | null
+type ActivityRow = { id: string; message: string; created_at: string; campaigns: CampaignRef }
+type DiceRow = { id: string; formula: string | null; die_type: string; result: number; roll_mode?: string | null; quantity?: number | null; created_at: string; campaigns: CampaignRef; profiles: { display_name: string } | null }
+type MemberRow = { id: string; created_at: string; campaigns: CampaignRef }
+type MessageRow = { id: string; content: string; recipient_id: string | null; created_at: string; campaigns: CampaignRef; profiles: { display_name: string } | null }
 
 const MESSAGE_PREVIEW_LENGTH = 80
 
@@ -341,15 +349,23 @@ function mapActivityRow(row: ActivityRow): LiveNotification {
     id:           `activity-${row.id}`,
     message:      row.message,
     campaignName: row.campaigns?.name ?? 'Campanha',
+    campaignSystem: row.campaigns?.system,
     createdAt:    row.created_at,
   }
 }
 
 function mapDiceRow(row: DiceRow): LiveNotification {
+  const who = row.profiles?.display_name ?? 'Alguém'
+  const system = row.campaigns?.system
+  // Terra Devastada Adaptada: o teste de pares fala em dados e pontos, não em fórmula.
+  const message = isAdaptedSystem(system) && row.roll_mode === 'evens'
+    ? `${who} testou com ${row.quantity ?? 1}d: ${row.result} ${row.result === 1 ? 'ponto' : 'pontos'}`
+    : `${who} rolou ${row.formula ?? row.die_type}: ${row.result}`
   return {
     id:           `dice-${row.id}`,
-    message:      `${row.profiles?.display_name ?? 'Alguém'} rolou ${row.formula ?? row.die_type}: ${row.result}`,
+    message,
     campaignName: row.campaigns?.name ?? 'Campanha',
+    campaignSystem: system,
     createdAt:    row.created_at,
   }
 }
@@ -359,6 +375,7 @@ function mapMemberRow(row: MemberRow): LiveNotification {
     id:           `member-${row.id}`,
     message:      'Você foi adicionado à campanha.',
     campaignName: row.campaigns?.name ?? 'Campanha',
+    campaignSystem: row.campaigns?.system,
     createdAt:    row.created_at,
   }
 }
@@ -370,6 +387,7 @@ function mapMessageRow(row: MessageRow): LiveNotification {
       id:           `message-${row.id}`,
       message:      `Mensagem privada de ${name}`,
       campaignName: row.campaigns?.name ?? 'Campanha',
+      campaignSystem: row.campaigns?.system,
       createdAt:    row.created_at,
     }
   }
@@ -380,6 +398,7 @@ function mapMessageRow(row: MessageRow): LiveNotification {
     id:           `message-${row.id}`,
     message:      `${name}: ${preview}`,
     campaignName: row.campaigns?.name ?? 'Campanha',
+    campaignSystem: row.campaigns?.system,
     createdAt:    row.created_at,
   }
 }
@@ -406,14 +425,14 @@ export async function getLiveNotifications(limit = 8): Promise<LiveNotification[
   const [activityRes, memberRes] = await Promise.all([
     supabase
       .from('campaign_activity')
-      .select('id, message, created_at, campaigns(name)')
+      .select('id, message, created_at, campaigns(name, system)')
       .in('type', POPUP_ACTIVITY_TYPES)
       .neq('actor_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit),
     supabase
       .from('campaign_members')
-      .select('id, created_at, campaigns(name)')
+      .select('id, created_at, campaigns(name, system)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit),
@@ -471,7 +490,7 @@ export function subscribeToNewRollsGlobally(
 export async function getDiceRollNotification(rollId: string): Promise<LiveNotification | null> {
   const { data, error } = await supabase
     .from('dice_rolls')
-    .select('id, formula, die_type, result, created_at, campaigns(name), profiles(display_name)')
+    .select('id, formula, die_type, result, roll_mode, quantity, created_at, campaigns(name, system), profiles(display_name)')
     .eq('id', rollId)
     .maybeSingle()
 
@@ -518,7 +537,7 @@ export function subscribeToNewMessagesGlobally(
 export async function getMessageNotification(messageId: string): Promise<LiveNotification | null> {
   const { data, error } = await supabase
     .from('campaign_messages')
-    .select('id, content, recipient_id, created_at, campaigns(name), profiles!user_id(display_name)')
+    .select('id, content, recipient_id, created_at, campaigns(name, system), profiles!user_id(display_name)')
     .eq('id', messageId)
     .maybeSingle()
 
@@ -539,14 +558,14 @@ export async function getRecentNotifications(limit = 3): Promise<LiveNotificatio
   const [activityRes, diceRes] = await Promise.all([
     supabase
       .from('campaign_activity')
-      .select('id, message, created_at, campaigns(name)')
+      .select('id, message, created_at, campaigns(name, system)')
       .in('type', NOTIFICATION_ACTIVITY_TYPES)
       .neq('actor_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit),
     supabase
       .from('dice_rolls')
-      .select('id, formula, die_type, result, created_at, campaigns(name), profiles(display_name)')
+      .select('id, formula, die_type, result, roll_mode, quantity, created_at, campaigns(name, system), profiles(display_name)')
       .neq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit),

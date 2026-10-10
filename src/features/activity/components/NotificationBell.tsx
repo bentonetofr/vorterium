@@ -4,12 +4,15 @@ import {
   getActivitySeenAt,
   getRecentNotifications,
   getUnreadNotificationCount,
+  isAdaptedSystem,
   markActivitySeen,
   type LiveNotification,
 } from '../services/activityService'
 import { Presence } from '../../../shared/components/Presence'
 import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
+import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts'
 import './NotificationBell.css'
+import './NotificationTda.css'
 import { Loader } from '../../../shared/components/Loader'
 
 // Cadência do selo — mais devagar que o pop-up ao vivo, é só o "de fundo".
@@ -61,7 +64,9 @@ export function NotificationBell() {
 
     setLoading(true)
     try {
-      setItems(await getRecentNotifications(3))
+      const recent = await getRecentNotifications(3)
+      if (recent.some((n) => isAdaptedSystem(n.campaignSystem))) loadTdaFonts()
+      setItems(recent)
     } catch (err) {
       console.error('Falha ao carregar notificações recentes:', err)
     } finally {
@@ -115,7 +120,7 @@ export function NotificationBell() {
             {!loading && items.length > 0 && (
               <ul className="notification-bell__items anim-stagger">
                 {items.map((item) => (
-                  <li key={item.id} className="notification-bell__item">
+                  <li key={item.id} className={`notification-bell__item${isAdaptedSystem(item.campaignSystem) ? ' notification-bell__item--tda' : ''}`}>
                     <p className="notification-bell__item-message">{item.message}</p>
                     <div className="notification-bell__item-meta">
                       <span>{item.campaignName}</span>

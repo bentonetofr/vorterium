@@ -3,10 +3,13 @@ import { useAuth } from '../../auth/AuthProvider'
 import {
   getLiveNotifications,
   getDiceRollNotification,
+  isAdaptedSystem,
   subscribeToNewRollsGlobally,
   type LiveNotification,
 } from '../services/activityService'
+import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts'
 import './NotificationPopup.css'
+import './NotificationTda.css'
 
 // Mais rápido que o sino de propósito — é o mecanismo "ao vivo", quer parecer
 // imediato. Ainda sem Realtime, só um polling mais frequente.
@@ -111,12 +114,15 @@ export function NotificationPopup() {
     }
   }, [current])
 
+  const adapted = isAdaptedSystem(current?.campaignSystem)
+  useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
+
   if (!user || !current) return null
 
   return (
     <div
       key={current.id}
-      className={`notification-popup${leaving ? ' notification-popup--leaving' : ''}`}
+      className={`notification-popup${adapted ? ' notification-popup--tda' : ''}${leaving ? ' notification-popup--leaving' : ''}`}
       role="status"
       aria-live="polite"
     >

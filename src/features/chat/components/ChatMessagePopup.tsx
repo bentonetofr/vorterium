@@ -4,11 +4,14 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useActiveChat } from '../ActiveChatContext'
 import {
   getMessageNotification,
+  isAdaptedSystem,
   subscribeToNewMessagesGlobally,
   type LiveNotification,
 } from '../../activity/services/activityService'
 import { useFabToastSlot } from '../../../shared/components/FabToasts'
+import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts'
 import '../../activity/components/NotificationPopup.css'
+import '../../activity/components/NotificationTda.css'
 import './ChatFab.css'
 
 // ────────────────────────────────────────────────────────
@@ -80,12 +83,15 @@ export function ChatMessagePopup() {
     }
   }, [current])
 
+  const adapted = isAdaptedSystem(current?.campaignSystem)
+  useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
+
   if (!user || !current) return null
 
   const popup = (
     <div
       key={current.id}
-      className={`notification-popup chat-message-popup${leaving ? ' notification-popup--leaving' : ''}`}
+      className={`notification-popup chat-message-popup${adapted ? ' notification-popup--tda' : ''}${leaving ? ' notification-popup--leaving' : ''}`}
       role="status"
       aria-live="polite"
     >

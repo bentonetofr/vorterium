@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.31',
+    date:    '2026-10-10',
+    title:   'Notificações da Terra Devastada Adaptada',
+    items: [
+      'Nas campanhas de Terra Devastada Adaptada, os avisos ganham o visual de The Last of Us: pop-up de notificação e de mensagem do chat, a lista do sino e o resultado dos dados, com fundo de carvão granulado, tarja vermelha e letras condensadas (no tema claro, papel de diário).',
+      'O aviso de teste de pares fala a língua do sistema: "Ellie testou com 3d: 2 pontos", e o resultado dos seus próprios dados mostra "Teste" e "pontos de desempenho" em vez de fórmula de dado.',
+    ],
+  },
+  {
     version: '1.30',
     date:    '2026-10-10',
     title:   'Retrato na Terra Devastada Adaptada',

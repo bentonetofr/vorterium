@@ -6,6 +6,8 @@ import { DiceRollerPanel } from './DiceRollerPanel'
 import { Presence } from '../../../shared/components/Presence'
 import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
 import { useFabToastSlot } from '../../../shared/components/FabToasts'
+import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
+import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts'
 import type { DiceRoll, RollBreakdownItem } from '../../../shared/types'
 import './DiceFab.css'
 
@@ -173,6 +175,10 @@ function portalTo(slot: HTMLElement | null, node: ReactNode) {
 export function DiceFab() {
   const { user } = useAuth()
   const { campaignId, isOpen, open, close } = useDiceRoller()
+  // Terra Devastada Adaptada: o resultado aparece no visual de The Last of Us.
+  const { campaign } = useCurrentCampaign()
+  const adapted = campaign?.id === campaignId && campaign?.system === 'terra_devastada_adaptada'
+  useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
 
   // ── Notificação de resultado ──
   const [activeRoll, setActiveRoll]     = useState<DiceRoll | null>(null)
@@ -251,10 +257,10 @@ export function DiceFab() {
   return (
     <>
       {(activeRoll || displayRoll !== null) && portalTo(toastSlot,
-        <div key={toastKey} className="dice-toast" role="status" aria-live="polite">
+        <div key={toastKey} className={`dice-toast${adapted ? ' dice-toast--tda' : ''}`} role="status" aria-live="polite">
           <div className="dice-toast__header">
             <span className="dice-toast__label">
-              Última rolagem
+              {adapted ? (activeRoll?.roll_mode === 'evens' ? 'Teste' : 'Rolagem') : 'Última rolagem'}
               {displayRoll === null && activeRoll?.is_private && (
                 <span title="Rolagem privada" aria-label="Rolagem privada"> 🔒</span>
               )}
@@ -269,6 +275,9 @@ export function DiceFab() {
               {displayRoll !== null ? displayRoll : activeRoll!.result}
             </span>
           </div>
+          {adapted && displayRoll === null && activeRoll?.roll_mode === 'evens' && (
+            <p className="dice-toast__unit">{activeRoll.result === 1 ? 'ponto de desempenho' : 'pontos de desempenho'}</p>
+          )}
 
           {displayRoll !== null && bouncingSides.length > 0 && (
             <div className="dice-toast__bounce-row" aria-hidden="true">
