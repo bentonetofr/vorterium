@@ -47,7 +47,9 @@
   background: radial-gradient(ellipse at center, transparent 35%, var(--tda-faith-glow) 100%);
   animation: tdaVignette 1000ms var(--ease-out);
 }
-.tda-hero[data-fx="hurt"], .tda-hero[data-fx="scare"] { animation: m-shake 420ms ease-in-out; }
+/* o tremor vai nos medidores (e não no cabeçalho, que trocaria a animação de entrada e a tocaria de novo) */
+.tda-hero[data-fx="hurt"] .tda-hero__meters,
+.tda-hero[data-fx="scare"] .tda-hero__meters { animation: m-shake 420ms ease-in-out; }
 @keyframes tdaVignette {
   0%   { opacity: 0; }
   18%  { opacity: 1; }

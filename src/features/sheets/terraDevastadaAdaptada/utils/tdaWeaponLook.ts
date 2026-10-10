@@ -36,17 +36,17 @@ const SLOT_PREFIX = 'tlou/'
 const KEYWORDS: [RegExp, WeaponKind][] = [
   [/lanca.?chamas|flamethrower|macarico/, 'lanca-chamas'],
   [/molotov|coquetel/, 'molotov'],
-  [/granada|bomba|dinamite|explosivo/, 'granada'],
+  [/granada|\bbombas?\b|dinamite|explosivo/, 'granada'],
   [/revolver|magnum|\.38|calibre 38/, 'revolver'],
   [/pistola|glock|9 ?mm|semiautomatica/, 'pistola'],
   [/escopeta|espingarda|shotgun|calibre 12|cano serrado/, 'escopeta'],
   [/rifle|fuzil|sniper|carabina|\bak\b|ar-?15|\bm4\b|\bcaca\b/, 'rifle'],
-  [/arco|besta|crossbow|\bbow\b/, 'arco'],
+  [/\barcos?\b|besta|crossbow|\bbow\b/, 'arco'],
   [/machadinha|machado|\baxe\b|hatchet/, 'machadinha'],
   [/facao|machete|espada|sabre/, 'facao'],
   [/faca|canivete|punhal|adaga|lamina|\bshiv\b/, 'faca'],
   [/taco|bastao|\bpau\b|\bbat\b|clava|martelo|marreta/, 'taco'],
-  [/cano|barra|ferro|\bpipe\b|tubo|pe de cabra|chave de roda/, 'cano'],
+  [/\bcanos?\b|\bbarras?\b|\bferro\b|\bpipe\b|\btubo\b|pe de cabra|chave de roda/, 'cano'],
 ]
 
 function plain(s: string): string {

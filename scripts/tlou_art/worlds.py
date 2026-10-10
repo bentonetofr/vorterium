@@ -269,7 +269,7 @@ def street() -> Zone:
     z.sound = {'auto': True, 'layers': {'wind': 0.35}}
 
     z.npc('rua-soldado-morto', 'Soldado caído', 'Corpo (revistar)',
-          person('muscular', SHORT, 'black', SHIRT_CAMO('floresta'), LEGS_CAMO('floresta'),
+          person('male', SHORT, 'black', SHIRT_CAMO('floresta'), LEGS_CAMO('floresta'),
                  mask=('tlou/mask/mascara-gas',), grime=('tlou/grime/sujeira', 'pesada')), 23.6, 23.2, 'left')
     return z
 
@@ -346,7 +346,7 @@ def checkpoint() -> Zone:
     z.sound = {'auto': True, 'layers': {'wind': 0.4}}
 
     z.npc('quar-guarda', 'Guarda da cancela', 'Soldado da quarentena',
-          person('muscular', SHORT, 'black', SHIRT_CAMO('urbana'), LEGS_CAMO('urbana'), 'black',
+          person('male', SHORT, 'black', SHIRT_CAMO('urbana'), LEGS_CAMO('urbana'), 'black',
                  armour=('tlou/armour/colete-tatico', 'preto'), mask=('tlou/mask/mascara-gas',),
                  weapon_hand=('tlou/weapon_hand/rifle',)), 12.4, 15.6, 'left')
     z.npc('quar-oficial', 'Oficial do posto', 'Comandante',
@@ -417,7 +417,7 @@ def hospital() -> Zone:
     z.light('hosp-emergencia', 23, 19, 160, '#ff4a3a', 0.2, 0.5)
     z.light('hosp-micelio', 4.4, 11, 150, '#9bd96a', 0.32, 0.12)
 
-    z.portal('saida-rua', 'Sair para a rua', 21, 37.4, 4, 1.2, ('ruinas-rua', 'hospital'))
+    z.portal('saida-rua', 'Sair para a rua', 21, 36.6, 4, 1.4, ('ruinas-rua', 'hospital'))
     z.portal('escada', 'Escada para o subsolo', 41.2, 5.7, 2.6, 1.4, ('ruinas-subsolo', 'sobe'))
     z.spawn = {'x': 23 * TILE, 'y': 35 * TILE}
     z.lighting = {'place': 'indoor', 'particles': True, 'clouds': False}
@@ -485,7 +485,7 @@ def basement() -> Zone:
           person('female', LONG, 'dark_brown', SHIRT_DIRTY('cinza'), LEGS_DIRTY('jeans'),
                  infection=('tlou/infection/estalador',), grime=('tlou/grime/sujeira', 'pesada')), 26, 22.4, 'up')
     z.npc('sub-corredor', 'Corredor', 'Infectado (corre atrás do barulho)',
-          person('muscular', SHORT, 'black', SHIRT_PLAID('marrom'), LEGS_DIRTY('preta'),
+          person('male', SHORT, 'black', SHIRT_PLAID('marrom'), LEGS_DIRTY('preta'),
                  infection=('tlou/infection/veias',)), 30, 12.6, 'down')
     return z
 

@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.39',
+    date:    '2026-10-10',
+    title:   'Varredura de erros: Cidade em Ruínas e armas no boneco',
+    items: [
+      'Cidade em Ruínas: o soldado caído, o guarda da cancela e o Corredor do subsolo usavam o corpo "musculoso", que não aceita camiseta camuflada, xadrez nem colete tático (as peças simplesmente sumiam). Agora usam o corpo normal e aparecem vestidos.',
+      'Cidade em Ruínas: a saída do hospital para a rua passava um pouco da borda do mapa e foi encaixada dentro dele.',
+      'Armas no boneco: nomes como "marco", "barco", "barraca" ou "ferrolho" não viram mais arco, cano ou bomba por engano (agora só valem as palavras inteiras: arco, cano, barra, ferro, tubo, bomba).',
+      'Ficha: o cabeçalho não toca mais a animação de entrada de novo depois do susto de Horror ou de levar dano; o tremor agora fica só nos medidores.',
+    ],
+  },
+  {
     version: '1.38',
     date:    '2026-10-10',
     title:   'Animações na ficha da Terra Devastada Adaptada',
