@@ -3,6 +3,7 @@
 //     mapa, pra arrastar inimigos e NPCs do painel e soltar no mapa.
 //  2. Passos dos outros: na câmera do mestre (modo watch), jogadores e NPCs controlados também fazem som de passos
 //     (o motor só tocava o passo do próprio boneco), mais baixo quanto mais longe do centro da câmera.
+//  6. Roupa que descolava do corpo ao correr: peça sem a animação faz o boneco inteiro usar os quadros de caminhar nela.
 //  5. `gate`: licença do mestre pra o jogador atravessar uma saída (ver a remenda 5 no fim).
 //
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
@@ -148,4 +149,21 @@ if (!types.includes('gate?:')) {
   types = types.replace(a, `${a}    /** Jogo: licença pra atravessar uma saída (o boneco espera a resposta; false = não sai). (remenda do Vorterium) */\n    gate?: (info: { from: string; fromName: string; to: string; toName: string; via: string }) => Promise<boolean>;\n`)
   writeFileSync(dts, types)
   console.log('tipos: licença de saída remendada')
+}
+
+// ── Remenda 6: roupa descolando do corpo ao correr. Peça sem a animação de correr (ou de ficar parado) caía no quadro de CAMINHAR enquanto o
+//    corpo usava o de correr, e as duas poses não batem (a roupa, o chapéu e a arma ficavam soltos). Agora, se QUALQUER peça equipada não
+//    tem a animação, o boneco inteiro usa os quadros de caminhar nela: tudo anda junto, sem descolar. Quem só tem peças completas corre normal. ──
+code = readFileSync(js, 'utf8')
+if (code.includes('miss = r !== "walk"')) {
+  console.log('motor: roupa ao correr já remendada')
+} else {
+  const a = '\t\tlet d = u.anims.includes(r), f = d ? r : "walk", p = un(e, u, l, n.skin);'
+  const b = '\t\tlet d = !miss && u.anims.includes(r), f = d ? r : "walk", p = un(e, u, l, n.skin);'
+  const head = '\tlet a = [], o = 0, s = mn(n).length > 0;\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;'
+  const headNew = '\tlet a = [], o = 0, s = mn(n).length > 0, miss = r !== "walk" && Object.entries(n.slots).some(([k, v]) => {\n\t\tif (i && k !== i) return !1;\n\t\tlet w = e.byId.get(v.id);\n\t\treturn !!w && !w.proc && !w.anims.includes(r);\n\t});\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;'
+  for (const x of [a, head]) if (!code.includes(x)) throw new Error('motor: não achei onde remendar a roupa ao correr (o motor mudou?): ' + x.slice(0, 50))
+  code = code.replace(a, b).replace(head, headNew)
+  writeFileSync(js, code)
+  console.log('motor: roupa ao correr remendada')
 }

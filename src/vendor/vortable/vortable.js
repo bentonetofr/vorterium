@@ -42572,7 +42572,11 @@ function mn(e) {
 	return e.shape?.bust === -2 && t.push([36, 46]), e.shape?.hips === -2 && t.push([46, 56]), t;
 }
 function hn(e, t, n, r, i) {
-	let a = [], o = 0, s = mn(n).length > 0;
+	let a = [], o = 0, s = mn(n).length > 0, miss = r !== "walk" && Object.entries(n.slots).some(([k, v]) => {
+		if (i && k !== i) return !1;
+		let w = e.byId.get(v.id);
+		return !!w && !w.proc && !w.anims.includes(r);
+	});
 	for (let [c, l] of Object.entries(n.slots)) {
 		if (i && c !== i) continue;
 		let u = e.byId.get(l.id);
@@ -42593,7 +42597,7 @@ function hn(e, t, n, r, i) {
 			});
 			continue;
 		}
-		let d = u.anims.includes(r), f = d ? r : "walk", p = un(e, u, l, n.skin);
+		let d = !miss && u.anims.includes(r), f = d ? r : "walk", p = un(e, u, l, n.skin);
 		for (let r of u.layers) {
 			let i = Lt(r, n.body), u = l.variant ? `${i}${f}/${l.variant}.png` : `${i}${f}.png`, m = s && pn.has(c) && n.body === "female" ? r.paths.male : void 0, h = m ? t + e.catalog.sheets + (l.variant ? `${m}${f}/${l.variant}.png` : `${m}${f}.png`) : void 0;
 			a.push({

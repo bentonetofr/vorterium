@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.51',
+    date:    '2026-10-10',
+    title:   'Roupas coladas no corpo ao correr (Vortable)',
+    items: [
+      'Corrigido: ao correr, roupas, chapéus, armas e mochilas descolavam do bonequinho e ficavam soltos. A causa: muitas peças só têm o desenho de caminhar, e o corpo usava o desenho de correr (poses que não batem).',
+      'Agora, se qualquer peça equipada não tem a animação de correr, o boneco inteiro corre usando os quadros de caminhar: tudo se move junto, sem desgrudar. Quem usa só peças completas continua com a corrida de verdade. O mesmo vale pra ficar parado.',
+      'Vale pra todos os jogadores, NPCs e pra câmera do mestre, que montam o boneco do mesmo jeito.',
+      'Por baixo: mais uma remenda no motor (node scripts/patch-vortable-camera.mjs depois de sincronizar o motor de novo).',
+    ],
+  },
+  {
     version: '1.50',
     date:    '2026-10-10',
     title:   'O mestre libera a saída de zona (Vortable)',
