@@ -892,6 +892,101 @@
 
 .tda-card-conditions { font-family: var(--font-body); }
 
+/* ── Vida (1 a 6) e combate ── */
+.tda-meter--health { border-left-color: var(--tda-faith); }
+.tda-meter--health .tda-track { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.tda-meter--health .tda-track__box { height: 26px; }
+.tda-meter--health .tda-track__box--on { color: var(--text-inverse); border-color: transparent; background: var(--tda-faith); }
+.tda-meter--hurt .tda-track__box--on { background: var(--accent-bright); }
+.tda-meter--critical { border-left-color: var(--tda-blood); }
+.tda-meter--critical .tda-track__box--on { background: var(--tda-blood); box-shadow: 0 0 8px var(--tda-blood-glow); }
+.tda-meter--critical .tda-meter__title,
+.tda-meter--down .tda-meter__title { color: var(--tda-blood); }
+.tda-meter--down { border-left-color: var(--tda-blood); }
+.tda-meter--critical .tda-meter__band strong,
+.tda-meter--down .tda-meter__band strong { color: var(--tda-blood); }
+.tda-meter--health .tda-meter__title { color: var(--tda-faith); }
+
+.tda-damage { display: flex; flex-direction: column; gap: var(--space-2); }
+.tda-combat .tda-field .tda-stepper { align-self: flex-start; }
+
+/* ── Bestiário ── */
+.tda-bestiary { display: flex; flex-direction: column; gap: var(--space-6); }
+.tda-bestiary__intro { font-size: var(--text-sm); color: var(--text-muted); line-height: 1.5; max-width: 70ch; }
+.tda-bestiary__section { display: flex; flex-direction: column; gap: var(--space-3); }
+.tda-bestiary__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-3);
+}
+.tda-creature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--tda-grain), var(--tda-paper);
+  border: 1px solid var(--border-dim);
+  border-top: 2px solid var(--tda-blood);
+  border-radius: var(--radius-lg);
+}
+.tda-creature--human { border-top-color: var(--accent-bright); }
+.tda-creature--animal { border-top-color: var(--tda-rust); }
+.tda-creature--outro { border-top-color: var(--border-bright); }
+.tda-creature__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.tda-creature__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.tda-creature__kind {
+  font-family: var(--tda-hand);
+  font-size: 1.3rem;
+  color: var(--tda-rust);
+}
+.tda-creature__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.tda-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) var(--space-1);
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+}
+.tda-stat__value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.tda-stat__label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.tda-stat--danger .tda-stat__value { color: var(--tda-blood); }
+.tda-creature__notes { font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); }
+.tda-creature__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: auto; }
+.tda-creature-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--tda-grain), var(--tda-paper);
+  border: 1px solid var(--border-base);
+  border-top: 2px solid var(--tda-blood);
+}
+.tda-creature-form__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--space-3); }
+
 /* ── Celular ── */
 @media (max-width: 900px) {
   .tda-hero { grid-template-columns: minmax(0, 1fr); }

@@ -15,20 +15,24 @@ import {
   CONDITIONS_MAX,
   CONDITION_DURATIONS,
   CONVICTION_MAX,
+  HEALTH_MAX,
   HORROR_MAX,
   INVENTORY_MAX,
   ITEM_KINDS,
-  ITEM_LEVELS,
+  PROTECTION_LEVELS,
+  WEAPON_LEVELS,
+  WEAPON_PRESETS,
   TEXT_LIMITS,
   TRAITS_INITIAL_MAX,
   TRAITS_MAX,
   TRUNFOS_MAX,
 } from '../constants/terraDevastadaAdaptada'
-import { convictionCost, horrorBand, initialHorror, newId } from '../utils/tdaRules'
+import { clampHealth, convictionCost, healthBand, horrorBand, initialHorror, newId } from '../utils/tdaRules'
 import { useTdaFonts } from '../utils/tdaFonts'
 import { announceTda, type TdaSheetUpdate } from '../services/tdaSheetService'
 import { TdaTestModal, type TdaTestPurpose } from './TdaTestModal'
 import { TdaHorrorModal } from './TdaHorrorModal'
+import { TdaCombatModal, type TdaCombatMode } from './TdaCombatModal'
 import './TerraDevastadaAdaptadaSheet.css'
 
 // ────────────────────────────────────────────────────────
@@ -53,6 +57,7 @@ type FormData = {
   conditions:     TdaCondition[]
   trunfos:        TdaTrunfo[]
   inventory:      TdaInventoryItem[]
+  health:         number
   horror:         number
   conviction:     number
   notes:          string
@@ -68,6 +73,7 @@ function sheetToForm(s: TdaSheet): FormData {
     conditions:     s.conditions ?? [],
     trunfos:        s.trunfos ?? [],
     inventory:      s.inventory ?? [],
+    health:         s.health ?? HEALTH_MAX,
     horror:         s.horror,
     conviction:     s.conviction,
     notes:          s.notes ?? '',
@@ -91,6 +97,7 @@ function formToPayload(f: FormData): TdaSheetUpdate {
       .map((t) => ({ id: t.id, name: t.name.trim(), description: t.description.trim() })),
     inventory: f.inventory.filter((i) => i.name.trim())
       .map((i) => ({ id: i.id, name: i.name.trim(), qty: i.qty, kind: i.kind, level: i.kind === 'item' ? 0 : i.level })),
+    health:         f.health,
     horror:         f.horror,
     conviction:     f.conviction,
     notes:          f.notes.trim() || null,
@@ -126,7 +133,12 @@ const TAB_IDS = TABS.map((t) => t.id)
 
 const DURATION_OPTIONS = CONDITION_DURATIONS.map((d) => ({ value: d.id, label: d.label }))
 const KIND_OPTIONS = ITEM_KINDS.map((k) => ({ value: k.id, label: k.label }))
-const LEVEL_OPTIONS = ITEM_LEVELS.map((l) => ({ value: String(l.value), label: l.label }))
+const WEAPON_LEVEL_OPTIONS = WEAPON_LEVELS.map((l) => ({ value: String(l.value), label: l.label }))
+const PROTECTION_LEVEL_OPTIONS = PROTECTION_LEVELS.map((l) => ({ value: String(l.value), label: l.label }))
+const WEAPON_PRESET_OPTIONS = [
+  { value: '', label: 'Arma pronta…' },
+  ...WEAPON_PRESETS.map((w) => ({ value: w.name, label: `${w.name} (dano ${w.damage})` })),
+]
 const TAG_OPTIONS = [
   { value: '',          label: 'Comum' },
   { value: 'motiva',    label: 'Motivação' },
@@ -142,6 +154,7 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveTab)
   const [testing, setTesting] = useState<TdaTestPurpose | null>(null)
   const [horrorScene, setHorrorScene] = useState(false)
+  const [combat, setCombat] = useState<TdaCombatMode | null>(null)
 
   // ── Salvamento automático (ver AltheriumSheetForm) ──
   const [saveState, setSaveState] = useState<SaveState>('saved')
@@ -245,6 +258,7 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
 
   const who = form.character_name.trim() || ownerName || 'Um sobrevivente'
   const band = horrorBand(form.horror)
+  const hband = healthBand(form.health)
   const cost = convictionCost(form.horror)
   const suggestedHorror = initialHorror(form.traits)
   const tagged = form.traits.some((t) => t.tag)
@@ -287,6 +301,32 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
         </div>
 
         <div className="tda-hero__meters">
+          <section className={`tda-meter tda-meter--health tda-meter--${hband.level}`} aria-label="Vida">
+            <div className="tda-meter__head">
+              <span className="tda-meter__title">Vida</span>
+              <div className="tda-meter__controls">
+                <button
+                  type="button" className="tda-stepper__btn" aria-label="Menos um de Vida"
+                  onClick={() => set('health', clampHealth(form.health - 1))} disabled={form.health <= 0}
+                >
+                  −
+                </button>
+                <span className="tda-meter__value">{form.health}<small>/{HEALTH_MAX}</small></span>
+                <button
+                  type="button" className="tda-stepper__btn" aria-label="Mais um de Vida"
+                  onClick={() => set('health', clampHealth(form.health + 1))} disabled={form.health >= HEALTH_MAX}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <Track
+              max={HEALTH_MAX} value={form.health} groups={HEALTH_MAX} label="Vida"
+              onChange={(v) => set('health', v)}
+            />
+            <p className="tda-meter__band"><strong>{hband.title}.</strong> {hband.effect}</p>
+          </section>
+
           <section className={`tda-meter tda-meter--horror tda-meter--band-${band.min}`} aria-label="Horror">
             <div className="tda-meter__head">
               <span className="tda-meter__title">Horror</span>
@@ -327,10 +367,16 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
           </section>
 
           <div className="tda-hero__actions">
+            <button type="button" className="tda-btn tda-btn--danger tda-btn--big" onClick={() => setCombat('atacar')}>
+              Atacar
+            </button>
+            <button type="button" className="tda-btn tda-btn--big" onClick={() => setCombat('esquivar')}>
+              Esquivar
+            </button>
             <button type="button" className="tda-btn tda-btn--primary tda-btn--big" onClick={() => setTesting('teste')}>
               Fazer um teste
             </button>
-            <button type="button" className="tda-btn tda-btn--danger tda-btn--big" onClick={() => setHorrorScene(true)}>
+            <button type="button" className="tda-btn tda-btn--big" onClick={() => setHorrorScene(true)}>
               Cena de horror
             </button>
             <button type="button" className="tda-btn" onClick={() => setTesting('redencao')} disabled={form.horror <= 0}>
@@ -463,8 +509,8 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                   <span className="tda-counter">{form.inventory.length}</span>
                 </div>
                 <p className="tda-hint">
-                  Armas têm letalidade e proteções têm proteção: baixa 1d, alta 2d, extrema 3d. Entram no teste como bônus
-                  (ferir, bloquear) ou penalidade (não matar, esquivar).
+                  Armas têm <strong>Dano</strong> (1 a 6): é o que tiram do alvo quando você acerta, e não somam dados no teste.
+                  Proteções somam dados ao se defender: baixa 1d, alta 2d, extrema 3d.
                 </p>
                 <ul className="tda-list">
                   {form.inventory.map((it) => (
@@ -490,17 +536,32 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                       />
                       {it.kind !== 'item' && (
                         <Select
-                        listClassName="tda-select-list"
+                          listClassName="tda-select-list"
                           className="tda-row__select" value={String(it.level || 1)}
                           onChange={(v) => update('inventory', it.id, { level: Number(v) })}
-                          options={LEVEL_OPTIONS}
-                          aria-label={it.kind === 'arma' ? 'Letalidade' : 'Proteção'}
+                          options={it.kind === 'arma' ? WEAPON_LEVEL_OPTIONS : PROTECTION_LEVEL_OPTIONS}
+                          aria-label={it.kind === 'arma' ? 'Dano' : 'Proteção'}
                         />
                       )}
                       <button type="button" className="tda-row__remove" onClick={() => remove('inventory', it.id)} aria-label={`Remover ${it.name || 'item'}`}>×</button>
                     </li>
                   ))}
                 </ul>
+                <div className="tda-field">
+                  <Select
+                    listClassName="tda-select-list"
+                    value="" options={WEAPON_PRESET_OPTIONS} aria-label="Adicionar arma pronta"
+                    disabled={form.inventory.length >= INVENTORY_MAX}
+                    onChange={(name) => {
+                      const preset = WEAPON_PRESETS.find((w) => w.name === name)
+                      if (!preset) return
+                      setForm((prev) => ({
+                        ...prev,
+                        inventory: [...prev.inventory, { id: newId(), name: preset.name, qty: 1, kind: 'arma', level: preset.damage }],
+                      }))
+                    }}
+                  />
+                </div>
                 <AddRow
                   placeholder="Novo item (Enter). Ex.: Pistola calibre 38" maxLength={TEXT_LIMITS.item}
                   disabled={form.inventory.length >= INVENTORY_MAX}
@@ -602,6 +663,24 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
           <button type="submit" className="tda-btn">{saveState === 'error' ? 'Tentar de novo' : 'Salvar agora'}</button>
         )}
       </footer>
+
+      <Presence show={combat !== null} exitMs={220}>
+        {() => combat && (
+          <TdaCombatModal
+            campaignId={sheet.campaign_id}
+            who={who}
+            traits={form.traits} conditions={form.conditions} inventory={form.inventory}
+            health={form.health} horror={form.horror} conviction={form.conviction}
+            initialMode={combat}
+            onHealth={(value) => set('health', clampHealth(value))}
+            onConviction={(delta) => setForm((prev) => ({
+              ...prev, conviction: Math.max(0, Math.min(CONVICTION_MAX, prev.conviction + delta)),
+            }))}
+            onAnnounce={(msg) => announceTda(sheet.campaign_id, msg)}
+            onClose={() => setCombat(null)}
+          />
+        )}
+      </Presence>
 
       <Presence show={testing !== null} exitMs={220}>
         {() => testing && (

@@ -459,6 +459,8 @@ export interface TdaSheet {
   conditions:     TdaCondition[]
   trunfos:        TdaTrunfo[]
   inventory:      TdaInventoryItem[]
+  /** Vida: 0 (caído) a 6. */
+  health:         number
   horror:         number
   conviction:     number
   notes:          string | null
@@ -468,6 +470,25 @@ export interface TdaSheet {
   npc_visible?: boolean
   created_at:     string
   updated_at:     string
+}
+
+/** Criatura do bestiário da campanha (Terra Devastada Adaptada, tabela tda_creatures). */
+export interface TdaCreature {
+  id:          string
+  campaign_id: string
+  name:        string
+  kind:        'infectado' | 'humano' | 'animal' | 'outro'
+  /** Dano por golpe (1 a 6). */
+  damage:      number
+  /** Resistência: dano que aguenta (1 a 12). */
+  toughness:   number
+  /** Meta pra acertá-la (1 a 6). */
+  defense:     number
+  /** Meta pra esquivar dela (1 a 6). */
+  ferocity:    number
+  notes:       string | null
+  created_at:  string
+  updated_at:  string
 }
 
 /** Ficha Terra Devastada Adaptada com o perfil do dono — visão do mestre. */

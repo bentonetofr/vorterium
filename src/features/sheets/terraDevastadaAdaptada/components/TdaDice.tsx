@@ -14,7 +14,7 @@ export type Picks = Record<string, number>
 interface PickSource {
   id:     string
   name:   string
-  /** Dados que vale (1 pra característica/condição; letalidade/proteção pros itens). */
+  /** Dados que vale (1 pra característica/condição; nível da proteção pros itens). */
   weight: number
   group:  'traits' | 'conditions' | 'items'
   hint?:  string
@@ -25,10 +25,11 @@ function sources(traits: TdaTrait[], conditions: TdaCondition[], inventory: TdaI
     ...traits.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, weight: 1, group: 'traits' as const })),
     ...conditions.filter((c) => c.name.trim()).map((c) => ({ id: c.id, name: c.name, weight: 1, group: 'conditions' as const })),
     ...inventory
-      .filter((i) => i.name.trim() && i.kind !== 'item' && i.level > 0)
+      // Arma não soma dados (ela decide o dano, no combate); só proteção entra.
+      .filter((i) => i.name.trim() && i.kind === 'protecao' && i.level > 0)
       .map((i) => ({
         id: i.id, name: i.name, weight: i.level, group: 'items' as const,
-        hint: i.kind === 'arma' ? `Letalidade ${i.level}d` : `Proteção ${i.level}d`,
+        hint: `Proteção ${i.level}d`,
       })),
   ]
 }
@@ -70,7 +71,7 @@ interface PoolPickerProps {
 const GROUP_LABELS: Record<PickSource['group'], string> = {
   traits:     'Características fixas',
   conditions: 'Condições',
-  items:      'Armas e proteções',
+  items:      'Proteções',
 }
 
 export function PoolPicker({

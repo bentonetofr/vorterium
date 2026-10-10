@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26',
+    date:    '2026-10-10',
+    title:   'Vida e combate na Terra Devastada Adaptada',
+    items: [
+      'Terra Devastada Adaptada: o personagem agora tem Vida, de 0 a 6, com trilha na ficha e uma faixa de estado (Inteiro, Machucado, Ferido, À beira da morte, Caído). Os cards do mestre também mostram a Vida de cada jogador.',
+      'Armas passam a ter Dano fixo, de 1 a 6 (corpo a corpo 1, pistola e revólver 2, escopeta 3, rifle 4, especiais 5 e 6), e deixam de somar dados no teste. O teste diz se você acerta; a arma diz quanto tira. No Inventário, um seletor de "arma pronta" adiciona cano, pistola, escopeta, rifle, lança-chamas, granada e outras já com o dano certo.',
+      'Novos botões Atacar e Esquivar na ficha. Atacar compara o seu desempenho com a Defesa do alvo e mostra se a arma mata (dano igual ou maior que a Resistência) ou quanto sobra de Resistência. Esquivar compara com a Ferocidade de quem ataca: desviou, leva 1 a menos (mínimo 1) ou leva o dano inteiro, que dá pra aplicar na Vida ali mesmo.',
+      'Última chance: num golpe que derrubaria o personagem, dá pra gastar Convicção (o custo normal, igual ao Horror) e ficar com 1 de Vida. Tudo é anunciado no chat da campanha.',
+      'Novo Bestiário (só o mestre) na Sessão das campanhas de Terra Devastada Adaptada: Corredor, Espreitador, Estalador, Cambaleante e Baiacu, mais humanos e um cão de rastreio, cada um com Dano, Resistência, Defesa e Ferocidade. Dá pra copiar uma criatura pra campanha e ajustar, ou criar as suas.',
+    ],
+  },
+  {
     version: '1.25',
     date:    '2026-10-10',
     title:   'Terra Devastada Adaptada',

@@ -1,5 +1,8 @@
 import type { TdaTrait } from '../../../../shared/types'
-import { HORROR_BANDS, HORROR_BASE, HORROR_MAX, POOL_MAX, type HorrorBand } from '../constants/terraDevastadaAdaptada'
+import {
+  HEALTH_BANDS, HEALTH_MAX, HORROR_BANDS, HORROR_BASE, HORROR_MAX, POOL_MAX,
+  type HealthBand, type HorrorBand,
+} from '../constants/terraDevastadaAdaptada'
 
 // ────────────────────────────────────────────────────────
 // Contas do Terra Devastada.
@@ -89,4 +92,32 @@ export function newId(): string {
 
 export function plural(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`
+}
+
+// ── Vida e combate ──────────────────────────────────────
+
+export function clampHealth(value: number): number {
+  return Math.max(0, Math.min(HEALTH_MAX, value))
+}
+
+export function healthBand(health: number): HealthBand {
+  return HEALTH_BANDS.find((b) => health >= b.min && health <= b.max) ?? HEALTH_BANDS[0]
+}
+
+/**
+ * Resultado de um golpe da arma contra a Resistência do alvo: dano igual ou
+ * maior mata em um acerto; menor, tira essa parte (o mestre acumula).
+ */
+export function hitEffect(damage: number, toughness: number): { kills: boolean; remaining: number } {
+  return { kills: damage >= toughness, remaining: Math.max(0, toughness - damage) }
+}
+
+/**
+ * Esquiva: sucesso desvia (0); parcial reduz 1 (mínimo 1); falha leva o dano
+ * inteiro. Dano 6 (Baiacu) não se reduz: é o golpe que mata.
+ */
+export function damageTaken(outcome: TestOutcome, damage: number): number {
+  if (outcome === 'sucesso') return 0
+  if (outcome === 'parcial') return damage >= HEALTH_MAX ? damage : Math.max(1, damage - 1)
+  return damage
 }

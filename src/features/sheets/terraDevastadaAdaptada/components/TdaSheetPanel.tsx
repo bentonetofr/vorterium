@@ -8,8 +8,8 @@ import {
 } from '../services/tdaSheetService'
 import { TdaSheetForm } from './TdaSheetForm'
 import { NpcSection } from '../../components/NpcSection'
-import { CONVICTION_MAX, HORROR_MAX } from '../constants/terraDevastadaAdaptada'
-import { horrorBand } from '../utils/tdaRules'
+import { CONVICTION_MAX, HEALTH_MAX, HORROR_MAX } from '../constants/terraDevastadaAdaptada'
+import { healthBand, horrorBand } from '../utils/tdaRules'
 import { useTdaFonts } from '../utils/tdaFonts'
 import type { TdaSheet, TdaSheetWithProfile } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
@@ -46,7 +46,8 @@ export function TdaSheetPanel({ campaignId, userRole }: TdaSheetPanelProps) {
             line: s.concept?.trim() || 'Sem conceito',
             bars: (
               <>
-                <CardBar sigla="Horror" tone="vitality" current={s.horror} max={HORROR_MAX} note={horrorBand(s.horror).title} />
+                <CardBar sigla="Vida" tone="vitality" current={s.health ?? HEALTH_MAX} max={HEALTH_MAX} note={healthBand(s.health ?? HEALTH_MAX).title} />
+                <CardBar sigla="Horror" tone="resource" current={s.horror} max={HORROR_MAX} note={horrorBand(s.horror).title} />
                 <CardBar sigla="Convicção" tone="resource" current={s.conviction} max={CONVICTION_MAX} />
               </>
             ),
@@ -195,7 +196,8 @@ function MasterView({ campaignId }: { campaignId: string }) {
               </span>
 
               <div className="sheet-card__bars">
-                <CardBar sigla="Horror" tone="vitality" current={s.horror} max={HORROR_MAX} note={band.title} />
+                <CardBar sigla="Vida" tone="vitality" current={s.health ?? HEALTH_MAX} max={HEALTH_MAX} note={healthBand(s.health ?? HEALTH_MAX).title} />
+                <CardBar sigla="Horror" tone="resource" current={s.horror} max={HORROR_MAX} note={band.title} />
                 <CardBar sigla="Convicção" tone="resource" current={s.conviction} max={CONVICTION_MAX} />
               </div>
 

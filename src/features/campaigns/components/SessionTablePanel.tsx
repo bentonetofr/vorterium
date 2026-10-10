@@ -5,6 +5,7 @@ import { CampaignActivityPanel } from '../../activity/components/CampaignActivit
 import { InitiativeTrackerPanel } from '../../initiative/components/InitiativeTrackerPanel'
 import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPanel'
 import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
+import { TdaBestiaryPanel } from '../../sheets/terraDevastadaAdaptada/components/TdaBestiaryPanel'
 import { VortableMesa } from '../../vortable/components/VortableMesa'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import type { CampaignWithRole } from '../../../shared/types'
@@ -35,7 +36,8 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // renderização.
   const location = useLocation()
   const mesa = useMesaStream()
-  const showBestiary = campaign.role === 'master' && campaign.system === 'altherium'
+  const showBestiary = campaign.role === 'master'
+    && (campaign.system === 'altherium' || campaign.system === 'terra_devastada_adaptada')
   // Abas que essa pessoa tem nessa campanha — pedido de outra (ex.:
   // Bestiário pra jogador) cai na Ficha em vez de abrir um painel vazio.
   const available = (tab: SessionSubTabId | undefined): tab is SessionSubTabId =>
@@ -67,7 +69,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
-    // Bestiário — só o mestre, e só em Altherium (as contas usam as fichas).
+    // Bestiário — só o mestre, em Altherium (as contas usam as fichas) e em Terra Devastada Adaptada.
     ...(showBestiary ? [{ id: 'bestiario' as const, label: 'Bestiário' }] : []),
     // Livro de regras — só nos sistemas que têm um (hoje, Altherium).
     ...(hasRulebook(campaign.system) ? [{ id: 'livro' as const, label: 'Livro' }] : []),
@@ -155,7 +157,9 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
           hidden={activeSubTab !== 'bestiario'}
           className="anim-tab-panel"
         >
-          {activeSubTab === 'bestiario' && <BestiaryPanel campaign={campaign} />}
+          {activeSubTab === 'bestiario' && (campaign.system === 'terra_devastada_adaptada'
+            ? <TdaBestiaryPanel campaignId={campaign.id} />
+            : <BestiaryPanel campaign={campaign} />)}
         </div>
       )}
 

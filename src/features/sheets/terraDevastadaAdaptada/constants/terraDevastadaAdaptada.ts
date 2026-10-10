@@ -1,7 +1,8 @@
 import type { TdaConditionDuration, TdaInventoryItem } from '../../../../shared/types'
 
 // ────────────────────────────────────────────────────────
-// Terra Devastada — números e tabelas do resumo de regras.
+// Terra Devastada Adaptada — números e tabelas (base: resumo de regras da
+// original; Vida, dano das armas e bestiário são da adaptada).
 // ────────────────────────────────────────────────────────
 
 /** Máximo de dados num teste (1 natural + 5). */
@@ -14,6 +15,25 @@ export const TRAITS_MAX = 60
 export const CONDITIONS_MAX = 40
 export const TRUNFOS_MAX = 40
 export const INVENTORY_MAX = 120
+
+/** Vida: de 0 (caído) a 6. Cada golpe de infectado tira de 1 a 6. */
+export const HEALTH_MAX = 6
+
+export interface HealthBand {
+  min:    number
+  max:    number
+  level:  'ok' | 'hurt' | 'critical' | 'down'
+  title:  string
+  effect: string
+}
+
+export const HEALTH_BANDS: HealthBand[] = [
+  { min: 6, max: 6, level: 'ok',       title: 'Inteiro',          effect: 'Sem ferimentos.' },
+  { min: 4, max: 5, level: 'hurt',     title: 'Machucado',        effect: 'Ainda de pé. Sangra e sente, mas luta normalmente.' },
+  { min: 2, max: 3, level: 'critical', title: 'Ferido',           effect: 'O Narrador pode dar uma condição (ferido, mancando...). Um golpe forte derruba.' },
+  { min: 1, max: 1, level: 'critical', title: 'À beira da morte', effect: 'Qualquer golpe derruba. Hora de fugir ou de gastar Convicção.' },
+  { min: 0, max: 0, level: 'down',     title: 'Caído',            effect: 'Fora de combate. Sem ajuda, morre.' },
+]
 
 export const HORROR_MAX = 12
 /** Horror inicial antes das motivações/desmotivações. */
@@ -42,16 +62,47 @@ export const CONDITION_DURATIONS: { id: TdaConditionDuration; label: string; hin
 
 export const ITEM_KINDS: { id: TdaInventoryItem['kind']; label: string; levelLabel: string | null }[] = [
   { id: 'item',     label: 'Item',     levelLabel: null },
-  { id: 'arma',     label: 'Arma',     levelLabel: 'Letalidade' },
+  { id: 'arma',     label: 'Arma',     levelLabel: 'Dano' },
   { id: 'protecao', label: 'Proteção', levelLabel: 'Proteção' },
 ]
 
-/** Nível de letalidade/proteção → dados de bônus (1d baixa, 2d alta, 3d extrema). */
-export const ITEM_LEVELS = [
+/**
+ * Arma: o nível é o DANO fixo por acerto (1 a 6). Não soma dados no teste:
+ * o teste diz se acerta, e a arma diz quanto tira.
+ */
+export const WEAPON_LEVELS = [
+  { value: 1, label: 'Dano 1 (corpo a corpo)' },
+  { value: 2, label: 'Dano 2 (pistola, revólver)' },
+  { value: 3, label: 'Dano 3 (escopeta)' },
+  { value: 4, label: 'Dano 4 (rifle)' },
+  { value: 5, label: 'Dano 5 (especial)' },
+  { value: 6, label: 'Dano 6 (especial)' },
+] as const
+
+/** Proteção: nível → dados de bônus ao se defender (1d baixa, 2d alta, 3d extrema). */
+export const PROTECTION_LEVELS = [
   { value: 1, label: 'Baixa (1d)' },
   { value: 2, label: 'Alta (2d)' },
   { value: 3, label: 'Extrema (3d)' },
 ] as const
+
+/** Armas prontas pra adicionar rápido (nome + dano). */
+export const WEAPON_PRESETS: { name: string; damage: number }[] = [
+  { name: 'Cano de ferro',    damage: 1 },
+  { name: 'Taco',             damage: 1 },
+  { name: 'Machadinha',       damage: 1 },
+  { name: 'Pistola',          damage: 2 },
+  { name: 'Revólver',         damage: 2 },
+  { name: 'Escopeta',         damage: 3 },
+  { name: 'Rifle de caça',    damage: 4 },
+  { name: 'Fuzil',            damage: 4 },
+  { name: 'Coquetel molotov', damage: 5 },
+  { name: 'Lança-chamas',     damage: 5 },
+  { name: 'Granada',          damage: 6 },
+]
+
+/** Sem arma: socos e chutes. */
+export const UNARMED = { name: 'Mãos nuas', damage: 1 } as const
 
 /** Metas de desempenho sugeridas pelo livro (ação contra meta). */
 export const DIFFICULTIES = [

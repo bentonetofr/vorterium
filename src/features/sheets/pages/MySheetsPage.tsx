@@ -99,6 +99,7 @@ async function loadAllSheets(): Promise<MySheetItem[]> {
       filled:        Boolean(s.character_name?.trim()) && s.traits.length > 0,
       stats:         [
         ...(s.concept ? [s.concept] : []),
+        `Vida ${s.health ?? 6}/6`,
         `Horror ${s.horror}/12`,
         `Convicção ${s.conviction}/24`,
       ],
