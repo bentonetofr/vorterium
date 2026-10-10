@@ -221,12 +221,12 @@ export function TdaSuppliesTab({
             </div>
           </div>
           <p className="tda-hint">
-            Tomar um suplemento dá uma nova característica fixa, como "Escuta apurada" ou "Mãos firmes" (a que o Narrador aprovar).
+            Tomar um suplemento dá uma nova qualidade, como "Escuta apurada" ou "Mãos firmes" (a que o Narrador aprovar).
           </p>
           <div className="tda-add-row">
             <input
               type="text" className="input" maxLength={TEXT_LIMITS.item} value={supplementText}
-              placeholder="Nova característica (Enter)" aria-label="Característica do suplemento"
+              placeholder="Nova qualidade (Enter)" aria-label="Qualidade do suplemento"
               disabled={supplies.suplementos < 1 || traitsFull}
               onChange={(e) => setSupplementText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); takeSupplement() } }}

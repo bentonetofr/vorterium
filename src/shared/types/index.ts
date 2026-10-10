@@ -417,11 +417,16 @@ export interface TdSheetWithProfile extends TdSheet {
 
 // ── Terra Devastada Adaptada (inspirada em The Last of Us) ─────────────────────────────────────
 
-/** Característica fixa. `tag` marca as que mexem no Horror inicial. */
+/**
+ * Característica fixa: qualidade (o que você tem de bom) ou defeito (o que te
+ * atrapalha). `tag` marca as que mexem no Horror inicial. Sem `kind` (fichas
+ * antigas), vale como qualidade.
+ */
 export interface TdaTrait {
-  id:   string
-  name: string
-  tag:  'motiva' | 'desmotiva' | null
+  id:    string
+  name:  string
+  tag:   'motiva' | 'desmotiva' | null
+  kind?: 'qualidade' | 'defeito'
 }
 
 export type TdaConditionDuration = 'curta' | 'media' | 'longa' | 'indeterminada'

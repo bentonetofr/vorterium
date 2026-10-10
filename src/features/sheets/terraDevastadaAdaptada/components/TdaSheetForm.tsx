@@ -24,7 +24,6 @@ import {
   WEAPON_LEVELS,
   WEAPON_PRESETS,
   TEXT_LIMITS,
-  TRAITS_INITIAL_MAX,
   TRAITS_MAX,
   TRUNFOS_MAX,
 } from '../constants/terraDevastadaAdaptada'
@@ -100,7 +99,7 @@ function sheetToForm(s: TdaSheet): FormData {
     concept:        s.concept ?? '',
     description:    s.description ?? '',
     background:     s.background ?? '',
-    traits:         s.traits ?? [],
+    traits:         (s.traits ?? []).map((t) => ({ ...t, kind: t.kind ?? 'qualidade' })),
     conditions:     s.conditions ?? [],
     trunfos:        s.trunfos ?? [],
     inventory:      (s.inventory ?? []).map((i) => normalizeWeapon(i, backpack)),
@@ -123,7 +122,7 @@ function formToPayload(f: FormData): TdaSheetUpdate {
     // campo, sempre na mesma ordem: o jsonb devolve as chaves reordenadas,
     // e o eco do próprio save precisa bater com o que foi enviado.
     traits: f.traits.filter((t) => t.name.trim())
-      .map((t) => ({ id: t.id, name: t.name.trim(), tag: t.tag ?? null })),
+      .map((t) => ({ id: t.id, name: t.name.trim(), tag: t.tag ?? null, kind: t.kind ?? 'qualidade' })),
     conditions: f.conditions.filter((c) => c.name.trim())
       .map((c) => ({ id: c.id, name: c.name.trim(), duration: c.duration })),
     trunfos: f.trunfos.filter((t) => t.name.trim() || t.description.trim())
@@ -288,9 +287,9 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
     setForm((prev) => ({ ...prev, [key]: (prev[key] as { id: string }[]).filter((it) => it.id !== id) }))
   }
 
-  function addTrait(name: string) {
+  function addTrait(name: string, kind: 'qualidade' | 'defeito' = 'qualidade') {
     setForm((prev) => prev.traits.length >= TRAITS_MAX ? prev
-      : { ...prev, traits: [...prev.traits, { id: newId(), name, tag: null }] })
+      : { ...prev, traits: [...prev.traits, { id: newId(), name, tag: null, kind }] })
   }
 
   function addCondition(name: string, duration: TdaConditionDuration = 'indeterminada') {
@@ -327,9 +326,9 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
     setForm((prev) => ({
       ...prev,
       supplies: { ...prev.supplies, suplementos: prev.supplies.suplementos - 1 },
-      traits: [...prev.traits, { id: newId(), name, tag: null }],
+      traits: [...prev.traits, { id: newId(), name, tag: null, kind: 'qualidade' }],
     }))
-    announceTda(sheet.campaign_id, `${who} tomou um suplemento e ganhou uma característica: ${name}.`)
+    announceTda(sheet.campaign_id, `${who} tomou um suplemento e ganhou uma qualidade: ${name}.`)
   }
 
   function upgradeOne(id: string) {
@@ -367,13 +366,47 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
     setError(null)
   }
 
+  /** A lista de qualidades ou a de defeitos (mesma linha, só muda o filtro e o rótulo). */
+  function renderTraits(kind: 'qualidade' | 'defeito') {
+    const rows = form.traits.filter((t) => (t.kind ?? 'qualidade') === kind)
+    const noun = kind === 'qualidade' ? 'Qualidade' : 'Defeito'
+    return (
+      <>
+        <ul className="tda-list">
+          {rows.map((t) => (
+            <li key={t.id} className="tda-row">
+              <input
+                type="text" className="input tda-row__name" maxLength={TEXT_LIMITS.item}
+                value={t.name} placeholder={noun}
+                onChange={(e) => update('traits', t.id, { name: e.target.value })}
+                aria-label={noun}
+              />
+              <Select
+                listClassName="tda-select-list"
+                className="tda-row__select" value={t.tag ?? ''}
+                onChange={(v) => update('traits', t.id, { tag: (v || null) as TdaTrait['tag'] })}
+                options={TAG_OPTIONS} aria-label="Efeito no Horror"
+              />
+              <button type="button" className="tda-row__remove" onClick={() => remove('traits', t.id)} aria-label={`Remover ${t.name || noun.toLowerCase()}`}>×</button>
+            </li>
+          ))}
+        </ul>
+        <AddRow
+          placeholder={kind === 'qualidade' ? 'Nova qualidade (Enter)' : 'Novo defeito (Enter)'} maxLength={TEXT_LIMITS.item}
+          disabled={form.traits.length >= TRAITS_MAX} onAdd={(name) => addTrait(name, kind)}
+        />
+      </>
+    )
+  }
+
   const who = form.character_name.trim() || ownerName || 'Um sobrevivente'
   const band = horrorBand(form.horror)
   const hband = healthBand(form.health)
   const cost = convictionCost(form.horror)
   const suggestedHorror = initialHorror(form.traits)
   const tagged = form.traits.some((t) => t.tag)
-  const traitsCount = form.traits.filter((t) => t.name.trim()).length
+  const qualitiesCount = form.traits.filter((t) => t.name.trim() && (t.kind ?? 'qualidade') === 'qualidade').length
+  const flawsCount = form.traits.filter((t) => t.name.trim() && t.kind === 'defeito').length
   const conditionsCount = form.conditions.filter((c) => c.name.trim()).length
 
   return (
@@ -534,54 +567,49 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
         <div id="tda-tabpanel-personagem" role="tabpanel" hidden={activeTab !== 'personagem'}>
           {activeTab === 'personagem' && (
             <div className="tda-tab-panel tda-columns anim-tab-panel">
-              <section className="tda-card">
-                <div className="tda-card__header">
-                  <h4 className="tda-card__title">Características fixas <span className="tda-card__subtitle">você é assim</span></h4>
-                  <span className={`tda-counter${traitsCount > TRAITS_INITIAL_MAX ? ' tda-counter--info' : ''}`}>
-                    {traitsCount}/{TRAITS_INITIAL_MAX}
-                  </span>
-                </div>
-                <p className="tda-hint">
-                  Habilidades, profissões, vícios, manias, sentimentos, defeitos... Cada uma que ajuda num teste vale +1d; cada uma que atrapalha, −1d.
-                  Na criação são até {TRAITS_INITIAL_MAX}; o Narrador pode dar mais durante o jogo.
-                </p>
+              <div className="tda-stack">
+                <section className="tda-card">
+                  <div className="tda-card__header">
+                    <h4 className="tda-card__title">Qualidades <span className="tda-card__subtitle">o que você tem de bom</span></h4>
+                    <span className="tda-counter">{qualitiesCount}</span>
+                  </div>
+                  <p className="tda-hint">
+                    Habilidades, profissões, talentos, laços, crenças... Cada qualidade que ajuda num teste vale +1d.
+                    O Narrador diz quantas escolher.
+                  </p>
+                  {renderTraits('qualidade')}
+                </section>
 
-                <ul className="tda-list">
-                  {form.traits.map((t) => (
-                    <li key={t.id} className="tda-row">
-                      <input
-                        type="text" className="input tda-row__name" maxLength={TEXT_LIMITS.item}
-                        value={t.name} placeholder="Característica"
-                        onChange={(e) => update('traits', t.id, { name: e.target.value })}
-                        aria-label="Característica"
-                      />
-                      <Select
-                        listClassName="tda-select-list"
-                        className="tda-row__select" value={t.tag ?? ''}
-                        onChange={(v) => update('traits', t.id, { tag: (v || null) as TdaTrait['tag'] })}
-                        options={TAG_OPTIONS} aria-label="Efeito no Horror"
-                      />
-                      <button type="button" className="tda-row__remove" onClick={() => remove('traits', t.id)} aria-label={`Remover ${t.name || 'característica'}`}>×</button>
-                    </li>
-                  ))}
-                </ul>
-                <AddRow
-                  placeholder="Nova característica (Enter)" maxLength={TEXT_LIMITS.item}
-                  disabled={form.traits.length >= TRAITS_MAX} onAdd={addTrait}
-                />
+                <section className="tda-card">
+                  <div className="tda-card__header">
+                    <h4 className="tda-card__title">Defeitos <span className="tda-card__subtitle">o que te atrapalha</span></h4>
+                    <span className="tda-counter">{flawsCount}</span>
+                  </div>
+                  <p className="tda-hint">
+                    Vícios, manias, medos, fraquezas, rancores... Cada defeito que atrapalha num teste vale −1d
+                    (e um defeito pode ajudar em certas situações). O Narrador diz quantos escolher.
+                  </p>
+                  {renderTraits('defeito')}
+                </section>
 
-                <div className="tda-initial-horror">
+                <section className="tda-card">
+                  <div className="tda-card__header">
+                    <h4 className="tda-card__title">Horror inicial</h4>
+                  </div>
                   <p className="tda-hint">
                     <strong>Motivação</strong> = algo que inibe o horror (−1 no Horror inicial);
-                    {' '}<strong>Desmotivação</strong> = algo que o estimula (+1). Horror inicial pelas marcações: <strong>{suggestedHorror}</strong>.
+                    {' '}<strong>Desmotivação</strong> = algo que o estimula (+1). Marque no seletor de cada qualidade ou defeito.
+                    Horror inicial pelas marcações: <strong>{suggestedHorror}</strong>.
                   </p>
                   {tagged && suggestedHorror !== form.horror && (
-                    <button type="button" className="tda-btn" onClick={() => set('horror', suggestedHorror)}>
-                      Usar {suggestedHorror} como Horror
-                    </button>
+                    <div className="tda-actions tda-actions--start">
+                      <button type="button" className="tda-btn" onClick={() => set('horror', suggestedHorror)}>
+                        Usar {suggestedHorror} como Horror
+                      </button>
+                    </div>
                   )}
-                </div>
-              </section>
+                </section>
+              </div>
 
               <section className="tda-card">
                 <div className="tda-card__header">
@@ -903,7 +931,7 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
             horror={form.horror}
             onApply={(value) => set('horror', value)}
             onAddCondition={(name) => addCondition(name)}
-            onAddTrait={addTrait}
+            onAddTrait={(name) => addTrait(name, 'defeito')}
             onAnnounce={(msg) => announceTda(sheet.campaign_id, msg)}
             onClose={() => setHorrorScene(false)}
           />

@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.29',
+    date:    '2026-10-10',
+    title:   'Qualidades e defeitos na Terra Devastada Adaptada',
+    items: [
+      'Terra Devastada Adaptada: as características fixas agora são duas listas, Qualidades (o que você tem de bom) e Defeitos (o que te atrapalha). Não há número limite no sistema: o Narrador diz na mesa quantas de cada o jogador escolhe. Fichas antigas passam a mostrar tudo como qualidades.',
+      'Nos testes, as qualidades e os defeitos aparecem em grupos separados. O primeiro toque numa qualidade soma 1d; num defeito, tira 1d (um segundo toque inverte, porque um defeito às vezes ajuda).',
+      'As perturbações que o Horror dá (leve e grave) entram na ficha como defeitos, e o suplemento dá uma qualidade nova.',
+    ],
+  },
+  {
     version: '1.28',
     date:    '2026-10-10',
     title:   'Materiais em pedaços, furtividade e revista na Terra Devastada Adaptada',

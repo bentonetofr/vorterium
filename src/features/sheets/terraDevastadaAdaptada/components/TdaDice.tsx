@@ -16,13 +16,17 @@ interface PickSource {
   name:   string
   /** Dados que vale (1 pra característica/condição; nível da proteção pros itens). */
   weight: number
-  group:  'traits' | 'conditions' | 'items'
+  group:  'qualities' | 'flaws' | 'conditions' | 'items'
   hint?:  string
+  /** Defeito: o primeiro toque é "atrapalha" (−), o segundo "ajuda" (+). */
+  flawFirst?: boolean
 }
 
 function sources(traits: TdaTrait[], conditions: TdaCondition[], inventory: TdaInventoryItem[]): PickSource[] {
   return [
-    ...traits.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name, weight: 1, group: 'traits' as const })),
+    ...traits.filter((t) => t.name.trim()).map((t) => (t.kind === 'defeito'
+      ? { id: t.id, name: t.name, weight: 1, group: 'flaws' as const, flawFirst: true }
+      : { id: t.id, name: t.name, weight: 1, group: 'qualities' as const })),
     ...conditions.filter((c) => c.name.trim()).map((c) => ({ id: c.id, name: c.name, weight: 1, group: 'conditions' as const })),
     ...inventory
       // Arma não soma dados (ela decide o dano, no combate); só proteção entra.
@@ -69,7 +73,8 @@ interface PoolPickerProps {
 }
 
 const GROUP_LABELS: Record<PickSource['group'], string> = {
-  traits:     'Características fixas',
+  qualities:  'Qualidades',
+  flaws:      'Defeitos',
   conditions: 'Condições',
   items:      'Proteções',
 }
@@ -81,19 +86,20 @@ export function PoolPicker({
   const net = picksNet(picks, situation)
   const pool = poolSize(net)
 
-  // Toque: neutro → ajuda → atrapalha → neutro.
+  // Toque: neutro → ajuda → atrapalha → neutro (nos defeitos, atrapalha vem primeiro).
   function cycle(s: PickSource) {
     onPicks((prev) => {
       const current = prev[s.id] ?? 0
+      const first = s.flawFirst ? -s.weight : s.weight
       const next = { ...prev }
-      if (current === 0) next[s.id] = s.weight
-      else if (current > 0) next[s.id] = -s.weight
+      if (current === 0) next[s.id] = first
+      else if (current === first) next[s.id] = -first
       else delete next[s.id]
       return next
     })
   }
 
-  const groups = (['traits', 'conditions', 'items'] as const)
+  const groups = (['qualities', 'flaws', 'conditions', 'items'] as const)
     .map((g) => ({ id: g, items: all.filter((s) => s.group === g) }))
     .filter((g) => g.items.length > 0)
 
@@ -102,7 +108,7 @@ export function PoolPicker({
       {hint && <p className="tda-hint">{hint}</p>}
 
       {groups.length === 0 && (
-        <p className="tda-hint">A ficha ainda não tem características. Só o dado natural vai rolar.</p>
+        <p className="tda-hint">A ficha ainda não tem qualidades nem defeitos. Só o dado natural vai rolar.</p>
       )}
 
       {groups.map((g) => (

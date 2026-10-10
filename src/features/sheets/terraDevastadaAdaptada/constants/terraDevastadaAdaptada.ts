@@ -7,8 +7,7 @@ import type { TdaConditionDuration, TdaInventoryItem } from '../../../../shared/
 
 /** Máximo de dados num teste (1 natural + 5). */
 export const POOL_MAX = 6
-/** Na criação: até 12 características fixas e até 3 condições. */
-export const TRAITS_INITIAL_MAX = 12
+/** Na criação: até 3 condições. Qualidades e defeitos não têm número fixo: o Narrador diz na mesa. */
 export const CONDITIONS_INITIAL_MAX = 3
 /** Listas guardadas na ficha (teto do banco). */
 export const TRAITS_MAX = 60
@@ -157,7 +156,7 @@ export const HORROR_BANDS: HorrorBand[] = [
   { min: 4,  max: 6,  title: 'Horrorizado',  gain: 'condicao',
     effect: 'Ganha uma condição de medo (horrorizado, apavorado...). Ela só some quando o Horror voltar a 3 ou menos.' },
   { min: 7,  max: 9,  title: 'Perturbado',   gain: 'perturbacao-leve',
-    effect: 'Ganha uma perturbação leve como característica fixa: fobia, mania, tique, paranoia, pesadelos...' },
+    effect: 'Ganha uma perturbação leve como defeito: fobia, mania, tique, paranoia, pesadelos...' },
   { min: 10, max: 12, title: 'À beira do abismo', gain: 'perturbacao-grave',
-    effect: 'Ganha uma perturbação grave como característica fixa: esquizofrenia, neurose, amnésia...' },
+    effect: 'Ganha uma perturbação grave como defeito: esquizofrenia, neurose, amnésia...' },
 ]
