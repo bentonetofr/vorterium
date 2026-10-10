@@ -44552,7 +44552,7 @@ var ta = 160, na = 8e3, ra = class {
 			}
 			!e.placed || c.default.Math.Distance.Between(r.x, r.y, o.x, o.y) > ta ? (r.setPosition(o.x, o.y), e.placed = !0) : r.setPosition(r.x + (o.x - r.x) * n, r.y + (o.y - r.y) * n), r.setDepth(r.y), i.setPosition(r.x, r.y - 1).setDepth(r.depth - .5), a.setPosition(r.x, r.y - (e.rat ? 22 : 66 * e.hs)).setDepth(1e8);
 			let l = `${e.texKey}:${o.anim}:${o.dir}`;
-			e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l);
+			e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l), this.hookSteps(e, r);
 		}
 	}
 	async build(e, t, n, r = !1) {
@@ -44570,6 +44570,17 @@ var ta = 160, na = 8e3, ra = class {
 			stroke: "#000",
 			strokeThickness: 3
 		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), e.label?.setText(e.name), e.sprite.setTexture(`${e.texKey}:idle`, 0), e.hs = r ? 1 : t.height ?? 1, e.sprite.setScale(e.hs), e.shadow?.setScale((r ? .38 : .75) * e.hs, (r ? .3 : .6) * e.hs));
+	}
+	hookSteps(e, t) {
+		if (e.stepsFor === t || !this.scene.cfg?.watch) return;
+		e.stepsFor = t;
+		let n = (n, r) => {
+			let i = this.scene, a = n.key.split(":"), o = a[a.length - 2], s = qa[o];
+			if (!s || !i.audio || !t.visible || !s.includes(Number(r.textureFrame) % (o === "walk" ? 9 : 8))) return;
+			let l = i.cameras.main, u = Math.max(l.width, l.height) / (2 * l.zoom) * 1.15, d = Math.max(0, 1 - c.default.Math.Distance.Between(t.x, t.y, l.midPoint.x, l.midPoint.y) / u);
+			d > .04 && i.audio.step(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d));
+		};
+		t.on(c.default.Animations.Events.ANIMATION_START, n), t.on(c.default.Animations.Events.ANIMATION_UPDATE, n);
 	}
 	drop(e) {
 		e.sprite?.destroy(), e.shadow?.destroy(), e.label?.destroy(), e.sprite = e.shadow = e.label = null;
@@ -45458,11 +45469,11 @@ var Ba = class e {
 		};
 		return n.fire = i(this.fires, La), n.torch = i(this.torches, La * .6), n.lake = i(this.water, Ra), n.swamp = i(this.swamp, Ra), n;
 	}
-	step(e, t, n, r) {
+	step(e, t, n, r, g = 1) {
 		let i = va();
 		if (!i.steps || !this.engine.running) return;
 		let a = tr(this.zone).place === "outdoor", o = Va(this.zone, e, t);
-		a && r.snow >= .6 && (o === "grass" || o === "dirt" || o === "sand") && (o = "snow"), this.stepSide = -this.stepSide, this.steps.play(o, i.steps * (n ? .9 : .7), this.stepSide * .08, a && r.rain > .2);
+		a && r.snow >= .6 && (o === "grass" || o === "dirt" || o === "sand") && (o = "snow"), this.stepSide = -this.stepSide, this.steps.play(o, i.steps * (n ? .9 : .7) * g, this.stepSide * .08, a && r.rain > .2);
 	}
 	destroy() {
 		for (let e of this.layers.values()) e.destroy();

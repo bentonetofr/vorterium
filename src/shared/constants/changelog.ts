@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.46',
+    date:    '2026-10-10',
+    title:   'Passos no controle ao vivo do mestre (Vortable)',
+    items: [
+      'Corrigido: na aba de Controle do mestre ninguém fazia barulho de passos. O motor só tocava o passo do próprio boneco, e a câmera do mestre não tem boneco. Agora os passos dos jogadores e dos NPCs que o mestre controla tocam na câmera, no som do chão onde pisam (grama, pedra, madeira, areia, neve...), com o ritmo da caminhada e da corrida.',
+      'O volume acompanha a distância: quem anda perto do centro da câmera faz passos mais altos, quem está longe fica mais baixo, e quem está fora da tela não faz som. Vale o botão "Ouvir" e o volume de passos do painel Sons.',
+      'Por baixo: mais uma remenda no motor (node scripts/patch-vortable-camera.mjs, a mesma da câmera). Depois de sincronizar o motor de novo, rode o script de novo.',
+    ],
+  },
+  {
     version: '1.45',
     date:    '2026-10-10',
     title:   'Vortable: inimigos e NPCs em tempo real, e fim do preso nas fachadas',
