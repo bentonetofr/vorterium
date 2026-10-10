@@ -87,7 +87,7 @@ export const PROTECTION_LEVELS = [
 ] as const
 
 /** Armas prontas pra adicionar rápido (nome + dano). */
-export const WEAPON_PRESETS: { name: string; damage: number }[] = [
+export const WEAPON_PRESETS: { name: string; damage: number; wtype?: 'fogo' | 'consumivel' }[] = [
   { name: 'Cano de ferro',    damage: 1 },
   { name: 'Taco',             damage: 1 },
   { name: 'Machadinha',       damage: 1 },
@@ -96,9 +96,9 @@ export const WEAPON_PRESETS: { name: string; damage: number }[] = [
   { name: 'Escopeta',         damage: 3 },
   { name: 'Rifle de caça',    damage: 4 },
   { name: 'Fuzil',            damage: 4 },
-  { name: 'Coquetel molotov', damage: 5 },
-  { name: 'Lança-chamas',     damage: 5 },
-  { name: 'Granada',          damage: 6 },
+  { name: 'Coquetel molotov', damage: 5, wtype: 'consumivel' },
+  { name: 'Lança-chamas',     damage: 5, wtype: 'fogo' },
+  { name: 'Granada',          damage: 6, wtype: 'consumivel' },
 ]
 
 /** Sem arma: socos e chutes. */

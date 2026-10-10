@@ -14,6 +14,7 @@ import {
   poolSize,
   type TestOutcome,
 } from '../utils/tdaRules'
+import { weaponReady, weaponType } from '../utils/tdaSupplies'
 import { DiceTray, PoolPicker, picksNet, picksSummary, type Picks } from './TdaDice'
 import { playRollSound } from './TdaTestModal'
 
@@ -50,6 +51,8 @@ interface TdaCombatModalProps {
   initialMode?: TdaCombatMode
   onHealth:     (value: number) => void
   onConviction: (delta: number) => void
+  /** Um ataque com a arma gasta uma bala, um uso ou uma unidade. */
+  onUseWeapon:  (weaponId: string) => void
   onAnnounce:   (message: string) => void
   onClose:      () => void
 }
@@ -61,11 +64,14 @@ interface Rolled {
   dice:      number
   preBoost:  number
   isPrivate: boolean
+  /** A arma de quando rolou (o ataque pode ter gasto a última unidade). */
+  weaponName:   string
+  weaponDamage: number
 }
 
 export function TdaCombatModal({
   campaignId, who, traits, conditions, inventory, health, horror, conviction,
-  initialMode = 'atacar', onHealth, onConviction, onAnnounce, onClose,
+  initialMode = 'atacar', onHealth, onConviction, onUseWeapon, onAnnounce, onClose,
 }: TdaCombatModalProps) {
   const [mode, setMode]           = useState<TdaCombatMode>(initialMode)
   const [targetId, setTargetId]   = useState(PRESET_CREATURES[0].id)
@@ -90,11 +96,14 @@ export function TdaCombatModal({
   const weapon = weapons.find((w) => w.id === weaponId)
   const weaponName = weapon?.name.trim() ?? UNARMED.name
   const weaponDamage = clampDamage(weapon ? weapon.level || 1 : UNARMED.damage)
+  const ready = weapon ? weaponReady(weapon) : { ok: true, reason: null }
+  const shownDamage = rolled?.weaponDamage ?? weaponDamage
+  const shownWeapon = rolled?.weaponName ?? weaponName
 
   const meta = mode === 'atacar' ? stats.defense : stats.ferocity
   const performance = rolled ? rolled.evens + rolled.preBoost + postBoost : 0
   const outcome: TestOutcome | null = rolled ? outcomeAgainst(performance, meta) : null
-  const hit = hitEffect(weaponDamage, stats.toughness)
+  const hit = hitEffect(shownDamage, stats.toughness)
   const taken = outcome ? damageTaken(outcome, stats.damage) : 0
   const wouldDrop = taken > 0 && taken >= health
 
@@ -118,6 +127,7 @@ export function TdaCombatModal({
   async function roll() {
     setError(null)
     if (boost * cost > conviction) { setError('Convicção insuficiente.'); return }
+    if (mode === 'atacar' && !ready.ok) { setError(`${ready.reason} Troque de arma.`); return }
     setRolling(true)
     try {
       const result = await rollEvensTest(campaignId, pool.dice, { conviction: boost, isPrivate })
@@ -126,9 +136,12 @@ export function TdaCombatModal({
       )
       if (!evens) throw new Error('Não foi possível ler a rolagem.')
       if (boost > 0) onConviction(-boost * cost)
+      const used = mode === 'atacar' && weapon ? weapon : null
+      if (used) onUseWeapon(used.id)
       setRolled({
         results: evens.results, bonus: evens.bonus, evens: evens.subtotal,
         dice: evens.quantity, preBoost: boost, isPrivate,
+        weaponName, weaponDamage: mode === 'atacar' ? weaponDamage : 0,
       })
       playRollSound()
       if (!isPrivate) onAnnounce(rollMessage(evens.quantity, evens.subtotal + boost, boost))
@@ -151,10 +164,25 @@ export function TdaCombatModal({
     const result = outcomeAgainst(total, meta)
     if (mode === 'atacar') {
       const dmg = result === 'falha' ? 'errou' : `${weaponDamage} de dano`
-      return truncate(`${who} atacou ${targetName} com ${weaponName} (${dice}d${used}): desempenho ${total}${conv} contra defesa ${meta}, ${outcomeWord(result)}; ${dmg}.`, 500)
+      return truncate(`${who} atacou ${targetName} com ${weaponName} (${dice}d${used}): desempenho ${total}${conv} contra defesa ${meta}, ${outcomeWord(result)}; ${dmg}.${weaponNote()}`, 500)
     }
     const dmg = damageTaken(result, stats.damage)
     return truncate(`${who} tentou esquivar de ${targetName} (${dice}d${used}): desempenho ${total}${conv} contra ferocidade ${meta}, ${outcomeWord(result)}; ${dmg > 0 ? `leva ${dmg} de dano` : 'desvia do golpe'}.`, 500)
+  }
+
+  /** O que sobra da arma depois do ataque (munição, usos, unidades). */
+  function weaponNote(): string {
+    if (!weapon) return ''
+    const type = weaponType(weapon)
+    if (type === 'fogo') {
+      const left = Math.max(0, (weapon.ammo ?? 0) - 1)
+      return left === 0 ? ' Acabou a munição.' : ` Restam ${plural(left, 'bala', 'balas')}.`
+    }
+    if (type === 'corpo') {
+      const left = Math.max(0, (weapon.dur ?? 0) - 1)
+      return left === 0 ? ` ${weaponName} quebrou!` : ''
+    }
+    return weapon.qty <= 1 ? ` Acabou: ${weaponName}.` : ` Restam ${weapon.qty - 1}.`
   }
 
   function spendAfter() {
@@ -202,7 +230,7 @@ export function TdaCombatModal({
   ]
   const weaponOptions = [
     { value: UNARMED_ID, label: `${UNARMED.name} (dano ${UNARMED.damage})` },
-    ...weapons.map((w) => ({ value: w.id, label: `${w.name.trim()} (dano ${clampDamage(w.level || 1)})` })),
+    ...weapons.map((w) => ({ value: w.id, label: `${w.name.trim()} (dano ${clampDamage(w.level || 1)}${stockLabel(w)})` })),
   ]
 
   return (
@@ -245,6 +273,11 @@ export function TdaCombatModal({
                       listClassName="tda-select-list"
                       value={weaponId} onChange={setWeaponId} options={weaponOptions} aria-label="Arma"
                     />
+                    {weapon && (
+                      <span className={ready.ok ? 'tda-hint' : 'tda-warn'}>
+                        {ready.ok ? stockText(weapon) : `${ready.reason} Troque de arma.`}
+                      </span>
+                    )}
                     {weapons.length === 0 && (
                       <span className="tda-hint">Sem armas no inventário: vão as mãos nuas. Adicione armas na aba Inventário.</span>
                     )}
@@ -320,7 +353,8 @@ export function TdaCombatModal({
 
               <div className="tda-actions">
                 <button type="button" className="tda-btn" onClick={onClose} disabled={rolling}>Cancelar</button>
-                <button type="button" className="tda-btn tda-btn--primary" onClick={() => void roll()} disabled={rolling}>
+                <button type="button" className="tda-btn tda-btn--primary" onClick={() => void roll()}
+                  disabled={rolling || (mode === 'atacar' && !ready.ok)}>
                   {rolling ? 'Rolando…' : `Rolar ${pool.dice}d`}
                 </button>
               </div>
@@ -348,7 +382,7 @@ export function TdaCombatModal({
                     {outcome !== 'falha' && (
                       <>
                         {outcome === 'parcial' ? 'Acertou, mas se expõe: ' : 'Acertou: '}
-                        {weaponDamage} de dano com {weaponName}. {hit.kills
+                        {shownDamage} de dano com {shownWeapon}. {hit.kills
                           ? `Mata (resistência ${stats.toughness}).`
                           : `Resistência de ${stats.toughness} cai para ${hit.remaining} (anote).`}
                       </>
@@ -428,6 +462,21 @@ function Stepper({ value, min, max, label, onChange }: {
         onClick={() => onChange(value + 1)} disabled={value >= max}>+</button>
     </div>
   )
+}
+
+/** " · 4 balas", " · 3 usos" ou " · x2" pro rótulo da lista de armas. */
+function stockLabel(w: TdaInventoryItem): string {
+  const type = weaponType(w)
+  if (type === 'fogo') return ` · ${plural(w.ammo ?? 0, 'bala', 'balas')}`
+  if (type === 'corpo') return ` · ${plural(w.dur ?? 0, 'uso', 'usos')}`
+  return ` · x${w.qty}`
+}
+
+function stockText(w: TdaInventoryItem): string {
+  const type = weaponType(w)
+  if (type === 'fogo') return `Cada ataque gasta 1 bala. Restam ${plural(w.ammo ?? 0, 'bala', 'balas')}.`
+  if (type === 'corpo') return `Cada ataque gasta 1 uso. Restam ${plural(w.dur ?? 0, 'uso', 'usos')} antes de quebrar.`
+  return `Cada uso gasta 1 unidade. Você tem ${w.qty}.`
 }
 
 function clampDamage(value: number): number {

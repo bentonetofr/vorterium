@@ -7,6 +7,7 @@ import type {
   TdaConditionDuration,
   TdaInventoryItem,
   TdaSheet,
+  TdaSupplies,
   TdaTrait,
   TdaTrunfo,
 } from '../../../../shared/types'
@@ -29,10 +30,29 @@ import {
 } from '../constants/terraDevastadaAdaptada'
 import { clampHealth, convictionCost, healthBand, horrorBand, initialHorror, newId } from '../utils/tdaRules'
 import { useTdaFonts } from '../utils/tdaFonts'
+import {
+  KIT_HEAL,
+  RECIPES,
+  UPGRADE_MAX,
+  WEAPON_TYPES,
+  ammoCap,
+  clampBackpack,
+  craft,
+  durabilityMax,
+  normalizeSupplies,
+  normalizeWeapon,
+  spendWeaponUse,
+  supplyCap,
+  throwableCap,
+  upgradeWeapon,
+  weaponType,
+  type SupplyKey,
+} from '../utils/tdaSupplies'
 import { announceTda, type TdaSheetUpdate } from '../services/tdaSheetService'
 import { TdaTestModal, type TdaTestPurpose } from './TdaTestModal'
 import { TdaHorrorModal } from './TdaHorrorModal'
 import { TdaCombatModal, type TdaCombatMode } from './TdaCombatModal'
+import { TdaSuppliesTab } from './TdaSuppliesTab'
 import './TerraDevastadaAdaptadaSheet.css'
 
 // ────────────────────────────────────────────────────────
@@ -57,6 +77,8 @@ type FormData = {
   conditions:     TdaCondition[]
   trunfos:        TdaTrunfo[]
   inventory:      TdaInventoryItem[]
+  supplies:       TdaSupplies
+  backpack:       number
   health:         number
   horror:         number
   conviction:     number
@@ -64,6 +86,7 @@ type FormData = {
 }
 
 function sheetToForm(s: TdaSheet): FormData {
+  const backpack = clampBackpack(s.backpack ?? 0)
   return {
     character_name: s.character_name ?? '',
     concept:        s.concept ?? '',
@@ -72,7 +95,9 @@ function sheetToForm(s: TdaSheet): FormData {
     traits:         s.traits ?? [],
     conditions:     s.conditions ?? [],
     trunfos:        s.trunfos ?? [],
-    inventory:      s.inventory ?? [],
+    inventory:      (s.inventory ?? []).map((i) => normalizeWeapon(i, backpack)),
+    supplies:       normalizeSupplies(s.supplies),
+    backpack,
     health:         s.health ?? HEALTH_MAX,
     horror:         s.horror,
     conviction:     s.conviction,
@@ -96,7 +121,12 @@ function formToPayload(f: FormData): TdaSheetUpdate {
     trunfos: f.trunfos.filter((t) => t.name.trim() || t.description.trim())
       .map((t) => ({ id: t.id, name: t.name.trim(), description: t.description.trim() })),
     inventory: f.inventory.filter((i) => i.name.trim())
-      .map((i) => ({ id: i.id, name: i.name.trim(), qty: i.qty, kind: i.kind, level: i.kind === 'item' ? 0 : i.level })),
+      .map((i) => ({
+        id: i.id, name: i.name.trim(), qty: i.qty, kind: i.kind, level: i.kind === 'item' ? 0 : i.level,
+        ...(i.kind === 'arma' ? { wtype: weaponType(i), ammo: i.ammo ?? 0, dur: i.dur ?? 0, up: i.up ?? 0 } : {}),
+      })),
+    supplies:       f.supplies,
+    backpack:       f.backpack,
     health:         f.health,
     horror:         f.horror,
     conviction:     f.conviction,
@@ -121,11 +151,12 @@ const AUTOSAVE_DELAY_MS = 800
 
 type SaveState = 'saved' | 'pending' | 'saving' | 'error'
 
-type TabId = 'personagem' | 'inventario' | 'trunfos' | 'historia'
+type TabId = 'personagem' | 'inventario' | 'suprimentos' | 'trunfos' | 'historia'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'personagem', label: 'Características' },
-  { id: 'inventario', label: 'Inventário' },
+  { id: 'inventario',  label: 'Inventário' },
+  { id: 'suprimentos', label: 'Suprimentos' },
   { id: 'trunfos',    label: 'Trunfos' },
   { id: 'historia',   label: 'História' },
 ]
@@ -254,6 +285,60 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
   function addCondition(name: string, duration: TdaConditionDuration = 'indeterminada') {
     setForm((prev) => prev.conditions.length >= CONDITIONS_MAX ? prev
       : { ...prev, conditions: [...prev.conditions, { id: newId(), name, duration }] })
+  }
+
+  function setSupply(key: SupplyKey, delta: number) {
+    setForm((prev) => ({
+      ...prev,
+      supplies: { ...prev.supplies, [key]: Math.max(0, Math.min(Math.max(supplyCap(key, prev.backpack), prev.supplies[key]), prev.supplies[key] + delta)) },
+    }))
+  }
+
+  function craftRecipe(id: string) {
+    const recipe = RECIPES.find((r) => r.id === id)
+    if (!recipe) return
+    const res = craft(recipe, form.supplies, form.inventory, form.backpack)
+    if ('error' in res) { setError(res.error); return }
+    setForm((prev) => ({ ...prev, supplies: res.supplies, inventory: res.inventory }))
+    setError(null)
+    announceTda(sheet.campaign_id, `${who} fabricou ${recipe.name}.`)
+  }
+
+  function useKit() {
+    if (form.supplies.kits < 1 || form.health >= HEALTH_MAX) return
+    const next = clampHealth(form.health + KIT_HEAL)
+    setForm((prev) => ({ ...prev, health: next, supplies: { ...prev.supplies, kits: prev.supplies.kits - 1 } }))
+    announceTda(sheet.campaign_id, `${who} usou um kit médico: Vida ${form.health} → ${next}/${HEALTH_MAX}.`)
+  }
+
+  function takeSupplement(name: string) {
+    if (form.supplies.suplementos < 1 || form.traits.length >= TRAITS_MAX) return
+    setForm((prev) => ({
+      ...prev,
+      supplies: { ...prev.supplies, suplementos: prev.supplies.suplementos - 1 },
+      traits: [...prev.traits, { id: newId(), name, tag: null }],
+    }))
+    announceTda(sheet.campaign_id, `${who} tomou um suplemento e ganhou uma característica: ${name}.`)
+  }
+
+  function upgradeOne(id: string) {
+    const res = upgradeWeapon(form.inventory, id, form.supplies)
+    if ('error' in res) { setError(res.error); return }
+    setForm((prev) => ({ ...prev, supplies: res.supplies, inventory: res.inventory }))
+    setError(null)
+    const item = form.inventory.find((i) => i.id === id)
+    announceTda(sheet.campaign_id, `${who} melhorou ${item?.name.trim() || 'uma arma'} na bancada.`)
+  }
+
+  function changeKind(id: string, kind: TdaInventoryItem['kind']) {
+    setForm((prev) => ({
+      ...prev,
+      inventory: prev.inventory.map((i) => (i.id !== id ? i : normalizeWeapon(
+        { ...i, kind, level: kind === 'item' ? 0 : i.level || 1, wtype: undefined, ammo: undefined, dur: undefined },
+        prev.backpack,
+      ))),
+    }))
+    setError(null)
   }
 
   const who = form.character_name.trim() || ownerName || 'Um sobrevivente'
@@ -511,10 +596,12 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                 <p className="tda-hint">
                   Armas têm <strong>Dano</strong> (1 a 6): é o que tiram do alvo quando você acerta, e não somam dados no teste.
                   Proteções somam dados ao se defender: baixa 1d, alta 2d, extrema 3d.
+                  Armas de fogo gastam balas, corpo a corpo gasta usos e arremessos somem ao usar. O limite do que cabe e os materiais ficam na aba Suprimentos.
                 </p>
                 <ul className="tda-list">
                   {form.inventory.map((it) => (
-                    <li key={it.id} className="tda-row tda-row--item">
+                    <li key={it.id} className="tda-item">
+                      <div className="tda-row tda-row--item">
                       <input
                         type="number" className="input tda-row__qty" min={1} max={9999}
                         value={it.qty} aria-label="Quantidade"
@@ -528,10 +615,7 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                       <Select
                         listClassName="tda-select-list"
                         className="tda-row__select" value={it.kind}
-                        onChange={(v) => {
-                          const kind = v as TdaInventoryItem['kind']
-                          update('inventory', it.id, { kind, level: kind === 'item' ? 0 : it.level || 1 })
-                        }}
+                        onChange={(v) => changeKind(it.id, v as TdaInventoryItem['kind'])}
                         options={KIND_OPTIONS} aria-label="Tipo"
                       />
                       {it.kind !== 'item' && (
@@ -544,6 +628,14 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                         />
                       )}
                       <button type="button" className="tda-row__remove" onClick={() => remove('inventory', it.id)} aria-label={`Remover ${it.name || 'item'}`}>×</button>
+                      </div>
+                      {it.kind === 'arma' && (
+                        <WeaponExtras
+                          item={it} backpack={form.backpack} supplies={form.supplies}
+                          onChange={(patch) => update('inventory', it.id, patch)}
+                          onUpgrade={() => upgradeOne(it.id)}
+                        />
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -557,7 +649,10 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                       if (!preset) return
                       setForm((prev) => ({
                         ...prev,
-                        inventory: [...prev.inventory, { id: newId(), name: preset.name, qty: 1, kind: 'arma', level: preset.damage }],
+                        inventory: [...prev.inventory, normalizeWeapon(
+                          { id: newId(), name: preset.name, qty: 1, kind: 'arma', level: preset.damage, wtype: preset.wtype },
+                          prev.backpack,
+                        )],
                       }))
                     }}
                   />
@@ -571,6 +666,21 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
                 />
               </section>
             </div>
+          )}
+        </div>
+
+        {/* ── Suprimentos ── */}
+        <div id="tda-tabpanel-suprimentos" role="tabpanel" hidden={activeTab !== 'suprimentos'}>
+          {activeTab === 'suprimentos' && (
+            <TdaSuppliesTab
+              supplies={form.supplies} backpack={form.backpack} health={form.health}
+              traitsFull={form.traits.length >= TRAITS_MAX}
+              onSupply={setSupply}
+              onBackpack={(v) => set('backpack', clampBackpack(v))}
+              onCraft={craftRecipe}
+              onUseKit={useKit}
+              onSupplement={takeSupplement}
+            />
           )}
         </div>
 
@@ -676,6 +786,7 @@ export function TdaSheetForm({ sheet, ownerName, onSave, saveError }: TdaSheetFo
             onConviction={(delta) => setForm((prev) => ({
               ...prev, conviction: Math.max(0, Math.min(CONVICTION_MAX, prev.conviction + delta)),
             }))}
+            onUseWeapon={(id) => setForm((prev) => ({ ...prev, inventory: spendWeaponUse(prev.inventory, id) }))}
             onAnnounce={(msg) => announceTda(sheet.campaign_id, msg)}
             onClose={() => setCombat(null)}
           />
@@ -754,6 +865,85 @@ function Track({ max, value, groups, label, onChange }: TrackProps) {
 }
 
 // ── Linha de adicionar ──────────────────────────────────
+
+interface WeaponExtrasProps {
+  item:      TdaInventoryItem
+  backpack:  number
+  supplies:  TdaSupplies
+  onChange:  (patch: Partial<TdaInventoryItem>) => void
+  onUpgrade: () => void
+}
+
+/** Linha de baixo de uma arma: tipo, balas ou usos, e melhorias na bancada. */
+function WeaponExtras({ item, backpack, supplies, onChange, onUpgrade }: WeaponExtrasProps) {
+  const type = weaponType(item)
+  const up = item.up ?? 0
+  const canUpgrade = up < UPGRADE_MAX && supplies.pecas >= 1 && supplies.sucata >= 1
+  const typeOptions = WEAPON_TYPES.map((t) => ({ value: t.id, label: t.label }))
+
+  function changeType(next: string) {
+    const wtype = next as TdaInventoryItem['wtype']
+    const draft = { ...item, wtype }
+    onChange({
+      wtype,
+      ammo: wtype === 'fogo' ? Math.min(item.ammo || 6, ammoCap(draft, backpack)) : 0,
+      dur:  wtype === 'corpo' ? Math.min(item.dur || durabilityMax(draft), durabilityMax(draft)) : 0,
+    })
+  }
+
+  return (
+    <div className="tda-item__extras">
+      <Select
+        listClassName="tda-select-list" className="tda-item__type"
+        value={type} onChange={changeType} options={typeOptions} aria-label="Tipo de arma"
+      />
+
+      {type === 'fogo' && (
+        <span className="tda-item__stock">
+          <span className="tda-item__label">Balas</span>
+          <span className="tda-stepper">
+            <button type="button" className="tda-stepper__btn" aria-label="Menos uma bala"
+              onClick={() => onChange({ ammo: Math.max(0, (item.ammo ?? 0) - 1) })} disabled={(item.ammo ?? 0) <= 0}>−</button>
+            <span className="tda-stepper__value">{item.ammo ?? 0}<small>/{ammoCap(item, backpack)}</small></span>
+            <button type="button" className="tda-stepper__btn" aria-label="Mais uma bala"
+              onClick={() => onChange({ ammo: (item.ammo ?? 0) + 1 })} disabled={(item.ammo ?? 0) >= ammoCap(item, backpack)}>+</button>
+          </span>
+        </span>
+      )}
+
+      {type === 'corpo' && (
+        <span className="tda-item__stock">
+          <span className="tda-item__label">Usos</span>
+          <span className="tda-stepper">
+            <button type="button" className="tda-stepper__btn" aria-label="Menos um uso"
+              onClick={() => onChange({ dur: Math.max(0, (item.dur ?? 0) - 1) })} disabled={(item.dur ?? 0) <= 0}>−</button>
+            <span className="tda-stepper__value">{item.dur ?? 0}<small>/{durabilityMax(item)}</small></span>
+            <button type="button" className="tda-stepper__btn" aria-label="Mais um uso"
+              onClick={() => onChange({ dur: (item.dur ?? 0) + 1 })} disabled={(item.dur ?? 0) >= durabilityMax(item)}>+</button>
+          </span>
+          {(item.dur ?? 0) === 0 && <span className="tda-warn">Quebrada</span>}
+        </span>
+      )}
+
+      {type === 'consumivel' && (
+        <span className="tda-item__stock tda-hint">Cabem até {throwableCap(backpack)}.</span>
+      )}
+
+      <span className="tda-item__stock">
+        <span className="tda-item__label">Melhoria</span>
+        <span className="tda-item__up">{up}/{UPGRADE_MAX}</span>
+        {type !== 'consumivel' && (
+          <button
+            type="button" className="tda-btn" onClick={onUpgrade} disabled={!canUpgrade}
+            title="Gasta 1 Peça e 1 Sucata: +2 balas ou +2 usos. O dano não muda."
+          >
+            Melhorar
+          </button>
+        )}
+      </span>
+    </div>
+  )
+}
 
 interface AddRowProps {
   placeholder: string

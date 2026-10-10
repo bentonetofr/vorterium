@@ -442,9 +442,29 @@ export interface TdaInventoryItem {
   id:    string
   name:  string
   qty:   number
-  /** Arma (letalidade) ou proteção; `level` é o bônus em dados (0 a 3). */
+  /** Arma ou proteção; `level` é o Dano da arma (1 a 6) ou os dados da proteção (1 a 3). */
   kind:  'item' | 'arma' | 'protecao'
   level: number
+  /** Só armas: corpo a corpo (gasta usos), de fogo (gasta balas) ou de arremesso (some ao usar). */
+  wtype?: 'corpo' | 'fogo' | 'consumivel'
+  /** Só armas de fogo: balas que restam. */
+  ammo?:  number
+  /** Só corpo a corpo: usos que restam antes de quebrar. */
+  dur?:   number
+  /** Só armas: melhorias na bancada (0 a 3). */
+  up?:    number
+}
+
+/** Materiais e kits que o personagem carrega (tabela tda_character_sheets.supplies). */
+export interface TdaSupplies {
+  trapos:      number
+  alcool:      number
+  sucata:      number
+  laminas:     number
+  explosivos:  number
+  pecas:       number
+  suplementos: number
+  kits:        number
 }
 
 export interface TdaSheet {
@@ -461,6 +481,10 @@ export interface TdaSheet {
   inventory:      TdaInventoryItem[]
   /** Vida: 0 (caído) a 6. */
   health:         number
+  /** Materiais e kits (jsonb; pode faltar chave). */
+  supplies?:      Partial<TdaSupplies> | null
+  /** Nível da Mochila (0 a 3). */
+  backpack?:      number
   horror:         number
   conviction:     number
   notes:          string | null

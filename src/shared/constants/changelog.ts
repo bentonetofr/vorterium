@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.27',
+    date:    '2026-10-10',
+    title:   'Suprimentos na Terra Devastada Adaptada',
+    items: [
+      'Terra Devastada Adaptada: nova aba Suprimentos na ficha, com Mochila (nível 0 a 3), materiais (Trapos, Álcool, Sucata, Lâminas, Explosivos e Peças), kits médicos e suplementos. Nada sobra: cada material e as balas de cada arma cabem até 6, mais 3 por nível de Mochila.',
+      'Fabricação: kit médico, coquetel molotov, bomba de pregos, bomba de fumaça e faca improvisada, com o custo à vista. O kit e o molotov gastam os mesmos materiais (Trapos + Álcool): curar ou atacar? Usar um kit devolve 3 de Vida.',
+      'Munição e desgaste: arma de fogo gasta 1 bala por ataque, corpo a corpo gasta 1 uso e quebra quando acaba, e arremessos (molotov, granada) somem ao usar. O Atacar já desconta tudo e avisa no chat quanto sobrou; sem bala ou com a arma quebrada, o ataque não rola.',
+      'Bancada: no Inventário, cada arma tem tipo, balas ou usos e até 3 melhorias (1 Peça + 1 Sucata cada), que dão +2 balas ou +2 usos e nunca mexem no dano.',
+      'Suplementos: tomar um dá uma característica nova à escolha, que entra direto nas Características fixas.',
+    ],
+  },
+  {
     version: '1.26',
     date:    '2026-10-10',
     title:   'Vida e combate na Terra Devastada Adaptada',
