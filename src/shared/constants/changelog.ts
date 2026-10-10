@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.52',
+    date:    '2026-10-10',
+    title:   'Zoom do Controle ao vivo no lugar certo (Vortable)',
+    items: [
+      'Corrigido: na câmera do mestre, o zoom da roda do mouse (mais e menos) ia pra um lugar errado em vez de ficar onde o cursor está. O motor calculava o ponto sob o mouse com a câmera ainda desatualizada. Agora o ponto do mapa que está sob o cursor fica parado enquanto você aproxima ou afasta, como num mapa online.',
+      'Acompanhando um jogador, o zoom fica centrado nele, que é o que faz sentido enquanto a câmera o segue. O zoom também ficou proporcional à força da roda: suave no touchpad e igual ao de antes na rodinha do mouse.',
+      'Os botões − e + do painel continuam dando zoom no centro da tela, e "Mapa inteiro" enquadra a zona toda.',
+      'Por baixo: mais uma remenda no motor (node scripts/patch-vortable-camera.mjs depois de sincronizar o motor de novo).',
+    ],
+  },
+  {
     version: '1.51',
     date:    '2026-10-10',
     title:   'Roupas coladas no corpo ao correr (Vortable)',

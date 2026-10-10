@@ -45650,10 +45650,10 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 		i.on("pointermove", (e) => {
 			e.isDown && (this.following = null, r.scrollX -= (e.x - e.prevPosition.x) / r.zoom, r.scrollY -= (e.y - e.prevPosition.y) / r.zoom);
 		}), i.on("wheel", (e, t, n, i) => {
-			let a = r.getWorldPoint(e.x, e.y);
-			r.setZoom(c.default.Math.Clamp(r.zoom * (i < 0 ? 1.15 : 1 / 1.15), .2, 6));
-			let o = r.getWorldPoint(e.x, e.y);
-			r.scrollX += a.x - o.x, r.scrollY += a.y - o.y;
+			let wheelZoom = r.zoom, nz = c.default.Math.Clamp(wheelZoom * Math.exp(-c.default.Math.Clamp(i, -240, 240) * .0016), .2, 6);
+			if (nz === wheelZoom) return;
+			let w = r.width, h = r.height, sx = e.x - r.x - w / 2, sy = e.y - r.y - h / 2, wx = sx / wheelZoom + r.scrollX + w / 2, wy = sy / wheelZoom + r.scrollY + h / 2;
+			r.setZoom(nz), this.following || (r.scrollX = wx - w / 2 - sx / nz, r.scrollY = wy - h / 2 - sy / nz);
 		});
 		let a = this.cfg.hub;
 		a && (this.remotes = new ra(this, a, this.cfg.assetBase, e.id), a.observe());

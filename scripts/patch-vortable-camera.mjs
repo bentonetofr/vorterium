@@ -4,6 +4,7 @@
 //  2. Passos dos outros: na câmera do mestre (modo watch), jogadores e NPCs controlados também fazem som de passos
 //     (o motor só tocava o passo do próprio boneco), mais baixo quanto mais longe do centro da câmera.
 //  6. Roupa que descolava do corpo ao correr: peça sem a animação faz o boneco inteiro usar os quadros de caminhar nela.
+//  7. Zoom da roda na câmera do mestre (âncora no mouse calculada certo).
 //  5. `gate`: licença do mestre pra o jogador atravessar uma saída (ver a remenda 5 no fim).
 //
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
@@ -166,4 +167,26 @@ if (code.includes('miss = r !== "walk"')) {
   code = code.replace(a, b).replace(head, headNew)
   writeFileSync(js, code)
   console.log('motor: roupa ao correr remendada')
+}
+
+// ── Remenda 7: zoom da roda na câmera do mestre. O motor lia o ponto do mapa sob o mouse DEPOIS de mudar o zoom, mas a matriz da câmera só
+//    atualiza no quadro seguinte, então a conta saía errada e o zoom ia pra um lugar que não era o do mouse. Agora a âncora é calculada na mão
+//    (o ponto sob o mouse fica parado). Acompanhando um jogador, o zoom fica centrado nele. O passo acompanha a força da roda (suave no touchpad). ──
+code = readFileSync(js, 'utf8')
+if (code.includes('wheelZoom')) {
+  console.log('motor: zoom da roda já remendado')
+} else {
+  const old = '\t\t}), i.on("wheel", (e, t, n, i) => {\n\t\t\tlet a = r.getWorldPoint(e.x, e.y);\n\t\t\tr.setZoom(c.default.Math.Clamp(r.zoom * (i < 0 ? 1.15 : 1 / 1.15), .2, 6));\n\t\t\tlet o = r.getWorldPoint(e.x, e.y);\n\t\t\tr.scrollX += a.x - o.x, r.scrollY += a.y - o.y;\n\t\t});'
+  const next = [
+    '\t\t}), i.on("wheel", (e, t, n, i) => {',
+    '\t\t\tlet wheelZoom = r.zoom, nz = c.default.Math.Clamp(wheelZoom * Math.exp(-c.default.Math.Clamp(i, -240, 240) * .0016), .2, 6);',
+    '\t\t\tif (nz === wheelZoom) return;',
+    '\t\t\tlet w = r.width, h = r.height, sx = e.x - r.x - w / 2, sy = e.y - r.y - h / 2, wx = sx / wheelZoom + r.scrollX + w / 2, wy = sy / wheelZoom + r.scrollY + h / 2;',
+    '\t\t\tr.setZoom(nz), this.following || (r.scrollX = wx - w / 2 - sx / nz, r.scrollY = wy - h / 2 - sy / nz);',
+    '\t\t});',
+  ].join('\n')
+  if (!code.includes(old)) throw new Error('motor: não achei o zoom da roda (o motor mudou?)')
+  code = code.replace(old, next)
+  writeFileSync(js, code)
+  console.log('motor: zoom da roda remendado')
 }
