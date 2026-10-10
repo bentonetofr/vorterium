@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.35',
+    date:    '2026-10-10',
+    title:   'Roupas e rostos do apocalipse no criador de personagem',
+    items: [
+      'Criador de personagem do Vortable: nova peça "Máscara de gás" (aba Acessórios, espaço Máscara), desenhada em cada direção que o boneco olha, com lentes, filtro e tiras.',
+      'Nova aba "Infecção": fungo de Estalador (cabeça coberta por placas de cordyceps), fungo parcial (na cabeça e no ombro) e infectado recente (olheiras fundas e veias escuras).',
+      'Roupas: camisa xadrez de manga comprida (vermelha, verde, azul e marrom), camiseta camuflada (floresta, deserto e urbana), camiseta surrada e suja (cinza, bege e branca), calça camuflada (floresta, deserto e urbana), calça surrada e suja (jeans, cargo e preta) e colete tático (oliva, preto e caqui).',
+      'Marcas: nova peça "Sujeira e lama" (leve, pesada e lama), que suja o corpo mais perto dos pés.',
+      'As peças novas funcionam em todos os corpos adultos e acompanham o balanço da caminhada, parado e correndo.',
+    ],
+  },
+  {
     version: '1.34',
     date:    '2026-10-10',
     title:   'Armas no boneco do Vortable',
