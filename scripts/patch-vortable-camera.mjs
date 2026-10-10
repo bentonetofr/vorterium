@@ -67,3 +67,23 @@ if (code.includes('hookSteps(')) {
   writeFileSync(js, code)
   console.log('motor: passos remendados')
 }
+
+// ── Remenda 3: `watch.npcs()` também devolve a posição (x, y) de cada NPC, pra clicar no NPC no mapa ──
+code = readFileSync(js, 'utf8')
+if (code.includes('role: e.role,\n\t\t\tx: e.x')) {
+  console.log('motor: posição dos NPCs já remendada')
+} else {
+  const old = '\twatchNpcs() {\n\t\treturn (this.cfg.zone.npcs ?? []).map((e) => ({\n\t\t\tid: e.id,\n\t\t\tname: e.name,\n\t\t\trole: e.role\n\t\t}));'
+  if (!code.includes(old)) throw new Error('motor: não achei watchNpcs (o motor mudou?)')
+  code = code.replace(old, old.replace('role: e.role\n', 'role: e.role,\n\t\t\tx: e.x,\n\t\t\ty: e.y\n'))
+  writeFileSync(js, code)
+  console.log('motor: posição dos NPCs remendada')
+}
+types = readFileSync(dts, 'utf8')
+if (!types.includes('role: string;\n        x?: number;')) {
+  const a = '    npcs(): {\n        id: string;\n        name: string;\n        role: string;\n    }[];'
+  if (!types.includes(a)) throw new Error('tipos: não achei npcs()')
+  types = types.replace(a, '    npcs(): {\n        id: string;\n        name: string;\n        role: string;\n        x?: number;\n        y?: number;\n    }[];')
+  writeFileSync(dts, types)
+  console.log('tipos: posição dos NPCs remendada')
+}

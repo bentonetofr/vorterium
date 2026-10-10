@@ -281,3 +281,26 @@
 .live__worldwarn b { color: var(--text-primary); }
 .live__worldwarn .btn { flex: 0 0 auto; }
 @media (max-width: 560px) { .live__worldwarn { flex-direction: column; align-items: stretch; } }
+
+/* NPC clicado no mapa: menu com Controlar e Tirar do mapa */
+.live__npcmenu {
+  position: absolute;
+  z-index: 22;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--bg-surface) 95%, transparent);
+  border: 1px solid var(--border-base);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  animation: m-pop-in 160ms var(--ease-out, ease-out) both;
+}
+.live__npcmenu strong { color: var(--text-primary); font-size: var(--text-sm); }
+.live__npcmenu small { color: var(--text-muted); font-size: var(--text-xs); margin-top: -4px; }
+.live__npcmenu .btn { width: 100%; justify-content: center; }
+.live__npcmenu-del { color: var(--danger-bright, #ff7a6b); border-color: color-mix(in srgb, var(--danger, #c0392b) 60%, transparent); }
+.live__npcrow { display: flex; gap: 4px; align-items: stretch; }
+.live__npcrow .live__player { flex: 1 1 auto; min-width: 0; }

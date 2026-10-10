@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.47',
+    date:    '2026-10-10',
+    title:   'Tirar NPCs do mapa (Vortable)',
+    items: [
+      'Controle ao vivo do Vortable: clique num NPC no mapa (qualquer um, inclusive os gerados e os inimigos) e abre um menu com o nome dele, "Controlar" (ou "Soltar") e "Tirar do mapa". Arrastar a câmera não conta como clique, e Esc fecha o menu.',
+      'No painel "NPCs desta zona", cada NPC ganhou um botão ✕ para tirar do mapa (com confirmação).',
+      'Tirar some na hora para você e para os jogadores da zona, sem recarregar nada, e a zona é gravada sem ele (quem entrar depois também não vê). Se o NPC estiver sendo controlado por você, ele é solto antes.',
+      'Por baixo: mais uma remenda no motor, para a lista de NPCs devolver também a posição de cada um (node scripts/patch-vortable-camera.mjs depois de sincronizar o motor de novo).',
+    ],
+  },
+  {
     version: '1.46',
     date:    '2026-10-10',
     title:   'Passos no controle ao vivo do mestre (Vortable)',

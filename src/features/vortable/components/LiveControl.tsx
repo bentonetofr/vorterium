@@ -10,6 +10,8 @@ import { SoundPanel } from './SoundPanel'
 import { EnemiesPane } from '../enemies/EnemiesPane'
 import { PeoplePane } from '../people/PeoplePane'
 import { setLocalZone } from '../enemies/localZone'
+import { removeEnemies } from '../enemies/enemies'
+import { mapPoint } from '../enemies/useMapDrop'
 import './LiveControl.css'
 import { Loader } from '../../../shared/components/Loader'
 
@@ -57,6 +59,10 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const [open, setOpen] = useState<Pane | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<HTMLDivElement>(null)
+  // menu do NPC clicado no mapa (posição dentro da área do mapa)
+  const [npcMenu, setNpcMenu] = useState<{ id: string; name: string; role: string; left: number; top: number } | null>(null)
+  const [removing, setRemoving] = useState(false)
+  const npcsRef = useRef<Npc[]>([])
 
   // clicar fora (na cena, por exemplo) ou Esc fecha o painel
   useEffect(() => {
@@ -92,6 +98,66 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     }, 500)
     return () => window.clearInterval(timer)
   }, [])
+
+  npcsRef.current = npcs
+
+  // clicar num NPC no mapa abre um menu (Controlar, Tirar do mapa); arrastar a câmera não conta como clique
+  useEffect(() => {
+    const el = viewRef.current
+    if (!el) return
+    let down: { x: number; y: number } | null = null
+    const onDown = (e: PointerEvent) => { down = { x: e.clientX, y: e.clientY } }
+    const onUp = (e: PointerEvent) => {
+      const d = down
+      down = null
+      if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 5 || e.button !== 0) return
+      const pt = mapPoint(watch.current, e.pageX, e.pageY)
+      if (!pt) { setNpcMenu(null); return }
+      // o NPC tem os pés em (x, y) e uns 60 px de altura
+      let best: { n: Npc; dist: number } | null = null
+      for (const n of npcsRef.current) {
+        if (n.x == null || n.y == null) continue
+        const dx = pt.x - n.x, dy = pt.y - (n.y - 28)
+        if (Math.abs(dx) > 18 || dy < -36 || dy > 34) continue
+        const dist = Math.hypot(dx, dy)
+        if (!best || dist < best.dist) best = { n, dist }
+      }
+      if (!best) { setNpcMenu(null); return }
+      const rect = el.getBoundingClientRect()
+      setNpcMenu({
+        id: best.n.id, name: best.n.name, role: best.n.role,
+        left: Math.max(8, Math.min(rect.width - 190, e.clientX - rect.left + 10)),
+        top: Math.max(8, Math.min(rect.height - 130, e.clientY - rect.top + 10)),
+      })
+    }
+    el.addEventListener('pointerdown', onDown)
+    el.addEventListener('pointerup', onUp)
+    return () => { el.removeEventListener('pointerdown', onDown); el.removeEventListener('pointerup', onUp) }
+  }, [active?.id, ready])
+
+  // o menu do NPC fecha com Esc ou quando a zona muda
+  useEffect(() => {
+    if (!npcMenu) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setNpcMenu(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [npcMenu])
+  useEffect(() => { setNpcMenu(null) }, [zoneId])
+
+  /** Tira um NPC da zona (some na hora pra todos e a zona é gravada sem ele). */
+  async function removeNpc(id: string) {
+    if (!zoneId || !active) return
+    setRemoving(true)
+    try {
+      if (watch.current?.controllingNpc() === id) await watch.current.releaseNpc()
+      await removeEnemies({ campaignId: campaign.id, worldId: active.id, worldName: active.name, zoneId, net: vnet.net, ids: [id] })
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Não deu pra tirar o NPC.')
+    } finally {
+      setRemoving(false)
+      setNpcMenu(null)
+    }
+  }
 
   const key = scope === 'all' ? '*' : zoneId ?? '*'
   // sem ajuste do mestre, vale o que o mundo tem (hora fixa ou ciclo); "automática" = o tempo passa
@@ -183,6 +249,14 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
         </div>
       )}
       <div className="live__view" ref={viewRef}>
+        {npcMenu && (
+          <div className="live__npcmenu" style={{ left: npcMenu.left, top: npcMenu.top }} role="menu" aria-label={`NPC ${npcMenu.name}`}>
+            <strong>{npcMenu.name}</strong>
+            {npcMenu.role && <small>{npcMenu.role}</small>}
+            <button type="button" role="menuitem" className="btn btn-ghost" onClick={() => { void control(npcMenu.id); setNpcMenu(null) }}>{controlling === npcMenu.id ? 'Soltar' : 'Controlar'}</button>
+            <button type="button" role="menuitem" className="btn btn-ghost live__npcmenu-del" disabled={removing} onClick={() => void removeNpc(npcMenu.id)}>{removing ? 'Tirando…' : 'Tirar do mapa'}</button>
+          </div>
+        )}
         <EngineStage
           key={active.id}
           deps={[campaign.id, userId, vnet.net, active.id]}
@@ -296,11 +370,15 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
                 {npcs.length === 0 && <p className="live__empty">Nenhum NPC aqui.</p>}
                 <ul className="live__players">
                   {npcs.map((n) => (
-                    <li key={n.id}>
+                    <li key={n.id} className="live__npcrow">
                       <button type="button" className={`live__player${controlling === n.id ? ' live__player--on' : ''}`} onClick={() => void control(n.id)}>
                         <span>{n.name}</span>
                         <small>{controlling === n.id ? 'controlando' : n.role || 'controlar'}</small>
                       </button>
+                      <button
+                        type="button" className="live__iconbtn" disabled={removing} title={`Tirar ${n.name} do mapa`} aria-label={`Tirar ${n.name} do mapa`}
+                        onClick={() => { if (confirm(`Tirar "${n.name}" do mapa?`)) void removeNpc(n.id) }}
+                      >✕</button>
                     </li>
                   ))}
                 </ul>

@@ -103,6 +103,8 @@ export interface WatchControls {
         id: string;
         name: string;
         role: string;
+        x?: number;
+        y?: number;
     }[];
     /** O NPC que o mestre controla agora (null = nenhum). */
     controllingNpc(): string | null;

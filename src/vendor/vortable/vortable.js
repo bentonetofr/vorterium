@@ -45891,7 +45891,9 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 		return (this.cfg.zone.npcs ?? []).map((e) => ({
 			id: e.id,
 			name: e.name,
-			role: e.role
+			role: e.role,
+			x: e.x,
+			y: e.y
 		}));
 	}
 	controllingNpc() {
