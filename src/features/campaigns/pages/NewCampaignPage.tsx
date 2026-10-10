@@ -1,9 +1,11 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createCampaign } from '../services/campaignService'
-import { SYSTEMS_CATALOG, STATUS_LABELS, isSupportedSystem } from '../../../shared/constants/systems'
+import { SYSTEMS_CATALOG, STATUS_LABELS, getSystemVariants, isSupportedSystem } from '../../../shared/constants/systems'
 import type { CampaignSystem } from '../../../shared/types'
 import { DndComingSoon } from '../../sheets/dnd/DndComingSoon'
+import { Presence } from '../../../shared/components/Presence'
+import { SystemVariantModal } from '../components/SystemVariantModal'
 import { useFeature } from '../../control/siteFeatures'
 import { VAMPIRO_FEATURE } from '../../sheets/vampiro/constants/vampiro'
 import './CampaignPages.css'
@@ -14,7 +16,9 @@ const DESCRIPTION_MAX = 1000
 export function NewCampaignPage() {
   // Vampiro nasce guardado: só aparece pra quem pode ver (o dono, testando).
   const vampiro = useFeature(VAMPIRO_FEATURE)
-  const systems = SYSTEMS_CATALOG.filter((s) => s.id !== 'vampiro' || vampiro.visible)
+  // Versões alternativas (ex.: Terra Devastada Adaptada) não têm cartão: o do
+  // sistema de origem abre a janelinha de escolha.
+  const systems = SYSTEMS_CATALOG.filter((s) => !s.variantOf && (s.id !== 'vampiro' || vampiro.visible))
   const navigate = useNavigate()
 
   const [name,        setName]        = useState('')
@@ -23,6 +27,7 @@ export function NewCampaignPage() {
   const [error,       setError]       = useState<string | null>(null)
   const [submitting,  setSubmitting]  = useState(false)
   const [showDndNotice, setShowDndNotice] = useState(false)
+  const [variantFor,  setVariantFor]  = useState<CampaignSystem | null>(null)
 
   const nameOver = name.length > NAME_MAX
   const descOver = description.length > DESCRIPTION_MAX
@@ -120,7 +125,8 @@ export function NewCampaignPage() {
               <span className="label">Sistema da campanha</span>
               <div className="system-selector" role="radiogroup" aria-label="Sistema da campanha">
                 {systems.map((sys) => {
-                  const isSelected = system === sys.id
+                  const variants = getSystemVariants(sys.id)
+                  const isSelected = system === sys.id || variants.some((v) => v.id === system)
                   const statusLabel = STATUS_LABELS[sys.status]
                   return (
                     <button
@@ -133,6 +139,14 @@ export function NewCampaignPage() {
                         if (sys.id === 'dnd5e') {
                           setSystem(sys.id)
                           setShowDndNotice(true)
+                          setError(null)
+                          return
+                        }
+                        if (variants.length > 0) {
+                          // Mais de uma versão: a janelinha decide qual id vai pra campanha
+                          // (fechar sem escolher não muda nada).
+                          setVariantFor(sys.id)
+                          setShowDndNotice(false)
                           setError(null)
                           return
                         }
@@ -152,6 +166,11 @@ export function NewCampaignPage() {
                           {statusLabel && (
                             <span className={`system-status-badge system-status-badge--${sys.status}`}>
                               {statusLabel}
+                            </span>
+                          )}
+                          {isSelected && variants.length > 0 && (
+                            <span className="system-status-badge system-status-badge--preview">
+                              {system === sys.id ? 'Original' : 'Adaptada'}
                             </span>
                           )}
                           {sys.id === 'vampiro' && vampiro.guarded && (
@@ -209,6 +228,17 @@ export function NewCampaignPage() {
           </form>
         </div>
       </div>
+
+      <Presence show={variantFor !== null} exitMs={220}>
+        {() => variantFor && (
+          <SystemVariantModal
+            system={variantFor}
+            current={system}
+            onPick={(picked) => { setSystem(picked); setVariantFor(null); setError(null) }}
+            onClose={() => setVariantFor(null)}
+          />
+        )}
+      </Presence>
     </div>
   )
 }

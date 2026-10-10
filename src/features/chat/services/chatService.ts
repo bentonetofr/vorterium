@@ -252,15 +252,16 @@ export async function getCharacterFaces(campaignId: string): Promise<Map<string,
   type Row = { user_id: string; character_name: string | null; portrait_url?: string | null }
   // NPCs são do mestre: o retrato e o nome dele vêm da ficha de jogador.
   const pc = await pcOnly()
-  const [alth, vtm, td, generic] = await Promise.all([
+  const [alth, vtm, td, tda, generic] = await Promise.all([
     supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('vtm_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
+    supabase.from('tda_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
     supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
   ])
 
   const faces = new Map<string, CharacterFace>()
-  for (const res of [alth, vtm, td, generic]) {
+  for (const res of [alth, vtm, td, tda, generic]) {
     for (const row of (res.data ?? []) as Row[]) {
       const current = faces.get(row.user_id)
       const name = row.character_name?.trim() || null

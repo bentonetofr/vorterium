@@ -415,6 +415,66 @@ export interface TdSheetWithProfile extends TdSheet {
   profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
+// ── Terra Devastada Adaptada (inspirada em The Last of Us) ─────────────────────────────────────
+
+/** Característica fixa. `tag` marca as que mexem no Horror inicial. */
+export interface TdaTrait {
+  id:   string
+  name: string
+  tag:  'motiva' | 'desmotiva' | null
+}
+
+export type TdaConditionDuration = 'curta' | 'media' | 'longa' | 'indeterminada'
+
+export interface TdaCondition {
+  id:       string
+  name:     string
+  duration: TdaConditionDuration
+}
+
+export interface TdaTrunfo {
+  id:          string
+  name:        string
+  description: string
+}
+
+export interface TdaInventoryItem {
+  id:    string
+  name:  string
+  qty:   number
+  /** Arma (letalidade) ou proteção; `level` é o bônus em dados (0 a 3). */
+  kind:  'item' | 'arma' | 'protecao'
+  level: number
+}
+
+export interface TdaSheet {
+  id:             string
+  campaign_id:    string
+  user_id:        string
+  character_name: string | null
+  concept:        string | null
+  description:    string | null
+  background:     string | null
+  traits:         TdaTrait[]
+  conditions:     TdaCondition[]
+  trunfos:        TdaTrunfo[]
+  inventory:      TdaInventoryItem[]
+  horror:         number
+  conviction:     number
+  notes:          string | null
+  /** Ficha de NPC do mestre. */
+  is_npc?: boolean
+  /** O mestre mostrou o NPC pros jogadores (eles só leem). */
+  npc_visible?: boolean
+  created_at:     string
+  updated_at:     string
+}
+
+/** Ficha Terra Devastada Adaptada com o perfil do dono — visão do mestre. */
+export interface TdaSheetWithProfile extends TdaSheet {
+  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
+}
+
 /** Especialização de uma perícia (Vampiro). */
 export interface VtmSpecialty {
   id:    string

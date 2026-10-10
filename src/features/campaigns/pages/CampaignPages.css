@@ -586,3 +586,57 @@
   .campaign-card-row__enter { flex: 1 1 100%; justify-content: center; min-height: 40px; }
   .page__back { min-height: 36px; }
 }
+
+/* ── Janelinha de versões do sistema (Terra Devastada: original ou adaptada) ── */
+.variant-modal {
+  width: min(420px, 100%);
+  padding: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.2s ease-out;
+}
+.variant-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.variant-modal__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--accent-bright);
+}
+.variant-modal__hint {
+  margin: var(--space-1) 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.variant-modal__options { display: flex; flex-direction: column; gap: var(--space-2); }
+.variant-modal__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  cursor: var(--cursor-hand);
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.variant-modal__option:hover { border-color: var(--border-bright); background: var(--bg-surface); }
+.variant-modal__option:active { transform: scale(0.985); }
+.variant-modal__option--current { border-color: rgba(212, 175, 55, 0.6); background: rgba(212, 175, 55, 0.05); }
+.variant-modal__name {
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+.variant-modal__desc { font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }

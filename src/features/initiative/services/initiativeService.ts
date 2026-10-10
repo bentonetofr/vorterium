@@ -1,7 +1,7 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { rollDice, rollEvensTest } from '../../dice/services/diceService'
 import type { InitiativeParticipant, InitiativeState } from '../../../shared/types'
-import type { CampaignSystem } from '../../../shared/constants/systems'
+import { isTerraDevastadaFamily, type CampaignSystem } from '../../../shared/constants/systems'
 
 // ────────────────────────────────────────────────────────
 // Leitura
@@ -146,7 +146,7 @@ export async function removeInitiativeParticipant(participantId: string): Promis
  * depois de rolar e ajustar à mão.
  */
 export async function rollInitiative(campaignId: string, participantId: string, system: CampaignSystem): Promise<void> {
-  const roll = system === 'terra_devastada'
+  const roll = isTerraDevastadaFamily(system)
     ? await rollEvensTest(campaignId, 1)
     : await rollDice(campaignId, system === 'altherium' ? '1d10' : '1d20')
   await setInitiativeValue(participantId, roll.result)

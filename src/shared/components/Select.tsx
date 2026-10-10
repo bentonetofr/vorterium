@@ -30,6 +30,8 @@ interface SelectProps {
   defaultValue?: string
   onChange:      (value: string) => void
   className?:    string
+  /** Classe extra da lista aberta (ela vai por portal pro <body>, fora do escopo da ficha). */
+  listClassName?: string
   /** Sem a classe .input — pra quem já estiliza o campo sozinho (ex.: .gact-filter). */
   plain?:        boolean
   disabled?:     boolean
@@ -43,7 +45,7 @@ const GAP = 6
 interface Placement { left: number; width: number; top?: number; bottom?: number; maxHeight: number }
 
 export function Select({
-  options, value, defaultValue = '', onChange, className, plain = false, disabled = false, id, 'aria-label': ariaLabel,
+  options, value, defaultValue = '', onChange, className, listClassName, plain = false, disabled = false, id, 'aria-label': ariaLabel,
 }: SelectProps) {
   const [ownValue, setOwnValue] = useState(defaultValue)
   const current = value ?? ownValue
@@ -195,7 +197,7 @@ export function Select({
               ref={listRef}
               id={listId}
               role="listbox"
-              className="select-list"
+              className={`select-list${listClassName ? ` ${listClassName}` : ''}`}
               data-state={state}
               style={listStyle}
               aria-label={ariaLabel}

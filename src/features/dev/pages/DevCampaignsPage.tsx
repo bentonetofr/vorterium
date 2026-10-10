@@ -192,6 +192,7 @@ function Rolls({ detail }: { detail: DevCampaignDetail }) {
 const SHEET_LABEL = {
   altherium_character_sheets: 'Altherium',
   td_character_sheets: 'Terra Devastada',
+  tda_character_sheets: 'Terra Devastada Adaptada',
   vtm_character_sheets: 'Vampiro',
   character_sheets: 'Genérica',
 } as const

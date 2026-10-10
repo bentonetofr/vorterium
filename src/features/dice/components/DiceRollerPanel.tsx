@@ -10,6 +10,7 @@ import {
 } from '../services/diceService'
 import { getCampaignMembers } from '../../members/services/memberService'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
+import { isTerraDevastadaFamily } from '../../../shared/constants/systems'
 import type { DiceRoll, DiceRollWithProfile } from '../../../shared/types'
 import './DiceRollerPanel.css'
 import { Loader } from '../../../shared/components/Loader'
@@ -60,7 +61,7 @@ const EVENS_POOLS = Array.from({ length: EVENS_MAX_DICE }, (_, i) => i + 1)
 export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRollerPanelProps) {
   // Terra Devastada rola testes de pares — atalho de 1d a 6d no topo.
   const { campaign } = useCurrentCampaign()
-  const isTerraDevastada = campaign?.id === campaignId && campaign.system === 'terra_devastada'
+  const isTerraDevastada = campaign?.id === campaignId && isTerraDevastadaFamily(campaign.system)
 
   // ── Rolagem ──
   const [rolling, setRolling]     = useState(false)

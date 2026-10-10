@@ -5,7 +5,7 @@
 // Usuários NÃO criam sistemas personalizados.
 // ────────────────────────────────────────────────────────
 
-export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada' | 'vampiro'
+export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada' | 'terra_devastada_adaptada' | 'vampiro'
 
 export type SystemStatus = 'available' | 'preview' | 'coming-soon'
 
@@ -16,6 +16,12 @@ export interface SystemEntry {
   status:      SystemStatus
   /** Ícone decorativo (emoji ou símbolo) */
   icon:        string
+  /**
+   * Versão alternativa de outro sistema: não ganha um cartão próprio na
+   * criação de campanha — o cartão do sistema de origem abre a escolha entre
+   * a versão original e esta.
+   */
+  variantOf?:  CampaignSystem
 }
 
 export const SYSTEMS_CATALOG: SystemEntry[] = [
@@ -48,6 +54,14 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     icon:        '☣',
   },
   {
+    id:          'terra_devastada_adaptada',
+    label:       'Terra Devastada Adaptada',
+    description: 'Versão adaptada do Terra Devastada, inspirada em The Last of Us: mesma base de pares em d6, Horror e Convicção, com ficha e visual próprios.',
+    status:      'available',
+    icon:        '☣',
+    variantOf:   'terra_devastada',
+  },
+  {
     // Guardado no Painel de controle (recurso 'vampiro'): só aparece na
     // criação de campanha pra quem pode ver (NewCampaignPage).
     id:          'vampiro',
@@ -78,6 +92,16 @@ export function getSystemDescription(system: string): string {
 
 export function getSystemStatus(system: string): SystemStatus {
   return _byId[system as CampaignSystem]?.status ?? 'available'
+}
+
+/** Terra Devastada, na versão original ou na adaptada (mesmas regras de dados). */
+export function isTerraDevastadaFamily(system: string | null | undefined): boolean {
+  return system === 'terra_devastada' || system === 'terra_devastada_adaptada'
+}
+
+/** Versões alternativas de um sistema (vazio se ele não tem). */
+export function getSystemVariants(system: CampaignSystem): SystemEntry[] {
+  return SYSTEMS_CATALOG.filter((s) => s.variantOf === system)
 }
 
 export function isSupportedSystem(system: string): system is CampaignSystem {

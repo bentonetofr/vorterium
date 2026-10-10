@@ -11,7 +11,7 @@ import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 // aparece — o site continua funcionando igual.
 // ────────────────────────────────────────────────────────
 
-export type SheetTable = 'character_sheets' | 'altherium_character_sheets' | 'td_character_sheets' | 'vtm_character_sheets'
+export type SheetTable = 'character_sheets' | 'altherium_character_sheets' | 'td_character_sheets' | 'tda_character_sheets' | 'vtm_character_sheets'
 
 /** O mínimo que toda ficha tem (pra seção de NPCs funcionar com qualquer sistema). */
 export interface NpcSheetBase {

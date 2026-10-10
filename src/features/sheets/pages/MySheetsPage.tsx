@@ -4,6 +4,7 @@ import { getMySheets, isSheetFilled } from '../services/sheetService'
 import { getMyAltheriumSheetsEverywhere } from '../altherium/services/altheriumSheetService'
 import { raizLabel } from '../altherium/constants/altherium'
 import { getMyTdSheetsEverywhere } from '../terraDevastada/services/tdSheetService'
+import { getMyTdaSheetsEverywhere } from '../terraDevastadaAdaptada/services/tdaSheetService'
 import { getMyVtmSheetsEverywhere } from '../vampiro/services/vampiroSheetService'
 import { getClan } from '../vampiro/constants/vampiro'
 import { healthMax } from '../vampiro/utils/vampiroRules'
@@ -42,8 +43,8 @@ function formatRelativeTime(iso: string): string {
 }
 
 async function loadAllSheets(): Promise<MySheetItem[]> {
-  const [simple, altherium, td, vtm] = await Promise.all([
-    getMySheets(), getMyAltheriumSheetsEverywhere(), getMyTdSheetsEverywhere(), getMyVtmSheetsEverywhere(),
+  const [simple, altherium, td, tda, vtm] = await Promise.all([
+    getMySheets(), getMyAltheriumSheetsEverywhere(), getMyTdSheetsEverywhere(), getMyTdaSheetsEverywhere(), getMyVtmSheetsEverywhere(),
   ])
 
   const items: MySheetItem[] = [
@@ -80,6 +81,20 @@ async function loadAllSheets(): Promise<MySheetItem[]> {
       campaignId:    s.campaign_id,
       campaignName:  s.campaign_name,
       system:        'terra_devastada' as const,
+      characterName: s.character_name,
+      filled:        Boolean(s.character_name?.trim()) && s.traits.length > 0,
+      stats:         [
+        ...(s.concept ? [s.concept] : []),
+        `Horror ${s.horror}/12`,
+        `Convicção ${s.conviction}/24`,
+      ],
+      updatedAt:     s.updated_at,
+    })),
+    ...tda.map((s) => ({
+      id:            s.id,
+      campaignId:    s.campaign_id,
+      campaignName:  s.campaign_name,
+      system:        'terra_devastada_adaptada' as const,
       characterName: s.character_name,
       filled:        Boolean(s.character_name?.trim()) && s.traits.length > 0,
       stats:         [

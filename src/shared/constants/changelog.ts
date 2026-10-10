@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.25',
+    date:    '2026-10-10',
+    title:   'Terra Devastada Adaptada',
+    items: [
+      'Criar campanha: ao escolher Terra Devastada, abre uma janelinha com duas opções: a versão original (a que já existia) e a versão adaptada.',
+      'Terra Devastada Adaptada: uma versão mexida do sistema, inspirada em The Last of Us. Começa com a mesma base de regras da original (testes de pares em d6, Horror, Convicção, características, condições, trunfos e inventário), mas com ficha própria.',
+      'A ficha adaptada tem visual de The Last of Us Parte II: cores de carvão e osso com tarja vermelha, letras de menu condensadas, granulado de filme e anotações à mão, como num diário. No tema claro, vira papel de caderno.',
+    ],
+  },
+  {
     version: '1.24',
     date:    '2026-10-06',
     title:   'Armas no manequim do Altherium',

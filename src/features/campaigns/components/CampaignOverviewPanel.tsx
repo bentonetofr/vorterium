@@ -8,6 +8,7 @@ import {
 import { getCampaignSheets, getMySheet } from '../../sheets/services/sheetService'
 import { getCampaignAltheriumSheets } from '../../sheets/altherium/services/altheriumSheetService'
 import { getCampaignTdSheets } from '../../sheets/terraDevastada/services/tdSheetService'
+import { getCampaignTdaSheets } from '../../sheets/terraDevastadaAdaptada/services/tdaSheetService'
 import { getCampaignVtmSheets } from '../../sheets/vampiro/services/vampiroSheetService'
 import {
   getInitiativeParticipants,
@@ -104,6 +105,12 @@ async function loadSheetsSummary(campaign: CampaignWithRole): Promise<SheetsSumm
   }
   if (campaign.system === 'terra_devastada') {
     const sheets = await getCampaignTdSheets(campaign.id)
+    return isMaster
+      ? { kind: 'master', count: sheets.length }
+      : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }
+  }
+  if (campaign.system === 'terra_devastada_adaptada') {
+    const sheets = await getCampaignTdaSheets(campaign.id)
     return isMaster
       ? { kind: 'master', count: sheets.length }
       : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }

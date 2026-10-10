@@ -1,0 +1,919 @@
+/* ═══════════════════════════════════════════════════════
+   Ficha Terra Devastada Adaptada — visual de The Last of Us Parte II.
+   Mesma estrutura da original (.tda-* = .td-*), com a paleta e as letras
+   trocadas aqui: os tokens do site são redefinidos DENTRO da ficha, então
+   campos, botões, abas e listas herdam o visual sem mexer no resto do site.
+   Escuro = carvão esverdeado e osso; claro = papel de diário.
+   ═══════════════════════════════════════════════════════ */
+
+.tda-panel,
+.tda-sheet,
+.tda-modal,
+.tda-select-list,
+.tda-card-conditions {
+  /* Tokens do site, no tom do jogo */
+  --bg-void:        #0b0c0a;
+  --bg-base:        #0f100d;
+  --bg-surface:     #151712;
+  --bg-elevated:    #1b1d17;
+  --bg-overlay:     #24271e;
+  --bg-bright:      #2e3227;
+  --border-dim:     rgba(190, 184, 156, 0.14);
+  --border-base:    #3b3e33;
+  --border-bright:  #6e7161;
+  --text-primary:   #ece7d6;
+  --text-secondary: #bfbaa6;
+  --text-muted:     #878471;
+  --text-inverse:   #11120e;
+  --accent:         #c98a3b;
+  --accent-bright:  #e2b05f;
+  --accent-dim:     #b98a45;
+  --accent-glow:    rgba(226, 176, 95, 0.14);
+  --gilded:         rgba(226, 176, 95, 0.32);
+  --gilded-bright:  #e2b05f;
+  --danger:         #e07a67;
+  --danger-bright:  #ee917f;
+  --radius-sm:      1px;
+  --radius-md:      2px;
+  --radius-lg:      2px;
+  --radius-xl:      3px;
+  --font-display:   'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-label:     'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-body:      'Barlow', system-ui, sans-serif;
+
+  /* Próprios da ficha */
+  --tda-blood:        #d65a45;
+  --tda-blood-dim:    rgba(214, 90, 69, 0.14);
+  --tda-blood-glow:   rgba(214, 90, 69, 0.36);
+  --tda-rust:         #c9803a;
+  --tda-faith:        #9cb36e;
+  --tda-faith-dim:    rgba(156, 179, 110, 0.14);
+  --tda-faith-glow:   rgba(156, 179, 110, 0.3);
+  --tda-paper:        var(--bg-surface);
+  --tda-hand:         'Reenie Beanie', 'Caveat', cursive;
+  /* Granulado de filme por cima do fundo (ruído fino, quase invisível) */
+  --tda-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 .9  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/></svg>");
+}
+[data-theme="light"] .tda-panel,
+[data-theme="light"] .tda-sheet,
+[data-theme="light"] .tda-modal,
+[data-theme="light"] .tda-select-list,
+[data-theme="light"] .tda-card-conditions {
+  /* Papel de diário */
+  --bg-void:        #ebe3cd;
+  --bg-base:        #e4dcc4;
+  --bg-surface:     #f4eedc;
+  --bg-elevated:    #efe8d3;
+  --bg-overlay:     #e6dec6;
+  --bg-bright:      #ddd4ba;
+  --border-dim:     rgba(70, 58, 32, 0.2);
+  --border-base:    #c2b793;
+  --border-bright:  #8f8462;
+  --text-primary:   #24211a;
+  --text-secondary: #4b4636;
+  --text-muted:     #7b745a;
+  --text-inverse:   #f4eedc;
+  --accent:         #9a5f1a;
+  --accent-bright:  #94581a;
+  --accent-dim:     #a86f2c;
+  --accent-glow:    rgba(148, 88, 26, 0.12);
+  --gilded:         rgba(148, 88, 26, 0.35);
+  --gilded-bright:  #94581a;
+  --danger:         #a3321f;
+  --danger-bright:  #a3321f;
+  --tda-blood:      #9a2e1d;
+  --tda-blood-dim:  rgba(154, 46, 29, 0.1);
+  --tda-blood-glow: rgba(154, 46, 29, 0.28);
+  --tda-rust:       #8a4b12;
+  --tda-faith:      #4f6b2b;
+  --tda-faith-dim:  rgba(79, 107, 43, 0.12);
+  --tda-faith-glow: rgba(79, 107, 43, 0.28);
+  --tda-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.1'/></svg>");
+}
+
+.tda-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.tda-sheet__owner { font-size: var(--text-sm); color: var(--text-muted); }
+
+.tda-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.tda-hint {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.tda-hint--center { text-align: center; }
+.tda-warn {
+  font-size: var(--text-sm);
+  color: var(--danger-bright);
+}
+.tda-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.tda-textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+.tda-textarea--tall { min-height: 220px; }
+
+/* ── Cabeçalho ── */
+.tda-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: var(--space-6);
+  padding: var(--space-5);
+  background:
+    linear-gradient(180deg, var(--tda-blood-dim), transparent 45%),
+    var(--tda-paper);
+  border: 1px solid var(--border-dim);
+  border-top: 3px solid var(--tda-blood);
+  border-radius: var(--radius-lg);
+}
+.tda-hero__identity { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.tda-hero__name {
+  width: 100%;
+  padding: var(--space-1) 0;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border-base);
+  outline: none;
+}
+.tda-hero__name:focus { border-bottom-color: var(--tda-blood); }
+.tda-hero__name::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+.tda-hero__meters { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.tda-hero__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2);
+}
+.tda-hero__actions .tda-btn { text-align: center; line-height: 1.3; }
+
+/* ── Medidores (Horror, Convicção) ── */
+.tda-meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.tda-meter__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.tda-meter__title {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.tda-meter--horror .tda-meter__title { color: var(--tda-blood); }
+.tda-meter--conviction .tda-meter__title { color: var(--tda-faith); }
+.tda-meter__value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+  min-width: 3.2ch;
+  text-align: center;
+}
+.tda-meter__value small { font-size: var(--text-sm); color: var(--text-muted); font-weight: 500; }
+.tda-meter__controls { display: flex; align-items: center; gap: var(--space-2); }
+.tda-meter__band { font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }
+.tda-meter__band strong { color: var(--text-secondary); }
+.tda-meter--band-10 .tda-meter__band strong,
+.tda-meter--band-7 .tda-meter__band strong { color: var(--tda-blood); }
+
+/* Trilha de caixinhas. As do Horror mudam de cor por faixa (1–3, 4–6...). */
+/* 12 colunas: o Horror cabe numa linha (grupos de 3), a Convicção em duas. */
+.tda-track {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 34px));
+  gap: 4px;
+}
+.tda-track__box {
+  min-width: 0;
+  height: 26px;
+  padding: 0;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.tda-track__box:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.tda-track__box:active { transform: scale(0.9); }
+.tda-track__box--gap { margin-right: 6px; }
+.tda-meter--horror .tda-track__box--on { color: var(--text-inverse); border-color: transparent; }
+.tda-meter--horror .tda-track__box--on[data-band="1"] { background: var(--accent-dim); }
+.tda-meter--horror .tda-track__box--on[data-band="2"] { background: var(--tda-rust); }
+.tda-meter--horror .tda-track__box--on[data-band="3"] { background: var(--tda-blood); }
+.tda-meter--horror .tda-track__box--on[data-band="4"] { background: var(--tda-blood); box-shadow: 0 0 8px var(--tda-blood-glow); }
+.tda-meter--conviction .tda-track__box { height: 20px; font-size: 9px; }
+.tda-meter--conviction .tda-track__box--on {
+  color: var(--text-inverse);
+  background: var(--tda-faith);
+  border-color: transparent;
+}
+.tda-meter--conviction .tda-track { gap: 3px; }
+
+/* ── Botões ── */
+.tda-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+  transition: all var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.tda-btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
+.tda-btn:active:not(:disabled) { transform: scale(0.95); }
+.tda-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tda-btn--primary { color: var(--accent-bright); border-color: var(--gilded); }
+.tda-btn--primary:hover:not(:disabled) { color: var(--accent-bright); background: var(--accent-glow); border-color: var(--gilded-bright); }
+.tda-btn--danger { color: var(--tda-blood); border-color: var(--tda-blood-glow); }
+.tda-btn--danger:hover:not(:disabled) { color: var(--tda-blood); background: var(--tda-blood-dim); border-color: var(--tda-blood); }
+.tda-btn--big { padding: var(--space-3); font-size: var(--text-sm); }
+
+.tda-stepper { display: inline-flex; align-items: center; gap: var(--space-2); }
+.tda-stepper__btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: var(--text-md);
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+}
+.tda-stepper__btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
+.tda-stepper__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.tda-stepper__value {
+  min-width: 3ch;
+  text-align: center;
+  font-family: var(--font-label);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tda-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.tda-actions--center { justify-content: center; }
+.tda-actions--start { justify-content: flex-start; }
+
+/* ── Abas ── */
+.tda-sheet-tabs {
+  align-self: flex-start;
+  max-width: 100%;
+  border-color: var(--tda-blood-glow);
+  box-shadow: var(--shadow-md);
+}
+.tda-sheet-tabs .campaign-tab { padding: var(--space-2) var(--space-6); font-size: var(--text-sm); }
+.tda-tab-panel { display: flex; flex-direction: column; gap: var(--space-6); }
+.tda-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+
+/* ── Cards ── */
+.tda-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--tda-paper);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+}
+.tda-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-dim);
+}
+.tda-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.tda-card__subtitle {
+  margin-left: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text-muted);
+}
+.tda-counter {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.tda-counter--info { color: var(--tda-rust); }
+
+/* ── Listas editáveis ── */
+.tda-list { display: flex; flex-direction: column; gap: var(--space-2); list-style: none; }
+.tda-list:empty { display: none; }
+.tda-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* `.input` traz width: 100% — aqui quem manda é o flex da linha. */
+.tda-row .tda-row__name { flex: 1 1 0; width: auto; min-width: 0; }
+.tda-row .tda-row__qty { flex: 0 0 72px; width: 72px; text-align: center; }
+.tda-row .tda-row__select { flex: 0 0 168px; width: 168px; }
+.tda-row__remove {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  font-size: var(--text-lg);
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+}
+.tda-row__remove:hover { color: var(--danger-bright); border-color: var(--danger); }
+.tda-add-row { display: flex; gap: var(--space-2); }
+.tda-add-row .input { flex: 1; min-width: 0; }
+.tda-trunfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-left: 3px solid var(--tda-rust);
+  border-radius: var(--radius-md);
+}
+.tda-initial-horror {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-dim);
+}
+
+.tda-sheet__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* ── Janelas (teste, cena de horror) ── */
+.tda-modal { width: min(560px, 100%); }
+.tda-modal__title { color: var(--text-primary); }
+.tda-horror .tda-modal__title { color: var(--tda-blood); }
+.tda-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.tda-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.tda-segmented__btn {
+  flex: 1;
+  padding: var(--space-2);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: var(--cursor-hand);
+}
+.tda-segmented__btn:hover { color: var(--text-primary); }
+.tda-segmented__btn--active { color: var(--accent-bright); background: var(--bg-elevated); box-shadow: var(--shadow-sm); }
+
+.tda-picker { display: flex; flex-direction: column; gap: var(--space-3); }
+.tda-picker__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tda-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px var(--space-3) 5px var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-void);
+  border: 1px solid var(--border-base);
+  border-radius: 999px;
+  cursor: var(--cursor-hand);
+  transition: all var(--transition-fast), transform 160ms var(--ease-spring);
+}
+.tda-chip:active:not(:disabled) { transform: scale(0.94); }
+.tda-chip__sign {
+  min-width: 22px;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-muted);
+}
+.tda-chip--plus { color: var(--text-primary); background: var(--tda-faith-dim); border-color: var(--tda-faith); }
+.tda-chip--plus .tda-chip__sign { color: var(--tda-faith); }
+.tda-chip--minus { color: var(--text-primary); background: var(--tda-blood-dim); border-color: var(--tda-blood); }
+.tda-chip--minus .tda-chip__sign { color: var(--tda-blood); }
+.tda-picker__situation { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.tda-picker__situation .tda-label { margin: 0; }
+
+.tda-pool {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-void);
+  border: 1px dashed var(--gilded);
+  border-radius: var(--radius-md);
+}
+.tda-pool__dice {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-bright);
+}
+.tda-pool__detail { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.4; }
+
+.tda-meta { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.tda-meta__btn {
+  min-width: 36px;
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+}
+.tda-meta__btn:hover { color: var(--text-primary); }
+.tda-meta__btn--active { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--accent-glow); }
+
+.tda-boost { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.tda-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: var(--cursor-hand);
+}
+
+/* Dados rolados: pares acendem, 6 brilha, extras do Golpe de Sorte com ↻. */
+.tda-tray {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  list-style: none;
+  padding: var(--space-2) 0;
+}
+.tda-die {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  animation: tdDieIn 0.35s var(--ease-spring) both;
+}
+.tda-die svg { display: block; width: 100%; height: 100%; }
+.tda-die__body { fill: var(--bg-void); stroke: currentColor; stroke-width: 2.5; }
+.tda-die__pip { fill: currentColor; }
+.tda-tray--shaking .tda-die { opacity: 0.8; animation: tdDieShake 0.18s ease-in-out infinite alternate; }
+.tda-die--even { color: var(--accent-bright); opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+.tda-die--even .tda-die__body { fill: var(--accent-glow); }
+.tda-die--six { color: var(--tda-blood); filter: drop-shadow(0 0 8px var(--tda-blood-glow)); }
+.tda-die--six .tda-die__body { fill: var(--tda-blood-dim); }
+.tda-die--extra::after {
+  content: '↻';
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tda-blood);
+}
+@keyframes tdDieIn {
+  from { transform: translateY(-10px) rotate(-20deg) scale(0.6); opacity: 0; }
+}
+@keyframes tdDieShake {
+  from { transform: rotate(-12deg) translateY(-2px); }
+  to   { transform: rotate(12deg) translateY(2px); }
+}
+
+.tda-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  text-align: center;
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  animation: fadeUp 0.25s ease-out;
+}
+.tda-result__number {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-bright);
+}
+.tda-result__label { font-size: var(--text-sm); color: var(--text-secondary); }
+.tda-result__outcome { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-primary); }
+.tda-result--sucesso { border-color: var(--tda-faith); }
+.tda-result--sucesso .tda-result__number { color: var(--tda-faith); }
+.tda-result--parcial { border-color: var(--gilded-bright); }
+.tda-result--falha { border-color: var(--tda-blood); }
+.tda-result--falha .tda-result__number { color: var(--tda-blood); }
+
+/* Cena de horror: listas de opções com pontos. */
+.tda-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.tda-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+}
+.tda-option:hover { background: var(--bg-void); }
+.tda-option input { accent-color: var(--tda-blood); flex-shrink: 0; }
+.tda-option__label { flex: 1; line-height: 1.4; }
+.tda-option__points {
+  font-family: var(--font-label);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.tda-option--active { color: var(--text-primary); background: var(--tda-blood-dim); border-color: var(--tda-blood-glow); }
+.tda-option--active .tda-option__points { color: var(--tda-blood); }
+.tda-horror__sum {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: var(--bg-void);
+  border-left: 3px solid var(--tda-blood);
+  border-radius: var(--radius-sm);
+}
+.tda-horror__sum strong { color: var(--tda-blood); }
+.tda-horror__relevar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-dim);
+}
+
+/* Condições nos cards de resumo do mestre. */
+.tda-card-conditions {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--tda-rust);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Camada The Last of Us Parte II
+   Menus em condensada maiúscula, destaque em osso (o item marcado vira
+   claro com texto escuro), cantos retos, granulado, e a letra de diário
+   à mão (Reenie Beanie) pras anotações.
+   ═══════════════════════════════════════════════════════ */
+
+.tda-panel { border-radius: var(--radius-lg); }
+.tda-panel:hover { border-color: var(--border-bright); }
+.tda-panel .sheet-panel__header {
+  background: var(--tda-grain), var(--bg-elevated);
+  border-bottom: 1px solid var(--border-base);
+}
+.tda-panel .sheet-panel__icon { color: var(--tda-blood); }
+.tda-panel .sheet-panel__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.tda-panel__tag {
+  font-family: var(--tda-hand);
+  font-size: 1.45rem;
+  line-height: 1;
+  color: var(--tda-rust);
+  transform: rotate(-2deg);
+}
+
+.tda-sheet { font-family: var(--font-body); color: var(--text-primary); }
+.tda-sheet .input { font-family: var(--font-body); }
+.tda-sheet strong { color: var(--text-primary); font-weight: 600; }
+
+.tda-label {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+.tda-hint { font-size: var(--text-sm); }
+
+/* ── Cabeçalho ── */
+.tda-hero {
+  position: relative;
+  background:
+    var(--tda-grain),
+    linear-gradient(180deg, var(--tda-blood-dim), transparent 38%),
+    var(--tda-paper);
+  border: 1px solid var(--border-base);
+  border-top: 1px solid var(--border-bright);
+  border-radius: var(--radius-lg);
+}
+/* Tarja vermelha no canto, como a do título do jogo. */
+.tda-hero::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 72px;
+  height: 4px;
+  background: var(--tda-blood);
+}
+.tda-hero__name {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-base);
+}
+.tda-hero__name::placeholder { font-family: var(--tda-hand); font-size: 1.9rem; text-transform: none; letter-spacing: 0; }
+
+/* ── Medidores ── */
+.tda-meter {
+  background: var(--tda-grain), var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-left: 2px solid var(--border-bright);
+}
+.tda-meter--horror { border-left-color: var(--tda-blood); }
+.tda-meter--conviction { border-left-color: var(--tda-faith); }
+.tda-meter__title { font-size: var(--text-sm); letter-spacing: 0.2em; }
+.tda-meter__value { font-size: var(--text-3xl); font-weight: 600; }
+.tda-meter__band { font-size: var(--text-sm); }
+.tda-track__box {
+  height: 22px;
+  border-radius: 0;
+  border-color: var(--border-base);
+  background: rgba(255, 255, 255, 0.015);
+}
+.tda-meter--conviction .tda-track__box { height: 14px; }
+.tda-meter--conviction .tda-track__box--on { background: var(--tda-faith); }
+
+/* ── Botões: o hover é o "item marcado" do menu (osso com texto escuro) ── */
+.tda-btn {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  border-radius: 0;
+  border-color: var(--border-bright);
+  color: var(--text-secondary);
+}
+.tda-btn:hover:not(:disabled) {
+  color: var(--bg-void);
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+.tda-btn--primary {
+  color: var(--bg-void);
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+.tda-btn--primary:hover:not(:disabled) {
+  color: var(--bg-void);
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+.tda-btn--danger { color: var(--tda-blood); border-color: var(--tda-blood-glow); }
+.tda-btn--danger:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--tda-blood);
+  border-color: var(--tda-blood);
+}
+[data-theme="light"] .tda-btn--danger:hover:not(:disabled) { color: #f4eedc; }
+.tda-stepper__btn { border-radius: 0; font-family: var(--font-display); }
+.tda-stepper__btn:hover:not(:disabled) { color: var(--bg-void); background: var(--text-primary); border-color: var(--text-primary); }
+
+/* ── Abas: texto solto com sublinhado, como o menu do jogo ── */
+.tda-sheet-tabs {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-base);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  gap: var(--space-1);
+}
+.tda-sheet-tabs .campaign-tab {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  border-radius: 0;
+  color: var(--text-muted);
+}
+.tda-sheet-tabs .campaign-tab:hover:not(.campaign-tab--active) { background: transparent; color: var(--text-primary); }
+.tda-sheet-tabs .campaign-tab--active { background: transparent; color: var(--text-primary); }
+.tda-sheet-tabs .tab-indicator {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  border-bottom: 2px solid var(--text-primary);
+}
+.tda-sheet-tabs .tab-indicator::after { display: none; }
+
+/* ── Cards ── */
+.tda-card {
+  background: var(--tda-grain), var(--tda-paper);
+  border: 1px solid var(--border-dim);
+  border-top: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+}
+.tda-card__header { border-bottom: 1px solid var(--border-base); }
+.tda-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.tda-card__subtitle {
+  font-family: var(--tda-hand);
+  font-size: 1.4rem;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--tda-rust);
+}
+.tda-counter { font-family: var(--font-display); font-size: var(--text-sm); letter-spacing: 0.1em; }
+.tda-row__remove { border-radius: 0; }
+.tda-trunfo {
+  background: var(--tda-grain), var(--bg-void);
+  border-left: 2px solid var(--accent-bright);
+}
+.tda-trunfo .tda-textarea { font-family: var(--tda-hand); font-size: 1.35rem; line-height: 1.2; }
+/* Antecedentes e anotações: letra de diário. */
+.tda-textarea--tall,
+#tda-tabpanel-historia .tda-textarea {
+  font-family: var(--tda-hand);
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+/* ── Janelas ── */
+.tda-modal {
+  background: var(--tda-grain), var(--bg-surface);
+  border: 1px solid var(--border-bright);
+  border-top: 3px solid var(--tda-blood);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+}
+.tda-modal .alth-modal__header { border-bottom: 1px solid var(--border-base); }
+.tda-modal .alth-modal__title,
+.tda-modal__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.tda-modal .input { font-family: var(--font-body); }
+.tda-segmented { border-radius: 0; }
+.tda-segmented__btn { font-family: var(--font-display); font-size: var(--text-sm); letter-spacing: 0.14em; text-transform: uppercase; border-radius: 0; }
+.tda-segmented__btn--active { color: var(--bg-void); background: var(--text-primary); box-shadow: none; }
+.tda-chip { border-radius: 0; font-family: var(--font-body); }
+.tda-meta__btn { border-radius: 0; font-family: var(--font-display); }
+.tda-meta__btn--active { color: var(--bg-void); background: var(--text-primary); border-color: var(--text-primary); }
+.tda-pool { border-style: solid; border-color: var(--border-bright); border-radius: 0; }
+.tda-pool__dice { font-family: var(--font-display); color: var(--text-primary); }
+.tda-result { border-radius: 0; background: var(--tda-grain), var(--bg-void); }
+.tda-result__number { font-family: var(--font-display); }
+.tda-option { border-radius: 0; }
+.tda-horror__sum { border-radius: 0; }
+
+/* Lista aberta dos campos de escolha (vai pro <body>, por isso a classe própria). */
+.tda-select-list {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+}
+.tda-select-list .select-list__option { font-family: var(--font-body); border-radius: 0; }
+.tda-select-list .select-list__option--active {
+  background: var(--text-primary);
+  color: var(--bg-void);
+  box-shadow: none;
+}
+.tda-select-list .select-list__option--selected { color: var(--accent-bright); }
+.tda-select-list .select-list__option--active.select-list__option--selected { color: var(--bg-void); }
+.tda-select-list .select-list__check { color: inherit; }
+
+.tda-card-conditions { font-family: var(--font-body); }
+
+/* ── Celular ── */
+@media (max-width: 900px) {
+  .tda-hero { grid-template-columns: minmax(0, 1fr); }
+  .tda-columns { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .tda-hero { padding: var(--space-4); }
+  .tda-hero__name { font-size: var(--text-2xl); }
+  .tda-hero__actions .tda-btn { padding: var(--space-2); }
+  .tda-sheet-tabs .campaign-tab { padding: var(--space-2) var(--space-3); }
+  .tda-row { flex-wrap: wrap; }
+  .tda-row .tda-row__name { flex-basis: calc(100% - 38px); }
+  .tda-row .tda-row__select { flex: 1 1 0; width: auto; }
+  .tda-row--item .tda-row__name { flex-basis: calc(100% - 80px - 38px); }
+  .tda-track { gap: 3px; }
+  .tda-track__box--gap { margin-right: 4px; }
+  .tda-die { width: 42px; height: 42px; }
+  .tda-modal__body { padding: var(--space-3); }
+  .tda-meta__btn { min-width: 30px; padding: var(--space-1) 6px; }
+}
+
+@media (max-width: 560px) {
+  .tda-hero__name { font-size: var(--text-3xl); }
+  .tda-sheet-tabs .campaign-tab { letter-spacing: 0.1em; }
+}
