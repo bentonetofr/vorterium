@@ -359,7 +359,7 @@ export function TdaSheetForm({ sheet, ownerName, showScene = false, onSave, save
   function changeKind(id: string, kind: TdaInventoryItem['kind']) {
     setForm((prev) => ({
       ...prev,
-      inventory: prev.inventory.map((i) => (i.id !== id ? i : normalizeWeapon(
+      inventory: prev.inventory.map((i) => (i.id !== id || i.kind === kind ? i : normalizeWeapon(
         { ...i, kind, level: kind === 'item' ? 0 : i.level || 1, wtype: undefined, ammo: undefined, dur: undefined },
         prev.backpack,
       ))),

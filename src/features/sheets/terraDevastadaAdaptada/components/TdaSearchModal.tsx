@@ -317,7 +317,7 @@ export function TdaSearchModal({
                     <li key={i} className={`tda-loot__row tda-loot__row--${row.state}`}>
                       <div className="tda-loot__info">
                         <strong>{lootLabel(row.find)}</strong>
-                        {row.find.kind === 'ammo' && row.state === 'pendente' && (
+                        {row.find.kind === 'ammo' && (row.state === 'pendente' || row.state === 'erro') && (
                           guns.length > 0 ? (
                             <Select
                               listClassName="tda-select-list" className="tda-loot__gun"
@@ -335,7 +335,10 @@ export function TdaSearchModal({
                         </div>
                       )}
                       {row.state === 'erro' && (
-                        <button type="button" className="tda-btn" onClick={() => leave(i)}>Deixar</button>
+                        <div className="tda-loot__actions">
+                          <button type="button" className="tda-btn" onClick={() => store([i])}>Tentar de novo</button>
+                          <button type="button" className="tda-btn" onClick={() => leave(i)}>Deixar</button>
+                        </div>
                       )}
                     </li>
                   ))}

@@ -111,7 +111,9 @@ export function TdaCombatModal({
   const info = MODES.find((m) => m.id === mode)!
   const targetName = targetId === CUSTOM ? 'um alvo' : PRESET_CREATURES.find((c) => c.id === targetId)?.name ?? 'um alvo'
 
-  const weapon = weapons.find((w) => w.id === weaponId)
+  // A arma escolhida pode ter sumido do inventário (arremesso que acabou): volta pras mãos nuas.
+  const activeWeaponId = weapons.some((w) => w.id === weaponId) ? weaponId : UNARMED_ID
+  const weapon = weapons.find((w) => w.id === activeWeaponId)
   const weaponName = weapon?.name.trim() ?? UNARMED.name
   const weaponDamage = clampDamage(weapon ? weapon.level || 1 : UNARMED.damage)
   const ready = weapon ? weaponReady(weapon) : { ok: true, reason: null }
@@ -310,7 +312,7 @@ export function TdaCombatModal({
                     <span className="tda-label">Arma</span>
                     <Select
                       listClassName="tda-select-list"
-                      value={weaponId} onChange={setWeaponId} options={weaponOptions} aria-label="Arma"
+                      value={activeWeaponId} onChange={setWeaponId} options={weaponOptions} aria-label="Arma"
                     />
                     {weapon && (
                       <span className={ready.ok ? 'tda-hint' : 'tda-warn'}>

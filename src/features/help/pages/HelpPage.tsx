@@ -18,7 +18,7 @@ const TOPICS: Topic[] = [
   {
     id: 'campanhas', icon: '◈', title: 'Campanhas e convites',
     steps: [
-      'Em Campanhas, clique em "Nova campanha", dê um nome e escolha o sistema: Genérico, Altherium ou Terra Devastada. Quem cria é o mestre.',
+      'Em Campanhas, clique em "Nova campanha", dê um nome e escolha o sistema: Genérico, Altherium ou Terra Devastada (na original ou na adaptada, inspirada em The Last of Us). Quem cria é o mestre.',
       'Pra chamar os jogadores, abra a campanha → Membros → "Gerar link de convite" e mande o link. Quem abrir o link logado entra como jogador.',
       'Na Visão geral fica o resumo: próxima sessão, combate em andamento, fichas e mensagens novas.',
       'Em Configurações o mestre troca nome, descrição, capa (até 10 MB) e o status da campanha.',
