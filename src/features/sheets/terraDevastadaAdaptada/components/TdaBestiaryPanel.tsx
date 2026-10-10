@@ -18,6 +18,7 @@ import {
 import { useTdaFonts } from '../utils/tdaFonts'
 import '../../components/SheetPanel.css'
 import './TerraDevastadaAdaptadaSheet.css'
+import './TdaMotion.css'
 
 // ────────────────────────────────────────────────────────
 // Bestiário do mestre (Terra Devastada Adaptada): referência com os

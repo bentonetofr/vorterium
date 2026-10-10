@@ -1,0 +1,225 @@
+/* Terra Devastada Adaptada: animações da ficha.
+   Usa as curvas e keyframes globais (shared/theme/motion.css). Em "menos movimento" o motion.css
+   já zera todas as animações, então nada daqui precisa de regra à parte. */
+
+/* ── Números e selos que mudaram: dão um pulinho ── */
+.tda-pop { animation: m-bump 380ms var(--ease-spring) backwards; }
+
+/* ── Abas: os cartões entram em cascata, e as linhas das listas entram uma a uma ── */
+.tda-tab-panel .tda-card { animation: m-item-in 460ms var(--ease-out) backwards; }
+.tda-tab-panel .tda-card:nth-of-type(2) { animation-delay: 70ms; }
+.tda-tab-panel .tda-card:nth-of-type(3) { animation-delay: 140ms; }
+.tda-tab-panel .tda-card:nth-of-type(4) { animation-delay: 210ms; }
+.tda-tab-panel .tda-card:nth-of-type(n + 5) { animation-delay: 280ms; }
+.tda-tab-panel .tda-stack:nth-child(2) .tda-card { animation-delay: 90ms; }
+.tda-card { transition: border-color var(--transition-fast), box-shadow var(--transition-base, 220ms) var(--ease-out); }
+.tda-card:hover { border-color: var(--border-bright); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); }
+.tda-row { animation: m-form-in 320ms var(--ease-out) backwards; }
+.tda-loot__row { animation: m-item-in 360ms var(--ease-out) backwards; }
+.tda-list > .tda-row:nth-child(2) { animation-delay: 40ms; }
+.tda-list > .tda-row:nth-child(3) { animation-delay: 80ms; }
+.tda-list > .tda-row:nth-child(4) { animation-delay: 120ms; }
+.tda-list > .tda-row:nth-child(n + 5) { animation-delay: 160ms; }
+.tda-loot > .tda-loot__row:nth-child(2) { animation-delay: 60ms; }
+.tda-loot > .tda-loot__row:nth-child(3) { animation-delay: 120ms; }
+.tda-loot > .tda-loot__row:nth-child(n + 4) { animation-delay: 180ms; }
+
+/* ── Cabeçalho ── */
+.tda-hero { position: relative; isolation: isolate; animation: m-page-in 520ms var(--ease-out) backwards; }
+.tda-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+}
+.tda-hero[data-fx="scare"]::after {
+  background: radial-gradient(ellipse at center, transparent 35%, var(--tda-blood-glow) 100%);
+  animation: tdaVignette 1100ms var(--ease-out);
+}
+.tda-hero[data-fx="hurt"]::after {
+  background: radial-gradient(ellipse at center, transparent 20%, var(--tda-blood-glow) 100%);
+  animation: tdaVignette 900ms var(--ease-out);
+}
+.tda-hero[data-fx="heal"]::after {
+  background: radial-gradient(ellipse at center, transparent 35%, var(--tda-faith-glow) 100%);
+  animation: tdaVignette 1000ms var(--ease-out);
+}
+.tda-hero[data-fx="hurt"], .tda-hero[data-fx="scare"] { animation: m-shake 420ms ease-in-out; }
+@keyframes tdaVignette {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Medidores: quando o número muda, o quadro reage */
+.tda-meter { transition: border-color var(--transition-fast), box-shadow 300ms var(--ease-out), background var(--transition-fast); }
+.tda-flash--up.tda-meter--horror { animation: tdaScare 760ms var(--ease-out); }
+.tda-flash--down.tda-meter--horror,
+.tda-flash--up.tda-meter--health,
+.tda-flash--up.tda-meter--conviction { animation: tdaGlowGood 800ms var(--ease-out); }
+.tda-flash--down.tda-meter--health,
+.tda-flash--down.tda-meter--conviction { animation: tdaHurt 640ms var(--ease-out); }
+@keyframes tdaScare {
+  0%   { box-shadow: 0 0 0 0 var(--tda-blood-glow), inset 0 0 0 0 var(--tda-blood-glow); transform: translateX(0); }
+  15%  { box-shadow: 0 0 22px 2px var(--tda-blood-glow), inset 0 0 26px var(--tda-blood-glow); transform: translateX(-3px); }
+  30%  { transform: translateX(3px); }
+  45%  { transform: translateX(-2px); }
+  60%  { transform: translateX(1px); }
+  100% { box-shadow: 0 0 0 0 transparent, inset 0 0 0 0 transparent; transform: none; }
+}
+@keyframes tdaGlowGood {
+  0%   { box-shadow: 0 0 0 0 var(--tda-faith-glow); }
+  30%  { box-shadow: 0 0 20px 3px var(--tda-faith-glow), inset 0 0 22px var(--tda-faith-dim); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes tdaHurt {
+  0%   { box-shadow: 0 0 0 0 var(--tda-blood-glow); transform: translateX(0); }
+  20%  { box-shadow: 0 0 18px 2px var(--tda-blood-glow), inset 0 0 22px var(--tda-blood-dim); transform: translateX(-4px); }
+  40%  { transform: translateX(3px); }
+  60%  { transform: translateX(-2px); }
+  100% { box-shadow: 0 0 0 0 transparent; transform: none; }
+}
+
+/* Caixinhas das trilhas: a que acende dá um estalo */
+.tda-track__box--on { animation: tdaBoxOn 340ms var(--ease-spring) backwards; }
+@keyframes tdaBoxOn {
+  0%   { transform: scale(0.5); filter: brightness(2.2); }
+  60%  { transform: scale(1.18); filter: brightness(1.4); }
+  100% { transform: none; filter: none; }
+}
+
+/* Vida crítica e Horror nas últimas faixas: o quadro pulsa como um coração */
+.tda-meter--critical { animation: tdaHeartbeat 1.5s ease-in-out infinite; }
+.tda-meter--down .tda-meter__title { animation: tdaFlicker 2.6s steps(1) infinite; }
+.tda-meter--horror.tda-meter--band-10 { animation: tdaCreep 2.4s ease-in-out infinite; }
+.tda-meter--horror.tda-meter--band-7 .tda-meter__title { animation: tdaFlicker 3.4s steps(1) infinite; }
+@keyframes tdaHeartbeat {
+  0%, 40%, 100% { box-shadow: 0 0 0 0 transparent; }
+  10%           { box-shadow: 0 0 16px 1px var(--tda-blood-glow); }
+  20%           { box-shadow: 0 0 4px 0 var(--tda-blood-glow); }
+  30%           { box-shadow: 0 0 20px 3px var(--tda-blood-glow); }
+}
+@keyframes tdaCreep {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  50%      { box-shadow: inset 0 0 28px var(--tda-blood-dim), 0 0 12px var(--tda-blood-glow); }
+}
+@keyframes tdaFlicker {
+  0%, 100% { opacity: 1; }
+  91%      { opacity: 0.35; }
+  93%      { opacity: 1; }
+  96%      { opacity: 0.5; }
+}
+
+/* ── Botões: brilho passando, subida no hover e afundar no clique ── */
+.tda-btn { position: relative; overflow: hidden; }
+.tda-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.16) 50%, transparent 70%);
+  transform: translateX(-120%) skewX(-20deg);
+}
+.tda-btn:hover:not(:disabled)::after { animation: m-glint 720ms var(--ease-out); }
+.tda-btn:active:not(:disabled) { box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.06); }
+.tda-hero__actions .tda-btn { transition: all var(--transition-fast), transform 200ms var(--ease-spring), box-shadow 260ms var(--ease-out); }
+.tda-hero__actions .tda-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35); }
+.tda-hero__actions .tda-btn--danger:hover:not(:disabled) { box-shadow: 0 8px 22px var(--tda-blood-glow); }
+.tda-hero__actions .tda-btn--primary:hover:not(:disabled) { box-shadow: 0 8px 22px var(--accent-glow); }
+.tda-hero__actions .tda-btn:active:not(:disabled) { transform: translateY(0) scale(0.95); }
+.tda-stepper__btn { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
+.tda-stepper__btn:active:not(:disabled) { transform: scale(0.82); }
+.tda-row__remove { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
+.tda-row__remove:hover { transform: rotate(90deg) scale(1.1); }
+.tda-row__remove:active { transform: scale(0.8); }
+
+/* Abas e seletores */
+.tda-sheet-tabs .campaign-tab__label { display: inline-block; transition: transform 200ms var(--ease-spring); }
+.tda-sheet-tabs .campaign-tab:hover .campaign-tab__label { transform: translateY(-1px); }
+.tda-sheet-tabs .campaign-tab:active .campaign-tab__label { transform: scale(0.94); }
+.tda-segmented__btn { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
+.tda-segmented__btn:active { transform: scale(0.94); }
+.tda-segmented__btn--active { animation: m-bump 320ms var(--ease-spring); }
+.tda-meta__btn { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
+.tda-meta__btn:active { transform: scale(0.94); }
+.tda-meta__btn--active { animation: m-bump 300ms var(--ease-spring); }
+.tda-option--active { animation: m-form-in 220ms var(--ease-out); }
+.tda-chip--plus, .tda-chip--minus { animation: m-bump 300ms var(--ease-spring); }
+
+/* ── Faixa de Alerta da cena ── */
+.tda-alert-strip { animation: m-alert-in 420ms var(--ease-out) backwards; }
+.tda-alert-strip--2 { animation: m-alert-in 420ms var(--ease-out) backwards, tdaAlertSlow 3.4s ease-in-out 420ms infinite; }
+.tda-alert-strip--3 { animation: m-alert-in 420ms var(--ease-out) backwards, tdaAlertFast 1.3s ease-in-out 420ms infinite; }
+.tda-alert-strip--3 .tda-alert-strip__level { animation: tdaFlicker 2.2s steps(1) infinite; }
+@keyframes tdaAlertSlow {
+  0%, 100% { box-shadow: inset 3px 0 0 0 transparent; }
+  50%      { box-shadow: inset 3px 0 12px -2px var(--tda-rust); }
+}
+@keyframes tdaAlertFast {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%      { box-shadow: 0 0 18px 0 var(--tda-blood-glow), inset 0 0 16px var(--tda-blood-dim); }
+}
+
+/* ── Testes: a mesa, os dados e o resultado ── */
+.tda-result { animation: m-item-in 380ms var(--ease-out) backwards; }
+.tda-result__number { display: inline-block; animation: m-bump 560ms var(--ease-spring) 140ms backwards; }
+.tda-result--sucesso { animation: m-item-in 380ms var(--ease-out) backwards, tdaWin 1000ms var(--ease-out) 200ms; }
+.tda-result--parcial { animation: m-item-in 380ms var(--ease-out) backwards, tdaMid 900ms var(--ease-out) 200ms; }
+.tda-result--falha { animation: m-item-in 380ms var(--ease-out) backwards, m-shake 520ms ease-in-out 200ms, tdaLose 1000ms var(--ease-out) 200ms; }
+@keyframes tdaWin {
+  0%   { box-shadow: 0 0 0 0 var(--tda-faith-glow); }
+  40%  { box-shadow: 0 0 26px 4px var(--tda-faith-glow); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes tdaMid {
+  0%   { box-shadow: 0 0 0 0 var(--accent-glow); }
+  40%  { box-shadow: 0 0 22px 2px var(--accent-glow); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes tdaLose {
+  0%   { box-shadow: 0 0 0 0 var(--tda-blood-glow); }
+  40%  { box-shadow: 0 0 28px 4px var(--tda-blood-glow), inset 0 0 20px var(--tda-blood-dim); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.tda-die--six { animation: tdDieIn 0.35s var(--ease-spring) both, tdaSixPulse 1.8s ease-in-out 0.5s infinite alternate; }
+@keyframes tdaSixPulse {
+  from { filter: drop-shadow(0 0 4px var(--tda-blood-glow)); }
+  to   { filter: drop-shadow(0 0 12px var(--tda-blood)); }
+}
+.tda-die--even:not(.tda-die--six) { animation: tdDieIn 0.35s var(--ease-spring) both, tdaEvenGlow 2.4s ease-in-out 0.6s infinite alternate; }
+@keyframes tdaEvenGlow {
+  from { filter: drop-shadow(0 0 3px var(--accent-glow)); }
+  to   { filter: drop-shadow(0 0 9px var(--accent-bright)); }
+}
+
+/* ── Suprimentos: o medidor enche ── */
+.tda-gauge__fill { animation: tdaFill 620ms var(--ease-out) backwards; }
+@keyframes tdaFill {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+.tda-gauge__cell--full .tda-gauge__fill { animation: tdaFill 620ms var(--ease-out) backwards, tdaFullGlow 2.6s ease-in-out 0.7s infinite alternate; }
+@keyframes tdaFullGlow {
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.35); }
+}
+
+/* ── Retrato ── */
+.tda-portrait__frame img { transition: transform 500ms var(--ease-out), filter 300ms var(--ease-out); }
+.tda-portrait__frame:hover:not(:disabled) img { transform: scale(1.06); }
+.tda-portrait__silhouette { display: inline-block; animation: tdaBreathe 3.6s ease-in-out infinite; }
+@keyframes tdaBreathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.1); }
+}
+.tda-portrait__hint { animation: m-item-in 600ms var(--ease-out) 200ms backwards; }
+
+/* ── Rodapé: estado do salvamento ── */
+.alth-save-status--saved.tda-pop { animation: m-bump 420ms var(--ease-spring) backwards, tdaSaved 1200ms var(--ease-out); }
+@keyframes tdaSaved {
+  0%   { text-shadow: 0 0 12px var(--tda-faith-glow); }
+  100% { text-shadow: 0 0 0 transparent; }
+}

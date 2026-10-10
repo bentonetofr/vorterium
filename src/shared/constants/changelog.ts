@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.38',
+    date:    '2026-10-10',
+    title:   'Animações na ficha da Terra Devastada Adaptada',
+    items: [
+      'Horror subindo dá um susto: o quadro do Horror treme, um clarão vermelho cobre o cabeçalho e o número dá um pulinho. Vida caindo faz o mesmo com o tremor e o vermelho; Vida ou Convicção subindo (ou o Horror baixando) acende um brilho verde.',
+      'Vida crítica pulsa como um coração e o Horror nas faixas mais altas respira em vermelho, com o título piscando como lâmpada ruim. O Alerta da cena também pulsa (devagar no 2, rápido no 3).',
+      'Cada caixinha das trilhas dá um estalo ao acender, e o medidor de suprimentos enche da esquerda para a direita; barras cheias brilham de leve.',
+      'Ao trocar de aba, os cartões entram em cascata e as linhas das listas (qualidades, inventário, achados) entram uma a uma. Cartões ganham brilho na borda ao passar o mouse.',
+      'Botões: brilho passando ao pôr o mouse, subida nos botões do cabeçalho, afundar ao clicar, o "×" gira e os botões de mais e menos encolhem no clique. Abas, seletores e opções dão um pulinho ao serem marcados.',
+      'Resultado dos testes: a caixa entra com o número pulando e brilha em verde no sucesso, em dourado no parcial e treme em vermelho na falha. Dados pares brilham e os seis (6) pulsam em vermelho.',
+      'Contadores, o estado do salvamento ("Tudo salvo") e a imagem do personagem (que revela com desfoque ao trocar, e dá zoom ao passar o mouse) também ganharam animação. Com "reduzir movimento" ligado no sistema, tudo isso fica parado.',
+    ],
+  },
+  {
     version: '1.37',
     date:    '2026-10-10',
     title:   'Ruas no estilo dos EUA (Vortable)',

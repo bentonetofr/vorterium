@@ -17,6 +17,7 @@ import { useTdaFonts } from '../utils/tdaFonts'
 import type { TdaSheet, TdaSheetWithProfile } from '../../../../shared/types'
 import '../../components/SheetPanel.css'
 import './TerraDevastadaAdaptadaSheet.css'
+import './TdaMotion.css'
 import { Loader } from '../../../../shared/components/Loader'
 
 interface TdaSheetPanelProps {

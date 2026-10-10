@@ -4,6 +4,7 @@ import { ALERT_LEVELS, alertLevel } from '../constants/tdaStealth'
 import { setTdaScene, type TdaScene } from '../services/tdaSceneService'
 import { useTdaScene } from '../utils/useTdaScene'
 import './TerraDevastadaAdaptadaSheet.css'
+import './TdaMotion.css'
 
 // ────────────────────────────────────────────────────────
 // Barra da cena (só o mestre): Alerta (Oculto, Suspeito, Alertado, Caçado)

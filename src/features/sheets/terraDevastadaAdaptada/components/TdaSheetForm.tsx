@@ -30,6 +30,7 @@ import {
 } from '../constants/terraDevastadaAdaptada'
 import { clampHealth, convictionCost, healthBand, horrorBand, initialHorror, newId } from '../utils/tdaRules'
 import { useTdaFonts } from '../utils/tdaFonts'
+import { heroEffect, useTdaFlash } from '../utils/useTdaFlash'
 import {
   KIT_HEAL,
   RECIPES,
@@ -62,6 +63,7 @@ import { alertLevel } from '../constants/tdaStealth'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { useTdaScene } from '../utils/useTdaScene'
 import './TerraDevastadaAdaptadaSheet.css'
+import './TdaMotion.css'
 
 // ────────────────────────────────────────────────────────
 // Ficha Terra Devastada Adaptada. Salvamento automático igual ao da ficha
@@ -204,6 +206,9 @@ export function TdaSheetForm({
   const [stealth, setStealth] = useState<TdaStealthMode | null>(null)
   const [searching, setSearching] = useState(false)
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
+  const healthFlash = useTdaFlash(form.health)
+  const horrorFlash = useTdaFlash(form.horror)
+  const convictionFlash = useTdaFlash(form.conviction)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('personagem')
   const tabDir = useTabDirection(TAB_IDS, activeTab)
@@ -455,7 +460,7 @@ export function TdaSheetForm({
       )}
 
       {/* ── Cabeçalho: identidade + Horror/Convicção ── */}
-      <header className="tda-hero">
+      <header className="tda-hero" data-fx={heroEffect(healthFlash, horrorFlash, convictionFlash) || undefined}>
         <div className="tda-hero__identity">
           <div className="tda-hero__id">
             <div className="tda-portrait">
@@ -470,7 +475,7 @@ export function TdaSheetForm({
                 aria-label={sheet.portrait_url ? 'Trocar a imagem do personagem' : 'Escolher uma imagem para o personagem'}
               >
                 {sheet.portrait_url
-                  ? <img src={sheet.portrait_url} alt="" />
+                  ? <img key={sheet.portrait_url} className="anim-img-swap" src={sheet.portrait_url} alt="" />
                   : (
                     <span className="tda-portrait__empty">
                       <span className="tda-portrait__silhouette" aria-hidden="true">☣</span>
@@ -519,7 +524,7 @@ export function TdaSheetForm({
         </div>
 
         <div className="tda-hero__meters">
-          <section className={`tda-meter tda-meter--health tda-meter--${hband.level}`} aria-label="Vida">
+          <section className={`tda-meter tda-meter--health tda-meter--${hband.level}${healthFlash ? ` tda-flash tda-flash--${healthFlash}` : ''}`} aria-label="Vida">
             <div className="tda-meter__head">
               <span className="tda-meter__title">Vida</span>
               <div className="tda-meter__controls">
@@ -529,7 +534,7 @@ export function TdaSheetForm({
                 >
                   −
                 </button>
-                <span className="tda-meter__value">{form.health}<small>/{HEALTH_MAX}</small></span>
+                <span key={form.health} className="tda-meter__value tda-pop">{form.health}<small>/{HEALTH_MAX}</small></span>
                 <button
                   type="button" className="tda-stepper__btn" aria-label="Mais um de Vida"
                   onClick={() => set('health', clampHealth(form.health + 1))} disabled={form.health >= HEALTH_MAX}
@@ -545,10 +550,10 @@ export function TdaSheetForm({
             <p className="tda-meter__band"><strong>{hband.title}.</strong> {hband.effect}</p>
           </section>
 
-          <section className={`tda-meter tda-meter--horror tda-meter--band-${band.min}`} aria-label="Horror">
+          <section className={`tda-meter tda-meter--horror tda-meter--band-${band.min}${horrorFlash ? ` tda-flash tda-flash--${horrorFlash}` : ''}`} aria-label="Horror">
             <div className="tda-meter__head">
               <span className="tda-meter__title">Horror</span>
-              <span className="tda-meter__value">{form.horror}<small>/{HORROR_MAX}</small></span>
+              <span key={form.horror} className="tda-meter__value tda-pop">{form.horror}<small>/{HORROR_MAX}</small></span>
             </div>
             <Track
               max={HORROR_MAX} value={form.horror} groups={3} label="Horror"
@@ -557,7 +562,7 @@ export function TdaSheetForm({
             <p className="tda-meter__band"><strong>{band.title}.</strong> {band.effect}</p>
           </section>
 
-          <section className="tda-meter tda-meter--conviction" aria-label="Convicção">
+          <section className={`tda-meter tda-meter--conviction${convictionFlash ? ` tda-flash tda-flash--${convictionFlash}` : ''}`} aria-label="Convicção">
             <div className="tda-meter__head">
               <span className="tda-meter__title">Convicção</span>
               <div className="tda-meter__controls">
@@ -567,7 +572,7 @@ export function TdaSheetForm({
                 >
                   −
                 </button>
-                <span className="tda-meter__value">{form.conviction}<small>/{CONVICTION_MAX}</small></span>
+                <span key={form.conviction} className="tda-meter__value tda-pop">{form.conviction}<small>/{CONVICTION_MAX}</small></span>
                 <button
                   type="button" className="tda-stepper__btn" aria-label="Mais um de Convicção"
                   onClick={() => set('conviction', Math.min(CONVICTION_MAX, form.conviction + 1))}
@@ -637,7 +642,7 @@ export function TdaSheetForm({
                 <section className="tda-card">
                   <div className="tda-card__header">
                     <h4 className="tda-card__title">Qualidades <span className="tda-card__subtitle">o que você tem de bom</span></h4>
-                    <span className="tda-counter">{qualitiesCount}</span>
+                    <span key={qualitiesCount} className="tda-counter tda-pop">{qualitiesCount}</span>
                   </div>
                   <p className="tda-hint">
                     Habilidades, profissões, talentos, laços, crenças... Cada qualidade que ajuda num teste vale +1d.
@@ -649,7 +654,7 @@ export function TdaSheetForm({
                 <section className="tda-card">
                   <div className="tda-card__header">
                     <h4 className="tda-card__title">Defeitos <span className="tda-card__subtitle">o que te atrapalha</span></h4>
-                    <span className="tda-counter">{flawsCount}</span>
+                    <span key={flawsCount} className="tda-counter tda-pop">{flawsCount}</span>
                   </div>
                   <p className="tda-hint">
                     Vícios, manias, medos, fraquezas, rancores... Cada defeito que atrapalha num teste vale −1d
@@ -680,7 +685,7 @@ export function TdaSheetForm({
               <section className="tda-card">
                 <div className="tda-card__header">
                   <h4 className="tda-card__title">Condições <span className="tda-card__subtitle">você está assim</span></h4>
-                  <span className="tda-counter">{conditionsCount}</span>
+                  <span key={conditionsCount} className="tda-counter tda-pop">{conditionsCount}</span>
                 </div>
                 <p className="tda-hint">
                   Características temporárias: ferido, exausto, bêbado, apavorado... Somam ou tiram dados como as fixas, até sumirem.
@@ -725,7 +730,7 @@ export function TdaSheetForm({
               <section className="tda-card">
                 <div className="tda-card__header">
                   <h4 className="tda-card__title">Inventário</h4>
-                  <span className="tda-counter">{form.inventory.length}</span>
+                  <span key={form.inventory.length} className="tda-counter tda-pop">{form.inventory.length}</span>
                 </div>
                 <p className="tda-hint">
                   Armas têm <strong>Dano</strong> (1 a 6): é o que tiram do alvo quando você acerta, e não somam dados no teste.
@@ -825,7 +830,7 @@ export function TdaSheetForm({
               <section className="tda-card">
                 <div className="tda-card__header">
                   <h4 className="tda-card__title">Trunfos</h4>
-                  <span className="tda-counter">{form.trunfos.length}</span>
+                  <span key={form.trunfos.length} className="tda-counter tda-pop">{form.trunfos.length}</span>
                 </div>
                 <ul className="tda-list tda-list--trunfos">
                   {form.trunfos.map((t) => (
@@ -897,7 +902,7 @@ export function TdaSheetForm({
       {/* ── Rodapé: salvamento ── */}
       <footer className="tda-sheet__footer">
         {(error || saveError) && <p className="tda-warn" role="alert">{error ?? saveError}</p>}
-        <span className={`alth-save-status alth-save-status--${saveState}`} role="status" aria-live="polite">
+        <span key={saveState} className={`alth-save-status alth-save-status--${saveState} tda-pop`} role="status" aria-live="polite">
           {saveState === 'saved'   && '✓ Tudo salvo'}
           {saveState === 'pending' && 'Alterações pendentes…'}
           {saveState === 'saving'  && <><span className="spinner spinner--sm" /> Salvando…</>}
