@@ -9,7 +9,12 @@ import './CharacterStudio.css'
  * Só aparece pro dono da ficha (cada jogador cria o seu). Fica solto (absolute) embaixo do retrato,
  * então o card em volta não muda de tamanho — o pai do botão precisa ter `position: relative`.
  */
-export function CreateCharacterButton({ campaignId, ownerId }: { campaignId: string; ownerId: string }) {
+export function CreateCharacterButton({ campaignId, ownerId, onCharacterSaved }: {
+  campaignId: string
+  ownerId: string
+  /** Chamado depois que o criador salva o personagem (a ficha usa pra pôr as armas no boneco novo). */
+  onCharacterSaved?: () => void
+}) {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   // undefined = descobrindo · null = ainda não criou
@@ -34,7 +39,7 @@ export function CreateCharacterButton({ campaignId, ownerId }: { campaignId: str
       >
         {mine ? 'Editar personagem no Vortable' : 'Criar personagem no Vortable'}
       </button>
-      {open && <CharacterStudio campaignId={campaignId} userId={user.id} onClose={() => { setOpen(false); refresh() }} onSaved={refresh} />}
+      {open && <CharacterStudio campaignId={campaignId} userId={user.id} onClose={() => { setOpen(false); refresh() }} onSaved={() => { refresh(); onCharacterSaved?.() }} />}
     </>
   )
 }

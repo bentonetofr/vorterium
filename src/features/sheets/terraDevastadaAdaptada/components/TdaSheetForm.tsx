@@ -49,7 +49,8 @@ import {
   weaponType,
   type SupplyKey,
 } from '../utils/tdaSupplies'
-import { announceTda, type TdaSheetUpdate } from '../services/tdaSheetService'
+import { announceTda, syncSheetLook, type TdaSheetUpdate } from '../services/tdaSheetService'
+import { CARRY_LABELS, type Carry } from '../utils/tdaWeaponLook'
 import { TdaTestModal, type TdaTestPurpose } from './TdaTestModal'
 import { TdaHorrorModal } from './TdaHorrorModal'
 import { TdaCombatModal, type TdaCombatMode } from './TdaCombatModal'
@@ -136,7 +137,7 @@ function formToPayload(f: FormData): TdaSheetUpdate {
     inventory: f.inventory.filter((i) => i.name.trim())
       .map((i) => ({
         id: i.id, name: i.name.trim(), qty: i.qty, kind: i.kind, level: i.kind === 'item' ? 0 : i.level,
-        ...(i.kind === 'arma' ? { wtype: weaponType(i), ammo: i.ammo ?? 0, dur: i.dur ?? 0, up: i.up ?? 0 } : {}),
+        ...(i.kind === 'arma' ? { wtype: weaponType(i), ammo: i.ammo ?? 0, dur: i.dur ?? 0, up: i.up ?? 0, ...(i.carry ? { carry: i.carry } : {}) } : {}),
       })),
     supplies:       f.supplies,
     backpack:       f.backpack,
@@ -182,6 +183,10 @@ const PROTECTION_LEVEL_OPTIONS = PROTECTION_LEVELS.map((l) => ({ value: String(l
 const WEAPON_PRESET_OPTIONS = [
   { value: '', label: 'Arma pronta…' },
   ...WEAPON_PRESETS.map((w) => ({ value: w.name, label: `${w.name} (dano ${w.damage})` })),
+]
+const CARRY_OPTIONS = [
+  { value: '', label: 'Boneco: automático' },
+  ...(Object.entries(CARRY_LABELS) as [Carry, string][]).map(([value, label]) => ({ value, label: `Boneco: ${label.toLowerCase()}` })),
 ]
 const TAG_OPTIONS = [
   { value: '',          label: 'Comum' },
@@ -479,7 +484,12 @@ export function TdaSheetForm({
               )}
               <input ref={fileRef} type="file" accept={PORTRAIT_TYPES.join(',')} hidden onChange={onFile} />
               {/* Só pro dono da ficha de jogador: abre o criador de personagem do Vortable */}
-              {!sheet.is_npc && <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />}
+              {!sheet.is_npc && (
+                <CreateCharacterButton
+                  campaignId={sheet.campaign_id} ownerId={sheet.user_id}
+                  onCharacterSaved={() => void syncSheetLook({ ...sheet, inventory: formRef.current.inventory }, true).catch(() => {})}
+                />
+              )}
             </div>
 
             <div className="tda-hero__fields">
@@ -1061,6 +1071,11 @@ function WeaponExtras({ item, backpack, supplies, onChange, onUpgrade }: WeaponE
       <Select
         listClassName="tda-select-list" className="tda-item__type"
         value={type} onChange={changeType} options={typeOptions} aria-label="Tipo de arma"
+      />
+      <Select
+        listClassName="tda-select-list" className="tda-item__type"
+        value={item.carry ?? ''} options={CARRY_OPTIONS} aria-label="Onde a arma fica no boneco"
+        onChange={(v) => onChange({ carry: (v || undefined) as Carry | undefined })}
       />
 
       {type === 'fogo' && (

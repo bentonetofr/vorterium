@@ -458,6 +458,8 @@ export interface TdaInventoryItem {
   dur?:   number
   /** Só armas: melhorias na bancada (0 a 3). */
   up?:    number
+  /** Só armas: onde ela aparece no boneco do Vortable (sem isso, automático). */
+  carry?: 'mao' | 'costas' | 'bolso'
 }
 
 /** Materiais e kits que o personagem carrega (tabela tda_character_sheets.supplies). */

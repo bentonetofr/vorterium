@@ -18,7 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from tlou_art import objects_infection, objects_nature, objects_quarantine, objects_ruins, objects_survival  # noqa: E402
-from tlou_art import terrains  # noqa: E402
+from tlou_art import chars, terrains, weapons  # noqa: E402
 from tlou_art.preview import contact  # noqa: E402
 from tlou_art.sheet import Sheet, merge_objects, write_credits  # noqa: E402
 
@@ -55,6 +55,10 @@ def main() -> None:
         contact(sheets, args[args.index('--preview') + 1])
         print('folha de contato pronta')
         return
+    if '--weapons-preview' in args:
+        weapons.preview(ASSETS, args[args.index('--weapons-preview') + 1])
+        print('armas: folha de contato pronta')
+        return
     if '--terrain-preview' in args:
         terrains.preview(args[args.index('--terrain-preview') + 1])
         print('terrenos: folha de contato pronta')
@@ -64,8 +68,14 @@ def main() -> None:
     terrains.merge_terrains(ASSETS, ground, ground_entries)
     merge_objects(ASSETS, built)
     write_credits(ASSETS)
+    char_slots, char_items = [], []
+    for module in (weapons,):
+        slots, items = module.generate(ASSETS)
+        char_slots += slots
+        char_items += items
+    chars.merge_character(ASSETS, char_slots, char_items)
     total = sum(len(e) for _, e in built.values())
-    print(f'{total} objetos em {len(built)} folha(s), {len(ground_entries)} terrenos')
+    print(f'{total} objetos em {len(built)} folha(s), {len(ground_entries)} terrenos, {len(char_items)} pecas de personagem')
 
 
 if __name__ == '__main__':

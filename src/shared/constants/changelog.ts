@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.34',
+    date:    '2026-10-10',
+    title:   'Armas no boneco do Vortable',
+    items: [
+      'Terra Devastada Adaptada: as armas do Inventário aparecem no boneco do Vortable, sozinhas. Cada arma é desenhada na mão, nas costas ou no bolso (cintura): pistola, revólver, escopeta, rifle, taco, cano de ferro, machadinha, facão, faca, arco, coquetel molotov, granada e lança-chamas. O desenho acompanha o balanço da caminhada e muda conforme o lado em que o boneco olha (de costas, a arma das costas aparece inteira).',
+      'Cada arma ganhou um seletor "Boneco" no Inventário: automático, na mão, nas costas ou no bolso. No automático, a primeira arma vai pra mão, as compridas pras costas e as pequenas pro bolso; só cabe uma arma em cada lugar.',
+      'O boneco se atualiza sozinho quando o inventário muda, e também depois de criar ou editar o personagem. Quem não tem personagem criado ainda vê as armas assim que criar. Bonecos infantis não carregam armas.',
+      'Criação de personagem: 11 cores novas de roupa (oliva militar, caqui sujo, ferrugem, jeans desbotado, jeans escuro, cinza fuligem, vinho gasto, azul petróleo, bege poeira, verde musgo e lama) e 3 de cabelo (castanho acinzentado, ruivo queimado e grisalho sujo), para qualquer peça de tecido.',
+      'As peças de arma também aparecem no criador de personagem, na aba "Armas", para quem quiser escolher à mão (a ficha sobrescreve na próxima atualização do inventário).',
+    ],
+  },
+  {
     version: '1.33',
     date:    '2026-10-10',
     title:   'Vortable: pacote Apocalipse',

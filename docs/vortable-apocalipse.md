@@ -8,6 +8,7 @@ encaixada nos catálogos do motor do Vortable.
 | Pacote | Conteúdo |
 |---|---|
 | Objetos | ruínas, veículos abandonados, mobiliário urbano, quarentena e barricadas, acampamento, infecção (fungo, casulos, bulbos e nuvens de esporos), natureza invasora, sobrevivência |
+| Personagem | 14 cores novas de roupa e cabelo; armas no boneco (mão, costas e bolso), ligadas ao inventário da ficha adaptada (`tdaWeaponLook.ts`, `weaponLookService.ts`) |
 | Terrenos | asfalto (novo, rachado, com musgo), calçada, concreto, entulho, terra, lama, grama seca, mato invasor, micélio, piso de hospital, madeira podre, carpete, folhas, cinzas, neve suja |
 
 Os ids dos objetos são estáveis (`tlou@<apelido>`): os mundos salvos guardam esse id, então regerar a
