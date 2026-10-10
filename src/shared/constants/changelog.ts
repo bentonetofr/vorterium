@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.55',
+    date:    '2026-10-10',
+    title:   'Hora atual do mapa na barra do Controle ao vivo (Vortable)',
+    items: [
+      'Ao lado do reloginho da barra do Controle ao vivo agora aparece a hora atual do mapa (por exemplo 18:30), atualizada sozinha enquanto o tempo passa, igual à da zona que você está vendo. Vale tanto no ciclo dia/noite quanto na hora fixa.',
+    ],
+  },
+  {
     version: '1.54',
     date:    '2026-10-10',
     title:   'Zoom do Controle ao vivo mais sensível (Vortable)',

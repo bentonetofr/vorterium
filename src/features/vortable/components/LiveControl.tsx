@@ -188,17 +188,18 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const icon = (name: string) => (name.startsWith('<svg') ? name : engine.current ? (engine.current.EDITOR_ICONS as Record<string, string>)[name] ?? '' : '')
 
   /** Botão redondo-quadrado do menu: abre/fecha um painel. */
-  const tool = (id: Pane, iconName: string, label: string, opts: { badge?: number; dot?: boolean } = {}) => (
+  const tool = (id: Pane, iconName: string, label: string, opts: { badge?: number; dot?: boolean; text?: string } = {}) => (
     <button
       key={id}
       type="button"
       className={`live-tool${open === id ? ' live-tool--open' : ''}`}
       onClick={() => setOpen(open === id ? null : id)}
-      title={label}
-      aria-label={label}
+      title={opts.text ? `${label}: ${opts.text}` : label}
+      aria-label={opts.text ? `${label}: ${opts.text}` : label}
       aria-expanded={open === id}
     >
       <span className="live-tool__icon" dangerouslySetInnerHTML={{ __html: icon(iconName) }} />
+      {opts.text && <span className="live-tool__time">{opts.text}</span>}
       <svg className="live-tool__chev" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m2 3.5 3 3 3-3" /></svg>
       {opts.badge != null && <span className="live-tool__badge">{opts.badge}</span>}
       {opts.dot && <span className="live-tool__dot" aria-hidden="true" />}
@@ -309,7 +310,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
             <span className="live-tool__text">{scope === 'all' ? 'Todas as zonas' : 'Só esta zona'}</span>
           </button>
           <span className="live__bar-sep" aria-hidden="true" />
-          {tool('hora', 'clock', 'Hora')}
+          {tool('hora', 'clock', 'Hora', { text: engine.current ? engine.current.formatHour(clock) : undefined })}
           {tool('tempo', 'cloud', 'Tempo')}
           {tool('vento', 'wind', 'Vento')}
           {tool('sons', 'sound', 'Sons')}

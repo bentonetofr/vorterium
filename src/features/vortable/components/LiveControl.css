@@ -68,6 +68,7 @@
 .live-tool:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.09); }
 .live-tool--open { color: var(--text-primary); background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.85); }
 .live-tool__icon { display: inline-flex; }
+.live-tool__time { font-family: var(--font-label); font-size: var(--text-sm); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .live-tool__icon svg { width: 20px; height: 20px; }
 .live-tool__chev { opacity: 0.7; transition: transform var(--transition-fast); }
 .live-tool--open .live-tool__chev { transform: rotate(180deg); }
