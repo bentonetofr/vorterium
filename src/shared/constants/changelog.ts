@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.36',
+    date:    '2026-10-10',
+    title:   'Mundo pronto: Cidade em Ruínas (Vortable)',
+    items: [
+      'Mundos do Vortable: novo mundo pronto "CIDADE EM RUÍNAS", no clima de The Last of Us, em "Criar este mundo" (ao lado do TORVALLEN). Vem com 4 zonas ligadas por saídas e céu nublado no fim da tarde.',
+      'Rua da Cidade: rua bloqueada por entulho, carros abandonados, postes, calçadas tomadas pelo mato, um acampamento de sobreviventes, o hospital e um mercadinho infectado de fungo.',
+      'Posto de Quarentena: cancela com barreiras e sacos de areia, cerca de arame, barracas militares, gerador, holofotes e a mesa de comando, com guarda, oficial, médica e um sobrevivente pedindo para entrar.',
+      'Hospital Abandonado: enfermaria com camas e soros, recepção com balcão e barricada, ala oeste tomada por cordyceps, um infectado Corredor e um médico sobrevivente.',
+      'Subsolo Infectado: o ninho, no escuro, com casulos, bulbos de esporos, árvore de fungo e dois Estaladores e um Corredor esperando.',
+      'Os NPCs já vêm vestidos com as peças novas do criador (máscara de gás, colete tático, roupas camufladas e suradas, fungo de Estalador) e armados.',
+      'O mundo é gerado pelo mesmo script do pacote Apocalipse (`python scripts/make-tlou-art.py --world`), então dá para ajustar e gerar de novo.',
+    ],
+  },
+  {
     version: '1.35',
     date:    '2026-10-10',
     title:   'Roupas e rostos do apocalipse no criador de personagem',

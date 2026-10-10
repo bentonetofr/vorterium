@@ -9,6 +9,7 @@ encaixada nos catálogos do motor do Vortable.
 |---|---|
 | Objetos | ruínas, veículos abandonados, mobiliário urbano, quarentena e barricadas, acampamento, infecção (fungo, casulos, bulbos e nuvens de esporos), natureza invasora, sobrevivência |
 | Personagem | 14 cores novas de roupa e cabelo; máscara de gás; fungo e veias de infectado; roupas xadrez, camufladas, sujas e colete tático; sujeira e lama; armas no boneco (mão, costas e bolso), ligadas ao inventário da ficha adaptada (`tdaWeaponLook.ts`, `weaponLookService.ts`) |
+| Mundo pronto | `CIDADE EM RUÍNAS` (`public/vortable/maps/ruinas.mundo.json`, 4 zonas, 10 NPCs), gerado por `scripts/tlou_art/worlds.py`; regerar só ele com `python scripts/make-tlou-art.py --world`; listado em `WorldsPanel.tsx` (`TEMPLATES`) |
 | Terrenos | asfalto (novo, rachado, com musgo), calçada, concreto, entulho, terra, lama, grama seca, mato invasor, micélio, piso de hospital, madeira podre, carpete, folhas, cinzas, neve suja |
 
 Os ids dos objetos são estáveis (`tlou@<apelido>`): os mundos salvos guardam esse id, então regerar a

@@ -3,6 +3,7 @@ e a encaixa nos catálogos de public/vortable/assets.
 
 uso:
     python scripts/make-tlou-art.py                 gera tudo e atualiza os catálogos
+    python scripts/make-tlou-art.py --world         só regera o mundo pronto (public/vortable/maps/ruinas.mundo.json)
     python scripts/make-tlou-art.py --preview a.png [--only folha1,folha2]
                                                      só desenha uma folha de contato dos objetos (não mexe nos catálogos)
 (precisa do Pillow: python -m pip install pillow)
@@ -18,11 +19,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from tlou_art import objects_infection, objects_nature, objects_quarantine, objects_ruins, objects_survival  # noqa: E402
-from tlou_art import chars, faces, garments, terrains, weapons  # noqa: E402
+from tlou_art import chars, faces, garments, terrains, weapons, worlds  # noqa: E402
 from tlou_art.preview import contact  # noqa: E402
 from tlou_art.sheet import Sheet, merge_objects, write_credits  # noqa: E402
 
 ASSETS = os.path.normpath(os.path.join(HERE, '..', 'public', 'vortable', 'assets'))
+VORTABLE = os.path.dirname(ASSETS)
 
 
 def object_sheets() -> dict[str, Sheet]:
@@ -47,6 +49,9 @@ def object_sheets() -> dict[str, Sheet]:
 
 def main() -> None:
     args = sys.argv[1:]
+    if '--world' in args:                      # só o mundo pronto (usa os catálogos que já estão no disco)
+        worlds.generate(VORTABLE)
+        return
     sheets = object_sheets()
     if '--preview' in args:
         if '--only' in args:
@@ -82,6 +87,7 @@ def main() -> None:
         char_slots += slots
         char_items += items
     chars.merge_character(ASSETS, char_slots, char_items)
+    worlds.generate(VORTABLE)
     total = sum(len(e) for _, e in built.values())
     print(f'{total} objetos em {len(built)} folha(s), {len(ground_entries)} terrenos, {len(char_items)} pecas de personagem')
 
