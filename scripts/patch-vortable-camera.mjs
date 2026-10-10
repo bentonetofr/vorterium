@@ -3,6 +3,7 @@
 //     mapa, pra arrastar inimigos e NPCs do painel e soltar no mapa.
 //  2. Passos dos outros: na câmera do mestre (modo watch), jogadores e NPCs controlados também fazem som de passos
 //     (o motor só tocava o passo do próprio boneco), mais baixo quanto mais longe do centro da câmera.
+//  5. `gate`: licença do mestre pra o jogador atravessar uma saída (ver a remenda 5 no fim).
 //
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
 // depois de cada sincronização, rode `node scripts/patch-vortable-camera.mjs` (é seguro rodar de novo).
@@ -109,4 +110,42 @@ if (code.includes('stepsFor(e) {')) {
   code = code.replace(syncOld, method + '\n' + syncOld).replace(ctlOld, ctlNew)
   writeFileSync(js, code)
   console.log('motor: passos do NPC controlado remendados')
+}
+
+// ── Remenda 5: licença do mestre pra sair da zona. `gate({ from, fromName, to, toName, via })` é chamado quando o boneco do jogador pisa numa
+//    saída; o boneco fica parado até a resposta (true = atravessa, false = fica). Sem `gate`, tudo funciona como antes. ──
+code = readFileSync(js, 'utf8')
+if (code.includes('this.cfg.gate')) {
+  console.log('motor: licença de saída já remendada')
+} else {
+  const travelOld = '\t\tthis.travelling = !0, t.frozen = !0;\n\t\tlet r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));'
+  const travelNew = [
+    '\t\tthis.travelling = !0, t.frozen = !0;',
+    '\t\tif (this.cfg.gate) {',
+    '\t\t\tlet g = await this.cfg.loadZone(n.zone).catch(() => null);',
+    '\t\t\tif (g) {',
+    '\t\t\t\tlet ok = await this.cfg.gate({ from: this.cfg.zone.id, fromName: this.cfg.zone.name, to: n.zone, toName: g.name, via: e.name || "" }).catch(() => !1);',
+    '\t\t\t\tif (!this.sys.isActive()) return;',
+    '\t\t\t\tif (!ok) {',
+    '\t\t\t\t\tthis.toast("O mestre não permitiu sair daqui."), t.frozen = !1, this.travelling = !1, this.armed = !1;',
+    '\t\t\t\t\treturn;',
+    '\t\t\t\t}',
+    '\t\t\t}',
+    '\t\t}',
+    '\t\tlet r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));',
+  ].join('\n')
+  const cfgOld = '\t\tonClock: (e) => u?.showTestClock(e),\n\t\tinputLocked: () => o,'
+  const cfgNew = '\t\tonClock: (e) => u?.showTestClock(e),\n\t\tgate: t.gate,\n\t\tinputLocked: () => o,'
+  for (const a of [travelOld, cfgOld]) if (!code.includes(a)) throw new Error('motor: não achei onde remendar a licença de saída (o motor mudou?): ' + a.slice(0, 50))
+  code = code.replace(travelOld, travelNew).replace(cfgOld, cfgNew)
+  writeFileSync(js, code)
+  console.log('motor: licença de saída remendada')
+}
+types = readFileSync(dts, 'utf8')
+if (!types.includes('gate?:')) {
+  const a = '    /** Avisado a cada zona que a cena abre (o mestre acompanha em que zona a câmera está). */\n    onZone?: (zone: ZoneData) => void;\n'
+  if (!types.includes(a)) throw new Error('tipos: não achei onZone')
+  types = types.replace(a, `${a}    /** Jogo: licença pra atravessar uma saída (o boneco espera a resposta; false = não sai). (remenda do Vorterium) */\n    gate?: (info: { from: string; fromName: string; to: string; toName: string; via: string }) => Promise<boolean>;\n`)
+  writeFileSync(dts, types)
+  console.log('tipos: licença de saída remendada')
 }

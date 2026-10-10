@@ -37,6 +37,8 @@ export interface VortableOptions {
     storage?: WorldStorage;
     /** Avisado a cada zona que a cena abre (o mestre acompanha em que zona a câmera está). */
     onZone?: (zone: ZoneData) => void;
+    /** Jogo: licença pra atravessar uma saída (o boneco espera a resposta; false = não sai). (remenda do Vorterium) */
+    gate?: (info: { from: string; fromName: string; to: string; toName: string; via: string }) => Promise<boolean>;
     /** Editor: mostra o botão "Personagem" e chama isto ao clicar. */
     onEditCharacter?: () => void;
     /** Editor: os NPCs especiais (os que têm ficha e personagem criado pelo mestre), pra pôr nas zonas. */

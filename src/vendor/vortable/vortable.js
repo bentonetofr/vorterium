@@ -46079,6 +46079,17 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 	async travel(e) {
 		let t = this.player, n = e.to;
 		this.travelling = !0, t.frozen = !0;
+		if (this.cfg.gate) {
+			let g = await this.cfg.loadZone(n.zone).catch(() => null);
+			if (g) {
+				let ok = await this.cfg.gate({ from: this.cfg.zone.id, fromName: this.cfg.zone.name, to: n.zone, toName: g.name, via: e.name || "" }).catch(() => !1);
+				if (!this.sys.isActive()) return;
+				if (!ok) {
+					this.toast("O mestre não permitiu sair daqui."), t.frozen = !1, this.travelling = !1, this.armed = !1;
+					return;
+				}
+			}
+		}
 		let r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));
 		r.fadeOut(Wa);
 		let [a] = await Promise.all([this.cfg.loadZone(n.zone).catch(() => null), i]);
@@ -52273,6 +52284,7 @@ function Pc(e, t) {
 			u?.showTestZone(e.name), t.onZone?.(e);
 		},
 		onClock: (e) => u?.showTestClock(e),
+		gate: t.gate,
 		inputLocked: () => o,
 		hub: l,
 		watch: r === "watch",

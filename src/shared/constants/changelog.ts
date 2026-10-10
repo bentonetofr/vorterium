@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.50',
+    date:    '2026-10-10',
+    title:   'O mestre libera a saída de zona (Vortable)',
+    items: [
+      'Quando um jogador pisa numa saída pra ir a outra zona, o boneco dele para e o mestre recebe um aviso no canto da tela (com um toquinho de som): "Fulano quer sair da zona", de onde pra onde e qual saída, com os botões Sim e Não.',
+      'Sim: o boneco atravessa pra outra zona na hora. Não: ele fica onde está, com o aviso "O mestre não permitiu sair daqui", e pode tentar de novo quando quiser.',
+      'O jogador vê "Esperando o mestre permitir a ida para…" enquanto não há resposta. Se o mestre não responder em 90 segundos, a saída é negada, e se a conexão com o mestre cair o pedido some.',
+      'Os pedidos se empilham se vários jogadores tentarem sair juntos, e somem sozinhos se o jogador desistir ou sair da sessão. Quem joga sozinho, sem o mestre ao vivo, atravessa sem perguntar. O NPC que o mestre controla não precisa de licença.',
+      'Corrigido nos interiores novos de Nova York: o nome de cada zona saía com o nome de uma sala em vez do nome do prédio (Farmácia, Bodega, Delegacia…). Importe de novo o nova-york.mundo.json para ver os nomes certos.',
+      'Por baixo: mais uma remenda no motor (node scripts/patch-vortable-camera.mjs depois de sincronizar o motor de novo).',
+    ],
+  },
+  {
     version: '1.49',
     date:    '2026-10-10',
     title:   'Interiores de Nova York bem mais detalhados (Vortable)',

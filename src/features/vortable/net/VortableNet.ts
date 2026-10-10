@@ -14,6 +14,7 @@ import { iceServers } from '../../mesa/mesaRtc'
 //
 // No DataChannel, cada mensagem é um JSON: ou uma mensagem do jogo (NetMsg do
 // motor: hello, who, state, bye, teleport, react) ou uma de sistema ({sys: 'kick'};
+// {sys: 'door', id, from, fromName, to, toName, via} do jogador pro mestre: "posso sair desta zona?", e {sys: 'door-ack', id, ok} da resposta;
 // {sys: 'role', role} do jogador pro mestre: "estou jogando" ou "estou assistindo";
 // {sys: 'cmd', cmd: 'spectate' | 'play'} do mestre pro jogador: mandar assistir / pôr em jogo).
 // ────────────────────────────────────────────────────────
@@ -46,6 +47,23 @@ export interface NetPeerInfo {
 
 export type NetStatus = 'off' | 'connecting' | 'online'
 
+/** Um jogador quer atravessar uma saída: o mestre decide. */
+export interface DoorInfo {
+  from: string
+  fromName: string
+  to: string
+  toName: string
+  /** Nome da saída (o que está escrito no portal). */
+  via: string
+}
+
+/** O pedido como o mestre recebe: de quem é e o id da pergunta. */
+export interface DoorRequest extends DoorInfo {
+  peerId: string
+  id: string
+  name: string
+}
+
 interface Options {
   /** Id do jogador na rede (o id do usuário). */
   selfId: string
@@ -68,6 +86,8 @@ interface Peer {
 const DROP_GRACE_MS = 6000
 /** Mestre: um "join" novo enquanto a conexão anterior ainda está abrindo (e é recente) é ignorado. */
 const NEGOTIATE_MS = 12_000
+/** Jogador: sem resposta do mestre depois disso, a saída é negada. */
+const DOOR_TIMEOUT_MS = 90_000
 /** Jogador pede de novo a cada tanto, enquanto o mestre está ao vivo e a conexão não abre. */
 const JOIN_RETRY_MS = 4000
 
@@ -82,6 +102,10 @@ export class VortableNet {
   onKicked: (() => void) | null = null
   /** O mestre mandou eu assistir ou voltar a jogar. */
   onCommand: ((cmd: NetCommand) => void) | null = null
+  /** Mestre: um jogador pediu licença pra sair da zona. */
+  onDoor: ((req: DoorRequest) => void) | null = null
+  /** Mestre: o jogador desistiu do pedido (ou caiu da sessão). id vazio = todos os pedidos dele. */
+  onDoorGone: ((peerId: string, id: string) => void) | null = null
   /** O mestre mandou tocar o som de uma criatura (s = id do som, v = volume 0 a 1, d = distância 0 a 2, zone = só quem está nela). */
   onSfx: ((msg: { s: string; v: number; d: number; zone: string | null }) => void) | null = null
 
@@ -91,6 +115,7 @@ export class VortableNet {
   /** Mestre: hora/tempo/vento ao vivo por zona ('*' = todas), entregues a quem entra. */
   private readonly envs = new Map<string, unknown>()
   private readonly peers = new Map<string, Peer>()   // mestre: um por jogador
+  private readonly doorWaits = new Map<string, (ok: boolean) => void>()   // jogador: pedidos de saída esperando o mestre
   private link: Peer | null = null                    // jogador: a ligação com o mestre
   private live = false
   private kicked = false
@@ -144,6 +169,35 @@ export class VortableNet {
   /** Mestre: manda um jogador assistir (ou voltar a jogar). */
   command(id: string, cmd: NetCommand) {
     this.sendTo(id, { sys: 'cmd', cmd })
+  }
+
+  /** Mestre: responde ao pedido de saída de um jogador (sim = o boneco atravessa). */
+  answerDoor(peerId: string, id: string, ok: boolean) {
+    this.sendTo(peerId, { sys: 'door-ack', id, ok })
+  }
+
+  /**
+   * Jogador: pede licença ao mestre pra atravessar uma saída. Resolve true (pode) ou false (não pode, sem resposta, ou a conexão caiu).
+   * Sem ligação com o mestre (jogo solo) não tem a quem perguntar: pode.
+   */
+  askDoor(info: DoorInfo): Promise<boolean> {
+    const dc = this.link?.dc
+    if (this.opts.isMaster || dc?.readyState !== 'open') return Promise.resolve(true)
+    const id = Math.random().toString(36).slice(2, 10)
+    return new Promise<boolean>((resolve) => {
+      const timer = window.setTimeout(() => {
+        if (!this.doorWaits.delete(id)) return
+        if (this.link?.dc?.readyState === 'open') this.link.dc.send(JSON.stringify({ sys: 'door-cancel', id }))
+        resolve(false)
+      }, DOOR_TIMEOUT_MS)
+      this.doorWaits.set(id, (ok) => { window.clearTimeout(timer); resolve(ok) })
+      dc.send(JSON.stringify({ sys: 'door', id, ...info }))
+    })
+  }
+
+  private dropDoorWaits() {
+    for (const done of [...this.doorWaits.values()]) done(false)
+    this.doorWaits.clear()
   }
 
   /** Jogador: conta ao mestre se está jogando ou só assistindo (reenviado ao reconectar). */
@@ -280,8 +334,14 @@ export class VortableNet {
     try { msg = JSON.parse(data) } catch { return }
     if (typeof msg !== 'object' || msg === null) return
     if ('sys' in msg) {
-      const sys = msg as { sys?: unknown; role?: unknown }
+      const sys = msg as { sys?: unknown; role?: unknown; id?: unknown; from?: unknown; fromName?: unknown; to?: unknown; toName?: unknown; via?: unknown }
       const peer = this.peers.get(id)
+      if (peer && sys.sys === 'door' && typeof sys.id === 'string' && typeof sys.to === 'string') {
+        const t = (v: unknown) => (typeof v === 'string' ? v.slice(0, 80) : '')
+        this.onDoor?.({ peerId: id, id: sys.id.slice(0, 20), name: peer.name, from: t(sys.from), fromName: t(sys.fromName), to: t(sys.to), toName: t(sys.toName), via: t(sys.via) })
+      } else if (peer && sys.sys === 'door-cancel' && typeof sys.id === 'string') {
+        this.onDoorGone?.(id, sys.id)
+      }
       if (peer && sys.sys === 'role' && (sys.role === 'player' || sys.role === 'spectator') && peer.role !== sys.role) {
         peer.role = sys.role
         this.onChange?.()
@@ -303,6 +363,7 @@ export class VortableNet {
     peer.pc.onconnectionstatechange = null
     if (peer.dc) { peer.dc.onclose = null; peer.dc.onmessage = null }
     peer.pc.close()
+    this.onDoorGone?.(id, '')
     if (announce) {
       // quem saiu some do mundo de todo mundo
       const bye = { t: 'bye', id }
@@ -328,6 +389,7 @@ export class VortableNet {
 
   private stopLink() {
     window.clearInterval(this.joinTimer)
+    this.dropDoorWaits()
     const link = this.link
     this.link = null
     if (link) {
@@ -404,6 +466,13 @@ export class VortableNet {
       } else if ((msg as { sys: unknown }).sys === 'cmd') {
         const cmd = (msg as { cmd?: unknown }).cmd
         if (cmd === 'spectate' || cmd === 'play') this.onCommand?.(cmd)
+      } else if ((msg as { sys: unknown }).sys === 'door-ack') {
+        const m = msg as { id?: unknown; ok?: unknown }
+        if (typeof m.id === 'string') {
+          const done = this.doorWaits.get(m.id)
+          this.doorWaits.delete(m.id)
+          done?.(m.ok === true)
+        }
       } else if ((msg as { sys: unknown }).sys === 'sfx') {
         const m = msg as { s?: unknown; v?: unknown; d?: unknown; zone?: unknown }
         if (typeof m.s === 'string') {

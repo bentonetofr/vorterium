@@ -15,6 +15,7 @@ import { setLocalZone } from '../enemies/localZone'
 import { CreatureSfxToggle } from '../enemies/CreatureSfxToggle'
 import './SceneBar.css'
 import './SpectatorStage.css'
+import './DoorPrompt.css'
 import { Loader } from '../../../shared/components/Loader'
 import { CharacterStudio } from './CharacterStudio'
 
@@ -27,6 +28,8 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   const [mine, setMine] = useState<CampaignCharacter | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  // o boneco está parado numa saída esperando o mestre dizer sim ou não (destino mostrado na tela)
+  const [waitingDoor, setWaitingDoor] = useState<string | null>(null)
   // cena do mestre por cima do jogo (preto, pausa, imagem, título)
   const { stage } = useMesaStream()
   const vnet = useVortableNet()
@@ -136,6 +139,11 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
             onZone: (z) => setLocalZone(z.id),
+            // sair de uma zona precisa do sim do mestre
+            gate: net ? async (info) => {
+              setWaitingDoor(info.toName || info.to)
+              try { return await net.askDoor(info) } finally { setWaitingDoor(null) }
+            } : undefined,
             // o nome é lido a cada anúncio: acompanha a ficha
             net: vnet.net ? { selfId: userId, get name() { return net?.name ?? vnet.name }, send: (m) => net?.send(m) } : undefined,
           })
@@ -155,6 +163,12 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
         }}
       />
       {allowSpectate && <button type="button" className="spectator-skip" onClick={() => vnet.setWatching(true)}>Assistir</button>}
+      {waitingDoor && (
+        <div className="doorwait" role="status" aria-live="polite">
+          <span className="doorwait__dot" aria-hidden="true" />
+          Esperando o mestre permitir a ida para <strong>{waitingDoor}</strong>…
+        </div>
+      )}
       <CreatureSfxToggle />
       <SceneOverlay scene={stage.scene} />
     </div>

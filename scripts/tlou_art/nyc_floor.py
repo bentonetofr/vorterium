@@ -63,14 +63,14 @@ class Plan:
             ys.append(y); y += h + HGAP
         self.xs, self.ys = xs, ys
         for r, line in enumerate(areas):
-            for c, name in enumerate(line):
-                if not name:
+            for c, key in enumerate(line):
+                if not key:
                     continue
                 x0, y0 = xs[c], ys[r]
                 x1, y1 = x0 + cols[c], y0 + rows[r]
-                rc = self.rooms.get(name)
+                rc = self.rooms.get(key)
                 if rc is None:
-                    self.rooms[name] = Rect(name, x0, y0, x1, y1, (roles or {}).get(name, name), (floors or {}).get(name), [(r, c)])
+                    self.rooms[key] = Rect(key, x0, y0, x1, y1, (roles or {}).get(key, key), (floors or {}).get(key), [(r, c)])
                 else:
                     rc.x0, rc.y0, rc.x1, rc.y1 = min(rc.x0, x0), min(rc.y0, y0), max(rc.x1, x1), max(rc.y1, y1)
                     rc.cells.append((r, c))

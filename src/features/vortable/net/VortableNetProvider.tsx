@@ -3,7 +3,8 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { getCharacterFaces } from '../../chat/services/chatService'
-import { VortableNet, type NetPeerInfo, type NetStatus, type Signaling } from './VortableNet'
+import { VortableNet, type DoorRequest, type NetPeerInfo, type NetStatus, type Signaling } from './VortableNet'
+import { DoorPrompt } from '../components/DoorPrompt'
 import { getResume, patchResume } from '../resume/resumeStore'
 import { creatureSfxEnabled, playCreatureSound, unlockCreatureAudio, type SoundDistance } from '../enemies/creatureSounds'
 import { getLocalZone } from '../enemies/localZone'
@@ -44,6 +45,8 @@ export function VortableNetProvider({ children, startWatching = false, remember 
   const [, bump] = useState(0)
   const [kicked, setKicked] = useState(false)
   const [watching, setWatching] = useState(startWatching)
+  // mestre: jogadores esperando licença pra sair da zona
+  const [doors, setDoors] = useState<DoorRequest[]>([])
 
   useEffect(() => {
     if (!campaign || !userId) return
@@ -52,6 +55,8 @@ export function VortableNetProvider({ children, startWatching = false, remember 
     })
     made.onChange = () => bump((n) => n + 1)
     made.onKicked = () => setKicked(true)
+    made.onDoor = (req) => setDoors((list) => [...list.filter((d) => !(d.peerId === req.peerId && d.id === req.id)), req])
+    made.onDoorGone = (peerId, id) => setDoors((list) => list.filter((d) => d.peerId !== peerId || (id !== '' && d.id !== id)))
     // o mestre manda assistir / volta a pôr em jogo
     made.onCommand = (cmd) => setWatching(cmd === 'spectate')
     // o mestre toca o som de uma criatura (quem está em outra zona não ouve, se ele escolheu assim)
@@ -67,6 +72,7 @@ export function VortableNetProvider({ children, startWatching = false, remember 
       made.dispose()
       setNet(null)
       setKicked(false)
+      setDoors([])
     }
     // o nome só vale na entrada; a sinalização é estável
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,7 +129,17 @@ export function VortableNetProvider({ children, startWatching = false, remember 
     name,
   }
 
-  return <NetContext.Provider value={value}>{children}</NetContext.Provider>
+  function answerDoor(req: DoorRequest, ok: boolean) {
+    net?.answerDoor(req.peerId, req.id, ok)
+    setDoors((list) => list.filter((d) => d !== req))
+  }
+
+  return (
+    <NetContext.Provider value={value}>
+      {children}
+      {isMaster && <DoorPrompt requests={doors} onAnswer={answerDoor} />}
+    </NetContext.Provider>
+  )
 }
 
 export function useVortableNet(): NetValue {
