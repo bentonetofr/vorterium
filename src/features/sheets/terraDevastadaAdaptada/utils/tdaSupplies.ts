@@ -7,11 +7,11 @@ import { newId } from './tdaRules'
 // desgaste das armas e fabricação. Tudo em funções puras (a ficha só
 // aplica o resultado).
 //
-// Materiais são achados em pedaços: Trapos, Álcool, Lâminas e Explosivos
-// guardados em PORCENTAGEM (100% = 1 inteiro, até 3 de cada = 300%); só
-// serve pra fabricar com 100% de cada ingrediente. Sucata e Peças são
-// sempre achadas inteiras (de 1 em 1, até 3). Kits médicos e suplementos
-// são unidades. A Mochila (0 a 3) aumenta as balas de cada arma de fogo
+// Materiais são achados em pedaços: Trapos, Álcool, Lâminas, Explosivos e
+// Sucata guardados em PORCENTAGEM (100% = 1 inteiro, até 3 de cada = 300%);
+// só serve pra fabricar com 100% de cada ingrediente. Peças são sempre
+// inteiras (valem no mínimo 1) e não têm teto: no jogo se acham aos montes.
+// Kits médicos e suplementos são unidades. A Mochila (0 a 3) aumenta as balas de cada arma de fogo
 // (6, +3 por nível), os kits (2 + nível) e os arremessos (3 + nível).
 // Melhorar uma arma na bancada (1 Peça + 1 Sucata) dá +2 balas ou +2
 // usos, e nunca mexe no dano.
@@ -23,14 +23,16 @@ export type SupplyKey = keyof TdaSupplies
 export const UNIT = 100
 /** Cabem até 3 inteiros de cada material (300%), com ou sem Mochila. */
 export const MATERIAL_CAP = 3 * UNIT
+/** Peças não têm teto de verdade; este é só um limite prático (999 peças). */
+export const PARTS_MAX = 999 * UNIT
 
 export const SUPPLY_LIST: { key: SupplyKey; label: string; hint: string; whole: boolean }[] = [
   { key: 'trapos',      label: 'Trapos',      hint: 'Curativos e pavios',            whole: false },
   { key: 'alcool',      label: 'Álcool',      hint: 'Limpa feridas ou vira fogo',    whole: false },
   { key: 'laminas',     label: 'Lâminas',     hint: 'Facas e cacos afiados',         whole: false },
   { key: 'explosivos',  label: 'Explosivos',  hint: 'Pólvora e pavio',               whole: false },
-  { key: 'sucata',      label: 'Sucata',      hint: 'Metal, fita, parafusos (inteira)', whole: true },
-  { key: 'pecas',       label: 'Peças',       hint: 'Pra melhorar armas (inteira)',  whole: true },
+  { key: 'sucata',      label: 'Sucata',      hint: 'Metal, fita, parafusos',        whole: false },
+  { key: 'pecas',       label: 'Peças',       hint: 'Pra melhorar armas (sempre inteira, sem limite)', whole: true },
 ]
 
 /** Chaves guardadas em unidades (o resto dos materiais é em porcentagem). */
@@ -58,7 +60,7 @@ export function normalizeSupplies(raw: Partial<TdaSupplies> | null | undefined):
   const base = emptySupplies()
   for (const key of Object.keys(base) as SupplyKey[]) {
     const v = Number(raw?.[key])
-    const max = COUNTED.includes(key) ? 99 : MATERIAL_CAP
+    const max = COUNTED.includes(key) ? 99 : key === 'pecas' ? PARTS_MAX : MATERIAL_CAP
     base[key] = Number.isFinite(v) ? Math.max(0, Math.min(max, Math.round(v))) : 0
   }
   return base
@@ -75,6 +77,7 @@ export function clampBackpack(n: number): number {
 export function supplyCap(key: SupplyKey, backpack: number): number {
   if (key === 'kits') return kitCap(backpack)
   if (key === 'suplementos') return SUPPLEMENT_MAX
+  if (key === 'pecas') return PARTS_MAX
   return MATERIAL_CAP
 }
 

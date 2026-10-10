@@ -5,6 +5,7 @@ import {
   KIT_HEAL,
   MATERIAL_CAP,
   MAX_BACKPACK,
+  PARTS_MAX,
   RECIPES,
   SUPPLY_LIST,
   UNIT,
@@ -67,12 +68,12 @@ export function TdaSuppliesTab({
         <section className="tda-card">
           <div className="tda-card__header">
             <h4 className="tda-card__title">Materiais <span className="tda-card__subtitle">em pedaços</span></h4>
-            <span className="tda-counter">até {MATERIAL_CAP / UNIT} de cada</span>
+            <span className="tda-counter">até {MATERIAL_CAP / UNIT} de cada, peças sem limite</span>
           </div>
           <p className="tda-hint">
-            Trapos, álcool, lâminas e explosivos se acham em pedaços: meio trapo, um terço de frasco. Só serve pra fabricar
-            com <strong>100%</strong> de cada ingrediente, então os pedaços vão se somando pelo caminho. Sucata e peças
-            sempre se acham inteiras.
+            Trapos, álcool, lâminas, explosivos e sucata se acham em pedaços: meio trapo, um terço de frasco. Só serve pra
+            fabricar com <strong>100%</strong> de cada ingrediente, então os pedaços vão se somando pelo caminho. Peças
+            sempre se acham inteiras (valem no mínimo 1) e não têm limite.
           </p>
           <ul className="tda-list">
             {SUPPLY_LIST.map((s) => {
@@ -86,11 +87,15 @@ export function TdaSuppliesTab({
                     </span>
                     {s.whole ? (
                       <div className="tda-stepper">
-                        <button type="button" className="tda-stepper__btn" aria-label={`Menos um de ${s.label}`}
+                        <button type="button" className="tda-stepper__btn" aria-label={`Menos uma ${s.label.toLowerCase()}`}
                           onClick={() => onSupply(s.key, value - UNIT)} disabled={value < UNIT}>−</button>
-                        <span className="tda-stepper__value">{value / UNIT}<small>/{MATERIAL_CAP / UNIT}</small></span>
-                        <button type="button" className="tda-stepper__btn" aria-label={`Mais um de ${s.label}`}
-                          onClick={() => onSupply(s.key, value + UNIT)} disabled={value >= MATERIAL_CAP}>+</button>
+                        <input
+                          type="number" className="input tda-parts__input" min={0} max={PARTS_MAX / UNIT} step={1}
+                          value={Math.floor(value / UNIT)} aria-label={`Quantidade de ${s.label.toLowerCase()}`}
+                          onChange={(e) => onSupply(s.key, (parseInt(e.target.value, 10) || 0) * UNIT)}
+                        />
+                        <button type="button" className="tda-stepper__btn" aria-label={`Mais uma ${s.label.toLowerCase()}`}
+                          onClick={() => onSupply(s.key, value + UNIT)} disabled={value >= PARTS_MAX}>+</button>
                       </div>
                     ) : (
                       <label className="tda-pct">
@@ -104,6 +109,7 @@ export function TdaSuppliesTab({
                     )}
                   </div>
 
+                  {!s.whole && (
                   <div className="tda-gauge" role="img" aria-label={`${s.label}: ${amountLabel(value)} de ${MATERIAL_CAP / UNIT}`}>
                     {[0, 1, 2].map((i) => {
                       const fill = Math.max(0, Math.min(1, (value - i * UNIT) / UNIT))
@@ -114,6 +120,7 @@ export function TdaSuppliesTab({
                       )
                     })}
                   </div>
+                  )}
 
                   <div className="tda-material__foot">
                     <span className="tda-hint">
@@ -150,7 +157,7 @@ export function TdaSuppliesTab({
             </div>
           </div>
           <p className="tda-hint">
-            Os materiais cabem sempre até {MATERIAL_CAP / UNIT} de cada. A Mochila aumenta as balas de cada arma de fogo
+            Os materiais cabem sempre até {MATERIAL_CAP / UNIT} de cada (peças não têm limite). A Mochila aumenta as balas de cada arma de fogo
             (até <strong>{capacity(backpack)}</strong>), os kits médicos (até <strong>{kitCap(backpack)}</strong>) e os
             explosivos de arremesso (até <strong>{throwableCap(backpack)}</strong>). Nível máximo: {MAX_BACKPACK}.
           </p>

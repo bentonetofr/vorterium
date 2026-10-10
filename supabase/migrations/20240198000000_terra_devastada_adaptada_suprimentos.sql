@@ -5,8 +5,8 @@
 -- ============================================================
 --
 -- Suprimentos do personagem:
---   • supplies: materiais em PORCENTAGEM (100 = 1 inteiro, até 300; sucata e
---     peças de 100 em 100) e kits/suplementos em unidades, num jsonb
+--   • supplies: materiais em PORCENTAGEM (100 = 1 inteiro, até 300) e peças de
+--     100 em 100 (sem teto), com kits/suplementos em unidades, num jsonb
 --     { "trapos", "alcool", "sucata", "laminas", "explosivos", "pecas",
 --       "suplementos", "kits" } (inteiros, ausente = 0);
 --   • backpack: nível da Mochila (0 a 3), que aumenta o quanto cabe de cada

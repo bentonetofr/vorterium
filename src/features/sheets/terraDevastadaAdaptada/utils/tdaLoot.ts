@@ -2,6 +2,7 @@ import type { TdaInventoryItem, TdaSupplies } from '../../../../shared/types'
 import type { TestOutcome } from './tdaRules'
 import {
   MATERIAL_CAP,
+  PARTS_MAX,
   SUPPLEMENT_MAX,
   SUPPLY_LIST,
   UNIT,
@@ -19,9 +20,11 @@ import {
 //             + 1 (no máximo 4).
 //   Tabela    d6 (+1 em lugar Rico, −1 em Escasso, de 1 a 6):
 //             1 nada · 2 trapos · 3 álcool · 4 lâminas ou explosivos ·
-//             5 sucata ou munição · 6 raro (peça, kit médico ou suplemento).
-//   Pedaços   trapos, álcool, lâminas e explosivos vêm em 25%, 50%, 75% ou
-//             100%; sucata, peça, kit e suplemento vêm inteiros.
+//             5 sucata, peça ou munição · 6 raro (peça, kit médico ou
+//             suplemento).
+//   Pedaços   trapos, álcool, lâminas, explosivos e sucata vêm em 25%,
+//             50%, 75% ou 100%; peça, kit e suplemento vêm inteiros.
+//             Peça nunca vale menos de 1 e não tem teto.
 // ────────────────────────────────────────────────────────
 
 export type Richness = 'escasso' | 'comum' | 'rico'
@@ -32,8 +35,8 @@ export const RICHNESS: { id: Richness; label: string; shift: number; hint: strin
   { id: 'rico',    label: 'Rico',    shift: 1,  hint: 'Intacto ou escondido: a tabela melhora.' },
 ]
 
-export type PieceKey = 'trapos' | 'alcool' | 'laminas' | 'explosivos'
-export type WholeKey = 'sucata' | 'pecas'
+export type PieceKey = 'trapos' | 'alcool' | 'laminas' | 'explosivos' | 'sucata'
+export type WholeKey = 'pecas'
 
 export type LootFind =
   | { kind: 'nada' }
@@ -71,7 +74,10 @@ export function rollLoot(shift: number, d6: Rng = cryptoD6): LootFind {
     case 2: return piece('trapos', sub)
     case 3: return piece('alcool', sub)
     case 4: return piece(d6() % 2 === 1 ? 'laminas' : 'explosivos', sub)
-    case 5: return sub <= 3 ? { kind: 'whole', key: 'sucata' } : { kind: 'ammo', bullets: 1 + ((d6() - 1) >> 1) }
+    case 5:
+      if (sub <= 2) return piece('sucata', d6())
+      if (sub === 3) return { kind: 'whole', key: 'pecas' }
+      return { kind: 'ammo', bullets: 1 + ((d6() - 1) >> 1) }
     default: return sub <= 3 ? { kind: 'whole', key: 'pecas' } : sub <= 5 ? { kind: 'kit' } : { kind: 'suplemento' }
   }
 }
@@ -84,7 +90,7 @@ export function lootLabel(f: LootFind): string {
   switch (f.kind) {
     case 'nada':       return 'Nada de útil, só lixo'
     case 'piece':      return `${f.percent}% de ${label(f.key)}`
-    case 'whole':      return f.key === 'pecas' ? '1 peça de arma' : '1 sucata'
+    case 'whole':      return '1 peça de arma'
     case 'ammo':       return f.bullets === 1 ? '1 bala' : `${f.bullets} balas`
     case 'kit':        return '1 kit médico'
     case 'suplemento': return '1 suplemento'
@@ -116,8 +122,8 @@ export function applyLoot(
     }
 
     case 'whole': {
-      if (MATERIAL_CAP - supplies[f.key] < UNIT) return { error: `Já está com 3 de ${label(f.key)}: não cabe mais.` }
-      return { supplies: { ...supplies, [f.key]: supplies[f.key] + UNIT }, inventory, text: `+1 ${f.key === 'pecas' ? 'peça' : 'sucata'}` }
+      if (supplies[f.key] + UNIT > PARTS_MAX) return { error: 'Não cabem mais peças.' }
+      return { supplies: { ...supplies, [f.key]: supplies[f.key] + UNIT }, inventory, text: '+1 peça' }
     }
 
     case 'kit': {
