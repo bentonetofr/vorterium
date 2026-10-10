@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.40',
+    date:    '2026-10-10',
+    title:   'Mundo pronto: Nova York — Zona Morta (Vortable)',
+    items: [
+      'Mundos do Vortable: novo mundo pronto "NOVA YORK: ZONA MORTA", com 37 zonas, no clima de The Last of Us, em "Criar este mundo". Lá fora nunca tem esporos: só mato invadindo o asfalto, carros abandonados, placas dos EUA e musgo em tudo.',
+      'Começa numa avenida na vertical (de baixo para cima), com becos dos dois lados, metrô, táxis, escadas de incêndio, carrinho de cachorro-quente e prédios para entrar: edifício de apartamentos (3 andares), bodega, farmácia e lanchonete. Cada prédio é uma zona e cada andar também.',
+      'A avenida segue para o norte e faz a curva para a direita (delegacia com 2 andares, edifício de escritórios com 2 andares, loja de roupas), depois a estrada vai perdendo o asfalto até virar estrada de terra na mata (motel e posto de gasolina). Mais adiante, a mata fechada, com cabana, galpão e a escola no centro.',
+      'A escola P.S. 114 tem térreo, 2º e 3º andares, porão e túnel de serviço. O túnel dá no metrô, com 5 zonas de estações e túneis cobertos de esporos, vagões abandonados, Estaladores e Corredores. Uma escada leva à superfície, na margem de um rio gigante.',
+      'A margem tem 3 zonas (cais, calçadão e o restaurante). O restaurante The Arbor tem salão, cozinha, 2º andar, salão de eventos e terraço, e é o fim do mapa.',
+      'Objetos novos (folha "Cidade grande"): trilhos e vagão de metrô, entrada do metrô (SUBWAY), escada de incêndio, toldos listrados, letreiros de neon (DELI, PHARMACY, MOTEL, DINER, POLICE, BANK, P.S. 114, THE ARBOR...), carros vistos de frente e de trás para ruas na vertical, carrinho de cachorro-quente, lixeira de arame, chaminé de vapor, barco encalhado e muro de beco.',
+      'O arquivo do mundo (nova-york.mundo.json) também pode ser importado direto pelo botão de importar mundo. Ele é gerado por scripts/tlou_art/world_nyc.py (python scripts/make-tlou-art.py --world).',
+    ],
+  },
+  {
     version: '1.39',
     date:    '2026-10-10',
     title:   'Varredura de erros: Cidade em Ruínas e armas no boneco',

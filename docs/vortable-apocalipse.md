@@ -10,6 +10,7 @@ encaixada nos catálogos do motor do Vortable.
 | Objetos | ruínas, veículos abandonados, mobiliário urbano, quarentena e barricadas, acampamento, infecção (fungo, casulos, bulbos e nuvens de esporos), natureza invasora, sobrevivência |
 | Personagem | 14 cores novas de roupa e cabelo; máscara de gás; fungo e veias de infectado; roupas xadrez, camufladas, sujas e colete tático; sujeira e lama; armas no boneco (mão, costas e bolso), ligadas ao inventário da ficha adaptada (`tdaWeaponLook.ts`, `weaponLookService.ts`) |
 | Ruas (EUA) | asfalto/calçada/concreto no estilo limpo (`terrains.py`); faixas pintadas de chão, placas de trânsito e peças americanas em `objects_roads.py` (folha `tlou-estrada`) |
+| Mundo Nova York | `NOVA YORK: ZONA MORTA` (`public/vortable/maps/nova-york.mundo.json`, 37 zonas, 18 NPCs): `world_nyc.py` monta o mundo, com `nyc_kit.py` (ruas, fachadas, fileiras de móveis), `nyc_buildings.py` (interiores), `nyc_surface.py` (zonas de fora), `nyc_inner.py` (delegacia, escola, metrô, restaurante) e a folha `tlou-cidade` (`objects_city.py`) |
 | Mundo pronto | `CIDADE EM RUÍNAS` (`public/vortable/maps/ruinas.mundo.json`, 4 zonas, 10 NPCs), gerado por `scripts/tlou_art/worlds.py`; regerar só ele com `python scripts/make-tlou-art.py --world`; listado em `WorldsPanel.tsx` (`TEMPLATES`) |
 | Terrenos | asfalto (novo, rachado, com musgo), calçada, concreto, entulho, terra, lama, grama seca, mato invasor, micélio, piso de hospital, madeira podre, carpete, folhas, cinzas, neve suja |
 

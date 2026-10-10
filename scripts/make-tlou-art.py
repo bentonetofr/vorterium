@@ -18,8 +18,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from tlou_art import objects_infection, objects_nature, objects_quarantine, objects_roads, objects_ruins, objects_survival  # noqa: E402
-from tlou_art import chars, faces, garments, terrains, weapons, worlds  # noqa: E402
+from tlou_art import objects_city, objects_infection, objects_nature, objects_quarantine, objects_roads, objects_ruins, objects_survival  # noqa: E402
+from tlou_art import chars, faces, garments, terrains, weapons, worlds, world_nyc  # noqa: E402
 from tlou_art.preview import contact  # noqa: E402
 from tlou_art.sheet import Sheet, merge_objects, write_credits  # noqa: E402
 
@@ -47,6 +47,9 @@ def object_sheets() -> dict[str, Sheet]:
     roads = Sheet('tlou-estrada')
     objects_roads.build(roads)
     sheets['tlou-estrada'] = roads
+    city = Sheet('tlou-cidade')
+    objects_city.build(city)
+    sheets['tlou-cidade'] = city
     return sheets
 
 
@@ -54,6 +57,7 @@ def main() -> None:
     args = sys.argv[1:]
     if '--world' in args:                      # só o mundo pronto (usa os catálogos que já estão no disco)
         worlds.generate(VORTABLE)
+        world_nyc.generate(VORTABLE)
         return
     sheets = object_sheets()
     if '--preview' in args:
@@ -91,6 +95,7 @@ def main() -> None:
         char_items += items
     chars.merge_character(ASSETS, char_slots, char_items)
     worlds.generate(VORTABLE)
+    world_nyc.generate(VORTABLE)
     total = sum(len(e) for _, e in built.values())
     print(f'{total} objetos em {len(built)} folha(s), {len(ground_entries)} terrenos, {len(char_items)} pecas de personagem')
 
