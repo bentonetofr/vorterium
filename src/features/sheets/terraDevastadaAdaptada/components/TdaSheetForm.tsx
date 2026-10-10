@@ -58,6 +58,7 @@ import { TdaStealthModal, type TdaStealthMode } from './TdaStealthModal'
 import { TdaSearchModal } from './TdaSearchModal'
 import { applyLoot, type LootFind } from '../utils/tdaLoot'
 import { alertLevel } from '../constants/tdaStealth'
+import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { useTdaScene } from '../utils/useTdaScene'
 import './TerraDevastadaAdaptadaSheet.css'
 
@@ -477,6 +478,8 @@ export function TdaSheetForm({
                 <button type="button" className="tda-portrait__remove" onClick={onPortraitRemove} aria-label="Remover a imagem">×</button>
               )}
               <input ref={fileRef} type="file" accept={PORTRAIT_TYPES.join(',')} hidden onChange={onFile} />
+              {/* Só pro dono da ficha de jogador: abre o criador de personagem do Vortable */}
+              {!sheet.is_npc && <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />}
             </div>
 
             <div className="tda-hero__fields">

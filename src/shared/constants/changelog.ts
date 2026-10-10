@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.32',
+    date:    '2026-10-10',
+    title:   'Criar personagem direto da ficha adaptada',
+    items: [
+      'Terra Devastada Adaptada: o botão "Criar personagem no Vortable" agora fica logo embaixo do quadro da imagem do personagem, na ficha. Depois de criado, vira "Editar personagem no Vortable".',
+    ],
+  },
+  {
     version: '1.31',
     date:    '2026-10-10',
     title:   'Notificações da Terra Devastada Adaptada',

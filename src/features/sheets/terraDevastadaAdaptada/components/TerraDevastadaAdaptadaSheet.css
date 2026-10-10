@@ -1231,6 +1231,26 @@
 }
 .tda-portrait__remove:hover { color: var(--bg-void); background: var(--tda-blood); border-color: var(--tda-blood); }
 
+/* Botão "Criar personagem no Vortable", embaixo do quadro da foto (no fluxo, sem cobrir a descrição). */
+.tda-portrait .char-btn {
+  position: static;
+  display: block;
+  transform: none;
+  width: 100%;
+  max-width: none;
+  margin-top: 14px;
+  padding: 7px var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-primary);
+  background: var(--bg-void);
+  border: 1px solid var(--border-bright);
+  border-radius: 0;
+}
+.tda-portrait .char-btn:hover { color: var(--bg-void); background: var(--text-primary); border-color: var(--text-primary); }
+
 /* ── Celular ── */
 @media (max-width: 900px) {
   .tda-hero { grid-template-columns: minmax(0, 1fr); }
