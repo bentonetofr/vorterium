@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { getMyCampaigns } from '../../campaigns/services/campaignService'
 import { useMesaStream } from '../MesaStreamProvider'
+import { useScreenShare } from '../screen/ScreenShareProvider'
 import { enterFullscreen } from '../../vortable/fullscreen'
 import './MesaLiveNotice.css'
 
@@ -17,6 +18,8 @@ import './MesaLiveNotice.css'
 // ────────────────────────────────────────────────────────
 
 interface Notice {
+  /** 'vortable' = sessão do Vortable; 'tela' = transmissão de tela. */
+  kind:         'vortable' | 'tela'
   liveId:       string
   campaignId:   string
   campaignName: string
@@ -52,6 +55,7 @@ export function MesaLiveNotice() {
   const { user } = useAuth()
   const { campaign } = useCurrentCampaign()
   const { viewing } = useMesaStream()
+  const screen = useScreenShare()
   const navigate = useNavigate()
   const [notices, setNotices] = useState<Notice[]>([])
   const dismissedRef = useRef<Set<string>>(readDismissed())
@@ -84,24 +88,28 @@ export function MesaLiveNotice() {
       await supabase.realtime.setAuth()
       if (disposed) return
       for (const c of playerCampaigns) {
-        const channel = supabase.channel(`mesa-aviso:${c.id}`, { config: { private: true, broadcast: { self: false } } })
-        channel.on('broadcast', { event: 'live' }, ({ payload }) => {
-          const liveId = String(payload?.liveId ?? '')
-          if (!liveId || dismissedRef.current.has(liveId)) return
-          setNotices((list) => list.some((n) => n.liveId === liveId) ? list : [...list, {
-            liveId,
-            campaignId:   c.id,
-            campaignName: c.name,
-            masterName:   String(payload?.masterName ?? 'O mestre'),
-          }])
-        })
-        channel.on('broadcast', { event: 'ended' }, () => {
-          setNotices((list) => list.filter((n) => n.campaignId !== c.id))
-        })
-        channel.subscribe((status) => {
-          if (status === 'SUBSCRIBED') void channel.send({ type: 'broadcast', event: 'status?', payload: {} })
-        })
-        channels.push(channel)
+        for (const kind of ['vortable', 'tela'] as const) {
+          const topic = kind === 'tela' ? `mesa-aviso:${c.id}:tela` : `mesa-aviso:${c.id}`
+          const channel = supabase.channel(topic, { config: { private: true, broadcast: { self: false } } })
+          channel.on('broadcast', { event: 'live' }, ({ payload }) => {
+            const liveId = String(payload?.liveId ?? '')
+            if (!liveId || dismissedRef.current.has(liveId)) return
+            setNotices((list) => list.some((n) => n.liveId === liveId) ? list : [...list, {
+              kind,
+              liveId,
+              campaignId:   c.id,
+              campaignName: c.name,
+              masterName:   String(payload?.masterName ?? 'O mestre'),
+            }])
+          })
+          channel.on('broadcast', { event: 'ended' }, () => {
+            setNotices((list) => list.filter((n) => !(n.campaignId === c.id && n.kind === kind)))
+          })
+          channel.subscribe((status) => {
+            if (status === 'SUBSCRIBED') void channel.send({ type: 'broadcast', event: 'status?', payload: {} })
+          })
+          channels.push(channel)
+        }
       }
     })()
 
@@ -118,15 +126,16 @@ export function MesaLiveNotice() {
   }
 
   // Quem já está com a aba Mesa aberta nessa campanha não precisa do aviso.
-  const visible = notices.filter((n) => !(viewing && n.campaignId === currentId))
+  const isViewing = (n: Notice) => n.campaignId === currentId && (n.kind === 'tela' ? screen.viewing : viewing)
+  const visible = notices.filter((n) => !isViewing(n))
   const current = visible[0] ?? null
 
   // Já está vendo: conta como visto.
   useEffect(() => {
-    if (!viewing || !currentId) return
-    for (const n of notices) if (n.campaignId === currentId) dismiss(n.liveId)
+    if (!currentId) return
+    for (const n of notices) if (isViewing(n)) dismiss(n.liveId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewing, currentId, notices])
+  }, [viewing, screen.viewing, currentId, notices])
 
   // Some sozinho depois de um tempo; som ao aparecer.
   const currentLiveId = current?.liveId
@@ -143,6 +152,10 @@ export function MesaLiveNotice() {
   function watch() {
     if (!current) return
     dismiss(current.liveId)
+    if (current.kind === 'tela') {
+      navigate(`/campanhas/${current.campaignId}/mesa-sessao`, { state: { initialSessionSubTab: 'transmissao' } })
+      return
+    }
     enterFullscreen() // vem do clique
     navigate(`/campanhas/${current.campaignId}/vortable`)
   }
@@ -151,7 +164,7 @@ export function MesaLiveNotice() {
     <div key={current.liveId} className="mesa-notice" role="status" aria-live="polite">
       <span className="mesa-notice__live">Ao vivo</span>
       <div className="mesa-notice__body">
-        <p className="mesa-notice__message"><strong>{current.masterName}</strong> iniciou a sessão no Vortable</p>
+        <p className="mesa-notice__message"><strong>{current.masterName}</strong> {current.kind === 'tela' ? 'iniciou uma transmissão de tela' : 'iniciou a sessão no Vortable'}</p>
         <p className="mesa-notice__campaign">{current.campaignName}</p>
       </div>
       <div className="mesa-notice__actions">

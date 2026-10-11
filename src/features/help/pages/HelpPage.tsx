@@ -53,6 +53,15 @@ const TOPICS: Topic[] = [
     ],
   },
   {
+    id: 'transmissao', icon: '▤', title: 'Transmissão de tela',
+    steps: [
+      'Mestre: na sub-aba Transmissão da Sessão, clique em "Transmitir tela" e escolha uma janela, aba ou a tela inteira. Pra ter som, marque "Compartilhar áudio" na escolha (funciona melhor escolhendo uma aba do navegador no Chrome ou no Edge).',
+      'Clique na imagem pra apontar um lugar: todos veem o ponteiro.',
+      '"Pausar" congela a imagem pros jogadores enquanto você arruma algo; "Trocar tela" muda o que está sendo mostrado sem parar a transmissão; "Parar transmissão" encerra.',
+      'Jogador: quando o mestre começa a transmitir, aparece um aviso em qualquer página do site com o botão "Assistir". O som continua tocando mesmo com você em outras abas. Se o navegador bloquear o som, clique em "Ativar som".',
+    ],
+  },
+  {
     id: 'fichas', icon: '◎', title: 'Fichas',
     steps: [
       'Cada jogador tem uma ficha por campanha, na sub-aba Ficha. Tudo salva sozinho: espere o "✓ Tudo salvo" no fim da ficha.',

@@ -88,6 +88,13 @@ export function PrivacidadePage() {
           ficam guardados na campanha e só os membros dela os veem.
         </p>
         <p className="public-page__text">
+          A transmissão de tela (aba Transmissão da Sessão) vai direto do navegador do
+          mestre para o de cada jogador (WebRTC) e <strong>não é gravada nem armazenada</strong> pelo
+          Vorterium. Para abrir essa conexão direta, os navegadores dos participantes
+          trocam entre si informações de rede, como o endereço IP, e podem consultar
+          servidores públicos de conexão (STUN), como os do Google.
+        </p>
+        <p className="public-page__text">
           O navegador também guarda localmente algumas preferências, como o tema
           escolhido e o volume dos sons.
         </p>

@@ -8,6 +8,8 @@ import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
 import { TdaBestiaryPanel } from '../../sheets/terraDevastadaAdaptada/components/TdaBestiaryPanel'
 import { VortableMesa } from '../../vortable/components/VortableMesa'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { useScreenShare } from '../../mesa/screen/ScreenShareProvider'
+import { ScreenPanel } from '../../mesa/screen/ScreenPanel'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
@@ -23,7 +25,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'transmissao', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -36,6 +38,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // renderização.
   const location = useLocation()
   const mesa = useMesaStream()
+  const screen = useScreenShare()
   const showBestiary = campaign.role === 'master'
     && (campaign.system === 'altherium' || campaign.system === 'terra_devastada_adaptada')
   // Abas que essa pessoa tem nessa campanha — pedido de outra (ex.:
@@ -47,7 +50,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // Com transmissão rolando, a Sessão já abre na Mesa.
   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(() => {
     const wanted = (location.state as NavigationState | null)?.initialSessionSubTab
-    return available(wanted) ? wanted : mesa.live ? 'mesa' : 'ficha'
+    return available(wanted) ? wanted : mesa.live ? 'mesa' : screen.live ? 'transmissao' : 'ficha'
   })
   const tabDir = useTabDirection(SUB_TAB_ORDER, activeSubTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveSubTab)
@@ -66,6 +69,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   // sentido na visão dele; jogador só tem a própria ficha.
   const subTabs: SubTab[] = [
     { id: 'mesa',       label: 'Mesa' },
+    { id: 'transmissao', label: 'Transmissão' },
     { id: 'ficha',      label: campaign.role === 'master' ? 'Fichas' : 'Ficha' },
     { id: 'atividade',  label: 'Atividade' },
     { id: 'iniciativa', label: 'Iniciativa' },
@@ -90,6 +94,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
             <span className="campaign-tab__label">
               {tab.label}
               {tab.id === 'mesa' && mesa.live && <span className="campaign-tab__live" aria-label="ao vivo" />}
+              {tab.id === 'transmissao' && screen.live && <span className="campaign-tab__live" aria-label="ao vivo" />}
             </span>
           </button>
         ))}
@@ -104,6 +109,15 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         className="anim-tab-panel"
       >
         {activeSubTab === 'mesa' && <VortableMesa campaign={campaign} />}
+      </div>
+
+      <div
+        id="session-subtabpanel-transmissao"
+        role="tabpanel"
+        hidden={activeSubTab !== 'transmissao'}
+        className="anim-tab-panel"
+      >
+        {activeSubTab === 'transmissao' && <ScreenPanel />}
       </div>
 
       <div

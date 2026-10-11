@@ -25,6 +25,7 @@ import { VortableFab } from '../../features/vortable/components/VortableFab'
 import { DocumentOverlay } from '../../features/mesa/documents/DocumentOverlay'
 import { DocumentsFab } from '../../features/mesa/documents/DocumentsFab'
 import { VortablePip } from '../../features/vortable/components/VortablePip'
+import { ScreenShareProvider } from '../../features/mesa/screen/ScreenShareProvider'
 import { usePip } from '../../features/vortable/pip/pipStore'
 import { Presence } from '../../shared/components/Presence'
 import { FabToasts } from '../../shared/components/FabToasts'
@@ -41,9 +42,11 @@ export function PrivateLayout() {
     <DiceRollerProvider>
     <CurrentCampaignProvider>
     <MesaStreamProvider announce={pip?.role === 'master'}>
+    <ScreenShareProvider>
     <RulebookHostProvider>
       <PrivateLayoutContent />
     </RulebookHostProvider>
+    </ScreenShareProvider>
     </MesaStreamProvider>
     </CurrentCampaignProvider>
     </DiceRollerProvider>

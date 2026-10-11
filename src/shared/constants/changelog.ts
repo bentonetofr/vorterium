@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.58',
+    date:    '2026-10-11',
+    title:   'Transmissão de tela de volta',
+    items: [
+      'A transmissão de tela do mestre voltou, do jeito que era: na Sessão, uma sub-aba nova chamada Transmissão (ao lado de Mesa). O mestre transmite uma janela, aba ou a tela inteira, com som, e os jogadores assistem direto no navegador (WebRTC, nada é gravado).',
+      'Voltaram também o ponteiro (clique na imagem e todos veem o brilho no mesmo lugar), Pausar, Trocar tela sem derrubar ninguém, o indicador de qualidade da conexão de cada jogador, a tela cheia, o volume e "Ativar som", a reconexão automática e os "Detalhes da conexão" quando a transmissão não abre.',
+      'O jogador recebe o aviso "iniciou uma transmissão de tela" com o botão Assistir em qualquer página do site, o som continua tocando em outras abas, e a Visão geral e o menu da campanha mostram "ao vivo".',
+      'Convive com o Vortable: são duas coisas separadas (a sub-aba Mesa continua sendo o mundo 2D e as artes). A transmissão usa um canal próprio, então não precisa de migration nova.',
+    ],
+  },
+  {
     version: '1.57',
     date:    '2026-10-11',
     title:   'Silenciador na fabricação (fichas Terra Devastada)',

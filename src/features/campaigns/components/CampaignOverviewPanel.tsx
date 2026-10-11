@@ -21,6 +21,7 @@ import type { TabId, SessionSubTabId } from '../campaignSections'
 import { AnimatedNumber } from '../../../shared/components/AnimatedNumber'
 import './CampaignOverviewPanel.css'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { useScreenShare } from '../../mesa/screen/ScreenShareProvider'
 import { Loader } from '../../../shared/components/Loader'
 
 // ────────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ async function loadSheetsSummary(campaign: CampaignWithRole): Promise<SheetsSumm
 function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
   const { chatUnread } = useCurrentCampaign()
   const mesa = useMesaStream()
+  const screen = useScreenShare()
   const [combat, setCombat]             = useState<InitiativeState | null>(null)
   const [participants, setParticipants] = useState<InitiativeParticipant[]>([])
   const [sheets, setSheets]             = useState<SheetsSummary | null>(null)
@@ -155,7 +157,9 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
       title="Sessão"
       action={mesa.live
         ? { label: 'Abrir a Mesa', onClick: () => onNavigate('mesa-sessao', 'mesa') }
-        : { label: 'Abrir sessão', onClick: () => onNavigate('mesa-sessao') }}
+        : screen.live
+          ? { label: 'Ver a transmissão', onClick: () => onNavigate('mesa-sessao', 'transmissao') }
+          : { label: 'Abrir sessão', onClick: () => onNavigate('mesa-sessao') }}
     >
       <div className="ov-stat__num ov-stat__num--sm">
         <span className={`ov-table-badge ${combat ? 'ov-table-badge--combat' : 'ov-table-badge--idle'}`}>
@@ -166,6 +170,11 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
         {mesa.live && (
           <span className="ov-stat__detail--live">
             Ao vivo na Mesa
+          </span>
+        )}
+        {screen.live && (
+          <span className="ov-stat__detail--live">
+            Transmissão de tela ao vivo
           </span>
         )}
         {combat && (

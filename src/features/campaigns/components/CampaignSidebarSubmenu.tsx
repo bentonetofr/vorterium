@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { CAMPAIGN_SECTIONS } from '../campaignSections'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { useScreenShare } from '../../mesa/screen/ScreenShareProvider'
 import { useCurrentCampaign } from '../CurrentCampaignContext'
 import { useCampaignNotebookAuthors } from '../../notebook/services/notebookService'
 
@@ -14,7 +15,9 @@ interface CampaignSidebarSubmenuProps {
 
 /** Lista de seções da campanha — reaproveitada no acordeão da barra lateral (desktop) e no menu suspenso da barra de topo (mobile). */
 export function CampaignSidebarSubmenu({ campaignId, chatUnread, privateUnread, onNavigate }: CampaignSidebarSubmenuProps) {
-  const { live } = useMesaStream()
+  const { live: vortableLive } = useMesaStream()
+  const screenLive = useScreenShare().live
+  const live = vortableLive || screenLive
   const { campaign } = useCurrentCampaign()
   // Cadernos dos jogadores (ex.: "Anotações da Bruna") — só o mestre vê.
   const notebooks = useCampaignNotebookAuthors(campaignId, campaign?.id === campaignId && campaign.role === 'master')
