@@ -3,12 +3,12 @@ import type { WatchControls } from '../../../vendor/vortable/vortable'
 import type { VortableNet } from '../net/VortableNet'
 import { CharacterFace } from '../components/CharacterFace'
 import { mapPoint, useMapDrop } from '../enemies/useMapDrop'
-import { ARCHETYPES, placePeople, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person } from './people'
+import { ARCHETYPES, importPeople, loadImported, pickFiles, placePeople, removeImported, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person } from './people'
 import '../enemies/enemies.css'
 
 type Npc = ReturnType<WatchControls['npcs']>[number]
 type Peer = ReturnType<WatchControls['peers']>[number]
-type Tab = 'gerar' | 'zona'
+type Tab = 'gerar' | 'zona' | 'importar'
 
 const DRAG_TYPE = 'application/x-vortable-person'
 const ARMS: { id: ArmsMode; label: string; title: string }[] = [
@@ -44,6 +44,8 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
   const [anchor, setAnchor] = useState('spawn')
   const [showName, setShowName] = useState(false)
   const [cards, setCards] = useState<Person[]>([])
+  // personagens importados de arquivo (ficam guardados no navegador, por campanha)
+  const [imported, setImported] = useState<Person[]>(() => loadImported(campaignId))
   const [rolling, setRolling] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
@@ -76,7 +78,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
   const here0 = anchorPeer ? { x: anchorPeer.x, y: anchorPeer.y } : null
 
   useMapDrop(viewEl, DRAG_TYPE, (key, pageX, pageY) => {
-    const person = cards.find((c) => c.key === key)
+    const person = cards.find((c) => c.key === key) ?? imported.find((c) => c.key === key)
     if (!person) return
     const point = mapPoint(watch, pageX, pageY)
     if (!point) { setNote('Pra arrastar, o motor do Vortable precisa da remenda da câmera (node scripts/patch-vortable-camera.mjs). Use o botão Colocar.'); return }
@@ -100,7 +102,21 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
     } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra tirar.') } finally { setBusy(null) }
   }
 
-  const label = (id: string) => ARCHETYPES.find((a) => a.id === id)?.label ?? id
+  const label = (id: string) => (id === 'importado' ? 'Importado' : ARCHETYPES.find((a) => a.id === id)?.label ?? id)
+
+  async function importFiles() {
+    setNote(null)
+    const files = await pickFiles()
+    if (files.length === 0) return
+    setBusy('import')
+    try {
+      const res = await importPeople(campaignId, files)
+      if (alive.current) {
+        setImported(res.all)
+        setNote([res.added ? `${res.added} personagem${res.added > 1 ? 's' : ''} importado${res.added > 1 ? 's' : ''}.` : 'Nenhum personagem importado.', ...res.errors].join(' '))
+      }
+    } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra importar.') } finally { setBusy(null) }
+  }
 
   return (
     <section className="live__block enemy">
@@ -108,6 +124,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
       <div className="live__segmented" role="tablist">
         <button type="button" role="tab" aria-selected={tab === 'gerar'} className={`live__seg${tab === 'gerar' ? ' live__seg--on' : ''}`} onClick={() => setTab('gerar')}>Gerar</button>
         <button type="button" role="tab" aria-selected={tab === 'zona'} className={`live__seg${tab === 'zona' ? ' live__seg--on' : ''}`} onClick={() => setTab('zona')}>Na zona{mine.length > 0 ? ` (${mine.length})` : ''}</button>
+        <button type="button" role="tab" aria-selected={tab === 'importar'} className={`live__seg${tab === 'importar' ? ' live__seg--on' : ''}`} onClick={() => setTab('importar')}>Importar{imported.length > 0 ? ` (${imported.length})` : ''}</button>
       </div>
 
       {tab === 'gerar' && (
@@ -156,6 +173,38 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
                   <span>{p.role} · {p.gear}</span>
                 </div>
                 <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
+              </li>
+            ))}
+          </ul>
+          {note && <p className="live__empty" role="status">{note}</p>}
+        </>
+      )}
+
+      {tab === 'importar' && (
+        <>
+          <p className="live__empty">Importe personagens do criador de personagens (arquivos .vortable-personagem.json, de um ou de vários). Eles ficam guardados aqui, prontos pra arrastar pro mapa ou usar o botão Colocar.</p>
+          <div className="live__row">
+            <button type="button" className="btn btn-primary" disabled={busy != null} onClick={() => void importFiles()}>{busy === 'import' ? 'Importando…' : 'Importar arquivo…'}</button>
+          </div>
+          <div className="enemy__opts">
+            <label className="live__switchrow">
+              <input type="checkbox" className="live__switch" checked={showName} onChange={(e) => setShowName(e.target.checked)} />
+              Mostrar o nome sobre a cabeça
+            </label>
+          </div>
+          {imported.length === 0 && <p className="live__empty">Nenhum personagem importado ainda.</p>}
+          <ul className="enemy__list">
+            {imported.map((p) => (
+              <li key={p.key} className="enemy__card enemy__card--drag" draggable onDragStart={(e) => startDrag(e, p)} title="Arraste para o mapa e solte onde quiser">
+                <CharacterFace appearance={p.appearance} size={56} />
+                <div className="enemy__info">
+                  <strong>{p.name}</strong>
+                  <small>Importado</small>
+                </div>
+                <div className="enemy__actions">
+                  <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
+                  <button type="button" className="live__chip" title={`Tirar ${p.name} da lista de importados`} aria-label={`Tirar ${p.name} da lista de importados`} onClick={() => setImported((all) => removeImported(campaignId, all, p.key))}>✕</button>
+                </div>
               </li>
             ))}
           </ul>

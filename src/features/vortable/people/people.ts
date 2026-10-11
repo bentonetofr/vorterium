@@ -10,7 +10,9 @@ import { announceAdd, announceRemove, zoneStorage } from '../enemies/enemies'
 // Cada sorteio é uma pessoa pronta (nome, função, aparência e armas); o mestre solta no mapa e ela vira um NPC fixo da zona.
 // ────────────────────────────────────────────────────────
 
-export type ArchetypeId = 'sobrevivente' | 'soldado' | 'oficial' | 'vagalume' | 'saqueador' | 'cacador' | 'medico' | 'contrabandista'
+export type HumanArchetype = 'sobrevivente' | 'soldado' | 'oficial' | 'vagalume' | 'saqueador' | 'cacador' | 'medico' | 'contrabandista'
+/** Os tipos do gerador: as pessoas, o cachorro e os personagens importados de arquivo. */
+export type ArchetypeId = HumanArchetype | 'cachorro' | 'importado'
 export type ArmsMode = 'auto' | 'none' | 'always'
 
 export interface Archetype {
@@ -28,6 +30,7 @@ export const ARCHETYPES: Archetype[] = [
   { id: 'cacador', label: 'Caçador', blurb: 'Vive na mata: camuflado ou xadrez, chapéu de aba, barba, rifle ou arco.' },
   { id: 'medico', label: 'Médico', blurb: 'Jaleco sujo, máscara e óculos. Quase nunca armado.' },
   { id: 'contrabandista', label: 'Contrabandista', blurb: 'Negocia de tudo: chapéu, mochila grande, pistola ou escopeta escondida.' },
+  { id: 'cachorro', label: 'Cachorro', blurb: 'Pastor alemão (clássico, preto, sable ou branco). Anda, corre e fica parado como qualquer NPC.' },
 ]
 
 export interface Person {
@@ -74,7 +77,7 @@ const WEAPON_LABEL: Record<WeaponKind, string> = {
 
 interface Arms { hand?: readonly [WeaponKind, number][]; back?: readonly [WeaponKind, number][]; hip?: readonly [WeaponKind, number][]; handP: number; backP: number; hipP: number }
 
-const ARMS: Record<ArchetypeId, Arms> = {
+const ARMS: Record<HumanArchetype, Arms> = {
   sobrevivente: { handP: 0.5, hand: [['faca', 3], ['cano', 3], ['taco', 3], ['pistola', 3], ['revolver', 1], ['machadinha', 2]], backP: 0.12, back: [['arco', 2], ['taco', 1]], hipP: 0.3, hip: [['faca', 3], ['pistola', 2]] },
   soldado: { handP: 1, hand: [['rifle', 6], ['escopeta', 2], ['pistola', 1]], backP: 0.35, back: [['rifle', 2], ['escopeta', 1]], hipP: 0.8, hip: [['pistola', 6], ['faca', 3], ['granada', 1]] },
   oficial: { handP: 1, hand: [['pistola', 5], ['revolver', 3]], backP: 0, hipP: 0.4, hip: [['faca', 1]] },
@@ -86,7 +89,7 @@ const ARMS: Record<ArchetypeId, Arms> = {
 }
 const ANY_HAND: readonly [WeaponKind, number][] = [['faca', 2], ['cano', 2], ['taco', 2], ['pistola', 3], ['machadinha', 1]]
 
-function rollLook(arch: ArchetypeId, mode: ArmsMode): WeaponLook {
+function rollLook(arch: HumanArchetype, mode: ArmsMode): WeaponLook {
   if (mode === 'none') return {}
   const a = ARMS[arch]
   const look: WeaponLook = {}
@@ -141,7 +144,7 @@ interface Style {
   grime: [string, number][]
 }
 
-function style(arch: ArchetypeId, female: boolean): Style {
+function style(arch: HumanArchetype, female: boolean): Style {
   const grime: [string, number][] = [['', 3], ['leve', 3], ['pesada', 2], ['lama', 1]]
   switch (arch) {
     case 'soldado': {
@@ -210,7 +213,8 @@ function style(arch: ArchetypeId, female: boolean): Style {
 
 /** Sorteia uma pessoa do tipo pedido (sem tipo, qualquer uma). */
 export async function rollPerson(arch: ArchetypeId | null, arms: ArmsMode = 'auto'): Promise<Person> {
-  const type: ArchetypeId = arch ?? pickW<ArchetypeId>([['sobrevivente', 5], ['soldado', 3], ['vagalume', 2], ['saqueador', 2], ['cacador', 1], ['medico', 1], ['contrabandista', 1], ['oficial', 1]])
+  if (arch === 'cachorro') return rollDog()
+  const type: HumanArchetype = arch && arch !== 'importado' ? arch : pickW<HumanArchetype>([['sobrevivente', 5], ['soldado', 3], ['vagalume', 2], ['saqueador', 2], ['cacador', 1], ['medico', 1], ['contrabandista', 1], ['oficial', 1]])
   const engine = await loadEngine()
   const data = await engine.loadCharacterData(VORTABLE_ASSETS)
   const female = chance(type === 'soldado' ? 0.25 : type === 'saqueador' ? 0.3 : 0.45)
@@ -234,6 +238,83 @@ export async function rollPerson(arch: ArchetypeId | null, arms: ArmsMode = 'aut
   const first = rnd(female ? NAMES_F : NAMES_M)
   const name = st.title ? `${st.title} ${rnd(SURNAMES)}` : `${first} ${rnd(SURNAMES)}`
   return { key: code(), name, role: rnd(st.role), archetype: type, appearance, look, gear: gearText(look) }
+}
+
+// ── Cachorro (pastor alemão) ─────────────────────────────
+
+const DOG_COATS: readonly [string, number][] = [['classico', 5], ['preto', 2], ['sable', 2], ['branco', 1]]
+const DOG_COAT_LABEL: Record<string, string> = { classico: 'clássico', preto: 'preto', sable: 'sable', branco: 'branco' }
+const DOG_NAMES = ['Rex', 'Thor', 'Duque', 'Luna', 'Nina', 'Max', 'Bolt', 'Zeus', 'Mel', 'Trovão', 'Sombra', 'Fera', 'Apolo', 'Kira', 'Hugo', 'Bella', 'Rocky', 'Lobo']
+
+/** Um pastor alemão: o corpo do cachorro no lugar do corpo humano, sem cabeça humana, roupa nem arma. */
+export async function rollDog(): Promise<Person> {
+  const engine = await loadEngine()
+  const data = await engine.loadCharacterData(VORTABLE_ASSETS)
+  const base = engine.defaultAppearance('male')
+  const coat = pickW(DOG_COATS)
+  const appearance = engine.normalizeAppearance(data, { ...base, slots: { body: { id: 'tlou/body/cachorro', variant: coat }, head: { id: 'tlou/head/nenhuma' } } })
+  return { key: code(), name: rnd(DOG_NAMES), role: 'Cachorro', archetype: 'cachorro', appearance, look: {}, gear: `pastor alemão ${DOG_COAT_LABEL[coat]}` }
+}
+
+// ── Importar personagens de arquivo ──────────────────────
+
+interface SavedImport { name: string; appearance: Appearance }
+const importKey = (campaignId: string) => `vortable:importados:${campaignId}`
+
+function toPerson(s: SavedImport): Person {
+  return { key: code(), name: s.name, role: 'Importado', archetype: 'importado', appearance: s.appearance, look: {}, gear: 'do arquivo' }
+}
+
+/** Os personagens que o mestre já importou nesta campanha (ficam guardados no navegador). */
+export function loadImported(campaignId: string): Person[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(importKey(campaignId)) ?? '[]') as SavedImport[]
+    return Array.isArray(raw) ? raw.filter((s) => s && typeof s.name === 'string' && s.appearance).map(toPerson) : []
+  } catch { return [] }
+}
+
+function saveImported(campaignId: string, people: Person[]) {
+  try { localStorage.setItem(importKey(campaignId), JSON.stringify(people.map((p) => ({ name: p.name, appearance: p.appearance })))) } catch { /* sem storage: só não lembra */ }
+}
+
+/** Abre o seletor de arquivos (vários) e devolve o texto de cada um. */
+export function pickFiles(): Promise<{ name: string; text: string }[]> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json,application/json'
+    input.multiple = true
+    input.onchange = async () => resolve(await Promise.all([...(input.files ?? [])].map(async (f) => ({ name: f.name, text: await f.text() }))))
+    input.oncancel = () => resolve([])
+    input.click()
+  })
+}
+
+/**
+ * Lê arquivos de personagem do Vortable (os que o criador de personagens exporta, de um ou vários personagens) e soma aos importados.
+ * Devolve a lista nova e o que deu certo ou errado.
+ */
+export async function importPeople(campaignId: string, files: { name: string; text: string }[]): Promise<{ all: Person[]; added: number; errors: string[] }> {
+  const engine = await loadEngine()
+  const data = await engine.loadCharacterData(VORTABLE_ASSETS)
+  const all = loadImported(campaignId)
+  const errors: string[] = []
+  let added = 0
+  for (const f of files) {
+    try {
+      for (const c of engine.parseCharacterFile(f.text, data)) { all.push(toPerson({ name: c.name, appearance: c.appearance })); added++ }
+    } catch (err) {
+      errors.push(`${f.name}: ${err instanceof Error ? err.message : 'não deu pra ler'}`)
+    }
+  }
+  if (added) saveImported(campaignId, all)
+  return { all, added, errors }
+}
+
+export function removeImported(campaignId: string, all: Person[], key: string): Person[] {
+  const next = all.filter((p) => p.key !== key)
+  saveImported(campaignId, next)
+  return next
 }
 
 export async function rollPeople(arch: ArchetypeId | null, n: number, arms: ArmsMode = 'auto'): Promise<Person[]> {

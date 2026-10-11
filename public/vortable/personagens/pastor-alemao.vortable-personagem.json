@@ -1,0 +1,74 @@
+{
+  "format": "vortable-character",
+  "version": 1,
+  "characters": [
+    {
+      "name": "Pastor alemão (clássico)",
+      "appearance": {
+        "version": 2,
+        "body": "male",
+        "skin": "light",
+        "slots": {
+          "body": {
+            "id": "tlou/body/cachorro",
+            "variant": "classico"
+          },
+          "head": {
+            "id": "tlou/head/nenhuma"
+          }
+        }
+      }
+    },
+    {
+      "name": "Pastor alemão (preto)",
+      "appearance": {
+        "version": 2,
+        "body": "male",
+        "skin": "light",
+        "slots": {
+          "body": {
+            "id": "tlou/body/cachorro",
+            "variant": "preto"
+          },
+          "head": {
+            "id": "tlou/head/nenhuma"
+          }
+        }
+      }
+    },
+    {
+      "name": "Pastor alemão (sable)",
+      "appearance": {
+        "version": 2,
+        "body": "male",
+        "skin": "light",
+        "slots": {
+          "body": {
+            "id": "tlou/body/cachorro",
+            "variant": "sable"
+          },
+          "head": {
+            "id": "tlou/head/nenhuma"
+          }
+        }
+      }
+    },
+    {
+      "name": "Pastor alemão (branco)",
+      "appearance": {
+        "version": 2,
+        "body": "male",
+        "skin": "light",
+        "slots": {
+          "body": {
+            "id": "tlou/body/cachorro",
+            "variant": "branco"
+          },
+          "head": {
+            "id": "tlou/head/nenhuma"
+          }
+        }
+      }
+    }
+  ]
+}

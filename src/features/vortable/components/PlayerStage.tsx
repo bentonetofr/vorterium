@@ -11,6 +11,7 @@ import { EngineStage } from './EngineStage'
 import { SceneOverlay } from './SceneOverlay'
 import { SpectatorStage } from './SpectatorStage'
 import { getResume, patchResume } from '../resume/resumeStore'
+import { loadPlayPosition, savePlayPosition } from '../resume/playPosition'
 import { setLocalZone } from '../enemies/localZone'
 import { CreatureSfxToggle } from '../enemies/CreatureSfxToggle'
 import './SceneBar.css'
@@ -130,8 +131,8 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           const data = await engine.loadCharacterData(VORTABLE_ASSETS)
           if (isDead()) return () => {}
           const net = vnet.net
-          // voltando ao Vortable: o boneco reaparece onde parou (mesma zona e mesmo ponto)
-          const back = getResume(campaign.id)?.play
+          // voltando ao Vortable (ou recarregando a página, ou depois de cair): o boneco reaparece onde parou (mesma zona e mesmo ponto)
+          const back = getResume(campaign.id)?.play ?? loadPlayPosition(campaign.id, userId)
           const game = engine.mountVortable(host, {
             mode: 'play',
             resume: back && back.worldId === active.id ? back.snap : undefined,
@@ -153,7 +154,20 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
             net.sink = (m) => game.receive(m)
             net.onOpen = () => game.resync()
           }
+          // a posição fica guardada no navegador a cada segundo e ao esconder/fechar a página, pra sobreviver a recarregar ou cair
+          const savePos = () => {
+            const snap = game.snapshot()
+            if (snap) savePlayPosition(campaign.id, userId, { worldId: active.id, snap })
+          }
+          const posTimer = window.setInterval(savePos, 1000)
+          const onHide = () => { if (document.visibilityState !== 'visible') savePos() }
+          window.addEventListener('pagehide', savePos)
+          document.addEventListener('visibilitychange', onHide)
           return () => {
+            window.clearInterval(posTimer)
+            window.removeEventListener('pagehide', savePos)
+            document.removeEventListener('visibilitychange', onHide)
+            savePos()
             if (gameRef.current === game) gameRef.current = null
             if (net && net.sink) { net.sink = null; net.onOpen = null }
             const snap = game.snapshot()

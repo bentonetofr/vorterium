@@ -157,6 +157,8 @@ export class MesaSession {
     if (this.disposed) return
     const next = { ...this.snap, ...patch }
     next.live = Boolean(next.stage.liveId)
+    // o mestre reenvia o estado a cada jogador que entra: se nada mudou, ninguém precisa redesenhar
+    if (!this.opts.isMaster && next.channelError === this.snap.channelError && JSON.stringify(next.stage) === JSON.stringify(this.snap.stage)) return
     this.snap = next
     this.opts.onChange(next)
   }

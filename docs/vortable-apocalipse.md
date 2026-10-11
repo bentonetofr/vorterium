@@ -39,3 +39,5 @@ O motor do Vortable é um bundle copiado de outro repositório (commits "Motor s
 sincronização, rode `python scripts/make-tlou-art.py` de novo**: a cópia sobrescreve os catálogos e apaga
 as entradas do pacote Apocalipse (as imagens `tlou-*.png` continuam, mas deixam de estar listadas).
 O ideal é, no futuro, levar este gerador pro repositório do motor.
+| Cachorro e importar NPCs | `scripts/tlou_art/dog.py` gera o pastor alemão (4 pelagens, de frente/costas/lado, caminhar/correr/parado) como o item de corpo `tlou/body/cachorro` + a cabeça vazia `tlou/head/nenhuma` (rodar `python scripts/make-tlou-art.py`); `people/people.ts` tem `rollDog`, `importPeople` (arquivos `.vortable-personagem.json`, guardados em localStorage por campanha) e a aba Importar do `PeoplePane`. Arquivo pronto: `public/vortable/personagens/pastor-alemao.vortable-personagem.json` |
+| Rede ao recarregar | O mestre (`VortableNet`) guarda o último `hello` de cada boneco e responde `who` só a quem perguntou (não repassa a todos); `playPosition.ts` guarda onde o jogador está (localStorage) |

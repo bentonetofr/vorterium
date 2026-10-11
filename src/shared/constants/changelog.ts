@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.56',
+    date:    '2026-10-10',
+    title:   'Pastor alemão, importar NPCs e recarregar sem derrubar ninguém (Vortable)',
+    items: [
+      'Gerador de NPCs: novo tipo "Cachorro". Sorteia pastores alemães em quatro pelagens (clássico com sela preta, preto, sable e branco) com nomes de cachorro. Anda, corre e fica parado, de frente, de costas e de lado, e dá pra arrastar pro mapa, colocar e controlar como qualquer NPC.',
+      'Gerador de NPCs: nova aba "Importar". Importe arquivos de personagem do Vortable (.vortable-personagem.json, de um ou de vários personagens, os mesmos que o criador de personagens exporta). Eles ficam guardados na lista (por campanha, neste navegador), com Colocar, arrastar pro mapa e um ✕ pra tirar da lista. O arquivo do pastor alemão pronto está em /vortable/personagens/pastor-alemao.vortable-personagem.json.',
+      'O cachorro aparece também no criador de personagens como um corpo especial (ao lado de esqueleto e zumbi).',
+      'Quando um jogador recarrega a página, o resto da mesa não reinicia mais: o mestre lembra quem já está na cena e entrega ao jogador que voltou, sem pedir pra todos se anunciarem de novo (antes, cada entrada ou queda gerava uma enxurrada de mensagens pra todos). E os jogadores não redesenham mais a tela quando o mestre só reenvia o mesmo estado da mesa.',
+      'Quando o jogador recarrega a página, fecha a aba ou a conexão cai, ele volta na zona e no ponto em que estava (a posição é guardada no navegador a cada segundo), em vez de voltar pro início do mundo.',
+    ],
+  },
+  {
     version: '1.55',
     date:    '2026-10-10',
     title:   'Hora atual do mapa na barra do Controle ao vivo (Vortable)',

@@ -115,6 +115,8 @@ export class VortableNet {
   /** Mestre: hora/tempo/vento ao vivo por zona ('*' = todas), entregues a quem entra. */
   private readonly envs = new Map<string, unknown>()
   private readonly peers = new Map<string, Peer>()   // mestre: um por jogador
+  /** Mestre: o último "hello" de cada boneco (jogadores, o do mestre, NPCs que ele controla), pra quem entra ver todo mundo sem ninguém ter que se anunciar de novo. */
+  private readonly known = new Map<string, string>()
   private readonly doorWaits = new Map<string, (ok: boolean) => void>()   // jogador: pedidos de saída esperando o mestre
   private link: Peer | null = null                    // jogador: a ligação com o mestre
   private live = false
@@ -138,10 +140,29 @@ export class VortableNet {
     }
     const data = JSON.stringify(msg)
     if (this.opts.isMaster) {
+      this.remember(msg, data)
+      // "quem está aí?" do próprio mestre: respondido aqui com o que já se sabe (perguntar pra todos faria cada jogador se anunciar de novo)
+      if (typeof msg === 'object' && msg !== null && (msg as { t?: unknown }).t === 'who') {
+        for (const hello of this.known.values()) this.sink?.(JSON.parse(hello))
+        return
+      }
       for (const p of this.peers.values()) if (p.dc?.readyState === 'open') p.dc.send(data)
     } else if (this.link?.dc?.readyState === 'open') {
       this.link.dc.send(data)
     }
+  }
+
+  private remember(msg: unknown, data: string) {
+    if (typeof msg !== 'object' || msg === null) return
+    const m = msg as { t?: unknown; id?: unknown }
+    if (typeof m.id !== 'string') return
+    if (m.t === 'hello') this.known.set(m.id, data)
+    else if (m.t === 'bye') this.known.delete(m.id)
+  }
+
+  /** Mestre: manda pra um jogador que acabou de entrar todos os bonecos que já estão no mundo. */
+  private replayTo(id: string) {
+    for (const [kid, data] of this.known) if (kid !== id) this.sendTo(id, JSON.parse(data))
   }
 
   /** Mestre: manda pra um jogador só. */
@@ -236,6 +257,7 @@ export class VortableNet {
     if (this.disposed) return
     this.disposed = true
     this.off()
+    this.known.clear()
     window.clearInterval(this.joinTimer)
     for (const id of [...this.peers.keys()]) this.closePeer(id, false)
     this.stopLink()
@@ -285,7 +307,7 @@ export class VortableNet {
 
     const dc = pc.createDataChannel('vortable')
     peer.dc = dc
-    dc.onopen = () => { this.sendEnvs(id); this.onChange?.(); this.onOpen?.() }
+    dc.onopen = () => { this.sendEnvs(id); this.replayTo(id); this.onChange?.(); this.onOpen?.() }
     dc.onmessage = (e) => this.fromPeer(id, String(e.data))
     dc.onclose = () => { if (this.peers.get(id) === peer) this.closePeer(id) }
 
@@ -348,8 +370,14 @@ export class VortableNet {
       }
       return
     }
-    // jogo recém-montado perguntando quem está aí: ele também precisa da hora/tempo do mestre
-    if ((msg as { t?: unknown }).t === 'who') this.sendEnvs(id)
+    // jogo recém-montado perguntando quem está aí: recebe a hora/tempo do mestre e os bonecos que o mestre já conhece, só ele
+    // (repassar o "quem está aí?" a todos fazia cada jogador se anunciar de novo a cada entrada ou queda de alguém)
+    if ((msg as { t?: unknown }).t === 'who') {
+      this.sendEnvs(id)
+      this.replayTo(id)
+      return
+    }
+    this.remember(msg, data)
     this.sink?.(msg)
     for (const [other, p] of this.peers) if (other !== id && p.dc?.readyState === 'open') p.dc.send(data)
   }
@@ -358,6 +386,7 @@ export class VortableNet {
     const peer = this.peers.get(id)
     if (!peer) return
     this.peers.delete(id)
+    this.known.delete(id)
     window.clearTimeout(peer.dropTimer)
     peer.pc.onicecandidate = null
     peer.pc.onconnectionstatechange = null
