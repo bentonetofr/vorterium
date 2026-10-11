@@ -144,9 +144,18 @@ const DISCONNECT_GRACE_MS = 6000
 const OFFER_TIMEOUT_MS    = 8000
 /** Reconexão automática do jogador: esperas crescentes, até desistir. */
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 6000, 10000, 10000, 15000, 15000]
+/** A ligação com o mestre não abriu nesse tempo: tenta de novo (da segunda vez em diante, só pelo servidor TURN, se houver). */
+const CONNECT_TIMEOUT_MS  = 15000
 const STATS_INTERVAL_MS   = 2000
 const PING_LIFETIME_MS    = 2400
 const PING_MIN_GAP_MS     = 200
+
+/** Configuração da conexão: com `relay`, só passa pelo servidor TURN (se houver). */
+function rtcConfig(relay: boolean): RTCConfiguration {
+  const config: RTCConfiguration = { iceServers: iceServers() }
+  if (relay && hasTurnServer()) config.iceTransportPolicy = 'relay'
+  return config
+}
 
 function newId(): string {
   return crypto.randomUUID().slice(0, 8)
@@ -188,6 +197,7 @@ export class ScreenSession {
   private viewerPc: RTCPeerConnection | null = null
   private viewerPending: RTCIceCandidateInit[] = []
   private viewerDropTimer: number | undefined
+  private connectTimer: number | undefined
   private offerTimer: number | undefined
   private reconnectTimer: number | undefined
   private reconnectAttempts = 0
@@ -246,7 +256,7 @@ export class ScreenSession {
     if (this.opts.isMaster) {
       on('viewer-join', (p) => {
         this.sendState()
-        void this.offerTo(String(p.viewerId ?? ''), String(p.name ?? 'Jogador'))
+        void this.offerTo(String(p.viewerId ?? ''), String(p.name ?? 'Jogador'), p.relay === true)
       })
       on('answer',       (p) => { void this.handleAnswer(String(p.from ?? ''), String(p.sdp ?? '')) })
       on('ice',          (p) => { if (p.from) void this.handleMasterIce(String(p.from), p.candidate as RTCIceCandidateInit) })
@@ -462,12 +472,12 @@ export class ScreenSession {
     if (publish) this.publishViewers()
   }
 
-  private async offerTo(viewerId: string, name: string) {
+  private async offerTo(viewerId: string, name: string, relay = false) {
     const stream = this.localStream
     if (!stream || !viewerId) return
     this.closePeer(viewerId, false)
 
-    const pc = new RTCPeerConnection({ iceServers: iceServers() })
+    const pc = new RTCPeerConnection(rtcConfig(relay))
     const video = stream.getVideoTracks()[0]
     const audio = stream.getAudioTracks()[0]
     const videoSender = video ? pc.addTrack(video, stream) : null
@@ -573,7 +583,12 @@ export class ScreenSession {
   private join() {
     this.lastJoinAt = performance.now()
     if (!this.snap.diag.turn && hasTurnServer()) this.diag({ turn: true })
-    this.send('viewer-join', { viewerId: this.myId, name: this.opts.name })
+    this.send('viewer-join', { viewerId: this.myId, name: this.opts.name, relay: this.useRelay() })
+  }
+
+  /** Já falhou uma vez e há servidor TURN: dessa vez a conexão vai só por ele (rota certa quando a direta não passa). */
+  private useRelay(): boolean {
+    return this.reconnectAttempts >= 1 && hasTurnServer()
   }
 
   /** "Tentar de novo" depois de desistir da reconexão automática. */
@@ -625,6 +640,7 @@ export class ScreenSession {
     this.viewerPending = []
     window.clearTimeout(this.viewerDropTimer)
     window.clearTimeout(this.offerTimer)
+    window.clearTimeout(this.connectTimer)
     if (!pc) return
     pc.ontrack = null
     pc.onicecandidate = null
@@ -662,8 +678,15 @@ export class ScreenSession {
     this.closeViewerPc()
     this.viewerPending = early
     window.clearTimeout(this.reconnectTimer)
-    const pc = new RTCPeerConnection({ iceServers: iceServers() })
+    const pc = new RTCPeerConnection(rtcConfig(this.useRelay()))
     this.viewerPc = pc
+    // ficou "conectando" sem abrir: desiste dessa ligação e refaz (a ICE sozinha leva ~30 s pra desistir)
+    window.clearTimeout(this.connectTimer)
+    this.connectTimer = window.setTimeout(() => {
+      if (this.viewerPc !== pc || pc.connectionState === 'connected') return
+      this.diag({ lastError: `A ligação com o mestre não abriu em ${CONNECT_TIMEOUT_MS / 1000} s.` })
+      this.scheduleReconnect()
+    }, CONNECT_TIMEOUT_MS)
     this.diag({
       offerAt: performance.now(), offers: this.snap.diag.offers + 1, iceState: 'new', connState: 'new',
       local: EMPTY_COUNTS, remote: EMPTY_COUNTS, route: null, turn: hasTurnServer(),
@@ -692,6 +715,7 @@ export class ScreenSession {
       if (this.viewerPc !== pc) return
       this.diag({ connState: pc.connectionState })
       window.clearTimeout(this.viewerDropTimer)
+      if (pc.connectionState === 'connected') window.clearTimeout(this.connectTimer)
       if (pc.connectionState === 'connected') {
         this.reconnectAttempts = 0
         this.update({ status: 'live' })

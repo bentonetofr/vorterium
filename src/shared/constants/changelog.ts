@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.59',
+    date:    '2026-10-11',
+    title:   'Transmissão de tela: jogador que ficava só "conectando"',
+    items: [
+      'Corrigido: quando a ligação direta entre o mestre e um jogador não abria (rede fechada, firewall, 4G), o jogador ficava em "Abrindo a cena…" por até meio minuto, esperando o navegador desistir sozinho. Agora, se a ligação não abre em 15 segundos, ela é refeita.',
+      'A partir da segunda tentativa, e havendo servidor TURN configurado, a conexão passa a ir só pelo TURN (dos dois lados), que é a rota que funciona quando a direta não passa. Depois de várias tentativas sem sucesso aparece "Tentar de novo", e em "Detalhes da conexão" fica o motivo.',
+    ],
+  },
+  {
     version: '1.58',
     date:    '2026-10-11',
     title:   'Transmissão de tela de volta',
