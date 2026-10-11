@@ -123,6 +123,7 @@ interface Peer {
   audioSender: RTCRtpSender | null
   stats:       ViewerStats | null
   dropTimer?:  number
+  connectTimer?: number
 }
 
 interface SessionOptions {
@@ -146,6 +147,10 @@ const OFFER_TIMEOUT_MS    = 8000
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 6000, 10000, 10000, 15000, 15000]
 /** A ligação com o mestre não abriu nesse tempo: tenta de novo (da segunda vez em diante, só pelo servidor TURN, se houver). */
 const CONNECT_TIMEOUT_MS  = 15000
+/** Mestre: a ligação de um jogador não abriu nesse tempo: sai da lista. */
+const PEER_CONNECT_TIMEOUT_MS = 25000
+/** Quanto esperar pelas rotas de rede (principalmente as do TURN) antes de mandar a oferta/resposta. */
+const ICE_GATHER_MAX_MS   = 4000
 const STATS_INTERVAL_MS   = 2000
 const PING_LIFETIME_MS    = 2400
 const PING_MIN_GAP_MS     = 200
@@ -155,6 +160,17 @@ function rtcConfig(relay: boolean): RTCConfiguration {
   const config: RTCConfiguration = { iceServers: iceServers() }
   if (relay && hasTurnServer()) config.iceTransportPolicy = 'relay'
   return config
+}
+
+/** Espera a coleta de rotas de rede terminar (ou o limite): o SDP local já sai com todas elas. */
+function waitIceGathered(pc: RTCPeerConnection): Promise<void> {
+  if (pc.iceGatheringState === 'complete') return Promise.resolve()
+  return new Promise((resolve) => {
+    const done = () => { window.clearTimeout(timer); pc.removeEventListener('icegatheringstatechange', onChange); resolve() }
+    const onChange = () => { if (pc.iceGatheringState === 'complete') done() }
+    const timer = window.setTimeout(done, ICE_GATHER_MAX_MS)
+    pc.addEventListener('icegatheringstatechange', onChange)
+  })
 }
 
 function newId(): string {
@@ -466,6 +482,7 @@ export class ScreenSession {
     if (!peer) return
     this.peers.delete(id)
     window.clearTimeout(peer.dropTimer)
+    window.clearTimeout(peer.connectTimer)
     peer.pc.onicecandidate = null
     peer.pc.onconnectionstatechange = null
     peer.pc.close()
@@ -492,9 +509,8 @@ export class ScreenSession {
     await tuneVideoSender(pc)
     if (this.peers.get(viewerId) !== peer) return
 
-    pc.onicecandidate = (e) => {
-      if (e.candidate) this.send('ice', { to: viewerId, candidate: e.candidate.toJSON() })
-    }
+    // Sem "trickle": a oferta só sai depois de juntar todas as rotas dentro do SDP (uma mensagem só). Mandar cada rota numa
+    // mensagem do Realtime estourava o limite de mensagens por segundo e perdia rotas, e a ligação ficava "conectando".
     pc.onconnectionstatechange = () => {
       if (this.peers.get(viewerId) !== peer) return
       if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
@@ -514,9 +530,14 @@ export class ScreenSession {
     try {
       const offer = await pc.createOffer()
       await pc.setLocalDescription({ type: 'offer', sdp: withStereoOpus(offer.sdp ?? '') })
+      await waitIceGathered(pc)
       if (this.peers.get(viewerId) !== peer) return
       this.send('offer', { to: viewerId, sdp: pc.localDescription?.sdp ?? '' })
       this.publishViewers()
+      // ligação que não abre: tira da lista (o jogador refaz o pedido sozinho)
+      peer.connectTimer = window.setTimeout(() => {
+        if (this.peers.get(viewerId) === peer && pc.connectionState !== 'connected') this.closePeer(viewerId)
+      }, PEER_CONNECT_TIMEOUT_MS)
     } catch (err) {
       console.error('[Mesa] Falha ao criar a oferta:', err)
       if (this.peers.get(viewerId) === peer) this.closePeer(viewerId)
@@ -702,9 +723,7 @@ export class ScreenSession {
       this.update({ remoteStream: new MediaStream(stream.getTracks()) })
     }
     pc.onicecandidate = (e) => {
-      if (!e.candidate) return
-      this.countIce('local', e.candidate)
-      this.send('ice', { from: this.myId, candidate: e.candidate.toJSON() })
+      if (e.candidate) this.countIce('local', e.candidate)       // só pro diagnóstico: as rotas vão dentro da resposta
     }
     pc.oniceconnectionstatechange = () => {
       if (this.viewerPc !== pc) return
@@ -737,6 +756,7 @@ export class ScreenSession {
       for (const c of pending) await pc.addIceCandidate(c).catch(() => {})
       const answer = await pc.createAnswer()
       await pc.setLocalDescription({ type: 'answer', sdp: withStereoOpus(answer.sdp ?? '') })
+      await waitIceGathered(pc)
       if (this.viewerPc !== pc) return
       this.send('answer', { from: this.myId, sdp: pc.localDescription?.sdp ?? '' })
     } catch (err) {

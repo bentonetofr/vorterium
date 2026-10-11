@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.60',
+    date:    '2026-10-11',
+    title:   'Transmissão de tela: a ligação não se perde mais pelo caminho',
+    items: [
+      'Provável causa dos jogadores que ficavam "conectando" pra sempre: cada rota de rede da ligação ia numa mensagem separada pelo canal em tempo real (uns 20 a 30 avisos em poucos segundos), e o limite de mensagens por segundo derrubava parte delas. Sem as rotas, a ligação nunca abria. Agora o mestre e o jogador juntam todas as rotas e mandam tudo numa mensagem só (a oferta e a resposta), sem avisos soltos.',
+      'No painel do mestre, o jogador cuja ligação não abre em 25 segundos sai da lista (em vez de ficar "conectando" pra sempre) e o jogador refaz o pedido sozinho.',
+      'Testado com um mestre e um jogador de mentira no mesmo navegador: conectou com vídeo e áudio, usando 1 oferta e 1 resposta e nenhum aviso de rota solto (antes eram dezenas). Rede real (4G, firewall) eu não consigo simular aqui.',
+    ],
+  },
+  {
     version: '1.59',
     date:    '2026-10-11',
     title:   'Transmissão de tela: jogador que ficava só "conectando"',
