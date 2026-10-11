@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.57',
+    date:    '2026-10-11',
+    title:   'Silenciador na fabricação (fichas Terra Devastada)',
+    items: [
+      'Fabricar ganhou um item novo: o Silenciador, que custa 2 Sucatas e vai pro inventário como item (abafa o tiro de uma arma de fogo; o efeito é do Narrador). Vale em todas as fichas da Terra Devastada Adaptada, inclusive nas de NPC.',
+    ],
+  },
+  {
     version: '1.56',
     date:    '2026-10-10',
     title:   'Pastor alemão, importar NPCs e recarregar sem derrubar ninguém (Vortable)',

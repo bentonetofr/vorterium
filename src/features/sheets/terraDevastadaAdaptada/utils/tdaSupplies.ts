@@ -185,6 +185,8 @@ export const RECIPES: Recipe[] = [
     hint: 'Cobre uma fuga ou um golpe furtivo. O efeito é do Narrador.' },
   { id: 'faca', name: 'Faca improvisada', cost: { laminas: UNIT, trapos: UNIT }, result: { kind: 'item', name: 'Faca improvisada' },
     hint: 'Uso único contra Estalador e portas trancadas. O efeito é do Narrador.' },
+  { id: 'silenciador', name: 'Silenciador', cost: { sucata: 2 * UNIT }, result: { kind: 'item', name: 'Silenciador' },
+    hint: 'Abafa o tiro de uma arma de fogo. O efeito é do Narrador.' },
 ]
 
 export function canAfford(cost: Recipe['cost'], supplies: TdaSupplies): boolean {
