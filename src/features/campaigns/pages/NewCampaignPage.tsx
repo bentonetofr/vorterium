@@ -9,6 +9,7 @@ import { SystemVariantModal } from '../components/SystemVariantModal'
 import { SystemPickerModal } from '../components/SystemPickerModal'
 import { useFeature } from '../../control/siteFeatures'
 import { VAMPIRO_FEATURE } from '../../sheets/vampiro/constants/vampiro'
+import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
 import './CampaignPages.css'
 import './NewCampaign.css'
 
@@ -18,6 +19,8 @@ const DESCRIPTION_MAX = 1000
 export function NewCampaignPage() {
   // Vampiro nasce guardado: só aparece pra quem pode ver (o dono, testando).
   const vampiro = useFeature(VAMPIRO_FEATURE)
+  // D&D 5e segue "Em breve" pra todo mundo; com o recurso visível (o dono, testando) dá pra criar campanha.
+  const dnd = useFeature(DND_FEATURE)
   // Versões alternativas (ex.: Terra Devastada Adaptada) não têm cartão: o do
   // sistema de origem abre a janelinha de escolha.
   const systems = SYSTEMS_CATALOG.filter((s) => !s.variantOf && (s.id !== 'vampiro' || vampiro.visible))
@@ -40,7 +43,7 @@ export function NewCampaignPage() {
   const baseEntry = entry?.variantOf ? getSystemEntry(entry.variantOf) : entry
   const art = baseEntry?.art ?? null
   const statusLabel = entry ? STATUS_LABELS[entry.status] : null
-  const showDnd = system === 'dnd5e'
+  const showDnd = system === 'dnd5e' && !dnd.visible
 
   function onPick(sys: (typeof systems)[number]) {
     setError(null)
@@ -69,7 +72,7 @@ export function NewCampaignPage() {
       return
     }
     if (!isSupportedSystem(system)) { setError('Selecione um sistema válido.'); return }
-    if (system === 'dnd5e') { setError('O D&D 5e ainda está em desenvolvimento. Escolha outro sistema por enquanto.'); return }
+    if (system === 'dnd5e' && !dnd.visible) { setError('O D&D 5e ainda está em desenvolvimento. Escolha outro sistema por enquanto.'); return }
 
     setSubmitting(true)
     try {
@@ -224,7 +227,7 @@ export function NewCampaignPage() {
           <SystemPickerModal
             systems={systems}
             current={system}
-            guarded={vampiro.guarded ? ['vampiro'] : []}
+            guarded={[...(vampiro.guarded ? ['vampiro' as const] : []), ...(dnd.guarded ? ['dnd5e' as const] : [])]}
             onPick={onPick}
             onClose={() => setPicker(false)}
           />

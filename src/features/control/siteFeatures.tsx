@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { LIVRO_FEATURE, livroOpenHere, livroToggle, closeMine as livroCloseMine } from '../livro/livroService'
 import { TORRE_FEATURE, torreOpenHere, torreToggle, closeMine as torreCloseMine } from '../torre/torreService'
 import { VAMPIRO_FEATURE } from '../sheets/vampiro/constants/vampiro'
+import { DND_FEATURE } from '../sheets/dnd/constants/dnd'
 
 // ────────────────────────────────────────────────────────
 // Recursos que o dono do site controla pelo Painel de controle (o livro
@@ -64,6 +65,12 @@ export const SITE_FEATURES: SiteFeature[] = [
     name: 'Vampiro: A Máscara',
     description: 'Sistema novo (5ª edição): campanhas de Vampiro com ficha própria (clã, atributos e perícias, Vitalidade e Força de Vontade com dano superficial e agravado, Fome, Humanidade com manchas e Potência de Sangue). Guardado, só você cria campanha de Vampiro e só você vê, cria e edita fichas de Vampiro (mesmo convidando alguém).',
     where: 'Criação de campanha e a aba Ficha das campanhas de Vampiro',
+  },
+  {
+    key: DND_FEATURE,
+    name: 'D&D 5e',
+    description: 'Sistema D&D 5e (regras de 2014, conteúdo do SRD 5.1) com ficha, criador de personagem e rolagens integradas, em construção por marcos. Guardado, só você consegue criar campanha de D&D; para todo mundo o cartão segue "Em breve".',
+    where: 'Criação de campanha e a aba Ficha das campanhas de D&D',
   },
 ]
 
