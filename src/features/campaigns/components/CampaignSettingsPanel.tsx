@@ -40,7 +40,7 @@ const DESCRIPTION_MAX = 1000
 const STATUS_OPTIONS: { value: CampaignWithRole['status']; label: string }[] = [
   { value: 'active',   label: 'Ativa' },
   { value: 'paused',   label: 'Pausada' },
-  { value: 'archived', label: 'Encerrada' },
+  { value: 'archived', label: 'Arquivada' },
 ]
 
 // ────────────────────────────────────────────────────────

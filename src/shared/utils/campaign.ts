@@ -23,7 +23,7 @@ export function formatRole(role: 'master' | 'player'): string {
 const STATUS_LABELS: Record<string, string> = {
   active:   'Ativa',
   paused:   'Pausada',
-  archived: 'Encerrada',
+  archived: 'Arquivada',
 }
 
 /** Retorna o rótulo em português para um status de campanha. */

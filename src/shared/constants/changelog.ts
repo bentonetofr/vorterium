@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.61',
+    date:    '2026-10-13',
+    title:   'Arquivar campanhas',
+    items: [
+      'Na lista de campanhas, o mestre ganhou um botão de envelope ao lado de cada campanha dele: ele arquiva a campanha (com uma confirmação), e ela sai da lista principal. Nada é apagado.',
+      'Ao lado do "+ Criar campanha" tem um botão novo, "Arquivadas", que mostra todas as campanhas arquivadas (com o número delas). Lá cada campanha tem o Entrar de sempre e o envelope aberto pra desarquivar. Clique em "Arquivadas" de novo pra voltar às campanhas ativas.',
+      'Arquivar usa o status "Arquivada" da campanha (o antigo "Encerrada" mudou de nome, em Configurações também), então vale pra todos: o jogador também vê a campanha em "Arquivadas", mas só o mestre arquiva e desarquiva.',
+    ],
+  },
+  {
     version: '1.60',
     date:    '2026-10-11',
     title:   'Transmissão de tela: a ligação não se perde mais pelo caminho',

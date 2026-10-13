@@ -152,6 +152,29 @@
 
 .campaign-cards { display: flex; flex-direction: column; gap: var(--space-3); }
 
+/* ── Arquivar campanhas: envelope ao lado do card e botão "Arquivadas" ── */
+.campaigns-header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); flex-shrink: 0; }
+.campaigns-archived-btn { display: inline-flex; align-items: center; gap: 8px; }
+.campaigns-archived-btn--on { border-color: var(--gilded); color: var(--text-primary); background: rgba(255, 255, 255, 0.07); }
+.campaign-line { display: flex; align-items: center; gap: var(--space-3); }
+.campaign-line > .campaign-card-row { flex: 1 1 auto; min-width: 0; }
+.campaign-line__archive {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.campaign-line__archive:hover:not(:disabled) { color: var(--gilded); border-color: var(--gilded); background: rgba(255, 255, 255, 0.05); }
+.campaign-line__archive:disabled { opacity: 0.5; cursor: progress; }
+
 /* ── Card de campanha ── */
 .campaign-card-row {
   display: flex;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
-import { getMyCampaigns } from '../services/campaignService'
+import { getMyCampaigns, updateCampaignDetails } from '../services/campaignService'
 import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
@@ -13,6 +13,9 @@ export function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<CampaignWithRole[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+  const [busyId, setBusyId]        = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -31,8 +34,30 @@ export function CampaignsPage() {
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ?? 'Usuário'
 
-  const asMaster = campaigns.filter((c) => c.role === 'master')
-  const asPlayer = campaigns.filter((c) => c.role === 'player')
+  const archived = campaigns.filter((c) => c.status === 'archived')
+  const active   = campaigns.filter((c) => c.status !== 'archived')
+  const asMaster = active.filter((c) => c.role === 'master')
+  const asPlayer = active.filter((c) => c.role === 'player')
+
+  /** Arquiva (some da lista principal e vai pra "Arquivadas") ou desarquiva uma campanha. Só o mestre. */
+  async function setArchived(campaign: CampaignWithRole, archive: boolean) {
+    const ok = archive
+      ? confirm(`Arquivar "${campaign.name}"?\n\nEla sai da lista e vai para "Arquivadas". Nada é apagado e dá pra desarquivar quando quiser.`)
+      : true
+    if (!ok) return
+    setBusyId(campaign.id)
+    setActionError(null)
+    try {
+      const updated = await updateCampaignDetails(campaign.id, {
+        name: campaign.name, description: campaign.description, status: archive ? 'archived' : 'active',
+      })
+      setCampaigns((list) => list.map((c) => (c.id === campaign.id ? { ...c, status: updated.status } : c)))
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Não foi possível arquivar a campanha.')
+    } finally {
+      setBusyId(null)
+    }
+  }
 
   return (
     <div className="page">
@@ -45,10 +70,43 @@ export function CampaignsPage() {
             Escolha uma campanha para continuar ou crie uma nova.
           </p>
         </div>
-        <Link to="/campanhas/nova" className="btn btn-primary" style={{ borderColor: 'rgba(255,221,184,0.5)', flexShrink: 0 }}>
-          + Criar campanha
-        </Link>
+        <div className="campaigns-header-actions">
+          <Link to="/campanhas/nova" className="btn btn-primary" style={{ borderColor: 'rgba(255,221,184,0.5)', flexShrink: 0 }}>
+            + Criar campanha
+          </Link>
+          <button
+            type="button"
+            className={`btn btn-ghost campaigns-archived-btn${showArchived ? ' campaigns-archived-btn--on' : ''}`}
+            aria-pressed={showArchived}
+            onClick={() => setShowArchived((v) => !v)}
+            title={showArchived ? 'Voltar às campanhas ativas' : 'Ver as campanhas arquivadas'}
+          >
+            <EnvelopeIcon /> Arquivadas{archived.length > 0 ? ` (${archived.length})` : ''}
+          </button>
+        </div>
       </header>
+
+      {actionError && <div className="page__feedback page__feedback--error" role="alert">{actionError}</div>}
+
+      {!loading && !error && showArchived && (
+        <div className="campaigns-list animate-fade-up">
+          <section>
+            <h3 className="campaigns-section__title">
+              <span className="campaigns-section__title-icon"><EnvelopeIcon /></span>
+              Campanhas arquivadas
+            </h3>
+            {archived.length === 0 ? (
+              <p className="page__empty-text">Nenhuma campanha arquivada. Pra arquivar uma, use o botão de envelope ao lado dela na lista.</p>
+            ) : (
+              <div className="campaign-cards anim-stagger">
+                {archived.map((c) => (
+                  <CampaignLine key={c.id} campaign={c} archivedView busy={busyId === c.id} onToggleArchive={() => void setArchived(c, false)} />
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
       {loading && (
         <div className="page__loading animate-fade-in">
@@ -60,7 +118,7 @@ export function CampaignsPage() {
         <div className="page__feedback page__feedback--error" role="alert">{error}</div>
       )}
 
-      {!loading && !error && campaigns.length === 0 && (
+      {!loading && !error && !showArchived && active.length === 0 && (
         <div className="page__empty animate-fade-up">
           <div className="page__empty-icon" aria-hidden="true">◈</div>
           <h3 className="page__empty-title">Nenhuma campanha ainda</h3>
@@ -71,7 +129,7 @@ export function CampaignsPage() {
         </div>
       )}
 
-      {!loading && !error && campaigns.length > 0 && (
+      {!loading && !error && !showArchived && active.length > 0 && (
         <div className="campaigns-list animate-fade-up">
           {asMaster.length > 0 && (
             <section>
@@ -80,7 +138,7 @@ export function CampaignsPage() {
                 Campanhas como mestre
               </h3>
               <div className="campaign-cards anim-stagger">
-                {asMaster.map((c) => <CampaignCard key={c.id} campaign={c} />)}
+                {asMaster.map((c) => <CampaignLine key={c.id} campaign={c} busy={busyId === c.id} onToggleArchive={() => void setArchived(c, true)} />)}
               </div>
             </section>
           )}
@@ -92,11 +150,47 @@ export function CampaignsPage() {
                 Campanhas como jogador
               </h3>
               <div className="campaign-cards anim-stagger">
-                {asPlayer.map((c) => <CampaignCard key={c.id} campaign={c} />)}
+                {asPlayer.map((c) => <CampaignLine key={c.id} campaign={c} />)}
               </div>
             </section>
           )}
         </div>
+      )}
+    </div>
+  )
+}
+
+function EnvelopeIcon({ open = false }: { open?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {open ? (
+        <>
+          <path d="M3 9.5 12 3l9 6.5V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+          <path d="m3 9.5 9 6 9-6" />
+        </>
+      ) : (
+        <>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m3.5 7 8.5 6 8.5-6" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+/** A campanha na lista, com (só pro mestre) o botão de envelope que arquiva ou desarquiva. */
+function CampaignLine({ campaign, archivedView = false, busy = false, onToggleArchive }: {
+  campaign: CampaignWithRole; archivedView?: boolean; busy?: boolean; onToggleArchive?: () => void
+}) {
+  const canArchive = campaign.role === 'master' && Boolean(onToggleArchive)
+  const label = archivedView ? `Desarquivar ${campaign.name}` : `Arquivar ${campaign.name}`
+  return (
+    <div className="campaign-line">
+      <CampaignCard campaign={campaign} />
+      {canArchive && (
+        <button type="button" className="campaign-line__archive" onClick={onToggleArchive} disabled={busy} title={label} aria-label={label}>
+          <EnvelopeIcon open={archivedView} />
+        </button>
       )}
     </div>
   )
