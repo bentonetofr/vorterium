@@ -1,5 +1,8 @@
 import { SimpleSheetPanel }           from './SimpleSheetPanel'
 import { DndComingSoon }             from '../dnd/DndComingSoon'
+import { DndCharacterSheetPanel }    from '../dnd/DndCharacterSheetPanel'
+import { DND_FEATURE }               from '../dnd/constants/dnd'
+import { useFeature }                from '../../control/siteFeatures'
 import { AltheriumSheetPanel }       from '../altherium/components/AltheriumSheetPanel'
 import { TdSheetPanel }              from '../terraDevastada/components/TdSheetPanel'
 import { TdaSheetPanel }             from '../terraDevastadaAdaptada/components/TdaSheetPanel'
@@ -19,10 +22,20 @@ interface CampaignSheetPanelProps {
 // Roteador de fichas por sistema
 // ────────────────────────────────────────────────────────
 
-export function CampaignSheetPanel({ campaign }: CampaignSheetPanelProps) {
+// D&D 5e: guardado no Painel de controle. Quem pode ver (o dono do site,
+// testando) abre a ficha; pra todos os outros segue o aviso. Provisório: a
+// ficha nova (Marco 3 do plano) substitui esta.
+function DndSheetGate({ campaignId, currentUserId }: { campaignId: string; currentUserId: string }) {
+  const feature = useFeature(DND_FEATURE)
+  return feature.visible
+    ? <DndCharacterSheetPanel campaignId={campaignId} currentUserId={currentUserId} />
+    : <DndComingSoon />
+}
+
+export function CampaignSheetPanel({ campaign, currentUserId }: CampaignSheetPanelProps) {
   switch (campaign.system) {
     case 'dnd5e':
-      return <DndComingSoon />
+      return <DndSheetGate campaignId={campaign.id} currentUserId={currentUserId} />
 
     case 'altherium':
       return (
