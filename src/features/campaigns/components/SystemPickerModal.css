@@ -1,0 +1,183 @@
+/* Janela de escolha do sistema: cartões grandes com arte, três por linha */
+.sysmodal {
+  width: min(1120px, 96vw);
+  max-height: min(86vh, 860px);
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(900px 300px at 50% -10%, rgba(212, 175, 55, 0.12), transparent 70%),
+    var(--bg-surface);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  overflow: hidden;
+}
+.sysmodal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--border-dim);
+}
+.sysmodal__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--accent-bright);
+}
+.sysmodal__hint { margin: 4px 0 0; font-size: var(--text-sm); color: var(--text-muted); }
+.sysmodal__close { width: 34px; height: 34px; font-size: var(--text-xl); }
+.sysmodal__scroll {
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-base) transparent;
+}
+.sysmodal__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.syscard {
+  --accent-c: 212, 175, 55;
+  position: relative;
+  display: block;
+  height: 250px;
+  padding: 0;
+  text-align: left;
+  color: var(--text-primary);
+  background: var(--bg-void);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: var(--cursor-hand, pointer);
+  isolation: isolate;
+  opacity: 0;
+  animation: syscard-in 520ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2), border-color 200ms ease, box-shadow 260ms ease;
+}
+.syscard__art {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: grid;
+  place-items: center;
+  background-size: cover;
+  background-position: center;
+  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1), filter 300ms ease;
+  filter: saturate(1.05);
+}
+.syscard__art-icon { font-size: 4rem; color: rgba(var(--accent-c), 0.6); }
+.syscard__shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to top, rgba(4, 7, 16, 0.96) 0%, rgba(4, 7, 16, 0.78) 34%, rgba(4, 7, 16, 0.12) 70%, rgba(4, 7, 16, 0.25) 100%),
+    radial-gradient(120% 80% at 50% 110%, rgba(var(--accent-c), 0.22), transparent 60%);
+}
+.syscard__text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+}
+.syscard__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+.syscard__icon { color: rgb(var(--accent-c)); font-size: 1rem; }
+.syscard__desc {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: rgba(230, 236, 255, 0.82);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+.syscard__badges { position: absolute; top: var(--space-3); left: var(--space-3); display: flex; flex-wrap: wrap; gap: 6px; }
+.syscard__badge {
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(8, 12, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.syscard__badge--coming-soon { color: #ffd98a; border-color: rgba(255, 217, 138, 0.45); }
+.syscard__badge--preview, .syscard__badge--guard { color: #8fe3ae; border-color: rgba(143, 227, 174, 0.45); }
+.syscard__check {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: #1a1206;
+  background: rgb(var(--accent-c));
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(var(--accent-c), 0.25), 0 6px 16px rgba(0, 0, 0, 0.5);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 320ms cubic-bezier(0.2, 1.6, 0.4, 1), opacity 180ms ease;
+}
+
+.syscard:hover, .syscard:focus-visible {
+  transform: translateY(-5px) scale(1.012);
+  border-color: rgba(var(--accent-c), 0.75);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(var(--accent-c), 0.35), 0 0 36px rgba(var(--accent-c), 0.22);
+  outline: none;
+}
+.syscard:hover .syscard__art, .syscard:focus-visible .syscard__art { transform: scale(1.08); filter: saturate(1.2) brightness(1.05); }
+.syscard:active { transform: translateY(-1px) scale(0.975); transition-duration: 90ms; }
+.syscard--selected { border-color: rgb(var(--accent-c)); box-shadow: 0 0 0 1px rgba(var(--accent-c), 0.6), 0 0 30px rgba(var(--accent-c), 0.28); }
+.syscard--selected .syscard__check, .syscard--picking .syscard__check { transform: scale(1); opacity: 1; }
+.syscard--picking { animation: syscard-pick 380ms ease both; }
+.syscard--soon .syscard__art { filter: saturate(0.75) brightness(0.9); }
+
+@keyframes syscard-in {
+  from { opacity: 0; transform: translateY(26px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes syscard-pick {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.955); }
+  70% { transform: scale(1.03); box-shadow: 0 0 0 3px rgba(var(--accent-c), 0.7), 0 0 60px rgba(var(--accent-c), 0.5); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 900px) {
+  .sysmodal__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 580px) {
+  .sysmodal { max-height: 92vh; }
+  .sysmodal__header { padding: var(--space-4); }
+  .sysmodal__scroll { padding: var(--space-4); }
+  .sysmodal__grid { grid-template-columns: 1fr; }
+  .syscard { height: 210px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .syscard { animation: none; opacity: 1; }
+  .syscard, .syscard__art, .syscard__check { transition: none; }
+  .syscard--picking { animation: none; }
+}

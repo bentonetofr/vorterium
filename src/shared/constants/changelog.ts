@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.63',
+    date:    '2026-10-13',
+    title:   'Criar campanha redesenhado, com janela de escolha de sistema',
+    items: [
+      'A tela de criar campanha foi refeita: três passos numerados (nome, sistema, descrição), campos maiores, entrada animada e uma prévia viva do cartão da campanha ao lado, que muda na hora conforme você escreve o nome e escolhe o sistema.',
+      'O sistema não vem mais todo de uma vez na página. Agora tem o botão "Escolher sistema da campanha", que abre uma janela grande no centro com um cartão por sistema, três por linha, rolando pra baixo se tiver mais. Cada cartão tem arte do sistema, nome, descrição e, quando for o caso, as marcas Em breve, Guardado ou 2 versões.',
+      'Artes novas e animações: os cartões entram um depois do outro, sobem e ganham brilho na cor do sistema ao passar o mouse, afundam ao clicar e mostram um visto que "pula" ao marcar, antes de a janela fechar. Escolhido o sistema, a página mostra um banner com a arte e o botão Trocar sistema. Terra Devastada continua perguntando a versão (original ou adaptada).',
+      'As artes (dados dourados, castelo e dragão, norte gelado, catedral gótica e uma rua do próprio mundo em pixel art do Terra Devastada) ficam em public/sistemas e são desenhadas por scripts/make-system-art.py.',
+    ],
+  },
+  {
     version: '1.62',
     date:    '2026-10-13',
     title:   'Excluir campanha pela lista',

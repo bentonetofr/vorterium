@@ -16,6 +16,10 @@ export interface SystemEntry {
   status:      SystemStatus
   /** Ícone decorativo (emoji ou símbolo) */
   icon:        string
+  /** Arte do cartão na escolha de sistema (public/sistemas, gerada por scripts/make-system-art.py). */
+  art?:        string
+  /** Cor de destaque do cartão, "r, g, b". */
+  accent?:     string
   /**
    * Versão alternativa de outro sistema: não ganha um cartão próprio na
    * criação de campanha — o cartão do sistema de origem abre a escolha entre
@@ -31,6 +35,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Ficha simples para campanhas sem sistema específico. Ideal para testes, one-shots ou sistemas caseiros.',
     status:      'available',
     icon:        '◎',
+    art:         '/sistemas/generico.webp',
+    accent:      '224, 176, 64',
   },
   {
     id:          'dnd5e',
@@ -38,6 +44,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Sistema de fantasia em desenvolvimento. A ficha completa será disponibilizada futuramente.',
     status:      'coming-soon',
     icon:        '⚔',
+    art:         '/sistemas/dnd5e.webp',
+    accent:      '232, 128, 58',
   },
   {
     id:          'altherium',
@@ -45,6 +53,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Sistema próprio do universo de Altherium: raízes, atributos, domínios e recursos do Livro de Regras 1.0.',
     status:      'available',
     icon:        '✦',
+    art:         '/sistemas/altherium.webp',
+    accent:      '110, 168, 255',
   },
   {
     id:          'terra_devastada',
@@ -52,6 +62,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Horror de sobrevivência num apocalipse zumbi: características livres, testes de pares em d6, Horror e Convicção.',
     status:      'available',
     icon:        '☣',
+    art:         '/sistemas/terra-devastada.webp',
+    accent:      '126, 200, 90',
   },
   {
     id:          'terra_devastada_adaptada',
@@ -69,6 +81,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     description: 'Horror pessoal entre os vampiros (5ª edição): clãs, atributos e perícias, Fome, Humanidade e Potência de Sangue.',
     status:      'available',
     icon:        '☥',
+    art:         '/sistemas/vampiro.webp',
+    accent:      '226, 56, 79',
   },
 ]
 
