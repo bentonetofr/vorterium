@@ -1,11 +1,13 @@
 import { ABILITIES, SKILLS, clampLevel, getAbilityModifier, getProficiencyBonus, skillBonus } from './abilities'
+import { computeArmorClass, computeMaxHp, hitDicePool } from './combat'
 import type { AbilityKey, Derived, DerivedInput, OverridableField, SaveDerived, SkillDerived, SkillKey } from './types'
 
 // ────────────────────────────────────────────────────────
 // computeDerived: tudo que a ficha, a rolagem e o card do mestre mostram,
 // calculado num lugar só pra os números nunca divergirem. Esqueleto do
-// Marco 1: atributos, proficiência, salvaguardas, perícias, iniciativa e
-// percepção passiva. CA, PV, conjuração e progressão entram nos próximos.
+// Marco 1: atributos, proficiência, salvaguardas, perícias, iniciativa,
+// percepção passiva, CA, PV e dados de vida. Conjuração e progressão entram
+// nos próximos passos.
 // ────────────────────────────────────────────────────────
 
 export function computeDerived(input: DerivedInput): Derived {
@@ -35,6 +37,28 @@ export function computeDerived(input: DerivedInput): Derived {
   let initiative = abilityMods.dexterity
   if (manual.initiative_bonus != null) { initiative = manual.initiative_bonus; overridden.push('initiative_bonus') }
 
+  const combat = input.combat ?? {}
+  const classKeys = input.classes.map((c) => c.classKey)
+
+  let armorClass = computeArmorClass({
+    armor:        combat.armor ?? null,
+    shield:       combat.shield === true,
+    dexMod:       abilityMods.dexterity,
+    conMod:       abilityMods.constitution,
+    wisMod:       abilityMods.wisdom,
+    barbarianUnarmoredDefense: classKeys.includes('barbarian'),
+    monkUnarmoredDefense:      classKeys.includes('monk'),
+    mediumDexCap: combat.mediumDexCap,
+    bonus:        combat.acBonus,
+  })
+  if (manual.armor_class != null) { armorClass = manual.armor_class; overridden.push('armor_class') }
+
+  const hpLevels = combat.hpLevels ?? []
+  let hpMax: number | null = hpLevels.length > 0
+    ? computeMaxHp(hpLevels, abilityMods.constitution, combat.hpBonusPerLevel ?? 0)
+    : null
+  if (manual.hp_max != null) { hpMax = manual.hp_max; overridden.push('hp_max') }
+
   return {
     totalLevel,
     proficiencyBonus,
@@ -43,6 +67,9 @@ export function computeDerived(input: DerivedInput): Derived {
     skills,
     initiative,
     passivePerception: 10 + skills.perception.bonus,
+    armorClass,
+    hpMax,
+    hitDice: hitDicePool(hpLevels),
     overridden,
   }
 }

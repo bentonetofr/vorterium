@@ -259,19 +259,20 @@ Obrigações:
 
 Tamanho: P (um dia de trabalho), M (alguns dias), G (uma semana ou mais). Cada marco é entregável e testável sozinho.
 
-### Marco 0: fundação (P) — feito em 13/10/2026, exceto a conferência do banco
+### Marco 0: fundação (P) — feito em 13/10/2026
 - Este documento revisado e aprovado.
 - Flag `dnd5e` em `SITE_FEATURES`; cartão D&D visível só para o dono em `NewCampaignPage`.
-- Conferir no banco real se há fichas em `dnd_character_sheets`.
+- Conferir no banco real se há fichas em `dnd_character_sheets` (feito: 0 linhas em 13/10/2026, a migration pode evoluir a tabela sem migrar dados).
 - Adicionar Vitest (decidido na seção 8) com o script `npm test`.
 - Texto de atribuição CC-BY conferido.
 - **Sem mudança visível para os jogadores.**
 
 ### Marco 1: motor de regras e catálogo núcleo (G) — esqueleto feito em 13/10/2026
 
-Esqueleto pronto em `sheets/dnd/rules/` (`computeDerived`: nível total, proficiência, salvaguardas, 18 perícias com meia
-proficiência e especialização, iniciativa, percepção passiva, sobrescritas manuais) com 21 testes. Falta: CA, PV, conjuração,
-progressão e todo o catálogo.
+Pronto em `sheets/dnd/rules/` (`computeDerived`): nível total, proficiência, salvaguardas, 18 perícias com meia
+proficiência e especialização, iniciativa, percepção passiva, **CA** (leve/média/pesada, escudo, Defesa sem Armadura de
+Bárbaro e Monge), **PV** (dado cheio no nível 1, média ou rolado depois, mínimo 1 por nível, bônus por nível), dados de vida
+e descanso longo, sobrescritas manuais. 44 testes. Falta: conjuração (espaços, multiclasse), progressão e todo o catálogo.
 - `rules/` completo (seção 4.4) com testes.
 - Catálogo: 12 classes com tabela de progressão 1-20, 9 raças, Acólito + antecedente personalizado, equipamento migrado
   do seed atual, condições, glossário PT-BR.

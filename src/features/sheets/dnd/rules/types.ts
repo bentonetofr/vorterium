@@ -17,7 +17,35 @@ export type SkillKey =
 export type ProficiencyLevel = 'none' | 'half' | 'proficient' | 'expertise'
 
 /** Campos que a ficha pode sobrescrever à mão (AUTO/MANUAL). */
-export type OverridableField = 'proficiency_bonus' | 'initiative_bonus'
+export type OverridableField = 'proficiency_bonus' | 'initiative_bonus' | 'armor_class' | 'hp_max'
+
+export type ArmorCategory = 'light' | 'medium' | 'heavy'
+
+/** Armadura vestida (os números vêm do catálogo de equipamento). */
+export interface ArmorInput {
+  category: ArmorCategory
+  baseAc:   number
+}
+
+/** Um nível ganho, na ordem da subida: dado de vida da classe e, se rolado, o valor tirado. */
+export interface HpLevel {
+  hitDie: number
+  roll?:  number
+}
+
+/** Dados de combate da ficha (todos opcionais: sem eles CA = 10 + Des e PV = null). */
+export interface CombatInput {
+  armor?:         ArmorInput | null
+  shield?:        boolean
+  /** Bônus fixos de CA (anel de proteção, estilo de luta Defesa). */
+  acBonus?:       number
+  /** Limite de Des da armadura média (3 com Mestre em Armadura Média). */
+  mediumDexCap?:  number
+  /** Níveis ganhos, em ordem; o primeiro usa o dado cheio. */
+  hpLevels?:      HpLevel[]
+  /** PV extra por nível (Anão da Colina +1, Robusto +2). */
+  hpBonusPerLevel?: number
+}
 
 export interface ClassLevel {
   classKey: string
@@ -30,6 +58,7 @@ export interface DerivedInput {
   classes:           ClassLevel[]
   skillProficiency?: Partial<Record<SkillKey, ProficiencyLevel>>
   saveProficiency?:  Partial<Record<AbilityKey, boolean>>
+  combat?:           CombatInput
   /** Valores manuais que vencem o cálculo oficial. */
   overrides?:        Partial<Record<OverridableField, number>>
 }
@@ -54,6 +83,11 @@ export interface Derived {
   skills:            Record<SkillKey, SkillDerived>
   initiative:        number
   passivePerception: number
+  armorClass:        number
+  /** null enquanto a ficha não tem níveis com dado de vida. */
+  hpMax:             number | null
+  /** Dados de vida por tipo (d6, d8, d10, d12). */
+  hitDice:           Record<number, number>
   /** Quais campos estão com valor manual (a tela mostra o selo MANUAL). */
   overridden:        OverridableField[]
 }
