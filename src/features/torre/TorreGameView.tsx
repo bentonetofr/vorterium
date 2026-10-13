@@ -7,6 +7,7 @@ import { GRATE } from './game/art'
 import { PuzzlePanel } from './PuzzlePanel'
 import { HintBanner } from '../livro/HintBanner'
 import { onSoundChange, sfx, startAmbient, stopAmbient, type Ambient } from '../livro/game/sound'
+import { ask } from '../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // A partida. Quem joga vê só o SEU andar (o outro aparece como sombra pela
@@ -245,7 +246,7 @@ export function TorreGameView({ view, offset, net, peers }: { view: TorreView; o
             {took !== null && <p className="lb-ending__time">Tempo: {fmtTime(took)}</p>}
             <div className="lb-lock__btns">
               <button type="button" className="lb-btn" onClick={() => setEndSeen(true)}>Ver a torre</button>
-              {me.gm && <button type="button" className="lb-btn lb-btn--gold" onClick={() => { if (window.confirm('Encerrar a Torre do Observatório pra todo mundo?')) void gm(view.room.id, { a: 'close' }) }}>Encerrar o jogo</button>}
+              {me.gm && <button type="button" className="lb-btn lb-btn--gold" onClick={() => ask({ title: 'Encerrar o jogo', message: 'Encerrar a Torre do Observatório pra todo mundo?', tone: 'danger', confirmLabel: 'Encerrar' }, () => void gm(view.room.id, { a: 'close' }))}>Encerrar o jogo</button>}
             </div>
           </section>
         </div>

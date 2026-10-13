@@ -16,6 +16,7 @@ import { deleteNpcCharacter, listNpcCharacters, npcCharacterKey, watchCharacters
 import type { SpecialNpc } from '../../../vendor/vortable/vortable'
 import { useAuth } from '../../auth/AuthProvider'
 import './SheetPanel.css'
+import { confirmDialog } from '../../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // Seção de NPCs na aba Ficha, igual pra todos os sistemas.
@@ -120,9 +121,11 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
     feed.current?.ping()
   })
 
-  const remove = (npc: T) => {
+  const remove = async (npc: T) => {
     const name = npc.character_name?.trim() || 'este NPC'
-    if (!window.confirm(`Apagar a ficha de ${name}? Não dá pra desfazer.`)) return
+    if (!(await confirmDialog({
+      title: 'Apagar a ficha', message: `Apagar a ficha de ${name}? Não dá pra desfazer.`, tone: 'danger', confirmLabel: 'Apagar',
+    }))) return
     void run(npc.id, async () => {
       await deleteNpc(table, npc.id)
       // o personagem dele no Vortable vai junto (os NPCs já postos nas zonas ficam como estão)

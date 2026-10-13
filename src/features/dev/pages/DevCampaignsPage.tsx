@@ -17,6 +17,7 @@ import { DevAvatar, DevState, RecordView, useLoad } from '../components/DevUi'
 import { CampaignActivityPanel } from '../../activity/components/CampaignActivityPanel'
 import { getSystemLabel } from '../../../shared/constants/systems'
 import { getCampaignStatusLabel } from '../../../shared/utils/campaign'
+import { alertDialog } from '../../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // Campanhas: lista de todas; clicar abre a campanha por dentro, só
@@ -262,7 +263,7 @@ function Files({ detail }: { detail: DevCampaignDetail }) {
     try {
       window.open(await getFileUrl(bucket, path), '_blank', 'noopener')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Não foi possível abrir.')
+      void alertDialog(err instanceof Error ? err.message : 'Não foi possível abrir.')
     }
   }
 

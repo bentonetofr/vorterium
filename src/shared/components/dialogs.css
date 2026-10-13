@@ -1,0 +1,51 @@
+/* Janelinhas de confirmar, avisar e perguntar (no lugar das do navegador) */
+.dlg {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background:
+    radial-gradient(420px 140px at 50% -20%, rgba(212, 175, 55, 0.12), transparent 70%),
+    var(--bg-surface);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+.dlg--danger {
+  border-color: rgba(229, 72, 77, 0.55);
+  background:
+    radial-gradient(420px 140px at 50% -20%, rgba(229, 72, 77, 0.14), transparent 70%),
+    var(--bg-surface);
+}
+.dlg__head { display: flex; align-items: center; gap: var(--space-3); }
+.dlg__icon {
+  flex: none;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--accent-bright);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid var(--gilded);
+}
+.dlg__icon--danger { color: #ff6b70; background: rgba(229, 72, 77, 0.14); border-color: rgba(229, 72, 77, 0.5); }
+.dlg__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; color: var(--accent-bright); }
+.dlg--danger .dlg__title { color: #ff8a8f; }
+.dlg__message { margin: 0; font-size: var(--text-sm); line-height: 1.6; color: var(--text-secondary); white-space: pre-line; overflow-wrap: anywhere; }
+.dlg__field { display: flex; flex-direction: column; gap: 6px; }
+.dlg__label { font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.dlg__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.dlg__danger {
+  color: #fff;
+  background: #c62828;
+  border-color: #e5484d;
+}
+.dlg__danger:hover:not(:disabled) { background: #e5484d; box-shadow: 0 0 18px rgba(229, 72, 77, 0.4); }
+.dlg__danger:disabled { opacity: 0.5; }
+@media (max-width: 480px) {
+  .dlg__actions { flex-direction: column-reverse; }
+  .dlg__actions .btn { width: 100%; justify-content: center; }
+}
+
+/* acima de qualquer tela cheia (jogos, Vortable) */
+.modal-overlay:has(> .dlg) { z-index: 100000; }

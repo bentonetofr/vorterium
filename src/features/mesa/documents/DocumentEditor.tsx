@@ -12,6 +12,7 @@ import { overflows, reflow, reflowAll } from './pageFlow'
 import {
   COVERS, INKS, MAX_AUTHOR, PAPERS, pageSeed, pageStyle, type DocStyle,
 } from './paperStyles'
+import { confirmDialog } from '../../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // Editor de documento (só o mestre): título, folha ou livro, as páginas, e
@@ -252,8 +253,11 @@ export function DocumentEditor({ doc, onClose, onSaved }: { doc: MesaDocument; o
   }
 
   /** O × do canto: com alterações não salvas, pergunta antes de jogar fora. */
-  function closeX() {
-    if (dirty && !window.confirm('Fechar sem salvar? As alterações deste documento vão se perder.')) return
+  async function closeX() {
+    if (dirty && !(await confirmDialog({
+      title: 'Fechar sem salvar?', message: 'As alterações deste documento vão se perder.',
+      tone: 'danger', confirmLabel: 'Fechar sem salvar', cancelLabel: 'Continuar editando',
+    }))) return
     onClose()
   }
 

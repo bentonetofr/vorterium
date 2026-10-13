@@ -48943,6 +48943,9 @@ function As(e) {
 function js(e) {
 	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
 }
+function vtConfirm(message, options) {
+	return typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));
+}
 function Ms(e, t) {
 	let n = e;
 	if (typeof e == "string") try {
@@ -49651,7 +49654,7 @@ var Rs = {
 		let e = await Ps();
 		if (e !== null) try {
 			let [t] = Ms(e, this.data);
-			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
+			if (this.dirty && !await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) return;
 			this.character = this.opts.single ? {
 				...t,
 				id: this.character.id
@@ -49661,7 +49664,7 @@ var Rs = {
 		}
 	}
 	async goBack() {
-		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
+		this.dirty && await vtConfirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?`, { title: "Salvar antes de sair?", confirmLabel: "Salvar e sair", cancelLabel: "Sair sem salvar" }) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
 		let e = this.modal("Créditos da arte", ho(this.opts.assetBase), [K("button", {
@@ -49669,8 +49672,8 @@ var Rs = {
 			onclick: () => e()
 		}, "Fechar")]);
 	}
-	newCharacter() {
-		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = Es("Novo personagem", Ut(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+	async newCharacter() {
+		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Es("Novo personagem", Ut(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = Wt(this.data, this.character.appearance), this.baseThumb = null, this.renderTabs(), this.renderRows(), this.recompose();
@@ -49697,14 +49700,14 @@ var Rs = {
 				_n(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(K("div", { class: "cp-item" }, r, K("div", {}, K("b", {}, a.name), K("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), K("button", {
 					class: "cp-btn cp-primary",
 					onclick: async () => {
-						(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
+						(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
 					}
 				}, "Usar"), K("button", {
 					class: "cp-btn cp-ghost",
 					title: "Apagar",
 					html: Y.trash,
 					onclick: async () => {
-						if (confirm(`Apagar "${a.name}"? Não dá pra desfazer.`)) {
+						if (await vtConfirm(`Apagar "${a.name}"? Não dá pra desfazer.`, { title: "Apagar personagem", tone: "danger", confirmLabel: "Apagar" })) {
 							try {
 								await this.opts.storage.remove(a.id);
 							} catch (e) {
@@ -52040,7 +52043,7 @@ var wc = "vortable:objects:recent", Tc = 24, Ec = [
 				title: "Apagar",
 				html: Y.trash,
 				onclick: async () => {
-					if (confirm(`Apagar "${i.name}"? Não dá pra desfazer.`)) {
+					if (await vtConfirm(`Apagar "${i.name}"? Não dá pra desfazer.`, { title: "Apagar zona", tone: "danger", confirmLabel: "Apagar" })) {
 						try {
 							await this.storage.remove(i.id);
 							let e = await this.storage.loadWorld();

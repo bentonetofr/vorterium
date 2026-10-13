@@ -5,6 +5,7 @@ import { CharacterFace } from '../components/CharacterFace'
 import { mapPoint, useMapDrop } from '../enemies/useMapDrop'
 import { ARCHETYPES, importPeople, loadImported, pickFiles, placePeople, removeImported, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person } from './people'
 import '../enemies/enemies.css'
+import { ask } from '../../../shared/components/dialogs'
 
 type Npc = ReturnType<WatchControls['npcs']>[number]
 type Peer = ReturnType<WatchControls['peers']>[number]
@@ -230,7 +231,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
             ))}
           </ul>
           {mine.length > 1 && (
-            <button type="button" className="btn btn-ghost" disabled={busy != null} onClick={() => { if (confirm('Tirar todas as pessoas geradas desta zona?')) void remove() }}>Tirar todas desta zona</button>
+            <button type="button" className="btn btn-ghost" disabled={busy != null} onClick={() => ask({ title: 'Tirar as pessoas', message: 'Tirar todas as pessoas geradas desta zona?', tone: 'danger', confirmLabel: 'Tirar todas' }, () => void remove())}>Tirar todas desta zona</button>
           )}
           {note && <p className="live__empty" role="status">{note}</p>}
         </>

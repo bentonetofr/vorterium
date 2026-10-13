@@ -14,6 +14,7 @@ import { removeEnemies } from '../enemies/enemies'
 import { mapPoint } from '../enemies/useMapDrop'
 import './LiveControl.css'
 import { Loader } from '../../../shared/components/Loader'
+import { alertDialog, ask, confirmDialog } from '../../../shared/components/dialogs'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
@@ -152,7 +153,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
       if (watch.current?.controllingNpc() === id) await watch.current.releaseNpc()
       await removeEnemies({ campaignId: campaign.id, worldId: active.id, worldName: active.name, zoneId, net: vnet.net, ids: [id] })
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Não deu pra tirar o NPC.')
+      void alertDialog(err instanceof Error ? err.message : 'Não deu pra tirar o NPC.')
     } finally {
       setRemoving(false)
       setNpcMenu(null)
@@ -232,7 +233,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const other = editing && editing.id !== active.id ? editing : null
   async function openEdited() {
     if (!other) return
-    if (!confirm(`Abrir "${other.name}" pros jogadores? Quem está no Vortable vai para ele agora.`)) return
+    if (!(await confirmDialog({ title: 'Abrir o mundo', message: `Abrir "${other.name}" pros jogadores? Quem está no Vortable vai para ele agora.`, confirmLabel: 'Abrir' }))) return
     setOpening(true)
     try {
       await setActiveWorld(campaign.id, other.id)
@@ -378,7 +379,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
                       </button>
                       <button
                         type="button" className="live__iconbtn" disabled={removing} title={`Tirar ${n.name} do mapa`} aria-label={`Tirar ${n.name} do mapa`}
-                        onClick={() => { if (confirm(`Tirar "${n.name}" do mapa?`)) void removeNpc(n.id) }}
+                        onClick={() => ask({ title: 'Tirar do mapa', message: `Tirar "${n.name}" do mapa?`, tone: 'danger', confirmLabel: 'Tirar' }, () => void removeNpc(n.id))}
                       >✕</button>
                     </li>
                   ))}
@@ -599,7 +600,7 @@ function SpectatorsPane() {
                   )}
                 <button
                   type="button" className="live__iconbtn" title={`Tirar ${p.name} da sessão`} aria-label={`Tirar ${p.name} da sessão`}
-                  onClick={() => { if (confirm(`Tirar ${p.name} da sessão?`)) vnet.net?.kick(p.id) }}
+                  onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${p.name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.net?.kick(p.id))}
                 >✕</button>
               </li>
             )

@@ -10,6 +10,7 @@ import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { CharacterFace } from './CharacterFace'
 import { Loader } from '../../../shared/components/Loader'
+import { ask } from '../../../shared/components/dialogs'
 
 /** Mestre: os jogadores, o personagem que cada um criou na ficha (o mestre não troca nem entrega), espectadores e teleporte. */
 export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userId: string }) {
@@ -102,8 +103,8 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
 
   function remove(character: CampaignCharacter) {
     const who = character.controllerId ? ` ${nameOf(character.controllerId)} vai precisar criar outro na ficha.` : ''
-    if (!confirm(`Apagar "${character.name}"?${who}`)) return
-    void run(`del:${character.id}`, () => deleteCharacter(campaign.id, character.id))
+    ask({ title: 'Apagar boneco', message: `Apagar "${character.name}"?${who}`, tone: 'danger', confirmLabel: 'Apagar' },
+      () => void run(`del:${character.id}`, () => deleteCharacter(campaign.id, character.id)))
   }
 
   return (
@@ -138,7 +139,7 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
               <li key={x.id}>
                 <span>👁 {x.name}</span>
                 <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(x.id, 'play')}>Colocar em jogo</button>
-                <button type="button" className="btn btn-ghost" onClick={() => { if (confirm(`Tirar ${x.name} da sessão?`)) vnet.net?.kick(x.id) }}>Tirar</button>
+                <button type="button" className="btn btn-ghost" onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${x.name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.net?.kick(x.id))}>Tirar</button>
               </li>
             ))}
           </ul>
@@ -194,7 +195,7 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => { if (confirm(`Tirar ${p.profile.display_name} da sessão?`)) vnet.net?.kick(p.user_id) }}
+                    onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${p.profile.display_name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.net?.kick(p.user_id))}
                   >
                     Expulsar
                   </button>

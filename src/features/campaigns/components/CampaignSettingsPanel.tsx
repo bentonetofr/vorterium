@@ -15,6 +15,7 @@ import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/
 import type { CampaignWithRole } from '../../../shared/types'
 import { Select } from '../../../shared/components/Select'
 import './CampaignSettingsPanel.css'
+import { confirmDialog } from '../../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -205,10 +206,11 @@ export function CampaignSettingsPanel({ campaign, onCampaignUpdate }: CampaignSe
 
   // ── Sair da campanha ──
   async function handleLeave() {
-    const confirmed = window.confirm(
-      `Tem certeza que deseja sair de "${campaign.name}"?\n\n` +
-      `Você perderá o acesso e precisará de um novo convite para entrar novamente.`
-    )
+    const confirmed = await confirmDialog({
+      title: 'Sair da campanha',
+      message: `Tem certeza que deseja sair de "${campaign.name}"?\n\nVocê perderá o acesso e precisará de um novo convite para entrar novamente.`,
+      tone: 'danger', confirmLabel: 'Sair da campanha',
+    })
     if (!confirmed) return
 
     setLeaveError(null)

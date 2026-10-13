@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { gm, type Sym, type TorreGame, type TorreView } from './torreService'
 import { STAR_NAMES } from './game/sky'
 import { GlyphIcon, SymbolIcon } from './puzzles/kit'
+import { ask } from '../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // O painel do mestre (menu ≡ → "Painel do mestre"), por cima da partida:
@@ -139,7 +140,7 @@ export function TorreGmPanel({ view, offset, onClose }: { view: TorreView; offse
       )}
 
       <div className="lb-lock__btns">
-        <button type="button" className="lb-btn" disabled={busy} onClick={() => { if (window.confirm('Recomeçar com outro segredo? Tudo o que a dupla fez se perde.')) void run({ a: 'reset' }, 'Partida nova.') }}>Recomeçar</button>
+        <button type="button" className="lb-btn" disabled={busy} onClick={() => ask({ title: 'Recomeçar', message: 'Recomeçar com outro segredo? Tudo o que a dupla fez se perde.', tone: 'danger', confirmLabel: 'Recomeçar' }, () => void run({ a: 'reset' }, 'Partida nova.'))}>Recomeçar</button>
       </div>
       {msg && <p className="lb-toast" role="status">{msg}</p>}
     </aside>

@@ -14,6 +14,7 @@ import { SceneOverlay } from './SceneOverlay'
 import './SceneBar.css'
 import './VortablePip.css'
 import { Loader } from '../../../shared/components/Loader'
+import { ask } from '../../../shared/components/dialogs'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 
@@ -98,7 +99,10 @@ function PipWindow({ campaign }: { campaign: CampaignWithRole }) {
 
   /** Fechar a telinha do mestre encerra a sessão (é ela que mantém a sessão no ar). */
   function close() {
-    if (master && !confirm('Fechar a telinha encerra a sessão pros jogadores. Encerrar?')) return
+    if (master) {
+      ask({ title: 'Encerrar a sessão?', message: 'Fechar a telinha encerra a sessão pros jogadores. Encerrar?', tone: 'danger', confirmLabel: 'Encerrar' }, closePip)
+      return
+    }
     closePip()
   }
 

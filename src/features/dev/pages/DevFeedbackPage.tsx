@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listFeedback, setFeedbackStatus, fmtDateTime, type DevFeedback, type FeedbackStatus } from '../services/devService'
 import { DevState, useLoad } from '../components/DevUi'
+import { alertDialog } from '../../../shared/components/dialogs'
 
 // Caixa de feedback: tudo que os jogadores mandaram, com o print. A única
 // alteração possível no painel é o status (novo → lido → resolvido).
@@ -25,7 +26,7 @@ export function DevFeedbackPage() {
       await setFeedbackStatus(f.id, status)
       setData((list) => list?.map((x) => (x.id === f.id ? { ...x, status } : x)) ?? null)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Não foi possível mudar o status.')
+      void alertDialog(err instanceof Error ? err.message : 'Não foi possível mudar o status.')
     } finally {
       setBusy(null)
     }

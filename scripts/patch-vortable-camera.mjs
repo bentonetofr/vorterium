@@ -6,6 +6,7 @@
 //  6. Roupa que descolava do corpo ao correr: peça sem a animação faz o boneco inteiro usar os quadros de caminhar nela.
 //  7. Zoom da roda na câmera do mestre (âncora no mouse calculada certo).
 //  8. Duração do dia de 3 h e 5 h (DAY_LENGTHS).
+//  9. Perguntas do motor com a janelinha do site (window.__vtConfirm).
 //  5. `gate`: licença do mestre pra o jogador atravessar uma saída (ver a remenda 5 no fim).
 //
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
@@ -205,4 +206,47 @@ if (code.includes('\t96,\n\t180,')) {
   code = code.replace(lenOld, lenNew).replace(labOld, labNew)
   writeFileSync(js, code)
   console.log('motor: durações de dia remendadas')
+}
+
+// ── Remenda 9: as perguntas do motor (criador de personagem, editor de zonas) usam a janelinha do site em vez do confirm do navegador.
+//    O site põe `window.__vtConfirm(mensagem, opções)` (devolve uma Promise); sem ele, cai no confirm de sempre. ──
+code = readFileSync(js, 'utf8')
+if (code.includes('function vtConfirm(')) {
+  console.log('motor: perguntas já remendadas')
+} else {
+  const T = (s) => s
+  const pairs = [
+    [
+      'if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;',
+      'if (this.dirty && !await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) return;',
+    ],
+    [
+      'this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?\\n\\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save()',
+      'this.dirty && await vtConfirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?`, { title: "Salvar antes de sair?", confirmLabel: "Salvar e sair", cancelLabel: "Sair sem salvar" }) && !await this.save()',
+    ],
+    [
+      '\tnewCharacter() {\n\t\t(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) &&',
+      '\tasync newCharacter() {\n\t\t(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) &&',
+    ],
+    [
+      '(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = structuredClone(a)',
+      '(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = structuredClone(a)',
+    ],
+    [
+      'if (confirm(`Apagar "${a.name}"? Não dá pra desfazer.`)) {',
+      'if (await vtConfirm(`Apagar "${a.name}"? Não dá pra desfazer.`, { title: "Apagar personagem", tone: "danger", confirmLabel: "Apagar" })) {',
+    ],
+    [
+      'if (confirm(`Apagar "${i.name}"? Não dá pra desfazer.`)) {',
+      'if (await vtConfirm(`Apagar "${i.name}"? Não dá pra desfazer.`, { title: "Apagar zona", tone: "danger", confirmLabel: "Apagar" })) {',
+    ],
+    [
+      'function Ms(e, t) {',
+      'function vtConfirm(message, options) {\n\treturn typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));\n}\nfunction Ms(e, t) {',
+    ],
+  ]
+  for (const [a] of pairs) if (!code.includes(a)) throw new Error('motor: não achei uma pergunta pra remendar (o motor mudou?): ' + a.slice(0, 60))
+  for (const [a, b] of pairs) code = code.replace(a, () => b)
+  writeFileSync(js, code)
+  console.log('motor: perguntas remendadas')
 }

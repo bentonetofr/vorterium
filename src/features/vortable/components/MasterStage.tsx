@@ -12,6 +12,7 @@ import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { getResume, patchResume } from '../resume/resumeStore'
 import { Loader } from '../../../shared/components/Loader'
+import { confirmDialog } from '../../../shared/components/dialogs'
 
 /** Duas telas: as ferramentas (editar o mundo) e o controle ao vivo (ver a cena como os jogadores e mudar tudo na hora). */
 type Mode = 'editar' | 'controle'
@@ -44,17 +45,23 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   function toggle() {
     setExtra(null)
     if (mode === 'editar' && editing && active && editing.id !== active.id) {
-      const ok = confirm(
-        `Você está editando "${editing.name}", mas os jogadores estão em "${active.name}" (o controle ao vivo mostra o mundo aberto).\n\n` +
-        `Abrir "${editing.name}" pros jogadores agora? Quem está no Vortable vai para ele na hora.`,
-      )
-      if (ok) {
-        void setActiveWorld(campaign.id, editing.id)
-          .then(() => { mesa.setWorldId(editing.id); return refresh() })
-          .catch(() => { /* ficou no mundo de antes: o aviso do controle oferece de novo */ })
-          .finally(() => setMode('controle'))
-        return
-      }
+      void confirmDialog({
+        title: 'Abrir o mundo editado?',
+        message:
+          `Você está editando "${editing.name}", mas os jogadores estão em "${active.name}" (o controle ao vivo mostra o mundo aberto).\n\n` +
+          `Abrir "${editing.name}" pros jogadores agora? Quem está no Vortable vai para ele na hora.`,
+        confirmLabel: 'Abrir pros jogadores', cancelLabel: 'Não abrir',
+      }).then((ok) => {
+        if (ok) {
+          void setActiveWorld(campaign.id, editing.id)
+            .then(() => { mesa.setWorldId(editing.id); return refresh() })
+            .catch(() => { /* ficou no mundo de antes: o aviso do controle oferece de novo */ })
+            .finally(() => setMode('controle'))
+          return
+        }
+        setMode((m) => (m === 'editar' ? 'controle' : 'editar'))
+      })
+      return
     }
     setMode((m) => (m === 'editar' ? 'controle' : 'editar'))
   }

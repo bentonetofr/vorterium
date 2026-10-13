@@ -19,6 +19,7 @@ import { useTdaFonts } from '../utils/tdaFonts'
 import '../../components/SheetPanel.css'
 import './TerraDevastadaAdaptadaSheet.css'
 import './TdaMotion.css'
+import { confirmDialog } from '../../../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // Bestiário do mestre (Terra Devastada Adaptada): referência com os
@@ -84,7 +85,7 @@ export function TdaBestiaryPanel({ campaignId }: TdaBestiaryPanelProps) {
   }
 
   async function remove(c: TdaCreature) {
-    if (!window.confirm(`Excluir "${c.name}" do bestiário?`)) return
+    if (!(await confirmDialog({ title: 'Excluir criatura', message: `Excluir "${c.name}" do bestiário?`, tone: 'danger', confirmLabel: 'Excluir' }))) return
     try {
       await deleteTdaCreature(c.id)
       setCreatures((prev) => prev.filter((x) => x.id !== c.id))

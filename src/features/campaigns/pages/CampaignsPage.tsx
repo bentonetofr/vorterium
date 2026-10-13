@@ -8,6 +8,7 @@ import type { CampaignWithRole } from '../../../shared/types'
 import { DeleteCampaignModal } from '../components/DeleteCampaignModal'
 import './CampaignPages.css'
 import { Loader } from '../../../shared/components/Loader'
+import { confirmDialog } from '../../../shared/components/dialogs'
 
 export function CampaignsPage() {
   const { user } = useAuth()
@@ -45,7 +46,11 @@ export function CampaignsPage() {
   /** Arquiva (some da lista principal e vai pra "Arquivadas") ou desarquiva uma campanha. Só o mestre. */
   async function setArchived(campaign: CampaignWithRole, archive: boolean) {
     const ok = archive
-      ? confirm(`Arquivar "${campaign.name}"?\n\nEla sai da lista e vai para "Arquivadas". Nada é apagado e dá pra desarquivar quando quiser.`)
+      ? await confirmDialog({
+        title: 'Arquivar campanha',
+        message: `"${campaign.name}" sai da lista e vai para "Arquivadas".\n\nNada é apagado e dá pra desarquivar quando quiser.`,
+        confirmLabel: 'Arquivar',
+      })
       : true
     if (!ok) return
     setBusyId(campaign.id)

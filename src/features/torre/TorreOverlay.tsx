@@ -15,6 +15,7 @@ import { useFeature } from '../control/siteFeatures'
 import { LIVRO_FEATURE, openRoom as openLivro } from '../livro/livroService'
 import '../livro/Livro.css'
 import './Torre.css'
+import { alertDialog, ask } from '../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // A Torre do Observatório cobre o site inteiro (o mesmo visual do Livro
@@ -118,12 +119,12 @@ export function TorreOverlay({ room, onMinimize }: { room: TorreRoomRow; onMinim
               <button type="button" role="menuitem" onClick={() => setSoundOn(!sound)} aria-pressed={sound}>{sound ? 'Som: ligado' : 'Som: desligado'}</button>
               <button type="button" role="menuitem" onClick={() => { setMenu(false); minimize() }}>Voltar ao site</button>
               {isGm && livro.visible && (
-                <button type="button" role="menuitem" onClick={() => { setMenu(false); void openLivro(room.campaign_id).catch((e) => window.alert(e instanceof Error ? e.message : 'Não deu certo.')) }}>Trocar para O Livro Bloqueado</button>
+                <button type="button" role="menuitem" onClick={() => { setMenu(false); void openLivro(room.campaign_id).catch((e) => { void alertDialog(e instanceof Error ? e.message : 'Não deu certo.') }) }}>Trocar para O Livro Bloqueado</button>
               )}
               {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); setGmOpen(true) }}>Painel do mestre</button>}
               {isGm && playing && <button type="button" role="menuitem" onClick={() => { setMenu(false); void gm(room.id, { a: 'lobby' }) }}>Trocar quem joga</button>}
               {isGm && (
-                <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); if (window.confirm('Encerrar a Torre do Observatório pra todo mundo?')) void gm(room.id, { a: 'close' }) }}>Encerrar o jogo</button>
+                <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenu(false); ask({ title: 'Encerrar o jogo', message: 'Encerrar a Torre do Observatório pra todo mundo?', tone: 'danger', confirmLabel: 'Encerrar' }, () => void gm(room.id, { a: 'close' })) }}>Encerrar o jogo</button>
               )}
             </div>
           )}

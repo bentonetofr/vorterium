@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.64',
+    date:    '2026-10-13',
+    title:   'Janelinhas do site no lugar dos avisos do navegador',
+    items: [
+      'Todos os "campaign-lab diz…" (as caixinhas de confirmar, avisar e perguntar do navegador) foram trocados por janelinhas pequenas no centro da tela, com o visual do site: ícone, título dourado, texto e botões. Arquivar, sair da campanha, apagar ficha, criatura, mundo ou zona, tirar alguém da sessão, encerrar o jogo, fechar documento sem salvar e as perguntas do Vortable, entre outras.',
+      'As perguntas perigosas (apagar, tirar, encerrar) ganharam visual vermelho e começam com o foco em Cancelar, então um Enter sem querer não apaga nada. Esc cancela, e o Enter confirma nas demais. Quando "Novo mundo" e "Renomear" pedem um nome, o campo de texto fica dentro da própria janelinha.',
+      'Se aparecer mais de uma pergunta ao mesmo tempo, elas entram na fila e aparecem uma por vez. As janelinhas ficam acima de qualquer tela cheia (jogos e Vortable).',
+      'Por baixo: o criador de personagens e o editor de zonas do motor do Vortable também usam essas janelinhas (mais uma remenda no motor: node scripts/patch-vortable-camera.mjs depois de sincronizar o motor de novo).',
+    ],
+  },
+  {
     version: '1.63',
     date:    '2026-10-13',
     title:   'Criar campanha redesenhado, com janela de escolha de sistema',

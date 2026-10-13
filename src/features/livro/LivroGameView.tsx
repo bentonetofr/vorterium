@@ -7,6 +7,7 @@ import { PuzzlePanel } from './PuzzlePanel'
 import { HintBanner } from './HintBanner'
 import { onSoundChange, sfx, startAmbient, stopAmbient } from './game/sound'
 import type { UiMsg } from './livroNet'
+import { ask } from '../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // A partida: a sala desenhada no canvas (o motor cuida de andar, mouse e
@@ -187,7 +188,7 @@ export function LivroGameView({ view, net, peers }: { view: LivroView; net: Livr
             {took !== null && <p className="lb-ending__time">Tempo: {fmtTime(took)}</p>}
             <div className="lb-lock__btns">
               <button type="button" className="lb-btn" onClick={() => setEndSeen(true)}>Ver a sala</button>
-              {me.gm && <button type="button" className="lb-btn lb-btn--gold" onClick={() => { if (window.confirm('Encerrar o Livro Bloqueado pra todo mundo?')) void gm(view.room.id, { a: 'close' }) }}>Encerrar o jogo</button>}
+              {me.gm && <button type="button" className="lb-btn lb-btn--gold" onClick={() => ask({ title: 'Encerrar o jogo', message: 'Encerrar o Livro Bloqueado pra todo mundo?', tone: 'danger', confirmLabel: 'Encerrar' }, () => void gm(view.room.id, { a: 'close' }))}>Encerrar o jogo</button>}
             </div>
           </section>
         </div>

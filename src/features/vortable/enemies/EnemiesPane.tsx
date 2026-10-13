@@ -9,6 +9,7 @@ import {
   creatureSfxEnabled, playCreatureSound, setCreatureSfxEnabled, soundDef, SOUND_GROUPS, unlockCreatureAudio,
   type SoundDistance, type SoundGroup,
 } from './creatureSounds'
+import { ask } from '../../../shared/components/dialogs'
 
 type Npc = ReturnType<WatchControls['npcs']>[number]
 type Peer = ReturnType<WatchControls['peers']>[number]
@@ -224,7 +225,7 @@ export function EnemiesPane({ viewEl, watch, campaignId, worldId, worldName, zon
             })}
           </ul>
           {enemies.length > 1 && (
-            <button type="button" className="btn btn-ghost" disabled={busy != null} onClick={() => { if (confirm('Tirar todos os inimigos desta zona?')) void remove() }}>Tirar todos desta zona</button>
+            <button type="button" className="btn btn-ghost" disabled={busy != null} onClick={() => ask({ title: 'Tirar os inimigos', message: 'Tirar todos os inimigos desta zona?', tone: 'danger', confirmLabel: 'Tirar todos' }, () => void remove())}>Tirar todos desta zona</button>
           )}
           {note && <p className="live__empty" role="status">{note}</p>}
         </>

@@ -2,6 +2,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { enterFullscreen } from './LivroOverlay'
 import './GameDock.css'
+import { alertDialog, confirmDialog } from '../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // Os ícones dos joguinhos na coluna de botões do canto (em cima do Painel
@@ -64,14 +65,14 @@ export function GameFab({ game, label, live, confirm, onOpen }: {
     )
   }
   if (!slot) return null
-  const click = () => {
+  const click = async () => {
     if (busy) return
-    if (confirm && !window.confirm(confirm)) return
+    if (confirm && !(await confirmDialog(confirm))) return
     enterFullscreen()
     const r = onOpen()
     if (r instanceof Promise) {
       setBusy(true)
-      r.catch((e) => window.alert(e instanceof Error ? e.message : 'Não deu certo.')).finally(() => setBusy(false))
+      r.catch((e) => { void alertDialog(e instanceof Error ? e.message : 'Não deu certo.') }).finally(() => setBusy(false))
     }
   }
   return createPortal(

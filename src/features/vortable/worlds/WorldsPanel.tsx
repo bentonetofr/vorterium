@@ -4,6 +4,7 @@ import { createWorld, deleteWorld, importWorldBundle, renameWorld, setActiveWorl
 import { useVortableWorlds } from './VortableWorldProvider'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import './WorldsPanel.css'
+import { confirmDialog, promptDialog } from '../../../shared/components/dialogs'
 
 /** Mundos prontos que vêm com o site (viram um mundo seu ao importar). */
 const TEMPLATES = [
@@ -43,8 +44,8 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
     }
   }
 
-  function create() {
-    const name = prompt('Nome do novo mundo:')?.trim()
+  async function create() {
+    const name = (await promptDialog({ title: 'Novo mundo', label: 'Nome do novo mundo', confirmLabel: 'Criar', maxLength: 80 }))?.trim()
     if (!name) return
     void run('new', async () => {
       const world = await createWorld(campaignId, name.slice(0, 80))
@@ -70,24 +71,24 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
     })
   }
 
-  function open(w: CampaignWorld) {
+  async function open(w: CampaignWorld) {
     if (w.active) return
-    if (!confirm(`Abrir "${w.name}"? Os jogadores que estão no Vortable vão para ele agora.`)) return
+    if (!(await confirmDialog({ title: 'Abrir o mundo', message: `Abrir "${w.name}"? Os jogadores que estão no Vortable vão para ele agora.`, confirmLabel: 'Abrir' }))) return
     void run(`open:${w.id}`, async () => {
       await setActiveWorld(campaignId, w.id)
       mesa.setWorldId(w.id) // os jogadores trocam de mundo na hora, mesmo se o tempo real do banco atrasar
     })
   }
 
-  function rename(w: CampaignWorld) {
-    const name = prompt('Novo nome do mundo:', w.name)?.trim()
+  async function rename(w: CampaignWorld) {
+    const name = (await promptDialog({ title: 'Renomear o mundo', label: 'Novo nome do mundo', initial: w.name, confirmLabel: 'Renomear', maxLength: 80 }))?.trim()
     if (!name || name === w.name) return
     void run(`rename:${w.id}`, () => renameWorld(campaignId, w.id, name.slice(0, 80)))
   }
 
-  function remove(w: CampaignWorld) {
+  async function remove(w: CampaignWorld) {
     if (w.active) return
-    if (!confirm(`Apagar "${w.name}" e as ${w.zones} zona(s) dele? Não dá pra desfazer.`)) return
+    if (!(await confirmDialog({ title: 'Apagar o mundo', message: `Apagar "${w.name}" e as ${w.zones} zona(s) dele? Não dá pra desfazer.`, tone: 'danger', confirmLabel: 'Apagar' }))) return
     void run(`del:${w.id}`, () => deleteWorld(campaignId, w.id))
   }
 

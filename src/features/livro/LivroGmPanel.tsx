@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { gm, type GameView, type LivroView, type Quadrant, type Sym } from './livroService'
 import { SymbolIcon } from './puzzles/kit'
+import { ask } from '../../shared/components/dialogs'
 
 // ────────────────────────────────────────────────────────
 // O painel do mestre do Livro (menu ≡ → "Painel do mestre"), por cima da
@@ -145,7 +146,7 @@ export function LivroGmPanel({ view, onClose }: { view: LivroView; onClose: () =
       )}
 
       <div className="lb-lock__btns">
-        <button type="button" className="lb-btn" disabled={busy} onClick={() => { if (window.confirm('Recomeçar com outro segredo? Tudo o que a dupla fez se perde.')) void run({ a: 'reset' }, 'Partida nova.') }}>Recomeçar</button>
+        <button type="button" className="lb-btn" disabled={busy} onClick={() => ask({ title: 'Recomeçar', message: 'Recomeçar com outro segredo? Tudo o que a dupla fez se perde.', tone: 'danger', confirmLabel: 'Recomeçar' }, () => void run({ a: 'reset' }, 'Partida nova.'))}>Recomeçar</button>
       </div>
       {msg && <p className="lb-toast" role="status">{msg}</p>}
     </aside>
