@@ -12,10 +12,10 @@ interface DeleteCampaignModalProps {
 
 /**
  * Exclusão de uma campanha: só libera o botão depois de escrever, igualzinho, a frase
- * `DELETAR (nome da campanha)`. Apaga a campanha e tudo o que está nela, sem volta.
+ * `DELETAR nome da campanha`. Apaga a campanha e tudo o que está nela, sem volta.
  */
 export function DeleteCampaignModal({ campaignId, campaignName, onClose, onDeleted }: DeleteCampaignModalProps) {
-  const phrase = `DELETAR (${campaignName})`
+  const phrase = `DELETAR ${campaignName}`
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)

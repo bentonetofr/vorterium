@@ -31,7 +31,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-10-13',
     title:   'Excluir campanha pela lista',
     items: [
-      'Na lista de campanhas (ativas e arquivadas), o mestre ganhou uma lixeira vermelha ao lado do envelope. Ao clicar abre uma janela de confirmação que só libera o botão "Excluir para sempre" depois de escrever, igualzinho, a frase DELETAR (nome da campanha), com o nome da campanha entre parênteses.',
+      'Na lista de campanhas (ativas e arquivadas), o mestre ganhou uma lixeira vermelha ao lado do envelope. Ao clicar abre uma janela de confirmação que só libera o botão "Excluir para sempre" depois de escrever, igualzinho, a frase DELETAR seguida do nome da campanha (por exemplo, DELETAR TESTE VAMPIRO), sem parênteses.',
       'Excluir apaga a campanha e tudo o que está nela (fichas, mundos do Vortable, notas, quadro, chat, episódios e jogadores), sem volta. Se só quiser tirar da lista, o envelope arquiva.',
     ],
   },
