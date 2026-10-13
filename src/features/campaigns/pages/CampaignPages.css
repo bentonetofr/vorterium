@@ -175,6 +175,43 @@
 .campaign-line__archive:hover:not(:disabled) { color: var(--gilded); border-color: var(--gilded); background: rgba(255, 255, 255, 0.05); }
 .campaign-line__archive:disabled { opacity: 0.5; cursor: progress; }
 
+/* Lixeira vermelha (excluir) ao lado do envelope */
+.campaign-line__delete { color: #e5484d; border-color: rgba(229, 72, 77, 0.5); }
+.campaign-line__delete:hover:not(:disabled) { color: #fff; background: #c62828; border-color: #c62828; }
+
+/* Janela de excluir campanha (escrever DELETAR (nome)) */
+.delete-modal {
+  width: min(460px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid #c62828;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.2s ease-out;
+}
+.delete-modal__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.delete-modal__title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; color: #e5484d; }
+.delete-modal__warn { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); }
+.delete-modal__label { margin-top: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); }
+.delete-modal__phrase {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px dashed var(--border-bright, rgba(255, 255, 255, 0.25));
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.delete-modal__input { width: 100%; }
+.delete-modal__error { margin: 0; font-size: var(--text-sm); color: var(--danger, #e06c6c); }
+.delete-modal__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
 /* ── Card de campanha ── */
 .campaign-card-row {
   display: flex;

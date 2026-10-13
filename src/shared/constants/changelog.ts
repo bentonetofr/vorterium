@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.62',
+    date:    '2026-10-13',
+    title:   'Excluir campanha pela lista',
+    items: [
+      'Na lista de campanhas (ativas e arquivadas), o mestre ganhou uma lixeira vermelha ao lado do envelope. Ao clicar abre uma janela de confirmação que só libera o botão "Excluir para sempre" depois de escrever, igualzinho, a frase DELETAR (nome da campanha), com o nome da campanha entre parênteses.',
+      'Excluir apaga a campanha e tudo o que está nela (fichas, mundos do Vortable, notas, quadro, chat, episódios e jogadores), sem volta. Se só quiser tirar da lista, o envelope arquiva.',
+    ],
+  },
+  {
     version: '1.61',
     date:    '2026-10-13',
     title:   'Arquivar campanhas',

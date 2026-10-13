@@ -5,6 +5,7 @@ import { getMyCampaigns, updateCampaignDetails } from '../services/campaignServi
 import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
+import { DeleteCampaignModal } from '../components/DeleteCampaignModal'
 import './CampaignPages.css'
 import { Loader } from '../../../shared/components/Loader'
 
@@ -16,6 +17,8 @@ export function CampaignsPage() {
   const [showArchived, setShowArchived] = useState(false)
   const [busyId, setBusyId]        = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  // campanha que o mestre está excluindo (a janela pede pra escrever DELETAR (nome))
+  const [deleting, setDeleting] = useState<CampaignWithRole | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -88,6 +91,15 @@ export function CampaignsPage() {
 
       {actionError && <div className="page__feedback page__feedback--error" role="alert">{actionError}</div>}
 
+      {deleting && (
+        <DeleteCampaignModal
+          campaignId={deleting.id}
+          campaignName={deleting.name}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => { setCampaigns((list) => list.filter((c) => c.id !== deleting.id)); setDeleting(null) }}
+        />
+      )}
+
       {!loading && !error && showArchived && (
         <div className="campaigns-list animate-fade-up">
           <section>
@@ -100,7 +112,7 @@ export function CampaignsPage() {
             ) : (
               <div className="campaign-cards anim-stagger">
                 {archived.map((c) => (
-                  <CampaignLine key={c.id} campaign={c} archivedView busy={busyId === c.id} onToggleArchive={() => void setArchived(c, false)} />
+                  <CampaignLine key={c.id} campaign={c} archivedView busy={busyId === c.id} onToggleArchive={() => void setArchived(c, false)} onDelete={() => setDeleting(c)} />
                 ))}
               </div>
             )}
@@ -138,7 +150,7 @@ export function CampaignsPage() {
                 Campanhas como mestre
               </h3>
               <div className="campaign-cards anim-stagger">
-                {asMaster.map((c) => <CampaignLine key={c.id} campaign={c} busy={busyId === c.id} onToggleArchive={() => void setArchived(c, true)} />)}
+                {asMaster.map((c) => <CampaignLine key={c.id} campaign={c} busy={busyId === c.id} onToggleArchive={() => void setArchived(c, true)} onDelete={() => setDeleting(c)} />)}
               </div>
             </section>
           )}
@@ -179,20 +191,36 @@ function EnvelopeIcon({ open = false }: { open?: boolean }) {
 }
 
 /** A campanha na lista, com (só pro mestre) o botão de envelope que arquiva ou desarquiva. */
-function CampaignLine({ campaign, archivedView = false, busy = false, onToggleArchive }: {
-  campaign: CampaignWithRole; archivedView?: boolean; busy?: boolean; onToggleArchive?: () => void
+function CampaignLine({ campaign, archivedView = false, busy = false, onToggleArchive, onDelete }: {
+  campaign: CampaignWithRole; archivedView?: boolean; busy?: boolean; onToggleArchive?: () => void; onDelete?: () => void
 }) {
-  const canArchive = campaign.role === 'master' && Boolean(onToggleArchive)
+  const isMaster = campaign.role === 'master'
   const label = archivedView ? `Desarquivar ${campaign.name}` : `Arquivar ${campaign.name}`
   return (
     <div className="campaign-line">
       <CampaignCard campaign={campaign} />
-      {canArchive && (
+      {isMaster && onToggleArchive && (
         <button type="button" className="campaign-line__archive" onClick={onToggleArchive} disabled={busy} title={label} aria-label={label}>
           <EnvelopeIcon open={archivedView} />
         </button>
       )}
+      {isMaster && onDelete && (
+        <button type="button" className="campaign-line__archive campaign-line__delete" onClick={onDelete} disabled={busy} title={`Excluir ${campaign.name}`} aria-label={`Excluir ${campaign.name}`}>
+          <TrashIcon />
+        </button>
+      )}
     </div>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12" />
+      <path d="M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7" />
+    </svg>
   )
 }
 
