@@ -110,3 +110,93 @@
 }
 .vortable-page__net--online { color: var(--success); border-color: var(--success); }
 .vortable-page__net--connecting { color: var(--warning); border-color: var(--warning); }
+
+/* ═══════════════════════════════════════════════════════
+   Celular e tablet
+   ═══════════════════════════════════════════════════════ */
+
+/* telas com entalhe (iPhone deitado): nada fica embaixo do recorte */
+.vortable-page {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.vortable-page__bar { min-height: 48px; }
+.vortable-page__full-ico { display: none; font-size: 18px; line-height: 1; }
+
+/* botão que abre e fecha as ferramentas (dados, chat, ficha...) no celular: no meio da borda direita, longe da faixa de cima,
+   do joystick (esquerda embaixo) e dos botões de andar (direita embaixo) */
+.vortable-tools__toggle {
+  position: fixed;
+  top: 50%;
+  margin-top: -22px;
+  right: max(10px, env(safe-area-inset-right, 0px));
+  z-index: 510;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--accent-bright);
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  border: 1px solid var(--gilded);
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+.vortable-tools__toggle--open { color: var(--text-inverse); background: var(--accent-bright); }
+.vortable-tools__toggle:active { transform: scale(0.92); }
+.vortable-tools__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: var(--text-inverse);
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 1px solid var(--bg-base);
+}
+/* recolhidas: some tudo menos o botão e os avisos que chegam (resultado de dado, mensagem nova) */
+.vortable-tools--folded > :not(.vortable-tools__toggle):not(.fab-toasts) { display: none; }
+/* o grupo aberto cobre os botões de andar: eles saem de cena até fechar */
+.vortable-page--tools-open .touch { visibility: hidden; }
+
+@media (max-width: 720px) {
+  .vortable-page__bar { gap: 6px; padding: 6px 8px; overflow-x: auto; scrollbar-width: none; }
+  .vortable-page__bar::-webkit-scrollbar { display: none; }
+  .vortable-page__bar > * { flex: none; }
+  .vortable-page__bar .vortable-page__title { flex: 1 1 0; min-width: 0; }
+  .vortable-page__bar .btn { min-height: 36px; padding-inline: 10px; }
+  .vortable-page__worlds small { display: none; }
+}
+@media (max-width: 520px) {
+  .vortable-page__title { display: none; }
+  .vortable-page__bar { justify-content: flex-start; }
+  .vortable-page__bar .vortable-page__worlds { margin-left: auto; }
+  .vortable-page__live-more, .vortable-page__full-label { display: none; }
+  .vortable-page__full-ico { display: inline; }
+}
+
+/* celular deitado: pouca altura, a faixa de cima e os botões encolhem pro jogo ganhar espaço */
+@media (orientation: landscape) and (max-height: 500px) {
+  .vortable-page__bar { min-height: 40px; padding-block: 3px; }
+  .vortable-page__bar .btn { min-height: 32px; padding-block: 2px; }
+  .vortable-page__title { max-width: 30vw; }
+  .vortable-master--float .vortable-master__top--float { top: 6px; }
+  .vortable-page .vortable-master__top { margin: 4px 8px; }
+  .vortable-master__top .mode-btn { width: 38px; height: 38px; }
+  .vortable-master__top .editor-bar { flex: 1 1 0; min-width: 0; }
+  .vortable-master__top .scene-bar { order: 3; }
+  .vortable-master__top .editor-bar { order: 2; }
+  .vortable-tools__toggle { width: 40px; height: 40px; margin-top: -20px; }
+}
+
+/* a página do Vortable não tem a barra de navegação de baixo: os botões do canto e as janelas descem até a borda */
+.vortable-page { --bottom-nav-h: 0px; }

@@ -1652,7 +1652,10 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
               <p className="board-empty__text">
                 {shield
                   ? 'Segredos, planos, mapas e anotações que os jogadores não podem ver. Só os mestres veem o que for posto aqui.'
-                  : 'Escolha uma ferramenta à esquerda (a tecla N cria um post-it) ou arraste fotos do computador pra cá. Elas vão direto pra Galeria da campanha.'}
+                  : (<>
+                    <span className="board-empty__desk">Escolha uma ferramenta à esquerda (a tecla N cria um post-it) ou arraste fotos do computador pra cá. Elas vão direto pra Galeria da campanha.</span>
+                    <span className="board-empty__touch">Toque numa ferramenta à esquerda pra começar (o post-it é o segundo). Fotos que você enviar vão direto pra Galeria da campanha.</span>
+                  </>)}
               </p>
             </div>
           )}

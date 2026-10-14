@@ -589,3 +589,31 @@ html { cursor: var(--cursor-arrow); }
        [type="button"], [type="submit"], [type="reset"]), textarea, [contenteditable="true"]) {
   cursor: text;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Toque (celular e tablet)
+   ═══════════════════════════════════════════════════════════ */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* sem o atraso e o zoom de toque duplo nos controles; sem o clarão cinza do toque */
+:where(a, button, summary, label, select, input, textarea, [role="button"], [role="tab"]) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* no iPhone (Safari), campo com letra menor que 16px dá zoom na página ao tocar */
+@supports (-webkit-touch-callout: none) {
+  @media (pointer: coarse) {
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), select, textarea { font-size: max(16px, 1em); }
+  }
+}
+
+@media (pointer: coarse) {
+  /* alvos de toque de pelo menos 40 px nos botões do site */
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 38px; }
+  /* o botão não "gruda" no estado de hover depois do toque */
+  .btn-primary:hover:not(:disabled), .primary-button:hover:not(:disabled) { transform: none; }
+  /* rolagem dentro de painéis não puxa a página junto */
+  .fab-panel, .modal, [role="dialog"] { overscroll-behavior: contain; }
+}

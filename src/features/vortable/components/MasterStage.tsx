@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import { createCharacterStorage, createWorldStorage, listNpcCharacters, resolveAppearance, setActiveWorld, VORTABLE_ASSETS } from '../services/vortableService'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
@@ -8,6 +8,8 @@ import { LiveControl } from './LiveControl'
 import { SceneBar } from './SceneBar'
 import { ModeButton } from './ModeButton'
 import { EditorBar, type EditorBarHandle } from './EditorBar'
+import { TouchLayer } from './TouchControls'
+import { primePlayZoom } from '../touch/playZoom'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { getResume, patchResume } from '../resume/resumeStore'
@@ -28,6 +30,15 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   const [extra, setExtra] = useState<Extra | null>(null)
   // ações do editor (nome, Nova, Salvar, Testar…), mostradas na faixa de cima enquanto o editor está aberto
   const [editor, setEditor] = useState<EditorBarHandle | null>(null)
+  // o botão Testar põe o mestre no mundo: aí os controles de toque aparecem (celular e tablet)
+  const [testing, setTesting] = useState(false)
+  const gameRef = useRef<{ setZoom(zoom: number): void } | null>(null)
+  useEffect(() => {
+    if (!editor) { setTesting(false); return }
+    const sync = () => setTesting(editor.controls.state().testing)
+    sync()
+    return editor.controls.subscribe(sync)
+  }, [editor])
   useEffect(() => { patchResume(campaign.id, { masterTab: mode }) }, [campaign.id, mode])
   const vnet = useVortableNet()
   const { editing, active, ready, refresh } = useVortableWorlds()
@@ -67,7 +78,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   }
 
   return (
-    <div className={`vortable-master${floating ? ' vortable-master--float' : ''}`}>
+    <div className={`vortable-master${floating ? ' vortable-master--float' : ''}${testing ? ' vortable-master--testing' : ''}`}>
       {/* no controle ao vivo a faixa some: os botões flutuam por cima da cena */}
       <div className={`vortable-master__top${floating ? ' vortable-master__top--float' : ''}`}>
         <ModeButton mode={mode} onClick={toggle} />
@@ -123,6 +134,7 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
             const zone = wantId ? (await worlds.load(wantId)) ?? undefined : undefined
             if (isDead()) return () => {}
             const net = vnet.net
+            primePlayZoom()
             const game = engine.mountVortable(host, {
               mode: 'edit',
               resume: resumeSnap,
@@ -142,7 +154,9 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               net.onOpen = () => game.resync()
             }
             if (game.editor) setEditor({ controls: game.editor, icons: engine.EDITOR_ICONS as Record<string, string> })
+            gameRef.current = game
             return () => {
+              if (gameRef.current === game) gameRef.current = null
               setEditor(null)
               if (net) { net.sink = null; net.onOpen = null }
               const snap = game.snapshot()
@@ -150,7 +164,9 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
               game.destroy()
             }
           }}
-        />
+        >
+          {testing && <TouchLayer onZoom={(z) => gameRef.current?.setZoom(z)} />}
+        </EngineStage>
       )}
 
       {!extra && mode === 'controle' && (

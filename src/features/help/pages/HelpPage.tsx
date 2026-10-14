@@ -36,7 +36,7 @@ const TOPICS: Topic[] = [
     id: 'quadro', icon: '⌗', title: 'O Quadro da campanha',
     steps: [
       'Um quadro infinito (como o Miro) pra mesa montar junto: post-its, textos, formas, setas ligando as coisas, desenho à mão, molduras pra separar áreas e linhas do tempo. Todo mundo edita e vê o cursor dos outros em tempo real.',
-      'Arraste o quadro com Espaço + arrastar (ou a ferramenta Mão), e dê zoom com a roda do mouse. Duplo clique no vazio cria um post-it; duplo clique num item edita o texto.',
+      'Arraste o quadro com Espaço + arrastar (ou a ferramenta Mão), e dê zoom com a roda do mouse. Duplo clique no vazio cria um post-it; duplo clique num item edita o texto. No celular, arraste o fundo com um dedo e use dois dedos (pinça) pra dar zoom; o botão de tela cheia do quadro ajuda.',
       'Fotos arrastadas do computador (ou coladas com Ctrl+V) vão direto pra Galeria da campanha; PDFs e textos vão pra Biblioteca. O botão de Biblioteca coloca no quadro o que já está na estante.',
       'O mestre pode trancar um item (um mapa de fundo, por exemplo): aí só ele move, edita ou apaga. O botão "?" no canto do quadro mostra todos os atalhos.',
     ],
@@ -44,7 +44,7 @@ const TOPICS: Topic[] = [
   {
     id: 'mesa', icon: '▣', title: 'Mesa (Vortable)',
     steps: [
-      'Na sub-aba Mesa, "Entrar no Vortable" abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Mestre: entre e clique em "Iniciar sessão" pra liberar os jogadores e avisar todos. Jogador: o botão fica bloqueado até o mestre iniciar; na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre).',
+      'Na sub-aba Mesa, "Entrar no Vortable" abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Mestre: entre e clique em "Iniciar sessão" pra liberar os jogadores e avisar todos. Jogador: o botão fica bloqueado até o mestre iniciar; na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre). No celular e no tablet aparecem na tela um joystick (esquerda), o botão Correr (direita) e o zoom (embaixo); os dados, o chat e a ficha ficam no botão de menu da borda direita. O Vortable fica melhor com o celular deitado, e o site avisa quando ele está em pé.',
       'Mestre, Editar mundo: pinte terreno, ponha objetos, cômodos, luzes, clima e sons, e ligue as zonas por portas e saídas. Salva na campanha.',
       'Mestre, Testar (botão amarelo do editor): anda pelo mundo com o seu boneco, junto com os jogadores. Personagens: cria bonecos, inclusive de NPCs.',
       'Mestre, Controle (durante a sessão): veja o mapa como os jogadores, troque de zona, enquadre o mapa inteiro, siga um jogador e mude hora, tempo e vento ao vivo pra todos, sem recarregar.',

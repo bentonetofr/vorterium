@@ -1,0 +1,39 @@
+/* ═══════════════════════════════════════════════════════
+   O que o motor desenha (.vt-*) no celular e no tablet.
+   O CSS do motor mora no vendor (não mexer lá): aqui só os ajustes de tela pequena.
+   ═══════════════════════════════════════════════════════ */
+
+@media (max-width: 900px), (pointer: coarse) {
+  /* Testar: a faixa do topo mostra a zona e o botão de voltar; as dicas de teclado (WASD...) não servem pro dedo */
+  .vt-root.vt-testing .vt-testbar {
+    left: 8px;
+    right: auto;
+    top: 8px;
+    max-width: calc(100% - 68px);
+    gap: 8px;
+    padding: 4px 4px 4px 10px;
+    transform: none;
+  }
+  .vt-testbar > span:not(.vt-testclock) { display: none; }
+  .vt-testzone { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40vw; font-size: 15px; }
+  .vt-testbar .vt-btn { height: 36px; }
+
+  /* botões do editor: alvos de toque maiores */
+  .vt-btn { height: 36px; }
+  .vt-tool { width: 40px; height: 40px; }
+  .vt-iconbtn { width: 34px; height: 34px; }
+  .vt-zoombar .vt-btn { min-width: 36px; }
+
+  /* janelas do motor: cabem na tela com rolagem */
+  .vt-modal { width: min(440px, 100% - 16px); max-height: calc(100% - 24px); }
+  .vt-modal.vt-modal-wide { width: calc(100% - 16px); }
+  .vt-modal-foot { flex-wrap: wrap; }
+  .vt-keyrow { grid-template-columns: 96px minmax(0, 1fr); }
+  .vt-npc { width: calc(100% - 16px); left: 8px; top: 8px; max-height: calc(100% - 16px); }
+  .vt-npc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .vt-name { width: 100%; }
+  .vt-toast { max-width: calc(100% - 24px); text-align: center; }
+}

@@ -5,10 +5,14 @@ export const fullscreenSupported = () => typeof document !== 'undefined' && docu
 
 export function enterFullscreen() {
   if (!fullscreenSupported() || document.fullscreenElement) return
-  void document.documentElement.requestFullscreen().catch(() => { /* recusou: fica só a página cheia */ })
+  void document.documentElement.requestFullscreen()
+    // no Android a tela cheia deixa travar na horizontal (o iPhone e o desktop não deixam: sem problema)
+    .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape'))
+    .catch(() => { /* recusou: fica só a página cheia */ })
 }
 
 export function leaveFullscreen() {
+  try { screen.orientation.unlock() } catch { /* sem trava pra soltar */ }
   if (document.fullscreenElement) void document.exitFullscreen().catch(() => {})
 }
 

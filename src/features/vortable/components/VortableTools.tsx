@@ -14,14 +14,18 @@ import { SheetFab } from './SheetFab'
 import { VortableFab } from './VortableFab'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { FabToasts } from '../../../shared/components/FabToasts'
+import { COMPACT_QUERY, useMediaQuery } from '../../../shared/lib/useMediaQuery'
 
 /**
  * Os botões flutuantes do site (sino, dados, chat, o caderno de quem tem um e o livro de documentos do mestre)
  * dentro do Vortable, no canto inferior direito (como no resto do site). O caderno só aparece pra
  * quem tem caderno: o NotebookFab já confere isso na conta.
  */
-export function VortableTools() {
-  const { campaign, setChatUnread, setPrivateUnread } = useCurrentCampaign()
+export function VortableTools({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const { campaign, chatUnread, privateUnread, setChatUnread, setPrivateUnread } = useCurrentCampaign()
+  // celular e tablet: os botões ficam recolhidos num só (cobririam o jogo e os controles de toque)
+  const compact = useMediaQuery(COMPACT_QUERY)
+  const unread = chatUnread + privateUnread
   const { activeChatCampaignId } = useActiveChat()
   const campaignId = campaign?.id ?? null
   const chatOpen = campaignId != null && activeChatCampaignId === campaignId
@@ -56,7 +60,23 @@ export function VortableTools() {
     <>
       <CritWolf />
       <DocumentOverlay />
-      <div className="dice-fab-wrapper">
+      <div className={`dice-fab-wrapper${compact ? ` vortable-tools${open ? '' : ' vortable-tools--folded'}` : ''}`}>
+        {compact && (
+          <button
+            type="button"
+            className={`vortable-tools__toggle${open ? ' vortable-tools__toggle--open' : ''}`}
+            onClick={onToggle}
+            aria-expanded={open}
+            aria-label={open ? 'Fechar as ferramentas' : 'Abrir as ferramentas (dados, chat, ficha)'}
+          >
+            {open ? '✕' : (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            )}
+            {!open && unread > 0 && <span className="vortable-tools__badge">{unread > 99 ? '99+' : unread}</span>}
+          </button>
+        )}
         <FabToasts>
           <NotificationPopup />
         </FabToasts>

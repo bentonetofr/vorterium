@@ -19,6 +19,8 @@ import './SpectatorStage.css'
 import './DoorPrompt.css'
 import { Loader } from '../../../shared/components/Loader'
 import { CharacterStudio } from './CharacterStudio'
+import { TouchLayer } from './TouchControls'
+import { primePlayZoom } from '../touch/playZoom'
 
 /**
  * Jogador: só a tela do jogo, com o personagem que ele criou na ficha (fixo nesta campanha).
@@ -39,7 +41,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   const allowSpectate = stage.spectate.allow
   const covered = stage.scene.kind !== 'game' || !!stage.document
   const coveredRef = useRef(covered)
-  const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void } | null>(null)
+  const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void; setZoom(zoom: number): void } | null>(null)
   useEffect(() => {
     coveredRef.current = covered
     gameRef.current?.setInputLocked(covered)
@@ -133,6 +135,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           const net = vnet.net
           // voltando ao Vortable (ou recarregando a página, ou depois de cair): o boneco reaparece onde parou (mesma zona e mesmo ponto)
           const back = getResume(campaign.id)?.play ?? loadPlayPosition(campaign.id, userId)
+          primePlayZoom()
           const game = engine.mountVortable(host, {
             mode: 'play',
             resume: back && back.worldId === active.id ? back.snap : undefined,
@@ -184,6 +187,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
         </div>
       )}
       <CreatureSfxToggle />
+      <TouchLayer hidden={covered} onZoom={(z) => gameRef.current?.setZoom(z)} />
       <SceneOverlay scene={stage.scene} />
     </div>
   )

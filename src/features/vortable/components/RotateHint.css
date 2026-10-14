@@ -1,0 +1,19 @@
+.rotate-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 600;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5, 20px);
+  background: rgba(6, 14, 32, 0.9);
+  backdrop-filter: blur(4px);
+}
+.rotate-hint__card { max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: var(--space-3, 12px); text-align: center; }
+.rotate-hint__icon { color: var(--accent-bright); animation: rotate-hint-turn 2.4s ease-in-out infinite; }
+.rotate-hint__title { margin: 0; font-size: var(--text-2xl); color: var(--accent-bright); }
+.rotate-hint__text { margin: 0; font-size: var(--text-md); color: var(--text-secondary); }
+@keyframes rotate-hint-turn {
+  0%, 20% { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+@media (prefers-reduced-motion: reduce) { .rotate-hint__icon { animation: none; } }

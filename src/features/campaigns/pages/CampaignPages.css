@@ -504,8 +504,9 @@
 
 .campaign-area__header-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-3);
   margin-top: var(--space-2);
 }
 
@@ -600,3 +601,20 @@
   color: var(--text-primary);
 }
 .variant-modal__desc { font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }
+
+/* telas bem estreitas (iPhone SE, 320 px): a capa encolhe pro nome e as etiquetas respirarem */
+@media (max-width: 380px) {
+  .campaign-area__page-header { grid-template-columns: 84px minmax(0, 1fr); gap: var(--space-3); }
+  .campaign-area__cover { width: 84px; height: 56px; }
+  .campaign-area-page .page__title { font-size: var(--text-3xl); }
+}
+
+/* celular deitado: pouca altura. O cabeçalho da campanha encolhe pro conteúdo aparecer */
+@media (max-height: 500px) and (orientation: landscape) {
+  .page { padding-block: var(--space-3); }
+  .campaign-area__page-header { grid-template-columns: 96px minmax(0, 1fr); gap: var(--space-3); }
+  .campaign-area__cover { width: 96px; height: 56px; }
+  .campaign-area-page .page__title { font-size: var(--text-2xl); }
+  .campaign-area__header-meta { margin-top: 0; }
+  .campaign-area-page { gap: var(--space-3); }
+}

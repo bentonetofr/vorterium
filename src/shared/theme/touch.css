@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════
+   Alvos de toque (celular e tablet)
+   Só quando o dedo é o ponteiro: o mouse continua com os tamanhos compactos de sempre.
+   Importado por último (main.tsx), então estes tamanhos valem por cima dos de cada tela.
+   ═══════════════════════════════════════════════════════════ */
+
+@media (pointer: coarse) {
+  /* cartões de NPC (todas as fichas) */
+  .npc-card__eye { min-height: 36px; padding-block: 6px; }
+  .npc-card__del { width: 40px; height: 40px; }
+
+  /* Terra Devastada Adaptada: contadores, trilhas de caixas, botões de nível */
+  .tda-stepper__btn { width: 40px; height: 40px; }
+  .tda-meta__btn { min-width: 40px; min-height: 38px; }
+  .tda-track__box.tda-track__box,
+  .tda-meter--conviction .tda-track__box.tda-track__box,
+  .tda-meter--health .tda-track__box.tda-track__box { height: 34px; }
+
+  /* Terra Devastada (original): contadores e trilhas */
+  .td-stepper__btn { width: 40px; height: 40px; }
+  .td-track__box.td-track__box { height: 34px; }
+
+  /* abas de dentro das fichas e das telas */
+  .campaign-tab { min-height: 38px; }
+
+  /* Feedback, Episódios, Quadro, Ajuda */
+  .feedback-kind { min-height: 38px; }
+  .sessions-panel__new-btn { min-height: 40px; }
+  .board-tab { min-height: 38px; }
+}

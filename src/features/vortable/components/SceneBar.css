@@ -98,3 +98,22 @@
 .vortable-master__top--float > * { pointer-events: auto; }
 .vortable-page .vortable-master__top.vortable-master__top--float { margin: 0; left: 24px; right: 24px; }
 .vortable-master__top--float .scene-bar { background: color-mix(in srgb, var(--bg-surface) 82%, transparent); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
+
+/* celular e tablet em pé: a faixa de cima ocupa pouco (modo e cena numa linha, o editor numa linha só dele) */
+@media (max-width: 900px) {
+  .vortable-master__top { gap: var(--space-2, 8px); }
+  .vortable-master__top .scene-bar { order: 2; margin-left: auto; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .vortable-master__top .scene-bar::-webkit-scrollbar { display: none; }
+  .vortable-master__top .scene-bar > * { flex: none; }
+  .scene-bar__label > :not(.scene-bar__dot) { display: none; }
+  .scene-btn { padding: 8px 12px; min-height: 36px; }
+  .vortable-master__top .mode-btn { order: 1; }
+  .vortable-master__top .editor-bar { order: 3; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .vortable-master__top .editor-bar::-webkit-scrollbar { display: none; }
+  .vortable-master__top .editor-bar > * { flex: none; }
+  .editor-bar__name { width: 140px; }
+  .editor-bar__btn { height: 36px; min-width: 36px; justify-content: center; }
+  .vortable-page .vortable-master__top { margin: var(--space-2, 8px); }
+  /* testando: o botão "Voltar ao editor" do motor basta; a faixa sai do caminho */
+  .vortable-master--testing .vortable-master__top { display: none; }
+}

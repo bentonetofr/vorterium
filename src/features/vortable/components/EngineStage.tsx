@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { loadEngine } from '../services/vortableService'
 import './VortableMesa.css'
+import './EngineMobile.css'
 import { Loader } from '../../../shared/components/Loader'
 
 export type Engine = Awaited<ReturnType<typeof loadEngine>>
@@ -15,10 +16,12 @@ interface EngineStageProps {
   deps: readonly unknown[]
   /** Palco com rolagem própria (o criador de personagem). */
   scroll?: boolean
+  /** Por cima do palco (controles na tela, avisos). */
+  children?: ReactNode
 }
 
 /** Palco onde o motor do Vortable roda, com tela de carregando e de erro. */
-export function EngineStage({ mount, deps, scroll }: EngineStageProps) {
+export function EngineStage({ mount, deps, scroll, children }: EngineStageProps) {
   const host = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState<string | null>(null)
@@ -68,6 +71,7 @@ export function EngineStage({ mount, deps, scroll }: EngineStageProps) {
           <button className="btn btn-ghost" onClick={() => setAttempt((n) => n + 1)}>Tentar de novo</button>
         </div>
       )}
+      {children}
     </div>
   )
 }

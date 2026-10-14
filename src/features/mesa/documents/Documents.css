@@ -406,6 +406,6 @@
 
 @media (max-width: 480px) {
   .docs-fab { right: calc(48px + var(--space-3) + 38px + var(--space-3) + 38px + var(--space-3)); bottom: 5px; width: 38px; height: 38px; }
-  .docs-panel.fab-panel { width: auto; height: max(200px, min(560px, calc(100dvh - 60px - 48px - 140px - var(--fab-toasts-space, 0px)))); }
+  .docs-panel.fab-panel { width: auto; height: max(200px, min(560px, calc(100dvh - var(--bottom-nav-h, 60px) - 48px - 140px - var(--fab-toasts-space, 0px)))); }
   .doc-overlay__stage { inset: 8dvh 2vw 18dvh; }
 }

@@ -75,8 +75,8 @@
 .vortable-pip__view .scene-card__title--big { font-size: var(--text-lg, 18px); }
 .vortable-pip__view .scene-card__sigil { font-size: 28px; }
 
-@media (max-width: 960px) {
+@media (max-width: 900px) {
   /* acima da barra de navegação inferior */
-  .vortable-pip { bottom: calc(60px + var(--space-4, 16px) + env(safe-area-inset-bottom, 0px)); width: min(300px, calc(100vw - 2 * var(--space-4, 16px))); }
+  .vortable-pip { bottom: calc(var(--bottom-nav-h, 60px) + var(--space-4, 16px) + env(safe-area-inset-bottom, 0px)); width: min(300px, calc(100vw - 2 * var(--space-4, 16px))); }
   .vortable-pip__view { height: 160px; }
 }

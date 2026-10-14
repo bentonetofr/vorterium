@@ -330,6 +330,13 @@
 }
 .board-empty__title { margin: 0; font-family: var(--font-display); font-size: var(--text-2xl); color: var(--text-secondary); }
 .board-empty__text { margin: 0; max-width: 420px; font-size: var(--text-sm); line-height: 1.6; color: var(--text-muted); }
+.board-empty__touch { display: none; }
+/* a faixa de ferramentas fica à esquerda: o texto abre espaço pra ela (e na tela de toque não fala em tecla nem em arrastar do computador) */
+@media (max-width: 640px) { .board-empty { padding: var(--space-6) var(--space-4) var(--space-6) 72px; } }
+@media (pointer: coarse) {
+  .board-empty__desk { display: none; }
+  .board-empty__touch { display: inline; }
+}
 
 /* ── Ferramentas ── */
 /* Vai do topo até acima da barra de zoom; se não couber (celular), as

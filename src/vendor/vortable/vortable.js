@@ -45539,7 +45539,8 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 		for (let t of e.npcs ?? []) this.addNpcBlock(t);
 		this.npcs = new ma(this, t, this.cfg.watch ? "always" : "near"), this.npcs.set(e.npcs ?? []), this.physics.world.setBounds(0, 0, i, a);
 		let l = this.cameras.main;
-		if (l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(Wa), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
+		let vz = this.cfg.watch ? 2 : window.__vtPlayZoom ?? 2;
+		if (l.setBounds(0, 0, i, a).setZoom(vz).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * vz < l.width || a * vz < l.height) && l.removeBounds(), r && l.fadeIn(Wa), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
 			let t = this.cfg.hub.onZoneChanged((t) => {
 				t === e.id && this.reloadZone();
 			});
@@ -45640,6 +45641,11 @@ var Ua = "char:me", Wa = 220, Ga = .15, Ka = 500, qa = {
 	inputLocked = !1;
 	setInputLocked(e) {
 		this.inputLocked = e, this.player && (this.player.locked = e), this.npcCtl && (this.npcCtl.player.locked = e);
+	}
+	setPlayZoom(e) {
+		if (this.cfg.watch) return;
+		let t = this.cameras.main, n = this.cfg.zone.width * 32, r = this.cfg.zone.height * 32;
+		t.setZoom(e), n * e < t.width || r * e < t.height ? t.removeBounds() : t.setBounds(0, 0, n, r);
 	}
 	following = null;
 	switching = !1;
@@ -52543,6 +52549,9 @@ function Pc(e, t) {
 		},
 		setInputLocked(e) {
 			o = e, g.scene.isActive("world") && g.scene.getScene("world").setInputLocked(e);
+		},
+		setZoom(e) {
+			window.__vtPlayZoom = e, g.scene.isActive("world") && g.scene.getScene("world").setPlayZoom?.(e);
 		},
 		destroy() {
 			r === "watch" && _()?.releaseNpc(b), l?.leave(), u?.destroy(), g.destroy(!0);

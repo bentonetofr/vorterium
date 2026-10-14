@@ -15,6 +15,7 @@ import { VortableWorldProvider, useVortableWorlds } from '../worlds/VortableWorl
 import { WorldsPanel } from '../worlds/WorldsPanel'
 import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen } from '../fullscreen'
 import { closePip } from '../pip/pipStore'
+import { RotateHint } from '../components/RotateHint'
 import '../components/VortablePage.css'
 import { Loader } from '../../../shared/components/Loader'
 
@@ -51,6 +52,8 @@ function VortablePageContent() {
   const mesa = useMesaStream()
   const { active, editing, error: worldsError } = useVortableWorlds()
   const [showWorlds, setShowWorlds] = useState(false)
+  // celular e tablet: os botões do canto ficam recolhidos num só, pra não cobrir o jogo nem os controles de toque
+  const [toolsOpen, setToolsOpen] = useState(false)
   // o mestre escolheu "Editar" num mundo: o MasterStage vai pra aba do editor
   const [editSignal, setEditSignal] = useState(0)
   const [campaign, setCampaign] = useState<CampaignWithRole | null>(null)
@@ -85,7 +88,7 @@ function VortablePageContent() {
   }
 
   return (
-    <div className="vortable-page">
+    <div className={`vortable-page${toolsOpen ? ' vortable-page--tools-open' : ''}`}>
       <header className="vortable-page__bar">
         <button type="button" className="btn btn-ghost vortable-page__exit" onClick={exit}>← Sair</button>
         <span className="vortable-page__title">{campaign?.name ?? 'Vortable'}</span>
@@ -101,7 +104,7 @@ function VortablePageContent() {
             onClick={() => mesa.setLive(!mesa.live)}
             title={mesa.live ? 'Os jogadores já podem entrar' : 'Libera o botão de entrar dos jogadores e avisa todos'}
           >
-            {mesa.live ? 'Encerrar sessão' : 'Iniciar sessão'}
+            {mesa.live ? 'Encerrar' : 'Iniciar'}<span className="vortable-page__live-more"> sessão</span>
           </button>
         )}
         {campaign && (
@@ -115,9 +118,11 @@ function VortablePageContent() {
           <button
             type="button"
             className="btn btn-ghost vortable-page__full"
+            aria-label={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
             onClick={() => (fullscreen ? leaveFullscreen() : enterFullscreen())}
           >
-            {fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+            <span className="vortable-page__full-ico" aria-hidden="true">{fullscreen ? '⤓' : '⛶'}</span>
+            <span className="vortable-page__full-label">{fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}</span>
           </button>
         )}
       </header>
@@ -144,7 +149,8 @@ function VortablePageContent() {
             </div>
           ))}
       </main>
-      {campaign && <VortableTools />}
+      {campaign && <RotateHint />}
+      {campaign && <VortableTools open={toolsOpen} onToggle={() => setToolsOpen((v) => !v)} />}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 /* ── Layout privado ── */
+:root { --bottom-nav-h: 60px; }
 .private-layout {
   display: flex;
   min-height: 100vh;
@@ -67,11 +68,11 @@
     position: fixed;
     left: var(--space-4);
     right: var(--space-4);
-    bottom: calc(60px + var(--space-4) + 48px + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--bottom-nav-h) + var(--space-4) + 48px + var(--space-3) + env(safe-area-inset-bottom, 0px));
     width: auto;
-    height: max(200px, min(460px, calc(100dvh - 60px - 48px - 140px - var(--fab-toasts-space, 0px))));
+    height: max(200px, min(460px, calc(100dvh - var(--bottom-nav-h) - 48px - 140px - var(--fab-toasts-space, 0px))));
   }
-  .fab-panel--fit { height: auto; max-height: max(140px, min(460px, calc(100dvh - 60px - 48px - 140px - var(--fab-toasts-space, 0px)))); }
+  .fab-panel--fit { height: auto; max-height: max(140px, min(460px, calc(100dvh - var(--bottom-nav-h) - 48px - 140px - var(--fab-toasts-space, 0px)))); }
 }
 
 /* ── Sidebar — desktop ── */
@@ -394,6 +395,8 @@
   flex: 1;
   margin-left: 256px;
   min-height: 100vh;
+  /* sem isso, um conteúdo largo estica a coluna além da tela (em vez de quebrar ou rolar dentro dela) */
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -407,7 +410,6 @@
 
 /* ── Barra de navegação inferior — mobile ── */
 .bottom-nav {
-  --bottom-nav-h: 60px;
   display: none;
   position: fixed;
   left: 0;
@@ -446,7 +448,7 @@
 .bottom-nav__link--active { color: var(--accent-bright); }
 
 /* ── Responsivo ── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   /* Coluna: barra de topo em cima, conteúdo embaixo (em linha, a barra
      de topo virava uma coluna ao lado e dobrava a largura da página). */
   .private-layout   { flex-direction: column; }
@@ -455,10 +457,11 @@
   .bottom-nav       { display: flex; }
   .private-layout__main {
     margin-left: 0;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    /* + 64px: os botões do canto (dado, chat...) não cobrem o fim da página */
+    padding-bottom: calc(var(--bottom-nav-h) + 64px + env(safe-area-inset-bottom, 0px));
   }
   /* Sino e dado sobem pra ficar acima da barra inferior. */
-  .dice-fab-wrapper { bottom: calc(60px + var(--space-4) + env(safe-area-inset-bottom, 0px)); }
+  .dice-fab-wrapper { bottom: calc(var(--bottom-nav-h) + var(--space-4) + env(safe-area-inset-bottom, 0px)); }
   .topbar__btn { min-width: 40px; min-height: 40px; }
 }
 
@@ -557,3 +560,48 @@
   box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.18), 0 6px 18px rgba(0, 0, 0, 0.3);
 }
 .notification-bell:active { transform: scale(0.9); transition-duration: 80ms; }
+
+/* ═══ Celular e tablet ═══ */
+
+/* telas com entalhe / barra de gestos: nada fica embaixo do recorte, nem deitado */
+@media (max-width: 900px) {
+  .topbar { padding-top: env(safe-area-inset-top, 0px); }
+  .topbar__row { padding-left: max(var(--space-5), env(safe-area-inset-left, 0px)); padding-right: max(var(--space-5), env(safe-area-inset-right, 0px)); }
+  .bottom-nav { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .private-layout__main { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .dice-fab-wrapper { right: max(var(--space-4), env(safe-area-inset-right, 0px)); }
+}
+
+/* Tablet e celular deitado (481–900 px): a janela do canto é fixa, ancorada na direita, em vez de estourar pra fora da tela */
+@media (min-width: 481px) and (max-width: 900px) {
+  .fab-panel {
+    position: fixed;
+    left: auto;
+    right: max(var(--space-4), env(safe-area-inset-right, 0px));
+    bottom: calc(var(--bottom-nav-h) + var(--space-4) + 56px + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    width: min(400px, calc(100vw - 2 * var(--space-4)));
+    height: max(220px, min(520px, calc(100dvh - var(--bottom-nav-h) - 56px - 120px - var(--fab-toasts-space, 0px))));
+  }
+  .fab-panel--fit { height: auto; max-height: max(160px, min(520px, calc(100dvh - var(--bottom-nav-h) - 56px - 120px - var(--fab-toasts-space, 0px)))); }
+}
+
+/* Celular deitado: pouca altura. A barra de baixo e a de cima encolhem (ícone e nome lado a lado) e a janela do canto
+   fica acima da fileira de botões, ocupando a altura que sobra. */
+@media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+  :root { --bottom-nav-h: 46px; }
+  .bottom-nav__link { flex-direction: row; gap: 8px; }
+  .bottom-nav__icon { font-size: 1.1rem; }
+  .topbar__row { padding-block: var(--space-1); }
+  .topbar__campaign-toggle { padding-block: 4px; }
+  .dice-fab-wrapper { bottom: calc(var(--bottom-nav-h) + var(--space-2) + env(safe-area-inset-bottom, 0px)); }
+  .fab-panel {
+    position: fixed;
+    left: auto;
+    right: calc(max(var(--space-4), env(safe-area-inset-right, 0px)) + 56px + var(--space-3));
+    /* acima da fileira de botões (chat, caderno, documentos), que fica na altura do dado */
+    bottom: calc(var(--bottom-nav-h) + var(--space-2) + 44px + var(--space-3) + env(safe-area-inset-bottom, 0px));
+    width: min(420px, calc(100vw - 140px));
+    height: calc(100dvh - var(--bottom-nav-h) - 72px - env(safe-area-inset-bottom, 0px) - var(--fab-toasts-space, 0px));
+  }
+  .fab-panel--fit { height: auto; max-height: calc(100dvh - var(--bottom-nav-h) - 72px - env(safe-area-inset-bottom, 0px) - var(--fab-toasts-space, 0px)); }
+}

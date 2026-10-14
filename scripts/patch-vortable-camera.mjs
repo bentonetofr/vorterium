@@ -7,6 +7,7 @@
 //  7. Zoom da roda na câmera do mestre (âncora no mouse calculada certo).
 //  8. Duração do dia de 3 h e 5 h (DAY_LENGTHS).
 //  9. Perguntas do motor com a janelinha do site (window.__vtConfirm).
+// 10. Zoom do jogador ajustável (`setZoom`, padrão da tela em window.__vtPlayZoom): no celular a câmera fixa em 2x mostrava só ~6 blocos.
 //  5. `gate`: licença do mestre pra o jogador atravessar uma saída (ver a remenda 5 no fim).
 //
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
@@ -249,4 +250,31 @@ if (code.includes('function vtConfirm(')) {
   for (const [a, b] of pairs) code = code.replace(a, () => b)
   writeFileSync(js, code)
   console.log('motor: perguntas remendadas')
+}
+
+// ── Remenda 10: zoom do jogador. A câmera do jogo era fixa em 2x (um bloco = 64 px na tela), o que num celular em pé mostra só uns 6 blocos de largura.
+//    Agora a cena lê o zoom de `window.__vtPlayZoom` (se existir; senão 2) ao abrir cada zona, e `game.setZoom(z)` muda na hora (os botões de zoom do
+//    celular e o zoom padrão por tamanho de tela vêm do site). Só vale pro jogo (`play`); a câmera do mestre (`watch`) tem o próprio zoom. ──
+code = readFileSync(js, 'utf8')
+if (code.includes('setPlayZoom(')) {
+  console.log('motor: zoom do jogador já remendado')
+} else {
+  const camOld = '\t\tif (l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(),'
+  const camNew = '\t\tlet vz = this.cfg.watch ? 2 : window.__vtPlayZoom ?? 2;\n\t\tif (l.setBounds(0, 0, i, a).setZoom(vz).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * vz < l.width || a * vz < l.height) && l.removeBounds(),'
+  const lockOld = '\tsetInputLocked(e) {\n\t\tthis.inputLocked = e, this.player && (this.player.locked = e), this.npcCtl && (this.npcCtl.player.locked = e);\n\t}'
+  const lockNew = lockOld + '\n\tsetPlayZoom(e) {\n\t\tif (this.cfg.watch) return;\n\t\tlet t = this.cameras.main, n = this.cfg.zone.width * 32, r = this.cfg.zone.height * 32;\n\t\tt.setZoom(e), n * e < t.width || r * e < t.height ? t.removeBounds() : t.setBounds(0, 0, n, r);\n\t}'
+  const handleOld = '\t\tsetInputLocked(e) {\n\t\t\to = e, g.scene.isActive("world") && g.scene.getScene("world").setInputLocked(e);\n\t\t},'
+  const handleNew = handleOld + '\n\t\tsetZoom(e) {\n\t\t\twindow.__vtPlayZoom = e, g.scene.isActive("world") && g.scene.getScene("world").setPlayZoom?.(e);\n\t\t},'
+  for (const x of [camOld, lockOld, handleOld]) if (!code.includes(x)) throw new Error('motor: não achei onde remendar o zoom do jogador (o motor mudou?): ' + x.slice(0, 50))
+  code = code.replace(camOld, () => camNew).replace(lockOld, () => lockNew).replace(handleOld, () => handleNew)
+  writeFileSync(js, code)
+  console.log('motor: zoom do jogador remendado')
+}
+types = readFileSync(dts, 'utf8')
+if (!types.includes('setZoom(zoom: number)')) {
+  const a = '    setInputLocked(locked: boolean): void;\n'
+  if (!types.includes(a)) throw new Error('tipos: não achei setInputLocked')
+  types = types.replace(a, `${a}    /** Jogo: muda o zoom da câmera (1 = um bloco de 32 px vira 32 px na tela; o padrão é 2). (remenda do Vorterium) */\n    setZoom(zoom: number): void;\n`)
+  writeFileSync(dts, types)
+  console.log('tipos: zoom do jogador remendado')
 }

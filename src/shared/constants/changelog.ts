@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.65',
+    date:    '2026-10-14',
+    title:   'Vortable e site no celular e no tablet',
+    items: [
+      'Vortable com controles na tela: no celular e no tablet aparece um joystick à esquerda (8 direções), o botão Correr à direita e os botões de zoom (− e +) embaixo, que também deixam esconder os controles. Quem testa o mundo pelo editor (botão Testar) também ganha os controles.',
+      'O Vortable foi pensado pro celular deitado: com o celular em pé aparece o aviso "Vire o celular" (dá pra continuar em pé), e na tela cheia do Android a tela trava na horizontal. O zoom do jogo acompanha o tamanho da tela (antes ele só mostrava uns 6 blocos de largura no celular).',
+      'Dados, chat, ficha, caderno e documentos do Vortable ficam recolhidos num botão de menu na borda direita no celular, pra não cobrirem o jogo nem os botões de andar. A faixa de cima do mestre (modo, cena e editor) ficou bem mais baixa, e o botão Testar esconde essa faixa pra dar a tela toda ao jogo.',
+      'Tablet: a barra de baixo e o menu de cima do site passam a valer até 900 px (antes, no iPad em pé, a barra lateral deixava o conteúdo apertado e algumas telas estouravam pro lado). As abas da Sessão rolam por dentro em vez de vazar.',
+      'Celular deitado: a barra de baixo, o cabeçalho da campanha e a janela do canto (chat, dados, notificações) encolhem pra caber na altura pequena. No iPhone, nada fica embaixo do entalhe. Telas bem estreitas (320 px) também ficaram certas.',
+      'Toque: botões menores das fichas (contadores, caixinhas de Vida, Horror e Convicção, abas, cartões de NPC) ganharam área de toque maior; o site não dá mais zoom ao tocar num campo de texto no iPhone; o fim da página não fica escondido atrás dos botões do canto; o quadro em branco explica o que fazer no toque.',
+    ],
+  },
+  {
     version: '1.64',
     date:    '2026-10-13',
     title:   'Janelinhas do site no lugar dos avisos do navegador',

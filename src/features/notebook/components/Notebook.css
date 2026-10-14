@@ -359,7 +359,7 @@
 }
 
 @media (max-width: 480px) {
-  .notebook-panel { max-height: calc(100dvh - 60px - 48px - 60px - env(safe-area-inset-bottom, 0px) - var(--fab-toasts-space, 0px)); }
+  .notebook-panel { max-height: calc(100dvh - var(--bottom-nav-h, 60px) - 48px - 60px - env(safe-area-inset-bottom, 0px) - var(--fab-toasts-space, 0px)); }
   /* Celular: dado 48px, chat e caderno 38px, centralizados com o dado. */
   .notebook-fab { right: calc(48px + var(--space-3) + 38px + var(--space-3)); bottom: 5px; }
   .notebook-fab__button { width: 38px; height: 38px; }

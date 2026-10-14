@@ -4,6 +4,7 @@ import { AppProviders } from './app/providers'
 import { installNoSpaceActivation } from './shared/lib/noSpaceActivation'
 import './index.css'
 import './shared/theme/motion.css'
+import './shared/theme/touch.css'
 
 installNoSpaceActivation()
 

@@ -13,6 +13,7 @@
    da ficha (Visão Geral / Combate / ...). */
 .session-table__subtabs {
   align-self: flex-start;
+  max-width: 100%; /* tablet: mais abas que largura, rola por dentro em vez de vazar */
   padding: 6px;
 }
 .session-table__subtabs.campaign-tabs .campaign-tab {
