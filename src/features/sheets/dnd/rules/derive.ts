@@ -1,13 +1,14 @@
 import { ABILITIES, SKILLS, clampLevel, getAbilityModifier, getProficiencyBonus, skillBonus } from './abilities'
 import { computeArmorClass, computeMaxHp, hitDicePool } from './combat'
+import { computeSpellcasting } from './spellcasting'
 import type { AbilityKey, Derived, DerivedInput, OverridableField, SaveDerived, SkillDerived, SkillKey } from './types'
 
 // ────────────────────────────────────────────────────────
 // computeDerived: tudo que a ficha, a rolagem e o card do mestre mostram,
 // calculado num lugar só pra os números nunca divergirem. Esqueleto do
 // Marco 1: atributos, proficiência, salvaguardas, perícias, iniciativa,
-// percepção passiva, CA, PV e dados de vida. Conjuração e progressão entram
-// nos próximos passos.
+// percepção passiva, CA, PV, dados de vida e conjuração (espaços, CD, truques,
+// magias conhecidas/preparadas).
 // ────────────────────────────────────────────────────────
 
 export function computeDerived(input: DerivedInput): Derived {
@@ -70,6 +71,7 @@ export function computeDerived(input: DerivedInput): Derived {
     armorClass,
     hpMax,
     hitDice: hitDicePool(hpLevels),
+    spellcasting: computeSpellcasting(input.classes, abilityMods, proficiencyBonus),
     overridden,
   }
 }

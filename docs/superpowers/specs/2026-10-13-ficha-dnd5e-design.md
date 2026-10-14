@@ -267,17 +267,30 @@ Tamanho: P (um dia de trabalho), M (alguns dias), G (uma semana ou mais). Cada m
 - Texto de atribuição CC-BY conferido.
 - **Sem mudança visível para os jogadores.**
 
-### Marco 1: motor de regras e catálogo núcleo (G) — esqueleto feito em 13/10/2026
+### Marco 1: motor de regras e catálogo núcleo (G) — FEITO em 13/10/2026
 
-Pronto em `sheets/dnd/rules/` (`computeDerived`): nível total, proficiência, salvaguardas, 18 perícias com meia
-proficiência e especialização, iniciativa, percepção passiva, **CA** (leve/média/pesada, escudo, Defesa sem Armadura de
-Bárbaro e Monge), **PV** (dado cheio no nível 1, média ou rolado depois, mínimo 1 por nível, bônus por nível), dados de vida
-e descanso longo, sobrescritas manuais. 44 testes. Falta: conjuração (espaços, multiclasse), progressão e todo o catálogo.
-- `rules/` completo (seção 4.4) com testes.
-- Catálogo: 12 classes com tabela de progressão 1-20, 9 raças, Acólito + antecedente personalizado, equipamento migrado
-  do seed atual, condições, glossário PT-BR.
-- Sem tela nova: o resultado é a biblioteca e os testes.
-- Verificação: `npm run verify` + testes das tabelas (PV, CA, espaços de magia, bônus por nível).
+**Motor** (`sheets/dnd/rules/`, `computeDerived`): nível total, proficiência, salvaguardas, 18 perícias (meia proficiência e
+especialização), iniciativa, percepção passiva, **CA** (leve/média/pesada, escudo, Defesa sem Armadura de Bárbaro e Monge),
+**PV** (dado cheio no nível 1, média ou rolado depois, mínimo 1 por nível, bônus por nível), dados de vida e descanso longo,
+**conjuração** (espaços por classe, multiclasse, Magia de Pacto do Bruxo separada, CD, ataque, truques, magias conhecidas e
+preparadas, grimório), **progressão** (tabela de XP, Aumentos de Atributo por classe, pré-requisitos de multiclasse),
+sobrescritas manuais (AUTO/MANUAL).
+
+**Catálogo** (`sheets/dnd/catalog/`, tudo do SRD 5.1, tabelas conferidas contra o PDF oficial): 12 classes com tabela de
+progressão, características por nível, proficiências, equipamento inicial e multiclasse; a subclasse do SRD de cada uma
+(12); 9 raças e 4 sub-raças (mais os 10 ancestrais dracônicos); antecedente Acólito e o personalizado; 37 armas, 12
+armaduras e escudo, 26 itens, 35 ferramentas; 14 condições e a Exaustão; 6 estilos de luta; glossário PT-BR. Busca por nome
+(sem acento) e ligação classe -> motor (`toClassLevels`).
+
+**Qualidade:** 181 testes (`npm test`), incluindo conferência nível a nível das características de classe com as tabelas do
+SRD, tabelas de espaços de magia, exemplos do próprio SRD (Patrulheiro 4 / Mago 3) e integridade das referências.
+
+**Correções feitas no seed antigo de equipamento** (o catálogo da migration 27 não tinha sido conferido): peso da alabarda e do
+arco longo, zarabatana que faltava, dano da rede, e a lista de ferramentas completa (o seed tinha 8, o SRD tem 35).
+Unidades da edição brasileira: peso em kg, alcances em metros; deslocamento do motor em pés (a tela converte, 30 pés = 9 m).
+
+**Ficou para os próximos marcos:** magias (310 do SRD, Marco 5), Metamagia e Invocações Místicas (opções individuais, Marco 5),
+talento Agarrador, e o catálogo de itens mágicos.
 
 ### Marco 2: banco (M)
 - Migrations novas (seção 4.3), políticas de NPC e "só o dono", lista de migrations no `verify-migrations.mjs` e README.
