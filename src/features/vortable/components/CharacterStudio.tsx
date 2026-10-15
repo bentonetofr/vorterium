@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader } from '../../../shared/components/Loader'
-import { assignCharacter, createCharacterStorage, createCharacterStorageFor, createNpcCharacterStorage, VORTABLE_ASSETS } from '../services/vortableService'
+import { assignCharacter, createCharacterStorage, createCharacterStorageFor, createNpcCharacterStorage, getCampaignSystem, VORTABLE_ASSETS } from '../services/vortableService'
+import { characterSettingOf } from '../../../shared/constants/systems'
 import { loadEngine } from '../services/vortableService'
 import './CharacterStudio.css'
 
@@ -36,17 +37,20 @@ export function CharacterStudio({ campaignId, userId, npc, forPlayer, onClose, o
     let destroy: (() => void) | null = null
     let closeTimer = 0
     ;(async () => {
-      const [engine, storage] = await Promise.all([
+      const [engine, storage, system] = await Promise.all([
         loadEngine(),
         npc ? createNpcCharacterStorage(campaignId, userId, npc.key)
           : forPlayer ? createCharacterStorageFor(campaignId, userId, forPlayer.id)
             : createCharacterStorage(campaignId, userId),
+        getCampaignSystem(campaignId),
       ])
       if (dead) return
       const creator = engine.mountCharacterCreator(el, {
         assetBase: VORTABLE_ASSETS,
         storage,
         single: true,
+        // o criador só oferece o que combina com a campanha (sem pistola em Altherium, sem armadura em Terra Devastada)
+        setting: characterSettingOf(system),
         title: npc ? 'Personagem do NPC' : forPlayer ? `Personagem de ${forPlayer.name || 'um jogador'}` : 'Seu personagem',
         ...(npc ? { name: npc.name } : {}),
         saveLabel: npc ? 'Salvar NPC' : 'Salvar personagem',

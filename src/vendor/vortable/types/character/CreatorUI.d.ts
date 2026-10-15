@@ -1,4 +1,5 @@
 import { type CharacterStorage } from './storage';
+import { type CharacterSetting } from './setting';
 import { type CharacterSave } from '../types';
 export interface CreatorOptions {
     assetBase: string;
@@ -18,6 +19,12 @@ export interface CreatorOptions {
     /** Nome do personagem novo (padrão: "Novo personagem"). */
     initialName?: string;
     saveLabel?: string;
+    /**
+     * Ambientação da campanha: 'medieval' só oferece peças de fantasia/Idade Média (sem armas de fogo nem roupa de hoje),
+     * 'modern' tira armadura, elmos, magia e raças de fantasia. Sem isto, oferece tudo. O que o personagem aberto tem
+     * de fora da ambientação sai ao abrir.
+     */
+    setting?: CharacterSetting;
     /** Salvar também põe o boneco em uso (padrão: sim). O mestre cria NPCs sem tomar o lugar do dele. */
     activateOnSave?: boolean;
     onSaved?: (c: CharacterSave) => void;

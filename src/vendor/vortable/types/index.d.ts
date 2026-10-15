@@ -3,6 +3,7 @@ import { type WorldStorage } from './storage';
 import { type Appearance, type CharacterSave, type Dir, type ZoneData, type SpecialNpc } from './types';
 import { daylight, formatHour, worldHour } from './world/daylight';
 import { type LiveSound, type NetLink } from './net/hub';
+import type { CharacterSetting } from './character/setting';
 import { type CharacterStorage } from './character/storage';
 export * from './types';
 export * from './storage';
@@ -10,6 +11,7 @@ export * from './character/storage';
 export * from './character/transfer';
 export { TERRAINS } from './assets/terrains';
 export { composeFrame as characterFrame } from './character/compose';
+export type { CharacterSetting } from './character/setting';
 export { defaultAppearance, randomAppearance, loadCharacterData, normalizeAppearance } from './character/catalog';
 export { parseNet, REACTIONS } from './net/hub';
 export type { LiveSound } from './net/hub';
@@ -210,6 +212,8 @@ export interface CreatorMountOptions {
     name?: string;
     saveLabel?: string;
     activateOnSave?: boolean;
+    /** Ambientação da campanha: só oferece as peças que combinam. Ver CreatorOptions. */
+    setting?: CharacterSetting;
     onSaved?: (c: CharacterSave) => void;
 }
 /** Criador de personagem (não usa o Phaser: só DOM e canvas). */

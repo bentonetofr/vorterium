@@ -113,6 +113,24 @@ export function isTerraDevastadaFamily(system: string | null | undefined): boole
   return system === 'terra_devastada' || system === 'terra_devastada_adaptada'
 }
 
+/**
+ * Ambientação do criador de personagem pro sistema: 'medieval' (fantasia, sem armas de fogo nem roupa de hoje),
+ * 'modern' (atual/apocalipse, sem armadura nem magia) ou undefined (genérico: oferece tudo).
+ */
+export function characterSettingOf(system: string | null | undefined): 'medieval' | 'modern' | undefined {
+  switch (system) {
+    case 'dnd5e':
+    case 'altherium':
+      return 'medieval'
+    case 'terra_devastada':
+    case 'terra_devastada_adaptada':
+    case 'vampiro':
+      return 'modern'
+    default:
+      return undefined
+  }
+}
+
 /** Versões alternativas de um sistema (vazio se ele não tem). */
 export function getSystemVariants(system: CampaignSystem): SystemEntry[] {
   return SYSTEMS_CATALOG.filter((s) => s.variantOf === system)

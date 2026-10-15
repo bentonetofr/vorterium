@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.72',
+    date:    '2026-10-15',
+    title:   'O criador de personagem se adapta à campanha',
+    items: [
+      'O criador de personagem agora só oferece o que combina com o sistema da campanha. Em Altherium e D&D 5e (mundo medieval) somem as armas de fogo, o taco e o cano, as bombas, o fungo da infecção, a máscara de gás, o colete tático, camisetas, polo, regata, óculos de sol e outras peças de hoje; ficam espadas curtas e machados (facão, machadinha, faca) e o arco, além de elmos, armaduras e chapéus mágicos.',
+      'Em Terra Devastada, Terra Devastada Adaptada e Vampiro (mundo atual) somem elmos e armaduras de metal, chapéus de mago, coroas, ombreiras, túnicas e as raças de fantasia (orc, goblin, troll, minotauro...), além de asas, chifres e cauda. As armas, a infecção e as roupas do apocalipse continuam.',
+      'Campanha Genérica continua com tudo. Ao abrir um personagem que já tinha uma peça que não combina (a pistola de um personagem de Altherium, por exemplo), ela sai na hora; ao salvar, o personagem fica limpo.',
+    ],
+  },
+  {
     version: '1.71',
     date:    '2026-10-15',
     title:   'Pose sentada de perfil',

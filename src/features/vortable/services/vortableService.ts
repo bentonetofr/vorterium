@@ -308,6 +308,13 @@ export async function createCharacterStorage(campaignId: string, userId: string)
   }
 }
 
+/** O sistema da campanha (decide a ambientação do criador de personagem); null se não deu pra ler. */
+export async function getCampaignSystem(campaignId: string): Promise<string | null> {
+  const { data, error } = await supabase.from('campaigns').select('campaign_system').eq('id', campaignId).maybeSingle()
+  if (error) return null
+  return (data?.campaign_system as string | undefined) ?? null
+}
+
 /** Esta pessoa é o mestre da campanha? */
 export async function isCampaignMaster(campaignId: string, userId: string): Promise<boolean> {
   const { data, error } = await supabase
