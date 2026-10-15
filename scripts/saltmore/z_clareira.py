@@ -101,11 +101,11 @@ def build() -> Zone:
         rock_cluster(z, tx, ty, 2.4, 3, [R_GRAY_SNOW if snow else R_DARK], reserve=False)
     for _ in range(30):
         tx = rng.uniform(0, W)
-        rock_cluster(z, tx, rng.uniform(11, 20), 3.2, 3, [R_DARK, R_DARK, R_COAL, R_GRAY], reserve=True)
+        rock_cluster(z, tx, rng.uniform(11, 20), 3.2, 3, [R_DARK, R_DARK, R_COAL], reserve=True)
     # paredões nas laterais
     for side_x in (1.5, W - 2.5):
         for ty in range(10, H - 6, 3):
-            rock_cluster(z, side_x + rng.uniform(-1, 1), ty + rng.uniform(-1, 1), 2.4, 3, [R_DARK, R_DARK, R_COAL, R_GRAY], reserve=False)
+            rock_cluster(z, side_x + rng.uniform(-1, 1), ty + rng.uniform(-1, 1), 2.4, 3, [R_DARK, R_DARK, R_COAL], reserve=False)
 
     # ── a mata ──
     cab_ell = lambda x, y: ((x - 36.5) / 22.0) ** 2 + ((y - 27.0) / 14.0) ** 2

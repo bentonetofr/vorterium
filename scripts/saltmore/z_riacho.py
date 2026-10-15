@@ -100,14 +100,14 @@ def build() -> Zone:
         tx, ty = rng.uniform(1, 34), rng.uniform(0.5, 14)
         if abs(tx - 17.5) < 2.6 and ty > 4:
             continue                                                 # deixa o canal da queda livre
-        rock_cluster(z, tx, ty, 1.6, 2, [R_DARK, R_DARK, R_COAL, R_GRAY], (0.35, 0.35, 0.2, 0.1), reserve=False)
+        rock_cluster(z, tx, ty, 1.6, 2, [R_DARK, R_DARK, R_COAL], (0.35, 0.35, 0.2, 0.1), reserve=False)
     for _ in range(26):
         tx = rng.choice([rng.uniform(5.5, 14), rng.uniform(21, 29)])
-        rock_cluster(z, tx, rng.uniform(13, 17.5), 1.8, 2, [R_DARK, R_DARK, R_COAL, R_GRAY], reserve=False)
+        rock_cluster(z, tx, rng.uniform(13, 17.5), 1.8, 2, [R_DARK, R_DARK, R_COAL], reserve=False)
     # pedras na água e nas margens
     for sx, sy in STREAM.pts[::7]:
         if rng.random() < 0.7 and not on_bridge(sx, sy):
-            rock_cluster(z, sx + rng.uniform(-1.5, 1.5), sy + rng.uniform(-2.2, 2.2), 0.8, 1, [R_GRAY], (0, 0, 0.7, 0.3), reserve=False)
+            rock_cluster(z, sx + rng.uniform(-1.5, 1.5), sy + rng.uniform(-2.2, 2.2), 0.8, 1, [R_DARK], (0, 0, 0.7, 0.3), reserve=False)
     # laje de pedra a céu aberto, na curva
     z.put(one(r'^laje de pedra$', sheet='rock-cinza'), 36.2, 33.2)
     z.put(one(r'^pedra redonda$', sheet='rock-cinza'), 33.2, 28.8)

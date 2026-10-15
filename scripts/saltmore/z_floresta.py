@@ -151,7 +151,7 @@ def build() -> Zone:
     for _ in range(26):
         tx, ty = rng.uniform(3, W - 3), rng.uniform(3, H - 3)
         if MAIN.dist(tx, ty) > 4.0:
-            rock_cluster(z, tx, ty, 1.5, rng.randint(1, 3), [R_DARK, R_COAL, R_GRAY], (0.05, 0.3, 0.45, 0.2))
+            rock_cluster(z, tx, ty, 1.5, rng.randint(1, 3), [R_DARK, R_COAL], (0.05, 0.3, 0.45, 0.2))
 
     # ── saídas ──
     z.portal('trilha-norte', 'Voltar pra clareira da cabana', 43 - 4.5, 0.3, 9, 2.6, ('saltmore-clareira', 'trilha-sul'))

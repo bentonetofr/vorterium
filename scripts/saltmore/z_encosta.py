@@ -44,7 +44,7 @@ def build() -> Zone:
     z.brush('dirt-light', MAIN.pts[::3], 0.8, 0.4, 153, only={'dirt', 'dirt-soft', 'pebbles'})
 
     # ── os paredões: entre as pernas do ziguezague e nas laterais ──
-    sets = [R_DARK, R_DARK, R_COAL, R_GRAY]
+    sets = [R_DARK, R_DARK, R_COAL]
     snow_sets = [R_DARK_SNOW, R_GRAY_SNOW]
     cliff_line(z, [(30, 21), (36, 24), (44, 27), (52, 30), (60, 33)], 2.5, snow_sets + sets, 1.0)
     cliff_line(z, [(28, 49), (36, 48), (44, 46), (48, 45)], 2.4, sets, 1.0)
@@ -66,7 +66,7 @@ def build() -> Zone:
     z.reserve_rect(tx0 - 7, ty0 - 6, tx0 + 7, ty0 + 6)
     for (x0, y0, x1, y1) in ((-5, -4, -2, -4), (2, -4, 5, -4), (-5, -4, -5, -1), (5, -4, 5, -1), (-5, 3, -3, 3), (3, 3, 5, 3)):
         z.fence('fence-8', int(tx0 + x0), int(ty0 + y0), int(tx0 + x1), int(ty0 + y1))
-    ruin_bits = R_GRAY['mid'] + R_GRAY['small'] + find(r'^(coluna de rocha|coluna aspera|laje de pedra|bloco de pedra|pedra cortada)', sheet='rock-cinza')
+    ruin_bits = R_DARK['mid'] + R_DARK['small'] + find(r'^(coluna de rocha|coluna aspera|laje de pedra|bloco de pedra|pedra cortada)', sheet='rock-escura')
     for _ in range(14):
         a = rng.uniform(0, math.tau)
         rr = rng.uniform(2.0, 6.0)

@@ -171,7 +171,7 @@ def build() -> Zone:
     for _ in range(14):
         tx, ty = rng.uniform(3, W - 3), rng.uniform(4, 56)
         if ROAD.dist(tx, ty) > 5 and z.free_disc(tx, ty, 1.0):
-            rock_cluster(z, tx, ty, 1.4, rng.randint(1, 3), [R_DARK, R_COAL, R_GRAY], (0.05, 0.3, 0.45, 0.2))
+            rock_cluster(z, tx, ty, 1.4, rng.randint(1, 3), [R_DARK, R_COAL], (0.05, 0.3, 0.45, 0.2))
 
     # ── gente: pescador no cais, sargento do pedágio, mercador no acampamento, guardas da cidade ──
     z.npc('ponte-pescador', 'Tam', 'Pescador', npcs.fisherman(), 19.4, 63.4, 'down')

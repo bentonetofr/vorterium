@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import math
 
-from .kit import (R_COAL, BUSHES_DARK, FERNS, FLOWERS, OAKS_BIG, OAKS_MID, PINES, R_GRAY, Building, carve, crop_field, find, forest, one, ring,
+from .kit import (R_COAL, R_DARK, BUSHES_DARK, FERNS, FLOWERS, OAKS_BIG, OAKS_MID, PINES, R_GRAY, Building, carve, crop_field, find, forest, one, ring,
                   rock_cluster, scatter, undergrowth)
 from . import npcs
 from .lib import TILE, Path, Zone, fbm, obj_size
@@ -172,7 +172,7 @@ class Village:
         # um trecho caído da muralha, a sudoeste: pedras no chão
         z.clear_fence(9, 78, 9, 82)
         for i, ty in enumerate((77.6, 78.8, 80.0, 81.2, 82.4)):
-            z.put(self.rng.choice(R_GRAY['small'] + R_GRAY['mid']), 8.8 + self.rng.uniform(-0.4, 0.6), ty, self.rng.random() < 0.5, radius=0.4)
+            z.put(self.rng.choice(R_DARK['small'] + R_DARK['mid']), 8.8 + self.rng.uniform(-0.4, 0.6), ty, self.rng.random() < 0.5, radius=0.4)
         # os portões: arco de pedra no vão, braseiros e estandartes
         for gy, name in ((WALL_T, 'norte'), (WALL_B, 'sul')):
             z.put('wd@961,466', GATE_X + 0.5, gy + 1.4)
@@ -392,7 +392,7 @@ class Village:
         for _ in range(16):
             tx, ty = rng.uniform(3, W - 3), rng.uniform(3, H - 3)
             if not _inside(tx, ty) and z.free_disc(tx, ty, 1.0):
-                rock_cluster(z, tx, ty, 1.4, rng.randint(1, 3), [R_DARK, R_COAL, R_GRAY], (0.05, 0.3, 0.45, 0.2))
+                rock_cluster(z, tx, ty, 1.4, rng.randint(1, 3), [R_DARK, R_COAL], (0.05, 0.3, 0.45, 0.2))
 
     def people(self) -> None:
         z = self.z
