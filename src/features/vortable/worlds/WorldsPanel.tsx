@@ -10,6 +10,7 @@ import { confirmDialog, promptDialog } from '../../../shared/components/dialogs'
 const TEMPLATES = [
   { id: 'torvallen', label: 'TORVALLEN', text: 'Grande Biblioteca do palácio: 4 andares, saguão e seção proibida (6 zonas)', url: `${import.meta.env.BASE_URL}vortable/maps/torvallen.mundo.json` },
   { id: 'ruinas', label: 'CIDADE EM RUÍNAS', text: 'Apocalipse no clima de The Last of Us: rua bloqueada, posto de quarentena, hospital abandonado e subsolo infectado (4 zonas, 10 NPCs)', url: `${import.meta.env.BASE_URL}vortable/maps/ruinas.mundo.json` },
+  { id: 'saltmore', label: 'SALTMORE', text: 'Floresta montanhosa e escura, de pinheiros e trilha de terra: cabana abandonada de dois andares, clareira, mata fechada com santuário e acampamento, riacho com cascata e ponte, passo rochoso com mirante, a Vila de Pedraverde (muralha, praça com feira, estalagem por dentro, capela, ferreiro, hortas) e a estrada até a ponte da cidade (9 zonas, 24 NPCs)', url: `${import.meta.env.BASE_URL}vortable/maps/saltmore.mundo.json` },
   { id: 'nova-york', label: 'NOVA YORK: ZONA MORTA', text: 'Cidade enorme no clima de The Last of Us: avenida e becos, prédios para explorar, estrada na mata, escola com porão, metrô infectado, rio e restaurante (37 zonas)', url: `${import.meta.env.BASE_URL}vortable/maps/nova-york.mundo.json` },
 ]
 

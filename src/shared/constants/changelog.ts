@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.70',
+    date:    '2026-10-15',
+    title:   'Novo mundo pronto no Vortable: SALTMORE',
+    items: [
+      'Mundos → Mundos prontos ganhou o SALTMORE: uma floresta montanhosa e escura, de pinheiros azul-esverdeados e trilha de terra, que começa dentro de uma cabana abandonada (térreo com lareira apagada e mobília quebrada, e um sótão pequeno com uma cama e tralhas) e desce, de zona em zona, até a ponte de uma cidade. São 9 zonas e 24 NPCs.',
+      'O caminho: a clareira da cabana (horta morta, poço, um túmulo solitário), a trilha da floresta sombria (um santuário esquecido e um acampamento de caçadores abandonado), o riacho com a cascata, o píer e a ponte de madeira, a encosta rochosa em ziguezague (torre em ruínas, mirante e uma emboscada) e a estrada até a ponte de pedra e o portão da cidade, onde o mapa continua.',
+      'No meio do caminho fica a Vila de Pedraverde, bem grande: muralha de pedra com dois portões, praça com chafariz e feira, capela com torre e cemitério, ferreiro, hortas, pomar, celeiro e a Estalagem do Corvo, que dá pra visitar por dentro. Os moradores (guardas, estalajadeira, ferreiro, feirantes, padre, uma criança...) já estão nas zonas.',
+      'O mundo usa só peças que o Vortable já tinha, então não precisa de nada novo. Dá pra criar o mundo direto por "Criar este mundo" ou baixar o arquivo e usar "Importar mundo".',
+    ],
+  },
+  {
     version: '1.69',
     date:    '2026-10-15',
     title:   'O mestre cria o personagem do jogador, mecha de cabelo e pose sentada',
