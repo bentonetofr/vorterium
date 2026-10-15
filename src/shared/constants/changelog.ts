@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.68',
+    date:    '2026-10-15',
+    title:   'Campanhas no celular viram cards que abrem',
+    items: [
+      'Na lista de campanhas do celular, cada campanha é um card enxuto: capa, nome inteiro (quebra em até duas linhas, sem cortar com "…"), seu papel e o status. Tocando no card ele abre um pouco e mostra a capa grande, o sistema, a descrição e o botão Entrar. Um card aberto por vez; tocar de novo fecha.',
+      'O mestre arquiva, desarquiva e exclui pelos botões dentro do card aberto (no computador e no tablet continua como era, com o envelope e a lixeira ao lado).',
+    ],
+  },
+  {
     version: '1.67',
     date:    '2026-10-15',
     title:   'Celular: botão Sair, menu de ferramentas e janelas',

@@ -9,6 +9,7 @@ import { DeleteCampaignModal } from '../components/DeleteCampaignModal'
 import './CampaignPages.css'
 import { Loader } from '../../../shared/components/Loader'
 import { confirmDialog } from '../../../shared/components/dialogs'
+import { useMediaQuery } from '../../../shared/lib/useMediaQuery'
 
 export function CampaignsPage() {
   const { user } = useAuth()
@@ -20,6 +21,9 @@ export function CampaignsPage() {
   const [actionError, setActionError] = useState<string | null>(null)
   // campanha que o mestre está excluindo (a janela pede pra escrever DELETAR (nome))
   const [deleting, setDeleting] = useState<CampaignWithRole | null>(null)
+  // celular: o card aberto (um por vez); toca de novo pra fechar
+  const [openId, setOpenId] = useState<string | null>(null)
+  const toggleOpen = (id: string) => setOpenId((cur) => (cur === id ? null : id))
 
   useEffect(() => {
     async function load() {
@@ -117,7 +121,7 @@ export function CampaignsPage() {
             ) : (
               <div className="campaign-cards anim-stagger">
                 {archived.map((c) => (
-                  <CampaignLine key={c.id} campaign={c} archivedView busy={busyId === c.id} onToggleArchive={() => void setArchived(c, false)} onDelete={() => setDeleting(c)} />
+                  <CampaignLine key={c.id} campaign={c} archivedView open={openId === c.id} onToggleOpen={() => toggleOpen(c.id)} busy={busyId === c.id} onToggleArchive={() => void setArchived(c, false)} onDelete={() => setDeleting(c)} />
                 ))}
               </div>
             )}
@@ -155,7 +159,7 @@ export function CampaignsPage() {
                 Campanhas como mestre
               </h3>
               <div className="campaign-cards anim-stagger">
-                {asMaster.map((c) => <CampaignLine key={c.id} campaign={c} busy={busyId === c.id} onToggleArchive={() => void setArchived(c, true)} onDelete={() => setDeleting(c)} />)}
+                {asMaster.map((c) => <CampaignLine key={c.id} campaign={c} open={openId === c.id} onToggleOpen={() => toggleOpen(c.id)} busy={busyId === c.id} onToggleArchive={() => void setArchived(c, true)} onDelete={() => setDeleting(c)} />)}
               </div>
             </section>
           )}
@@ -167,7 +171,7 @@ export function CampaignsPage() {
                 Campanhas como jogador
               </h3>
               <div className="campaign-cards anim-stagger">
-                {asPlayer.map((c) => <CampaignLine key={c.id} campaign={c} />)}
+                {asPlayer.map((c) => <CampaignLine key={c.id} campaign={c} open={openId === c.id} onToggleOpen={() => toggleOpen(c.id)} />)}
               </div>
             </section>
           )}
@@ -196,11 +200,25 @@ function EnvelopeIcon({ open = false }: { open?: boolean }) {
 }
 
 /** A campanha na lista, com (só pro mestre) o botão de envelope que arquiva ou desarquiva. */
-function CampaignLine({ campaign, archivedView = false, busy = false, onToggleArchive, onDelete }: {
-  campaign: CampaignWithRole; archivedView?: boolean; busy?: boolean; onToggleArchive?: () => void; onDelete?: () => void
+function CampaignLine({ campaign, archivedView = false, busy = false, open = false, onToggleOpen, onToggleArchive, onDelete }: {
+  campaign: CampaignWithRole; archivedView?: boolean; busy?: boolean; open?: boolean; onToggleOpen?: () => void; onToggleArchive?: () => void; onDelete?: () => void
 }) {
   const isMaster = campaign.role === 'master'
   const label = archivedView ? `Desarquivar ${campaign.name}` : `Arquivar ${campaign.name}`
+  const phone = useMediaQuery('(max-width: 600px)')
+  if (phone) {
+    return (
+      <MobileCampaignCard
+        campaign={campaign}
+        open={open}
+        onToggle={() => onToggleOpen?.()}
+        archivedView={archivedView}
+        busy={busy}
+        onToggleArchive={isMaster ? onToggleArchive : undefined}
+        onDelete={isMaster ? onDelete : undefined}
+      />
+    )
+  }
   return (
     <div className="campaign-line">
       <CampaignCard campaign={campaign} />
@@ -268,6 +286,68 @@ function CampaignCard({ campaign }: { campaign: CampaignWithRole }) {
       >
         Entrar →
       </Link>
+    </div>
+  )
+}
+
+/**
+ * Celular: o card mostra só o principal (capa, nome inteiro, papel e status). Tocando, ele abre um pouco
+ * e mostra o resto (sistema, descrição, capa grande) com o botão Entrar; o mestre também arquiva e exclui por ali.
+ */
+function MobileCampaignCard({ campaign, open, onToggle, archivedView, busy, onToggleArchive, onDelete }: {
+  campaign: CampaignWithRole; open: boolean; onToggle: () => void; archivedView: boolean; busy: boolean
+  onToggleArchive?: () => void; onDelete?: () => void
+}) {
+  const sysStatus = getSystemStatus(campaign.system)
+  const sysStatusLabel = STATUS_LABELS[sysStatus]
+  const bodyId = `mcard-${campaign.id}`
+  return (
+    <div className={`mcard${open ? ' mcard--open' : ''}`}>
+      <button type="button" className="mcard__head" onClick={onToggle} aria-expanded={open} aria-controls={bodyId}>
+        <span
+          className={`mcard__cover${campaign.cover_url ? '' : ' mcard__cover--empty'}`}
+          style={campaign.cover_url ? { backgroundImage: `url(${campaign.cover_url})` } : undefined}
+          aria-hidden="true"
+        >
+          {!campaign.cover_url && '◈'}
+        </span>
+        <span className="mcard__main">
+          <span className="mcard__name">{campaign.name}</span>
+          <span className="mcard__sub">
+            <span className={`campaign-card-role campaign-card-role--${campaign.role}`}>{formatRole(campaign.role)}</span>
+            <span className={`campaign-status ${getCampaignStatusClass(campaign.status)}`}>{getCampaignStatusLabel(campaign.status)}</span>
+          </span>
+        </span>
+        <span className="mcard__chev" aria-hidden="true">▾</span>
+      </button>
+
+      <div className="mcard__body" id={bodyId} role="region" aria-label={`Mais sobre ${campaign.name}`}>
+        <div className="mcard__inner">
+          {campaign.cover_url && (
+            <div className="mcard__banner" style={{ backgroundImage: `url(${campaign.cover_url})` }} aria-hidden="true" />
+          )}
+          <div className="mcard__meta">
+            <span className="badge">{getSystemLabel(campaign.system)}</span>
+            {sysStatusLabel && <span className={`system-status-badge system-status-badge--${sysStatus}`}>{sysStatusLabel}</span>}
+          </div>
+          {campaign.description
+            ? <p className="mcard__desc">{campaign.description}</p>
+            : <p className="mcard__desc mcard__desc--empty">Sem descrição.</p>}
+          <div className="mcard__actions">
+            <Link to={`/campanhas/${campaign.id}`} className="btn btn-primary mcard__enter" tabIndex={open ? 0 : -1}>Entrar →</Link>
+            {onToggleArchive && (
+              <button type="button" className="btn btn-ghost mcard__aux" onClick={onToggleArchive} disabled={busy} tabIndex={open ? 0 : -1}>
+                <EnvelopeIcon open={archivedView} /> {archivedView ? 'Desarquivar' : 'Arquivar'}
+              </button>
+            )}
+            {onDelete && (
+              <button type="button" className="btn btn-ghost mcard__aux mcard__aux--danger" onClick={onDelete} disabled={busy} tabIndex={open ? 0 : -1} aria-label={`Excluir ${campaign.name}`}>
+                <TrashIcon /> Excluir
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

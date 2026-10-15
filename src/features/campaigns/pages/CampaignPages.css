@@ -618,3 +618,88 @@
   .campaign-area__header-meta { margin-top: 0; }
   .campaign-area-page { gap: var(--space-3); }
 }
+
+/* ═══ Celular: card de campanha que abre ═══
+   Fechado: capa, nome inteiro, papel e status. Aberto: sistema, descrição, capa grande e o botão Entrar. */
+.mcard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
+}
+.mcard--open { border-color: var(--gilded); background: var(--bg-elevated); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+
+.mcard__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mcard__cover {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  background-position: center;
+  background-size: cover;
+  background-color: var(--bg-elevated);
+  color: var(--accent-dim);
+  font-size: var(--text-xl);
+}
+.mcard__cover--empty { background-image: linear-gradient(135deg, var(--bg-elevated), var(--bg-surface)); }
+.mcard__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mcard__name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mcard--open .mcard__name { -webkit-line-clamp: unset; color: var(--accent-bright); }
+.mcard__sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--space-3); }
+.mcard__chev { flex: none; font-size: var(--text-sm); color: var(--text-muted); transition: transform 220ms ease; }
+.mcard--open .mcard__chev { transform: rotate(180deg); color: var(--accent-bright); }
+
+/* abre e fecha animando a altura (grid 0fr → 1fr, sem medir nada) */
+.mcard__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 260ms ease; }
+.mcard--open .mcard__body { grid-template-rows: 1fr; }
+.mcard__inner {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  visibility: hidden;
+  transition: visibility 0s linear 260ms, padding 260ms ease;
+}
+.mcard--open .mcard__inner { visibility: visible; padding: 0 var(--space-3) var(--space-3); transition-delay: 0s; }
+
+.mcard__banner { height: 110px; flex: none; border: 1px solid var(--border-dim); border-radius: var(--radius-md); background-position: center; background-size: cover; }
+.mcard__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.mcard__desc { margin: 0; font-size: var(--text-sm); line-height: 1.55; color: var(--text-secondary); overflow-wrap: anywhere; white-space: pre-line; }
+.mcard__desc--empty { color: var(--text-muted); font-style: italic; }
+.mcard__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.mcard__enter { flex: 1 1 100%; justify-content: center; }
+.mcard__aux { flex: 1 1 0; justify-content: center; min-height: 40px; font-size: var(--text-xs); padding-inline: var(--space-3); }
+.mcard__aux--danger { color: #e5484d; border-color: rgba(229, 72, 77, 0.5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mcard__body, .mcard__inner, .mcard__chev { transition: none; }
+}
