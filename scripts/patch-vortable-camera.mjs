@@ -55,8 +55,8 @@ code = readFileSync(js, 'utf8')
 if (code.includes('hookSteps(')) {
   console.log('motor: passos já remendados')
 } else {
-  const vaName = ident(code, /step\(e, t, n, r\) \{\n\t\tlet i = (\w+)\(\);\n\t\tif \(!i\.steps \|\| !this\.engine\.running\) return;/, 'as opções de som')
-  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = (\w+)\[r\];/, 'a tabela de quadros dos passos')
+  const vaName = ident(code, /step\(e, t, n, r\) \{\n\t\tlet i = ([\w$]+)\(\);\n\t\tif \(!i\.steps \|\| !this\.engine\.running\) return;/, 'as opções de som')
+  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = ([\w$]+)\[r\];/, 'a tabela de quadros dos passos')
   const stepOld = `step(e, t, n, r) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
   const stepNew = `step(e, t, n, r, g = 1) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
   const playOld = 'this.steps.play(o, i.steps * (n ? .9 : .7), this.stepSide * .08'
@@ -110,7 +110,7 @@ code = readFileSync(js, 'utf8')
 if (code.includes('stepsFor(e) {')) {
   console.log('motor: passos do NPC controlado já remendados')
 } else {
-  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = (\w+)\[r\];/, 'a tabela de quadros dos passos')
+  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = ([\w$]+)\[r\];/, 'a tabela de quadros dos passos')
   const syncOld = '\tsyncFootsteps(e) {'
   const method = [
     '\tstepsFor(e) {',
@@ -174,7 +174,7 @@ code = readFileSync(js, 'utf8')
 if (code.includes('miss = r !== "walk"')) {
   console.log('motor: roupa ao correr já remendada')
 } else {
-  const mnName = ident(code, /\tlet a = \[\], o = 0, s = (\w+)\(n\)\.length > 0;\n\tfor \(let \[c, l\] of Object\.entries\(n\.slots\)\) \{/, 'a função do porte')
+  const mnName = ident(code, /\tlet a = \[\], o = 0, s = ([\w$]+)\(n\)\.length > 0;\n\tfor \(let \[c, l\] of Object\.entries\(n\.slots\)\) \{/, 'a função do porte')
   const a = '\t\tlet d = u.anims.includes(r), f = d ? r : "walk", p = '
   const b = '\t\tlet d = !miss && u.anims.includes(r), f = d ? r : "walk", p = '
   const head = `\tlet a = [], o = 0, s = ${mnName}(n).length > 0;\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;`
@@ -212,7 +212,7 @@ code = readFileSync(js, 'utf8')
 if (code.includes('\t96,\n\t180,')) {
   console.log('motor: durações de dia já remendadas')
 } else {
-  const jrName = ident(code, /\], (\w+) = \[\n\t12,\n\t24,\n\t48,\n\t96\n\];/, 'a lista de durações do dia')
+  const jrName = ident(code, /\], ([\w$]+) = \[\n\t12,\n\t24,\n\t48,\n\t96\n\];/, 'a lista de durações do dia')
   const lenOld = `], ${jrName} = [\n\t12,\n\t24,\n\t48,\n\t96\n];`
   const lenNew = `], ${jrName} = [\n\t12,\n\t24,\n\t48,\n\t96,\n\t180,\n\t300\n];`
   const labOld = '}, `${e} min`)));\n\t\t\tt.addEventListener("change", () => s({ dayMinutes:'
@@ -230,7 +230,7 @@ if (code.includes('function vtConfirm(')) {
   console.log('motor: perguntas já remendadas')
 } else {
   // a função que lê o arquivo de personagem (`parseCharacterFile`): a vtConfirm entra logo antes dela
-  const parseName = ident(code, /function (\w+)\(e, t\) \{\n\tlet n = e;\n\tif \(typeof e == "string"\) try \{\n\t\tn = JSON\.parse\(e\);/, 'a leitura do arquivo de personagem')
+  const parseName = ident(code, /function ([\w$]+)\(e, t\) \{\n\tlet n = e;\n\tif \(typeof e == "string"\) try \{\n\t\tn = JSON\.parse\(e\);/, 'a leitura do arquivo de personagem')
   const pairs = [
     [
       'if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;',
