@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.66',
+    date:    '2026-10-15',
+    title:   'Vortable do jogador no celular e no tablet',
+    items: [
+      'Criar o personagem no celular: o título e o botão Salvar não se sobrepõem mais, e com o celular deitado o boneco fica de um lado e as opções do outro (antes as opções ficavam espremidas numa faixa de uns 110 px).',
+      'Assistir o jogo (câmera de espectador): a barra de cima, que ocupava um terço da tela do celular, virou uma faixa compacta (câmera, jogador seguido e "Entrar em jogo"), com botões maiores pro toque. Deitado, as reações ficam miúdas embaixo.',
+      'Conferido do lado do jogador: andar com o joystick, Correr, zoom, o menu de ferramentas (dados, chat, ficha), a ficha em tela cheia, o criador de personagem e a câmera de espectador, no celular em pé e deitado e no tablet.',
+    ],
+  },
+  {
     version: '1.65',
     date:    '2026-10-14',
     title:   'Vortable e site no celular e no tablet',

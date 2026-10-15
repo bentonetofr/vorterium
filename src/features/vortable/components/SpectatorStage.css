@@ -131,3 +131,27 @@
   .spectator__react { width: calc(100% - 24px); justify-content: space-between; }
   .spectator__emoji { width: 34px; height: 34px; font-size: 20px; }
 }
+
+/* celular e tablet: a barra de cima ocupa pouco (tudo numa linha que rola, em vez de empilhar em 5) */
+@media (max-width: 900px), (pointer: coarse) {
+  .spectator__bar { gap: 4px; padding: 8px 10px 14px; }
+  .spectator__row { flex-wrap: nowrap; }
+  .spectator__row--zones { overflow-x: auto; scrollbar-width: none; }
+  .spectator__row--zones::-webkit-scrollbar { display: none; }
+  .spectator__zone { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spectator__play { flex: none; min-height: 38px; padding: 6px 14px; }
+  .spectator__chips { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .spectator__chips::-webkit-scrollbar { display: none; }
+  .spectator__chip { flex: none; white-space: nowrap; min-height: 36px; padding: 6px 12px; }
+  .spectator__arrow { width: 36px; height: 36px; }
+  .spectator__following { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spectator__emoji { width: 42px; height: 42px; }
+  .spectator__react { bottom: max(var(--space-3, 12px), env(safe-area-inset-bottom, 0px)); }
+}
+/* celular deitado: a barra de cima vira uma faixa só e as reações ficam miúdas embaixo */
+@media (orientation: landscape) and (max-height: 500px) {
+  .spectator__bar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 12px 12px; }
+  .spectator__bar > .spectator__row:first-child { flex: 1 1 100%; }
+  .spectator__react { bottom: max(6px, env(safe-area-inset-bottom, 0px)); padding: 3px 6px; }
+  .spectator__emoji { width: 34px; height: 34px; font-size: 19px; }
+}
