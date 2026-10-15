@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.69',
+    date:    '2026-10-15',
+    title:   'O mestre cria o personagem do jogador, mecha de cabelo e pose sentada',
+    items: [
+      'Vortable, ficha do jogador: o mestre agora vê, embaixo do retrato da ficha de cada jogador, o botão "Criar personagem do jogador" (ou "Editar personagem do jogador", se ele já tem um). Abre o mesmo criador de personagem do Vortable, e o que o mestre salvar vira o boneco com que aquele jogador joga na campanha. Serve pra quem não consegue montar o boneco sozinho. Dentro do criador o mestre também pode importar um arquivo de personagem (botão de importar, em cima).',
+      'Criador de personagem, aba Cabelo: novo espaço "Mecha de cabelo". Pinta uma parte do cabelo de outra cor (a mecha branca no cabelo ruivo): mecha da frente, metade do cabelo ou mecha fina, do lado direito ou do esquerdo do personagem, na cor que quiser. Aparece de frente, de lado e no jogo.',
+      'Criador de personagem, aba Corpo: nova linha "Pose" (Em pé ou Sentado). Sentado é pra personagens que não andam: o boneco fica sentado no chão, com as pernas esticadas pra frente, em todas as animações (parado, andando e correndo; ao se mover ele se arrasta).',
+      'Personagem pronto pra importar: o ruivo de mecha branca, barba, camiseta preta, tiras vermelhas, braçadeiras e botas, sentado, está em /vortable/personagens/ruivo-mecha-branca-sentado.vortable-personagem.json.',
+    ],
+  },
+  {
     version: '1.68',
     date:    '2026-10-15',
     title:   'Campanhas no celular viram cards que abrem',

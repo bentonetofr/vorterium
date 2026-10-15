@@ -13,6 +13,8 @@
 // O motor é sincronizado de outro repositório (`npm run vorterium` lá) e essa sincronização apaga a remenda:
 // depois de cada sincronização, rode `node scripts/patch-vortable-camera.mjs` (é seguro rodar de novo).
 // Sem a remenda o resto funciona; só o arrastar do painel de inimigos avisa que precisa dela.
+// Os nomes curtos do motor (va, qa, un, mn, jr, Ms...) mudam a cada sincronização (o minificador renomeia), então as remendas
+// que dependem deles descobrem o nome por regex (`ident`) em vez de escrevê-lo no texto.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -22,6 +24,13 @@ const js = join(root, 'vortable.js')
 const dts = join(root, 'types', 'index.d.ts')
 
 let code = readFileSync(js, 'utf8')
+
+/** O nome curto (minificado) que o motor deu a algo: o 1º grupo da regex no código; erro se não achar. */
+const ident = (src, re, what) => {
+  const m = src.match(re)
+  if (!m) throw new Error(`motor: não achei o nome de ${what} (o motor mudou?)`)
+  return m[1]
+}
 if (code.includes('worldAt:')) {
   console.log('motor: já remendado (worldAt)')
 } else {
@@ -46,8 +55,10 @@ code = readFileSync(js, 'utf8')
 if (code.includes('hookSteps(')) {
   console.log('motor: passos já remendados')
 } else {
-  const stepOld = 'step(e, t, n, r) {\n\t\tlet i = va();\n\t\tif (!i.steps || !this.engine.running) return;'
-  const stepNew = 'step(e, t, n, r, g = 1) {\n\t\tlet i = va();\n\t\tif (!i.steps || !this.engine.running) return;'
+  const vaName = ident(code, /step\(e, t, n, r\) \{\n\t\tlet i = (\w+)\(\);\n\t\tif \(!i\.steps \|\| !this\.engine\.running\) return;/, 'as opções de som')
+  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = (\w+)\[r\];/, 'a tabela de quadros dos passos')
+  const stepOld = `step(e, t, n, r) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
+  const stepNew = `step(e, t, n, r, g = 1) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
   const playOld = 'this.steps.play(o, i.steps * (n ? .9 : .7), this.stepSide * .08'
   const playNew = 'this.steps.play(o, i.steps * (n ? .9 : .7) * g, this.stepSide * .08'
   const animOld = 'e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l);'
@@ -58,7 +69,7 @@ if (code.includes('hookSteps(')) {
     '\t\tif (e.stepsFor === t || !this.scene.cfg?.watch) return;',
     '\t\te.stepsFor = t;',
     '\t\tlet n = (n, r) => {',
-    '\t\t\tlet i = this.scene, a = n.key.split(":"), o = a[a.length - 2], s = qa[o];',
+    `\t\t\tlet i = this.scene, a = n.key.split(":"), o = a[a.length - 2], s = ${qaName}[o];`,
     '\t\t\tif (!s || !i.audio || !t.visible || !s.includes(Number(r.textureFrame) % (o === "walk" ? 9 : 8))) return;',
     '\t\t\tlet l = i.cameras.main, u = Math.max(l.width, l.height) / (2 * l.zoom) * 1.15, d = Math.max(0, 1 - c.default.Math.Distance.Between(t.x, t.y, l.midPoint.x, l.midPoint.y) / u);',
     '\t\t\td > .04 && i.audio.step(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d));',
@@ -99,11 +110,12 @@ code = readFileSync(js, 'utf8')
 if (code.includes('stepsFor(e) {')) {
   console.log('motor: passos do NPC controlado já remendados')
 } else {
+  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = (\w+)\[r\];/, 'a tabela de quadros dos passos')
   const syncOld = '\tsyncFootsteps(e) {'
   const method = [
     '\tstepsFor(e) {',
     '\t\tlet t = (t, n) => {',
-    '\t\t\tlet a = t.key.split(":"), r = a[a.length - 2], i = qa[r];',
+    `\t\t\tlet a = t.key.split(":"), r = a[a.length - 2], i = ${qaName}[r];`,
     '\t\t\ti && this.audio && i.includes(Number(n.textureFrame) % (r === "walk" ? 9 : 8)) && this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow);',
     '\t\t};',
     '\t\te.on(c.default.Animations.Events.ANIMATION_START, t), e.on(c.default.Animations.Events.ANIMATION_UPDATE, t);',
@@ -162,10 +174,11 @@ code = readFileSync(js, 'utf8')
 if (code.includes('miss = r !== "walk"')) {
   console.log('motor: roupa ao correr já remendada')
 } else {
-  const a = '\t\tlet d = u.anims.includes(r), f = d ? r : "walk", p = un(e, u, l, n.skin);'
-  const b = '\t\tlet d = !miss && u.anims.includes(r), f = d ? r : "walk", p = un(e, u, l, n.skin);'
-  const head = '\tlet a = [], o = 0, s = mn(n).length > 0;\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;'
-  const headNew = '\tlet a = [], o = 0, s = mn(n).length > 0, miss = r !== "walk" && Object.entries(n.slots).some(([k, v]) => {\n\t\tif (i && k !== i) return !1;\n\t\tlet w = e.byId.get(v.id);\n\t\treturn !!w && !w.proc && !w.anims.includes(r);\n\t});\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;'
+  const mnName = ident(code, /\tlet a = \[\], o = 0, s = (\w+)\(n\)\.length > 0;\n\tfor \(let \[c, l\] of Object\.entries\(n\.slots\)\) \{/, 'a função do porte')
+  const a = '\t\tlet d = u.anims.includes(r), f = d ? r : "walk", p = '
+  const b = '\t\tlet d = !miss && u.anims.includes(r), f = d ? r : "walk", p = '
+  const head = `\tlet a = [], o = 0, s = ${mnName}(n).length > 0;\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;`
+  const headNew = `\tlet a = [], o = 0, s = ${mnName}(n).length > 0, miss = r !== "walk" && Object.entries(n.slots).some(([k, v]) => {\n\t\tif (i && k !== i) return !1;\n\t\tlet w = e.byId.get(v.id);\n\t\treturn !!w && !w.proc && !w.anims.includes(r);\n\t});\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;`
   for (const x of [a, head]) if (!code.includes(x)) throw new Error('motor: não achei onde remendar a roupa ao correr (o motor mudou?): ' + x.slice(0, 50))
   code = code.replace(a, b).replace(head, headNew)
   writeFileSync(js, code)
@@ -199,8 +212,9 @@ code = readFileSync(js, 'utf8')
 if (code.includes('\t96,\n\t180,')) {
   console.log('motor: durações de dia já remendadas')
 } else {
-  const lenOld = '], jr = [\n\t12,\n\t24,\n\t48,\n\t96\n];'
-  const lenNew = '], jr = [\n\t12,\n\t24,\n\t48,\n\t96,\n\t180,\n\t300\n];'
+  const jrName = ident(code, /\], (\w+) = \[\n\t12,\n\t24,\n\t48,\n\t96\n\];/, 'a lista de durações do dia')
+  const lenOld = `], ${jrName} = [\n\t12,\n\t24,\n\t48,\n\t96\n];`
+  const lenNew = `], ${jrName} = [\n\t12,\n\t24,\n\t48,\n\t96,\n\t180,\n\t300\n];`
   const labOld = '}, `${e} min`)));\n\t\t\tt.addEventListener("change", () => s({ dayMinutes:'
   const labNew = '}, e >= 120 ? `${e / 60} h` : `${e} min`)));\n\t\t\tt.addEventListener("change", () => s({ dayMinutes:'
   for (const x of [lenOld, labOld]) if (!code.includes(x)) throw new Error('motor: não achei a lista de durações do dia (o motor mudou?): ' + x.slice(0, 40))
@@ -215,7 +229,8 @@ code = readFileSync(js, 'utf8')
 if (code.includes('function vtConfirm(')) {
   console.log('motor: perguntas já remendadas')
 } else {
-  const T = (s) => s
+  // a função que lê o arquivo de personagem (`parseCharacterFile`): a vtConfirm entra logo antes dela
+  const parseName = ident(code, /function (\w+)\(e, t\) \{\n\tlet n = e;\n\tif \(typeof e == "string"\) try \{\n\t\tn = JSON\.parse\(e\);/, 'a leitura do arquivo de personagem')
   const pairs = [
     [
       'if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;',
@@ -242,8 +257,8 @@ if (code.includes('function vtConfirm(')) {
       'if (await vtConfirm(`Apagar "${i.name}"? Não dá pra desfazer.`, { title: "Apagar zona", tone: "danger", confirmLabel: "Apagar" })) {',
     ],
     [
-      'function Ms(e, t) {',
-      'function vtConfirm(message, options) {\n\treturn typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));\n}\nfunction Ms(e, t) {',
+      `function ${parseName}(e, t) {`,
+      `function vtConfirm(message, options) {\n\treturn typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));\n}\nfunction ${parseName}(e, t) {`,
     ],
   ]
   for (const [a] of pairs) if (!code.includes(a)) throw new Error('motor: não achei uma pergunta pra remendar (o motor mudou?): ' + a.slice(0, 60))

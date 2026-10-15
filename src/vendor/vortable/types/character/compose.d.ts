@@ -20,7 +20,10 @@ export declare const ANIMS: {
 export type AnimName = keyof typeof ANIMS;
 /** Linhas do quadro que usam o desenho masculino: tronco liso (despeitada) e/ou quadril reto (desbundada). */
 export declare function flatRanges(a: Appearance): [number, number][];
-/** Folha de uma animação com a aparência inteira (ou só de um espaço, pras miniaturas). */
+/**
+ * Folha de uma animação com a aparência inteira (ou só de um espaço, pras miniaturas).
+ * Sentado (`pose`): o desenho em pé é rearranjado (pose.ts); as pernas vêm do quadro parado.
+ */
 export declare function composeAnim(assetBase: string, a: Appearance, anim: AnimName, only?: string): Promise<HTMLCanvasElement>;
 /**
  * Um quadro só (64×64) da "walk", pra miniaturas: rápido porque recolore

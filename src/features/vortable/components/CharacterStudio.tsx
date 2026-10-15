@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader } from '../../../shared/components/Loader'
-import { assignCharacter, createCharacterStorage, createNpcCharacterStorage, VORTABLE_ASSETS } from '../services/vortableService'
+import { assignCharacter, createCharacterStorage, createCharacterStorageFor, createNpcCharacterStorage, VORTABLE_ASSETS } from '../services/vortableService'
 import { loadEngine } from '../services/vortableService'
 import './CharacterStudio.css'
 
@@ -10,12 +10,17 @@ import './CharacterStudio.css'
  * o boneco fixo dele nesta campanha (é com ele que entra no Vortable).
  * Com `npc`, é o mestre criando o personagem de um NPC especial (com ficha): fica guardado na ficha do NPC,
  * sem virar o boneco de ninguém, e aparece na lista de NPCs especiais do editor.
+ * Com `forPlayer`, é o mestre criando (ou refazendo) o personagem de um jogador, na ficha dele: ao salvar, vira o boneco do jogador.
+ * Serve pra quem não consegue montar o boneco sozinho; o mestre também pode importar um arquivo de personagem aqui.
  */
-export function CharacterStudio({ campaignId, userId, npc, onClose, onSaved }: {
+export function CharacterStudio({ campaignId, userId, npc, forPlayer, onClose, onSaved }: {
   campaignId: string
+  /** Quem está com o criador aberto (o próprio jogador, ou o mestre quando é `npc` ou `forPlayer`). */
   userId: string
   /** NPC especial: chave do personagem dele e o nome da ficha. */
   npc?: { key: string; name: string }
+  /** Mestre criando o personagem de um jogador: o id dele e (se souber) o nome. */
+  forPlayer?: { id: string; name?: string }
   onClose: () => void
   onSaved?: () => void
 }) {
@@ -31,19 +36,24 @@ export function CharacterStudio({ campaignId, userId, npc, onClose, onSaved }: {
     let destroy: (() => void) | null = null
     let closeTimer = 0
     ;(async () => {
-      const [engine, storage] = await Promise.all([loadEngine(), npc ? createNpcCharacterStorage(campaignId, userId, npc.key) : createCharacterStorage(campaignId, userId)])
+      const [engine, storage] = await Promise.all([
+        loadEngine(),
+        npc ? createNpcCharacterStorage(campaignId, userId, npc.key)
+          : forPlayer ? createCharacterStorageFor(campaignId, userId, forPlayer.id)
+            : createCharacterStorage(campaignId, userId),
+      ])
       if (dead) return
       const creator = engine.mountCharacterCreator(el, {
         assetBase: VORTABLE_ASSETS,
         storage,
         single: true,
-        title: npc ? 'Personagem do NPC' : 'Seu personagem',
+        title: npc ? 'Personagem do NPC' : forPlayer ? `Personagem de ${forPlayer.name || 'um jogador'}` : 'Seu personagem',
         ...(npc ? { name: npc.name } : {}),
         saveLabel: npc ? 'Salvar NPC' : 'Salvar personagem',
         back: { label: 'Fechar', onClick: () => cb.current.onClose() },
         onSaved: (c) => {
           // o personagem salvo é o que a pessoa joga nesta campanha (o do NPC não vira boneco de ninguém)
-          void (npc ? Promise.resolve() : assignCharacter(campaignId, userId, c.id))
+          void (npc ? Promise.resolve() : assignCharacter(campaignId, forPlayer?.id ?? userId, c.id))
             .catch(() => {})
             .finally(() => {
               cb.current.onSaved?.()
@@ -55,7 +65,7 @@ export function CharacterStudio({ campaignId, userId, npc, onClose, onSaved }: {
       else destroy = creator.destroy
     })().catch((err) => console.error('[vortable] o criador de personagem não abriu', err))
     return () => { dead = true; window.clearTimeout(closeTimer); destroy?.() }
-  }, [campaignId, userId, npc?.key])
+  }, [campaignId, userId, npc?.key, forPlayer?.id])
 
   // a página de trás não rola enquanto o criador está aberto
   useEffect(() => {

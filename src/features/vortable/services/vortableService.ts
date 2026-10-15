@@ -308,6 +308,59 @@ export async function createCharacterStorage(campaignId: string, userId: string)
   }
 }
 
+/** Esta pessoa é o mestre da campanha? */
+export async function isCampaignMaster(campaignId: string, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('campaign_members').select('role').eq('campaign_id', campaignId).eq('user_id', userId).maybeSingle()
+  if (error) fail('não deu pra conferir o seu papel na campanha', error)
+  return data?.role === 'master'
+}
+
+/**
+ * O boneco de UM jogador, mexido pelo mestre (ele cria ou edita o personagem na ficha do jogador, por exemplo pra quem não
+ * consegue fazer o boneco sozinho). Lê o boneco que o jogador controla; salvar edita esse mesmo boneco (seja de quem for a criação)
+ * ou, se o jogador ainda não tem, cria um (o mestre fica como criador) e entrega a ele.
+ */
+export async function createCharacterStorageFor(campaignId: string, masterId: string, playerId: string): Promise<CharacterStorage> {
+  const { parseCharacter } = await loadEngine()
+  const current = () => supabase.from('vortable_characters').select('*').eq('campaign_id', campaignId).eq('controller_id', playerId)
+
+  return {
+    async list(): Promise<CharacterSave[]> {
+      const { data, error } = await current()
+      if (error) fail('não deu pra ler o personagem do jogador', error)
+      return (data ?? [])
+        .map((row) => parseCharacter({ id: row.id, name: row.name, appearance: row.appearance, updatedAt: Date.parse(row.updated_at as string) }))
+        .filter((c): c is CharacterSave => !!c)
+    },
+
+    async save(c) {
+      const found = await supabase
+        .from('vortable_characters').select('id').eq('campaign_id', campaignId).eq('id', c.id).maybeSingle()
+      if (found.error) fail('não deu pra salvar o personagem do jogador', found.error)
+      const { error } = found.data
+        ? await supabase.from('vortable_characters').update({ name: c.name, appearance: c.appearance }).eq('campaign_id', campaignId).eq('id', c.id)
+        : await supabase.from('vortable_characters').insert({ campaign_id: campaignId, user_id: masterId, id: c.id, name: c.name, appearance: c.appearance })
+      if (error) fail('não deu pra salvar o personagem do jogador', error)
+    },
+
+    async remove(id) {
+      const { error } = await supabase.from('vortable_characters').delete().eq('campaign_id', campaignId).eq('id', id)
+      if (error) fail('não deu pra apagar o personagem do jogador', error)
+    },
+
+    async getActive() {
+      const { data, error } = await current().maybeSingle()
+      if (error) fail('não deu pra ler o personagem do jogador', error)
+      return (data?.id as string | undefined) ?? null
+    },
+
+    async setActive(id) {
+      await assignCharacter(campaignId, playerId, id)
+    },
+  }
+}
+
 /**
  * O personagem de UM NPC especial (o mestre o cria na ficha do NPC): sempre o mesmo id, sem "controlador".
  * `name` é o nome da ficha (o personagem nasce com ele).

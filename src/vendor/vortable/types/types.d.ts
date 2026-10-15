@@ -208,6 +208,8 @@ export interface Appearance {
         hips?: number;
         weight?: number;
     };
+    /** Pose: 'sitting' = sentado no chão (quem não anda: o desenho em pé vira sentado em todas as animações). Sem ela, em pé. */
+    pose?: 'sitting';
 }
 /** Um personagem salvo. */
 export interface CharacterSave {

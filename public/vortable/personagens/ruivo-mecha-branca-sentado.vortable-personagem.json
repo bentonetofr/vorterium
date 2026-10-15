@@ -1,0 +1,113 @@
+{
+  "format": "vortable-character",
+  "version": 1,
+  "characters": [
+    {
+      "name": "Ruivo da mecha branca (sentado)",
+      "appearance": {
+        "version": 2,
+        "body": "male",
+        "skin": "peach",
+        "slots": {
+          "body": {
+            "id": "body/body"
+          },
+          "head": {
+            "id": "head/heads/human/heads_human_male"
+          },
+          "eyebrows": {
+            "id": "head/eyebrows/eyebrows_thick",
+            "colors": {
+              "color": "auburn"
+            }
+          },
+          "wrinkles": {
+            "id": "head/head_wrinkles"
+          },
+          "expression": {
+            "id": "head/faces/face_angry2"
+          },
+          "hair": {
+            "id": "hair/short/hair_messy2",
+            "colors": {
+              "color": "redhead"
+            }
+          },
+          "beard": {
+            "id": "hair/beards/beards_trimmed",
+            "colors": {
+              "color": "redhead"
+            }
+          },
+          "mustache": {
+            "id": "hair/mustaches/beards_mustache",
+            "colors": {
+              "color": "redhead"
+            }
+          },
+          "clothes": {
+            "id": "torso/shirts/shortsleeve/torso_clothes_tshirt",
+            "colors": {
+              "color": "black"
+            }
+          },
+          "overalls": {
+            "id": "torso/aprons/torso_aprons_suspenders",
+            "variant": "red"
+          },
+          "legs": {
+            "id": "legs/pants/legs_pantaloons",
+            "colors": {
+              "color": "walnut"
+            }
+          },
+          "shoes": {
+            "id": "feet/boots/feet_boots_rim",
+            "colors": {
+              "color": "brown"
+            }
+          },
+          "gloves": {
+            "id": "arms/arms_gloves",
+            "colors": {
+              "color": "iron"
+            }
+          },
+          "neck": {
+            "id": "headwear/neck/neck_necklace_simple",
+            "variant": "ceramic"
+          },
+          "arms": {
+            "id": "arms/wrists/arms_bracers",
+            "colors": {
+              "color": "steel"
+            }
+          },
+          "belt": {
+            "id": "torso/waist/belt_leather",
+            "variant": "brown"
+          },
+          "scar_arm": {
+            "id": "body/wounds/wound_arm",
+            "colors": {
+              "color": "tan"
+            }
+          },
+          "scar_face": {
+            "id": "proc/cic_olho_vert_d",
+            "colors": {
+              "color": "antiga"
+            }
+          },
+          "hair_streak": {
+            "id": "streak/frente_direita",
+            "colors": {
+              "color": "white"
+            }
+          }
+        },
+        "pose": "sitting"
+      }
+    }
+  ]
+}

@@ -86,6 +86,8 @@ export declare class CreatorUI {
     /** Porte do corpo: peito, bunda e peso no feminino; magro, normal, musculoso ou gordo no masculino. */
     private shapeRows;
     private heightRow;
+    /** Pose: em pé ou sentado no chão (pra quem não anda). */
+    private poseRow;
     private skinRow;
     private slotRow;
     /** Cores e variantes da peça escolhida. */
