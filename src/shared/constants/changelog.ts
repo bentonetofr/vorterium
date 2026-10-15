@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.71',
+    date:    '2026-10-15',
+    title:   'Pose sentada de perfil',
+    items: [
+      'Criador de personagem, pose Sentado: agora de perfil, pra ficar claro que ele está sentado. O tronco fica no chão e as pernas ficam deitadas, esticadas pra frente, com os pés levantados na ponta. Olhando pra esquerda ou pra direita ele vira pro lado certo; de frente e de costas aparece de perfil olhando pra direita.',
+    ],
+  },
+  {
     version: '1.70',
     date:    '2026-10-15',
     title:   'Novo mundo pronto no Vortable: SALTMORE',
