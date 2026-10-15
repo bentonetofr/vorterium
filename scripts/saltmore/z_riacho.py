@@ -130,7 +130,7 @@ def build() -> Zone:
         if MAIN.dist(x, y) < 2.4 or STREAM.dist(x, y) < 3.6 or math.hypot(x - px, y - py) < 8.0:
             return 0.0
         return min(1.0, 0.3 + 0.7 * fbm(x / 4.0, y / 4.0, 13, 2))
-    undergrowth(z, under, n_per_100=10.0, box=(1, 2, W - 1, H - 1), seed=7)
+    undergrowth(z, under, n_per_100=7.5, box=(1, 2, W - 1, H - 1), seed=7)
     scatter(z, list(LOGS), 10, (3, 18, W - 3, H - 4), 0.5, near=MAIN, near_min=3.5, near_max=15)
     scatter(z, list(FLOWERS[:30]), 30, (3, 18, W - 3, H - 4), 0.25, near=MAIN, near_min=2.4, near_max=8)
     scatter(z, list(FLOWERS[:30]), 14, (2, 14, 14, 30), 0.25, near=None)

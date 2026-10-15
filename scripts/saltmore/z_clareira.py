@@ -131,7 +131,7 @@ def build() -> Zone:
     def ground(x: float, y: float) -> float:
         d = TRAIL.dist(x, y)
         return 0.0 if d < 2.6 else min(1.0, 0.25 + 0.7 * fbm(x / 5.0, y / 5.0, 19, 2))
-    undergrowth(z, ground, n_per_100=9.0, box=(1, 14, W - 1, H - 1), seed=5)
+    undergrowth(z, ground, n_per_100=7.0, box=(1, 14, W - 1, H - 1), seed=5)
     undergrowth(z, lambda x, y: 0.9 if TRAIL.dist(x, y) > 2.4 and TRAIL.dist(x, y) < 6 else 0.0, n_per_100=3.0,
                 box=(2, 22, W - 2, H - 2), kinds=list(FLOWERS[:20]), seed=8)
 

@@ -136,7 +136,7 @@ def build() -> Zone:
     z.light('portao-d', 54.6, WALL_BOT + 0.8, 120, '#ffb15a', 0.4, 0.3)
     # os primeiros telhados da cidade, lá dentro
     for x0, w, sty in ((6, 9, ('wall-50', 'floor-73')), (20, 8, ('wall-197', 'floor-12')), (36, 7, ('wall-52', 'floor-74')),
-                       (62, 8, ('wall-206', 'floor-35'))):
+                       (62, 8, ('wall-199', 'floor-35'))):
         b = Building(z, x0, 94, w, roof_d=2, wall_h=2, wall=sty[0], wall_trim='ceil-8', roof=sty[1], roof_trim='ceil-8')
         b.window(w * 0.3, 'wd@611,162', dy=-0.9)
         b.window(w * 0.7, 'wd@130,64', dy=-0.9)
@@ -166,7 +166,7 @@ def build() -> Zone:
         if ROAD.dist(x, y) < 2.6 or y > 83:
             return 0.0
         return min(1.0, 0.3 + 0.7 * fbm(x / 4.0, y / 4.0, 15, 2))
-    undergrowth(z, under, n_per_100=8.0, box=(1, 1, W - 1, 83), seed=17, kinds=list(BUSHES_DARK) + list(FLOWERS[:20]))
+    undergrowth(z, under, n_per_100=6.0, box=(1, 1, W - 1, 83), seed=17, kinds=list(BUSHES_DARK) + list(FLOWERS[:20]))
     scatter(z, list(FLOWERS[:30]), 30, (2, 4, W - 2, 56), 0.25, near=ROAD, near_min=2.8, near_max=9)
     for _ in range(14):
         tx, ty = rng.uniform(3, W - 3), rng.uniform(4, 56)

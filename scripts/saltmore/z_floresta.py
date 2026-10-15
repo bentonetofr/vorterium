@@ -14,7 +14,7 @@ SHRINE_SPUR = Path([(26, 28), (20, 29.5), (14, 31.5)])
 CAMP_SPUR = Path([(51, 56), (56, 56.5), (60, 57)])
 
 # clareiras (cx, cy, rx, ry): santuário, acampamento, anel de cogumelos, lagoa, carroça
-HOLES = [(11, 32, 8.5, 6.5), (61, 57, 8.5, 6.5), (60, 92, 5.5, 4.5), (12, 87, 8.0, 6.5), (34, 77, 5.0, 3.5), (36, 40, 4.5, 3.0)]
+HOLES = [(11, 32, 8.5, 6.5), (61, 57, 8.5, 6.5), (60, 92, 5.5, 4.5), (12, 87, 8.0, 6.5), (34, 77, 5.0, 3.5), (36, 40, 4.5, 3.0), (14, 62, 6.0, 5.0)]
 
 
 def build() -> Zone:
@@ -94,6 +94,24 @@ def build() -> Zone:
     z.put(one(r'^tronco oco caido$', pack='plants'), 38.5, 43.2)
     z.put(one(r'^tronco caido com musgo$', pack='plants'), 33.0, 40.4)
 
+    # ── a ruína da cabana do lenhador (oeste): fundação de pedra, vigas caídas e um menir com oferendas ──
+    z.disc('stone-moss', 14, 62, 4.2, 0.8, 95, only={'grass-dark', 'grass', 'dirt-weeds', 'stone-moss'})
+    z.fence('fence-8', 10, 59, 12, 59)
+    z.fence('fence-8', 15, 59, 18, 59)
+    z.fence('fence-8', 10, 59, 10, 65)
+    z.fence('fence-8', 18, 59, 18, 62)
+    z.fence('fence-8', 10, 65, 13, 65)
+    z.fence('fence-8', 16, 65, 18, 65)
+    z.put(one(r'^viga caida$', pack='medieval'), 14.0, 62.5)
+    z.put(one(r'^viga caida 2$', pack='medieval'), 13.4, 60.6, True)
+    z.put(one(r'^tabuas cruzadas$', pack='medieval'), 16.2, 63.6)
+    z.put(one(r'^lareira de madeira$|^pilha de lenha grande$', pack='medieval'), 11.6, 61.0)
+    z.put(one(r'^menir( pontudo)?$', sheet='rock-cinza'), 20.6, 61.6)
+    z.put(one(r'^pilha de pedras$', sheet='rock-cinza'), 21.4, 62.6)
+    for dx, dy in ((-0.9, 0.9), (0.6, 1.4)):
+        z.put(rng.choice(FLOWERS), 20.6 + dx, 62.4 + dy)
+    z.reserve_rect(8, 57, 22, 68)
+
     # ── anel de cogumelos (sudeste) ──
     ring(z, MUSHROOMS[:8], 60, 92, 3.0, 11, 0.25, ry=2.2, radius=0.3)
     z.put(one(r'^cogumelos roxos$', pack='plants'), 60, 92)
@@ -126,7 +144,7 @@ def build() -> Zone:
     def under(x: float, y: float) -> float:
         d = MAIN.dist(x, y)
         return 0.0 if d < 2.4 else min(1.0, 0.35 + 0.65 * fbm(x / 4.0, y / 4.0, 11, 2))
-    undergrowth(z, under, n_per_100=11.0, box=(1, 2, W - 1, H - 1), seed=5)
+    undergrowth(z, under, n_per_100=8.0, box=(1, 2, W - 1, H - 1), seed=5)
     scatter(z, list(LOGS) + list(find(r'^(toco|toco \d)$', pack='plants')), 22, (3, 4, W - 3, H - 4), 0.5, near=MAIN, near_min=3.5, near_max=16)
     scatter(z, list(FLOWERS[:30]), 26, (3, 4, W - 3, H - 4), 0.25, near=MAIN, near_min=2.4, near_max=8)
     # pedras cobertas de musgo

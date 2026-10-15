@@ -20,8 +20,8 @@ STONE = dict(wall='wall-50', wall_trim='ceil-8', roof='floor-73', roof_trim='cei
 STONE_DARK = dict(wall='wall-53', wall_trim='ceil-25', roof='floor-72', roof_trim='ceil-25')
 STONE_BEAMS = dict(wall='wall-52', wall_trim='ceil-8', roof='floor-74', roof_trim='ceil-8')
 TUDOR = dict(wall='wall-197', wall_trim='ceil-3', roof='floor-12', roof_trim='ceil-3')
-TUDOR_GRID = dict(wall='wall-202', wall_trim='ceil-3', roof='floor-35', roof_trim='ceil-8')
-TUDOR_X = dict(wall='wall-206', wall_trim='ceil-3', roof='floor-73', roof_trim='ceil-8')
+TUDOR_GRID = dict(wall='wall-199', wall_trim='ceil-3', roof='floor-35', roof_trim='ceil-8')
+TUDOR_X = dict(wall='wall-196', wall_trim='ceil-3', roof='floor-73', roof_trim='ceil-8')
 TIMBER = dict(wall='wall-227', wall_trim='ceil-3', roof='floor-7', roof_trim='ceil-3')
 BRICK = dict(wall='wall-17', wall_trim='ceil-11', roof='floor-12', roof_trim='ceil-11')
 
@@ -75,6 +75,7 @@ class Village:
                 x += 3.4 if w < 12 else 3.8
         self.houses.append(b)
         self._pending_yard.append(b)
+        z.light(f'casa-{len(self.houses)}', x0 + ddx, b.base - 0.6, 95, '#ffcf8a', 0.2, 0.05)
         # degrau e caminho até a rua
         z.put(one(r'^tapete de porta$', pack='lpc-base'), x0 + ddx, b.base + 0.4)
         z.reserve_rect(x0 + ddx - 1.2, b.base, x0 + ddx + 1.2, b.base + 1.6)
@@ -256,7 +257,7 @@ class Village:
         gx0, gy0, gx1, gy1 = 64, 28, 80, 38
         z.reserve_rect(gx0 - 1, gy0 - 1, gx1 + 2, gy1 + 2)
         z.fence_box('fence-4', gx0, gy0, gx1, gy1, gaps=[(68, gy0, 70, gy0)])
-        z.paint_tiles('grass', gx0, gy0, gx1, gy1)
+        z.paint_tiles('grass-dark', gx0, gy0, gx1, gy1)
         graves = find(r'^lapide (baixa|baixa 2|redonda|redonda 2|com brasao|gasta|gasta 2|quebrada|quebrada 2|caida|partida)$', pack='medieval')
         crosses = [one(r'^cruz de madeira$', pack='medieval'), one(r'^cruz de madeira 2$', pack='medieval')]
         for ty in (31.2, 34.0, 36.8):
@@ -382,12 +383,12 @@ class Village:
             if not _inside(x, y) or _road_dist(x, y) < 2.4:
                 return 0.0
             return min(1.0, 0.25 + 0.6 * fbm(x / 4.0, y / 4.0, 21, 2))
-        undergrowth(z, inside_ground, n_per_100=5.0, box=(WALL_L, WALL_T, WALL_R, WALL_B), kinds=list(BUSHES_DARK) + list(FERNS) + list(FLOWERS[:25]), seed=11)
+        undergrowth(z, inside_ground, n_per_100=3.5, box=(WALL_L, WALL_T, WALL_R, WALL_B), kinds=list(BUSHES_DARK) + list(FERNS) + list(FLOWERS[:25]), seed=11)
         scatter(z, list(FLOWERS[:30]), 40, (WALL_L + 1, WALL_T + 2, WALL_R - 1, WALL_B - 2), 0.25, near=None)
 
         def out_ground(x: float, y: float) -> float:
             return 0.0 if (_inside(x, y) or _road_dist(x, y) < 2.4) else min(1.0, 0.3 + 0.7 * fbm(x / 4.0, y / 4.0, 23, 2))
-        undergrowth(z, out_ground, n_per_100=10.0, box=(1, 1, W - 1, H - 1), seed=13)
+        undergrowth(z, out_ground, n_per_100=4.0, box=(1, 1, W - 1, H - 1), seed=13)
         for _ in range(16):
             tx, ty = rng.uniform(3, W - 3), rng.uniform(3, H - 3)
             if not _inside(tx, ty) and z.free_disc(tx, ty, 1.0):
