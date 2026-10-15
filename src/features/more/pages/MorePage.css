@@ -45,3 +45,6 @@
 }
 .more-legal { display: flex; justify-content: center; gap: var(--space-4); font-size: var(--text-xs); }
 .more-legal a { color: var(--text-muted); }
+
+/* Sair da conta: no celular a barra lateral não existe, então o botão mora aqui */
+.btn.more-signout { width: 100%; margin-top: var(--space-4); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }

@@ -3,6 +3,7 @@
 .private-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-base);
 }
 
@@ -79,6 +80,7 @@
 .sidebar {
   width: 256px;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-dim);
   display: flex;
@@ -395,6 +397,7 @@
   flex: 1;
   margin-left: 256px;
   min-height: 100vh;
+  min-height: 100dvh;
   /* sem isso, um conteúdo largo estica a coluna além da tela (em vez de quebrar ou rolar dentro dela) */
   min-width: 0;
   display: flex;
@@ -604,4 +607,52 @@
     height: calc(100dvh - var(--bottom-nav-h) - 72px - env(safe-area-inset-bottom, 0px) - var(--fab-toasts-space, 0px));
   }
   .fab-panel--fit { height: auto; max-height: calc(100dvh - var(--bottom-nav-h) - 72px - env(safe-area-inset-bottom, 0px) - var(--fab-toasts-space, 0px)); }
+}
+
+/* ═══ Botões do canto recolhidos (celular e tablet) ═══
+   Sino, dado, chat, caderno e documentos num botão só; abre quando a pessoa toca (ou quando uma janela abre sozinha). */
+.site-tools__toggle {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--accent-bright);
+  background: var(--bg-elevated);
+  border: 1px solid var(--gilded);
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform var(--transition-base), background var(--transition-base), color var(--transition-base);
+}
+.site-tools__toggle--open { color: var(--text-inverse); background: var(--accent-bright); }
+.site-tools__toggle:active { transform: scale(0.92); }
+.site-tools__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: var(--text-inverse);
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 1px solid var(--bg-base);
+}
+/* recolhido: some tudo menos o botão, os avisos que chegam (dado, mensagem, notificação) */
+.site-tools--folded > :not(.site-tools__toggle):not(.fab-toasts):not(.chat-message-popup__anchor) { display: none; }
+
+/* botão Sair da barra de cima: com o nome escrito (só a setinha ninguém entendia) */
+.topbar__btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Digitando (teclado aberto no celular): a barra de baixo sai da frente, e os botões e janelas do canto descem pra ocupar o lugar dela */
+@media (max-width: 900px) {
+  :root:has(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="color"], [type="file"]):focus, textarea:focus, select:focus, [contenteditable="true"]:focus) { --bottom-nav-h: 0px; }
+  :root:has(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="color"], [type="file"]):focus, textarea:focus, select:focus, [contenteditable="true"]:focus) .bottom-nav { display: none; }
 }

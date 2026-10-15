@@ -41,6 +41,7 @@
   display: block;
   width: 100%;
   height: calc(100vh - 220px);
+  height: calc(100dvh - 220px);
   min-height: 560px;
   border: 0;
   background: var(--bg-void);

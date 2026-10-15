@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.67',
+    date:    '2026-10-15',
+    title:   'Celular: botão Sair, menu de ferramentas e janelas',
+    items: [
+      'Sair da conta no celular: o botão da barra de cima agora diz "Sair" (era só uma setinha) e a página Mais ganhou o botão "Sair da conta" no fim.',
+      'Os botões do canto (sino, dados, chat, caderno, documentos) ficam recolhidos num botão de menu no celular e no tablet, em vez de taparem campos de texto e botões das páginas. Tocando nele abrem como sempre, com o número de mensagens não lidas em cima; resultado de dado e aviso de mensagem nova continuam aparecendo sozinhos.',
+      'Teclado aberto no celular: a barra de baixo sai da frente e as janelas do canto (chat, dados) sobem junto com o teclado em vez de ficarem atrás dele. A altura das telas passou a contar a barra de endereço do navegador do celular, que sobe e desce (nada mais fica escondido embaixo).',
+      'Vortable, Mundos: o cabeçalho e os mundos prontos ficam certos no celular (o botão Fechar saía da tela). No editor, a faixa de ferramentas rola quando a tela é baixa, e as últimas ferramentas deixam de ficar inalcançáveis com o celular deitado.',
+    ],
+  },
+  {
     version: '1.66',
     date:    '2026-10-15',
     title:   'Vortable do jogador no celular e no tablet',

@@ -108,3 +108,15 @@
 .worlds__tpl div { display: flex; flex-direction: column; }
 .worlds__tpl strong { font-family: var(--font-display); color: var(--text-primary); }
 .worlds__tpl span { color: var(--text-secondary); font-size: var(--text-sm); }
+
+/* celular: o cabeçalho quebra em duas linhas, os mundos empilham e os mundos prontos ganham a largura toda */
+@media (max-width: 640px) {
+  .worlds { padding: var(--space-4, 16px) var(--space-3, 12px); padding-right: 64px; /* o botão de menu da borda direita não cobre o conteúdo */ }
+  .worlds__head { flex-wrap: wrap; gap: var(--space-2, 8px); }
+  .worlds__head-actions { flex: 1 1 100%; }
+  .worlds__head-actions .btn { flex: 1 1 0; min-width: 0; padding-inline: var(--space-3, 12px); }
+  .worlds__grid { grid-template-columns: minmax(0, 1fr); }
+  .world--new { min-height: 96px; }
+  .worlds__tpl { flex-direction: column; align-items: stretch; }
+  .worlds__tpl .btn { align-self: stretch; }
+}

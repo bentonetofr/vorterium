@@ -1305,6 +1305,7 @@
   width: min(480px, 100%);
   max-height: calc(100vh - 2 * var(--space-4));
   max-height: calc(100dvh - 2 * var(--space-4));
+  max-height: calc(100dvh - 2 * var(--space-4));
   overflow-y: auto;
   background: var(--bg-surface);
   box-shadow: var(--shadow-lg);

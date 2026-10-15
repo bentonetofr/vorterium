@@ -25,6 +25,11 @@
   .vortable-page .vt-iconbtn { width: 34px; height: 34px; }
   .vortable-page .vt-zoombar .vt-btn { min-width: 36px; }
 
+  /* a faixa de ferramentas do editor rola quando a tela é baixa (celular deitado): antes as de baixo ficavam inalcançáveis */
+  .vortable-page .vt-tools { min-height: 0; overflow-y: auto; scrollbar-width: none; justify-content: flex-start; }
+  .vortable-page .vt-tools::-webkit-scrollbar { display: none; }
+  .vortable-page .vt-tools > * { flex: none; }
+
   /* janelas do motor: cabem na tela com rolagem */
   .vortable-page .vt-modal { width: min(440px, 100% - 16px); max-height: calc(100% - 24px); }
   .vortable-page .vt-modal.vt-modal-wide { width: calc(100% - 16px); }

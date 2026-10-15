@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthProvider'
 import { SITE_NAV, TOOL_NAV, type NavItem } from '../../../app/navigation'
 import { useUnseenChangelog } from '../../../shared/constants/changelog'
 import '../../../shared/theme/toolPage.css'
@@ -10,6 +11,8 @@ import './MorePage.css'
 
 export function MorePage() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { signOut } = useAuth()
   const unseen = useUnseenChangelog()
 
   function renderGroup(title: string, items: NavItem[]) {
@@ -51,6 +54,13 @@ export function MorePage() {
       </div>
       {renderGroup('Ferramentas', TOOL_NAV)}
       {renderGroup('Vorterium', SITE_NAV)}
+      <button
+        type="button"
+        className="btn btn-ghost more-signout"
+        onClick={async () => { try { await signOut() } finally { navigate('/login', { replace: true }) } }}
+      >
+        <span aria-hidden="true">↩</span> Sair da conta
+      </button>
       <nav className="more-legal" aria-label="Links institucionais">
         <Link to="/sobre">Sobre</Link>
         <Link to="/termos">Termos</Link>

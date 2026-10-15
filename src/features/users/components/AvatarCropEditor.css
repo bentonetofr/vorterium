@@ -4,6 +4,7 @@
   width: min(560px, 100%);
   max-height: calc(100vh - 2 * var(--space-4));
   max-height: calc(100dvh - 2 * var(--space-4));
+  max-height: calc(100dvh - 2 * var(--space-4));
   overflow-y: auto;
   display: flex;
   flex-direction: column;

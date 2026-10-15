@@ -30,6 +30,8 @@ import { usePip } from '../../features/vortable/pip/pipStore'
 import { Presence } from '../../shared/components/Presence'
 import { FabToasts } from '../../shared/components/FabToasts'
 import { Collapse } from '../../shared/components/Collapse'
+import { COMPACT_QUERY, useMediaQuery } from '../../shared/lib/useMediaQuery'
+import { useOpenFloatingPanel } from '../../shared/lib/floatingPanels'
 import { useUnseenChangelog } from '../../shared/constants/changelog'
 import { SITE_NAV, TOOL_NAV, pageLabel, type NavItem } from '../navigation'
 import './PrivateLayout.css'
@@ -75,6 +77,12 @@ function PrivateLayoutContent() {
   const navigate = useNavigate()
   const { campaign, chatUnread, privateUnread } = useCurrentCampaign()
   const [mobileCampaignMenuOpen, setMobileCampaignMenuOpen] = useState(false)
+  // celular e tablet: os botões do canto (sino, dado, chat...) ficam recolhidos num só, pra não taparem formulários e botões
+  const compact = useMediaQuery(COMPACT_QUERY)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const panelOpen = useOpenFloatingPanel()
+  const toolsFolded = compact && !toolsOpen && !panelOpen
+  const unreadTotal = chatUnread + privateUnread
   const location = useLocation()
   const unseenNews = useUnseenChangelog()
   const inMore = MORE_PATHS.some((p) => location.pathname.startsWith(p))
@@ -220,10 +228,10 @@ function PrivateLayoutContent() {
             <button
               className="topbar__btn"
               onClick={handleSignOut}
-              aria-label="Sair"
-              title="Sair"
+              aria-label="Sair da conta"
+              title="Sair da conta"
             >
-              ↩
+              <span aria-hidden="true">↩</span> Sair
             </button>
           </div>
         </div>
@@ -286,11 +294,27 @@ function PrivateLayoutContent() {
     <DocumentOverlay />
     <LivroHost />
     <TorreHost />
-    <div className="dice-fab-wrapper">
+    <div className={`dice-fab-wrapper${compact ? ` site-tools${toolsFolded ? ' site-tools--folded' : ''}` : ''}`}>
       <FabToasts>
         <MesaLiveNotice />
         <NotificationPopup />
       </FabToasts>
+      {compact && !panelOpen && (
+        <button
+          type="button"
+          className={`site-tools__toggle${toolsOpen ? ' site-tools__toggle--open' : ''}`}
+          onClick={() => setToolsOpen((v) => !v)}
+          aria-expanded={toolsOpen}
+          aria-label={toolsOpen ? 'Fechar as ferramentas' : 'Abrir as ferramentas (dados, chat, notificações)'}
+        >
+          {toolsOpen ? '✕' : (
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          )}
+          {!toolsOpen && unreadTotal > 0 && <span className="site-tools__badge">{unreadTotal > 99 ? '99+' : unreadTotal}</span>}
+        </button>
+      )}
       <GameDockSlot />
       <ControlFab />
       <NotificationBell />
