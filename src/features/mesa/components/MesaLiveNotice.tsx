@@ -153,7 +153,7 @@ export function MesaLiveNotice() {
     if (!current) return
     dismiss(current.liveId)
     if (current.kind === 'tela') {
-      navigate(`/campanhas/${current.campaignId}/mesa-sessao`, { state: { initialSessionSubTab: 'transmissao' } })
+      navigate(`/campanhas/${current.campaignId}/mesa-sessao`, { state: { initialSessionSubTab: 'mesa' } })
       return
     }
     enterFullscreen() // vem do clique

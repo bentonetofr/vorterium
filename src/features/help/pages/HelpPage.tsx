@@ -44,7 +44,7 @@ const TOPICS: Topic[] = [
   {
     id: 'mesa', icon: '▣', title: 'Mesa (Vortable)',
     steps: [
-      'Na sub-aba Mesa, "Entrar no Vortable" abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Mestre: entre e clique em "Iniciar sessão" pra liberar os jogadores e avisar todos. Jogador: o botão fica bloqueado até o mestre iniciar; na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre). No celular e no tablet aparecem na tela um joystick (esquerda), o botão Correr (direita) e o zoom (embaixo); os dados, o chat e a ficha ficam no botão de menu da borda direita. O Vortable fica melhor com o celular deitado, e o site avisa quando ele está em pé.',
+      'Na sub-aba Mesa, o "Entrar no Vortable" (lá embaixo, depois da transmissão e das artes) abre o mundo 2D da campanha em tela cheia ("Sair" volta pro site). Mestre: entre e clique em "Iniciar sessão" pra liberar os jogadores e avisar todos. Jogador: o botão fica bloqueado até o mestre iniciar; na primeira vez, crie o seu boneco; depois é só andar (WASD ou setas, Shift corre). No celular e no tablet aparecem na tela um joystick (esquerda), o botão Correr (direita) e o zoom (embaixo); os dados, o chat e a ficha ficam no botão de menu da borda direita. O Vortable fica melhor com o celular deitado, e o site avisa quando ele está em pé.',
       'Mestre, Editar mundo: pinte terreno, ponha objetos, cômodos, luzes, clima e sons, e ligue as zonas por portas e saídas. Salva na campanha.',
       'Mestre, Testar (botão amarelo do editor): anda pelo mundo com o seu boneco, junto com os jogadores. Personagens: cria bonecos, inclusive de NPCs.',
       'Mestre, Controle (durante a sessão): veja o mapa como os jogadores, troque de zona, enquadre o mapa inteiro, siga um jogador e mude hora, tempo e vento ao vivo pra todos, sem recarregar.',
@@ -55,7 +55,7 @@ const TOPICS: Topic[] = [
   {
     id: 'transmissao', icon: '▤', title: 'Transmissão de tela',
     steps: [
-      'Mestre: na sub-aba Transmissão da Sessão, clique em "Transmitir tela" e escolha uma janela, aba ou a tela inteira. Pra ter som, marque "Compartilhar áudio" na escolha (funciona melhor escolhendo uma aba do navegador no Chrome ou no Edge).',
+      'Mestre: no alto da sub-aba Mesa da Sessão, clique em "Transmitir tela" e escolha uma janela, aba ou a tela inteira. Pra ter som, marque "Compartilhar áudio" na escolha (funciona melhor escolhendo uma aba do navegador no Chrome ou no Edge).',
       'Clique na imagem pra apontar um lugar: todos veem o ponteiro.',
       '"Pausar" congela a imagem pros jogadores enquanto você arruma algo; "Trocar tela" muda o que está sendo mostrado sem parar a transmissão; "Parar transmissão" encerra.',
       'Jogador: quando o mestre começa a transmitir, aparece um aviso em qualquer página do site com o botão "Assistir". O som continua tocando mesmo com você em outras abas. Se o navegador bloquear o som, clique em "Ativar som".',

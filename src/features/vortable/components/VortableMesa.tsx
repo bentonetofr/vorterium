@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom'
 import type { CampaignWithRole } from '../../../shared/types'
 import { MesaArts } from '../../mesa/components/MesaArts'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { ScreenPanel } from '../../mesa/screen/ScreenPanel'
 import { enterFullscreen } from '../fullscreen'
 import './VortableMesa.css'
 
 /**
- * Aba Mesa da Sessão: porta de entrada do Vortable (que abre em tela cheia,
- * numa página própria) e as artes recentes da mesa.
+ * Aba Mesa da Sessão: a transmissão de tela do mestre, as artes recentes e,
+ * por último, a porta de entrada do Vortable (que abre em tela cheia, numa
+ * página própria).
  */
 export function VortableMesa({ campaign }: { campaign: CampaignWithRole }) {
   const navigate = useNavigate()
@@ -22,6 +24,8 @@ export function VortableMesa({ campaign }: { campaign: CampaignWithRole }) {
 
   return (
     <section className="vortable-mesa">
+      <ScreenPanel />
+      <MesaArts campaignId={campaign.id} />
       <div className="vortable-mesa__hero">
         <div>
           <h3 className="vortable-mesa__title">Vortable</h3>
@@ -35,7 +39,6 @@ export function VortableMesa({ campaign }: { campaign: CampaignWithRole }) {
           {locked ? 'Bloqueado' : 'Entrar no Vortable'}
         </button>
       </div>
-      <MesaArts campaignId={campaign.id} />
     </section>
   )
 }

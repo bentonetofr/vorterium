@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.73',
+    date:    '2026-10-16',
+    title:   'Transmissão na aba Mesa, Vortable embaixo',
+    items: [
+      'A Transmissão de tela não tem mais uma aba própria: ela fica no alto da aba Mesa da Sessão, com o mesmo funcionamento de antes (transmitir, pausar, trocar tela, ponteiro, som e tela cheia).',
+      'A aba Mesa agora segue esta ordem: Transmissão, Artes recentes e, por último, o campo do Vortable com o botão "Entrar no Vortable".',
+      'O ponto de "ao vivo" da aba Mesa acende também quando só há transmissão de tela, e o aviso "Assistir" e o atalho da Visão geral levam direto pra ela.',
+    ],
+  },
+  {
     version: '1.72',
     date:    '2026-10-15',
     title:   'O criador de personagem se adapta à campanha',

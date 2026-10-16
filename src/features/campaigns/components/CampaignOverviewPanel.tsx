@@ -158,7 +158,7 @@ function SessionTableCard({ campaign, onNavigate }: SessionTableCardProps) {
       action={mesa.live
         ? { label: 'Abrir a Mesa', onClick: () => onNavigate('mesa-sessao', 'mesa') }
         : screen.live
-          ? { label: 'Ver a transmissão', onClick: () => onNavigate('mesa-sessao', 'transmissao') }
+          ? { label: 'Ver a transmissão', onClick: () => onNavigate('mesa-sessao', 'mesa') }
           : { label: 'Abrir sessão', onClick: () => onNavigate('mesa-sessao') }}
     >
       <div className="ov-stat__num ov-stat__num--sm">

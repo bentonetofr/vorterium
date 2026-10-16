@@ -5,7 +5,7 @@ import type { ScreenDiag, ScreenPing, ScreenViewer, ViewerStatus } from './Scree
 import '../components/MesaPanel.css'
 
 // ────────────────────────────────────────────────────────
-// Aba "Transmissão" da Sessão: o mestre transmite a tela (com som); aponta
+// Transmissão (topo da aba Mesa da Sessão): o mestre transmite a tela (com som); aponta
 // com um clique e todos veem o brilho no mesmo lugar. A conexão mora no
 // ScreenShareProvider — esta aba só desenha.
 // ────────────────────────────────────────────────────────

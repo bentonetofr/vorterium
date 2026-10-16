@@ -6,16 +6,16 @@ import { EMPTY_SNAPSHOT, ScreenSession, type ScreenSnapshot } from './ScreenSess
 
 // ────────────────────────────────────────────────────────
 // Transmissão de tela no nível do layout: a conexão vive enquanto a pessoa
-// está dentro da campanha, não só com a aba "Transmissão" aberta. Assim o mestre
+// está dentro da campanha, não só com a aba "Mesa" aberta. Assim o mestre
 // pode abrir fichas/bestiário sem derrubar a tela, e o jogador continua
 // OUVINDO a transmissão em qualquer aba — o som sai de um <audio> daqui;
-// a aba Transmissão só desenha o vídeo (mudo) por cima do mesmo stream.
+// a aba Mesa só desenha o vídeo (mudo) por cima do mesmo stream.
 // ────────────────────────────────────────────────────────
 
 interface ScreenShareValue extends ScreenSnapshot {
   enabled:      boolean
   isMaster:     boolean
-  /** A aba Transmissão está aberta agora (o aviso de "ao vivo" não aparece por cima dela). */
+  /** A transmissão está na tela agora (aba Mesa aberta) (o aviso de "ao vivo" não aparece por cima dela). */
   viewing:      boolean
   setViewing:   (v: boolean) => void
   // Mestre
