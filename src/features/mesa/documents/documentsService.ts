@@ -74,6 +74,17 @@ export async function listDocuments(campaignId: string): Promise<MesaDocument[]>
   return (data ?? []).map((r) => normalize(r as Record<string, unknown>))
 }
 
+/** Documentos liberados de todas as campanhas da pessoa (é o que a Biblioteca mostra). */
+export async function listMyReleasedDocuments(): Promise<MesaDocument[]> {
+  const { data, error } = await supabase
+    .from('campaign_mesa_documents')
+    .select(COLUMNS)
+    .eq('visible', true)
+    .order('created_at', { ascending: true })
+  if (error) throw new Error('Não foi possível carregar a biblioteca.')
+  return (data ?? []).map((r) => normalize(r as Record<string, unknown>))
+}
+
 export async function getDocument(id: string): Promise<MesaDocument | null> {
   const { data, error } = await supabase.from('campaign_mesa_documents').select(COLUMNS).eq('id', id).maybeSingle()
   if (error) throw new Error('Não foi possível abrir o documento.')

@@ -18,6 +18,9 @@ import {
   validateDocument,
   type CampaignDocument,
 } from '../services/campaignDocumentsService'
+import { listMyReleasedDocuments, type MesaDocument } from '../../mesa/documents/documentsService'
+import { BookCover, DocumentView, PaperPage } from '../../mesa/documents/DocViews'
+import { pageSeed, pageStyle } from '../../mesa/documents/paperStyles'
 import { getSystemEntry, getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
 import '../../../shared/theme/toolPage.css'
@@ -43,6 +46,8 @@ const RULEBOOK_PREFIX = 'livro:'
 type ShelfItem =
   | { type: 'rulebook'; key: string; system: CampaignSystem; title: string; subtitle: string }
   | { type: 'doc'; key: string; doc: CampaignDocument }
+  /** Folha ou livro escrito na Mesa e liberado pelo mestre. */
+  | { type: 'mesadoc'; key: string; doc: MesaDocument }
 
 interface Shelf {
   key:       string
@@ -76,17 +81,24 @@ function transitionName(item: ShelfItem): string {
   return item.type === 'rulebook' ? `doc-livro-${item.system}` : `doc-${item.doc.id}`
 }
 
+function itemTitle(item: ShelfItem): string {
+  if (item.type === 'rulebook') return item.title
+  return item.type === 'mesadoc' ? item.doc.title : item.doc.name
+}
+
 export function LibraryPage() {
   const [campaigns, setCampaigns] = useState<CampaignWithRole[]>([])
   const [docs, setDocs]           = useState<CampaignDocument[]>([])
+  const [mesaDocs, setMesaDocs]   = useState<MesaDocument[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
   const [params, setParams]       = useSearchParams()
 
   const load = useCallback(async () => {
-    const [camps, list] = await Promise.all([getMyCampaigns(), listMyDocuments()])
+    const [camps, list, released] = await Promise.all([getMyCampaigns(), listMyDocuments(), listMyReleasedDocuments()])
     setCampaigns(camps)
     setDocs(list)
+    setMesaDocs(released)
   }, [])
 
   useEffect(() => {
@@ -101,22 +113,26 @@ export function LibraryPage() {
       type: 'rulebook', key: RULEBOOK_PREFIX + b.system, system: b.system, title: b.title, subtitle: b.subtitle,
     })
 
-    const byCampaign = new Map<string, CampaignDocument[]>()
-    for (const d of docs) byCampaign.set(d.campaign_id, [...(byCampaign.get(d.campaign_id) ?? []), d])
+    const byCampaign = new Map<string, ShelfItem[]>()
+    const add = (campaignId: string, it: ShelfItem) => byCampaign.set(campaignId, [...(byCampaign.get(campaignId) ?? []), it])
+    for (const d of docs) add(d.campaign_id, { type: 'doc', key: d.id, doc: d })
+    // Folhas e livros da Mesa só chegam aqui depois que o mestre libera.
+    for (const d of mesaDocs) add(d.campaign_id, { type: 'mesadoc', key: `mesa:${d.id}`, doc: d })
+    const createdAt = (it: ShelfItem) => (it.type === 'rulebook' ? '' : it.doc.created_at)
 
     // Os livros de regras ficam só na estante própria; a da campanha tem
-    // apenas os documentos do mestre.
+    // os documentos do mestre (arquivos guardados e folhas/livros liberados).
     const campaignShelves = campaigns.map<Shelf>((c) => ({
       key:      c.id,
       name:     c.name,
       kicker:   getSystemLabel(c.system),
       campaign: c,
-      items:    (byCampaign.get(c.id) ?? []).map<ShelfItem>((doc) => ({ type: 'doc', key: doc.id, doc })),
+      items:    (byCampaign.get(c.id) ?? []).sort((a, b) => createdAt(a).localeCompare(createdAt(b))),
     }))
     // Estantes com documento mais recente primeiro; as vazias por último.
     const latest = (s: Shelf) => {
       const last = s.items[s.items.length - 1]
-      return last?.type === 'doc' ? last.doc.created_at : ''
+      return last ? createdAt(last) : ''
     }
     campaignShelves.sort((a, b) => latest(b).localeCompare(latest(a)))
 
@@ -124,7 +140,7 @@ export function LibraryPage() {
       ? [{ key: RULES_SHELF, name: 'Livros de regras', kicker: 'Vorterium', campaign: null, items: books.map(rulebookItem) }]
       : []
     return [...rules, ...campaignShelves]
-  }, [campaigns, docs])
+  }, [campaigns, docs, mesaDocs])
 
   const shelf = shelves.find((s) => s.key === params.get('estante')) ?? null
   const item = shelf?.items.find((i) => i.key === params.get('doc')) ?? null
@@ -385,6 +401,31 @@ function DocCard({ item, index, thumb, onOpen }: { item: ShelfItem; index: numbe
     )
   }
 
+  if (item.type === 'mesadoc') {
+    const { doc } = item
+    return (
+      <button type="button" className="doc-card doc-card--mesadoc" onClick={onOpen} style={{ '--i': index } as CSSProperties}>
+        <span className="doc-card__stack">
+          <span className="doc-card__mesa" style={sheetStyle}>
+            {doc.kind === 'book'
+              ? <BookCover title={doc.title} style={doc.style} />
+              : (
+                <div className="doc-sheet">
+                  <PaperPage html={doc.pages[0]?.html ?? ''} style={pageStyle(doc.style, doc.pages[0]?.style)} seed={pageSeed(doc.id, 0)} />
+                </div>
+              )}
+          </span>
+        </span>
+        <span className="doc-card__info">
+          <span className="doc-card__name">{doc.title}</span>
+          <span className="doc-card__meta">
+            {doc.kind === 'book' ? `Livro · ${doc.pages.length} ${doc.pages.length === 1 ? 'página' : 'páginas'}` : 'Folha'} · {dateLabel(doc.created_at)}
+          </span>
+        </span>
+      </button>
+    )
+  }
+
   const { doc } = item
   const kind = documentKind(doc)
   return (
@@ -437,7 +478,7 @@ function DocumentViewer({ shelf, item, onBack, onOpen, onChanged }: DocumentView
     return () => window.removeEventListener('keydown', onKey)
   }, [onBack])
 
-  const title = item.type === 'rulebook' ? item.title : item.doc.name
+  const title = itemTitle(item)
 
   return (
     <section className="doc-viewer">
@@ -452,6 +493,8 @@ function DocumentViewer({ shelf, item, onBack, onOpen, onChanged }: DocumentView
         <div className="doc-viewer__frame" style={{ viewTransitionName: transitionName(item) } as CSSProperties}>
           <RulebookPanel system={item.system} />
         </div>
+      ) : item.type === 'mesadoc' ? (
+        <MesaDocumentBody doc={item.doc} isMaster={shelf.campaign?.role === 'master'} />
       ) : (
         <DocumentBody doc={item.doc} isMaster={shelf.campaign?.role === 'master'} onChanged={onChanged} onDeleted={onBack} />
       )}
@@ -461,19 +504,43 @@ function DocumentViewer({ shelf, item, onBack, onOpen, onChanged }: DocumentView
           {prev ? (
             <button type="button" className="doc-viewer__page doc-viewer__page--prev" onClick={() => onOpen(prev)}>
               <span className="doc-viewer__page-dir">‹ anterior</span>
-              <span className="doc-viewer__page-name">{prev.type === 'rulebook' ? prev.title : prev.doc.name}</span>
+              <span className="doc-viewer__page-name">{itemTitle(prev)}</span>
             </button>
           ) : <span />}
           {next && (
             <button type="button" className="doc-viewer__page doc-viewer__page--next" onClick={() => onOpen(next)}>
               <span className="doc-viewer__page-dir">próximo ›</span>
-              <span className="doc-viewer__page-name">{next.type === 'rulebook' ? next.title : next.doc.name}</span>
+              <span className="doc-viewer__page-name">{itemTitle(next)}</span>
             </button>
           )}
         </nav>
       )}
       <span className="sr-only" aria-live="polite">{title}</span>
     </section>
+  )
+}
+
+/** Folha ou livro da Mesa, lido aqui mesmo (livro: setas ← → pra folhear). */
+function MesaDocumentBody({ doc, isMaster }: { doc: MesaDocument; isMaster: boolean }) {
+  return (
+    <div className="doc-viewer__frame" style={{ viewTransitionName: `doc-${doc.id}` } as CSSProperties}>
+      <header className="doc-viewer__bar">
+        <div className="doc-viewer__titles">
+          <h2 className="doc-viewer__title">{doc.title}</h2>
+          <span className="doc-viewer__meta">
+            {doc.kind === 'book' ? `Livro · ${doc.pages.length} ${doc.pages.length === 1 ? 'página' : 'páginas'}` : 'Folha'} · liberado pelo mestre
+          </span>
+        </div>
+        {isMaster && (
+          <div className="doc-viewer__actions">
+            <Link className="btn btn-ghost doc-viewer__btn" to={`/campanhas/${doc.campaign_id}/mesa-sessao`}>Editar na Mesa</Link>
+          </div>
+        )}
+      </header>
+      <div className="doc-viewer__mesa">
+        <DocumentView doc={doc} keys />
+      </div>
+    </div>
   )
 }
 

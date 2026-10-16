@@ -69,8 +69,8 @@ export function MesaDocuments({ campaignId }: { campaignId: string }) {
           <h5 id="mesa-docs-title" className="mesa-gallery__title">Documentos</h5>
           <p className="mesa-gallery__sub">
             {isMaster
-              ? 'Cartas e livros em papel antigo, escritos à mão. Nascem escondidos: libere quando os jogadores encontrarem, ou ponha na mesa.'
-              : 'Cartas e livros que o mestre entregou à mesa.'}
+              ? 'Cartas e livros em papel antigo, escritos à mão. Nascem escondidos: ao liberar, vão pra Biblioteca da campanha e os jogadores passam a ler. Dá pra pôr na mesa também.'
+              : 'Cartas e livros que o mestre entregou à mesa. Ficam guardados na Biblioteca da campanha.'}
           </p>
         </div>
         {isMaster && (
