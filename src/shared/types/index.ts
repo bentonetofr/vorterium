@@ -237,6 +237,8 @@ export interface AltheriumSheet {
   dano_cabeca:        number
   /** Ids dos triunfos escolhidos (só Berserker — catálogo em altheriumTriumphs.ts). */
   berserker_triumphs: string[]
+  /** Limite de triunfos do Berserker escolhido pelo jogador (null = automático, pelos domínios). */
+  triumph_limit_override?: number | null
   /** Trilha do Runaskin — define os 3 triunfos iniciais. */
   runaskin_trail:     'regente' | 'sentinela' | 'carniceiro' | null
   /** Triunfos usados na cena atual (limitado pelo NR, zera em "Nova cena"). */

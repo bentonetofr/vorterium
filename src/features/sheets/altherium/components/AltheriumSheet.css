@@ -358,6 +358,9 @@
   flex-shrink: 0;
 }
 .alth-counter--over { color: var(--danger); font-weight: 700; }
+/* Triunfos: o limite é um número editável, igual ao Movimento. */
+.alth-triumphs__limit { display: flex; align-items: center; gap: 6px; }
+.alth-counter--over .alth-movement__input { color: var(--danger); border-color: var(--danger); }
 
 /* Movimento: número editável (m por turno); "automático" aparece quando foi mudado à mão. */
 .alth-movement { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }

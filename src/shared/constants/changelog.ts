@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.74',
+    date:    '2026-10-17',
+    title:   'Limite de triunfos editável',
+    items: [
+      'Ficha de Altherium, aba Triunfos: o limite no canto ("Triunfos: 2 / 3") agora é um número que dá pra mudar, igual ao Movimento. Quer 5 triunfos por causa de uma build ou de uma regra da casa? É só digitar 5.',
+      'Mudado à mão, aparece o botão "automático", que volta pra regra de sempre: (2 + domínios com ponto) ÷ 2, arredondado pra baixo. Digitar o mesmo número da regra também volta pro automático, e aí o limite segue os domínios de novo.',
+    ],
+  },
+  {
     version: '1.73',
     date:    '2026-10-16',
     title:   'Transmissão na aba Mesa, Vortable embaixo',

@@ -122,6 +122,10 @@ type FormData = {
   dano_tronco:        number
   dano_cabeca:        number
   berserker_triumphs: string[]
+  /** Limite de triunfos escolhido; null = automático pelos domínios. */
+  triumph_limit_override: number | null
+  /** A coluna existe no banco (migration 20240201)? Sem ela, nada de triumph_limit_override no salvamento. */
+  triumph_limit_known: boolean
   runaskin_trail:     RunaskinTrail | ''
   runaskin_scene_uses: number
   runaskin_trail_overrides: Record<string, RunaskinTriumphOverride>
@@ -166,6 +170,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     dano_tronco:        s.dano_tronco,
     dano_cabeca:        s.dano_cabeca,
     berserker_triumphs: s.berserker_triumphs ?? [],
+    triumph_limit_override: s.triumph_limit_override ?? null,
+    triumph_limit_known: 'triumph_limit_override' in s,
     runaskin_trail:     s.runaskin_trail ?? '',
     runaskin_scene_uses: s.runaskin_scene_uses ?? 0,
     runaskin_trail_overrides: s.runaskin_trail_overrides ?? {},
@@ -212,6 +218,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     dano_tronco:         f.dano_tronco,
     dano_cabeca:         f.dano_cabeca,
     berserker_triumphs:  f.berserker_triumphs,
+    ...(f.triumph_limit_known || f.triumph_limit_override !== null ? { triumph_limit_override: f.triumph_limit_override } : {}),
     runaskin_trail:      f.runaskin_trail === '' ? null : f.runaskin_trail,
     runaskin_scene_uses: f.runaskin_scene_uses,
     notes:               f.notes.trim() || null,
@@ -609,7 +616,10 @@ export function AltheriumSheetForm({
     <AltheriumTriumphsPanel
       raiz={raiz === 'berserker' ? 'berserker' : null}
       triumphIds={form.berserker_triumphs}
-      limit={berserkerTriumphLimit(domains)}
+      limit={form.triumph_limit_override ?? berserkerTriumphLimit(domains)}
+      autoLimit={berserkerTriumphLimit(domains)}
+      limitOverridden={form.triumph_limit_override !== null}
+      onLimitChange={(n) => set('triumph_limit_override', n)}
       fvCurrent={form.fv_current}
       onChange={(ids) => set('berserker_triumphs', ids)}
       recent={form.recent_triumphs}

@@ -10,6 +10,9 @@ import {
   type BerserkerTriumphDef,
 } from '../constants/altheriumTriumphs'
 
+/** Teto do limite editável (igual ao check da migration 20240201). */
+const TRIUMPH_LIMIT_MAX = 99
+
 // ────────────────────────────────────────────────────────
 // Aba Triunfos do Berserker — escolhe da lista (até o limite) e paga em FV
 // (Pilar: AltheriumPilarTriumphs; Runaskin: AltheriumRunaskinTriumphs). "Usar"
@@ -21,7 +24,14 @@ interface AltheriumTriumphsPanelProps {
   /** Pilar e Runaskin têm painel próprio. */
   raiz:           Exclude<AltheriumRaiz, 'runaskin' | 'pilar'> | null
   triumphIds:     string[]
+  /** Limite em vigor (o escolhido pelo jogador ou o automático). */
   limit:          number
+  /** Limite pela regra: ⌊(2 + domínios com ponto) ÷ 2⌋. */
+  autoLimit:      number
+  /** O jogador mudou o limite à mão? */
+  limitOverridden: boolean
+  /** Novo limite; null = volta pro automático. */
+  onLimitChange:  (limit: number | null) => void
   fvCurrent:      number
   onChange:       (ids: string[]) => void
   onSpendFv:      (cost: number, triumphName: string) => void
@@ -34,7 +44,7 @@ interface AltheriumTriumphsPanelProps {
 }
 
 export function AltheriumTriumphsPanel({
-  raiz, triumphIds, limit, fvCurrent,
+  raiz, triumphIds, limit, autoLimit, limitOverridden, onLimitChange, fvCurrent,
   onChange, onSpendFv, recent, onRecent, disabled = false, allOwned = false,
 }: AltheriumTriumphsPanelProps) {
   const [lastUsed, setLastUsed] = useState<string | null>(null)
@@ -76,19 +86,47 @@ export function AltheriumTriumphsPanel({
       <div className="alth-card__header">
         <h4 className="alth-card__title">Triunfos do Berserker</h4>
         {!allOwned && (
-          <span className={`alth-counter${over ? ' alth-counter--over' : ''}`}>
-            Triunfos: {owned.length} / {limit}
-          </span>
+          <div className={`alth-counter alth-triumphs__limit${over ? ' alth-counter--over' : ''}`}>
+            <label htmlFor="alth-triumph-limit">Triunfos: {owned.length} /</label>
+            <input
+              id="alth-triumph-limit"
+              type="number"
+              className="input alth-movement__input"
+              min={0}
+              max={TRIUMPH_LIMIT_MAX}
+              value={limit}
+              disabled={disabled}
+              onChange={(e) => {
+                const n = Math.max(0, Math.min(TRIUMPH_LIMIT_MAX, parseInt(e.target.value, 10) || 0))
+                // igual ao automático = volta pro automático (acompanha os domínios de novo)
+                onLimitChange(n === autoLimit ? null : n)
+              }}
+              aria-describedby="alth-triumph-limit-hint"
+            />
+            {limitOverridden && (
+              <button
+                type="button"
+                className="alth-movement__auto"
+                disabled={disabled}
+                onClick={() => onLimitChange(null)}
+                title={`Voltar ao automático: ${autoLimit} (2 + domínios com ponto) ÷ 2`}
+              >
+                automático
+              </button>
+            )}
+          </div>
         )}
       </div>
       {!allOwned && (
-        <p className="alth-hint">
-          Limite: (2 + domínios com ponto) ÷ 2, arredondado pra baixo.
+        <p id="alth-triumph-limit-hint" className="alth-hint">
+          {limitOverridden
+            ? `Limite mudado à mão (pela regra seria ${autoLimit}).`
+            : 'Limite: (2 + domínios com ponto) ÷ 2, arredondado pra baixo. Dá pra mudar no número acima.'}
         </p>
       )}
       {!allOwned && over && (
         <p className="alth-triumphs__warn" role="alert">
-          Você tem mais triunfos do que o limite atual: remova algum ou ganhe domínios.
+          Você tem mais triunfos do que o limite atual: remova algum, ganhe domínios ou aumente o limite.
         </p>
       )}
       {lastUsed && <p key={lastUsed} className="alth-triumphs__used" role="status">{lastUsed}</p>}

@@ -58,6 +58,7 @@ const NUMBER_LABELS: Record<string, string> = {
   torre_current:       'Torre',
   hacksilvers:         'Hacksilvers',
   movement_override:   'Movimento (m)',
+  triumph_limit_override: 'Limite de triunfos',
   runaskin_scene_uses: 'Usos de runa na cena',
   vitality_roll:       'd10 de Vitalidade',
   equilibrio_roll:     'd10 de Equilíbrio',
@@ -163,7 +164,7 @@ const RANK_PREFIXES: [RegExp, number][] = [
   [/^hacksilvers$/, 4],
   [/^domain$/, 5],
   [/^(genesis_abilities)$/, 0],
-  [/^(berserker_triumphs|runaskin_|pilar_card_mode|rune|skald_inspirations)/, 6],
+  [/^(berserker_triumphs|triumph_limit_|runaskin_|pilar_card_mode|rune|skald_inspirations)/, 6],
   [/^(item|equip|itemedit)$/, 7],
   [/^notes$/, 9],
 ]
