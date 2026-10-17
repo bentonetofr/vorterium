@@ -87,22 +87,26 @@ export function AltheriumTriumphsPanel({
         <h4 className="alth-card__title">Triunfos do Berserker</h4>
         {!allOwned && (
           <div className={`alth-counter alth-triumphs__limit${over ? ' alth-counter--over' : ''}`}>
-            <label htmlFor="alth-triumph-limit">Triunfos: {owned.length} /</label>
-            <input
-              id="alth-triumph-limit"
-              type="number"
-              className="input alth-movement__input"
-              min={0}
-              max={TRIUMPH_LIMIT_MAX}
-              value={limit}
-              disabled={disabled}
-              onChange={(e) => {
-                const n = Math.max(0, Math.min(TRIUMPH_LIMIT_MAX, parseInt(e.target.value, 10) || 0))
-                // igual ao automático = volta pro automático (acompanha os domínios de novo)
-                onLimitChange(n === autoLimit ? null : n)
-              }}
-              aria-describedby="alth-triumph-limit-hint"
-            />
+            <label htmlFor="alth-triumph-limit">Triunfos:</label>
+            <span className="alth-vital-bar__values">
+              <span className="alth-vital-bar__max-fixed" title="Triunfos que você tem">{owned.length}</span>
+              <span className="alth-vital-bar__sep">/</span>
+              <input
+                id="alth-triumph-limit"
+                type="number"
+                className="alth-vital-bar__value-input alth-vital-bar__max-input"
+                min={0}
+                max={TRIUMPH_LIMIT_MAX}
+                value={limit}
+                disabled={disabled}
+                onChange={(e) => {
+                  const n = Math.max(0, Math.min(TRIUMPH_LIMIT_MAX, parseInt(e.target.value, 10) || 0))
+                  // igual ao automático = volta pro automático (acompanha os domínios de novo)
+                  onLimitChange(n === autoLimit ? null : n)
+                }}
+                aria-describedby="alth-triumph-limit-hint"
+              />
+            </span>
             {limitOverridden && (
               <button
                 type="button"
