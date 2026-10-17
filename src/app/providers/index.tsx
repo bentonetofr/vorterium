@@ -3,7 +3,6 @@ import { AuthProvider } from '../../features/auth/AuthProvider'
 import { AppRouter } from '../router'
 import { ClickEffects } from '../../shared/components/ClickEffects'
 import { DialogHost } from '../../shared/components/dialogs'
-import { SecretTab } from '../../shared/components/SecretTab'
 
 /**
  * Composição de todos os providers globais da aplicação.
@@ -15,7 +14,6 @@ export function AppProviders() {
     <ThemeProvider>
       <ClickEffects />
       <DialogHost />
-      <SecretTab />
       <AuthProvider>
         <AppRouter />
       </AuthProvider>

@@ -30,6 +30,7 @@ import { TermosPage }      from '../../features/public/pages/TermosPage'
 import { PrivacidadePage } from '../../features/public/pages/PrivacidadePage'
 
 import { InvitePage } from '../../features/invites/pages/InvitePage'
+import { SecretShortcut, SecretPage, SECRET_PATH } from '../../shared/components/SecretTab'
 
 import { DevRoute }         from '../../features/dev/DevRoute'
 import { DevLayout }        from '../../features/dev/DevLayout'
@@ -42,7 +43,11 @@ import { DevCampaignsPage, DevCampaignPage } from '../../features/dev/pages/DevC
 export function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <SecretShortcut />
       <Routes>
+        {/* ── Aba secreta (Ctrl+Ç): sem layout, sem login, sem link no site ── */}
+        <Route path={SECRET_PATH} element={<SecretPage />} />
+
         {/* ── Rotas públicas (sem autenticação obrigatória) ── */}
         <Route element={<PublicLayout />}>
           <Route path="/"            element={<LandingPage />} />
