@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { captureErrorMessage } from '../mesaRtc'
+import { getMesaImageShowUrl } from '../services/mesaImagesService'
 import { EMPTY_SNAPSHOT, ScreenSession, type ScreenSnapshot } from './ScreenSession'
 
 // ────────────────────────────────────────────────────────
@@ -27,6 +28,9 @@ interface ScreenShareValue extends ScreenSnapshot {
   setPaused:    (paused: boolean) => void
   /** Ponteiro: x/y de 0 a 1 dentro da imagem. */
   ping:         (x: number, y: number) => void
+  /** Põe uma arte das "Artes recentes" na mesa (todos veem na hora). Erros sobem pra quem chamou. */
+  showArt:      (art: { id: string; path: string; name: string }) => Promise<void>
+  hideArt:      () => void
   // Jogador
   volume:       number
   setVolume:    (v: number) => void
@@ -122,6 +126,15 @@ export function ScreenShareProvider({ children }: { children: ReactNode }) {
   const setPaused = useCallback((paused: boolean) => { void sessionRef.current?.setPaused(paused) }, [])
   const ping      = useCallback((x: number, y: number) => sessionRef.current?.ping(x, y), [])
   const retry     = useCallback(() => sessionRef.current?.retry(), [])
+  const hideArt   = useCallback(() => sessionRef.current?.hideArt(), [])
+
+  const showArt = useCallback(async (art: { id: string; path: string; name: string }) => {
+    const session = sessionRef.current
+    if (!session) return
+    // link longo (12 h): a arte pode ficar na mesa a sessão inteira
+    const url = await getMesaImageShowUrl(art.path)
+    session.showArt({ id: art.id, name: art.name, url })
+  }, [])
 
   // ── Som do jogador ─────────────────────────────────────
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -169,6 +182,8 @@ export function ScreenShareProvider({ children }: { children: ReactNode }) {
     stopShare,
     setPaused,
     ping,
+    showArt,
+    hideArt,
     volume,
     setVolume,
     muted,

@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.75',
+    date:    '2026-10-17',
+    title:   'Arte na mesa, ao vivo pra todos',
+    items: [
+      'Aba Mesa, Artes recentes: o mestre ganhou o botão "Na mesa" em cada arte (e "Pôr na mesa" quando a arte está aberta em tamanho grande). A arte aparece na hora, em tempo real, na Transmissão de todos os jogadores.',
+      'Se o mestre estiver transmitindo a tela, a arte fica por cima dela (o som continua tocando). O ponteiro funciona sobre a arte: todos veem o brilho no mesmo lugar dela.',
+      'A arte que está na mesa ganha uma moldura dourada e a etiqueta "Na mesa". Pra voltar à tela transmitida (ou à cena de espera), é só clicar em "Tirar" ou em "Tirar da mesa" na barra abaixo da Transmissão. Excluir a arte também tira da mesa.',
+      'Quem está em outra página recebe o aviso "o mestre pôs uma arte na mesa", com o botão Assistir, igual ao da transmissão de tela.',
+    ],
+  },
+  {
     version: '1.74',
     date:    '2026-10-17',
     title:   'Limite de triunfos editável',

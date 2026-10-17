@@ -9,7 +9,7 @@ import { captureScreen, hasTurnServer, iceServers, tuneVideoSender, withStereoOp
 // só olha o prefixo e o id da campanha) leva a negociação e o estado:
 //
 //   jogador → viewer-join {viewerId, name}   "estou aqui"
-//   mestre  → state {stage}                  o que está na mesa (tela? pausada?)
+//   mestre  → state {stage}                  o que está na mesa (tela? pausada? arte?)
 //   mestre  → offer  {to, sdp}               uma por jogador, se tem tela
 //   jogador → answer {from, sdp}
 //   ambos   → ice    {to | from, candidate}
@@ -18,7 +18,8 @@ import { captureScreen, hasTurnServer, iceServers, tuneVideoSender, withStereoOp
 //
 // E no canal "mesa-aviso:<campanha>:tela" (que os jogadores escutam de todas
 // as campanhas deles, em qualquer página), o mestre manda:
-//   live {liveId, masterName} / ended {liveId} — e responde "status?".
+//   live {liveId, masterName, art?} / ended {liveId} — e responde "status?".
+//   (art = true: o aviso é de uma arte que o mestre pôs na mesa; liveId = showId dela)
 //
 // viewerId = usuário + sufixo aleatório, pra mesma pessoa em duas abas
 // não derrubar uma a outra.
@@ -45,6 +46,17 @@ export interface ScreenViewer {
   stats: ViewerStats | null
 }
 
+/** Arte das "Artes recentes" que o mestre pôs na mesa (aparece por cima da tela, pra todos). */
+export interface ScreenArt {
+  /** Muda a cada vez que o mestre põe uma arte (cada uma avisa os jogadores uma vez). */
+  showId: string
+  /** Id da arte (campaign_mesa_images). */
+  id:     string
+  name:   string
+  /** Link assinado da imagem (vale por 12 h). */
+  url:    string
+}
+
 /** O que está na mesa agora — o mestre define e manda pra todos. */
 export interface ScreenStage {
   /** Id da "sessão ao vivo" (a transmissão); null = nada no ar. */
@@ -53,6 +65,8 @@ export interface ScreenStage {
   screenId: string | null
   paused:   boolean
   audio:    boolean
+  /** Arte na mesa (null = nenhuma). */
+  art:      ScreenArt | null
 }
 
 export interface ScreenPing {
@@ -82,7 +96,7 @@ export interface ScreenDiag {
 export interface ScreenSnapshot {
   channelError: string | null
   stage:        ScreenStage
-  /** Tem uma transmissão no ar. */
+  /** Tem algo no ar: tela transmitida ou arte na mesa. */
   live:         boolean
   pings:        ScreenPing[]
   // Mestre
@@ -94,7 +108,7 @@ export interface ScreenSnapshot {
   diag:         ScreenDiag
 }
 
-export const EMPTY_STAGE: ScreenStage = { liveId: null, screenId: null, paused: false, audio: false }
+export const EMPTY_STAGE: ScreenStage = { liveId: null, screenId: null, paused: false, audio: false, art: null }
 
 const EMPTY_COUNTS: IceCounts = { host: 0, srflx: 0, relay: 0, prflx: 0 }
 
@@ -194,6 +208,15 @@ function isStage(value: unknown): value is ScreenStage {
   return typeof value === 'object' && value !== null && 'liveId' in value && 'screenId' in value
 }
 
+/** A arte que veio do mestre, conferida (link só http/https; versão antiga sem arte = null). */
+function parseArt(value: unknown): ScreenArt | null {
+  if (typeof value !== 'object' || value === null) return null
+  const a = value as Record<string, unknown>
+  if (typeof a.url !== 'string' || !/^https?:\/\//.test(a.url) || a.url.length > 4000) return null
+  const text = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '')
+  return { showId: text(a.showId, 40) || newId(), id: text(a.id, 80), name: text(a.name, 200) || 'Arte', url: a.url }
+}
+
 export class ScreenSession {
   private readonly opts: SessionOptions
   private readonly myId: string
@@ -231,7 +254,7 @@ export class ScreenSession {
   private update(patch: Partial<ScreenSnapshot>) {
     if (this.disposed) return
     const next = { ...this.snap, ...patch }
-    next.live = Boolean(next.stage.screenId)
+    next.live = Boolean(next.stage.screenId) || Boolean(next.stage.art)
     this.snap = next
     this.opts.onChange(next)
   }
@@ -271,7 +294,8 @@ export class ScreenSession {
 
     if (this.opts.isMaster) {
       on('viewer-join', (p) => {
-        this.sendState()
+        // Só responde quem tem algo no ar: outra aba do mestre, vazia, não apaga a arte/tela pro jogador.
+        if (this.snap.live) this.sendState()
         void this.offerTo(String(p.viewerId ?? ''), String(p.name ?? 'Jogador'), p.relay === true)
       })
       on('answer',       (p) => { void this.handleAnswer(String(p.from ?? ''), String(p.sdp ?? '')) })
@@ -373,7 +397,9 @@ export class ScreenSession {
     this.aviso = aviso
     // Jogador que abriu o site agora pergunta se tem algo rolando.
     aviso.on('broadcast', { event: 'status?' }, () => {
-      if (this.snap.live) this.sendAviso('live', { liveId: this.snap.stage.liveId, masterName: this.opts.name })
+      const { stage } = this.snap
+      if (stage.screenId) this.sendAviso('live', { liveId: stage.liveId, masterName: this.opts.name })
+      if (stage.art) this.sendAviso('live', { liveId: stage.art.showId, masterName: this.opts.name, art: true })
     })
     aviso.subscribe()
   }
@@ -381,6 +407,24 @@ export class ScreenSession {
   private sendAviso(event: 'live' | 'ended', payload: Payload) {
     if (!this.aviso) return
     void this.aviso.send({ type: 'broadcast', event, payload: { ...payload, campaignId: this.opts.campaignId } })
+  }
+
+  // ── Mestre: arte na mesa ───────────────────────────────
+
+  /** Põe uma arte na mesa: aparece na hora pra todos, por cima da tela (se houver). */
+  showArt(art: { id: string; name: string; url: string }): void {
+    if (!this.opts.isMaster || this.disposed) return
+    const next: ScreenArt = { showId: newId(), id: art.id, name: art.name, url: art.url }
+    this.setStage({ art: next })
+    this.sendAviso('live', { liveId: next.showId, masterName: this.opts.name, art: true })
+  }
+
+  /** Tira a arte da mesa (volta a tela transmitida, ou a cena de espera). */
+  hideArt(): void {
+    const art = this.snap.stage.art
+    if (!this.opts.isMaster || !art) return
+    this.setStage({ art: null })
+    if (!this.snap.stage.screenId) this.sendAviso('ended', { liveId: art.showId })
   }
 
   // ── Mestre: tela ───────────────────────────────────────
@@ -670,7 +714,7 @@ export class ScreenSession {
   }
 
   private handleState(incoming: ScreenStage) {
-    const stage: ScreenStage = { ...incoming }
+    const stage: ScreenStage = { ...incoming, art: parseArt(incoming.art) }
     const prev = this.snap.stage
     this.update({ stage })
     if (stage.screenId && stage.screenId !== prev.screenId) {

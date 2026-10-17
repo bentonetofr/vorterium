@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { useScreenShare } from './ScreenShareProvider'
 import { canShareScreen } from '../mesaRtc'
-import type { ScreenDiag, ScreenPing, ScreenViewer, ViewerStatus } from './ScreenSession'
+import type { ScreenArt, ScreenDiag, ScreenPing, ScreenViewer, ViewerStatus } from './ScreenSession'
 import '../components/MesaPanel.css'
 
 // ────────────────────────────────────────────────────────
 // Transmissão (topo da aba Mesa da Sessão): o mestre transmite a tela (com som); aponta
-// com um clique e todos veem o brilho no mesmo lugar. A conexão mora no
-// ScreenShareProvider — esta aba só desenha.
+// com um clique e todos veem o brilho no mesmo lugar. Também põe na mesa uma
+// arte das "Artes recentes" (fica por cima da tela, se houver; o som continua).
+// A conexão mora no ScreenShareProvider — esta aba só desenha.
 // ────────────────────────────────────────────────────────
 
 // ── Palco: mídia + ponteiro ──────────────────────────────
@@ -55,15 +56,20 @@ function PingLayer({ pings, box }: { pings: ScreenPing[]; box: Box | null }) {
 
 interface StageProps {
   stream?:   MediaStream | null
+  /** Arte na mesa: aparece no lugar do vídeo (que continua tocando por baixo, escondido). */
+  art?:      ScreenArt | null
   pings:     ScreenPing[]
   onPoint?:  (x: number, y: number) => void
   frameRef:  RefObject<HTMLDivElement | null>
   children?: ReactNode
 }
 
-function StageMedia({ stream, pings, onPoint, frameRef, children }: StageProps) {
+function StageMedia({ stream, art, pings, onPoint, frameRef, children }: StageProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null)
+  const [videoSize, setSize] = useState<{ w: number; h: number } | null>(null)
+  const [artSize, setArtSize] = useState<{ url: string; w: number; h: number } | null>(null)
+  // o ponteiro mede pela arte quando ela está na mesa (todos apontam no mesmo lugar dela)
+  const size = art ? (artSize?.url === art.url ? artSize : null) : videoSize
   const box = useContentBox(frameRef, size)
 
   useEffect(() => {
@@ -94,8 +100,18 @@ function StageMedia({ stream, pings, onPoint, frameRef, children }: StageProps) 
     <div className={`mesa-stage__media${onPoint ? ' mesa-stage__media--pointer' : ''}`} onClick={handleClick}>
       {stream ? (
         // Sempre mudo: o som vem do <audio> do provider (continua fora da aba).
-        <video ref={videoRef} className="mesa-stage__video" autoPlay playsInline muted />
+        <video ref={videoRef} className="mesa-stage__video" autoPlay playsInline muted style={art ? { display: 'none' } : undefined} />
       ) : null}
+      {art && (
+        <img
+          key={art.showId}
+          className="mesa-stage__image"
+          src={art.url}
+          alt={art.name}
+          draggable={false}
+          onLoad={(e) => setArtSize({ url: art.url, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+        />
+      )}
       <PingLayer pings={pings} box={box} />
       {children}
     </div>
@@ -214,7 +230,8 @@ function MasterView() {
   const stream = mesa.localStream
   const { stage } = mesa
   const sharing = Boolean(stream)
-  const showing = sharing
+  const art = stage.art
+  const showing = sharing || Boolean(art)
   const canShare = canShareScreen()
   const watching = new Set(mesa.viewers.filter((v) => v.state === 'connected').map((v) => v.id.split(':')[0])).size
 
@@ -228,9 +245,9 @@ function MasterView() {
     <>
       <div ref={frameRef} className={`mesa-stage${showing ? ' mesa-stage--live' : ''}`}>
         {showing ? (
-          <StageMedia stream={stream} pings={mesa.pings} onPoint={mesa.ping} frameRef={frameRef}>
-            <span className="mesa-live-badge">Ao vivo</span>
-            {stage.paused && <span className="mesa-paused-badge">Pausada para os jogadores</span>}
+          <StageMedia stream={stream} art={art} pings={mesa.pings} onPoint={mesa.ping} frameRef={frameRef}>
+            <span className="mesa-live-badge">{art ? 'Na mesa' : 'Ao vivo'}</span>
+            {stage.paused && !art && <span className="mesa-paused-badge">Pausada para os jogadores</span>}
             {fullscreen.supported && (
               <div className="mesa-controls mesa-controls--corner">
                 <button type="button" className="mesa-ctrl" onClick={(e) => { e.stopPropagation(); fullscreen.toggle() }} aria-label={fullscreen.active ? 'Sair da tela cheia' : 'Tela cheia'}>
@@ -251,6 +268,19 @@ function MasterView() {
       </div>
 
       {showing && <p className="mesa-hint mesa-hint--center">Clique na imagem para apontar um lugar para todos.</p>}
+
+      {art && (
+        <div className="mesa-bar">
+          <div className="mesa-bar__info">
+            <span className="mesa-bar__count">
+              Arte na mesa: <strong>{art.name}</strong>{sharing ? ' (por cima da tela; o som continua)' : ''}
+            </span>
+          </div>
+          <div className="mesa-bar__actions">
+            <button type="button" className="btn btn-ghost" onClick={mesa.hideArt}>Tirar da mesa</button>
+          </div>
+        </div>
+      )}
 
       {mesa.shareError && <p className="mesa-msg mesa-msg--error" role="alert">{mesa.shareError}</p>}
 
@@ -308,24 +338,27 @@ function PlayerView() {
   const fullscreen = useFullscreen(frameRef)
   const { stage } = mesa
   const stream = mesa.remoteStream
+  const art = stage.art
   const showVideo = Boolean(stream) && Boolean(stage.screenId)
+  const showing = showVideo || Boolean(art)
   const hasAudio = Boolean(stage.screenId) && stage.audio && Boolean(stream)
   const scene = SCENE_BY_STATUS[mesa.status]
 
   return (
     <>
-      <div ref={frameRef} className={`mesa-stage${showVideo ? ' mesa-stage--live' : ''}`}>
-        {showVideo ? (
-          <StageMedia stream={stream} pings={mesa.pings} frameRef={frameRef}>
-            {showVideo && mesa.status === 'live' && !stage.paused && <span className="mesa-live-badge">Ao vivo</span>}
+      <div ref={frameRef} className={`mesa-stage${showing ? ' mesa-stage--live' : ''}`}>
+        {showing ? (
+          <StageMedia stream={showVideo ? stream : null} art={art} pings={mesa.pings} frameRef={frameRef}>
+            {art && <span className="mesa-live-badge">Na mesa</span>}
+            {!art && showVideo && mesa.status === 'live' && !stage.paused && <span className="mesa-live-badge">Ao vivo</span>}
 
-            {showVideo && stage.paused && (
+            {!art && showVideo && stage.paused && (
               <div className="mesa-paused">
                 <span className="mesa-paused__sigil" aria-hidden="true">ᛉ</span>
                 <p className="mesa-paused__title">Mestre ajustando a cena…</p>
               </div>
             )}
-            {showVideo && mesa.status === 'reconnecting' && (
+            {!art && showVideo && mesa.status === 'reconnecting' && (
               <div className="mesa-paused"><p className="mesa-paused__title">Reconectando…</p></div>
             )}
 
@@ -361,6 +394,8 @@ function PlayerView() {
                 </>
               ) : showVideo ? (
                 <span className="mesa-controls__note">Sem som</span>
+              ) : art ? (
+                <span className="mesa-controls__note">{art.name}</span>
               ) : null}
               <span className="mesa-controls__spacer" />
               {fullscreen.supported && (

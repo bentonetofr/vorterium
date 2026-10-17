@@ -11,7 +11,8 @@ import { enterFullscreen } from '../../vortable/fullscreen'
 import './MesaLiveNotice.css'
 
 // ────────────────────────────────────────────────────────
-// Aviso "o mestre abriu o Vortable" em QUALQUER página do site. Escuta o
+// Aviso "o mestre abriu o Vortable" (ou transmitiu a tela, ou pôs uma arte
+// na mesa) em QUALQUER página do site. Escuta o
 // canal "mesa-aviso:<campanha>" de todas as campanhas em que a pessoa é
 // jogadora; ao entrar, pergunta "status?" (quem abriu o site no meio da
 // transmissão também é avisado). Cada transmissão avisa uma vez só.
@@ -24,6 +25,8 @@ interface Notice {
   campaignId:   string
   campaignName: string
   masterName:   string
+  /** Transmissão: é uma arte que o mestre pôs na mesa (não a tela). */
+  art?:         boolean
 }
 
 const NOTICE_MS    = 15_000
@@ -100,6 +103,7 @@ export function MesaLiveNotice() {
               campaignId:   c.id,
               campaignName: c.name,
               masterName:   String(payload?.masterName ?? 'O mestre'),
+              art:          payload?.art === true,
             }])
           })
           channel.on('broadcast', { event: 'ended' }, () => {
@@ -164,7 +168,7 @@ export function MesaLiveNotice() {
     <div key={current.liveId} className="mesa-notice" role="status" aria-live="polite">
       <span className="mesa-notice__live">Ao vivo</span>
       <div className="mesa-notice__body">
-        <p className="mesa-notice__message"><strong>{current.masterName}</strong> {current.kind === 'tela' ? 'iniciou uma transmissão de tela' : 'iniciou a sessão no Vortable'}</p>
+        <p className="mesa-notice__message"><strong>{current.masterName}</strong> {current.kind === 'tela' ? (current.art ? 'pôs uma arte na mesa' : 'iniciou uma transmissão de tela') : 'iniciou a sessão no Vortable'}</p>
         <p className="mesa-notice__campaign">{current.campaignName}</p>
       </div>
       <div className="mesa-notice__actions">

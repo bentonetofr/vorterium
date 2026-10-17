@@ -459,6 +459,11 @@
 }
 .mesa-thumb__link:hover { color: var(--text-primary); }
 .mesa-thumb__link--danger { color: var(--danger); font-weight: 700; }
+/* Pôr na mesa (só o mestre): a arte vai pra Transmissão, ao vivo pra todos. */
+.mesa-thumb__link--table { color: var(--accent-bright); font-weight: 600; }
+.mesa-thumb__link--active { color: var(--gilded-bright); }
+.mesa-thumb--on-table { outline: 2px solid var(--gilded-bright); outline-offset: 2px; border-radius: var(--radius-md); }
+.mesa-thumb__tag--table { background: var(--gilded-bright); color: #1a1408; }
 
 /* ── Textos ── */
 .mesa-hint { margin: 0; font-size: var(--text-xs); color: var(--text-muted); line-height: 1.6; }

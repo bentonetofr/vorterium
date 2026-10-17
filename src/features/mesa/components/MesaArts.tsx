@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { addGalleryImageToBoard, imageSize } from '../../board/services/boardService'
 import { useAuth } from '../../auth/AuthProvider'
 import { useMesaStream } from '../MesaStreamProvider'
+import { useScreenShare } from '../screen/ScreenShareProvider'
 import './MesaPanel.css'
 import {
   deleteMesaImage,
@@ -19,7 +20,8 @@ import { Loader } from '../../../shared/components/Loader'
 // como referência — um retrato do personagem, um mapa, uma arte que
 // inspirou a cena. Todos veem (clicar abre grande). Cada um exclui o que
 // enviou; o mestre, qualquer uma. Todos podem pôr uma arte no Quadro da
-// campanha (e elas aparecem na Galeria).
+// campanha (e elas aparecem na Galeria). O mestre também põe uma arte na
+// mesa: ela aparece na Transmissão, ao vivo, pra todo mundo.
 // ────────────────────────────────────────────────────────
 
 /** Quantas artes aparecem antes do "Ver todas". */
@@ -29,6 +31,9 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
   const mesa = useMesaStream()
   const { user } = useAuth()
   const isMaster = mesa.isMaster
+  const screen = useScreenShare()
+  /** Id da arte que está na mesa agora (na Transmissão). */
+  const onTableId = screen.stage.art?.id ?? null
   const [arts, setArts]           = useState<MesaArt[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
@@ -89,6 +94,7 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
     setBusyId(art.id)
     try {
       await deleteMesaImage(art)
+      if (onTableId === art.id) screen.hideArt()
       setArts((list) => list.filter((a) => a.id !== art.id))
       setConfirmId(null)
     } catch (err) {
@@ -107,6 +113,22 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
       window.setTimeout(() => setPlaced((cur) => (cur === art.name ? null : cur)), 6000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível pôr a imagem no Quadro.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function handleToTable(art: MesaArt) {
+    if (onTableId === art.id) { screen.hideArt(); return }
+    setError(null)
+    setBusyId(art.id)
+    try {
+      await screen.showArt(art)
+      setViewing(null)
+      // a Transmissão fica logo acima: rola até ela pra ver o que os jogadores estão vendo
+      document.querySelector('.mesa .mesa-stage')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível pôr a arte na mesa.')
     } finally {
       setBusyId(null)
     }
@@ -151,7 +173,7 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
             const busy = busyId === art.id
             const mine = !!user && art.uploaded_by === user.id
             return (
-              <li key={art.id} className={`mesa-thumb${fresh.has(art.id) ? ' mesa-thumb--fresh' : ''}`}>
+              <li key={art.id} className={`mesa-thumb${fresh.has(art.id) ? ' mesa-thumb--fresh' : ''}${onTableId === art.id ? ' mesa-thumb--on-table' : ''}`}>
                 <button
                   type="button"
                   className="mesa-thumb__preview"
@@ -162,7 +184,9 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
                   {art.url
                     ? <img src={art.url} alt="" loading="lazy" draggable={false} />
                     : <span className="mesa-thumb__missing">sem prévia</span>}
-                  {fresh.has(art.id) && <span className="mesa-thumb__tag mesa-thumb__tag--new">Nova</span>}
+                  {onTableId === art.id
+                    ? <span className="mesa-thumb__tag mesa-thumb__tag--table">Na mesa</span>
+                    : fresh.has(art.id) && <span className="mesa-thumb__tag mesa-thumb__tag--new">Nova</span>}
                   <span className="mesa-thumb__hover">Ver</span>
                 </button>
                 <div className="mesa-thumb__foot">
@@ -170,6 +194,18 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
                     {art.name}
                     <span className="mesa-thumb__by">{mine ? 'por você' : art.uploader_name ? `por ${art.uploader_name}` : 'do mestre'}</span>
                   </span>
+                  {isMaster && art.url && (
+                    <button
+                      type="button"
+                      className={`mesa-thumb__link mesa-thumb__link--table${onTableId === art.id ? ' mesa-thumb__link--active' : ''}`}
+                      onClick={() => void handleToTable(art)}
+                      disabled={busy}
+                      aria-label={onTableId === art.id ? `Tirar ${art.name} da mesa` : `Pôr ${art.name} na mesa`}
+                      title={onTableId === art.id ? 'Tirar da mesa' : 'Pôr na mesa (todos veem na Transmissão)'}
+                    >
+                      {onTableId === art.id ? 'Tirar' : 'Na mesa'}
+                    </button>
+                  )}
                   <button type="button" className="mesa-thumb__link" onClick={() => void handleToBoard(art)} disabled={busy} aria-label={`Pôr ${art.name} no Quadro`} title="Pôr no Quadro">▦</button>
                   {canDelete(art) && (confirmId === art.id ? (
                     <span className="mesa-thumb__confirm">
@@ -198,13 +234,23 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
         </button>
       )}
 
-      {viewing && <ArtViewer art={viewing} onClose={() => setViewing(null)} />}
+      {viewing && (
+        <ArtViewer
+          art={viewing}
+          onClose={() => setViewing(null)}
+          tableAction={isMaster && viewing.url ? (
+            <button type="button" className="btn btn-primary" onClick={() => void handleToTable(viewing)} disabled={busyId === viewing.id}>
+              {onTableId === viewing.id ? 'Tirar da mesa' : 'Pôr na mesa'}
+            </button>
+          ) : null}
+        />
+      )}
     </section>
   )
 }
 
 /** A imagem grande, por cima de tudo (Esc ou clique fora fecha). */
-function ArtViewer({ art, onClose }: { art: MesaArt; onClose: () => void }) {
+function ArtViewer({ art, onClose, tableAction }: { art: MesaArt; onClose: () => void; tableAction?: ReactNode }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
@@ -216,6 +262,7 @@ function ArtViewer({ art, onClose }: { art: MesaArt; onClose: () => void }) {
       <figure className="mesa-art-view__figure">
         {art.url ? <img src={art.url} alt={art.name} /> : <span className="mesa-thumb__missing">sem prévia</span>}
         <figcaption>{art.name}{art.uploader_name ? ` · por ${art.uploader_name}` : ''}</figcaption>
+        {tableAction}
       </figure>
     </div>,
     document.body,
