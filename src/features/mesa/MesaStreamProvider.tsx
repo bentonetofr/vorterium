@@ -59,45 +59,46 @@ export function MesaStreamProvider({ children, announce = false }: { children: R
   const sessionRef = useRef<MesaSession | null>(null)
   const [snap, setSnap]       = useState<MesaSnapshot>(EMPTY_SNAPSHOT)
   const [viewing, setViewing] = useState(false)
+  // sobe quando a página volta do cache do navegador (a sessão antiga foi desligada ao sair)
+  const [generation, setGeneration] = useState(0)
+  // quem escuta a conversa do multiplayer: fica no provedor, então sobrevive a trocar de sessão
+  const signalHandlers = useRef(new Set<(payload: Record<string, unknown>) => void>())
 
   useEffect(() => {
     if (!campaignId || !userId) return
     const session = new MesaSession({
-      campaignId, userId, name, isMaster, announce: announce && isMaster, onChange: setSnap,
+      campaignId, userId, name, isMaster, announce: announce && isMaster, onChange: setSnap, report: announce,
       // o mestre que pega a sessão de quem a largou continua do mesmo estado (ao vivo, cena, regras)
       resume: announce && isMaster ? peekHandoff(campaignId) ?? undefined : undefined,
     })
     sessionRef.current = session
+    const off = session.onSignal((payload) => { for (const handler of signalHandlers.current) handler(payload) })
     void session.connect()
     return () => {
+      off()
       session.dispose()
       if (sessionRef.current === session) sessionRef.current = null
       setSnap(EMPTY_SNAPSHOT)
     }
     // O nome só vai no aviso de entrada — não reconecta se mudar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId, userId, isMaster, announce])
+  }, [campaignId, userId, isMaster, announce, generation])
 
-  // Fechou a aba/navegador: avisa os outros na hora.
+  // Fechou a aba ou recarregou: os outros ficam sabendo na hora (o mestre ao vivo só "sai um instante":
+  // se ele voltar em até 90 s, a sessão continua). Voltou do cache do navegador: conecta de novo.
   useEffect(() => {
-    const onUnload = () => sessionRef.current?.dispose()
-    window.addEventListener('pagehide', onUnload)
-    return () => window.removeEventListener('pagehide', onUnload)
+    const onHide = () => sessionRef.current?.suspend()
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) setGeneration((n) => n + 1) }
+    window.addEventListener('pagehide', onHide)
+    window.addEventListener('pageshow', onShow)
+    return () => { window.removeEventListener('pagehide', onHide); window.removeEventListener('pageshow', onShow) }
   }, [])
 
   const signaling = useMemo(() => ({
     send: (payload: Record<string, unknown>) => sessionRef.current?.signal(payload),
-    // a sessão pode ainda não existir (conecta num efeito): espera ela aparecer
     subscribe: (handler: (payload: Record<string, unknown>) => void) => {
-      let off: (() => void) | null = null
-      let timer = 0
-      const attach = () => {
-        const session = sessionRef.current
-        if (session) { off = session.onSignal(handler); return }
-        timer = window.setTimeout(attach, 200)
-      }
-      attach()
-      return () => { window.clearTimeout(timer); off?.() }
+      signalHandlers.current.add(handler)
+      return () => { signalHandlers.current.delete(handler) }
     },
   }), [])
 

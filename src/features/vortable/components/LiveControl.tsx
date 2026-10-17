@@ -590,17 +590,17 @@ function SpectatorsPane() {
                   <small>{watching ? 'assistindo' : 'jogando'}</small>
                 </span>
                 {watching
-                  ? <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.id, 'play')}>Colocar em jogo</button>
+                  ? <button type="button" className="btn btn-ghost" onClick={() => vnet.command(p.id, p.name, 'play')}>Colocar em jogo</button>
                   : (
                     <button
                       type="button" className="btn btn-ghost" disabled={!rules.allow}
                       title={rules.allow ? 'Ele vira espectador: fica só com a câmera' : 'Ligue "Permitir espectadores" primeiro'}
-                      onClick={() => vnet.net?.command(p.id, 'spectate')}
+                      onClick={() => vnet.command(p.id, p.name, 'spectate')}
                     >Mandar assistir</button>
                   )}
                 <button
                   type="button" className="live__iconbtn" title={`Tirar ${p.name} da sessão`} aria-label={`Tirar ${p.name} da sessão`}
-                  onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${p.name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.net?.kick(p.id))}
+                  onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${p.name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.kick(p.id, p.name))}
                 >✕</button>
               </li>
             )

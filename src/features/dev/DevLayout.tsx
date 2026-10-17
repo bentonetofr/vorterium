@@ -14,6 +14,7 @@ const NAV = [
   { to: '/dev/feedback',  label: 'Feedback' },
   { to: '/dev/usuarios',  label: 'Usuários' },
   { to: '/dev/campanhas', label: 'Campanhas' },
+  { to: '/dev/erros',     label: 'Erros do Vortable' },
 ]
 
 export function DevLayout() {

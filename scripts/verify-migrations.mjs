@@ -104,6 +104,7 @@ const expectedMigrations = [
   '20240199000000_terra_devastada_adaptada_furtividade.sql',
   '20240200000000_terra_devastada_adaptada_retrato.sql',
   '20240201000000_altherium_limite_triunfos.sql',
+  '20240202000000_vortable_erros.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

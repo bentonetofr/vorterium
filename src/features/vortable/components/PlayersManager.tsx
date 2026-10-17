@@ -44,7 +44,7 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
       const worlds = await createWorldStorage(campaign.id, active.id, active.name)
       const zone = await worlds.load(zoneId)
       if (!zone) throw new Error('Essa zona não existe mais.')
-      vnet.net?.sendTo(playerId, { t: 'teleport', zone: zone.id, x: zone.spawn.x, y: zone.spawn.y })
+      vnet.deliver(playerId, players?.find((p) => p.user_id === playerId)?.profile.display_name ?? 'O jogador', { t: 'teleport', zone: zone.id, x: zone.spawn.x, y: zone.spawn.y }, `Levar para ${zone.name}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não deu pra levar o jogador.')
     }
@@ -138,8 +138,8 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
             {spectators.map((x) => (
               <li key={x.id}>
                 <span>👁 {x.name}</span>
-                <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(x.id, 'play')}>Colocar em jogo</button>
-                <button type="button" className="btn btn-ghost" onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${x.name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.net?.kick(x.id))}>Tirar</button>
+                <button type="button" className="btn btn-ghost" onClick={() => vnet.command(x.id, x.name, 'play')}>Colocar em jogo</button>
+                <button type="button" className="btn btn-ghost" onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${x.name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.kick(x.id, x.name))}>Tirar</button>
               </li>
             ))}
           </ul>
@@ -176,7 +176,7 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
                 <span>{watching ? 'Assistindo' : mine ? mine.name : 'Ainda não criou o personagem'}</span>
               </div>
               {online && watching && (
-                <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.user_id, 'play')}>Colocar em jogo</button>
+                <button type="button" className="btn btn-ghost" onClick={() => vnet.command(p.user_id, p.profile.display_name, 'play')}>Colocar em jogo</button>
               )}
               {online && !watching && (
                 <>
@@ -190,12 +190,12 @@ export function PlayersManager({ campaign }: { campaign: CampaignWithRole; userI
                     {zones.map((z) => <option key={z.id} value={z.id}>{z.name}</option>)}
                   </select>
                   {rules.allow && (
-                    <button type="button" className="btn btn-ghost" onClick={() => vnet.net?.command(p.user_id, 'spectate')}>Mandar assistir</button>
+                    <button type="button" className="btn btn-ghost" onClick={() => vnet.command(p.user_id, p.profile.display_name, 'spectate')}>Mandar assistir</button>
                   )}
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${p.profile.display_name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.net?.kick(p.user_id))}
+                    onClick={() => ask({ title: 'Tirar da sessão', message: `Tirar ${p.profile.display_name} da sessão?`, tone: 'danger', confirmLabel: 'Tirar' }, () => vnet.kick(p.user_id, p.profile.display_name))}
                   >
                     Expulsar
                   </button>

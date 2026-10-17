@@ -41,6 +41,12 @@ export function MasterStage({ campaign, userId, editSignal = 0 }: { campaign: Ca
   }, [editor])
   useEffect(() => { patchResume(campaign.id, { masterTab: mode }) }, [campaign.id, mode])
   const vnet = useVortableNet()
+  // parou o Testar: o boneco de teste do mestre sai do mapa dos jogadores (o motor não avisa, e ele ficava lá parado)
+  const wasTesting = useRef(false)
+  useEffect(() => {
+    if (wasTesting.current && !testing) vnet.net?.send({ t: 'bye', id: userId })
+    wasTesting.current = testing
+  }, [testing, vnet.net, userId])
   const { editing, active, ready, refresh } = useVortableWorlds()
   const mesa = useMesaStream()
 

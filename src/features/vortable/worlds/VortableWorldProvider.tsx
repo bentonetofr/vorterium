@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { ensureWorlds, watchWorlds, type CampaignWorld } from '../services/vortableService'
+import { errorText } from '../errors/vtCodes'
 
 interface WorldValue {
   /** Carregou a lista de mundos? */
@@ -37,7 +38,7 @@ export function VortableWorldProvider({ children }: { children: ReactNode }) {
       setWorlds(await ensureWorlds(campaignId, isMaster))
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível carregar os mundos.')
+      setError(errorText(err, 'Não foi possível carregar os mundos.'))
     } finally {
       setReady(true)
     }

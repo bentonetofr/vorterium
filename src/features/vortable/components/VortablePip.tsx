@@ -15,6 +15,7 @@ import './SceneBar.css'
 import './VortablePip.css'
 import { Loader } from '../../../shared/components/Loader'
 import { ask } from '../../../shared/components/dialogs'
+import { VtErrorPopups } from '../errors/VtErrorPopups'
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 
@@ -78,6 +79,9 @@ function PipWindow({ campaign }: { campaign: CampaignWithRole }) {
     ?? (picked && inGame.some((p) => p.id === picked) ? picked : null)
     ?? inGame[0]?.id ?? null
   const followed = inGame.find((p) => p.id === followId)
+
+  // a conta abriu o Vortable em outra aba (ou o mestre tirou da sessão): a telinha some
+  useEffect(() => { if (vnet.issue === 'replaced' || vnet.issue === 'kicked') closePip() }, [vnet.issue])
 
   useEffect(() => {
     const timer = window.setInterval(() => { const w = watch.current; if (w) setPeers(w.peers()) }, 600)
@@ -171,6 +175,7 @@ function PipWindow({ campaign }: { campaign: CampaignWithRole }) {
           <button type="button" className="vortable-pip__btn" onClick={() => step(1)} disabled={inGame.length < 2} aria-label="Próximo jogador">›</button>
         </footer>
       </div>
+      <VtErrorPopups />
     </aside>
   )
 }

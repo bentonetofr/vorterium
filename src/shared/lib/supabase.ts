@@ -16,6 +16,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
   },
+  // A "batida" que mantém o tempo real conectado roda num Web Worker: numa aba em segundo plano o
+  // navegador atrasa os timers da página e o servidor derrubava o canal (ex.: o mestre olhando uma ficha
+  // em outra aba durante a sessão do Vortable).
+  realtime: { worker: true },
 })
 
 let channelSeq = 0

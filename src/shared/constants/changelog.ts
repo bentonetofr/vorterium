@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.76',
+    date:    '2026-10-17',
+    title:   'Vortable mais estável, e todo erro com um código',
+    items: [
+      'A conexão do Vortable foi refeita pra aguentar a mesa cheia (o mestre e 5 jogadores, ou mais) em tempo real. Se a sua internet cai ou fica instável, o Vortable percebe em uns 10 segundos e volta sozinho; ao voltar, o mapa se acerta: quem saiu enquanto você estava fora some, quem entrou aparece, e a hora, o tempo e as zonas que o mestre mudou chegam até você.',
+      'Acabaram os bonecos fantasmas e duplicados: quem fecha o Vortable some na hora do mapa de todos, e abrir o Vortable em outra aba ou no celular com a mesma conta não duplica o boneco. A aba antiga avisa e tem o botão "Usar aqui" pra voltar a jogar por ela.',
+      'Rede que bloqueia a ligação direta (4G, rede de empresa ou de faculdade)? O jogador entra pela conexão reserva, que passa pelo servidor. É um pouco mais lenta, mas funciona sempre. E as posições agora vão por um canal rápido: um pacote perdido não trava mais o movimento de todo mundo.',
+      'O mestre pode recarregar a página no meio da sessão: os jogadores veem "O mestre está sem conexão" e o jogo continua de onde parou quando ele volta (se ele não voltar em 90 segundos, a sessão acaba). Ter o site aberto em outra aba enquanto joga também não derruba mais ninguém.',
+      'Todo erro do Vortable tem um código (por exemplo VT-NET-002, conexão com o mestre caiu) e aparece num aviso no canto dizendo o que aconteceu e o que fazer. Os erros que param o jogo abrem uma janela no meio da tela com o botão pra recarregar. Leituras do servidor que falham por rede tentam de novo sozinhas antes de dar erro.',
+      'Mestre: um botão "Erros" na barra do Vortable mostra, ao vivo, os erros de todos da campanha (quem, quando, o código, o que houve e os detalhes do momento), com filtro por pessoa e por tipo. Erros sérios de um jogador também aparecem num aviso pra você. A barra mostra a latência de cada jogador e quem está pela conexão reserva.',
+      'Pedir pra passar por uma saída enquanto a conexão cai (ou sem resposta do mestre) agora avisa o motivo, em vez de só não deixar passar. E quando o mestre leva alguém a uma zona, manda assistir ou tira da sessão e a pessoa não está conectada, aparece o aviso.',
+    ],
+  },
+  {
     version: '1.75',
     date:    '2026-10-17',
     title:   'Arte na mesa, ao vivo pra todos',

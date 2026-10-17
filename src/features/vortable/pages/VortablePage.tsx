@@ -17,6 +17,8 @@ import { fullscreenSupported, enterFullscreen, leaveFullscreen, useIsFullscreen 
 import { closePip } from '../pip/pipStore'
 import { RotateHint } from '../components/RotateHint'
 import '../components/VortablePage.css'
+import { VtErrorPopups } from '../errors/VtErrorPopups'
+import { VtErrorsButton } from '../errors/VtErrorsButton'
 import { Loader } from '../../../shared/components/Loader'
 
 /**
@@ -108,12 +110,20 @@ function VortablePageContent() {
           </button>
         )}
         {campaign && (
-          <span className={`vortable-page__net vortable-page__net--${campaign.role === 'master' ? (vnet.peers.some((p) => p.connected) ? 'online' : 'off') : vnet.status}`}>
+          <span
+            className={`vortable-page__net vortable-page__net--${campaign.role === 'master' ? (vnet.peers.some((p) => p.connected) ? 'online' : 'off') : vnet.status}`}
+            title={campaign.role === 'master'
+              ? vnet.peers.filter((p) => p.connected).map((p) => `${p.name}: ${p.via === 'reserva' ? 'reserva' : 'direto'}${p.rtt != null ? ` · ${p.rtt} ms` : ''}`).join('\n') || 'Ninguém conectado'
+              : vnet.transport === 'reserva' ? 'Pela conexão reserva (a sua rede não deixou a ligação direta)' : undefined}
+          >
             {campaign.role === 'master'
               ? `${vnet.peers.filter((p) => p.connected).length} online`
-              : vnet.status === 'online' ? 'Conectado' : vnet.status === 'connecting' ? 'Conectando…' : 'Sozinho'}
+              : vnet.status === 'online'
+                ? `Conectado${vnet.transport === 'reserva' ? ' (reserva)' : ''}${vnet.rtt != null ? ` · ${vnet.rtt} ms` : ''}`
+                : vnet.status === 'connecting' ? (mesa.masterAway ? 'Mestre sem conexão…' : 'Conectando…') : 'Sozinho'}
           </span>
         )}
+        {campaign?.role === 'master' && user && <VtErrorsButton campaignId={campaign.id} userId={user.id} />}
         {fullscreenSupported() && (
           <button
             type="button"
@@ -150,6 +160,7 @@ function VortablePageContent() {
           ))}
       </main>
       {campaign && <RotateHint />}
+      <VtErrorPopups />
       {campaign && <VortableTools open={toolsOpen} onToggle={() => setToolsOpen((v) => !v)} />}
     </div>
   )

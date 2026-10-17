@@ -39,6 +39,7 @@ import { DevOverviewPage }  from '../../features/dev/pages/DevOverviewPage'
 import { DevFeedbackPage }  from '../../features/dev/pages/DevFeedbackPage'
 import { DevUsersPage, DevUserPage } from '../../features/dev/pages/DevUsersPage'
 import { DevCampaignsPage, DevCampaignPage } from '../../features/dev/pages/DevCampaignsPage'
+import { DevErrorsPage }    from '../../features/dev/pages/DevErrorsPage'
 
 export function AppRouter() {
   return (
@@ -74,6 +75,7 @@ export function AppRouter() {
           <Route path="/dev/usuarios/:userId"      element={<DevUserPage />} />
           <Route path="/dev/campanhas"             element={<DevCampaignsPage />} />
           <Route path="/dev/campanhas/:campaignId" element={<DevCampaignPage />} />
+          <Route path="/dev/erros"                element={<DevErrorsPage />} />
         </Route>
 
         {/* ── Vortable em tela cheia: logado, mas sem o layout do site ── */}

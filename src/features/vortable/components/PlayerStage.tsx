@@ -21,6 +21,8 @@ import { Loader } from '../../../shared/components/Loader'
 import { CharacterStudio } from './CharacterStudio'
 import { TouchLayer } from './TouchControls'
 import { primePlayZoom } from '../touch/playZoom'
+import { vtError } from '../errors/vtErrors'
+import { errorText } from '../errors/vtCodes'
 
 /**
  * Jogador: só a tela do jogo, com o personagem que ele criou na ficha (fixo nesta campanha).
@@ -56,7 +58,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
       setMine(await getMyCharacter(campaign.id, userId))
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível abrir o seu boneco.')
+      setError(errorText(err, 'Não foi possível abrir o seu boneco.'))
     }
   }, [campaign.id, userId])
 
@@ -74,8 +76,25 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   if (vnet.kicked) {
     return (
       <div className="vortable-stage"><div className="vortable-stage__cover" role="alert">
-        <span>O mestre tirou você da sessão.</span>
+        <span><code className="vt-code">VT-SALA-006</code> O mestre tirou você da sessão.</span>
         <button className="btn btn-ghost" onClick={vnet.retry}>Entrar de novo</button>
+      </div></div>
+    )
+  }
+  if (vnet.issue === 'replaced') {
+    return (
+      <div className="vortable-stage"><div className="vortable-stage__cover" role="alert">
+        <span><code className="vt-code">VT-SALA-007</code> O Vortable foi aberto em outra aba ou aparelho com a sua conta.</span>
+        <button className="btn btn-primary" onClick={vnet.retry}>Usar aqui</button>
+      </div></div>
+    )
+  }
+  if (vnet.issue === 'version') {
+    return (
+      <div className="vortable-stage"><div className="vortable-stage__cover" role="alert">
+        <span><code className="vt-code">VT-SYNC-004</code> Você e o mestre estão com versões diferentes do Vortable.</span>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>Recarregar a página</button>
+        <small>Se continuar, peça pro mestre recarregar a página dele também.</small>
       </div></div>
     )
   }
@@ -143,10 +162,16 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
             assetBase: VORTABLE_ASSETS,
             storage: worlds,
             onZone: (z) => setLocalZone(z.id),
-            // sair de uma zona precisa do sim do mestre
+            // sair de uma zona precisa do sim do mestre (sem resposta ou sem ligação: não passa, e o pop-up diz por quê)
             gate: net ? async (info) => {
-              setWaitingDoor(info.toName || info.to)
-              try { return await net.askDoor(info) } finally { setWaitingDoor(null) }
+              const zona = info.toName || info.to
+              setWaitingDoor(zona)
+              try {
+                const answer = await net.askDoor(info)
+                if (answer === 'timeout') vtError('VT-SALA-009', { vars: { zona } })
+                else if (answer === 'lost') vtError('VT-SALA-010', { vars: { zona } })
+                return answer === 'ok'
+              } finally { setWaitingDoor(null) }
             } : undefined,
             // o nome é lido a cada anúncio: acompanha a ficha
             net: vnet.net ? { selfId: userId, get name() { return net?.name ?? vnet.name }, send: (m) => net?.send(m) } : undefined,
@@ -155,6 +180,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
           gameRef.current = game
           if (net) {
             net.sink = (m) => game.receive(m)
+            // abriu (ou voltou depois de cair): reanuncia o boneco; quem saiu e as zonas mudadas a rede já corrige
             net.onOpen = () => game.resync()
           }
           // a posição fica guardada no navegador a cada segundo e ao esconder/fechar a página, pra sobreviver a recarregar ou cair

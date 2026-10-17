@@ -1,0 +1,167 @@
+/* ── Código de erro (chip) ─────────────────────────────── */
+.vt-code {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+.vt-code--info { color: var(--text-secondary, #b8bfd0); }
+.vt-code--aviso { color: #e9b44c; }
+.vt-code--erro { color: var(--danger-bright, #ff7b72); }
+.vt-code--grave { color: #fff; background: #b3261e; border-color: #b3261e; }
+
+/* ── Pop-ups ────────────────────────────────────────────── */
+.vt-pops {
+  position: fixed;
+  top: 60px;
+  right: 12px;
+  z-index: 9500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(360px, calc(100vw - 24px));
+  pointer-events: none;
+}
+.vt-pop {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px 11px;
+  border: 1px solid var(--border-base, #3a4157);
+  border-left: 4px solid #e9b44c;
+  border-radius: 10px;
+  background: var(--bg-overlay, #222a3d);
+  color: var(--text-primary, #eef1f7);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: vt-pop-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.vt-pop--info { border-left-color: var(--accent, #c9a45c); }
+.vt-pop--erro { border-left-color: var(--danger-bright, #ff7b72); }
+.vt-pop--grave { border-left-color: #b3261e; }
+.vt-pop__head { display: flex; align-items: center; gap: 8px; }
+.vt-pop__title { flex: 1; min-width: 0; margin: 0; font-size: 0.92rem; font-weight: 700; }
+.vt-pop__close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted, #8a92a6);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.vt-pop__close:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary, #eef1f7); }
+.vt-pop__what, .vt-pop__fix { margin: 0; font-size: 0.84rem; line-height: 1.4; }
+.vt-pop__what { color: var(--text-primary, #eef1f7); }
+.vt-pop__fix { color: var(--text-secondary, #b8bfd0); }
+.vt-pop__fix b { color: var(--text-primary, #eef1f7); }
+.vt-pop__meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--text-muted, #8a92a6); }
+.vt-pop__btns { display: flex; gap: 8px; margin-top: 4px; }
+.vt-pop__btns .btn { flex: 1; }
+
+/* grave: janela no meio da tela */
+.vt-grave {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(4, 6, 10, 0.6);
+}
+.vt-grave .vt-pop {
+  width: min(420px, 100%);
+  padding: 16px 18px 18px;
+  gap: 8px;
+}
+.vt-grave .vt-pop__title { font-size: 1.05rem; }
+.vt-grave .vt-pop__what, .vt-grave .vt-pop__fix { font-size: 0.92rem; }
+
+@keyframes vt-pop-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vt-pop { animation: none; }
+}
+@media (max-width: 560px) {
+  .vt-pops { top: auto; bottom: 12px; right: 8px; left: 8px; width: auto; }
+}
+
+/* ── Lista de erros do mestre ───────────────────────────── */
+.vt-errbtn { position: relative; }
+.vt-errbtn__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger-bright, #ff7b72);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.vt-errors {
+  position: fixed;
+  top: 52px;
+  right: 0;
+  bottom: 0;
+  z-index: 9400;
+  display: flex;
+  flex-direction: column;
+  width: min(460px, 100vw);
+  border-left: 1px solid var(--border-base, #3a4157);
+  background: var(--bg-surface, #171c28);
+  color: var(--text-primary, #eef1f7);
+  box-shadow: -12px 0 30px rgba(0, 0, 0, 0.45);
+}
+.vt-errors__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-dim, #2a3042);
+}
+.vt-errors__title { flex: 1; margin: 0; font-size: 1rem; }
+.vt-errors__tools { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border-dim, #2a3042); }
+.vt-errors__tools select { min-width: 0; flex: 1; }
+.vt-errors__list { flex: 1; overflow-y: auto; margin: 0; padding: 6px 0; list-style: none; }
+.vt-errors__empty { padding: 24px 14px; color: var(--text-muted, #8a92a6); text-align: center; }
+.vt-err {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-dim, #2a3042);
+}
+.vt-err__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.vt-err__who { font-weight: 700; }
+.vt-err__role { font-size: 0.75rem; color: var(--text-muted, #8a92a6); }
+.vt-err__when { margin-left: auto; font-size: 0.75rem; color: var(--text-muted, #8a92a6); white-space: nowrap; }
+.vt-err__title { margin: 4px 0 0; font-size: 0.86rem; font-weight: 600; }
+.vt-err__what { margin: 2px 0 0; font-size: 0.82rem; color: var(--text-secondary, #b8bfd0); }
+.vt-err__count { font-size: 0.75rem; color: var(--text-muted, #8a92a6); }
+.vt-err details { margin-top: 4px; font-size: 0.78rem; color: var(--text-muted, #8a92a6); }
+.vt-err summary { cursor: pointer; }
+.vt-err pre {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  max-height: 180px;
+  overflow: auto;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 0.72rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.vt-errors__foot { padding: 10px 14px; border-top: 1px solid var(--border-dim, #2a3042); font-size: 0.78rem; color: var(--text-muted, #8a92a6); }
