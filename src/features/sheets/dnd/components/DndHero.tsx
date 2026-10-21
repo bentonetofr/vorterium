@@ -5,7 +5,8 @@ import { classLine } from '../model/sheetModel'
 import { formatSigned } from '../model/format'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
-import { DerivedField, Toggle } from './DndControls'
+import { DerivedField, NumberField, Toggle } from './DndControls'
+import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -31,8 +32,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
 
   const hpMax = derived.hpMax ?? form.hp_max
   const hp = Math.max(0, Math.min(hpMax, form.hp_current))
-  const pct = Math.max(0, Math.min(100, (hp / Math.max(1, hpMax)) * 100))
-  const tone = hp === 0 ? 'down' : pct <= 25 ? 'low' : pct <= 50 ? 'mid' : 'ok'
+  const tone = hp === 0 ? 'down' : 'ok'
 
   const race = form.race_key ? getRace(form.race_key) : undefined
   const subrace = form.race_key && form.subrace_key ? getSubrace(form.race_key, form.subrace_key) : undefined
@@ -128,14 +128,23 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
       <div className={`dsh-hp dsh-hp--${tone}`}>
         <div className="dsh-hp__head">
           <span className="dsh-hp__title">Pontos de Vida</span>
-          <span className="dsh-hp__nums">
-            <strong>{hp}</strong> / {hpMax}
-            {form.hp_temp > 0 && <span className="dsh-hp__temp" title="PV temporários">+{form.hp_temp} temp.</span>}
+          <span className="dsh-hp__values">
+            <NumberField
+              className="dsh-hp__input" value={hp} onChange={(n) => set('hp_current', n)} min={0} max={hpMax}
+              label="PV atuais" disabled={readOnly}
+            />
+            <span className="dsh-hp__sep">/</span>
+            {derived.hpMax != null
+              ? <DerivedField ctx={ctx} field="hp_max" value={derived.hpMax} label="PV máximo" min={1} max={9999} />
+              : <NumberField className="dsh-hp__input dsh-hp__input--max" value={form.hp_max} onChange={(n) => set('hp_max', n)} min={1} max={9999} label="PV máximo" disabled={readOnly} />}
+            <label className="dsh-hp__tempfield" title="PV temporários: o dano gasta eles primeiro">
+              <span>+</span>
+              <NumberField className="dsh-hp__input dsh-hp__input--temp" value={form.hp_temp} onChange={(n) => set('hp_temp', n)} min={0} max={9999} label="PV temporários" disabled={readOnly} />
+              <span>temp.</span>
+            </label>
           </span>
         </div>
-        <div className="dsh-hp__track" role="progressbar" aria-label="Pontos de vida" aria-valuemin={0} aria-valuemax={hpMax} aria-valuenow={hp}>
-          <div className="dsh-hp__fill" style={{ width: `${pct}%` }} />
-        </div>
+        <DndDragBar value={hp} max={hpMax} onChange={(n) => set('hp_current', n)} disabled={readOnly} label="Pontos de vida" />
         <div className="dsh-hp__btns">
           {[-5, -1, 1, 5].map((d) => (
             <button key={d} type="button" className="dsh-mini" disabled={readOnly} onClick={() => heal(d)}

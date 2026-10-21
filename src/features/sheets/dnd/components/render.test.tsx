@@ -145,10 +145,21 @@ describe('cabeçalho', () => {
     expect(html).toContain('AUTO')
   })
 
-  it('barra de PV com PV temporário', () => {
+  it('barra de PV arrastável com campos de PV atual, máximo e temporário', () => {
     const html = hero(makeCtx())
     expect(html).toContain('Pontos de Vida')
-    expect(html).toContain('+3 temp.')
+    expect(html).toContain('aria-label="PV atuais"')
+    expect(html).toContain('aria-label="PV temporários"')
+    expect(html).toContain('aria-label="PV máximo"')            // o máximo calculado tem o selo AUTO
+    expect(html).toContain('role="slider"')
+    expect(html).toContain('aria-valuenow="30"')
+    expect(html).toContain('width:60%')                         // 30 de 50 (Guerreiro 3 + Mago 2, Con +3, anão da colina)
+    expect(html).toContain('dsh-drag__handle')
+  })
+
+  it('sem classes, o PV máximo é um campo digitável', () => {
+    const html = hero(makeCtx({ data: makeData({ classes: [] }) }))
+    expect(html).toContain('dsh-hp__input--max')
   })
 
   it('NPC e modo leitura não mostram o botão de criar personagem nem permitem descansar', () => {

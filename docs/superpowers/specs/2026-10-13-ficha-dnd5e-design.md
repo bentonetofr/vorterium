@@ -332,6 +332,8 @@ CD e ataque de magia manuais e ataque com arma; `rules/rest.ts` (descansos); `mo
 (`sheetModel`), define o que a tela edita e grava (`sheetForm`), planeja os espaços de magia como recursos (`slots`), lista as
 características do catálogo (`features`) e formata números (`format`).
 
+**Visual (21/10, pedido do usuário):** tema vermelho (acento, cabeçalho, bolinhas) e barra de PV igual à do Altherium: campos de PV atual, máximo e temporário editáveis e a barra arrastável com a linha branca (`DndDragBar`).
+
 **Código antigo removido:** a ficha provisória (`DndCharacterSheetPanel`, editores, prévia com dados de mentira e o CSS de 1.789 linhas).
 
 **Migration nova:** `20240206000000_dnd_classes_upsert.sql` corrige o gatilho da soma de níveis, que contava a própria classe duas

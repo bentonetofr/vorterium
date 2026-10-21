@@ -108,8 +108,8 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
           <h4 className="dsh-card__title">Carga</h4>
           <span className={`dsh-badge${carried > capacity ? ' dsh-badge--bad' : ''}`}>{formatKg(carried)} / {formatKg(capacity)}</span>
         </div>
-        <div className="dsh-hp__track" role="progressbar" aria-label="Carga" aria-valuemin={0} aria-valuemax={Math.round(capacity)} aria-valuenow={Math.round(carried)}>
-          <div className={`dsh-hp__fill${carried > capacity ? ' is-over' : ''}`} style={{ width: `${pct}%` }} />
+        <div className="dsh-load" role="progressbar" aria-label="Carga" aria-valuemin={0} aria-valuemax={Math.round(capacity)} aria-valuenow={Math.round(carried)}>
+          <div className={`dsh-load__fill${carried > capacity ? ' is-over' : ''}`} style={{ width: `${pct}%` }} />
         </div>
         <p className="dsh-note">Capacidade de carga = Força × 7,5 kg. Passou disso, o personagem fica sobrecarregado (a mesa decide a penalidade).</p>
       </section>
