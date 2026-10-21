@@ -185,6 +185,32 @@ describe('computeDerived: conjuração', () => {
     expect(computeDerived({ ...base, classes: [{ classKey: 'paladin', level: 1, spellcasting: paladin }] }).spellcasting).toBeNull()
   })
 
+  it('o atributo escolhido vale no lugar do da classe', () => {
+    // Mago com INT 18 (+4) escolhendo Carisma 14 (+2): proficiência +3.
+    const d = computeDerived({ ...base, abilities: { ...base.abilities, charisma: 14 }, spellAbility: 'charisma' })
+    expect(d.spellcasting!.classes[0]).toMatchObject({ ability: 'charisma', saveDc: 8 + 3 + 2, attackBonus: 3 + 2 })
+    expect(d.spellStats).toEqual({ ability: 'charisma', saveDc: 13, attackBonus: 5, chosen: true })
+  })
+
+  it('sem classe conjuradora, o atributo escolhido ainda calcula CD e ataque', () => {
+    const d = computeDerived({
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 16, wisdom: 10, charisma: 10 },
+      classes: [{ classKey: 'fighter', level: 5 }], spellAbility: 'intelligence',
+    })
+    expect(d.spellcasting).toBeNull()
+    expect(d.spellStats).toEqual({ ability: 'intelligence', saveDc: 8 + 3 + 3, attackBonus: 3 + 3, chosen: true })
+  })
+
+  it('sem classe conjuradora e sem escolha não há CD nem ataque', () => {
+    expect(computeDerived({ abilities: base.abilities, classes: [{ classKey: 'fighter', level: 5 }] }).spellStats).toBeNull()
+  })
+
+  it('a CD manual vale também sem classe conjuradora', () => {
+    const d = computeDerived({ abilities: base.abilities, classes: [{ classKey: 'fighter', level: 1 }], spellAbility: 'wisdom', overrides: { spell_save_dc: 17 } })
+    expect(d.spellStats!.saveDc).toBe(17)
+    expect(d.overridden).toContain('spell_save_dc')
+  })
+
   it('proficiência manual muda a CD', () => {
     const s = computeDerived({ ...base, overrides: { proficiency_bonus: 5 } }).spellcasting!
     expect(s.classes[0].saveDc).toBe(8 + 5 + 4)

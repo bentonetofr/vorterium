@@ -1,4 +1,4 @@
-import type { AbilityKey, ClassLevel, ClassSpellcasting, SpellcastingDerived, SpellcastingProfile } from './types'
+import type { AbilityKey, ClassLevel, ClassSpellcasting, SpellcastingDerived, SpellcastingProfile, SpellStats } from './types'
 
 // ────────────────────────────────────────────────────────
 // Conjuração (5e 2014, SRD 5.1): espaços de magia, multiclasse, Magia de
@@ -148,11 +148,16 @@ export function wizardSpellbookSize(level: number): number {
   return lv < 1 ? 0 : 6 + 2 * (lv - 1)
 }
 
-/** Tudo da conjuração para a ficha. null se nenhuma classe conjura. */
+/**
+ * Tudo da conjuração para a ficha. null se nenhuma classe conjura.
+ * `abilityOverride` é o atributo de conjuração escolhido à mão: vale no lugar do
+ * da classe na CD, no ataque e na conta das magias preparadas.
+ */
 export function computeSpellcasting(
   classes: ClassLevel[],
   abilityMods: Record<AbilityKey, number>,
   proficiencyBonus: number,
+  abilityOverride?: AbilityKey,
 ): SpellcastingDerived | null {
   const casting = classes.filter((c): c is ClassLevel & { spellcasting: SpellcastingProfile } =>
     c.spellcasting != null && hasSpellcasting(c.spellcasting, c.level))
@@ -161,10 +166,11 @@ export function computeSpellcasting(
   const { slots, pact } = computeSpellSlots(casting.map((c) => ({ profile: c.spellcasting, level: c.level })))
 
   const perClass: ClassSpellcasting[] = casting.map((c) => {
-    const mod = abilityMods[c.spellcasting.ability]
+    const ability = abilityOverride ?? c.spellcasting.ability
+    const mod = abilityMods[ability]
     return {
       classKey:      c.classKey,
-      ability:       c.spellcasting.ability,
+      ability,
       saveDc:        spellSaveDcFromMod(proficiencyBonus, mod),
       attackBonus:   spellAttackFromMod(proficiencyBonus, mod),
       cantripsKnown: cantripsKnownAt(c.spellcasting, c.level),
@@ -174,4 +180,22 @@ export function computeSpellcasting(
   })
 
   return { slots, pact, classes: perClass }
+}
+
+/**
+ * CD e ataque de magia da ficha: os da primeira classe conjuradora e, sem classe
+ * conjuradora, os do atributo escolhido à mão (Cavaleiro Místico, itens, homebrew).
+ * Sem nenhum dos dois, não há o que mostrar (null).
+ */
+export function computeSpellStats(
+  spellcasting: SpellcastingDerived | null,
+  abilityOverride: AbilityKey | undefined,
+  abilityMods: Record<AbilityKey, number>,
+  proficiencyBonus: number,
+): SpellStats | null {
+  const first = spellcasting?.classes[0]
+  if (first) return { ability: first.ability, saveDc: first.saveDc, attackBonus: first.attackBonus, chosen: abilityOverride != null }
+  if (!abilityOverride) return null
+  const mod = abilityMods[abilityOverride]
+  return { ability: abilityOverride, saveDc: spellSaveDcFromMod(proficiencyBonus, mod), attackBonus: spellAttackFromMod(proficiencyBonus, mod), chosen: true }
 }

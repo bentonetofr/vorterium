@@ -8,6 +8,7 @@ import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { setDndResourceCurrent } from '../services/dndResourceService'
 import { DerivedField, Pips, Toggle } from './DndControls'
+import type { DndForm } from '../model/sheetForm'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -18,10 +19,11 @@ import type { SheetCtx } from './sheetContext'
 // ────────────────────────────────────────────────────────
 
 const LEVEL_OPTIONS = Array.from({ length: 10 }, (_, level) => ({ value: String(level), label: level === 0 ? 'Truque' : `${level}º nível` }))
+const ABILITY_OPTIONS = [{ value: '', label: 'Automático (pela classe)' }, ...ABILITIES.map((a) => ({ value: a.key, label: a.label }))]
 const LEARNING_LABEL = { known: 'conhece', prepared: 'prepara', 'prepared-half': 'prepara', spellbook: 'prepara (do grimório)' } as const
 
 export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
-  const { derived, data, sheet, readOnly, report } = ctx
+  const { derived, data, sheet, form, set, readOnly, report } = ctx
   const casting = derived.spellcasting
   const [name, setName] = useState('')
   const [level, setLevel] = useState('1')
@@ -71,7 +73,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
 
   if (!casting && spells.length === 0 && readOnly) return <div className="dsh-tab"><p className="dsh-faint">Este personagem não conjura magias.</p></div>
 
-  const first = casting?.classes[0]
+  const stats = derived.spellStats
   const pact = data.resources.find((r) => r.key === PACT_SLOT_KEY && r.max_value > 0)
 
   return (
@@ -79,14 +81,21 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
       <div className={`dsh-col${casting ? '' : ' dsh-wide'}`}>
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Conjuração</h4></div>
-        {!casting ? (
-          <p className="dsh-faint">Nenhuma das classes do personagem conjura magias. Classes conjuradoras: Bardo, Clérigo, Druida, Feiticeiro, Bruxo, Mago, e Paladino e Patrulheiro a partir do 2º nível.</p>
+        <label className="dsh-field">
+          <span className="dsh-label">Atributo de conjuração</span>
+          <Select options={ABILITY_OPTIONS} value={form.spell_ability} onChange={(v) => set('spell_ability', v as DndForm['spell_ability'])} disabled={readOnly} aria-label="Atributo de conjuração" />
+        </label>
+        {stats ? (
+          <dl className="dsh-facts">
+            <dt>Atributo</dt><dd>{ABILITIES.find((a) => a.key === stats.ability)?.label}{stats.chosen ? ' (escolhido)' : ''}</dd>
+            <dt>CD das magias</dt><dd><DerivedField ctx={ctx} field="spell_save_dc" value={stats.saveDc} label="CD das magias" min={0} max={40} /></dd>
+            <dt>Ataque de magia</dt><dd><DerivedField ctx={ctx} field="spell_attack_bonus" value={stats.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} /></dd>
+          </dl>
         ) : (
+          <p className="dsh-faint">Nenhuma das classes do personagem conjura magias. Escolha um atributo acima para calcular a CD e o ataque de magia à mão (útil para subclasses, itens e homebrew), ou use uma classe conjuradora: Bardo, Clérigo, Druida, Feiticeiro, Bruxo, Mago, e Paladino e Patrulheiro a partir do 2º nível.</p>
+        )}
+        {casting && (
           <>
-            <dl className="dsh-facts">
-              <dt>CD das magias</dt><dd><DerivedField ctx={ctx} field="spell_save_dc" value={first!.saveDc} label="CD das magias" min={0} max={40} /></dd>
-              <dt>Ataque de magia</dt><dd><DerivedField ctx={ctx} field="spell_attack_bonus" value={first!.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} /></dd>
-            </dl>
             <ul className="dsh-list">
               {casting.classes.map((c) => {
                 const def = getClass(c.classKey)
@@ -106,6 +115,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
             {casting.classes.length > 1 && <p className="dsh-note">Na multiclasse, os espaços de magia somam os níveis de conjurador; truques e magias contam por classe.</p>}
           </>
         )}
+        <p className="dsh-note">CD = 8 + bônus de proficiência + modificador do atributo. Ataque = bônus de proficiência + modificador.</p>
       </section>
       </div>
 
@@ -177,7 +187,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
           </div>
         )}
         <p className="dsh-note">
-          {first ? <>Ataque de magia {formatSigned(first.attackBonus)}, CD {first.saveDc}. </> : null}
+          {stats ? <>Ataque de magia {formatSigned(stats.attackBonus)}, CD {stats.saveDc}. </> : null}
           A busca no catálogo de magias do livro chega numa próxima atualização.
         </p>
       </section>

@@ -164,6 +164,14 @@ export interface DerivedBundle {
   /** Dado de vida da classe inicial etc. ficam em derived.hitDice. */
 }
 
+const ABILITY_KEYS: readonly AbilityKey[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
+
+/** Atributo de conjuração escolhido pelo jogador (guardado nas escolhas da ficha), se for um atributo válido. */
+export function spellAbilityOf(sheet: DndCharacterSheet): AbilityKey | undefined {
+  const v = (sheet.choices as Record<string, unknown> | undefined)?.spellAbility
+  return typeof v === 'string' && (ABILITY_KEYS as readonly string[]).includes(v) ? (v as AbilityKey) : undefined
+}
+
 /** Bônus de CA digitado pelo jogador (anel de proteção, estilo de luta Defesa...), guardado nas escolhas da ficha. */
 export function acBonusOf(sheet: DndCharacterSheet): number {
   const v = (sheet.choices as Record<string, unknown> | undefined)?.acBonus
@@ -190,6 +198,7 @@ export function buildDerivedInput(b: SheetBundle): { input: DerivedInput; gear: 
     classes:          engineClasses,
     saveProficiency:  saveProficiencies(sheet),
     skillProficiency: skillLevels(details),
+    spellAbility:     spellAbilityOf(sheet),
     combat: {
       armor:           armorInput(gear.armor),
       shield:          gear.shield,
@@ -237,7 +246,7 @@ export function attackFor(weaponKey: string, derived: Derived, weaponProf: reado
  * recalcula a partir das regras; estas colunas são só o último resultado.
  */
 export function derivedColumns(derived: Derived, current: DndCharacterSheet): Partial<DndCharacterSheet> {
-  const caster = derived.spellcasting?.classes[0]
+  const caster = derived.spellStats
   return {
     armor_class:        Math.max(0, Math.min(99, derived.armorClass)),
     initiative_bonus:   Math.max(-99, Math.min(99, derived.initiative)),

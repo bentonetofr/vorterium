@@ -80,6 +80,8 @@ export interface DerivedInput {
   classes:           ClassLevel[]
   skillProficiency?: Partial<Record<SkillKey, ProficiencyLevel>>
   saveProficiency?:  Partial<Record<AbilityKey, boolean>>
+  /** Atributo de conjuração escolhido à mão (vale no lugar do da classe; permite conjurar sem classe conjuradora). */
+  spellAbility?:     AbilityKey
   combat?:           CombatInput
   /** Valores manuais que vencem o cálculo oficial. */
   overrides?:        Partial<Record<OverridableField, number>>
@@ -109,6 +111,15 @@ export interface ClassSpellcasting {
   spellbookSize: number | null
 }
 
+/** CD e ataque de magia da ficha, com o atributo de conjuração em uso. */
+export interface SpellStats {
+  ability:     AbilityKey
+  saveDc:      number
+  attackBonus: number
+  /** O atributo foi escolhido à mão (e não vem da classe). */
+  chosen:      boolean
+}
+
 export interface SpellcastingDerived {
   /** Espaços de magia 1º ao 9º (índice 0 = 1º nível). Não inclui a Magia de Pacto. */
   slots:   number[]
@@ -134,6 +145,8 @@ export interface Derived {
   hitDice:           Record<number, number>
   /** null se nenhuma classe da ficha conjura. */
   spellcasting:      SpellcastingDerived | null
+  /** CD e ataque de magia: da primeira classe conjuradora, ou do atributo escolhido à mão. null se nada conjura. */
+  spellStats:        SpellStats | null
   /** Quais campos estão com valor manual (a tela mostra o selo MANUAL). */
   overridden:        OverridableField[]
 }

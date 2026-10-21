@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DndCharacterClass, DndCharacterSheet, DndSheetDetails } from '../../../../shared/types'
 import {
-  acBonusOf, armorWarning, attackFor, classLine, clampHp, deriveSheet, derivedColumns, equippedGear, itemTitle,
+  acBonusOf, armorWarning, spellAbilityOf, attackFor, classLine, clampHp, deriveSheet, derivedColumns, equippedGear, itemTitle,
   manualOverrides, proficiencySets, saveColumns, strengthWarning, type SheetBundle,
 } from './sheetModel'
 
@@ -116,6 +116,15 @@ describe('perícias, sobrescritas e bônus de CA', () => {
     }
     expect(manualOverrides(details)).toEqual({ armor_class: 21 })
     expect(deriveSheet(bundle({ details })).derived.armorClass).toBe(21)
+  })
+
+  it('atributo de conjuração escolhido vem das escolhas da ficha e só aceita atributos válidos', () => {
+    expect(spellAbilityOf(makeSheet({ choices: { spellAbility: 'wisdom' } }))).toBe('wisdom')
+    expect(spellAbilityOf(makeSheet({ choices: { spellAbility: 'sorte' } }))).toBeUndefined()
+    expect(spellAbilityOf(makeSheet())).toBeUndefined()
+    const { derived } = deriveSheet(bundle({ sheet: makeSheet({ choices: { spellAbility: 'charisma' } }) }))
+    expect(derived.spellStats?.ability).toBe('charisma')
+    expect(derivedColumns(derived, makeSheet()).spellcasting_ability).toBe('charisma')
   })
 
   it('bônus de CA digitado soma, preso entre -10 e 10', () => {

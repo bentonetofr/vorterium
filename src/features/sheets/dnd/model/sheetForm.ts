@@ -1,7 +1,7 @@
 import type { DndCharacterSheet, DndCharacterSheetUpdateInput, DndCondition } from '../../../../shared/types'
 import { getBackground, getRace } from '../catalog'
-import type { Derived } from '../rules/types'
-import { clampHp, derivedColumns } from './sheetModel'
+import type { AbilityKey, Derived } from '../rules/types'
+import { clampHp, derivedColumns, spellAbilityOf } from './sheetModel'
 
 // ────────────────────────────────────────────────────────
 // O que a pessoa edita na ficha D&D (os campos da própria linha da ficha) e
@@ -13,6 +13,7 @@ import { clampHp, derivedColumns } from './sheetModel'
 export const DND_TEXT_LIMITS = {
   character_name: 120, player_name: 120, alignment: 80,
   concentrating_on: 160, personality_traits: 2000, ideals: 2000, bonds: 2000, flaws: 2000, backstory: 12000, notes: 12000,
+  notes_racial: 6000, notes_background: 6000, notes_class: 6000,
 } as const
 
 export interface DndForm {
@@ -48,6 +49,12 @@ export interface DndForm {
   hit_dice_used:     Record<string, number>
   /** Bônus fixo de CA (anel de proteção, estilo de luta Defesa); vai em `choices.acBonus`. */
   ac_bonus:          number
+  /** Atributo de conjuração escolhido à mão ('' = o da classe); vai em `choices.spellAbility`. */
+  spell_ability:     AbilityKey | ''
+  /** Anotações por origem (Características): vão em `choices.notesRacial`, `notesBackground` e `notesClass`. */
+  notes_racial:      string
+  notes_background:  string
+  notes_class:       string
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -84,6 +91,10 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     concentrating_on: s.concentrating_on ?? '',
     hit_dice_used:    { ...(s.hit_dice_used ?? {}) },
     ac_bonus:         typeof choices.acBonus === 'number' ? choices.acBonus : 0,
+    spell_ability:    spellAbilityOf(s) ?? '',
+    notes_racial:     typeof choices.notesRacial === 'string' ? choices.notesRacial : '',
+    notes_background: typeof choices.notesBackground === 'string' ? choices.notesBackground : '',
+    notes_class:      typeof choices.notesClass === 'string' ? choices.notesClass : '',
   }
 }
 
@@ -98,7 +109,7 @@ export function sheetWithForm(sheet: DndCharacterSheet, f: DndForm): DndCharacte
     strength_save_proficient: f.strength_save_proficient, dexterity_save_proficient: f.dexterity_save_proficient,
     constitution_save_proficient: f.constitution_save_proficient, intelligence_save_proficient: f.intelligence_save_proficient,
     wisdom_save_proficient: f.wisdom_save_proficient, charisma_save_proficient: f.charisma_save_proficient,
-    choices: { ...(sheet.choices ?? {}), acBonus: f.ac_bonus },
+    choices: { ...(sheet.choices ?? {}), acBonus: f.ac_bonus, spellAbility: f.spell_ability || undefined },
   }
 }
 
@@ -109,7 +120,7 @@ export function validateForm(f: DndForm): string | null {
   if (over(f.player_name, L.player_name)) return `O nome do jogador deve ter no máximo ${L.player_name} caracteres.`
   if (over(f.alignment, L.alignment)) return `A tendência deve ter no máximo ${L.alignment} caracteres.`
   if (over(f.concentrating_on, L.concentrating_on)) return `A concentração deve ter no máximo ${L.concentrating_on} caracteres.`
-  for (const k of ['personality_traits', 'ideals', 'bonds', 'flaws', 'backstory', 'notes'] as const) {
+  for (const k of ['personality_traits', 'ideals', 'bonds', 'flaws', 'backstory', 'notes', 'notes_racial', 'notes_background', 'notes_class'] as const) {
     if (over(f[k], L[k])) return `Esse campo passa do limite de ${L[k]} caracteres.`
   }
   return null
@@ -122,6 +133,12 @@ const clampInt = (n: number, min: number, max: number) => Math.max(min, Math.min
  * valores calculados pelo motor. `classText` é o texto "Guerreiro 5 / Mago 3"
  * (a coluna class_name, que os cards e as telas antigas leem).
  */
+function setNote(choices: Record<string, unknown>, key: string, text: string): void {
+  const clean = text.trim()
+  if (clean) choices[key] = clean
+  else delete choices[key]
+}
+
 export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Derived, classText: string, hasClasses: boolean): DndCharacterSheetUpdateInput {
   const merged = sheetWithForm(sheet, f)
   const calc = derivedColumns(derived, merged)
@@ -131,6 +148,11 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   const choices = { ...((sheet.choices ?? {}) as Record<string, unknown>) }
   if (f.ac_bonus !== 0) choices.acBonus = clampInt(f.ac_bonus, -10, 10)
   else delete choices.acBonus
+  if (f.spell_ability) choices.spellAbility = f.spell_ability
+  else delete choices.spellAbility
+  setNote(choices, 'notesRacial', f.notes_racial)
+  setNote(choices, 'notesBackground', f.notes_background)
+  setNote(choices, 'notesClass', f.notes_class)
 
   return {
     character_name: f.character_name.trim() || null,

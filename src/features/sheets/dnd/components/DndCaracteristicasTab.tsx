@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterFeature, DndCharacterResource, DndFeatureSource, DndRecharge } from '../../../../shared/types'
+import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { homebrewKeyFromName } from '../catalog/homebrewKey'
 import { availableFeatures, findCatalogFeature, missingFeatures } from '../model/features'
 import { createDndFeature, removeDndFeature, removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
@@ -19,14 +20,23 @@ const RECHARGE_OPTIONS: { value: DndRecharge; label: string }[] = [
   { value: 'dawn', label: 'Amanhecer' }, { value: 'manual', label: 'Manual' },
 ]
 const RECHARGE_LABEL = Object.fromEntries(RECHARGE_OPTIONS.map((r) => [r.value, r.label])) as Record<DndRecharge, string>
+/** Siglas da tabela de recursos: DC (descanso curto), DL (descanso longo), AM (amanhecer). */
+const RECHARGE_SHORT: Record<DndRecharge, string> = { short: 'DC', long: 'DL', dawn: 'AM', manual: 'Manual' }
+const RECHARGE_SHORT_OPTIONS = RECHARGE_OPTIONS.map((r) => ({ value: r.value, label: RECHARGE_SHORT[r.value] }))
 
 const SOURCE_LABEL: Record<DndFeatureSource, string> = {
   class: 'Classe', subclass: 'Subclasse', race: 'Raça', subrace: 'Sub-raça', background: 'Antecedente', feat: 'Talento', item: 'Item', manual: 'Própria',
 }
 const SOURCE_ORDER: DndFeatureSource[] = ['race', 'subrace', 'background', 'class', 'subclass', 'feat', 'item', 'manual']
 
+const NOTES = [
+  { key: 'notes_racial', title: 'Traços raciais', hint: 'Visão no escuro, resistências, idiomas e o que mais a raça dá.' },
+  { key: 'notes_background', title: 'Traços de antecedente', hint: 'A característica do antecedente, contatos e favores.' },
+  { key: 'notes_class', title: 'Características de classe', hint: 'Anotações sobre as características das classes e subclasses.' },
+] as const
+
 export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
-  const { data, sheet, form, readOnly, report } = ctx
+  const { data, sheet, form, set, readOnly, report } = ctx
   const [busy, setBusy] = useState<string | null>(null)
   const [resLabel, setResLabel] = useState('')
   const [resMax, setResMax] = useState(1)
@@ -103,28 +113,42 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card dsh-wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Recursos</h4></div>
         {resources.length === 0 && <p className="dsh-faint">Nenhum recurso. Crie os que o personagem gasta e recarrega, como Fúria, pontos de ki ou Inspiração de Bardo.</p>}
-        <ul className="dsh-list dsh-list--cols">
-          {resources.map((r) => (
-            <li key={r.id} className="dsh-resource">
-              <div className="dsh-resource__main">
-                <strong>{r.label}</strong>
-                {r.max_value <= 10
-                  ? <Pips total={r.max_value} filled={Math.min(r.current_value, r.max_value)} label={`${r.label} disponíveis`} onChange={readOnly || busy === r.id ? undefined : (n) => void setCurrent(r, n)} />
-                  : <NumberField value={r.current_value} min={0} max={r.max_value} label={`${r.label} atuais`} disabled={readOnly || busy === r.id} onChange={(n) => void setCurrent(r, n)} className="dsh-num--sm" />}
-                <span className="dsh-faint">{Math.min(r.current_value, r.max_value)}/{r.max_value}</span>
-                {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}
-              </div>
-              {!readOnly && (
-                <div className="dsh-resource__edit">
-                  <label className="dsh-field dsh-field--inline"><span className="dsh-faint">Máximo</span>
-                    <NumberField value={r.max_value} min={0} max={999} label={`Máximo de ${r.label}`} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-num--sm" /></label>
-                  <Select options={RECHARGE_OPTIONS} value={r.recharge} onChange={(v) => void patchResource(r, { recharge: v as DndRecharge })} aria-label={`Recarga de ${r.label}`} />
-                </div>
-              )}
-              {readOnly && <span className="dsh-faint">Recarrega: {RECHARGE_LABEL[r.recharge]}</span>}
-            </li>
-          ))}
-        </ul>
+        {resources.length > 0 && (
+          <table className="dsh-table dsh-res-table">
+            <thead>
+              <tr>
+                <th scope="col">Nome</th>
+                <th scope="col" title="DC: descanso curto · DL: descanso longo · AM: amanhecer">Recarga</th>
+                <th scope="col">Restante</th>
+                <th scope="col">Total</th>
+                {!readOnly && <th scope="col"><span className="dsh-sr">Remover</span></th>}
+              </tr>
+            </thead>
+            <tbody>
+              {resources.map((r) => (
+                <tr key={r.id}>
+                  <th scope="row" className="dsh-res-table__name">{r.label}</th>
+                  <td>
+                    {readOnly
+                      ? <span title={RECHARGE_LABEL[r.recharge]}>{RECHARGE_SHORT[r.recharge]}</span>
+                      : <Select options={RECHARGE_SHORT_OPTIONS} value={r.recharge} onChange={(v) => void patchResource(r, { recharge: v as DndRecharge })} aria-label={`Recarga de ${r.label}`} />}
+                  </td>
+                  <td>
+                    <NumberField value={Math.min(r.current_value, r.max_value)} min={0} max={r.max_value} label={`${r.label} restantes`}
+                      disabled={readOnly || busy === r.id} onChange={(n) => void setCurrent(r, n)} className="dsh-num--sm" />
+                  </td>
+                  <td>
+                    <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`}
+                      disabled={readOnly || busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-num--sm" />
+                  </td>
+                  {!readOnly && (
+                    <td><button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button></td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
         {!readOnly && (
           <div className="dsh-add-row">
             <input type="text" className="dsh-input" value={resLabel} maxLength={80} placeholder="Nome do recurso (ex.: Fúria)"
@@ -134,7 +158,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addResource()} disabled={busy === 'res'}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note">Os descansos (botões no alto da ficha) recarregam os recursos conforme a recarga de cada um. Os espaços de magia ficam na aba Magias.</p>
+        <p className="dsh-note"><strong>DC</strong> recarrega no descanso curto, <strong>DL</strong> no descanso longo e <strong>AM</strong> ao amanhecer; o descanso longo também recarrega o que volta no curto. Os descansos (botões no alto da ficha) recarregam tudo conforme a recarga de cada recurso. Os espaços de magia ficam na aba Magias.</p>
       </section>
 
       <section className="dsh-card dsh-wide">
@@ -197,6 +221,17 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
           </div>
         )}
       </section>
+
+      {NOTES.map((n) => (
+        <section className="dsh-card" key={n.key}>
+          <div className="dsh-card__header">
+            <h4 className="dsh-card__title">{n.title}</h4>
+            <span className="dsh-faint">{form[n.key].length}/{DND_TEXT_LIMITS[n.key]}</span>
+          </div>
+          <textarea className="dsh-input dsh-textarea" rows={6} maxLength={DND_TEXT_LIMITS[n.key]} value={form[n.key]} readOnly={readOnly}
+            placeholder={n.hint} aria-label={n.title} onChange={(e) => set(n.key, e.target.value)} />
+        </section>
+      ))}
     </div>
   )
 }

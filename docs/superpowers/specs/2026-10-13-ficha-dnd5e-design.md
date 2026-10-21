@@ -334,6 +334,8 @@ características do catálogo (`features`) e formata números (`format`).
 
 **Visual (21/10, pedido do usuário):** tema vermelho (acento, cabeçalho, bolinhas) e barra de PV igual à do Altherium: campos de PV atual, máximo e temporário editáveis e a barra arrastável com a linha branca (`DndDragBar`).
 
+**Sugestões de jogador (21/10):** atributo de conjuração escolhível (`choices.spellAbility`; CD = 8 + proficiência + modificador e ataque = proficiência + modificador, também sem classe conjuradora, via `Derived.spellStats`); recursos em tabela Nome | Recarga (DC/DL/AM) | Restante | Total; anotações de traços raciais, de antecedente e de classe (`choices.notesRacial/notesBackground/notesClass`). Percepção passiva já existia. Conflito 5e x 5.5e: seguir a Opção 1 (catálogo SRD 5.1 completo, "duplicar e editar" vira cópia homebrew, mais "criar do zero"), no Marco 5/7.
+
 **Código antigo removido:** a ficha provisória (`DndCharacterSheetPanel`, editores, prévia com dados de mentira e o CSS de 1.789 linhas).
 
 **Migration nova:** `20240206000000_dnd_classes_upsert.sql` corrige o gatilho da soma de níveis, que contava a própria classe duas

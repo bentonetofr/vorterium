@@ -379,6 +379,16 @@
 .dsh-item__qty { display: inline-flex; align-items: center; gap: var(--space-2); }
 
 /* Características e recursos */
+/* Tabela de recursos: Nome | Recarga | Restante | Total */
+.dsh-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.dsh-table th, .dsh-table td { padding: var(--space-2) var(--space-3); text-align: left; vertical-align: middle; border-bottom: 1px solid var(--border-dim); }
+.dsh-table thead th { font-family: var(--font-label); font-size: var(--text-xs); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.dsh-table tbody tr:last-child > * { border-bottom: 0; }
+.dsh-res-table th:nth-child(n + 3), .dsh-res-table td:nth-child(n + 3) { width: 84px; }
+.dsh-res-table th:nth-child(2), .dsh-res-table td:nth-child(2) { width: 110px; }
+.dsh-res-table__name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--dsh-bone); }
+.dsh-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 .dsh-resource__main { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; font-size: var(--text-sm); color: var(--dsh-bone); }
 .dsh-resource__main strong { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; }
 .dsh-resource__edit { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }

@@ -1,6 +1,6 @@
 import { ABILITIES, SKILLS, clampLevel, getAbilityModifier, getProficiencyBonus, skillBonus } from './abilities'
 import { computeArmorClass, computeMaxHp, computeSpeed, hitDicePool } from './combat'
-import { computeSpellcasting } from './spellcasting'
+import { computeSpellStats, computeSpellcasting } from './spellcasting'
 import type { AbilityKey, Derived, DerivedInput, OverridableField, SaveDerived, SkillDerived, SkillKey } from './types'
 
 // ────────────────────────────────────────────────────────
@@ -74,14 +74,15 @@ export function computeDerived(input: DerivedInput): Derived {
     : null
   if (manual.hp_max != null) { hpMax = manual.hp_max; overridden.push('hp_max') }
 
-  const spellcasting = computeSpellcasting(input.classes, abilityMods, proficiencyBonus)
-  if (spellcasting && (manual.spell_save_dc != null || manual.spell_attack_bonus != null)) {
-    for (const c of spellcasting.classes) {
+  const spellcasting = computeSpellcasting(input.classes, abilityMods, proficiencyBonus, input.spellAbility)
+  const spellStats = computeSpellStats(spellcasting, input.spellAbility, abilityMods, proficiencyBonus)
+  if (spellStats && (manual.spell_save_dc != null || manual.spell_attack_bonus != null)) {
+    for (const c of spellcasting?.classes ?? []) {
       if (manual.spell_save_dc != null) c.saveDc = manual.spell_save_dc
       if (manual.spell_attack_bonus != null) c.attackBonus = manual.spell_attack_bonus
     }
-    if (manual.spell_save_dc != null) overridden.push('spell_save_dc')
-    if (manual.spell_attack_bonus != null) overridden.push('spell_attack_bonus')
+    if (manual.spell_save_dc != null) { spellStats.saveDc = manual.spell_save_dc; overridden.push('spell_save_dc') }
+    if (manual.spell_attack_bonus != null) { spellStats.attackBonus = manual.spell_attack_bonus; overridden.push('spell_attack_bonus') }
   }
 
   return {
@@ -97,6 +98,7 @@ export function computeDerived(input: DerivedInput): Derived {
     hpMax,
     hitDice: hitDicePool(hpLevels),
     spellcasting,
+    spellStats,
     overridden,
   }
 }

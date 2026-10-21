@@ -141,6 +141,16 @@ describe('abas', () => {
     expect(html).toContain('Bola de Fogo')
     expect(html).toContain('Truque')
     expect(html).toContain('Preparadas')
+    expect(html).toContain('Atributo de conjuração')
+  })
+
+  it('Magias sem classe conjuradora, com atributo escolhido, mostra CD e ataque', () => {
+    const data = makeData({ classes: [cls('fighter', 5, true)] })
+    const ctx = makeCtx({ data, sheet: makeSheet({ choices: { spellAbility: 'intelligence' } }) })
+    const html = renderToStaticMarkup(<DndMagiasTab ctx={ctx} />)
+    expect(html).toContain('CD das magias')
+    expect(html).toContain('(escolhido)')
+    expect(html).not.toContain('Nenhuma das classes do personagem conjura')
   })
 
   it('Magias de um não conjurador explica quem conjura', () => {
@@ -168,6 +178,7 @@ describe('abas', () => {
   it('Características: recursos, importação do catálogo e características da ficha', () => {
     const html = renderToStaticMarkup(<DndCaracteristicasTab ctx={makeCtx()} />)
     expect(html).toContain('Fúria')
+    for (const t of ['Nome', 'Recarga', 'Restante', 'Total', 'Traços raciais', 'Traços de antecedente', 'Características de classe']) expect(html).toContain(t)
     expect(html).toContain('Retomar o Fôlego')
     expect(html).toContain('Cicatriz de guerra')
     expect(html).toContain('Trazer do catálogo')

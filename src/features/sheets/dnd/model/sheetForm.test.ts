@@ -108,6 +108,21 @@ describe('formToPayload', () => {
     expect(run({ ...form, ac_bonus: 0 }).choices).toEqual({ outro: 'x' })
   })
 
+  it('atributo de conjuração e anotações por origem vão nas escolhas e somem quando vazios', () => {
+    const sheet = makeSheet({ choices: { outro: 'x' } })
+    const run = (f: ReturnType<typeof formFromSheet>) => formToPayload(sheet, f, deriveSheet({ sheet: sheetWithForm(sheet, f), classes: [], details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] }, proficiencies: [] }).derived, '', false)
+    const form = { ...formFromSheet(sheet), spell_ability: 'wisdom' as const, notes_racial: '  Visão no escuro  ', notes_background: 'Favor do templo', notes_class: '' }
+    expect(run(form).choices).toEqual({ outro: 'x', spellAbility: 'wisdom', notesRacial: 'Visão no escuro', notesBackground: 'Favor do templo' })
+    expect(run({ ...form, spell_ability: '', notes_racial: '', notes_background: '   ' }).choices).toEqual({ outro: 'x' })
+    const back = formFromSheet(makeSheet({ choices: { spellAbility: 'wisdom', notesClass: 'Fúria 2x' } }))
+    expect(back).toMatchObject({ spell_ability: 'wisdom', notes_class: 'Fúria 2x', notes_racial: '' })
+  })
+
+  it('as anotações por origem respeitam o limite de texto', () => {
+    const f = { ...formFromSheet(makeSheet()), notes_class: 'a'.repeat(6001) }
+    expect(validateForm(f)).toContain('6000')
+  })
+
   it('condições em ordem fixa e dados de vida só com valores positivos', () => {
     const sheet = makeSheet()
     const form = { ...formFromSheet(sheet), conditions: ['prone', 'blinded'] as const, hit_dice_used: { '10': 0, '8': 2 } }
