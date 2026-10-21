@@ -44,7 +44,7 @@ export const monk: ClassDef = {
   progression: [
     { key: 'martial_arts_die', label: 'Artes Marciais', values: byLevel([[1, 'd4'], [5, 'd6'], [11, 'd8'], [17, 'd10']]) },
     { key: 'ki_points', label: 'Pontos de Ki', values: [0, ...Array.from({ length: 19 }, (_, i) => i + 2)] },
-    { key: 'unarmored_movement', label: 'Movimento sem Armadura', values: byLevel([[1, '—'], [2, '+3 m'], [6, '+4,5 m'], [10, '+6 m'], [14, '+7,5 m'], [18, '+9 m']]) },
+    { key: 'unarmored_movement', label: 'Movimento sem Armadura', values: byLevel([[1, '0 m'], [2, '+3 m'], [6, '+4,5 m'], [10, '+6 m'], [14, '+7,5 m'], [18, '+9 m']]) },
   ],
   multiclass: {
     requirement: { mode: 'all', abilities: ['dexterity', 'wisdom'] },

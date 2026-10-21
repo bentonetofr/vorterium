@@ -108,6 +108,7 @@ const expectedMigrations = [
   '20240203000000_dnd_ficha_nova.sql',
   '20240204000000_dnd_classes_recursos.sql',
   '20240205000000_dnd_campanha_homebrew.sql',
+  '20240206000000_dnd_classes_upsert.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

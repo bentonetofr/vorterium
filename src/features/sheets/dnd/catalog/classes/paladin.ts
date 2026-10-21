@@ -42,7 +42,7 @@ export const paladin: ClassDef = {
   ],
   progression: [
     { key: 'lay_on_hands_pool', label: 'Cura pelas Mãos (PV)', values: Array.from({ length: 20 }, (_, i) => (i + 1) * 5) },
-    { key: 'aura_range', label: 'Alcance das Auras', values: byLevel([[1, '—'], [6, '3 m'], [18, '9 m']]) },
+    { key: 'aura_range', label: 'Alcance das Auras', values: byLevel([[1, 'nenhum'], [6, '3 m'], [18, '9 m']]) },
   ],
   multiclass: {
     requirement: { mode: 'all', abilities: ['strength', 'charisma'] },

@@ -1,0 +1,103 @@
+import { useState } from 'react'
+import { ABILITIES, SKILLS } from '../rules/abilities'
+import { formatSigned } from '../model/format'
+import { upsertDndSkill } from '../services/dndSheetService'
+import { NumberField, Pips } from './DndControls'
+import type { SheetCtx } from './sheetContext'
+import type { AbilityKey } from '../rules/types'
+
+// ────────────────────────────────────────────────────────
+// Aba Atributos e Perícias: os seis atributos com modificador e salvaguarda,
+// as 18 perícias (proficiência e especialização) e as percepções passivas.
+// Os bônus saem do motor de regras: bônus de proficiência pelo nível total,
+// Pau para Toda Obra do Bardo, etc.
+// ────────────────────────────────────────────────────────
+
+const SAVE_FLAG: Record<AbilityKey, `${AbilityKey}_save_proficient`> = {
+  strength: 'strength_save_proficient', dexterity: 'dexterity_save_proficient', constitution: 'constitution_save_proficient',
+  intelligence: 'intelligence_save_proficient', wisdom: 'wisdom_save_proficient', charisma: 'charisma_save_proficient',
+}
+
+export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
+  const { form, set, derived, data, sheet, readOnly, report } = ctx
+  const [busy, setBusy] = useState<string | null>(null)
+  const skillRows = new Map(data.details.skills.map((s) => [s.skill_key, s]))
+
+  async function setSkillLevel(skillKey: (typeof SKILLS)[number]['key'], filled: number) {
+    if (readOnly) return
+    setBusy(skillKey)
+    report(null)
+    try {
+      const saved = await upsertDndSkill(sheet.id, skillKey, filled >= 1, filled >= 2)
+      data.setDetails((d) => ({ ...d, skills: [...d.skills.filter((s) => s.id !== saved.id && s.skill_key !== saved.skill_key), saved] }))
+    } catch (err) {
+      report(err instanceof Error ? err.message : 'Não foi possível salvar a perícia.')
+    } finally { setBusy(null) }
+  }
+
+  const passive = (skill: 'perception' | 'insight' | 'investigation') => 10 + derived.skills[skill].bonus
+
+  return (
+    <div className="dsh-tab anim-tab-panel">
+      <section className="dsh-card">
+        <div className="dsh-card__header">
+          <h4 className="dsh-card__title">Atributos e salvaguardas</h4>
+          <span className="dsh-badge" title="Bônus de proficiência pelo nível total">Proficiência {formatSigned(derived.proficiencyBonus)}</span>
+        </div>
+        <div className="dsh-abilities">
+          {ABILITIES.map((a) => {
+            const save = derived.saves[a.key]
+            return (
+              <div key={a.key} className="dsh-ability">
+                <span className="dsh-ability__name">{a.label}</span>
+                <strong className="dsh-ability__mod" aria-label={`Modificador de ${a.label}`}>{formatSigned(derived.abilityMods[a.key])}</strong>
+                <NumberField value={form[a.key]} onChange={(n) => set(a.key, n)} min={1} max={30} label={a.label} disabled={readOnly} className="dsh-ability__score" />
+                <label className={`dsh-ability__save${save.proficient ? ' is-on' : ''}`} title="Proficiência na salvaguarda">
+                  <input type="checkbox" checked={form[SAVE_FLAG[a.key]]} disabled={readOnly} onChange={(e) => set(SAVE_FLAG[a.key], e.target.checked)} />
+                  <span>Salvaguarda</span>
+                  <strong>{formatSigned(save.bonus)}</strong>
+                </label>
+              </div>
+            )
+          })}
+        </div>
+        <p className="dsh-note">
+          O modificador é (valor − 10) ÷ 2, para baixo. As salvaguardas com proficiência vêm da classe inicial; ajuste à mão se precisar.
+        </p>
+      </section>
+
+      <section className="dsh-card">
+        <div className="dsh-card__header">
+          <h4 className="dsh-card__title">Perícias</h4>
+          <span className="dsh-badge">{data.details.skills.filter((s) => s.proficient).length} com proficiência</span>
+        </div>
+        <ul className="dsh-skills">
+          {SKILLS.map((k) => {
+            const row = skillRows.get(k.key)
+            const filled = row?.expertise ? 2 : row?.proficient ? 1 : 0
+            const d = derived.skills[k.key]
+            const ab = ABILITIES.find((x) => x.key === k.ability)!
+            return (
+              <li key={k.key} className={`dsh-skill${filled ? ' is-prof' : ''}`}>
+                <Pips total={2} filled={filled} size="sm" label={`Proficiência em ${k.label}`} onChange={readOnly || busy === k.key ? undefined : (n) => void setSkillLevel(k.key, n)} />
+                <span className="dsh-skill__name">{k.label}<small>{ab.short}</small></span>
+                {d.level === 'half' && <span className="dsh-skill__half" title="Pau para Toda Obra: metade da proficiência">½</span>}
+                <strong className="dsh-skill__bonus">{formatSigned(d.bonus)}</strong>
+              </li>
+            )
+          })}
+        </ul>
+        <p className="dsh-note">Uma bolinha é proficiência; duas, especialização (dobra o bônus de proficiência).</p>
+      </section>
+
+      <section className="dsh-card">
+        <div className="dsh-card__header"><h4 className="dsh-card__title">Percepções passivas</h4></div>
+        <dl className="dsh-facts dsh-facts--grid">
+          <dt>Percepção</dt><dd>{passive('perception')}</dd>
+          <dt>Intuição</dt><dd>{passive('insight')}</dd>
+          <dt>Investigação</dt><dd>{passive('investigation')}</dd>
+        </dl>
+      </section>
+    </div>
+  )
+}

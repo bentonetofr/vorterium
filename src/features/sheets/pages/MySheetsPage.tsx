@@ -7,6 +7,8 @@ import { getMyTdSheetsEverywhere } from '../terraDevastada/services/tdSheetServi
 import { getMyTdaSheetsEverywhere } from '../terraDevastadaAdaptada/services/tdaSheetService'
 import { getMyVtmSheetsEverywhere } from '../vampiro/services/vampiroSheetService'
 import { getClan } from '../vampiro/constants/vampiro'
+import { getMyDndSheetsEverywhere } from '../dnd/services/dndSheetService'
+import { getClass, getRace } from '../dnd/catalog'
 import { healthMax } from '../vampiro/utils/vampiroRules'
 import { getSystemLabel, type CampaignSystem } from '../../../shared/constants/systems'
 import './MySheetsPage.css'
@@ -43,8 +45,9 @@ function formatRelativeTime(iso: string): string {
 }
 
 async function loadAllSheets(): Promise<MySheetItem[]> {
-  const [simple, altherium, td, tda, vtm] = await Promise.all([
+  const [simple, altherium, td, tda, vtm, dnd] = await Promise.all([
     getMySheets(), getMyAltheriumSheetsEverywhere(), getMyTdSheetsEverywhere(), getMyTdaSheetsEverywhere(), getMyVtmSheetsEverywhere(),
+    getMyDndSheetsEverywhere(),
   ])
 
   const items: MySheetItem[] = [
@@ -117,6 +120,21 @@ async function loadAllSheets(): Promise<MySheetItem[]> {
         `Vitalidade ${Math.max(0, healthMax(s) - s.health_superficial - s.health_aggravated)}/${healthMax(s)}`,
         `Fome ${s.hunger}`,
         `Humanidade ${s.humanity}`,
+      ],
+      updatedAt:     s.updated_at,
+    })),
+    ...dnd.map((s) => ({
+      id:            s.id,
+      campaignId:    s.campaign_id,
+      campaignName:  s.campaign_name,
+      system:        'dnd5e' as const,
+      characterName: s.character_name,
+      filled:        Boolean(s.character_name?.trim()) && Boolean(s.class_key || s.class_name),
+      stats:         [
+        ...[s.race_key ? getRace(s.race_key)?.name : s.race, s.class_key ? getClass(s.class_key)?.name : s.class_name].filter((x): x is string => !!x),
+        `Nível ${s.level}`,
+        `PV ${s.hp_current}/${s.hp_max}`,
+        `CA ${s.armor_class}`,
       ],
       updatedAt:     s.updated_at,
     })),

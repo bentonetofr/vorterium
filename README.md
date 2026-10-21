@@ -544,15 +544,12 @@ src/
 │   │   ├── components/     # SimpleSheetPanel, CampaignSheetPanel (roteador de sistemas)
 │   │   ├── dnd/            # D&D 5e (em construção por marcos: docs/superpowers/specs/2026-10-13-ficha-dnd5e-design.md)
 │   │   │   │                 Guardado no Painel de controle (recurso dnd5e): só o dono do site vê.
-│   │   │   ├── rules/      # Motor de regras puro (CA, PV, conjuração, progressão) + testes
+│   │   │   ├── rules/      # Motor de regras puro (CA, PV, conjuração, progressão, descansos) + testes
 │   │   │   ├── catalog/    # Catálogo do SRD 5.1: classes, raças, equipamento, condições + testes
-│   │   │   │                 (a ficha abaixo é a antiga, provisória, até a ficha nova do Marco 3)
-│   │   │   ├── services/   # dndSheetService (getMyDndSheet, ensureMyDndSheet, updateDndSheet)
-│   │   │   ├── DndCharacterSheetPanel.tsx  # Painel real, pronto pra ligar
-│   │   │   ├── DndCharacterSheetPreview.tsx # Prévia visual com dados mock (referência)
-│   │   │   ├── DndCharacterSheet.css
-│   │   │   ├── mockCharacter.ts
-│   │   │   └── tabs/       # Componentes de aba (mock — referência)
+│   │   │   ├── model/      # Liga a ficha do banco ao motor (sheetModel, sheetForm, slots, features, format) + testes
+│   │   │   ├── hooks/      # useDndSheetData (classes, perícias, inventário, recursos...)
+│   │   │   ├── services/   # dndSheetService, dndClassService, dndResourceService, dndCampaignService, dndHomebrewService, dndPortraitService
+│   │   │   └── components/ # DndSheetPanel (jogador, mestre, NPCs), DndSheetForm (autosave), cabeçalho e as 7 abas
 │   │   ├── altherium/      # Ficha Altherium (base): painel, formulário, cálculos, constantes
 │   │   └── services/       # sheetService (ficha genérica)
 │   ├── dice/               # DiceRollerProvider, DiceFab, DiceRollerPanel + diceService

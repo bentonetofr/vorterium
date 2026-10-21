@@ -313,11 +313,33 @@ com testes). Os serviços ainda não têm tela: entram nos Marcos 3 a 7.
 **Achado sobre as rolagens:** o banco já aceita resultado 0 e negativo (a trava de "mínimo 1" só existe no cliente,
 `rollParsedFormula`), então o Marco 6 não precisa de migration para isso.
 
-### Marco 3: ficha nova, no molde das outras (G)
-- Painel, cabeçalho, abas, salvamento automático, AUTO/MANUAL, retrato, NPCs, cards do mestre ao vivo.
-- Ligação em `CampaignSheetPanel`, Visão Geral, Minhas fichas, SheetFab (testar no Vortable e no celular).
-- Reaproveita o CSS atual onde servir; o que é incompatível com o tema Medieval Dark v2 é refeito.
-- Edição livre ainda: o jogador digita classe e raça; o assistente vem no marco seguinte.
+### Marco 3: ficha nova, no molde das outras (G) — FEITO em 21/10/2026 (falta a conferência visual no navegador)
+
+**Telas** (`sheets/dnd/components/`): cabeçalho (retrato, nome, raça/classe/nível, CA, iniciativa, deslocamento em metros,
+proficiência, percepção passiva, inspiração, barra de PV com dano e cura rápidos, descansos curto e longo) e sete abas:
+Personagem (identidade, classes e níveis com multiclasse, subclasse, PV rolados quando a campanha usa rolagem, XP, proficiências),
+Atributos e Perícias, Combate (PV, salvaguardas contra a morte, dados de vida, defesa, condições, exaustão, concentração, ataques
+calculados pelo catálogo), Magias (CD, ataque, espaços clicáveis, Pacto do Bruxo, lista manual), Inventário (moedas, carga em kg,
+armadura e escudo equipados mudam a CA), Características (recursos, "Trazer do catálogo", usos e anotações) e História.
+Todo número que o livro calcula tem o selo AUTO/MANUAL. Salvamento automático igual ao do Vampiro, com o eco do save tratado.
+
+**Painel da campanha:** jogador edita a própria ficha; o mestre vê cards ao vivo (PV, CA, iniciativa, deslocamento, condições,
+concentração) e abre a ficha de cada um; seção de NPCs (`NpcSection`) com o mestre criando, mostrando e escondendo fichas.
+Ligado em `CampaignSheetPanel`, na Visão Geral da campanha, em "Minhas fichas" e, por já usar `CampaignSheetPanel`, no `SheetFab` do Vortable.
+
+**Motor e modelo:** `computeDerived` ganhou deslocamento (Movimento Rápido, Movimento sem Armadura), Pau para Toda Obra do Bardo,
+CD e ataque de magia manuais e ataque com arma; `rules/rest.ts` (descansos); `model/` liga as linhas do banco ao motor
+(`sheetModel`), define o que a tela edita e grava (`sheetForm`), planeja os espaços de magia como recursos (`slots`), lista as
+características do catálogo (`features`) e formata números (`format`).
+
+**Código antigo removido:** a ficha provisória (`DndCharacterSheetPanel`, editores, prévia com dados de mentira e o CSS de 1.789 linhas).
+
+**Migration nova:** `20240206000000_dnd_classes_upsert.sql` corrige o gatilho da soma de níveis, que contava a própria classe duas
+vezes quando o site atualiza o nível por `upsert` (achado ao reproduzir no banco de teste; as 102 verificações passam).
+
+**Qualidade:** 334 testes, incluindo renderização de cabeçalho e abas (sem navegador) e o eco do salvamento.
+
+**Ficou para depois:** busca no catálogo de magias (Marco 5), assistente de criação (Marco 4), botões de rolagem (Marco 6).
 
 ### Marco 4: criador de personagem (G)
 - Assistente em oito passos (seção 4.6) escrevendo na ficha.

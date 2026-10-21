@@ -2,11 +2,14 @@
 // Serviço — Ficha D&D 5e
 // ────────────────────────────────────────────────────────
 
-import { supabase }    from '../../../../shared/lib/supabase'
+import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
+import { pcOnly } from '../../services/npcService'
 import { logActivity } from '../../../activity/services/activityService'
 import type {
   DndCharacterAttack,
   DndCharacterAttackInput,
+  DndCharacterClass,
+  DndCharacterProficiency,
   DndCharacterOverride,
   DndCharacterInventoryInput,
   DndCharacterInventoryItem,
@@ -50,6 +53,7 @@ export async function getMyDndSheet(
   const { data, error } = await supabase
     .from('dnd_character_sheets')
     .select('*')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .eq('user_id', user.id)
     .single()
@@ -106,6 +110,7 @@ export async function getCampaignDndSheets(
   const { data, error } = await supabase
     .from('dnd_character_sheets')
     .select('*, profiles(id, display_name, email, avatar_url)')
+    .match(await pcOnly())
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: true })
 
@@ -144,7 +149,8 @@ export async function updateDndSheet(
   const sheet    = data as DndCharacterSheet
   const name     = charName?.trim() || sheet.character_name?.trim()
   const message  = name ? `Ficha de "${name}" atualizada.` : 'Ficha D&D atualizada.'
-  logActivity(campaignId, 'sheet_updated', message)
+  // NPC não vai pro histórico: o nome escondido não pode vazar pros jogadores.
+  if (!sheet.is_npc) logActivity(campaignId, 'sheet_updated', message)
 
   return sheet
 }
@@ -281,4 +287,93 @@ export async function updateDndSpell(id: string, input: Partial<DndCharacterSpel
 export async function deleteDndSpell(id: string): Promise<void> {
   const { error } = await supabase.from('dnd_character_spells').delete().eq('id', id)
   if (error) throw new Error('Não foi possível remover a magia.')
+}
+
+
+// ────────────────────────────────────────────────────────
+// Ficha nova (Marco 3): proficiências extras, "minhas fichas", Realtime
+// ────────────────────────────────────────────────────────
+
+/** Proficiências extras da ficha (armas, armaduras, ferramentas e idiomas além dos de classe e raça). */
+export async function listDndProficiencies(sheetId: string): Promise<DndCharacterProficiency[]> {
+  const { data, error } = await supabase.from('dnd_character_proficiencies').select('*').eq('sheet_id', sheetId)
+  if (error) throw new Error('Não foi possível carregar as proficiências da ficha.')
+  return (data ?? []) as DndCharacterProficiency[]
+}
+
+export async function addDndProficiency(
+  sheetId: string, category: DndCharacterProficiency['category'], entryKey: string, label: string,
+): Promise<DndCharacterProficiency> {
+  const { data, error } = await supabase
+    .from('dnd_character_proficiencies')
+    .upsert({ sheet_id: sheetId, category, entry_key: entryKey, label, source: 'manual' }, { onConflict: 'sheet_id,category,entry_key' })
+    .select('*')
+    .single()
+  if (error) throw new Error('Não foi possível adicionar a proficiência.')
+  return data as DndCharacterProficiency
+}
+
+export async function removeDndProficiency(id: string): Promise<void> {
+  const { error } = await supabase.from('dnd_character_proficiencies').delete().eq('id', id)
+  if (error) throw new Error('Não foi possível remover a proficiência.')
+}
+
+/** Fichas D&D do usuário em todas as campanhas ("Minhas fichas"). */
+export async function getMyDndSheetsEverywhere(): Promise<(DndCharacterSheet & { campaign_name: string })[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuário não autenticado.')
+
+  const { data, error } = await supabase
+    .from('dnd_character_sheets')
+    .select('*, campaigns(id, name)')
+    .match(await pcOnly())
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false })
+
+  // Sem a migration ou com o recurso guardado: nenhuma ficha (a página não quebra por isso).
+  if (error) return []
+  return ((data ?? []) as unknown as (DndCharacterSheet & { campaigns: { id: string; name: string } | null })[])
+    .filter((row) => row.campaigns != null)
+    .map(({ campaigns, ...sheet }) => ({ ...sheet, campaign_name: campaigns!.name }))
+}
+
+/** Classes de várias fichas de uma vez (pros cards do mestre). */
+export async function listDndClassesForSheets(sheetIds: string[]): Promise<DndCharacterClass[]> {
+  if (sheetIds.length === 0) return []
+  const { data, error } = await supabase.from('dnd_character_classes').select('*').in('sheet_id', sheetIds)
+  // Sem a migration: os cards só ficam sem a linha de classe.
+  if (error) return []
+  return (data ?? []) as DndCharacterClass[]
+}
+
+/**
+ * Mudanças nas fichas da campanha (Realtime, respeita a RLS). UPDATE traz a
+ * linha inteira sem o perfil: quem chama mescla. INSERT e DELETE pedem
+ * recarregar a lista.
+ */
+export function subscribeToCampaignDndSheets(
+  campaignId: string,
+  onSheetUpdate: (sheet: DndCharacterSheet) => void,
+  onListChange: () => void,
+): () => void {
+  const table = 'dnd_character_sheets'
+  const channel = supabase
+    .channel(uniqueChannel(`dnd_sheets:${campaignId}`))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table, filter: `campaign_id=eq.${campaignId}` },
+      (payload) => onSheetUpdate(payload.new as DndCharacterSheet))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table, filter: `campaign_id=eq.${campaignId}` },
+      () => onListChange())
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table, filter: `campaign_id=eq.${campaignId}` },
+      () => onListChange())
+    .subscribe()
+  return () => { void supabase.removeChannel(channel) }
+}
+
+/** Qualquer mudança nas classes (o banco manda só o que a pessoa pode ver): quem chama recarrega. */
+export function subscribeToDndClasses(onChange: () => void): () => void {
+  const channel = supabase
+    .channel(uniqueChannel('dnd_classes'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'dnd_character_classes' }, () => onChange())
+    .subscribe()
+  return () => { void supabase.removeChannel(channel) }
 }

@@ -10,6 +10,7 @@ import { getCampaignAltheriumSheets } from '../../sheets/altherium/services/alth
 import { getCampaignTdSheets } from '../../sheets/terraDevastada/services/tdSheetService'
 import { getCampaignTdaSheets } from '../../sheets/terraDevastadaAdaptada/services/tdaSheetService'
 import { getCampaignVtmSheets } from '../../sheets/vampiro/services/vampiroSheetService'
+import { getCampaignDndSheets } from '../../sheets/dnd/services/dndSheetService'
 import {
   getInitiativeParticipants,
   getInitiativeState,
@@ -118,6 +119,12 @@ async function loadSheetsSummary(campaign: CampaignWithRole): Promise<SheetsSumm
   }
   if (campaign.system === 'vampiro') {
     const sheets = await getCampaignVtmSheets(campaign.id)
+    return isMaster
+      ? { kind: 'master', count: sheets.length }
+      : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }
+  }
+  if (campaign.system === 'dnd5e') {
+    const sheets = await getCampaignDndSheets(campaign.id)
     return isMaster
       ? { kind: 'master', count: sheets.length }
       : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }
