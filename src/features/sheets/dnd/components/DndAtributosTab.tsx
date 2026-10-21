@@ -88,15 +88,12 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
           })}
         </ul>
         <p className="dsh-note">Uma bolinha é proficiência; duas, especialização (dobra o bônus de proficiência).</p>
-      </section>
-
-      <section className="dsh-card">
-        <div className="dsh-card__header"><h4 className="dsh-card__title">Percepções passivas</h4></div>
-        <dl className="dsh-facts dsh-facts--grid">
-          <dt>Percepção</dt><dd>{passive('perception')}</dd>
-          <dt>Intuição</dt><dd>{passive('insight')}</dd>
-          <dt>Investigação</dt><dd>{passive('investigation')}</dd>
-        </dl>
+        <span className="dsh-label">Percepções passivas</span>
+        <div className="dsh-passives">
+          <div className="dsh-passive"><strong>{passive('perception')}</strong><span>Percepção</span></div>
+          <div className="dsh-passive"><strong>{passive('insight')}</strong><span>Intuição</span></div>
+          <div className="dsh-passive"><strong>{passive('investigation')}</strong><span>Investigação</span></div>
+        </div>
       </section>
     </div>
   )

@@ -99,11 +99,11 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   })
 
   return (
-    <div className="dsh-tab dsh-columns anim-tab-panel">
-      <section className="dsh-card">
+    <div className="dsh-tab dsh-cols anim-tab-panel">
+      <section className="dsh-card dsh-wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Recursos</h4></div>
         {resources.length === 0 && <p className="dsh-faint">Nenhum recurso. Crie os que o personagem gasta e recarrega, como Fúria, pontos de ki ou Inspiração de Bardo.</p>}
-        <ul className="dsh-list">
+        <ul className="dsh-list dsh-list--cols">
           {resources.map((r) => (
             <li key={r.id} className="dsh-resource">
               <div className="dsh-resource__main">
@@ -137,7 +137,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
         <p className="dsh-note">Os descansos (botões no alto da ficha) recarregam os recursos conforme a recarga de cada um. Os espaços de magia ficam na aba Magias.</p>
       </section>
 
-      <section className="dsh-card dsh-card--wide">
+      <section className="dsh-card dsh-wide">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Características</h4>
           <span className="dsh-badge">{features.length}</span>

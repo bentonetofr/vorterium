@@ -75,7 +75,8 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   const pact = data.resources.find((r) => r.key === PACT_SLOT_KEY && r.max_value > 0)
 
   return (
-    <div className="dsh-tab dsh-columns anim-tab-panel">
+    <div className="dsh-tab dsh-cols anim-tab-panel">
+      <div className={`dsh-col${casting ? '' : ' dsh-wide'}`}>
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Conjuração</h4></div>
         {!casting ? (
@@ -106,8 +107,10 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
           </>
         )}
       </section>
+      </div>
 
       {casting && (
+        <div className="dsh-col">
         <section className="dsh-card">
           <div className="dsh-card__header"><h4 className="dsh-card__title">Espaços de magia</h4></div>
           {slotRows.filter((r) => r.max_value > 0).length === 0 && <p className="dsh-faint">Sem espaços de magia neste nível.</p>}
@@ -137,9 +140,10 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
           </ul>
           <p className="dsh-note">Bolinha cheia é um espaço disponível; clique para gastar. O descanso longo recarrega todos.</p>
         </section>
+        </div>
       )}
 
-      <section className="dsh-card dsh-card--wide">
+      <section className="dsh-card dsh-wide">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Magias do personagem</h4>
           {preparedLimit > 0 && <span className={`dsh-badge${preparedCount > preparedLimit ? ' dsh-badge--bad' : ''}`}>Preparadas {preparedCount} / {preparedLimit}</span>}

@@ -89,16 +89,16 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
   const equippable = (i: DndCharacterInventoryItem) => !!i.catalog_entry_key && (!!getArmor(i.catalog_entry_key) || i.catalog_entry_key === SHIELD.key || WEAPONS.some((w) => w.key === i.catalog_entry_key))
 
   return (
-    <div className="dsh-tab dsh-columns anim-tab-panel">
+    <div className="dsh-tab dsh-cols anim-tab-panel">
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Moedas</h4>
           <span className="dsh-badge" title="Tudo convertido em peças de ouro">≈ {coinsInGold({ cp: form.coin_cp, sp: form.coin_sp, ep: form.coin_ep, gp: form.coin_gp, pp: form.coin_pp }).toLocaleString('pt-BR')} po</span>
         </div>
         <div className="dsh-coins">
-          {([['coin_cp', 'Cobre (pc)'], ['coin_sp', 'Prata (pp)'], ['coin_ep', 'Electro (pe)'], ['coin_gp', 'Ouro (po)'], ['coin_pp', 'Platina (pl)']] as const).map(([k, label]) => (
-            <label key={k} className="dsh-field"><span className="dsh-label">{label}</span>
-              <NumberField value={form[k]} onChange={(n) => set(k, n)} min={0} max={99999999} label={label} disabled={readOnly} /></label>
+          {([['coin_cp', 'Cobre', 'pc'], ['coin_sp', 'Prata', 'pp'], ['coin_ep', 'Electro', 'pe'], ['coin_gp', 'Ouro', 'po'], ['coin_pp', 'Platina', 'pl']] as const).map(([k, label, abbr]) => (
+            <label key={k} className="dsh-field" title={`${label} (${abbr})`}><span className="dsh-label">{label}</span>
+              <NumberField value={form[k]} onChange={(n) => set(k, n)} min={0} max={99999999} label={`${label} (${abbr})`} disabled={readOnly} /></label>
           ))}
         </div>
       </section>
@@ -114,7 +114,7 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         <p className="dsh-note">Capacidade de carga = Força × 7,5 kg. Passou disso, o personagem fica sobrecarregado (a mesa decide a penalidade).</p>
       </section>
 
-      <section className="dsh-card dsh-card--wide">
+      <section className="dsh-card dsh-wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Itens</h4><span className="dsh-badge">{items.length}</span></div>
         {items.length === 0 && <p className="dsh-faint">Nenhum item ainda.</p>}
         <ul className="dsh-list">

@@ -94,7 +94,8 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
   const diePool = Object.entries(derived.hitDice).map(([die, total]) => ({ die: Number(die), total })).sort((a, b) => b.die - a.die)
 
   return (
-    <div className="dsh-tab dsh-columns anim-tab-panel">
+    <div className="dsh-tab dsh-cols anim-tab-panel">
+      <div className="dsh-col">
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Pontos de vida</h4>
@@ -102,14 +103,14 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
         </div>
         <div className="dsh-trio">
           <label className="dsh-field"><span className="dsh-label">Atuais</span>
-            <NumberField value={hp} onChange={(n) => set('hp_current', n)} min={0} max={hpMax} label="PV atuais" disabled={readOnly} /></label>
+            <NumberField value={hp} onChange={(n) => set('hp_current', n)} min={0} max={hpMax} label="PV atuais" disabled={readOnly} className="dsh-num--field" /></label>
           <div className="dsh-field"><span className="dsh-label">Máximo</span>
             {derived.hpMax != null
               ? <DerivedField ctx={ctx} field="hp_max" value={derived.hpMax} label="PV máximo" min={1} max={9999} />
-              : <NumberField value={form.hp_max} onChange={(n) => set('hp_max', n)} min={1} max={9999} label="PV máximo" disabled={readOnly} />}
+              : <NumberField value={form.hp_max} onChange={(n) => set('hp_max', n)} min={1} max={9999} label="PV máximo" disabled={readOnly} className="dsh-num--field" />}
           </div>
           <label className="dsh-field"><span className="dsh-label">Temporários</span>
-            <NumberField value={form.hp_temp} onChange={(n) => set('hp_temp', n)} min={0} max={9999} label="PV temporários" disabled={readOnly} /></label>
+            <NumberField value={form.hp_temp} onChange={(n) => set('hp_temp', n)} min={0} max={9999} label="PV temporários" disabled={readOnly} className="dsh-num--field" /></label>
         </div>
         {derived.hpMax == null && <p className="dsh-note">Sem classes, o PV máximo é o que você digita. Com classes, ele sai do dado de vida e da Constituição.</p>}
         {!readOnly && (
@@ -149,53 +150,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
       </section>
 
       <section className="dsh-card">
-        <div className="dsh-card__header">
-          <h4 className="dsh-card__title">Defesa</h4>
-          <span className="dsh-badge">CA {derived.armorClass}</span>
-        </div>
-        <dl className="dsh-facts">
-          <dt>Armadura</dt><dd>{gear.armor ? `${gear.armor.name} (CA ${gear.armor.baseAc})` : <span className="dsh-faint">Nenhuma equipada</span>}</dd>
-          <dt>Escudo</dt><dd>{gear.shield ? 'Equipado (+2)' : <span className="dsh-faint">Nenhum</span>}</dd>
-          <dt>Iniciativa</dt><dd><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></dd>
-        </dl>
-        <label className="dsh-field">
-          <span className="dsh-label">Bônus fixo de CA <span className="dsh-faint">· anel de proteção, estilo de luta Defesa</span></span>
-          <NumberField value={form.ac_bonus} onChange={(n) => set('ac_bonus', n)} min={-10} max={10} label="Bônus de CA" disabled={readOnly} className="dsh-num--sm" />
-        </label>
-        {armorMsg && <p className="dsh-warn">{armorMsg}</p>}
-        {strMsg && <p className="dsh-warn">{strMsg}</p>}
-        <p className="dsh-note">Equipe a armadura e o escudo na aba Inventário: a CA muda sozinha. Bárbaro e Monge sem armadura usam a Defesa sem Armadura.</p>
-      </section>
-
-      <section className="dsh-card">
-        <div className="dsh-card__header"><h4 className="dsh-card__title">Condições</h4><span className="dsh-badge">{form.conditions.length ? `${form.conditions.length} ativa${form.conditions.length > 1 ? 's' : ''}` : 'nenhuma'}</span></div>
-        <div className="dsh-chips">
-          {CONDITIONS.map((c) => (
-            <button key={c.key} type="button" disabled={readOnly}
-              className={`dsh-pick${form.conditions.includes(c.key as never) ? ' is-on' : ''}`}
-              onClick={() => toggleCondition(c.key)} title={c.summary} aria-pressed={form.conditions.includes(c.key as never)}>
-              {c.name}
-            </button>
-          ))}
-        </div>
-        {form.conditions.length > 0 && (
-          <ul className="dsh-list dsh-list--plain">
-            {form.conditions.map((k) => <li key={k} className="dsh-note"><strong>{CONDITIONS.find((c) => c.key === k)?.name}:</strong> {CONDITIONS.find((c) => c.key === k)?.summary}</li>)}
-          </ul>
-        )}
-        <div className="dsh-field">
-          <span className="dsh-label">Exaustão</span>
-          <Pips total={6} filled={form.exhaustion} tone="bad" label="Níveis de exaustão" onChange={readOnly ? undefined : (n) => set('exhaustion', n)} />
-          {exhaustionLevel && <p className="dsh-note"><strong>Nível {exhaustionLevel.level}:</strong> {exhaustionLevel.effect}. {EXHAUSTION.rule}</p>}
-        </div>
-        <label className="dsh-field">
-          <span className="dsh-label">Concentrando em</span>
-          <input type="text" className="dsh-input" maxLength={160} value={form.concentrating_on} readOnly={readOnly}
-            placeholder="Nenhuma magia" onChange={(e) => set('concentrating_on', e.target.value)} />
-        </label>
-      </section>
-
-      <section className="dsh-card dsh-card--wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Ataques</h4></div>
         {data.details.attacks.length === 0 && <p className="dsh-faint">Nenhum ataque ainda. Escolha uma arma do catálogo e o bônus e o dano saem sozinhos.</p>}
         <ul className="dsh-list">
@@ -241,6 +195,57 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
         )}
         <p className="dsh-note">Bônus de ataque = modificador (Força, Destreza ou a melhor das duas em armas de acuidade) + proficiência. Os campos manuais, se preenchidos, valem no lugar do cálculo.</p>
       </section>
+
+      </div>
+      <div className="dsh-col">
+      <section className="dsh-card">
+        <div className="dsh-card__header">
+          <h4 className="dsh-card__title">Defesa</h4>
+          <span className="dsh-badge">CA {derived.armorClass}</span>
+        </div>
+        <dl className="dsh-facts">
+          <dt>Armadura</dt><dd>{gear.armor ? `${gear.armor.name} (CA ${gear.armor.baseAc})` : <span className="dsh-faint">Nenhuma equipada</span>}</dd>
+          <dt>Escudo</dt><dd>{gear.shield ? 'Equipado (+2)' : <span className="dsh-faint">Nenhum</span>}</dd>
+          <dt>Iniciativa</dt><dd><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></dd>
+        </dl>
+        <label className="dsh-field">
+          <span className="dsh-label">Bônus fixo de CA <span className="dsh-faint">· anel de proteção, estilo de luta Defesa</span></span>
+          <NumberField value={form.ac_bonus} onChange={(n) => set('ac_bonus', n)} min={-10} max={10} label="Bônus de CA" disabled={readOnly} className="dsh-num--field" />
+        </label>
+        {armorMsg && <p className="dsh-warn">{armorMsg}</p>}
+        {strMsg && <p className="dsh-warn">{strMsg}</p>}
+        <p className="dsh-note">Equipe a armadura e o escudo na aba Inventário: a CA muda sozinha. Bárbaro e Monge sem armadura usam a Defesa sem Armadura.</p>
+      </section>
+
+      <section className="dsh-card">
+        <div className="dsh-card__header"><h4 className="dsh-card__title">Condições</h4><span className="dsh-badge">{form.conditions.length ? `${form.conditions.length} ativa${form.conditions.length > 1 ? 's' : ''}` : 'nenhuma'}</span></div>
+        <div className="dsh-chips">
+          {CONDITIONS.map((c) => (
+            <button key={c.key} type="button" disabled={readOnly}
+              className={`dsh-pick${form.conditions.includes(c.key as never) ? ' is-on' : ''}`}
+              onClick={() => toggleCondition(c.key)} title={c.summary} aria-pressed={form.conditions.includes(c.key as never)}>
+              {c.name}
+            </button>
+          ))}
+        </div>
+        {form.conditions.length > 0 && (
+          <ul className="dsh-list dsh-list--plain">
+            {form.conditions.map((k) => <li key={k} className="dsh-note"><strong>{CONDITIONS.find((c) => c.key === k)?.name}:</strong> {CONDITIONS.find((c) => c.key === k)?.summary}</li>)}
+          </ul>
+        )}
+        <div className="dsh-field">
+          <span className="dsh-label">Exaustão</span>
+          <Pips total={6} filled={form.exhaustion} tone="bad" label="Níveis de exaustão" onChange={readOnly ? undefined : (n) => set('exhaustion', n)} />
+          {exhaustionLevel && <p className="dsh-note"><strong>Nível {exhaustionLevel.level}:</strong> {exhaustionLevel.effect}. {EXHAUSTION.rule}</p>}
+        </div>
+        <label className="dsh-field">
+          <span className="dsh-label">Concentrando em</span>
+          <input type="text" className="dsh-input" maxLength={160} value={form.concentrating_on} readOnly={readOnly}
+            placeholder="Nenhuma magia" onChange={(e) => set('concentrating_on', e.target.value)} />
+        </label>
+      </section>
+
+      </div>
     </div>
   )
 }

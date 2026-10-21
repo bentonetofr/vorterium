@@ -140,15 +140,17 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const toNext = xpToNextLevel(form.experience)
 
   return (
-    <div className="dsh-tab dsh-columns anim-tab-panel">
+    <div className="dsh-tab dsh-cols anim-tab-panel">
+      <div className="dsh-col">
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Identidade</h4></div>
-        <label className="dsh-field">
+        <div className="dsh-fields">
+        <label className="dsh-field dsh-field--full">
           <span className="dsh-label">Jogador</span>
           <input type="text" className="dsh-input" maxLength={120} value={form.player_name} readOnly={readOnly}
             onChange={(e) => set('player_name', e.target.value)} placeholder="Quem joga este personagem" />
         </label>
-        <div className="dsh-field">
+        <div className={`dsh-field${subraceOptions ? '' : ' dsh-field--full'}`}>
           <span className="dsh-label">Raça</span>
           <Select options={RACE_OPTIONS} value={form.race_key} disabled={readOnly}
             onChange={(v) => update((f) => ({ ...f, race_key: v, subrace_key: '' }))} aria-label="Raça" />
@@ -168,6 +170,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
           <Select options={ALIGNMENT_OPTIONS} value={ALIGNMENTS.includes(form.alignment) ? form.alignment : ''} disabled={readOnly}
             onChange={(v) => set('alignment', v)} aria-label="Tendência" />
         </div>
+        </div>
         {race && (
           <p className="dsh-note">
             <strong>{race.name}:</strong> deslocamento {formatMeters(race.speed)}
@@ -180,6 +183,21 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
       </section>
 
       <section className="dsh-card">
+        <div className="dsh-card__header"><h4 className="dsh-card__title">Experiência</h4></div>
+        <div className="dsh-field">
+          <span className="dsh-label">Pontos de experiência</span>
+          <NumberField value={form.experience} onChange={(n) => set('experience', n)} min={0} max={99999999} label="Pontos de experiência" disabled={readOnly} className="dsh-num--field" />
+        </div>
+        <p className="dsh-note">
+          Pelo XP, o nível seria <strong>{xpLevel}</strong>
+          {toNext != null ? <>; faltam {toNext.toLocaleString('pt-BR')} pontos para o nível {xpLevel + 1}.</> : <>, o máximo.</>}
+          {xpLevel > derived.totalLevel && <> <strong className="dsh-warn-inline">Já dá para subir de nível.</strong></>}
+        </p>
+      </section>
+
+      </div>
+      <div className="dsh-col">
+      <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Classes e níveis</h4>
           <span className={`dsh-badge${totalLevel > 20 ? ' dsh-badge--bad' : ''}`}>Nível {data.classes.length ? totalLevel : form.level}</span>
@@ -188,7 +206,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         {data.classes.length === 0 && (
           <div className="dsh-field">
             <span className="dsh-label">Nível <span className="dsh-faint">· vale enquanto não houver classes</span></span>
-            <NumberField value={form.level} onChange={(n) => set('level', n)} min={1} max={20} label="Nível" disabled={readOnly} />
+            <NumberField value={form.level} onChange={(n) => set('level', n)} min={1} max={20} label="Nível" disabled={readOnly} className="dsh-num--field" />
           </div>
         )}
 
@@ -253,19 +271,6 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
       </section>
 
       <section className="dsh-card">
-        <div className="dsh-card__header"><h4 className="dsh-card__title">Experiência</h4></div>
-        <div className="dsh-field">
-          <span className="dsh-label">Pontos de experiência</span>
-          <NumberField value={form.experience} onChange={(n) => set('experience', n)} min={0} max={99999999} label="Pontos de experiência" disabled={readOnly} />
-        </div>
-        <p className="dsh-note">
-          Pelo XP, o nível seria <strong>{xpLevel}</strong>
-          {toNext != null ? <>; faltam {toNext.toLocaleString('pt-BR')} pontos para o nível {xpLevel + 1}.</> : <>, o máximo.</>}
-          {xpLevel > derived.totalLevel && <> <strong className="dsh-warn-inline">Já dá para subir de nível.</strong></>}
-        </p>
-      </section>
-
-      <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Proficiências e idiomas</h4></div>
         <dl className="dsh-facts">
           <dt>Armaduras</dt>
@@ -296,6 +301,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
           </div>
         )}
       </section>
+
+      </div>
     </div>
   )
 }
