@@ -105,6 +105,9 @@ const expectedMigrations = [
   '20240200000000_terra_devastada_adaptada_retrato.sql',
   '20240201000000_altherium_limite_triunfos.sql',
   '20240202000000_vortable_erros.sql',
+  '20240203000000_dnd_ficha_nova.sql',
+  '20240204000000_dnd_classes_recursos.sql',
+  '20240205000000_dnd_campanha_homebrew.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

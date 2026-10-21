@@ -793,10 +793,32 @@ export interface DndCharacterSheet {
   class_key:          string | null
   subclass_key:       string | null
   background_key:     string | null
+  // Ficha nova (migration 20240203000000); opcionais pra o código funcionar antes dela rodar
+  is_npc?:            boolean
+  npc_visible?:       boolean
+  portrait_url?:      string | null
+  /** Dados de vida gastos por tipo de dado, ex.: { "8": 2 } (dois d8). */
+  hit_dice_used?:     Record<string, number>
+  coin_cp?:           number
+  coin_sp?:           number
+  coin_ep?:           number
+  coin_gp?:           number
+  coin_pp?:           number
+  conditions?:        DndCondition[]
+  exhaustion?:        number
+  concentrating_on?:  string | null
+  /** Escolhas feitas no criador de personagem (perícias de classe, idiomas, truques...). */
+  choices?:           Record<string, unknown>
+  build_version?:     number
   // Timestamps
   created_at: string
   updated_at: string
 }
+
+/** Condições do SRD que a ficha guarda (a Exaustão tem coluna própria, 0 a 6). */
+export type DndCondition =
+  | 'blinded' | 'charmed' | 'deafened' | 'frightened' | 'grappled' | 'incapacitated' | 'invisible'
+  | 'paralyzed' | 'petrified' | 'poisoned' | 'prone' | 'restrained' | 'stunned' | 'unconscious'
 
 /** Campos atualizáveis da ficha D&D 5e (sem estruturais). */
 export type DndCharacterSheetUpdateInput = Partial<
@@ -901,6 +923,92 @@ export interface DndSheetDetails {
   inventory: DndCharacterInventoryItem[]
   spells: DndCharacterSpell[]
   overrides: DndCharacterOverride[]
+}
+
+// ── D&D 5e: classes, recursos, características, campanha e homebrew ──
+// (migrations 20240203000000 a 20240205000000)
+
+/** Uma classe do personagem (multiclasse = várias linhas). */
+export interface DndCharacterClass {
+  id:           string
+  sheet_id:     string
+  class_key:    string
+  level:        number
+  subclass_key: string | null
+  /** A classe do nível 1 do personagem (dado de vida cheio). */
+  is_initial:   boolean
+  /** PV dos níveis seguintes: 0 = média, 1 a 12 = valor rolado. */
+  hp_rolls:     number[]
+  created_at:   string
+  updated_at:   string
+}
+
+export type DndRecharge = 'short' | 'long' | 'dawn' | 'manual'
+
+/** Espaços de magia, Fúria, Ki, Inspiração de Bardo... (atual / máximo / recarga). */
+export interface DndCharacterResource {
+  id:            string
+  sheet_id:      string
+  key:           string
+  label:         string
+  current_value: number
+  max_value:     number
+  recharge:      DndRecharge
+  source:        'class' | 'race' | 'feat' | 'item' | 'spell_slots' | 'manual'
+  sort_order:    number
+  created_at:    string
+  updated_at:    string
+}
+
+export type DndFeatureSource = 'class' | 'subclass' | 'race' | 'subrace' | 'background' | 'feat' | 'item' | 'manual'
+
+export interface DndCharacterFeature {
+  id:           string
+  sheet_id:     string
+  source:       DndFeatureSource
+  /** Chave no catálogo; null = característica livre. */
+  feature_key:  string | null
+  name:         string
+  level:        number | null
+  notes:        string
+  uses_current: number | null
+  uses_max:     number | null
+  recharge:     DndRecharge | null
+  sort_order:   number
+  created_at:   string
+  updated_at:   string
+}
+
+/** Como a campanha define o PV a cada nível: pela média do dado ou rolando. */
+export type DndHpMode = 'average' | 'rolled'
+
+export interface DndCampaignSettings {
+  campaign_id: string
+  hp_mode:     DndHpMode
+  created_at:  string
+  updated_at:  string
+}
+
+export type DndHomebrewCategory =
+  | 'race' | 'subrace' | 'class' | 'subclass' | 'background' | 'feat'
+  | 'weapon' | 'armor' | 'item' | 'tool' | 'spell' | 'condition'
+
+/** personal: só o autor; pending: proposto ao mestre; approved: vale pra campanha toda. */
+export type DndHomebrewStatus = 'personal' | 'pending' | 'approved'
+
+export interface DndHomebrewEntry {
+  id:          string
+  campaign_id: string
+  created_by:  string | null
+  category:    DndHomebrewCategory
+  entry_key:   string
+  name:        string
+  data:        Record<string, unknown>
+  status:      DndHomebrewStatus
+  /** Recado do mestre ao recusar (só o mestre escreve). */
+  review_note: string | null
+  created_at:  string
+  updated_at:  string
 }
 
 export type DndDerivedField =

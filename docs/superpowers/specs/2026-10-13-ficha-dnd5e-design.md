@@ -292,10 +292,26 @@ Unidades da edição brasileira: peso em kg, alcances em metros; deslocamento do
 **Ficou para os próximos marcos:** magias (310 do SRD, Marco 5), Metamagia e Invocações Místicas (opções individuais, Marco 5),
 talento Agarrador, e o catálogo de itens mágicos.
 
-### Marco 2: banco (M)
-- Migrations novas (seção 4.3), políticas de NPC e "só o dono", lista de migrations no `verify-migrations.mjs` e README.
-- Serviços: classes, recursos, características, homebrew, retrato (bucket `dnd-portraits`).
-- Migration colada no chat; avisar quais precisam rodar antes do deploy.
+### Marco 2: banco (M) — FEITO em 21/10/2026
+
+Três migrations, validadas num Postgres real (PGlite) com 96 verificações de acesso e regras, e rodando duas vezes sem erro:
+
+- `20240203000000_dnd_ficha_nova.sql`: a tabela da ficha ganha NPC (`is_npc`, `npc_visible`), retrato (bucket `dnd-portraits`), moedas,
+  condições, exaustão, concentração, dados de vida gastos e as escolhas do criador; guarda "só o dono do site" enquanto o recurso
+  estiver desligado (`dnd_open()`); funções de acesso `dnd_sheet_access` e `dnd_sheet_npc_shown`; Realtime pros cards do mestre.
+- `20240204000000_dnd_classes_recursos.sql`: `dnd_character_classes` (multiclasse, soma dos níveis até 20, uma classe inicial,
+  PV rolados por nível; gatilho mantém `level` e `class_key` da ficha), `dnd_character_resources` (espaços de magia, Fúria, Ki...) e
+  `dnd_character_features`.
+- `20240205000000_dnd_campanha_homebrew.sql`: `dnd_campaign_settings` (modo de PV: média ou rolagem, padrão média),
+  `dnd_homebrew_entries` (personal -> pending -> approved, com recado do mestre ao recusar, limite de 300 por pessoa) e
+  `dice_rolls.roll_label`.
+
+No TypeScript: tipos novos em `shared/types`, serviços `dndClassService`, `dndResourceService` (recursos e características),
+`dndCampaignService`, `dndHomebrewService` e `dndPortraitService`, e `rules/hpLevels.ts` (liga as classes da ficha ao cálculo de PV,
+com testes). Os serviços ainda não têm tela: entram nos Marcos 3 a 7.
+
+**Achado sobre as rolagens:** o banco já aceita resultado 0 e negativo (a trava de "mínimo 1" só existe no cliente,
+`rollParsedFormula`), então o Marco 6 não precisa de migration para isso.
 
 ### Marco 3: ficha nova, no molde das outras (G)
 - Painel, cabeçalho, abas, salvamento automático, AUTO/MANUAL, retrato, NPCs, cards do mestre ao vivo.
