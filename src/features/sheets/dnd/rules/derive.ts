@@ -1,5 +1,5 @@
 import { ABILITIES, SKILLS, clampLevel, getAbilityModifier, getProficiencyBonus, skillBonus } from './abilities'
-import { computeArmorClass, computeMaxHp, hitDicePool } from './combat'
+import { computeArmorClass, computeMaxHp, computeSpeed, hitDicePool } from './combat'
 import { computeSpellcasting } from './spellcasting'
 import type { AbilityKey, Derived, DerivedInput, OverridableField, SaveDerived, SkillDerived, SkillKey } from './types'
 
@@ -29,13 +29,18 @@ export function computeDerived(input: DerivedInput): Derived {
     saves[key] = { ability: key, proficient, bonus: mod + (proficient ? proficiencyBonus : 0) }
   }
 
+  // Pau para Toda Obra (Bardo, 2º nível): metade da proficiência no que o personagem ainda não domina.
+  const jackOfAllTrades = input.classes.some((c) => c.classKey === 'bard' && c.level >= 2)
+
   const skills = {} as Record<SkillKey, SkillDerived>
   for (const { key, ability } of SKILLS) {
-    const level = input.skillProficiency?.[key] ?? 'none'
+    const stored = input.skillProficiency?.[key] ?? 'none'
+    const level = stored === 'none' && jackOfAllTrades ? 'half' : stored
     skills[key] = { ability, level, bonus: skillBonus(abilityMods[ability], level, proficiencyBonus) }
   }
 
-  let initiative = abilityMods.dexterity
+  // A iniciativa é um teste de Destreza: o Pau para Toda Obra também vale nela.
+  let initiative = abilityMods.dexterity + (jackOfAllTrades ? Math.floor(proficiencyBonus / 2) : 0)
   if (manual.initiative_bonus != null) { initiative = manual.initiative_bonus; overridden.push('initiative_bonus') }
 
   const combat = input.combat ?? {}
@@ -54,11 +59,30 @@ export function computeDerived(input: DerivedInput): Derived {
   })
   if (manual.armor_class != null) { armorClass = manual.armor_class; overridden.push('armor_class') }
 
+  let speed = computeSpeed({
+    base:           combat.baseSpeed ?? 30,
+    barbarianLevel: input.classes.filter((c) => c.classKey === 'barbarian').reduce((n, c) => n + c.level, 0),
+    monkLevel:      input.classes.filter((c) => c.classKey === 'monk').reduce((n, c) => n + c.level, 0),
+    armor:          combat.armor ?? null,
+    shield:         combat.shield === true,
+  })
+  if (manual.speed != null) { speed = manual.speed; overridden.push('speed') }
+
   const hpLevels = combat.hpLevels ?? []
   let hpMax: number | null = hpLevels.length > 0
     ? computeMaxHp(hpLevels, abilityMods.constitution, combat.hpBonusPerLevel ?? 0)
     : null
   if (manual.hp_max != null) { hpMax = manual.hp_max; overridden.push('hp_max') }
+
+  const spellcasting = computeSpellcasting(input.classes, abilityMods, proficiencyBonus)
+  if (spellcasting && (manual.spell_save_dc != null || manual.spell_attack_bonus != null)) {
+    for (const c of spellcasting.classes) {
+      if (manual.spell_save_dc != null) c.saveDc = manual.spell_save_dc
+      if (manual.spell_attack_bonus != null) c.attackBonus = manual.spell_attack_bonus
+    }
+    if (manual.spell_save_dc != null) overridden.push('spell_save_dc')
+    if (manual.spell_attack_bonus != null) overridden.push('spell_attack_bonus')
+  }
 
   return {
     totalLevel,
@@ -69,9 +93,10 @@ export function computeDerived(input: DerivedInput): Derived {
     initiative,
     passivePerception: 10 + skills.perception.bonus,
     armorClass,
+    speed,
     hpMax,
     hitDice: hitDicePool(hpLevels),
-    spellcasting: computeSpellcasting(input.classes, abilityMods, proficiencyBonus),
+    spellcasting,
     overridden,
   }
 }

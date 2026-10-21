@@ -83,3 +83,88 @@ export function hitDicePool(levels: HpLevel[]): Record<number, number> {
 export function hitDiceRecoveredOnLongRest(totalDice: number): number {
   return Math.max(1, Math.floor(totalDice / 2))
 }
+
+// ────────────────────────────────────────────────────────
+// Deslocamento
+// ────────────────────────────────────────────────────────
+
+/** Movimento sem Armadura do Monge, em pés, por nível de monge (1 a 20). */
+export const MONK_UNARMORED_MOVEMENT: readonly number[] = [
+  0, 10, 10, 10, 10, 15, 15, 15, 15, 20, 20, 20, 20, 25, 25, 25, 25, 30, 30, 30,
+]
+
+export interface SpeedOptions {
+  /** Deslocamento da raça em pés (25 ou 30). */
+  base:          number
+  barbarianLevel: number
+  monkLevel:     number
+  armor:         ArmorInput | null
+  shield:        boolean
+}
+
+/**
+ * Deslocamento em pés: base da raça, mais Movimento Rápido do Bárbaro (+10 a
+ * partir do 5º nível, sem armadura pesada) e Movimento sem Armadura do Monge
+ * (sem armadura e sem escudo).
+ */
+export function computeSpeed(o: SpeedOptions): number {
+  let speed = o.base
+  if (o.barbarianLevel >= 5 && o.armor?.category !== 'heavy') speed += 10
+  if (o.monkLevel >= 2 && !o.armor && !o.shield) speed += MONK_UNARMORED_MOVEMENT[Math.min(20, o.monkLevel) - 1]
+  return speed
+}
+
+// ────────────────────────────────────────────────────────
+// Ataque com arma
+// ────────────────────────────────────────────────────────
+
+export interface WeaponAttackInput {
+  range:       'melee' | 'ranged' | 'both'
+  /** Propriedades do catálogo em português ("acuidade", "versátil 1d8"...). */
+  properties:  readonly string[]
+  /** Dado de dano da arma ("1d8"), ou null (Rede). */
+  damage:      string | null
+  strMod:      number
+  dexMod:      number
+  proficiencyBonus: number
+  proficient:  boolean
+  /** Bônus extra de ataque / dano (arma mágica, estilo de luta). */
+  attackExtra?: number
+  damageExtra?: number
+}
+
+export interface WeaponAttack {
+  ability:     'strength' | 'dexterity'
+  attackBonus: number
+  damageBonus: number
+  /** Fórmula de dano pronta ("1d8+3"), ou null se a arma não causa dano. */
+  damageFormula: string | null
+}
+
+/**
+ * Força ou Destreza: arma de acuidade usa a melhor das duas; arma à distância
+ * usa Destreza; corpo a corpo (inclusive as de arremesso) usa Força.
+ */
+export function weaponAttack(w: WeaponAttackInput): WeaponAttack {
+  const finesse = w.properties.some((p) => p === 'acuidade')
+  const useDex = finesse ? w.dexMod > w.strMod : w.range === 'ranged'
+  const mod = useDex ? w.dexMod : w.strMod
+  const damageBonus = mod + (w.damageExtra ?? 0)
+  return {
+    ability: useDex ? 'dexterity' : 'strength',
+    attackBonus: mod + (w.proficient ? w.proficiencyBonus : 0) + (w.attackExtra ?? 0),
+    damageBonus,
+    damageFormula: w.damage ? formatDamage(w.damage, damageBonus) : null,
+  }
+}
+
+/** "1d8" + 3 -> "1d8+3"; + -1 -> "1d8-1"; + 0 -> "1d8". */
+export function formatDamage(dice: string, bonus: number): string {
+  if (bonus === 0) return dice
+  return bonus > 0 ? `${dice}+${bonus}` : `${dice}${bonus}`
+}
+
+/** Proficiência com uma arma: a lista tem 'simple', 'martial' ou chaves de armas específicas. */
+export function weaponProficient(weapon: { key: string; category: 'simple' | 'martial' }, proficiencies: readonly string[]): boolean {
+  return proficiencies.includes(weapon.category) || proficiencies.includes(weapon.key)
+}

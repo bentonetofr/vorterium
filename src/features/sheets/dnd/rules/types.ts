@@ -17,7 +17,8 @@ export type SkillKey =
 export type ProficiencyLevel = 'none' | 'half' | 'proficient' | 'expertise'
 
 /** Campos que a ficha pode sobrescrever à mão (AUTO/MANUAL). */
-export type OverridableField = 'proficiency_bonus' | 'initiative_bonus' | 'armor_class' | 'hp_max'
+export type OverridableField =
+  | 'proficiency_bonus' | 'initiative_bonus' | 'armor_class' | 'hp_max' | 'speed' | 'spell_save_dc' | 'spell_attack_bonus'
 
 export type ArmorCategory = 'light' | 'medium' | 'heavy'
 
@@ -45,6 +46,8 @@ export interface CombatInput {
   hpLevels?:      HpLevel[]
   /** PV extra por nível (Anão da Colina +1, Robusto +2). */
   hpBonusPerLevel?: number
+  /** Deslocamento base da raça, em pés (30 se não informado). */
+  baseSpeed?:     number
 }
 
 /** Como a classe conjura (dados vêm do catálogo; ver rules/spellcasting.ts). */
@@ -123,6 +126,8 @@ export interface Derived {
   initiative:        number
   passivePerception: number
   armorClass:        number
+  /** Deslocamento em pés (a tela converte para metros). */
+  speed:             number
   /** null enquanto a ficha não tem níveis com dado de vida. */
   hpMax:             number | null
   /** Dados de vida por tipo (d6, d8, d10, d12). */
