@@ -10,6 +10,7 @@ import { formatMeters } from '../model/format'
 import { addDndProficiency, removeDndProficiency } from '../services/dndSheetService'
 import { removeDndClass, saveDndClass } from '../services/dndClassService'
 import { NumberField } from './DndControls'
+import { ChipRow, StatChip, XpMeter } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -167,12 +168,13 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         </div>
         </div>
         {race && (
-          <p className="dsh-note">
-            <strong>{race.name}:</strong> deslocamento {formatMeters(race.speed)}
-            {Object.keys(race.abilityBonuses).length > 0 && <>, bônus {Object.entries(race.abilityBonuses).map(([a, n]) => `+${n} ${ABILITIES.find((x) => x.key === a)?.short}`).join(', ')}</>}
-            {race.abilityChoice && <>, mais +{race.abilityChoice.amount} em {race.abilityChoice.count} atributos à escolha</>}.
-            {' '}Os atributos na aba Atributos e Perícias você escreve já com os bônus da raça.
-          </p>
+          <ChipRow>
+            <StatChip label="Deslocamento">{formatMeters(race.speed)}</StatChip>
+            {Object.entries(race.abilityBonuses).map(([a, n]) => (
+              <StatChip key={a} label={ABILITIES.find((x) => x.key === a)?.short ?? a} tone="good" title="Bônus da raça: escreva os atributos já com ele">+{n}</StatChip>
+            ))}
+            {race.abilityChoice && <StatChip label="À escolha" tone="good" title="Bônus da raça: escreva os atributos já com ele">+{race.abilityChoice.amount} em {race.abilityChoice.count}</StatChip>}
+          </ChipRow>
         )}
         {background && background.feature && <p className="dsh-note"><strong>{background.feature.name}:</strong> {background.feature.summary}</p>}
       </section>
@@ -183,11 +185,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
           <span className="dsh-label">Pontos de experiência</span>
           <NumberField value={form.experience} onChange={(n) => set('experience', n)} min={0} max={99999999} label="Pontos de experiência" disabled={readOnly} className="dsh-num--field" />
         </div>
-        <p className="dsh-note">
-          Pelo XP, o nível seria <strong>{xpLevel}</strong>
-          {toNext != null ? <>; faltam {toNext.toLocaleString('pt-BR')} pontos para o nível {xpLevel + 1}.</> : <>, o máximo.</>}
-          {xpLevel > derived.totalLevel && <> <strong className="dsh-warn-inline">Já dá para subir de nível.</strong></>}
-        </p>
+        <XpMeter xp={form.experience} xpLevel={xpLevel} level={derived.totalLevel} toNext={toNext} />
       </section>
 
       </div>
@@ -259,10 +257,10 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addClass()} disabled={!newClass || busy}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note">
-          {data.hpMode === 'rolled' ? 'PV por nível: rolagem (regra da campanha, escolhida pelo mestre).' : 'PV por nível: média do dado (regra da campanha, escolhida pelo mestre).'}
-          {' '}A primeira classe é a do 1º nível: dado de vida cheio, proficiências completas e salvaguardas.
-        </p>
+        <ChipRow>
+          <StatChip label="PV por nível" title="Regra da campanha, escolhida pelo mestre">{data.hpMode === 'rolled' ? 'Rolagem' : 'Média do dado'}</StatChip>
+          <StatChip label="1ª classe" title="É a do 1º nível: dado de vida cheio, proficiências completas e salvaguardas">Dado cheio</StatChip>
+        </ChipRow>
       </section>
 
       <section className="dsh-card">

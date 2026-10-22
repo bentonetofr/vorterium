@@ -6,6 +6,7 @@ import { coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
 import { itemTitle } from '../model/sheetModel'
 import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
 import { DerivedField, NumberField, Toggle } from './DndControls'
+import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -111,10 +112,13 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-load" role="progressbar" aria-label="Carga" aria-valuemin={0} aria-valuemax={Math.round(capacity)} aria-valuenow={Math.round(carried)}>
           <div className={`dsh-load__fill${carried > capacity ? ' is-over' : ''}`} style={{ width: `${pct}%` }} />
         </div>
-        <p className="dsh-note">
-          Capacidade de carga = Força × 7,5 kg: <DerivedField ctx={ctx} field="carry_capacity" value={capacity} label="Capacidade de carga em kg" suffix=" kg" min={0} max={9999} step={0.5} className="dsh-derived--inline" />.
-          Passou disso, o personagem fica sobrecarregado (a mesa decide a penalidade).
-        </p>
+        <ChipRow>
+          <StatChip label="Capacidade" title="Força × 7,5 kg">
+            <DerivedField ctx={ctx} field="carry_capacity" value={capacity} label="Capacidade de carga em kg" suffix=" kg" min={0} max={9999} step={0.5} className="dsh-derived--inline" />
+          </StatChip>
+          <StatChip label="Carregando" tone={carried > capacity ? 'bad' : undefined}>{formatKg(carried)}</StatChip>
+          {carried > capacity && <StatusPill tone="bad" title="A mesa decide a penalidade">Sobrecarregado</StatusPill>}
+        </ChipRow>
       </section>
 
       <section className="dsh-card dsh-wide">

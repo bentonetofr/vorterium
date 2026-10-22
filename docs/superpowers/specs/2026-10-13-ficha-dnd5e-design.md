@@ -370,6 +370,10 @@ Botão "Automatizar" no cabeçalho da ficha abre uma janela no centro da tela (`
 **14 itens** (`model/automation.ts`): Bônus de proficiência, CA, Iniciativa, Deslocamento, PV máximos, Capacidade de carga, CD das magias, Ataque de magia, Modificadores de atributo (6), Salvaguardas (6), Perícias (18), Percepções passivas (3), Espaços de magia e Recursos de classe e raça. Os números ficam em `dnd_character_overrides` (41 campos aceitos); os dois comportamentos (espaços e recursos) ficam em `choices.manualModes`. Espaços de magia manuais: total de cada nível digitável. Recursos manuais: total, recarga e remover liberados. No topo da janela, "Automatizar tudo" e "Manualizar tudo" trocam todos os itens de uma vez.
 **Migration nova:** `20240208000000_dnd_automatizar.sql` (amplia a lista de `field_key`; 117 verificações no Postgres de teste).
 
+### Ficha mais visual (pedido do usuário em 21/10/2026) — FEITO
+
+Parágrafos de explicação saíram da ficha e viraram figuras (`components/DndVisuals.tsx`): **medidor de XP** (nível pelo XP, barra, quanto falta e selo "Já dá para subir de nível"), **fórmulas em blocos** para a CD e o ataque de magia (8 + proficiência + modificador), **etiquetas de valor** (deslocamento e bônus da raça, PV por nível, atributo/proficiência/propriedades de cada ataque, armadura/escudo/iniciativa, capacidade e carga, truques e magias de cada classe), **selos de estado** (Estabilizado, Morreu, Sobrecarregado, nível de exaustão, Conjurador multiclasse) e **legendas** com as próprias bolinhas (perícias) e códigos DC/DL/AM (recursos). As regras que sobraram viram dica ao passar o mouse.
+
 ### Marco 6: rolagens integradas (M)
 - Coluna `roll_label`, `floor`, crítico por dado mantido, mensagens de atividade (seção 4.5).
 - Cliques na ficha rolam: perícia, salvaguarda, ataque, dano, iniciativa, morte, dado de vida; vantagem/desvantagem.

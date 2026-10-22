@@ -8,6 +8,7 @@ import { AUTO_RESOURCE_KEYS } from '../model/classResources'
 import { availableFeatures, classOptionAllowance, findCatalogFeature, missingFeatures } from '../model/features'
 import { createDndFeature, removeDndFeature, removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
 import { NumberField, Pips } from './DndControls'
+import { RechargeLegend } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -123,7 +124,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
     <div className="dsh-tab dsh-cols anim-tab-panel">
       <section className="dsh-card dsh-wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Recursos</h4></div>
-        {resources.length === 0 && <p className="dsh-faint">Nenhum recurso. Os da classe e da raça (Fúria, Ki, Surto de Ação...) aparecem sozinhos; crie aqui os outros que o personagem gasta e recarrega.</p>}
+        {resources.length === 0 && <p className="dsh-faint">Nenhum recurso ainda.</p>}
         {resources.length > 0 && (
           <table className="dsh-table dsh-res-table">
             <thead>
@@ -172,7 +173,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addResource()} disabled={busy === 'res'}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note">O total e a recarga dos recursos da classe e da raça vêm das tabelas do livro e acompanham o nível (para mexer à mão, use Automatizar no alto da ficha). <strong>DC</strong> recarrega no descanso curto, <strong>DL</strong> no descanso longo e <strong>AM</strong> ao amanhecer; o descanso longo também recarrega o que volta no curto. Os descansos (botões no alto da ficha) recarregam tudo conforme a recarga de cada recurso. Os espaços de magia ficam na aba Magias.</p>
+        <RechargeLegend />
       </section>
 
       <section className="dsh-card dsh-wide">

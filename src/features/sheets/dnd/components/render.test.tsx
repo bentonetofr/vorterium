@@ -254,7 +254,6 @@ describe('abas', () => {
     const html = renderToStaticMarkup(<DndMagiasTab ctx={ctx} />)
     expect(html).toContain('Total de espaços de 1º nível')
     expect(html).toContain('Total de espaços de 9º nível')
-    expect(html).toContain('O total de cada nível é seu')
   })
 
   it('recursos de classe em modo manual: total e recarga editáveis', () => {
@@ -264,10 +263,54 @@ describe('abas', () => {
     expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).toContain('aria-label="Remover Fúria"')
   })
 
+  it('Experiência é um medidor com nível, barra e quanto falta, e não um parágrafo', () => {
+    const ctx = makeCtx()
+    ctx.form.experience = 299
+    const html = renderToStaticMarkup(<DndPersonagemTab ctx={ctx} />)
+    expect(html).toContain('dsh-xp__bar')
+    expect(html).toContain('role="progressbar"')
+    expect(html).toContain('Nível pelo XP')
+    expect(html).toContain('faltam <strong>1</strong> XP')
+    expect(html).not.toContain('Pelo XP, o nível seria')
+    ctx.form.experience = 14000
+    expect(renderToStaticMarkup(<DndPersonagemTab ctx={ctx} />)).toContain('Já dá para subir de nível')
+    ctx.form.experience = 400000
+    expect(renderToStaticMarkup(<DndPersonagemTab ctx={ctx} />)).toContain('nível 20')
+  })
+
+  it('CD e ataque de magia aparecem como fórmula em blocos', () => {
+    const data = makeData({ classes: [cls('wizard', 5, true)] })
+    const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data })} />)
+    expect(html).toContain('dsh-eq__tile--result')
+    expect(html).toContain('Cálculo de CD das magias')
+    expect(html).toContain('Cálculo de Ataque de magia')
+    expect(html).not.toContain('CD = 8 + bônus de proficiência')
+  })
+
+  it('legendas visuais no lugar de frases: bolinhas das perícias e recarga dos recursos', () => {
+    expect(renderToStaticMarkup(<DndAtributosTab ctx={makeCtx()} />)).toContain('Meia proficiência')
+    const car = renderToStaticMarkup(<DndCaracteristicasTab ctx={makeCtx()} />)
+    expect(car).toContain('dsh-legend__code')
+    expect(car).toContain('Descanso curto')
+    expect(car).not.toContain('recarrega no descanso curto, <strong>DL</strong>')
+  })
+
+  it('Defesa e Inventário usam etiquetas de valor, e sobrecarga vira selo', () => {
+    const def = renderToStaticMarkup(<DndCombateTab ctx={makeCtx()} />)
+    expect(def).toContain('dsh-statchip')
+    expect(def).not.toContain('Equipe a armadura e o escudo na aba Inventário')
+    const ctx = makeCtx()
+    ctx.form.strength = 3
+    const inv = renderToStaticMarkup(<DndInventarioTab ctx={ctx} />)
+    expect(inv).toContain('Capacidade')
+    expect(inv).toContain('Carregando')
+    expect(inv).not.toContain('Capacidade de carga = Força')
+  })
+
   it('Magias de um não conjurador explica quem conjura', () => {
     const data = makeData({ classes: [cls('fighter', 5, true)] })
     const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data })} />)
-    expect(html).toContain('Nenhuma das classes do personagem conjura')
+    expect(html).toContain('Nenhuma classe conjuradora')
   })
 
   it('Magias de um Bruxo mostra o Pacto', () => {

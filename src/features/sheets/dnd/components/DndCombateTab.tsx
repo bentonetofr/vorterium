@@ -7,6 +7,7 @@ import { armorWarning, attackFor, strengthWarning } from '../model/sheetModel'
 import { formatSigned } from '../model/format'
 import { createDndAttack, deleteDndAttack, updateDndAttack } from '../services/dndSheetService'
 import { DerivedField, NumberField, Pips } from './DndControls'
+import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -112,13 +113,11 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
           <label className="dsh-field"><span className="dsh-label">Temporários</span>
             <NumberField value={form.hp_temp} onChange={(n) => set('hp_temp', n)} min={0} max={9999} label="PV temporários" disabled={readOnly} className="dsh-num--field" /></label>
         </div>
-        {derived.hpMax == null && <p className="dsh-note">Sem classes, o PV máximo é o que você digita. Com classes, ele sai do dado de vida e da Constituição.</p>}
         {!readOnly && (
           <div className="dsh-add-row">
             <NumberField value={amount} onChange={setAmount} min={1} max={9999} label="Quantidade" className="dsh-num--sm" />
-            <button type="button" className="dsh-chip dsh-chip--bad" onClick={() => damage(amount)}>Dano</button>
+            <button type="button" className="dsh-chip dsh-chip--bad" onClick={() => damage(amount)} title="O dano gasta os PV temporários primeiro">Dano</button>
             <button type="button" className="dsh-chip dsh-chip--good" onClick={() => heal(amount)}>Cura</button>
-            <span className="dsh-faint">O dano gasta os PV temporários primeiro.</span>
           </div>
         )}
 
@@ -128,8 +127,8 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             <span>Sucessos <Pips total={3} filled={form.death_save_successes} tone="good" label="Sucessos" onChange={readOnly ? undefined : (n) => set('death_save_successes', n)} /></span>
             <span>Falhas <Pips total={3} filled={form.death_save_failures} tone="bad" label="Falhas" onChange={readOnly ? undefined : (n) => set('death_save_failures', n)} /></span>
           </div>
-          {form.death_save_failures >= 3 && <p className="dsh-warn">Três falhas: o personagem morre.</p>}
-          {form.death_save_successes >= 3 && <p className="dsh-note">Três sucessos: estabilizado.</p>}
+          {form.death_save_failures >= 3 && <StatusPill tone="bad">Morreu</StatusPill>}
+          {form.death_save_successes >= 3 && <StatusPill tone="good">Estabilizado</StatusPill>}
         </div>
 
         {diePool.length > 0 && (
@@ -144,7 +143,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                 </div>
               )
             })}
-            {lastRoll && <p className="dsh-note" role="status">{lastRoll}</p>}
+            {lastRoll && <StatusPill tone="good">{lastRoll}</StatusPill>}
           </div>
         )}
       </section>
@@ -166,10 +165,11 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                   {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeAttack(a)} disabled={busy === a.id} aria-label={`Remover ${a.name}`}>×</button>}
                 </div>
                 {view && (
-                  <p className="dsh-note">
-                    {view.attack.ability === 'strength' ? 'Força' : 'Destreza'}{view.proficient ? ' + proficiência' : ' (sem proficiência com esta arma)'}
-                    {view.weapon.properties.length > 0 && <> · {view.weapon.properties.join(', ')}</>}
-                  </p>
+                  <ChipRow>
+                    <StatChip label="Atributo">{view.attack.ability === 'strength' ? 'FOR' : 'DES'}</StatChip>
+                    <StatChip label="Proficiência" tone={view.proficient ? 'good' : 'bad'}>{view.proficient ? 'Sim' : 'Não'}</StatChip>
+                    {view.weapon.properties.map((prop) => <StatusPill key={prop}>{prop}</StatusPill>)}
+                  </ChipRow>
                 )}
                 {!readOnly && (
                   <div className="dsh-attack__edit">
@@ -193,7 +193,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addAttack()} disabled={busy === 'new'}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note">Bônus de ataque = modificador (Força, Destreza ou a melhor das duas em armas de acuidade) + proficiência. Os campos manuais, se preenchidos, valem no lugar do cálculo.</p>
       </section>
 
       </div>
@@ -203,18 +202,17 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
           <h4 className="dsh-card__title">Defesa</h4>
           <span className="dsh-badge">CA {derived.armorClass}</span>
         </div>
-        <dl className="dsh-facts">
-          <dt>Armadura</dt><dd>{gear.armor ? `${gear.armor.name} (CA ${gear.armor.baseAc})` : <span className="dsh-faint">Nenhuma equipada</span>}</dd>
-          <dt>Escudo</dt><dd>{gear.shield ? 'Equipado (+2)' : <span className="dsh-faint">Nenhum</span>}</dd>
-          <dt>Iniciativa</dt><dd><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></dd>
-        </dl>
+        <ChipRow>
+          <StatChip label="Armadura" tone={gear.armor ? 'good' : undefined}>{gear.armor ? `${gear.armor.name} (CA ${gear.armor.baseAc})` : 'Nenhuma'}</StatChip>
+          <StatChip label="Escudo" tone={gear.shield ? 'good' : undefined}>{gear.shield ? '+2' : 'Nenhum'}</StatChip>
+          <StatChip label="Iniciativa"><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></StatChip>
+        </ChipRow>
         <label className="dsh-field">
-          <span className="dsh-label">Bônus fixo de CA <span className="dsh-faint">· anel de proteção, estilo de luta Defesa</span></span>
+          <span className="dsh-label" title="Anel de proteção, estilo de luta Defesa...">Bônus fixo de CA</span>
           <NumberField value={form.ac_bonus} onChange={(n) => set('ac_bonus', n)} min={-10} max={10} label="Bônus de CA" disabled={readOnly} className="dsh-num--field" />
         </label>
         {armorMsg && <p className="dsh-warn">{armorMsg}</p>}
         {strMsg && <p className="dsh-warn">{strMsg}</p>}
-        <p className="dsh-note">Equipe a armadura e o escudo na aba Inventário: a CA muda sozinha. Bárbaro e Monge sem armadura usam a Defesa sem Armadura.</p>
       </section>
 
       <section className="dsh-card">
@@ -228,15 +226,10 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             </button>
           ))}
         </div>
-        {form.conditions.length > 0 && (
-          <ul className="dsh-list dsh-list--plain">
-            {form.conditions.map((k) => <li key={k} className="dsh-note"><strong>{CONDITIONS.find((c) => c.key === k)?.name}:</strong> {CONDITIONS.find((c) => c.key === k)?.summary}</li>)}
-          </ul>
-        )}
         <div className="dsh-field">
           <span className="dsh-label">Exaustão</span>
           <Pips total={6} filled={form.exhaustion} tone="bad" label="Níveis de exaustão" onChange={readOnly ? undefined : (n) => set('exhaustion', n)} />
-          {exhaustionLevel && <p className="dsh-note"><strong>Nível {exhaustionLevel.level}:</strong> {exhaustionLevel.effect}. {EXHAUSTION.rule}</p>}
+          {exhaustionLevel && <StatusPill tone="bad" title={EXHAUSTION.rule}>Nível {exhaustionLevel.level}: {exhaustionLevel.effect}</StatusPill>}
         </div>
         <label className="dsh-field">
           <span className="dsh-label">Concentrando em</span>

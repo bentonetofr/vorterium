@@ -3,6 +3,7 @@ import { ABILITIES, SKILLS } from '../rules/abilities'
 import { formatSigned } from '../model/format'
 import { upsertDndSkill } from '../services/dndSheetService'
 import { DerivedField, NumberField, Pips } from './DndControls'
+import { SkillLegend } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 import type { AbilityKey } from '../rules/types'
 
@@ -40,7 +41,7 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Atributos e salvaguardas</h4>
-          <span className="dsh-badge" title="Bônus de proficiência pelo nível total">Proficiência {formatSigned(derived.proficiencyBonus)}</span>
+          <span className="dsh-badge" title="Modificador = (valor − 10) ÷ 2, para baixo. Bônus de proficiência pelo nível total. Para digitar os números à mão, use Automatizar.">Proficiência {formatSigned(derived.proficiencyBonus)}</span>
         </div>
         <div className="dsh-abilities">
           {ABILITIES.map((a) => {
@@ -63,9 +64,6 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
             )
           })}
         </div>
-        <p className="dsh-note">
-          O modificador é (valor − 10) ÷ 2, para baixo. As salvaguardas com proficiência vêm da classe inicial. Para digitar os números à mão, use o botão Automatizar no alto da ficha.
-        </p>
       </section>
 
       <section className="dsh-card">
@@ -91,7 +89,7 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
             )
           })}
         </ul>
-        <p className="dsh-note">Uma bolinha é proficiência; duas, especialização (dobra o bônus de proficiência).</p>
+        <SkillLegend />
         <span className="dsh-label">Percepções passivas</span>
         <div className="dsh-passives">
           <div className="dsh-passive"><DerivedField ctx={ctx} field="passive_perception" value={derived.passives.perception} label="Percepção passiva" min={0} max={99} /><span>Percepção</span></div>

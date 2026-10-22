@@ -11,6 +11,7 @@ import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceService'
 import { DerivedField, NumberField, Pips, Toggle } from './DndControls'
+import { ChipRow, Equation, StatChip, StatusPill } from './DndVisuals'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
@@ -128,13 +129,23 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
           <Select options={ABILITY_OPTIONS} value={form.spell_ability} onChange={(v) => set('spell_ability', v as DndForm['spell_ability'])} disabled={readOnly} aria-label="Atributo de conjuração" />
         </label>
         {stats ? (
-          <dl className="dsh-facts">
-            <dt>Atributo</dt><dd>{ABILITIES.find((a) => a.key === stats.ability)?.label}{stats.chosen ? ' (escolhido)' : ''}</dd>
-            <dt>CD das magias</dt><dd><DerivedField ctx={ctx} field="spell_save_dc" value={stats.saveDc} label="CD das magias" min={0} max={40} /></dd>
-            <dt>Ataque de magia</dt><dd><DerivedField ctx={ctx} field="spell_attack_bonus" value={stats.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} /></dd>
-          </dl>
+          <>
+            <ChipRow>
+              <StatChip label="Atributo">{ABILITIES.find((a) => a.key === stats.ability)?.label}{stats.chosen ? ' (escolhido)' : ''}</StatChip>
+            </ChipRow>
+            <Equation
+              resultLabel="CD das magias"
+              parts={[{ label: 'Base', value: 8 }, { label: 'Proficiência', value: formatSigned(derived.proficiencyBonus) }, { label: 'Modificador', value: formatSigned(derived.abilityMods[stats.ability]) }]}
+              result={<DerivedField ctx={ctx} field="spell_save_dc" value={stats.saveDc} label="CD das magias" min={0} max={40} />}
+            />
+            <Equation
+              resultLabel="Ataque de magia"
+              parts={[{ label: 'Proficiência', value: formatSigned(derived.proficiencyBonus) }, { label: 'Modificador', value: formatSigned(derived.abilityMods[stats.ability]) }]}
+              result={<DerivedField ctx={ctx} field="spell_attack_bonus" value={stats.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} />}
+            />
+          </>
         ) : (
-          <p className="dsh-faint">Nenhuma das classes do personagem conjura magias. Escolha um atributo acima para calcular a CD e o ataque de magia à mão (útil para subclasses, itens e homebrew), ou use uma classe conjuradora: Bardo, Clérigo, Druida, Feiticeiro, Bruxo, Mago, e Paladino e Patrulheiro a partir do 2º nível.</p>
+          <StatusPill tone="warn" title="Escolha um atributo acima para calcular a CD e o ataque de magia à mão, ou use uma classe conjuradora">Nenhuma classe conjuradora</StatusPill>
         )}
         {casting && (
           <>
@@ -146,25 +157,26 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                 return (
                   <li key={c.classKey} className="dsh-class">
                     <strong className="dsh-class__name">{def?.name ?? c.classKey}</strong>
-                    <p className="dsh-note">
-                      Atributo: {ab?.label}. Truques: {c.cantripsKnown}. Magias que {LEARNING_LABEL[learning]}: {c.spellsKnownOrPrepared}
-                      {c.spellbookSize != null && <>, grimório com {c.spellbookSize}</>}.
-                    </p>
+                    <ChipRow>
+                      <StatChip label="Atributo">{ab?.short ?? ab?.label}</StatChip>
+                      <StatChip label="Truques">{c.cantripsKnown}</StatChip>
+                      <StatChip label={`Magias que ${LEARNING_LABEL[learning]}`}>{c.spellsKnownOrPrepared}</StatChip>
+                      {c.spellbookSize != null && <StatChip label="Grimório">{c.spellbookSize}</StatChip>}
+                    </ChipRow>
                   </li>
                 )
               })}
             </ul>
-            {casting.classes.length > 1 && <p className="dsh-note">Na multiclasse, os espaços de magia somam os níveis de conjurador; truques e magias contam por classe.</p>}
+            {casting.classes.length > 1 && <StatusPill title="Os espaços de magia somam os níveis de conjurador; truques e magias contam por classe">Conjurador multiclasse</StatusPill>}
           </>
         )}
-        <p className="dsh-note">CD = 8 + bônus de proficiência + modificador do atributo. Ataque = bônus de proficiência + modificador.</p>
       </section>
       </div>
 
       {(casting || manualSlots) && (
         <div className="dsh-col">
         <section className="dsh-card">
-          <div className="dsh-card__header"><h4 className="dsh-card__title">Espaços de magia</h4></div>
+          <div className="dsh-card__header"><h4 className="dsh-card__title" title="Bolinha cheia é um espaço disponível; clique para gastar. O descanso longo recarrega todos.">Espaços de magia</h4></div>
           {!manualSlots && slotRows.filter((r) => r.max_value > 0).length === 0 && <p className="dsh-faint">Sem espaços de magia neste nível.</p>}
           <ul className="dsh-slots">
             {slotList.map(({ level: lv, max }) => {
@@ -196,10 +208,6 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
               </li>
             )}
           </ul>
-          <p className="dsh-note">
-            Bolinha cheia é um espaço disponível; clique para gastar. O descanso longo recarrega todos.
-            {manualSlots ? ' O total de cada nível é seu: escreva nas caixinhas.' : ''}
-          </p>
         </section>
         </div>
       )}
@@ -269,7 +277,6 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip" onClick={() => void addSpell()} disabled={busy === 'new'}>Adicionar</button>
           </div>
         )}
-        {stats && <p className="dsh-note">Ataque de magia {formatSigned(stats.attackBonus)}, CD {stats.saveDc}.</p>}
       </section>
 
       {!readOnly && (
@@ -278,7 +285,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
             <h4 className="dsh-card__title">Livro de magias</h4>
             <button type="button" className="dsh-chip" aria-expanded={bookOpen} onClick={() => setBookOpen((o) => !o)}>{bookOpen ? 'Fechar o livro' : 'Abrir o livro'}</button>
           </div>
-          {!bookOpen && <p className="dsh-note">As 319 magias do SRD 5.1, traduzidas, com busca e filtros por nível, escola e classe. Adicione à ficha com um clique.</p>}
+          {!bookOpen && <ChipRow><StatChip label="No livro">319 magias</StatChip><StatChip label="Fonte">SRD 5.1</StatChip><StatChip label="Filtros">nível · escola · classe</StatChip></ChipRow>}
           {bookOpen && (
             <DndSpellBrowser catalog={catalogMod?.SPELLS ?? null} have={haveKeys} myClasses={casting?.classes.map((c) => c.classKey) ?? []}
               readOnly={readOnly} busy={busy} onAdd={(sp) => void addFromBook(sp)} />
