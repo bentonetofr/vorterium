@@ -137,7 +137,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             </thead>
             <tbody>
               {resources.map((r) => {
-                const auto = AUTO_RESOURCE_KEYS.has(r.key)
+                const auto = AUTO_RESOURCE_KEYS.has(r.key) && !form.manual_modes.includes('class_resources')
                 return (
                 <tr key={r.id}>
                   <th scope="row" className="dsh-res-table__name">{r.label}</th>
@@ -172,7 +172,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addResource()} disabled={busy === 'res'}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note">O total e a recarga dos recursos da classe e da raça vêm das tabelas do livro e acompanham o nível. <strong>DC</strong> recarrega no descanso curto, <strong>DL</strong> no descanso longo e <strong>AM</strong> ao amanhecer; o descanso longo também recarrega o que volta no curto. Os descansos (botões no alto da ficha) recarregam tudo conforme a recarga de cada recurso. Os espaços de magia ficam na aba Magias.</p>
+        <p className="dsh-note">O total e a recarga dos recursos da classe e da raça vêm das tabelas do livro e acompanham o nível (para mexer à mão, use Automatizar no alto da ficha). <strong>DC</strong> recarrega no descanso curto, <strong>DL</strong> no descanso longo e <strong>AM</strong> ao amanhecer; o descanso longo também recarrega o que volta no curto. Os descansos (botões no alto da ficha) recarregam tudo conforme a recarga de cada recurso. Os espaços de magia ficam na aba Magias.</p>
       </section>
 
       <section className="dsh-card dsh-wide">

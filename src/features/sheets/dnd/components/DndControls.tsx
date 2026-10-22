@@ -1,6 +1,6 @@
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { DndDerivedField } from '../../../../shared/types'
-import { removeDndOverride, saveDndOverride } from '../services/dndSheetService'
+import { saveDndOverride } from '../services/dndSheetService'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -102,16 +102,17 @@ export function Toggle({ checked, onChange, label, title }: ToggleProps) {
 }
 
 // ────────────────────────────────────────────────────────
-// AUTO / MANUAL: os valores que o livro calcula (CA, PV máximo, iniciativa,
-// deslocamento, proficiência, CD e ataque das magias). Em AUTO vale a conta;
-// em MANUAL vale o número que a pessoa escreveu (guardado em
-// dnd_character_overrides). O clique no selo troca de modo.
+// Valores que o livro calcula (CA, PV máximo, iniciativa, deslocamento,
+// proficiência, CD e ataque das magias, modificadores, salvaguardas, perícias,
+// passivas, carga). Automático: mostra a conta. Manual (escolhido no botão
+// Automatizar do alto da ficha): vira um campo para digitar o número, guardado
+// em dnd_character_overrides. A ficha não tem mais selo nem botão de modo.
 // ────────────────────────────────────────────────────────
 
 interface DerivedFieldProps {
   ctx:       SheetCtx
   field:     DndDerivedField
-  /** Valor que o motor devolveu (em MANUAL, o próprio número manual). */
+  /** Valor que o motor devolveu (em modo manual, o próprio número manual). */
   value:     number
   label:     string
   /** Mostra o valor (ex.: pés em metros) e converte o que se digita de volta. */
@@ -122,32 +123,14 @@ interface DerivedFieldProps {
   min?:      number
   max?:      number
   step?:     number
+  className?: string
 }
 
-export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow = (n) => n, suffix, signed, min = -99, max = 999, step = 1 }: DerivedFieldProps) {
+export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow = (n) => n, suffix, signed, min = -99, max = 999, step = 1, className }: DerivedFieldProps) {
   const { data, sheet, readOnly, report } = ctx
   const override = data.details.overrides.find((o) => o.field_key === field)
-  const manual = !!override
-  const [busy, setBusy] = useState(false)
   const shown = show(value)
   const text = `${signed && shown >= 0 ? '+' : ''}${String(shown).replace('.', ',')}${suffix ?? ''}`
-
-  async function toggleMode() {
-    if (readOnly || busy) return
-    setBusy(true)
-    report(null)
-    try {
-      if (manual) {
-        await removeDndOverride(sheet.id, field)
-        data.setDetails((d) => ({ ...d, overrides: d.overrides.filter((o) => o.field_key !== field) }))
-      } else {
-        const saved = await saveDndOverride(sheet.id, field, String(value))
-        data.setDetails((d) => ({ ...d, overrides: [...d.overrides.filter((o) => o.field_key !== field), saved] }))
-      }
-    } catch (err) {
-      report(err instanceof Error ? err.message : 'Não foi possível trocar o modo.')
-    } finally { setBusy(false) }
-  }
 
   async function saveManual(n: number) {
     if (readOnly) return
@@ -163,17 +146,10 @@ export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow
   }
 
   return (
-    <span className="dsh-derived">
-      {manual && !readOnly
+    <span className={`dsh-derived${className ? ` ${className}` : ''}`}>
+      {override && !readOnly
         ? <ManualBox value={shown} onCommit={saveManual} label={label} min={min} max={max} step={step} />
         : <strong className="dsh-derived__value" aria-label={label}>{text}</strong>}
-      <button
-        type="button" disabled={readOnly || busy}
-        className={`dsh-mode${manual ? ' dsh-mode--manual' : ''}`} onClick={() => void toggleMode()}
-        title={manual ? 'Valor manual. Clique pra voltar ao cálculo do livro.' : 'Calculado pelas regras do livro. Clique pra digitar à mão.'}
-      >
-        {manual ? 'MANUAL' : 'AUTO'}
-      </button>
     </span>
   )
 }

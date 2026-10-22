@@ -196,6 +196,32 @@ export async function saveDndOverride(
   return data as DndCharacterOverride
 }
 
+/** Grava vários campos manuais de uma vez (os grupos do botão Automatizar: 6 modificadores, 18 perícias...). */
+export async function saveDndOverrides(
+  sheetId: string,
+  entries: readonly { field: DndDerivedField; value: number }[],
+): Promise<DndCharacterOverride[]> {
+  if (entries.length === 0) return []
+  const rows = entries.map((e) => ({ sheet_id: sheetId, field_key: e.field, manual_value: String(e.value), reason: '' }))
+  const { data, error } = await supabase
+    .from('dnd_character_overrides')
+    .upsert(rows, { onConflict: 'sheet_id,field_key' })
+    .select('*')
+  if (error) throw new Error('Não foi possível salvar o modo manual.')
+  return (data ?? []) as DndCharacterOverride[]
+}
+
+/** Devolve vários campos ao cálculo do livro de uma vez. */
+export async function removeDndOverrides(sheetId: string, fields: readonly DndDerivedField[]): Promise<void> {
+  if (fields.length === 0) return
+  const { error } = await supabase
+    .from('dnd_character_overrides')
+    .delete()
+    .eq('sheet_id', sheetId)
+    .in('field_key', [...fields])
+  if (error) throw new Error('Não foi possível voltar ao modo automático.')
+}
+
 /** Remove a exceção e devolve o campo ao cálculo do livro. */
 export async function removeDndOverride(sheetId: string, fieldKey: DndDerivedField): Promise<void> {
   const { error } = await supabase

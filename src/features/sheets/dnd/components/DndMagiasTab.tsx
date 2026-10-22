@@ -6,11 +6,11 @@ import type { SpellEntry } from '../catalog/types'
 import { SPELL_SCHOOL_LABEL, spellLevelLabel } from '../catalog/spellUtils'
 import { useSpellCatalog } from '../hooks/useSpellCatalog'
 import { ABILITIES } from '../rules/abilities'
-import { PACT_SLOT_KEY, spellSlotKey } from '../model/slots'
+import { PACT_SLOT_KEY, spellSlotKey, spellSlotLabel } from '../model/slots'
 import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
-import { setDndResourceCurrent } from '../services/dndResourceService'
-import { DerivedField, Pips, Toggle } from './DndControls'
+import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceService'
+import { DerivedField, NumberField, Pips, Toggle } from './DndControls'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
@@ -51,6 +51,21 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     report(null)
     try { await job() } catch (err) { report(err instanceof Error ? err.message : 'Algo deu errado. Tente de novo.') } finally { setBusy(null) }
   }
+
+  const manualSlots = form.manual_modes.includes('spell_slots')
+  const slotList = manualSlots
+    ? Array.from({ length: 9 }, (_, i) => ({ level: i + 1, max: slotRows.find((r) => r.key === spellSlotKey(i + 1))?.max_value ?? 0 }))
+    : (casting?.slots ?? []).map((max, i) => ({ level: i + 1, max }))
+  /** Modo manual: o total de espaços de cada nível é digitado; o gasto continua nas bolinhas. */
+  const setSlotTotal = (level: number, total: number) => run(spellSlotKey(level), async () => {
+    const key = spellSlotKey(level)
+    const row = slotRows.find((r) => r.key === key)
+    const saved = await saveDndResource(sheet.id, {
+      key, label: spellSlotLabel(level), max_value: total, current_value: Math.min(row?.current_value ?? total, total),
+      recharge: 'long', source: 'spell_slots', sort_order: level,
+    })
+    data.setResources((rs) => [...rs.filter((r) => r.key !== key), saved])
+  })
 
   const setSlots = (key: string, filled: number) => {
     const row = slotRows.find((r) => r.key === key)
@@ -146,27 +161,33 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
       </section>
       </div>
 
-      {casting && (
+      {(casting || manualSlots) && (
         <div className="dsh-col">
         <section className="dsh-card">
           <div className="dsh-card__header"><h4 className="dsh-card__title">Espaços de magia</h4></div>
-          {slotRows.filter((r) => r.max_value > 0).length === 0 && <p className="dsh-faint">Sem espaços de magia neste nível.</p>}
+          {!manualSlots && slotRows.filter((r) => r.max_value > 0).length === 0 && <p className="dsh-faint">Sem espaços de magia neste nível.</p>}
           <ul className="dsh-slots">
-            {casting.slots.map((max, i) => {
-              const key = spellSlotKey(i + 1)
+            {slotList.map(({ level: lv, max }) => {
+              const key = spellSlotKey(lv)
               const row = slotRows.find((r) => r.key === key)
-              if (max === 0) return null
+              if (max === 0 && !manualSlots) return null
               const available = row ? Math.min(row.current_value, max) : max
               return (
                 <li key={key} className="dsh-slot">
-                  <span className="dsh-slot__label">{i + 1}º nível</span>
-                  <Pips total={max} filled={available} label={`Espaços de ${i + 1}º nível disponíveis`}
-                    onChange={readOnly || !row || busy === key ? undefined : (n) => setSlots(key, n)} />
-                  <span className="dsh-faint">{available}/{max}</span>
+                  <span className="dsh-slot__label">{lv}º nível</span>
+                  {manualSlots && (
+                    <NumberField value={max} min={0} max={20} label={`Total de espaços de ${lv}º nível`} disabled={readOnly || busy === key}
+                      onChange={(n) => void setSlotTotal(lv, n)} className="dsh-num--sm" />
+                  )}
+                  {max > 0 && (
+                    <Pips total={max} filled={available} label={`Espaços de ${lv}º nível disponíveis`}
+                      onChange={readOnly || !row || busy === key ? undefined : (n) => setSlots(key, n)} />
+                  )}
+                  <span className="dsh-faint">{max > 0 ? `${available}/${max}` : ''}</span>
                 </li>
               )
             })}
-            {casting.pact && pact && (
+            {casting?.pact && pact && (
               <li className="dsh-slot">
                 <span className="dsh-slot__label">Pacto ({casting.pact.level}º nível)</span>
                 <Pips total={pact.max_value} filled={Math.min(pact.current_value, pact.max_value)} tone="good" label="Espaços de Pacto disponíveis"
@@ -175,7 +196,10 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
               </li>
             )}
           </ul>
-          <p className="dsh-note">Bolinha cheia é um espaço disponível; clique para gastar. O descanso longo recarrega todos.</p>
+          <p className="dsh-note">
+            Bolinha cheia é um espaço disponível; clique para gastar. O descanso longo recarrega todos.
+            {manualSlots ? ' O total de cada nível é seu: escreva nas caixinhas.' : ''}
+          </p>
         </section>
         </div>
       )}

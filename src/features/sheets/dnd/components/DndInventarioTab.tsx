@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterInventoryItem } from '../../../../shared/types'
 import { ARMORS, GEAR, SHIELD, TOOLS, WEAPONS, getArmor } from '../catalog'
-import { carryCapacityKg, coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
+import { coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
 import { itemTitle } from '../model/sheetModel'
 import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
-import { NumberField, Toggle } from './DndControls'
+import { DerivedField, NumberField, Toggle } from './DndControls'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -31,14 +31,14 @@ function entriesOf(kind: Kind): { key: string; name: string; weight: number; not
 }
 
 export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
-  const { form, set, data, sheet, readOnly, report } = ctx
+  const { form, set, derived, data, sheet, readOnly, report } = ctx
   const [kind, setKind] = useState<Kind>('weapon')
   const [pickKey, setPickKey] = useState('')
   const [customName, setCustomName] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
 
   const items = data.details.inventory
-  const capacity = carryCapacityKg(form.strength)
+  const capacity = derived.carryCapacity
   const carried = inventoryWeightKg(items)
   const pct = Math.min(100, (carried / Math.max(1, capacity)) * 100)
   const options = [{ value: '', label: 'Escolher do catálogo' }, ...entriesOf(kind).map((e) => ({ value: e.key, label: e.name }))]
@@ -111,7 +111,10 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-load" role="progressbar" aria-label="Carga" aria-valuemin={0} aria-valuemax={Math.round(capacity)} aria-valuenow={Math.round(carried)}>
           <div className={`dsh-load__fill${carried > capacity ? ' is-over' : ''}`} style={{ width: `${pct}%` }} />
         </div>
-        <p className="dsh-note">Capacidade de carga = Força × 7,5 kg. Passou disso, o personagem fica sobrecarregado (a mesa decide a penalidade).</p>
+        <p className="dsh-note">
+          Capacidade de carga = Força × 7,5 kg: <DerivedField ctx={ctx} field="carry_capacity" value={capacity} label="Capacidade de carga em kg" suffix=" kg" min={0} max={9999} step={0.5} className="dsh-derived--inline" />.
+          Passou disso, o personagem fica sobrecarregado (a mesa decide a penalidade).
+        </p>
       </section>
 
       <section className="dsh-card dsh-wide">

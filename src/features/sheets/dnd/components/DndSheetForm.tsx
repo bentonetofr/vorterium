@@ -194,7 +194,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
   // ── Espaços de magia como recursos: o máximo vem do motor ──
   const slotSync = useRef(false)
   useEffect(() => {
-    if (readOnly || !ready || data.degraded || slotSync.current) return
+    if (readOnly || !ready || data.degraded || slotSync.current || form.manual_modes.includes('spell_slots')) return
     const slots = derived.spellcasting?.slots ?? [0, 0, 0, 0, 0, 0, 0, 0, 0]
     const existing = data.resources.filter((r) => r.source === 'spell_slots')
     const plan = planSlotResources(slots, derived.spellcasting?.pact ?? null, existing)
@@ -210,12 +210,12 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       } finally { slotSync.current = false }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, ready, data.degraded, derived.spellcasting, data.resources])
+  }, [readOnly, ready, data.degraded, derived.spellcasting, data.resources, form.manual_modes])
 
   // ── Recursos de classe e de raça (Fúria, Ki, Surto de Ação...): o máximo vem das tabelas do livro ──
   const classResSync = useRef(false)
   useEffect(() => {
-    if (readOnly || !ready || data.degraded || classResSync.current) return
+    if (readOnly || !ready || data.degraded || classResSync.current || form.manual_modes.includes('class_resources')) return
     const desired = desiredClassResources({
       classes: data.classes.map((c) => ({ classKey: c.class_key, level: c.level })),
       abilityMods: derived.abilityMods,
@@ -235,7 +235,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       } finally { classResSync.current = false }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, ready, data.degraded, data.classes, derived.abilityMods, form.race_key, data.resources])
+  }, [readOnly, ready, data.degraded, data.classes, derived.abilityMods, form.race_key, data.resources, form.manual_modes])
 
   // ── Descansos ──
   async function rechargeResourcesAndFeatures(kind: 'short' | 'long') {

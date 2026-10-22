@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ABILITIES, SKILLS } from '../rules/abilities'
 import { formatSigned } from '../model/format'
 import { upsertDndSkill } from '../services/dndSheetService'
-import { NumberField, Pips } from './DndControls'
+import { DerivedField, NumberField, Pips } from './DndControls'
 import type { SheetCtx } from './sheetContext'
 import type { AbilityKey } from '../rules/types'
 
@@ -35,8 +35,6 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
     } finally { setBusy(null) }
   }
 
-  const passive = (skill: 'perception' | 'insight' | 'investigation') => 10 + derived.skills[skill].bonus
-
   return (
     <div className="dsh-tab anim-tab-panel">
       <section className="dsh-card">
@@ -50,19 +48,23 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
             return (
               <div key={a.key} className="dsh-ability">
                 <span className="dsh-ability__name">{a.label}</span>
-                <strong className="dsh-ability__mod" aria-label={`Modificador de ${a.label}`}>{formatSigned(derived.abilityMods[a.key])}</strong>
+                <span className="dsh-ability__mod">
+                  <DerivedField ctx={ctx} field={`mod_${a.key}`} value={derived.abilityMods[a.key]} label={`Modificador de ${a.label}`} signed min={-10} max={20} />
+                </span>
                 <NumberField value={form[a.key]} onChange={(n) => set(a.key, n)} min={1} max={30} label={a.label} disabled={readOnly} className="dsh-ability__score" />
-                <label className={`dsh-ability__save${save.proficient ? ' is-on' : ''}`} title="Proficiência na salvaguarda">
-                  <input type="checkbox" checked={form[SAVE_FLAG[a.key]]} disabled={readOnly} onChange={(e) => set(SAVE_FLAG[a.key], e.target.checked)} />
-                  <span>Salvaguarda</span>
-                  <strong>{formatSigned(save.bonus)}</strong>
-                </label>
+                <div className={`dsh-ability__save${save.proficient ? ' is-on' : ''}`}>
+                  <label title="Proficiência na salvaguarda">
+                    <input type="checkbox" checked={form[SAVE_FLAG[a.key]]} disabled={readOnly} onChange={(e) => set(SAVE_FLAG[a.key], e.target.checked)} />
+                    <span>Salvaguarda</span>
+                  </label>
+                  <DerivedField ctx={ctx} field={`save_${a.key}`} value={save.bonus} label={`Salvaguarda de ${a.label}`} signed min={-20} max={30} />
+                </div>
               </div>
             )
           })}
         </div>
         <p className="dsh-note">
-          O modificador é (valor − 10) ÷ 2, para baixo. As salvaguardas com proficiência vêm da classe inicial; ajuste à mão se precisar.
+          O modificador é (valor − 10) ÷ 2, para baixo. As salvaguardas com proficiência vêm da classe inicial. Para digitar os números à mão, use o botão Automatizar no alto da ficha.
         </p>
       </section>
 
@@ -82,7 +84,9 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
                 <Pips total={2} filled={filled} size="sm" label={`Proficiência em ${k.label}`} onChange={readOnly || busy === k.key ? undefined : (n) => void setSkillLevel(k.key, n)} />
                 <span className="dsh-skill__name">{k.label}<small>{ab.short}</small></span>
                 {d.level === 'half' && <span className="dsh-skill__half" title="Pau para Toda Obra: metade da proficiência">½</span>}
-                <strong className="dsh-skill__bonus">{formatSigned(d.bonus)}</strong>
+                <span className="dsh-skill__bonus">
+                  <DerivedField ctx={ctx} field={`skill_${k.key}`} value={d.bonus} label={`Bônus de ${k.label}`} signed min={-20} max={40} />
+                </span>
               </li>
             )
           })}
@@ -90,9 +94,9 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
         <p className="dsh-note">Uma bolinha é proficiência; duas, especialização (dobra o bônus de proficiência).</p>
         <span className="dsh-label">Percepções passivas</span>
         <div className="dsh-passives">
-          <div className="dsh-passive"><strong>{passive('perception')}</strong><span>Percepção</span></div>
-          <div className="dsh-passive"><strong>{passive('insight')}</strong><span>Intuição</span></div>
-          <div className="dsh-passive"><strong>{passive('investigation')}</strong><span>Investigação</span></div>
+          <div className="dsh-passive"><DerivedField ctx={ctx} field="passive_perception" value={derived.passives.perception} label="Percepção passiva" min={0} max={99} /><span>Percepção</span></div>
+          <div className="dsh-passive"><DerivedField ctx={ctx} field="passive_insight" value={derived.passives.insight} label="Intuição passiva" min={0} max={99} /><span>Intuição</span></div>
+          <div className="dsh-passive"><DerivedField ctx={ctx} field="passive_investigation" value={derived.passives.investigation} label="Investigação passiva" min={0} max={99} /><span>Investigação</span></div>
         </div>
       </section>
     </div>

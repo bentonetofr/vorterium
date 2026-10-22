@@ -19,6 +19,9 @@ export type ProficiencyLevel = 'none' | 'half' | 'proficient' | 'expertise'
 /** Campos que a ficha pode sobrescrever à mão (AUTO/MANUAL). */
 export type OverridableField =
   | 'proficiency_bonus' | 'initiative_bonus' | 'armor_class' | 'hp_max' | 'speed' | 'spell_save_dc' | 'spell_attack_bonus'
+  | 'carry_capacity'
+  | `passive_${'perception' | 'insight' | 'investigation'}`
+  | `mod_${AbilityKey}` | `save_${AbilityKey}` | `skill_${SkillKey}`
 
 export type ArmorCategory = 'light' | 'medium' | 'heavy'
 
@@ -136,6 +139,10 @@ export interface Derived {
   skills:            Record<SkillKey, SkillDerived>
   initiative:        number
   passivePerception: number
+  /** Percepção, Intuição e Investigação passivas (10 + bônus da perícia). */
+  passives: { perception: number; insight: number; investigation: number }
+  /** Capacidade de carga em kg (Força × 7,5). */
+  carryCapacity: number
   armorClass:        number
   /** Deslocamento em pés (a tela converte para metros). */
   speed:             number

@@ -23,10 +23,15 @@ export function computeDerived(input: DerivedInput): Derived {
   const abilityMods = {} as Record<AbilityKey, number>
   const saves = {} as Record<AbilityKey, SaveDerived>
   for (const { key } of ABILITIES) {
-    const mod = getAbilityModifier(input.abilities[key])
+    let mod = getAbilityModifier(input.abilities[key])
+    const modKey = `mod_${key}` as const
+    if (manual[modKey] != null) { mod = manual[modKey]!; overridden.push(modKey) }
     const proficient = input.saveProficiency?.[key] === true
     abilityMods[key] = mod
-    saves[key] = { ability: key, proficient, bonus: mod + (proficient ? proficiencyBonus : 0) }
+    let bonus = mod + (proficient ? proficiencyBonus : 0)
+    const saveKey = `save_${key}` as const
+    if (manual[saveKey] != null) { bonus = manual[saveKey]!; overridden.push(saveKey) }
+    saves[key] = { ability: key, proficient, bonus }
   }
 
   // Pau para Toda Obra (Bardo, 2º nível): metade da proficiência no que o personagem ainda não domina.
@@ -36,8 +41,21 @@ export function computeDerived(input: DerivedInput): Derived {
   for (const { key, ability } of SKILLS) {
     const stored = input.skillProficiency?.[key] ?? 'none'
     const level = stored === 'none' && jackOfAllTrades ? 'half' : stored
-    skills[key] = { ability, level, bonus: skillBonus(abilityMods[ability], level, proficiencyBonus) }
+    let bonus = skillBonus(abilityMods[ability], level, proficiencyBonus)
+    const skillKey = `skill_${key}` as const
+    if (manual[skillKey] != null) { bonus = manual[skillKey]!; overridden.push(skillKey) }
+    skills[key] = { ability, level, bonus }
   }
+
+  const passives = { perception: 0, insight: 0, investigation: 0 }
+  for (const k of ['perception', 'insight', 'investigation'] as const) {
+    const passiveKey = `passive_${k}` as const
+    passives[k] = 10 + skills[k].bonus
+    if (manual[passiveKey] != null) { passives[k] = manual[passiveKey]!; overridden.push(passiveKey) }
+  }
+
+  let carryCapacity = input.abilities.strength * 7.5
+  if (manual.carry_capacity != null) { carryCapacity = manual.carry_capacity; overridden.push('carry_capacity') }
 
   // A iniciativa é um teste de Destreza: o Pau para Toda Obra também vale nela.
   let initiative = abilityMods.dexterity + (jackOfAllTrades ? Math.floor(proficiencyBonus / 2) : 0)
@@ -92,7 +110,9 @@ export function computeDerived(input: DerivedInput): Derived {
     saves,
     skills,
     initiative,
-    passivePerception: 10 + skills.perception.bonus,
+    passivePerception: passives.perception,
+    passives,
+    carryCapacity,
     armorClass,
     speed,
     hpMax,

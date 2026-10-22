@@ -1014,6 +1014,9 @@ export interface DndHomebrewEntry {
   updated_at:  string
 }
 
+type DndAbilityName = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma'
+
+/** Campos calculados que a ficha pode trocar por um valor manual (Automatizar). */
 export type DndDerivedField =
   | 'proficiency_bonus'
   | 'initiative_bonus'
@@ -1022,6 +1025,11 @@ export type DndDerivedField =
   | 'hp_max'
   | 'spell_save_dc'
   | 'spell_attack_bonus'
+  | 'carry_capacity'
+  | `passive_${'perception' | 'insight' | 'investigation'}`
+  | `mod_${DndAbilityName}`
+  | `save_${DndAbilityName}`
+  | `skill_${DndSkillKey}`
 
 export interface DndCharacterOverride {
   id: string

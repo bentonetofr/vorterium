@@ -1,6 +1,7 @@
 import type { DndCharacterSheet, DndCharacterSheetUpdateInput, DndCondition } from '../../../../shared/types'
 import { getBackground, getRace } from '../catalog'
 import type { AbilityKey, Derived } from '../rules/types'
+import { isManualMode, type ManualMode } from './automation'
 import { clampHp, derivedColumns, spellAbilityOf } from './sheetModel'
 
 // ────────────────────────────────────────────────────────
@@ -55,6 +56,8 @@ export interface DndForm {
   notes_racial:      string
   notes_background:  string
   notes_class:       string
+  /** Comportamentos automáticos desligados no botão Automatizar; vai em `choices.manualModes`. */
+  manual_modes:      ManualMode[]
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -95,6 +98,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     notes_racial:     typeof choices.notesRacial === 'string' ? choices.notesRacial : '',
     notes_background: typeof choices.notesBackground === 'string' ? choices.notesBackground : '',
     notes_class:      typeof choices.notesClass === 'string' ? choices.notesClass : '',
+    manual_modes:     Array.isArray(choices.manualModes) ? choices.manualModes.filter(isManualMode).sort() : [],
   }
 }
 
@@ -109,7 +113,7 @@ export function sheetWithForm(sheet: DndCharacterSheet, f: DndForm): DndCharacte
     strength_save_proficient: f.strength_save_proficient, dexterity_save_proficient: f.dexterity_save_proficient,
     constitution_save_proficient: f.constitution_save_proficient, intelligence_save_proficient: f.intelligence_save_proficient,
     wisdom_save_proficient: f.wisdom_save_proficient, charisma_save_proficient: f.charisma_save_proficient,
-    choices: { ...(sheet.choices ?? {}), acBonus: f.ac_bonus, spellAbility: f.spell_ability || undefined },
+    choices: { ...(sheet.choices ?? {}), acBonus: f.ac_bonus, spellAbility: f.spell_ability || undefined, manualModes: f.manual_modes },
   }
 }
 
@@ -150,6 +154,8 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   else delete choices.acBonus
   if (f.spell_ability) choices.spellAbility = f.spell_ability
   else delete choices.spellAbility
+  if (f.manual_modes.length > 0) choices.manualModes = [...f.manual_modes].sort()
+  else delete choices.manualModes
   setNote(choices, 'notesRacial', f.notes_racial)
   setNote(choices, 'notesBackground', f.notes_background)
   setNote(choices, 'notesClass', f.notes_class)

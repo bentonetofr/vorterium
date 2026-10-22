@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
 // Estes testes só renderizam (sem navegador): pegam erro de execução ao montar o
 // cabeçalho e as abas com uma ficha de exemplo. O cliente do Supabase e o botão
 // do Vortable ficam de fora, pois dependem de variáveis de ambiente e do motor do mapa.
+vi.mock('../../../../shared/components/ModalOverlay', () => ({ ModalOverlay: ({ children }: { children: ReactNode }) => <div className="modal-overlay">{children}</div> }))
 vi.mock('../../../../shared/lib/supabase', () => ({
   supabase: {},
   uniqueChannel: (base: string) => base,
@@ -29,6 +31,8 @@ import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
+import { DndAutomationPanel } from './DndAutomationPanel'
+import { AUTOMATION_ITEMS } from '../model/automation'
 import * as spellCatalog from '../catalog/spells'
 import { primeSpellCatalog } from '../hooks/useSpellCatalog'
 
@@ -54,8 +58,8 @@ describe('cabeçalho', () => {
     const html = hero(makeCtx())
     expect(html).toContain('18')            // cota de malha 16 + escudo 2
     expect(html).toContain('7,5 m')         // anão: 25 pés
-    expect(html).toContain('MANUAL')        // iniciativa manual
-    expect(html).toContain('AUTO')
+    expect(html).toContain('dsh-num--manual')   // iniciativa manual vira campo para digitar
+    expect(html).not.toMatch(/>(AUTO|MANUAL)</) // a ficha não tem mais selo de modo
   })
 
   it('barra de PV arrastável com campos de PV atual, máximo e temporário', () => {
@@ -192,6 +196,71 @@ describe('abas', () => {
     expect(todas).toContain('319 magias do livro')
     const so = renderToStaticMarkup(<DndSpellBrowser catalog={null} have={new Set()} myClasses={[]} readOnly={false} busy={null} onAdd={() => {}} />)
     expect(so).toContain('Abrindo o livro de magias')
+  })
+
+  it('botão Automatizar no cabeçalho, só para quem pode editar', () => {
+    expect(hero(makeCtx())).toContain('Automatizar')
+    expect(hero(makeCtx({ readOnly: true }))).not.toContain('Automatizar')
+  })
+
+  it('janela Automatizar: lista vertical com descrição à esquerda e Automático/Manual à direita', () => {
+    const html = renderToStaticMarkup(<DndAutomationPanel ctx={makeCtx()} onClose={() => {}} />)
+    expect(html).toContain('role="dialog"')
+    expect(html).toContain('Valores do personagem')
+    expect(html).toContain('Atributos e perícias')
+    expect(html).toContain('Recursos')
+    for (const item of AUTOMATION_ITEMS) expect(html).toContain(item.title)
+    expect(html.match(/>Automático</g)).toHaveLength(AUTOMATION_ITEMS.length)
+    expect(html.match(/>Manual</g)).toHaveLength(AUTOMATION_ITEMS.length)
+    expect(html).toContain('Tudo automático')
+    expect(html).toContain('Fechar')
+  })
+
+  it('janela Automatizar mostra quais itens estão manuais', () => {
+    // a ficha de exemplo tem a iniciativa manual
+    const html = renderToStaticMarkup(<DndAutomationPanel ctx={makeCtx()} onClose={() => {}} />)
+    expect(html).toContain('1 item em modo manual')
+    const ctx = makeCtx()
+    ctx.form.manual_modes = ['spell_slots']
+    const two = renderToStaticMarkup(<DndAutomationPanel ctx={ctx} onClose={() => {}} />)
+    expect(two).toContain('2 itens em modo manual')
+  })
+
+  it('nenhuma aba tem selo AUTO ou MANUAL', () => {
+    const ctx = makeCtx({ data: makeData({ classes: [cls('wizard', 5, true)] }) })
+    for (const Tab of [DndPersonagemTab, DndAtributosTab, DndCombateTab, DndMagiasTab, DndInventarioTab, DndCaracteristicasTab, DndHistoriaTab]) {
+      expect(renderToStaticMarkup(<Tab ctx={ctx} />)).not.toMatch(/>(AUTO|MANUAL)</)
+    }
+  })
+
+  it('perícias, salvaguardas e modificadores viram campos quando manuais', () => {
+    const ctx = makeCtx()
+    ctx.data.details.overrides.push(
+      { id: 'o9', sheet_id: 's1', field_key: 'skill_stealth', manual_value: '9', reason: '', updated_at: '2026-10-21T00:00:00Z' },
+      { id: 'o10', sheet_id: 's1', field_key: 'mod_strength', manual_value: '5', reason: '', updated_at: '2026-10-21T00:00:00Z' },
+      { id: 'o11', sheet_id: 's1', field_key: 'save_wisdom', manual_value: '7', reason: '', updated_at: '2026-10-21T00:00:00Z' },
+    )
+    const html = renderToStaticMarkup(<DndAtributosTab ctx={ctx} />)
+    expect(html.match(/dsh-num--manual/g)).toHaveLength(3)
+    expect(html).toContain('aria-label="Bônus de Furtividade"')
+    const normal = renderToStaticMarkup(<DndAtributosTab ctx={makeCtx()} />)
+    expect(normal).not.toContain('dsh-num--manual')
+  })
+
+  it('espaços de magia em modo manual: total digitável em todos os níveis', () => {
+    const ctx = makeCtx({ data: makeData({ classes: [cls('fighter', 5, true)] }) })
+    ctx.form.manual_modes = ['spell_slots']
+    const html = renderToStaticMarkup(<DndMagiasTab ctx={ctx} />)
+    expect(html).toContain('Total de espaços de 1º nível')
+    expect(html).toContain('Total de espaços de 9º nível')
+    expect(html).toContain('O total de cada nível é seu')
+  })
+
+  it('recursos de classe em modo manual: total e recarga editáveis', () => {
+    const base = makeCtx({ data: makeData({ resources: [resource('rage', 'Fúria', 2, 3, 'long', 'class')] }) })
+    expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).not.toContain('aria-label="Remover Fúria"')
+    base.form.manual_modes = ['class_resources']
+    expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).toContain('aria-label="Remover Fúria"')
   })
 
   it('Magias de um não conjurador explica quem conjura', () => {

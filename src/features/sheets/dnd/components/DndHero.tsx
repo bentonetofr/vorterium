@@ -1,10 +1,12 @@
-import { useRef, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { getBackground, getClass, getRace, getSubrace } from '../catalog'
 import { DND_PORTRAIT_TYPES } from '../constants/dnd'
 import { classLine } from '../model/sheetModel'
 import { formatSigned } from '../model/format'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
+import { DndAutomationPanel } from './DndAutomationPanel'
+import { Presence } from '../../../../shared/components/Presence'
 import { DerivedField, NumberField, Toggle } from './DndControls'
 import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
@@ -29,6 +31,7 @@ interface DndHeroProps {
 export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove, onShortRest, onLongRest, restBusy, isNpc }: DndHeroProps) {
   const { form, set, derived, data, sheet, readOnly } = ctx
   const fileRef = useRef<HTMLInputElement>(null)
+  const [autoOpen, setAutoOpen] = useState(false)
 
   const hpMax = derived.hpMax ?? form.hp_max
   const hp = Math.max(0, Math.min(hpMax, form.hp_current))
@@ -64,6 +67,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
   }
 
   return (
+    <>
     <header className="dsh-hero">
       <div className="dsh-hero__id">
         <div className="dsh-portrait">
@@ -94,6 +98,10 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
               title="Recarrega o que volta no descanso curto. Os dados de vida você gasta na aba Combate.">Descanso curto</button>
             <button type="button" className="dsh-chip" onClick={onLongRest} disabled={readOnly || restBusy}
               title="PV ao máximo, recarrega tudo, recupera metade dos dados de vida e tira 1 nível de exaustão.">Descanso longo</button>
+            {!readOnly && (
+              <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => setAutoOpen(true)}
+                title="Escolha o que a ficha calcula sozinha e o que você preenche à mão.">Automatizar</button>
+            )}
           </div>
         </div>
       </div>
@@ -117,7 +125,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
         </div>
         <div className="dsh-stat" title="10 + bônus de Percepção">
           <span className="dsh-stat__label">Percepção passiva</span>
-          <strong className="dsh-derived__value">{derived.passivePerception}</strong>
+          <DerivedField ctx={ctx} field="passive_perception" value={derived.passivePerception} label="Percepção passiva" min={0} max={99} />
         </div>
         <div className="dsh-stat dsh-stat--toggle">
           <span className="dsh-stat__label">Inspiração</span>
@@ -153,5 +161,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
         </div>
       </div>
     </header>
+    <Presence show={autoOpen}>{() => <DndAutomationPanel ctx={ctx} onClose={() => setAutoOpen(false)} />}</Presence>
+    </>
   )
 }
