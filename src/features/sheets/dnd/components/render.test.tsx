@@ -198,6 +198,32 @@ describe('abas', () => {
     expect(so).toContain('Abrindo o livro de magias')
   })
 
+  it('barra de PV: sem botões de +/-, PV temporários em azul dentro da barra', () => {
+    const ctx = makeCtx()
+    ctx.form.hp_temp = 3
+    const html = hero(ctx)
+    expect(html).toContain('class="dsh-hp__temp"')
+    expect(html).toContain('3 PV temporários')
+    expect(html).not.toContain('dsh-hp__btns')
+    expect(html).not.toContain('Dano de')
+    expect(html).not.toContain('Cura de')
+    ctx.form.hp_temp = 0
+    expect(hero(ctx)).not.toContain('class="dsh-hp__temp"')
+  })
+
+  it('inspiração é um botão de pressionar com ícone, sem caixinha de marcar', () => {
+    const ctx = makeCtx()
+    ctx.form.inspiration = true
+    const on = hero(ctx)
+    expect(on).toContain('dsh-inspire is-on')
+    expect(on).toContain('aria-pressed="true"')
+    expect(on).toContain('Inspirado')
+    ctx.form.inspiration = false
+    const off = hero(ctx)
+    expect(off).toContain('aria-pressed="false"')
+    expect(off).not.toContain('dsh-toggle')
+  })
+
   it('botão Automatizar no cabeçalho, só para quem pode editar', () => {
     expect(hero(makeCtx())).toContain('Automatizar')
     expect(hero(makeCtx({ readOnly: true }))).not.toContain('Automatizar')

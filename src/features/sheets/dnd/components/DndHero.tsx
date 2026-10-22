@@ -2,12 +2,11 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { getBackground, getClass, getRace, getSubrace } from '../catalog'
 import { DND_PORTRAIT_TYPES } from '../constants/dnd'
 import { classLine } from '../model/sheetModel'
-import { formatSigned } from '../model/format'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { DndAutomationPanel } from './DndAutomationPanel'
 import { Presence } from '../../../../shared/components/Presence'
-import { DerivedField, NumberField, Toggle } from './DndControls'
+import { DerivedField, NumberField } from './DndControls'
 import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
 
@@ -53,17 +52,6 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
     const f = e.target.files?.[0]
     e.target.value = ''
     if (f) onPortraitChange(f)
-  }
-
-  function heal(delta: number) {
-    if (readOnly) return
-    if (delta >= 0) { set('hp_current', Math.min(hpMax, hp + delta)); return }
-    // dano: os PV temporários absorvem primeiro
-    let dmg = -delta
-    const absorbed = Math.min(form.hp_temp, dmg)
-    dmg -= absorbed
-    if (absorbed) set('hp_temp', form.hp_temp - absorbed)
-    set('hp_current', Math.max(0, hp - dmg))
   }
 
   return (
@@ -129,7 +117,15 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
         </div>
         <div className="dsh-stat dsh-stat--toggle">
           <span className="dsh-stat__label">Inspiração</span>
-          <Toggle checked={form.inspiration} onChange={readOnly ? undefined : (v) => set('inspiration', v)} label={form.inspiration ? 'Tem' : 'Não'} />
+          <button
+            type="button" className={`dsh-inspire${form.inspiration ? ' is-on' : ''}`} aria-pressed={form.inspiration} disabled={readOnly}
+            onClick={() => set('inspiration', !form.inspiration)} title={form.inspiration ? 'Inspirado: gaste para ter vantagem em uma jogada' : 'Sem inspiração'}
+          >
+            <svg className="dsh-inspire__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.3 6.1 20.5l1.3-6.6L2.5 9.4l6.6-.8L12 2.5z" />
+            </svg>
+            <span>{form.inspiration ? 'Inspirado' : 'Sem'}</span>
+          </button>
         </div>
       </div>
 
@@ -152,13 +148,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
             </label>
           </span>
         </div>
-        <DndDragBar value={hp} max={hpMax} onChange={(n) => set('hp_current', n)} disabled={readOnly} label="Pontos de vida" />
-        <div className="dsh-hp__btns">
-          {[-5, -1, 1, 5].map((d) => (
-            <button key={d} type="button" className="dsh-mini" disabled={readOnly} onClick={() => heal(d)}
-              aria-label={d < 0 ? `Dano de ${-d}` : `Cura de ${d}`}>{d > 0 ? `+${d}` : formatSigned(d).replace('-', '−')}</button>
-          ))}
-        </div>
+        <DndDragBar value={hp} max={hpMax} temp={form.hp_temp} onChange={(n) => set('hp_current', n)} disabled={readOnly} label="Pontos de vida" />
       </div>
     </header>
     <Presence show={autoOpen}>{() => <DndAutomationPanel ctx={ctx} onClose={() => setAutoOpen(false)} />}</Presence>
