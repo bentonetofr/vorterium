@@ -10,7 +10,7 @@ import { formatMeters } from '../model/format'
 import { addDndProficiency, removeDndProficiency } from '../services/dndSheetService'
 import { removeDndClass, saveDndClass } from '../services/dndClassService'
 import { NumberField } from './DndControls'
-import { BonusTiles, ChipRow, StatChip, XpMeter } from './DndVisuals'
+import { BonusTiles, XpMeter } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -200,8 +200,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         </div>
 
         {data.classes.length === 0 && (
-          <div className="dsh-field">
-            <span className="dsh-label">Nível <span className="dsh-faint">· vale enquanto não houver classes</span></span>
+          <div className="dsh-field dsh-field--tile">
+            <span className="dsh-label" title="Vale enquanto o personagem não tem classes">Nível</span>
             <NumberField value={form.level} onChange={(n) => set('level', n)} min={1} max={20} label="Nível" disabled={readOnly} className="dsh-num--field" />
           </div>
         )}
@@ -220,7 +220,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
                 <div className="dsh-class__main">
                   <strong className="dsh-class__name">{def?.name ?? row.class_key}{row.is_initial && <span className="dsh-tag">inicial</span>}</strong>
                   <label className="dsh-class__level">
-                    <span className="dsh-faint">Nível</span>
+                    <span className="dsh-class__level-label">Nível</span>
                     <NumberField value={row.level} onChange={(n) => void setLevel(row, n)} min={1} max={Math.max(1, 20 - others)} label={`Nível de ${def?.name ?? row.class_key}`} disabled={readOnly || busy} />
                   </label>
                   {!readOnly && (
@@ -228,8 +228,11 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
                   )}
                 </div>
                 {subOptions && (
-                  <Select options={subOptions} value={row.subclass_key ?? ''} disabled={readOnly || busy || row.level < (def?.subclassLevel ?? 1)}
-                    onChange={(v) => void setSubclass(row, v)} aria-label={`Subclasse de ${def?.name}`} />
+                  <div className="dsh-field dsh-field--tile">
+                    <span className="dsh-label">{def?.subclasses[0]?.kind ?? 'Subclasse'}</span>
+                    <Select options={subOptions} value={row.subclass_key ?? ''} disabled={readOnly || busy || row.level < (def?.subclassLevel ?? 1)}
+                      onChange={(v) => void setSubclass(row, v)} aria-label={`Subclasse de ${def?.name}`} />
+                  </div>
                 )}
                 {!row.is_initial && data.classes.length > 1 && !readOnly && (
                   <button type="button" className="dsh-link" onClick={() => void makeInitial(row)} disabled={busy}>Tornar a classe inicial (a do 1º nível)</button>
@@ -237,11 +240,11 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
                 {blocked && <p className="dsh-warn">Para a multiclasse, {def?.name} pede atributo 13 ou mais ({def!.multiclass.requirement.abilities.map((a) => ABILITIES.find((x) => x.key === a)?.short).join(def!.multiclass.requirement.mode === 'all' ? ' e ' : ' ou ')}).</p>}
                 {data.hpMode === 'rolled' && rollLevels.length > 0 && (
                   <div className="dsh-rolls">
-                    <span className="dsh-faint">PV rolados (d{dieSize}, 0 usa a média):</span>
+                    <span className="dsh-label" title="Escreva o valor tirado no dado de cada nível; 0 usa a média">PV rolados · d{dieSize}</span>
                     <div className="dsh-rolls__grid">
                       {rollLevels.map((lv) => (
                         <label key={lv} className="dsh-roll">
-                          <span>Nv {lv}</span>
+                          <small>Nv {lv}</small>
                           <NumberField value={row.hp_rolls[lv - firstRollable] ?? 0} min={0} max={dieSize} label={`PV rolado no nível ${lv}`}
                             disabled={readOnly || busy} onChange={(n) => void setHpRoll(row, lv - firstRollable, n)} />
                         </label>
@@ -255,15 +258,21 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         </ul>
 
         {!readOnly && totalLevel < 20 && (
-          <div className="dsh-add-row">
-            <Select options={addOptions} value={newClass} onChange={setNewClass} aria-label="Adicionar classe" />
-            <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addClass()} disabled={!newClass || busy}>Adicionar</button>
+          <div className="dsh-addclass">
+            <div className="dsh-field dsh-field--tile">
+              <span className="dsh-label">Adicionar classe</span>
+              <Select options={addOptions} value={newClass} onChange={setNewClass} aria-label="Adicionar classe" />
+            </div>
+            <button type="button" className="dsh-chip dsh-chip--primary dsh-addclass__btn" onClick={() => void addClass()} disabled={!newClass || busy}>Adicionar</button>
           </div>
         )}
-        <ChipRow>
-          <StatChip label="PV por nível" title="Regra da campanha, escolhida pelo mestre">{data.hpMode === 'rolled' ? 'Rolagem' : 'Média do dado'}</StatChip>
-          <StatChip label="1ª classe" title="É a do 1º nível: dado de vida cheio, proficiências completas e salvaguardas">Dado cheio</StatChip>
-        </ChipRow>
+        <BonusTiles
+          title="Regras de PV"
+          tiles={[
+            { label: 'PV por nível', value: data.hpMode === 'rolled' ? 'Rolagem' : 'Média do dado', wide: true, hint: 'Regra da campanha, escolhida pelo mestre' },
+            { label: '1ª classe', value: 'Dado cheio', wide: true, hint: 'É a do 1º nível: dado de vida cheio, proficiências completas e salvaguardas' },
+          ]}
+        />
       </section>
 
       <section className="dsh-card">

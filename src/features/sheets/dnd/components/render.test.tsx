@@ -117,9 +117,22 @@ describe('abas', () => {
     expect(html).toContain('dsh-lore')                            // característica do antecedente
   })
 
+  it('Classes e níveis: nível, subclasse, PV rolados e adicionar classe em tiles', () => {
+    const html = renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx()} />)
+    expect(html).toContain('dsh-class__level-label')
+    expect(html).toContain('dsh-addclass')
+    expect(html).toContain('Adicionar classe')
+    expect(html).toContain('dsh-roll')
+    expect(html).toContain('Regras de PV')
+    expect(html).not.toContain('PV rolados (d')
+    const empty = renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx({ data: makeData({ classes: [] }) })} />)
+    expect(empty).toContain('dsh-field--tile')
+    expect(empty).not.toContain('· vale enquanto não houver classes')
+  })
+
   it('Personagem sem classes pede o nível', () => {
     const html = renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx({ data: makeData({ classes: [] }) })} />)
-    expect(html).toContain('vale enquanto não houver classes')
+    expect(html).toContain('Vale enquanto o personagem não tem classes')
   })
 
   it('Atributos e Perícias: seis atributos, 18 perícias e passivas', () => {

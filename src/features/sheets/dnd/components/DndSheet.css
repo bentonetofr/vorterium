@@ -372,12 +372,35 @@
 .dsh-feature { padding: 0; gap: 0; }
 
 /* Classes */
-.dsh-class__main { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-.dsh-class__name { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--dsh-bone); }
-.dsh-class__level { display: inline-flex; align-items: center; gap: var(--space-2); }
+.dsh-class__main { display: flex; align-items: center; gap: var(--space-3); }
+.dsh-class__main .dsh-x { margin-left: 0; }
+.dsh-class__name { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--dsh-bone); }
+.dsh-class__level {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 0; padding: 5px 12px 3px; min-width: 64px;
+  background: rgba(0, 0, 0, 0.24); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast);
+}
+.dsh-class__level:hover { border-color: var(--border-bright); }
+.dsh-class__level:focus-within { border-color: var(--dsh-accent-line); }
+.dsh-class__level-label { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.dsh-sheet .dsh-class__level .dsh-num, .dsh-sheet .dsh-roll .dsh-num {
+  width: 3ch; min-width: 0; min-height: 0; height: auto; padding: 0; text-align: center; background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--dsh-bone);
+}
+.dsh-sheet .dsh-class__level .dsh-num:focus, .dsh-sheet .dsh-roll .dsh-num:focus { outline: none; color: var(--dsh-accent); }
 .dsh-rolls { display: flex; flex-direction: column; gap: var(--space-2); }
-.dsh-rolls__grid { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
-.dsh-roll { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--text-muted); }
+.dsh-rolls__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: var(--space-2); }
+.dsh-roll {
+  display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 4px 2px;
+  background: rgba(0, 0, 0, 0.24); border: 1px solid var(--border-dim); border-radius: var(--radius-md); transition: border-color var(--transition-fast);
+}
+.dsh-roll:hover { border-color: var(--border-bright); }
+.dsh-roll:focus-within { border-color: var(--dsh-accent-line); }
+.dsh-roll small { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+
+/* Adicionar classe: tile com a lista e o botão ao lado */
+.dsh-addclass { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); align-items: stretch; }
+.dsh-addclass__btn { align-self: stretch; padding: 0 var(--space-5); min-height: 0; }
 
 /* Atributos e perícias */
 .dsh-abilities { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
