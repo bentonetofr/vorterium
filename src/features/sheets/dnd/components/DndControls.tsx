@@ -148,7 +148,7 @@ export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow
   return (
     <span className={`dsh-derived${className ? ` ${className}` : ''}`}>
       {override && !readOnly
-        ? <ManualBox value={shown} onCommit={saveManual} label={label} min={min} max={max} step={step} />
+        ? <><ManualBox value={shown} onCommit={saveManual} label={label} min={min} max={max} step={step} />{suffix && <span className="dsh-derived__suffix">{suffix.trim()}</span>}</>
         : <strong className="dsh-derived__value" aria-label={label}>{text}</strong>}
     </span>
   )
