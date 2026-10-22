@@ -121,7 +121,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   const pact = data.resources.find((r) => r.key === PACT_SLOT_KEY && r.max_value > 0)
 
   return (
-    <div className="dsh-tab dsh-cols anim-tab-panel">
+    <div className="dsh-tab dsh-cols dsh-cols--even anim-tab-panel">
       <div className={`dsh-col${casting ? '' : ' dsh-wide'}`}>
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Conjuração</h4></div>

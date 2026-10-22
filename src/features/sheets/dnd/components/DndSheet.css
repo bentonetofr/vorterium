@@ -945,3 +945,6 @@
 .dsh-flag:disabled { cursor: default; opacity: 0.7; }
 .dsh-spellchips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .dsh-spell-group + .dsh-newattack { margin-top: var(--space-3); }
+
+.dsh-cols--even { align-items: stretch; }
+.dsh-cols--even > .dsh-col > .dsh-card { flex: 1; }
