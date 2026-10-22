@@ -64,6 +64,16 @@ describe('desiredClassResources', () => {
     expect(one('warlock', 17).map((r) => r.key)).toEqual(['mystic_arcanum_6', 'mystic_arcanum_7', 'mystic_arcanum_8', 'mystic_arcanum_9'])
   })
 
+  it('Mestre de Batalha: dados de superioridade 4, 5 e 6, recarga no descanso curto', () => {
+    const at = (level: number, subclassKey?: string) => find(desiredClassResources({ classes: [{ classKey: 'fighter', level, subclassKey }], abilityMods: mods }), 'superiority_dice')
+    expect(at(2, 'battle_master')).toBeUndefined()
+    expect(at(3, 'battle_master')).toMatchObject({ label: 'Dados de Superioridade', max: 4, recharge: 'short' })
+    expect(at(7, 'battle_master')?.max).toBe(5)
+    expect(at(15, 'battle_master')?.max).toBe(6)
+    expect(at(10, 'champion')).toBeUndefined()
+    expect(at(10)).toBeUndefined()
+  })
+
   it('multiclasse soma os recursos de cada classe pelo nível dela', () => {
     const r = desiredClassResources({ classes: [{ classKey: 'fighter', level: 2 }, { classKey: 'monk', level: 3 }], abilityMods: mods })
     expect(r.map((x) => x.key)).toEqual(['second_wind', 'action_surge', 'ki'])

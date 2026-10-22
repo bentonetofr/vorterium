@@ -217,7 +217,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
   useEffect(() => {
     if (readOnly || !ready || data.degraded || classResSync.current || form.manual_modes.includes('class_resources')) return
     const desired = desiredClassResources({
-      classes: data.classes.map((c) => ({ classKey: c.class_key, level: c.level })),
+      classes: data.classes.map((c) => ({ classKey: c.class_key, level: c.level, subclassKey: c.subclass_key })),
       abilityMods: derived.abilityMods,
       raceKey: form.race_key || null,
     })

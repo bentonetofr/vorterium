@@ -18,7 +18,7 @@ export interface ClassResourceDef {
 }
 
 export interface ClassResourceInput {
-  classes:  readonly Pick<ClassLevel, 'classKey' | 'level'>[]
+  classes:  readonly (Pick<ClassLevel, 'classKey' | 'level'> & { subclassKey?: string | null })[]
   abilityMods: Record<AbilityKey, number>
   raceKey?: string | null
 }
@@ -29,7 +29,7 @@ const RAGES = [2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6]
 export const AUTO_RESOURCE_KEYS: ReadonlySet<string> = new Set([
   'rage', 'bardic_inspiration', 'channel_divinity', 'channel_divinity_paladin', 'wild_shape', 'second_wind', 'action_surge',
   'indomitable', 'ki', 'lay_on_hands', 'divine_sense', 'stroke_of_luck', 'sorcery_points', 'arcane_recovery',
-  'mystic_arcanum_6', 'mystic_arcanum_7', 'mystic_arcanum_8', 'mystic_arcanum_9', 'breath_weapon', 'relentless_endurance',
+  'mystic_arcanum_6', 'mystic_arcanum_7', 'mystic_arcanum_8', 'mystic_arcanum_9', 'breath_weapon', 'relentless_endurance', 'superiority_dice',
 ])
 
 /** O que a ficha deveria ter de recursos de classe e raça. */
@@ -60,6 +60,7 @@ export function desiredClassResources(input: ClassResourceInput): ClassResourceD
         add('second_wind', 'Retomar o Fôlego', 'short', 1)
         add('action_surge', 'Surto de Ação', 'short', lv >= 17 ? 2 : lv >= 2 ? 1 : 0)
         add('indomitable', 'Indomável', 'long', lv >= 17 ? 3 : lv >= 13 ? 2 : lv >= 9 ? 1 : 0)
+        if (c.subclassKey === 'battle_master') add('superiority_dice', 'Dados de Superioridade', 'short', lv >= 15 ? 6 : lv >= 7 ? 5 : lv >= 3 ? 4 : 0)
         break
       case 'monk':
         add('ki', 'Pontos de Ki', 'short', lv >= 2 ? lv : 0)

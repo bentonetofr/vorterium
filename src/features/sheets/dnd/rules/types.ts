@@ -56,8 +56,8 @@ export interface CombatInput {
 /** Como a classe conjura (dados vêm do catálogo; ver rules/spellcasting.ts). */
 export interface SpellcastingProfile {
   ability: AbilityKey
-  /** full: tabela própria de conjurador; half: Paladino e Patrulheiro; pact: Bruxo. */
-  kind:    'full' | 'half' | 'pact'
+  /** full: tabela própria de conjurador; half: Paladino e Patrulheiro; third: Cavaleiro Místico e Trapaceiro Arcano (subclasses); pact: Bruxo. */
+  kind:    'full' | 'half' | 'third' | 'pact'
   /**
    * known: aprende magias e só troca ao subir de nível (Bardo, Patrulheiro, Feiticeiro, Bruxo);
    * prepared: prepara nível + modificador (Clérigo, Druida);

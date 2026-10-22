@@ -183,7 +183,7 @@ export function buildDerivedInput(b: SheetBundle): { input: DerivedInput; gear: 
   const gear = equippedGear(details)
   const race = sheet.race_key ? getRace(sheet.race_key) : undefined
 
-  const classRows = classes.map((c) => ({ classKey: c.class_key, level: c.level }))
+  const classRows = classes.map((c) => ({ classKey: c.class_key, level: c.level, subclassKey: c.subclass_key }))
   const engineClasses = classRows.length > 0
     ? toClassLevels(classRows)
     : [{ classKey: NO_CLASS, level: sheet.level }]

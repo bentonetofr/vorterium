@@ -53,23 +53,25 @@ function clampClassLevel(level: number): number {
 /** A classe já tem a característica Conjuração (ou Magia de Pacto) neste nível? */
 export function hasSpellcasting(profile: SpellcastingProfile, level: number): boolean {
   if (profile.kind === 'half') return level >= 2     // Paladino e Patrulheiro conjuram a partir do 2º nível
+  if (profile.kind === 'third') return level >= 3    // Cavaleiro Místico e Trapaceiro Arcano, a partir do 3º
   return level >= 1
 }
 
-/** Espaços de uma classe só (tabela própria). Meio conjurador usa a coluna do nível de conjurador ceil(nível / 2). */
+/** Espaços de uma classe só (tabela própria). Meio conjurador usa a coluna do nível de conjurador ceil(nível / 2); um terço, ceil(nível / 3). */
 export function singleClassSlots(profile: SpellcastingProfile, level: number): number[] {
   const lv = clampClassLevel(level)
   if (profile.kind === 'pact' || !hasSpellcasting(profile, lv)) return [...NO_SLOTS]
-  const casterLevel = profile.kind === 'full' ? lv : Math.ceil(lv / 2)
+  const casterLevel = profile.kind === 'full' ? lv : profile.kind === 'half' ? Math.ceil(lv / 2) : Math.ceil(lv / 3)
   return [...FULL_CASTER_SLOTS[casterLevel - 1]]
 }
 
-/** Nível de conjurador na multiclasse: completo conta tudo; meio conta metade, para baixo; Bruxo não entra. */
+/** Nível de conjurador na multiclasse: completo conta tudo; meio conta metade e um terço conta a terça parte, para baixo; Bruxo não entra. */
 export function multiclassCasterLevel(classes: { profile: SpellcastingProfile; level: number }[]): number {
   return classes.reduce((sum, c) => {
     if (!hasSpellcasting(c.profile, c.level)) return sum
     if (c.profile.kind === 'full') return sum + c.level
     if (c.profile.kind === 'half') return sum + Math.floor(c.level / 2)
+    if (c.profile.kind === 'third') return sum + Math.floor(c.level / 3)
     return sum
   }, 0)
 }

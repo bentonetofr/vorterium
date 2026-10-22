@@ -378,6 +378,11 @@ Parágrafos de explicação saíram da ficha e viraram figuras (`components/DndV
 
 Por pedido do usuário, os **13 antecedentes** do Livro do Jogador entram na lista (Acólito, do SRD, e mais Charlatão, Criminoso, Artista, Herói do Povo, Artesão de Guilda, Eremita, Nobre, Forasteiro, Sábio, Marinheiro, Soldado e Órfão), além do personalizado. Os 12 de fora do SRD (`source: 'phb'` em `catalog/misc.data.ts`) levam só o nome, as perícias, as ferramentas e idiomas e um resumo da característica **em palavras nossas**; não há texto copiado. **Pendência jurídica para o Marco 8:** o Livro do Jogador não é conteúdo livre; decidir, na revisão final e na página de créditos, se esses 12 ficam, e por isso eles têm o marcador `phb` para serem filtrados num lugar só.
 
+### Subclasses do Livro do Jogador (pedido do usuário em 22/10/2026) — FEITO
+
+Por pedido do usuário, as **40 subclasses** (12 do SRD e 28 do Livro do Jogador) estão na lista de cada classe: Bárbaro 2, Bardo 2, Clérigo 7 (Vida, Conhecimento, Luz, Natureza, Tempestade, Enganação, Guerra), Druida 2, Guerreiro 3, Monge 3, Paladino 3, Patrulheiro 2, Ladino 3, Feiticeiro 2, Bruxo 3 e Mago 8 (as oito escolas). As 28 de fora do SRD (`source: 'phb'`, em `catalog/classes/phbSubclasses{A,B,C}.ts`) levam o nome e um resumo de cada característica **em palavras nossas**, sem texto copiado. **Mesma pendência jurídica dos antecedentes para o Marco 8.**
+O Cavaleiro Místico e o Trapaceiro Arcano conjuram de verdade: o motor ganhou o tipo **conjurador de um terço** (espaços de magia pela tabela deles, a terça parte na multiclasse, truques e magias conhecidas, Inteligência) e o Livro de magias usa a lista do Mago para eles. O Mestre de Batalha ganha o recurso Dados de Superioridade.
+
 ### Marco 6: rolagens integradas (M)
 - Coluna `roll_label`, `floor`, crítico por dado mantido, mensagens de atividade (seção 4.5).
 - Cliques na ficha rolam: perícia, salvaguarda, ataque, dano, iniciativa, morte, dado de vida; vantagem/desvantagem.

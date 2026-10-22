@@ -111,6 +111,12 @@ export interface SubclassDef extends CatalogBase {
   kind:     string
   summary:  string
   features: FeatureEntry[]
+  /** srd51 = do documento livre; phb = do Livro do Jogador (fora do SRD, com resumos em palavras nossas). */
+  source?:  'srd51' | 'phb'
+  /** Subclasse que conjura (Cavaleiro Místico, Trapaceiro Arcano): como ela conjura. */
+  spellcasting?: SpellcastingProfile
+  /** Classe cuja lista de magias vale para a subclasse conjuradora (as duas usam a do Mago). */
+  spellList?: string
 }
 
 export interface ClassDef extends CatalogBase {

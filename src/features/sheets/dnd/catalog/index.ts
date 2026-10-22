@@ -55,11 +55,19 @@ export function getSubrace(raceKey: string, subraceKey: string): SubraceDef | un
  * Liga as classes da ficha ao motor de regras: devolve cada nível de classe com o
  * perfil de conjuração do catálogo. Classe desconhecida (homebrew) passa sem perfil.
  */
-export function toClassLevels(rows: { classKey: string; level: number }[]): ClassLevel[] {
-  return rows.map((row) => {
-    const def = classMap.get(row.classKey)
-    return def?.spellcasting ? { ...row, spellcasting: def.spellcasting } : { ...row }
+export function toClassLevels(rows: { classKey: string; level: number; subclassKey?: string | null }[]): ClassLevel[] {
+  return rows.map(({ classKey, level, subclassKey }) => {
+    const def = classMap.get(classKey)
+    const spellcasting = def?.spellcasting ?? def?.subclasses.find((s) => s.key === subclassKey)?.spellcasting
+    return spellcasting ? { classKey, level, spellcasting } : { classKey, level }
   })
+}
+
+/** Classe cuja lista de magias vale para a classe da ficha (o Cavaleiro Místico e o Trapaceiro Arcano usam a do Mago). */
+export function spellListClass(classKey: string, subclassKey?: string | null): string {
+  const def = classMap.get(classKey)
+  if (def?.spellcasting) return classKey
+  return def?.subclasses.find((s) => s.key === subclassKey)?.spellList ?? classKey
 }
 
 /** Dado de vida de uma classe (d6, d8, d10 ou d12), ou null se a classe não é do catálogo. */

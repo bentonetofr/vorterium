@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterSpell } from '../../../../shared/types'
-import { getClass } from '../catalog'
+import { getClass, spellListClass } from '../catalog'
 import type { SpellEntry } from '../catalog/types'
 import { SPELL_SCHOOL_LABEL, spellLevelLabel } from '../catalog/spellUtils'
 import { useSpellCatalog } from '../hooks/useSpellCatalog'
@@ -287,7 +287,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
           </div>
           {!bookOpen && <ChipRow><StatChip label="No livro">319 magias</StatChip><StatChip label="Fonte">SRD 5.1</StatChip><StatChip label="Filtros">nível · escola · classe</StatChip></ChipRow>}
           {bookOpen && (
-            <DndSpellBrowser catalog={catalogMod?.SPELLS ?? null} have={haveKeys} myClasses={casting?.classes.map((c) => c.classKey) ?? []}
+            <DndSpellBrowser catalog={catalogMod?.SPELLS ?? null} have={haveKeys} myClasses={casting?.classes.map((c) => spellListClass(c.classKey, data.classes.find((r) => r.class_key === c.classKey)?.subclass_key)) ?? []}
               readOnly={readOnly} busy={busy} onAdd={(sp) => void addFromBook(sp)} />
           )}
         </section>
