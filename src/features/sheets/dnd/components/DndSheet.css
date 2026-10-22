@@ -329,6 +329,9 @@
 .dsh-tab { display: flex; flex-direction: column; gap: var(--space-5); }
 .dsh-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); align-items: start; }
 .dsh-col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+/* Aba Personagem: quatro cards em duas colunas, com os da mesma linha da mesma altura e alinhados */
+.dsh-tab.dsh-personagem { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto; grid-auto-flow: column; align-items: stretch; gap: var(--space-5); }
+.dsh-personagem > .dsh-card { min-width: 0; }
 .dsh-wide { grid-column: 1 / -1; }
 
 .dsh-card {
@@ -661,6 +664,7 @@
 }
 @media (max-width: 900px) {
   .dsh-cols { grid-template-columns: 1fr; }
+  .dsh-tab.dsh-personagem { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
 }
 @media (max-width: 760px) {
   .dsh-hero__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }

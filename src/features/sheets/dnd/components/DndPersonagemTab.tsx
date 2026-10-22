@@ -152,8 +152,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const toNext = xpToNextLevel(form.experience)
 
   return (
-    <div className="dsh-tab dsh-cols anim-tab-panel">
-      <div className="dsh-col">
+    <div className="dsh-tab dsh-personagem anim-tab-panel">
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Identidade</h4></div>
         <div className="dsh-fields">
@@ -209,8 +208,6 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         <XpMeter xp={form.experience} xpLevel={xpLevel} level={derived.totalLevel} toNext={toNext} />
       </section>
 
-      </div>
-      <div className="dsh-col">
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Classes e níveis</h4>
@@ -331,7 +328,6 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         )}
       </section>
 
-      </div>
     </div>
   )
 }
