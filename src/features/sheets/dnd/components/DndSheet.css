@@ -984,3 +984,21 @@
 .dsh-loadtile.is-over .dsh-loadtile__value { color: var(--dsh-warn); }
 .dsh-loadtile__value .dsh-derived { font-size: inherit; line-height: inherit; }
 @media (max-width: 420px) { .dsh-loadtiles { grid-template-columns: 1fr; } }
+
+/* Itens: Equipar em pílula, quantidade e peso em mini tiles, notas em etiquetas */
+.dsh-item { border-left: 3px solid var(--border-base); }
+.dsh-item.is-equipped { border-left-color: var(--dsh-accent); }
+.dsh-itemnum {
+  display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 62px; padding: 3px 8px 2px;
+  background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border-dim); border-radius: var(--radius-md); cursor: text;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-itemnum:hover { border-color: var(--border-bright); }
+.dsh-itemnum:focus-within { border-color: var(--dsh-accent-line); box-shadow: 0 0 0 1px var(--dsh-accent-soft); }
+.dsh-itemnum small { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dsh-bone-dim); }
+.dsh-sheet .dsh-itemnum .dsh-num.dsh-itemnum__input {
+  width: 4.5ch; min-width: 0; min-height: 0; height: auto; padding: 0; text-align: center; background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--dsh-bone);
+}
+.dsh-sheet .dsh-itemnum .dsh-num.dsh-itemnum__input:focus { outline: none; color: var(--dsh-accent); }
+.dsh-newattack__wide { grid-column: 1 / -1; }

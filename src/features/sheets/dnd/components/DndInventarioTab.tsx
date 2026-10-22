@@ -5,7 +5,7 @@ import { ARMORS, GEAR, SHIELD, TOOLS, WEAPONS, getArmor } from '../catalog'
 import { coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
 import { itemTitle } from '../model/sheetModel'
 import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
-import { DerivedField, NumberField, Toggle } from './DndControls'
+import { DerivedField, NumberField } from './DndControls'
 import { StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
@@ -136,7 +136,12 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
 
       <section className="dsh-card dsh-wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Itens</h4><span className="dsh-badge">{items.length}</span></div>
-        {items.length === 0 && <p className="dsh-faint">Nenhum item ainda.</p>}
+        {items.length === 0 && (
+          <div className="dsh-noattack">
+            <strong>Nenhum item ainda</strong>
+            <span>Escolha um item do catálogo abaixo, ou escreva o nome de um item próprio.</span>
+          </div>
+        )}
         <ul className="dsh-list">
           {items.map((i) => {
             const armor = i.catalog_entry_key ? getArmor(i.catalog_entry_key) : undefined
@@ -146,25 +151,33 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
                   <strong className="dsh-item__name">{itemTitle(i.name, i.catalog_entry_key)}</strong>
                   {armor && <span className="dsh-tag">CA {armor.baseAc}</span>}
                   {i.catalog_entry_key === SHIELD.key && <span className="dsh-tag">+{SHIELD.acBonus}</span>}
-                  {equippable(i) && <Toggle checked={i.equipped} onChange={readOnly || busy === i.id ? undefined : (v) => void setEquipped(i, v)} label="Equipado" />}
-                  <label className="dsh-item__qty"><span className="dsh-faint">Qtd.</span>
-                    <NumberField value={i.quantity} min={1} max={9999} label={`Quantidade de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setQuantity(i, n)} /></label>
-                  <label className="dsh-item__qty"><span className="dsh-faint">kg</span>
-                    <NumberField value={i.weight} min={0} max={99999} step={0.1} label={`Peso de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setWeight(i, n)} /></label>
+                  {equippable(i) && (
+                    <button type="button" className={`dsh-flag${i.equipped ? ' is-on' : ''}`} aria-pressed={i.equipped} disabled={readOnly || busy === i.id}
+                      title="Armaduras e escudos equipados mudam a CA" onClick={() => void setEquipped(i, !i.equipped)}>{i.equipped ? '✓ Equipado' : 'Equipar'}</button>
+                  )}
+                  <label className="dsh-itemnum"><small>Qtd.</small>
+                    <NumberField value={i.quantity} min={1} max={9999} label={`Quantidade de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setQuantity(i, n)} className="dsh-itemnum__input" /></label>
+                  <label className="dsh-itemnum"><small>Kg</small>
+                    <NumberField value={i.weight} min={0} max={99999} step={0.1} label={`Peso de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setWeight(i, n)} className="dsh-itemnum__input" /></label>
                   {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeItem(i)} disabled={busy === i.id} aria-label={`Remover ${i.name}`}>×</button>}
                 </div>
-                {i.notes && <p className="dsh-note">{i.notes}</p>}
+                {i.notes && (i.notes.length <= 90
+                  ? <div className="dsh-spellchips">{i.notes.split(' · ').map((n) => <span key={n} className="dsh-cardchip">{n}</span>)}</div>
+                  : <p className="dsh-note">{i.notes}</p>)}
               </li>
             )
           })}
         </ul>
         {!readOnly && (
-          <div className="dsh-add-row">
-            <Select options={KIND_OPTIONS} value={kind} onChange={(v) => { setKind(v as Kind); setPickKey('') }} aria-label="Tipo de item" />
-            <Select options={options} value={pickKey} onChange={setPickKey} aria-label="Item do catálogo" />
-            <input type="text" className="dsh-input" value={customName} maxLength={160} placeholder="ou o nome de um item próprio"
-              onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addItem() } }} />
-            <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addItem()} disabled={busy === 'new'}>Adicionar</button>
+          <div className="dsh-newattack">
+            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Tipo de item</span>
+              <Select options={KIND_OPTIONS} value={kind} onChange={(v) => { setKind(v as Kind); setPickKey('') }} aria-label="Tipo de item" /></div>
+            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Item do catálogo</span>
+              <Select options={options} value={pickKey} onChange={setPickKey} aria-label="Item do catálogo" /></div>
+            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Ou um item próprio</span>
+              <input type="text" className="dsh-focus__input" value={customName} maxLength={160} placeholder="Nome do item"
+                onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addItem() } }} /></label>
+            <button type="button" className="dsh-newattack__add" onClick={() => void addItem()} disabled={busy === 'new'}>+ Adicionar item</button>
           </div>
         )}
       </section>
