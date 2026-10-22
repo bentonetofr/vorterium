@@ -145,11 +145,6 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Identidade</h4></div>
         <div className="dsh-fields">
-        <label className="dsh-field dsh-field--full">
-          <span className="dsh-label">Jogador</span>
-          <input type="text" className="dsh-input" maxLength={120} value={form.player_name} readOnly={readOnly}
-            onChange={(e) => set('player_name', e.target.value)} placeholder="Quem joga este personagem" />
-        </label>
         <div className={`dsh-field${subraceOptions ? '' : ' dsh-field--full'}`}>
           <span className="dsh-label">Raça</span>
           <Select options={RACE_OPTIONS} value={form.race_key} disabled={readOnly}
