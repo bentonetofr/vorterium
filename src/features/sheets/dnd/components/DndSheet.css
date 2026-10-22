@@ -1051,3 +1051,23 @@
 .dsh-feature__uses-chip { margin-left: auto; color: var(--dsh-bone); border-color: var(--dsh-accent-line); background: var(--dsh-accent-soft); }
 .dsh-feature__uses { gap: var(--space-3); }
 .dsh-feature__body textarea { background: rgba(0, 0, 0, 0.22); }
+
+/* Anotações da aba Características: três cards lado a lado, com a dica no topo e o texto sem caixa preta */
+.dsh-notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); align-items: stretch; }
+.dsh-notecard { min-width: 0; }
+.dsh-notecard__hint { margin: 0; font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }
+.dsh-notearea {
+  flex: 1; width: 100%; min-height: 220px; padding: var(--space-3) var(--space-4); resize: vertical;
+  font-family: var(--font-body); font-size: var(--text-sm); line-height: 1.65; color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.22); border: 1px solid var(--border-dim); border-radius: var(--radius-md); outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-notearea::placeholder { color: var(--text-muted); opacity: 0.7; }
+.dsh-notearea:hover { border-color: var(--border-base); }
+.dsh-notearea:focus { border-color: var(--dsh-accent-line); box-shadow: 0 0 0 1px var(--dsh-accent-soft); }
+@media (max-width: 900px) { .dsh-notes { grid-template-columns: 1fr; } }
+
+.dsh-notecard .dsh-card__title { font-size: var(--text-lg); }
+.dsh-notecard__hint { min-height: 2.9em; }
+.dsh-notecard__count { align-self: flex-end; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--text-muted); }
+.dsh-notecard__count.is-near { color: var(--dsh-warn); }

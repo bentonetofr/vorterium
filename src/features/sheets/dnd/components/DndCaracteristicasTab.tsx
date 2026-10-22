@@ -298,16 +298,21 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
         )}
       </section>
 
-      {NOTES.map((n) => (
-        <section className="dsh-card" key={n.key}>
-          <div className="dsh-card__header">
-            <h4 className="dsh-card__title">{n.title}</h4>
-            <span className="dsh-faint">{form[n.key].length}/{DND_TEXT_LIMITS[n.key]}</span>
-          </div>
-          <textarea className="dsh-input dsh-textarea" rows={6} maxLength={DND_TEXT_LIMITS[n.key]} value={form[n.key]} readOnly={readOnly}
-            placeholder={n.hint} aria-label={n.title} onChange={(e) => set(n.key, e.target.value)} />
-        </section>
-      ))}
+      <div className="dsh-notes dsh-wide">
+        {NOTES.map((n) => {
+          const used = form[n.key].length
+          const limit = DND_TEXT_LIMITS[n.key]
+          return (
+            <section className="dsh-card dsh-notecard" key={n.key}>
+              <div className="dsh-card__header"><h4 className="dsh-card__title">{n.title}</h4></div>
+              <p className="dsh-notecard__hint">{n.hint}</p>
+              <textarea className="dsh-notearea" maxLength={limit} value={form[n.key]} readOnly={readOnly}
+                placeholder="Escreva aqui..." aria-label={n.title} onChange={(e) => set(n.key, e.target.value)} />
+              <span className={`dsh-notecard__count${used >= limit * 0.9 ? ' is-near' : ''}`} title="Caracteres usados / limite">{used.toLocaleString('pt-BR')} / {limit.toLocaleString('pt-BR')}</span>
+            </section>
+          )
+        })}
+      </div>
     </div>
   )
 }
