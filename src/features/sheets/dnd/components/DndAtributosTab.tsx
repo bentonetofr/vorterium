@@ -47,12 +47,20 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
           {ABILITIES.map((a) => {
             const save = derived.saves[a.key]
             return (
-              <div key={a.key} className="dsh-ability">
-                <span className="dsh-ability__name">{a.label}</span>
-                <span className="dsh-ability__mod">
-                  <DerivedField ctx={ctx} field={`mod_${a.key}`} value={derived.abilityMods[a.key]} label={`Modificador de ${a.label}`} signed min={-10} max={20} />
-                </span>
-                <NumberField value={form[a.key]} onChange={(n) => set(a.key, n)} min={1} max={30} label={a.label} disabled={readOnly} className="dsh-ability__score" />
+              <div key={a.key} className={`dsh-ability${save.proficient ? ' is-prof' : ''}`}>
+                <div className="dsh-ability__head">
+                  <span className="dsh-ability__name">{a.label}</span>
+                  <span className="dsh-ability__short">{a.short}</span>
+                </div>
+                <div className="dsh-ability__body">
+                  <span className="dsh-ability__mod" title="Modificador">
+                    <DerivedField ctx={ctx} field={`mod_${a.key}`} value={derived.abilityMods[a.key]} label={`Modificador de ${a.label}`} signed min={-10} max={20} />
+                  </span>
+                  <label className="dsh-ability__scorebox" title="Valor do atributo">
+                    <small>Valor</small>
+                    <NumberField value={form[a.key]} onChange={(n) => set(a.key, n)} min={1} max={30} label={a.label} disabled={readOnly} className="dsh-ability__score" />
+                  </label>
+                </div>
                 <div className={`dsh-ability__save${save.proficient ? ' is-on' : ''}`}>
                   <label title="Proficiência na salvaguarda">
                     <input type="checkbox" checked={form[SAVE_FLAG[a.key]]} disabled={readOnly} onChange={(e) => set(SAVE_FLAG[a.key], e.target.checked)} />
