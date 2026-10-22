@@ -31,6 +31,7 @@ import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
+import { moveHpBar } from './DndDragBar'
 import { DndAutomationPanel } from './DndAutomationPanel'
 import { AUTOMATION_ITEMS } from '../model/automation'
 import * as spellCatalog from '../catalog/spells'
@@ -69,9 +70,10 @@ describe('cabeçalho', () => {
     expect(html).toContain('aria-label="PV temporários"')
     expect(html).toContain('aria-label="PV máximo"')            // o máximo calculado tem o selo AUTO
     expect(html).toContain('role="slider"')
-    expect(html).toContain('aria-valuenow="30"')
+    expect(html).toContain('aria-valuenow="33"')                // PV atuais + temporários (30 + 3)
     expect(html).toContain('width:60%')                         // 30 de 50 (Guerreiro 3 + Mago 2, Con +3, anão da colina)
     expect(html).toContain('dsh-drag__handle')
+    expect(html).toContain('left:66%')                          // a linha branca fica no fim da barra, depois do azul
   })
 
   it('sem classes, o PV máximo é um campo digitável', () => {
@@ -196,6 +198,29 @@ describe('abas', () => {
     expect(todas).toContain('319 magias do livro')
     const so = renderToStaticMarkup(<DndSpellBrowser catalog={null} have={new Set()} myClasses={[]} readOnly={false} busy={null} onAdd={() => {}} />)
     expect(so).toContain('Abrindo o livro de magias')
+  })
+
+  it('barra de PV: a linha branca fica no fim, depois dos PV temporários, mesmo com a barra crescendo', () => {
+    const ctx = makeCtx()
+    ctx.form.hp_current = 50
+    ctx.form.hp_temp = 25
+    const html = hero(ctx)
+    expect(html).toContain('aria-valuenow="75"')
+    expect(html).toContain('left:100%')
+    expect(html).toContain('width:66.67%')          // 50 de 75: a escala cresceu para caber o azul
+  })
+
+  it('moveHpBar: ao diminuir gasta os temporários primeiro e depois os PV; ao aumentar cura até o máximo', () => {
+    const at = { hp: 30, temp: 10 }
+    expect(moveHpBar(at, 50, 40)).toEqual(at)                         // sem mudança
+    expect(moveHpBar(at, 50, 36)).toEqual({ hp: 30, temp: 6 })        // só temporários
+    expect(moveHpBar(at, 50, 30)).toEqual({ hp: 30, temp: 0 })        // temporários zerados
+    expect(moveHpBar(at, 50, 22)).toEqual({ hp: 22, temp: 0 })        // depois os PV atuais
+    expect(moveHpBar(at, 50, 0)).toEqual({ hp: 0, temp: 0 })
+    expect(moveHpBar(at, 50, -5)).toEqual({ hp: 0, temp: 0 })
+    expect(moveHpBar(at, 50, 45)).toEqual({ hp: 35, temp: 10 })       // cura PV, não cria temporários
+    expect(moveHpBar(at, 50, 200)).toEqual({ hp: 50, temp: 10 })      // até o máximo
+    expect(moveHpBar({ hp: 8, temp: 0 }, 8, 8)).toEqual({ hp: 8, temp: 0 })
   })
 
   it('barra de PV: sem botões de +/-, PV temporários em azul dentro da barra', () => {
