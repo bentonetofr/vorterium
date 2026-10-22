@@ -105,6 +105,18 @@ describe('abas', () => {
     expect(html).toContain('Já dá para subir de nível') // 15.000 XP = nível 6; a ficha tem nível 5
   })
 
+  it('Identidade: campos em tile e bônus da raça em tiles, não em etiquetas soltas', () => {
+    const ctx = makeCtx()
+    ctx.form.race_key = 'human'
+    const html = renderToStaticMarkup(<DndPersonagemTab ctx={ctx} />)
+    expect(html.match(/dsh-field--tile/g)!.length).toBeGreaterThanOrEqual(4)
+    expect(html).toContain('dsh-bonuses__grid')
+    expect(html).toContain('Da raça · Humano')
+    expect(html).toContain('Deslocamento')
+    expect(html.match(/dsh-bonus--good/g)).toHaveLength(6)        // humano: +1 em todos os seis atributos
+    expect(html).toContain('dsh-lore')                            // característica do antecedente
+  })
+
   it('Personagem sem classes pede o nível', () => {
     const html = renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx({ data: makeData({ classes: [] }) })} />)
     expect(html).toContain('vale enquanto não houver classes')

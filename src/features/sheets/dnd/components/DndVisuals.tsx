@@ -101,3 +101,22 @@ export function RechargeLegend() {
     </ul>
   )
 }
+
+export interface BonusTile { label: string; value: ReactNode; tone?: 'good'; wide?: boolean; hint?: string }
+
+/** Grade de tiles (rótulo pequeno em cima, valor grande embaixo): bônus da raça, por exemplo. */
+export function BonusTiles({ title, tiles }: { title: string; tiles: BonusTile[] }) {
+  return (
+    <div className="dsh-bonuses">
+      <span className="dsh-bonuses__title">{title}</span>
+      <div className="dsh-bonuses__grid">
+        {tiles.map((t) => (
+          <span key={t.label} className={`dsh-bonus${t.wide ? ' dsh-bonus--wide' : ''}${t.tone ? ` dsh-bonus--${t.tone}` : ''}`} title={t.hint}>
+            <small>{t.label}</small>
+            <strong>{t.value}</strong>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}

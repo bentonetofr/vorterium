@@ -556,6 +556,42 @@
 .dsh-legend__half { display: inline-grid; place-items: center; width: 20px; height: 20px; border: 1px solid var(--border-base); border-radius: 50%; color: var(--dsh-warn); font-size: 11px; }
 .dsh-legend__code { padding: 1px 7px; font-family: var(--font-label); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--dsh-bone); background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-base); border-radius: 999px; text-decoration: none; }
 
+/* Campo em tile: rótulo pequeno em cima e o valor logo abaixo, sem caixa preta */
+.dsh-field--tile {
+  gap: 2px; padding: 9px 14px 7px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-field--tile:hover { border-color: var(--border-bright); }
+.dsh-field--tile:focus-within { border-color: var(--dsh-accent-line); box-shadow: 0 0 0 1px var(--dsh-accent-soft); }
+.dsh-field--tile > .dsh-label { font-size: 10px; letter-spacing: 0.12em; color: var(--dsh-bone-dim); }
+.dsh-sheet .dsh-field--tile .select-trigger, .dsh-sheet .dsh-field--tile .dsh-num.dsh-num--field {
+  min-height: 30px; padding: 0; text-align: left; background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: 0.01em; color: var(--dsh-bone);
+}
+.dsh-sheet .dsh-field--tile .select-trigger:hover:not(:disabled), .dsh-sheet .dsh-field--tile .select-trigger--open { border: 0; box-shadow: none; }
+.dsh-field--tile .select-trigger__value--empty { color: var(--text-muted); font-size: 15px; font-weight: 400; opacity: 0.75; }
+.dsh-field--tile .select-trigger__chevron { width: 14px; height: 14px; color: var(--dsh-accent); }
+
+/* Bônus da raça: grade de tiles */
+.dsh-bonuses { display: flex; flex-direction: column; gap: var(--space-2); }
+.dsh-bonuses__title { font-family: var(--font-label); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dsh-bone-dim); }
+.dsh-bonuses__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: var(--space-2); }
+.dsh-bonus {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 6px;
+  background: rgba(0, 0, 0, 0.24); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+}
+.dsh-bonus--wide { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; padding: 8px 14px; }
+.dsh-bonus small { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.dsh-bonus strong { font-family: var(--font-display); font-size: 20px; line-height: 1.1; color: var(--dsh-bone); }
+.dsh-bonus--good { background: rgba(139, 224, 164, 0.06); border-color: rgba(139, 224, 164, 0.3); }
+.dsh-bonus--good strong { color: var(--dsh-good); }
+
+/* Característica do antecedente */
+.dsh-lore { padding: var(--space-3) var(--space-4); background: rgba(255, 255, 255, 0.025); border-left: 3px solid var(--dsh-accent); border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.dsh-lore strong { display: block; margin-bottom: 2px; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--dsh-bone); }
+.dsh-lore p { margin: 0; font-size: var(--text-xs); line-height: 1.6; color: var(--text-secondary); }
+
 /* Rodapé */
 .dsh-sheet__footer { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .dsh-save { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.04em; color: var(--text-muted); }

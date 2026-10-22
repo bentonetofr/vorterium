@@ -10,7 +10,7 @@ import { formatMeters } from '../model/format'
 import { addDndProficiency, removeDndProficiency } from '../services/dndSheetService'
 import { removeDndClass, saveDndClass } from '../services/dndClassService'
 import { NumberField } from './DndControls'
-import { ChipRow, StatChip, XpMeter } from './DndVisuals'
+import { BonusTiles, ChipRow, StatChip, XpMeter } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -146,42 +146,45 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Identidade</h4></div>
         <div className="dsh-fields">
-        <div className={`dsh-field${subraceOptions ? '' : ' dsh-field--full'}`}>
+        <div className={`dsh-field dsh-field--tile${subraceOptions ? '' : ' dsh-field--full'}`}>
           <span className="dsh-label">Raça</span>
           <Select options={RACE_OPTIONS} value={form.race_key} disabled={readOnly}
             onChange={(v) => update((f) => ({ ...f, race_key: v, subrace_key: '' }))} aria-label="Raça" />
         </div>
         {subraceOptions && (
-          <div className="dsh-field">
+          <div className="dsh-field dsh-field--tile">
             <span className="dsh-label">Sub-raça</span>
             <Select options={subraceOptions} value={form.subrace_key} disabled={readOnly} onChange={(v) => set('subrace_key', v)} aria-label="Sub-raça" />
           </div>
         )}
-        <div className="dsh-field">
+        <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Antecedente</span>
           <Select options={BACKGROUND_OPTIONS} value={form.background_key} disabled={readOnly} onChange={(v) => set('background_key', v)} aria-label="Antecedente" />
         </div>
-        <div className="dsh-field">
+        <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Tendência</span>
           <Select options={ALIGNMENT_OPTIONS} value={ALIGNMENTS.includes(form.alignment) ? form.alignment : ''} disabled={readOnly}
             onChange={(v) => set('alignment', v)} aria-label="Tendência" />
         </div>
         </div>
         {race && (
-          <ChipRow>
-            <StatChip label="Deslocamento">{formatMeters(race.speed)}</StatChip>
-            {Object.entries(race.abilityBonuses).map(([a, n]) => (
-              <StatChip key={a} label={ABILITIES.find((x) => x.key === a)?.short ?? a} tone="good" title="Bônus da raça: escreva os atributos já com ele">+{n}</StatChip>
-            ))}
-            {race.abilityChoice && <StatChip label="À escolha" tone="good" title="Bônus da raça: escreva os atributos já com ele">+{race.abilityChoice.amount} em {race.abilityChoice.count}</StatChip>}
-          </ChipRow>
+          <BonusTiles
+            title={`Da raça · ${race.name}`}
+            tiles={[
+              { label: 'Deslocamento', value: formatMeters(race.speed), wide: true },
+              ...Object.entries(race.abilityBonuses).map(([a, n]) => ({ label: ABILITIES.find((x) => x.key === a)?.short ?? a, value: `+${n}`, tone: 'good' as const, hint: 'Bônus da raça: escreva os atributos já com ele' })),
+              ...(race.abilityChoice ? [{ label: 'À escolha', value: `+${race.abilityChoice.amount} em ${race.abilityChoice.count}`, tone: 'good' as const, wide: true, hint: 'Bônus da raça: escreva os atributos já com ele' }] : []),
+            ]}
+          />
         )}
-        {background && background.feature && <p className="dsh-note"><strong>{background.feature.name}:</strong> {background.feature.summary}</p>}
+        {background && background.feature && (
+          <div className="dsh-lore"><strong>{background.feature.name}</strong><p>{background.feature.summary}</p></div>
+        )}
       </section>
 
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Experiência</h4></div>
-        <div className="dsh-field">
+        <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Pontos de experiência</span>
           <NumberField value={form.experience} onChange={(n) => set('experience', n)} min={0} max={99999999} label="Pontos de experiência" disabled={readOnly} className="dsh-num--field" />
         </div>
