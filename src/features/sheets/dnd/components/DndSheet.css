@@ -1002,3 +1002,8 @@
 }
 .dsh-sheet .dsh-itemnum .dsh-num.dsh-itemnum__input:focus { outline: none; color: var(--dsh-accent); }
 .dsh-newattack__wide { grid-column: 1 / -1; }
+
+.dsh-facts__pair { display: contents; }
+.dsh-book__rowlabel { min-width: 84px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.dsh-book__row[aria-label] { gap: 6px; }
+.dsh-book__spacer { flex: 1 1 0; }

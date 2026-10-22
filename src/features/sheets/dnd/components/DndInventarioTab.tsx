@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Select } from '../../../../shared/components/Select'
+import { Presence } from '../../../../shared/components/Presence'
 import type { DndCharacterInventoryItem } from '../../../../shared/types'
-import { ARMORS, GEAR, SHIELD, TOOLS, WEAPONS, getArmor } from '../catalog'
+import { SHIELD, WEAPONS, getArmor } from '../catalog'
+import { BOOK_ITEMS, type BookItem } from '../catalog/itemBook'
 import { coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
 import { itemTitle } from '../model/sheetModel'
 import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
 import { DerivedField, NumberField } from './DndControls'
-import { StatusPill } from './DndVisuals'
+import { DndItemBrowser } from './DndItemBrowser'
+import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -15,34 +17,18 @@ import type { SheetCtx } from './sheetContext'
 // armadura por vez). Pesos em kg, como no livro brasileiro.
 // ────────────────────────────────────────────────────────
 
-type Kind = 'weapon' | 'armor' | 'gear' | 'tool'
-const KIND_OPTIONS: { value: Kind; label: string }[] = [
-  { value: 'weapon', label: 'Armas' }, { value: 'armor', label: 'Armaduras e escudo' },
-  { value: 'gear', label: 'Equipamento de aventura' }, { value: 'tool', label: 'Ferramentas' },
-]
-
-function entriesOf(kind: Kind): { key: string; name: string; weight: number; note: string }[] {
-  switch (kind) {
-    case 'weapon': return WEAPONS.map((w) => ({ key: w.key, name: w.name, weight: w.weight, note: [w.cost, w.damage && `${w.damage} ${w.damageType ?? ''}`.trim(), ...w.properties].filter(Boolean).join(' · ') }))
-    case 'armor':  return [...ARMORS.map((a) => ({ key: a.key, name: a.name, weight: a.weight, note: `CA ${a.baseAc}${a.category === 'medium' ? ' + Des (máx. 2)' : a.category === 'light' ? ' + Des' : ''} · ${a.cost}` })),
-                           { key: SHIELD.key, name: SHIELD.name, weight: SHIELD.weight, note: `+${SHIELD.acBonus} de CA · ${SHIELD.cost}` }]
-    case 'gear':   return GEAR.map((g) => ({ key: g.key, name: g.name, weight: g.weight, note: g.cost }))
-    case 'tool':   return TOOLS.map((t) => ({ key: t.key, name: t.name, weight: t.weight, note: t.cost }))
-  }
-}
-
 export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
-  const { form, set, derived, data, sheet, readOnly, report } = ctx
-  const [kind, setKind] = useState<Kind>('weapon')
-  const [pickKey, setPickKey] = useState('')
+  const { form, set, derived, data, sheet, readOnly, report, prof } = ctx
   const [customName, setCustomName] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
+  const [bookOpen, setBookOpen] = useState(false)
 
   const items = data.details.inventory
   const capacity = derived.carryCapacity
   const carried = inventoryWeightKg(items)
   const pct = Math.min(100, (carried / Math.max(1, capacity)) * 100)
-  const options = [{ value: '', label: 'Escolher do catálogo' }, ...entriesOf(kind).map((e) => ({ value: e.key, label: e.name }))]
+  const owned = new Map<string, number>()
+  for (const i of items) if (i.catalog_entry_key) owned.set(i.catalog_entry_key, (owned.get(i.catalog_entry_key) ?? 0) + i.quantity)
 
   async function run(key: string, job: () => Promise<void>) {
     setBusy(key)
@@ -53,15 +39,23 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
   const replace = (saved: DndCharacterInventoryItem) => data.setDetails((d) => ({ ...d, inventory: d.inventory.map((i) => (i.id === saved.id ? saved : i)) }))
 
   const addItem = () => run('new', async () => {
-    const entry = pickKey ? entriesOf(kind).find((e) => e.key === pickKey) : undefined
-    const name = (entry?.name ?? customName).trim()
-    if (!name) { report('Escolha um item do catálogo ou escreva o nome do item.'); return }
+    const name = customName.trim()
+    if (!name) { report('Escreva o nome do item, ou abra o livro de itens para escolher um do catálogo.'); return }
     const saved = await createDndInventoryItem(sheet.id, {
-      name, quantity: 1, weight: entry?.weight ?? 0, equipped: false, notes: entry?.note ?? '',
-      catalog_entry_key: entry?.key ?? null, sort_order: items.length,
+      name, quantity: 1, weight: 0, equipped: false, notes: '', catalog_entry_key: null, sort_order: items.length,
     })
     data.setDetails((d) => ({ ...d, inventory: [...d.inventory, saved] }))
-    setPickKey(''); setCustomName('')
+    setCustomName('')
+  })
+
+  /** Do livro: item novo entra com 1; se já tem, soma 1 na quantidade. */
+  const addFromBook = (it: BookItem) => run(it.key, async () => {
+    const existing = items.find((i) => i.catalog_entry_key === it.key)
+    if (existing) { replace(await updateDndInventoryItem(existing.id, { quantity: Math.min(9999, existing.quantity + 1) })); return }
+    const saved = await createDndInventoryItem(sheet.id, {
+      name: it.name, quantity: 1, weight: it.weight, equipped: false, notes: it.note, catalog_entry_key: it.key, sort_order: items.length,
+    })
+    data.setDetails((d) => ({ ...d, inventory: [...d.inventory, saved] }))
   })
 
   const setEquipped = (item: DndCharacterInventoryItem, equipped: boolean) => run(item.id, async () => {
@@ -170,17 +164,30 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         </ul>
         {!readOnly && (
           <div className="dsh-newattack">
-            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Tipo de item</span>
-              <Select options={KIND_OPTIONS} value={kind} onChange={(v) => { setKind(v as Kind); setPickKey('') }} aria-label="Tipo de item" /></div>
-            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Item do catálogo</span>
-              <Select options={options} value={pickKey} onChange={setPickKey} aria-label="Item do catálogo" /></div>
-            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Ou um item próprio</span>
+            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Item próprio</span>
               <input type="text" className="dsh-focus__input" value={customName} maxLength={160} placeholder="Nome do item"
                 onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addItem() } }} /></label>
             <button type="button" className="dsh-newattack__add" onClick={() => void addItem()} disabled={busy === 'new'}>+ Adicionar item</button>
           </div>
         )}
       </section>
+
+      {!readOnly && (
+        <section className="dsh-card dsh-wide dsh-bookcta">
+          <div className="dsh-bookcta__text">
+            <h4 className="dsh-card__title">Livro de itens</h4>
+            <p className="dsh-note">Armas, armaduras, equipamento e ferramentas do SRD em cards, com busca e filtros. Clique em um para levá-lo à ficha na hora, ou em "Ver mais" para ver tudo sobre ele.</p>
+            <ChipRow><StatChip label="No livro">{BOOK_ITEMS.length} itens</StatChip><StatChip label="Fonte">SRD 5.1</StatChip><StatChip label="Filtros">tipo · categoria · alcance · dano · propriedade</StatChip></ChipRow>
+          </div>
+          <button type="button" className="dsh-bookcta__open" aria-haspopup="dialog" onClick={() => setBookOpen(true)}>Abrir o livro</button>
+        </section>
+      )}
+      {!readOnly && (
+        <Presence show={bookOpen}>{() => (
+          <DndItemBrowser owned={owned} prof={{ weapons: prof.weapons, armor: prof.armor }} readOnly={readOnly} busy={busy}
+            onAdd={(it) => void addFromBook(it)} onClose={() => setBookOpen(false)} />
+        )}</Presence>
+      )}
     </div>
   )
 }

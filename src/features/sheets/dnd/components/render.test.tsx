@@ -31,6 +31,7 @@ import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
+import { DndItemBrowser } from './DndItemBrowser'
 import { moveHpBar } from './DndDragBar'
 import { DndAutomationPanel } from './DndAutomationPanel'
 import { AUTOMATION_ITEMS } from '../model/automation'
@@ -221,6 +222,31 @@ describe('abas', () => {
     expect(html).toContain('Ver a magia')
     expect(html).not.toContain('Abrir o livro')
     expect(html).not.toContain('Personalizar')
+  })
+
+  it('Livro de itens: cards de tudo, filtros, o que a ficha já tem e o botão Ver mais', () => {
+    const props = { prof: { weapons: ['simple'], armor: ['light'] }, readOnly: false, busy: null, onAdd: () => {} }
+    const html = renderToStaticMarkup(<DndItemBrowser owned={new Map([['club', 2]])} {...props} />)
+    expect(html).toContain('Livro de itens')
+    expect(html).toContain('Buscar item')
+    for (const f of ['Todos', 'Armas', 'Armaduras e escudo', 'Equipamento', 'Ferramentas', 'Mais leve', 'Mais barato', 'Só o que sei usar']) expect(html).toContain(f)
+    expect(html).toContain('Clava')
+    expect(html).toContain('✓ Tem ×2 · + mais um')                 // a clava já está na ficha
+    expect(html).toContain('+ Adicionar')
+    expect(html).toContain('Ver mais')
+    expect(html).toContain('Mostrar mais')
+    expect(html).not.toContain('Alcance</span>')                   // filtros de arma só aparecem ao escolher Armas
+    const ro = renderToStaticMarkup(<DndItemBrowser owned={new Map()} {...props} readOnly />)
+    expect(ro).toContain('disabled')
+  })
+
+  it('Inventário: abre o livro de itens e só cria item próprio no formulário', () => {
+    const html = renderToStaticMarkup(<DndInventarioTab ctx={makeCtx()} />)
+    expect(html).toContain('Livro de itens')
+    expect(html).toContain('Abrir o livro')
+    expect(html).toContain('Item próprio')
+    expect(html).not.toContain('Item do catálogo')
+    expect(renderToStaticMarkup(<DndInventarioTab ctx={makeCtx({ readOnly: true })} />)).not.toContain('Abrir o livro')
   })
 
   it('Livro de magias: lista o catálogo, marca o que já está na ficha e mostra o filtro da ficha', () => {
