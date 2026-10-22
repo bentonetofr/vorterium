@@ -5,6 +5,7 @@ import { Loader } from '../../../../shared/components/Loader'
 import type { DndCharacterClass, DndCharacterSheet, DndCharacterSheetUpdateInput } from '../../../../shared/types'
 import { getClass, getRace, getSubrace } from '../catalog'
 import { DND_FEATURE } from '../constants/dnd'
+import { DndCheckRequestCard } from '../rolls/DndCheckRequestCard'
 import { classLine } from '../model/sheetModel'
 import { formatMeters } from '../model/format'
 import {
@@ -192,6 +193,10 @@ function MasterView({ campaignId }: { campaignId: string }) {
 
   return (
     <div className="sheets-list-wrapper">
+      <DndCheckRequestCard
+        campaignId={campaignId}
+        players={sheets.filter((s) => !s.is_npc).map((s) => ({ userId: s.user_id, name: s.character_name?.trim() || s.profile?.display_name || 'Jogador' }))}
+      />
       <div className="sheets-cards anim-stagger">
         {sheets.map((s) => {
           const ownerLabel = s.profile?.display_name ?? 'Jogador removido'

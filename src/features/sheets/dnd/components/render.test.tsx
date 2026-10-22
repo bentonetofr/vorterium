@@ -33,6 +33,7 @@ import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndItemBrowser } from './DndItemBrowser'
 import { DndRollProvider } from '../rolls/DndRollProvider'
+import { DndCheckRequestCard } from '../rolls/DndCheckRequestCard'
 import { moveHpBar } from './DndDragBar'
 import { DndAutomationPanel } from './DndAutomationPanel'
 import { AUTOMATION_ITEMS } from '../model/automation'
@@ -223,6 +224,18 @@ describe('abas', () => {
     expect(html).toContain('Ver a magia')
     expect(html).not.toContain('Abrir o livro')
     expect(html).not.toContain('Personalizar')
+  })
+
+  it('mestre: card de pedir teste com os jogadores, o teste, a CD e a vantagem', () => {
+    const html = renderToStaticMarkup(<DndCheckRequestCard campaignId="c1" players={[{ userId: 'u1', name: 'Lia' }, { userId: 'u2', name: 'Bran' }]} />)
+    expect(html).toContain('Pedir teste')
+    expect(html).toContain('>Lia<')
+    expect(html).toContain('>Bran<')
+    expect(html).toContain('aria-pressed="true"')          // todos já vêm marcados
+    expect(html).toContain('CD oculta')
+    expect(html).toContain('Vantagem')
+    expect(html).toContain('Pedir Percepção')
+    expect(html).toContain('Perícia · Furtividade')
   })
 
   it('botões de rolar: aparecem na ficha editável dentro do provedor e somem só de leitura', () => {

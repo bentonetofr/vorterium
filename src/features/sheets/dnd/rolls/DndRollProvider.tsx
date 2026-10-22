@@ -4,7 +4,9 @@ import type { DiceRoll, DiceRollContext } from '../../../../shared/types'
 import { parseDiceFormula, recordRoll, rollParsedFormula, type RollExtras, type RollResult } from '../../../dice/services/diceService'
 import { getMyDiceSkin, onDiceSkinChange } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
-import { revealCheckDc } from '../services/dndCheckService'
+import { supabase } from '../../../../shared/lib/supabase'
+import { listOpenCheckRequests, listRequestAnswers, revealCheckDc, subscribeToCheckRequests, type DndCheckRequest } from '../services/dndCheckService'
+import { dismiss, isDismissed, onPendingOpen, sheetListening, specFromRequest, takePending } from './checkRequests'
 import type { SheetCtx } from '../components/sheetContext'
 import type { CheckSpec } from './checkModel'
 import { DndCheckPanel, type CheckDone } from './DndCheckPanel'
@@ -33,7 +35,12 @@ export const useDndRoll = (): DndRollApi => useContext(RollContext)
 
 export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: ReactNode }) {
   const [skin, setSkin] = useState(DEFAULT_SKIN)
-  const [open, setOpen] = useState<{ id: number; spec: CheckSpec; onResult?: (d: CheckDone) => void } | null>(null)
+  const [open, setOpen] = useState<{ id: number; spec: CheckSpec; onResult?: (d: CheckDone) => void; requestId?: string } | null>(null)
+  const openRef = useRef(open)
+  openRef.current = open
+  const answered = useRef(new Set<string>())
+  const derivedRef = useRef(ctx.derived)
+  derivedRef.current = ctx.derived
   // o painel continua na tela durante a animação de saída
   const lastOpen = useRef(open)
   if (open) lastOpen.current = open
@@ -78,6 +85,50 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
 
   const closeTray = useCallback(() => setTray(null), [])
 
+  // ── Pedidos de teste do mestre: na própria ficha do jogador, o painel abre sozinho ──
+  const ownerId = ctx.sheet.user_id
+  const isNpc = ctx.sheet.is_npc
+  useEffect(() => {
+    if (!canRoll || isNpc) return
+    let alive = true
+    let me: string | null = null
+    const stopListening = sheetListening()
+
+    const openRequest = (req: DndCheckRequest) => {
+      if (!alive || openRef.current) return
+      setOpen({ id: ++trayId.current, spec: specFromRequest(req, derivedRef.current), requestId: req.id, onResult: () => { answered.current.add(req.id) } })
+    }
+    const consider = async (req: DndCheckRequest, force = false) => {
+      if (!me || req.status !== 'open' || !req.targets.includes(me) || answered.current.has(req.id)) return
+      if (!force && isDismissed(req.id)) return
+      const answers = await listRequestAnswers(campaignId, [req.id])
+      if (answers.some((a) => a.user_id === me)) { answered.current.add(req.id); return }
+      openRequest(req)
+    }
+
+    void supabase.auth.getUser().then(async ({ data }) => {
+      me = data.user?.id ?? null
+      if (!alive || me !== ownerId) return
+      const list = await listOpenCheckRequests(campaignId)
+      const wanted = takePending()
+      const first = (wanted && list.find((r) => r.id === wanted)) || list.find((r) => !isDismissed(r.id))
+      if (first) void consider(first, first.id === wanted)
+    }).catch(() => {})
+
+    const unsub = subscribeToCheckRequests(campaignId, (req) => { if (me === ownerId) void consider(req) })
+    const unsubPending = onPendingOpen((id) => {
+      takePending()
+      void listOpenCheckRequests(campaignId).then((list) => { const r = list.find((x) => x.id === id); if (r) void consider(r, true) })
+    })
+    return () => { alive = false; stopListening(); unsub(); unsubPending() }
+  }, [canRoll, isNpc, campaignId, ownerId])
+
+  const closePanel = useCallback(() => {
+    const cur = openRef.current
+    if (cur?.requestId && !answered.current.has(cur.requestId)) dismiss(cur.requestId)
+    setOpen(null)
+  }, [])
+
   return (
     <RollContext.Provider value={api}>
       {children}
@@ -88,7 +139,7 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
               key={lastOpen.current.id}
               spec={lastOpen.current.spec} character={character} sheetId={sheetId} skin={skin} perform={perform} revealDc={revealCheckDc}
               inspiration={{ has: ctx.form.inspiration, spend: () => ctx.set('inspiration', false) }}
-              onResult={lastOpen.current.onResult} onClose={() => setOpen(null)}
+              onResult={lastOpen.current.onResult} onClose={closePanel}
             />
           )}</Presence>
           <DndDiceTray job={tray} onDone={closeTray} />

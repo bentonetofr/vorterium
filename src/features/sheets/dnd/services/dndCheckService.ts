@@ -1,4 +1,5 @@
 import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
+import type { DiceRoll } from '../../../../shared/types'
 
 // ────────────────────────────────────────────────────────
 // Pedido de teste do mestre (dnd_check_requests, migration 20240210): o
@@ -89,4 +90,13 @@ export function subscribeToCheckRequests(campaignId: string, onChange: (row: Dnd
       (payload) => { if (payload.new && 'id' in payload.new) onChange(payload.new as DndCheckRequest) })
     .subscribe()
   return () => { supabase.removeChannel(channel) }
+}
+
+/** As rolagens que responderam a estes pedidos (roll_context.request_id), da mais antiga para a mais nova. */
+export async function listRequestAnswers(campaignId: string, ids: readonly string[]): Promise<DiceRoll[]> {
+  if (ids.length === 0) return []
+  const { data, error } = await supabase.from('dice_rolls').select('*')
+    .eq('campaign_id', campaignId).in('roll_context->>request_id', [...ids]).order('created_at', { ascending: true })
+  if (error) return []
+  return data as DiceRoll[]
 }
