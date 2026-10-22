@@ -103,6 +103,11 @@
   font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1; color: var(--dsh-bone);
 }
 .dsh-derived__value, .dsh-derived__suffix { font: inherit; color: inherit; }
+.dsh-derived__unit {
+  padding: 0 4px; margin-left: 2px; background: none; border: 0; border-bottom: 1px dashed transparent; border-radius: 0; cursor: var(--cursor-hand);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.dsh-derived__unit:hover { color: var(--dsh-accent); border-bottom-color: var(--dsh-accent); }
 .dsh-sheet .dsh-derived .dsh-num.dsh-num--manual {
   width: 3.4ch; min-width: 0; min-height: 0; height: auto; padding: 0 0 1px; text-align: center; font: inherit; color: inherit;
   background: transparent; border: 0; border-bottom: 1px solid transparent; border-radius: 0; box-shadow: none; cursor: text;

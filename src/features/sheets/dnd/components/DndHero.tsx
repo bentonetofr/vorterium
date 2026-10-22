@@ -31,6 +31,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
   const { form, set, update, derived, data, sheet, readOnly } = ctx
   const fileRef = useRef<HTMLInputElement>(null)
   const [autoOpen, setAutoOpen] = useState(false)
+  const feet = form.speed_unit === 'ft'
 
   const hpMax = derived.hpMax ?? form.hp_max
   const hp = Math.max(0, Math.min(hpMax, form.hp_current))
@@ -105,7 +106,12 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
         </div>
         <div className="dsh-stat">
           <span className="dsh-stat__label">Deslocamento</span>
-          <DerivedField ctx={ctx} field="speed" value={derived.speed} label="Deslocamento em metros" show={(ft) => Math.round(ft * 0.3 * 100) / 100} unshow={(m) => Math.round(m / 0.3)} suffix=" m" min={0} max={300} step={0.5} />
+          <DerivedField
+            ctx={ctx} field="speed" value={derived.speed} label={feet ? 'Deslocamento em pés' : 'Deslocamento em metros'}
+            show={feet ? undefined : (ft) => Math.round(ft * 0.3 * 100) / 100} unshow={feet ? undefined : (m) => Math.round(m / 0.3)}
+            suffix={feet ? ' ft' : ' m'} min={0} max={feet ? 1000 : 300} step={feet ? 5 : 0.5}
+            onUnitClick={() => set('speed_unit', feet ? 'm' : 'ft')} unitTitle={feet ? 'Em pés. Clique para ver em metros.' : 'Em metros. Clique para ver em pés.'}
+          />
         </div>
         <div className="dsh-stat">
           <span className="dsh-stat__label">Proficiência</span>

@@ -124,13 +124,21 @@ interface DerivedFieldProps {
   max?:      number
   step?:     number
   className?: string
+  /** Faz a unidade (m, kg...) virar um botão que chama isto ao clicar. */
+  onUnitClick?: () => void
+  unitTitle?:   string
 }
 
-export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow = (n) => n, suffix, signed, min = -99, max = 999, step = 1, className }: DerivedFieldProps) {
+export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow = (n) => n, suffix, signed, min = -99, max = 999, step = 1, className, onUnitClick, unitTitle }: DerivedFieldProps) {
   const { data, sheet, readOnly, report } = ctx
   const override = data.details.overrides.find((o) => o.field_key === field)
   const shown = show(value)
-  const text = `${signed && shown >= 0 ? '+' : ''}${String(shown).replace('.', ',')}${suffix ?? ''}`
+  const number = `${signed && shown >= 0 ? '+' : ''}${String(shown).replace('.', ',')}`
+  const text = `${number}${onUnitClick ? '' : (suffix ?? '')}`
+  const unit = suffix?.trim()
+  const unitEl = unit ? (onUnitClick && !readOnly
+    ? <button type="button" className="dsh-derived__suffix dsh-derived__unit" onClick={onUnitClick} title={unitTitle}>{unit}</button>
+    : <span className="dsh-derived__suffix">{unit}</span>) : null
 
   async function saveManual(n: number) {
     if (readOnly) return
@@ -148,8 +156,10 @@ export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow
   return (
     <span className={`dsh-derived${className ? ` ${className}` : ''}`}>
       {override && !readOnly
-        ? <><ManualBox value={shown} onCommit={saveManual} label={label} min={min} max={max} step={step} />{suffix && <span className="dsh-derived__suffix">{suffix.trim()}</span>}</>
-        : <strong className="dsh-derived__value" aria-label={label}>{text}</strong>}
+        ? <><ManualBox value={shown} onCommit={saveManual} label={label} min={min} max={max} step={step} />{unitEl}</>
+        : onUnitClick
+          ? <><strong className="dsh-derived__value" aria-label={label}>{text}</strong>{unitEl}</>
+          : <strong className="dsh-derived__value" aria-label={label}>{text}</strong>}
     </span>
   )
 }

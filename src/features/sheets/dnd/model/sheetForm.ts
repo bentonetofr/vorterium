@@ -58,6 +58,8 @@ export interface DndForm {
   notes_class:       string
   /** Comportamentos automáticos desligados no botão Automatizar; vai em `choices.manualModes`. */
   manual_modes:      ManualMode[]
+  /** Unidade em que o deslocamento é mostrado: metros (padrão da edição brasileira) ou pés; vai em `choices.speedUnit`. */
+  speed_unit:        'm' | 'ft'
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -98,6 +100,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     notes_racial:     typeof choices.notesRacial === 'string' ? choices.notesRacial : '',
     notes_background: typeof choices.notesBackground === 'string' ? choices.notesBackground : '',
     notes_class:      typeof choices.notesClass === 'string' ? choices.notesClass : '',
+    speed_unit:       choices.speedUnit === 'ft' ? 'ft' : 'm',
     manual_modes:     Array.isArray(choices.manualModes) ? choices.manualModes.filter(isManualMode).sort() : [],
   }
 }
@@ -154,6 +157,8 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   else delete choices.acBonus
   if (f.spell_ability) choices.spellAbility = f.spell_ability
   else delete choices.spellAbility
+  if (f.speed_unit === 'ft') choices.speedUnit = 'ft'
+  else delete choices.speedUnit
   if (f.manual_modes.length > 0) choices.manualModes = [...f.manual_modes].sort()
   else delete choices.manualModes
   setNote(choices, 'notesRacial', f.notes_racial)

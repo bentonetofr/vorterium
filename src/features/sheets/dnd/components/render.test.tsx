@@ -58,7 +58,7 @@ describe('cabeçalho', () => {
   it('CA, deslocamento em metros e iniciativa manual aparecem', () => {
     const html = hero(makeCtx())
     expect(html).toContain('18')            // cota de malha 16 + escudo 2
-    expect(html).toContain('7,5 m')         // anão: 25 pés
+    expect(html).toContain('7,5')           // anão: 25 pés = 7,5 m
     expect(html).toContain('dsh-num--manual')   // iniciativa manual vira campo para digitar
     expect(html).not.toMatch(/>(AUTO|MANUAL)</) // a ficha não tem mais selo de modo
   })
@@ -249,6 +249,19 @@ describe('abas', () => {
     expect(off).toContain('>Não<')
     expect(off).not.toContain('dsh-toggle')
     expect(off).not.toContain('<svg')
+  })
+
+  it('deslocamento: a unidade é um botão que alterna entre metros e pés', () => {
+    const m = hero(makeCtx())
+    expect(m).toContain('aria-label="Deslocamento em metros"')
+    expect(m).toMatch(/dsh-derived__unit"[^>]*>m</)
+    const ctx = makeCtx()
+    ctx.form.speed_unit = 'ft'
+    const ft = hero(ctx)
+    expect(ft).toContain('aria-label="Deslocamento em pés"')
+    expect(ft).toContain('>25<')
+    expect(ft).toMatch(/dsh-derived__unit"[^>]*>ft</)
+    expect(hero(makeCtx({ readOnly: true }))).not.toContain('dsh-derived__unit')
   })
 
   it('botão Automatizar no cabeçalho, só para quem pode editar', () => {

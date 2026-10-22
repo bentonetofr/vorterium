@@ -123,6 +123,17 @@ describe('formToPayload', () => {
     expect(validateForm(f)).toContain('6000')
   })
 
+  it('a unidade do deslocamento (pés) vai nas escolhas; metros é o padrão e não grava nada', () => {
+    const sheet = makeSheet({ choices: { outro: 'x' } })
+    const run = (f: ReturnType<typeof formFromSheet>) => formToPayload(sheet, f, deriveSheet({ sheet: sheetWithForm(sheet, f), classes: [], details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] }, proficiencies: [] }).derived, '', false)
+    const form = { ...formFromSheet(sheet), speed_unit: 'ft' as const }
+    expect(run(form).choices).toEqual({ outro: 'x', speedUnit: 'ft' })
+    expect(run({ ...form, speed_unit: 'm' }).choices).toEqual({ outro: 'x' })
+    expect(formFromSheet(makeSheet({ choices: { speedUnit: 'ft' } })).speed_unit).toBe('ft')
+    expect(formFromSheet(makeSheet({ choices: { speedUnit: 'lixo' } })).speed_unit).toBe('m')
+    expect(formFromSheet(makeSheet()).speed_unit).toBe('m')
+  })
+
   it('condições em ordem fixa e dados de vida só com valores positivos', () => {
     const sheet = makeSheet()
     const form = { ...formFromSheet(sheet), conditions: ['prone', 'blinded'] as const, hit_dice_used: { '10': 0, '8': 2 } }
