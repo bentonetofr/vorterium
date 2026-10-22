@@ -17,7 +17,7 @@ import type { SheetCtx } from './sheetContext'
 // concentração e ataques com arma. As contas de ataque saem do motor.
 // ────────────────────────────────────────────────────────
 
-const WEAPON_OPTIONS = [{ value: '', label: 'Arma do catálogo' }, ...WEAPONS.map((w) => ({ value: w.key, label: w.name }))]
+const WEAPON_OPTIONS = [{ value: '', label: 'Escolher uma arma' }, ...WEAPONS.map((w) => ({ value: w.key, label: w.name }))]
 
 export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, update, derived, data, sheet, readOnly, gear, prof, report } = ctx
@@ -158,7 +158,12 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
 
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Ataques</h4></div>
-        {data.details.attacks.length === 0 && <p className="dsh-faint">Nenhum ataque ainda. Escolha uma arma do catálogo e o bônus e o dano saem sozinhos.</p>}
+        {data.details.attacks.length === 0 && (
+          <div className="dsh-noattack">
+            <strong>Nenhum ataque ainda</strong>
+            <span>Escolha uma arma do catálogo e o bônus e o dano saem sozinhos.</span>
+          </div>
+        )}
         <ul className="dsh-list">
           {data.details.attacks.map((a) => {
             const view = a.catalog_entry_key ? attackFor(a.catalog_entry_key, derived, prof.weapons) : null
@@ -194,11 +199,13 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
           })}
         </ul>
         {!readOnly && (
-          <div className="dsh-add-row">
-            <Select options={WEAPON_OPTIONS} value={weaponKey} onChange={setWeaponKey} aria-label="Arma do catálogo" />
-            <input type="text" className="dsh-input" value={customName} maxLength={120} placeholder="ou o nome de um ataque próprio"
-              onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addAttack() } }} />
-            <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addAttack()} disabled={busy === 'new'}>Adicionar</button>
+          <div className="dsh-newattack">
+            <div className="dsh-field dsh-field--tile dsh-newattack__weapon"><span className="dsh-label">Arma do catálogo</span>
+              <Select options={WEAPON_OPTIONS} value={weaponKey} onChange={setWeaponKey} aria-label="Arma do catálogo" /></div>
+            <label className="dsh-field dsh-field--tile dsh-newattack__custom"><span className="dsh-label">Ou um ataque próprio</span>
+              <input type="text" className="dsh-focus__input" value={customName} maxLength={120} placeholder="Nome do ataque"
+                onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addAttack() } }} /></label>
+            <button type="button" className="dsh-newattack__add" onClick={() => void addAttack()} disabled={busy === 'new'}>+ Adicionar ataque</button>
           </div>
         )}
       </section>
