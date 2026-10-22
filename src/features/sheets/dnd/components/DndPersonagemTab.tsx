@@ -4,13 +4,13 @@ import type { DndCharacterClass, DndCharacterProficiency } from '../../../../sha
 import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace } from '../catalog'
 import { homebrewKeyFromName } from '../catalog/homebrewKey'
 import { levelFromXp, meetsRequirement, xpToNextLevel } from '../rules/progression'
-import { ABILITIES } from '../rules/abilities'
+import { ABILITIES, SKILLS } from '../rules/abilities'
 import { saveColumns } from '../model/sheetModel'
 import { formatMeters } from '../model/format'
 import { addDndProficiency, removeDndProficiency } from '../services/dndSheetService'
 import { removeDndClass, saveDndClass } from '../services/dndClassService'
 import { NumberField } from './DndControls'
-import { BonusTiles, XpMeter } from './DndVisuals'
+import { BonusTiles, ChipRow, StatChip, XpMeter } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -176,6 +176,13 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
               ...(race.abilityChoice ? [{ label: 'À escolha', value: `+${race.abilityChoice.amount} em ${race.abilityChoice.count}`, tone: 'good' as const, wide: true, hint: 'Bônus da raça: escreva os atributos já com ele' }] : []),
             ]}
           />
+        )}
+        {background && !background.custom && (
+          <ChipRow>
+            <StatChip label="Perícias">{background.skills.map((k) => SKILLS.find((x) => x.key === k)?.label ?? k).join(', ')}</StatChip>
+            {background.tools.length > 0 && <StatChip label="Ferramentas">{background.tools.join(', ')}</StatChip>}
+            {background.languagesChoices > 0 && <StatChip label="Idiomas">+{background.languagesChoices} à escolha</StatChip>}
+          </ChipRow>
         )}
         {background && background.feature && (
           <div className="dsh-lore"><strong>{background.feature.name}</strong><p>{background.feature.summary}</p></div>

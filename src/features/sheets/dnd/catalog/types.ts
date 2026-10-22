@@ -195,6 +195,8 @@ export interface BackgroundDef extends CatalogBase {
   /** Personalizado: o jogador escolhe 2 perícias livres em vez de uma lista fixa. */
   custom?: boolean
   skillChoices?: number
+  /** srd51 = do documento livre (Acólito); phb = do Livro do Jogador (fora do SRD, com resumos em palavras nossas). */
+  source?: 'srd51' | 'phb'
 }
 
 // ── Condições ───────────────────────────────────────────

@@ -1,3 +1,4 @@
+import type { SkillKey } from '../rules/types'
 import type { BackgroundDef, FightingStyleDef, GlossaryEntry } from './types'
 
 // ────────────────────────────────────────────────────────
@@ -13,9 +14,20 @@ export const FIGHTING_STYLES: FightingStyleDef[] = [
   { key: 'two_weapon_fighting', name: 'Combate com Duas Armas', original: 'Two-Weapon Fighting', classes: ['fighter', 'ranger'], summary: 'Soma o modificador de atributo ao dano do segundo ataque ao lutar com duas armas.' },
 ]
 
+/** Atalho para escrever um antecedente do Livro do Jogador. */
+function bg(
+  key: string, name: string, original: string, summary: string, skills: SkillKey[], tools: string[], languagesChoices: number, toolOrLanguageChoices: number,
+  equipment: string[], featureKey: string, featureName: string, featureOriginal: string, featureSummary: string,
+): BackgroundDef {
+  return {
+    key, name, original, summary, skills, skillChoices: 0, languagesChoices, toolOrLanguageChoices, tools, equipment, source: 'phb',
+    feature: { level: 1, key: featureKey, name: featureName, original: featureOriginal, summary: featureSummary },
+  }
+}
+
 export const BACKGROUNDS: BackgroundDef[] = [
   {
-    key: 'acolyte', name: 'Acólito', original: 'Acolyte',
+    key: 'acolyte', name: 'Acólito', original: 'Acolyte', source: 'srd51',
     summary: 'Você passou a vida a serviço de um templo, intermediando o mundo sagrado e o mortal.',
     skills: ['insight', 'religion'],
     skillChoices: 0,
@@ -28,6 +40,56 @@ export const BACKGROUNDS: BackgroundDef[] = [
       summary: 'Você e seus companheiros podem esperar cura e cuidados gratuitos em templos da sua fé (você fornece os componentes materiais de magias). Quem compartilha a sua religião sustenta você, mas só você, num estilo de vida modesto.',
     },
   },
+  // Os antecedentes abaixo são do Livro do Jogador (fora do SRD 5.1): vão só os nomes, as proficiências e um
+  // resumo da característica escrito em palavras nossas.
+  bg('charlatan', 'Charlatão', 'Charlatan', 'Você vive de enganar: conversa afiada, identidades falsas e um golpe para cada ocasião.',
+    ['deception', 'sleight_of_hand'], ['Kit de disfarce', 'Kit de falsificação'], 0, 0,
+    ['Roupas finas', 'Kit de disfarce', 'Ferramentas de um golpe à sua escolha', 'Uma bolsa com 15 po'],
+    'false_identity', 'Identidade Falsa', 'False Identity', 'Você mantém uma segunda identidade bem montada, com documentos, conhecidos e disfarce, e sabe forjar papéis que já tenha visto.'),
+  bg('criminal', 'Criminoso', 'Criminal', 'Você tem passado de crime e conhece o submundo, seus contatos e seus perigos.',
+    ['deception', 'stealth'], ['Um jogo à escolha', 'Ferramentas de ladrão'], 0, 0,
+    ['Um pé de cabra', 'Roupas comuns escuras com capuz', 'Uma bolsa com 15 po'],
+    'criminal_contact', 'Contato Criminoso', 'Criminal Contact', 'Você tem um contato confiável que leva e traz mensagens da rede criminosa local, mesmo a grandes distâncias.'),
+  bg('entertainer', 'Artista', 'Entertainer', 'Você vive para o palco e para o público: música, dança, teatro ou outra arte.',
+    ['acrobatics', 'performance'], ['Kit de disfarce', 'Um instrumento musical à escolha'], 0, 0,
+    ['Um instrumento musical', 'Um presente de um admirador', 'Fantasia', 'Uma bolsa com 15 po'],
+    'by_popular_demand', 'A Pedido do Público', 'By Popular Demand', 'Onde você se apresenta, recebe hospedagem e comida modestas de graça, e é reconhecido pelo público local.'),
+  bg('folk_hero', 'Herói do Povo', 'Folk Hero', 'Você vem do povo e já fez algo que o tornou querido pela gente comum.',
+    ['animal_handling', 'survival'], ['Um tipo de ferramenta de artesão à escolha', 'Veículos (terrestres)'], 0, 0,
+    ['Ferramentas de artesão', 'Uma pá', 'Uma panela de ferro', 'Roupas comuns', 'Uma bolsa com 10 po'],
+    'rustic_hospitality', 'Hospitalidade Rústica', 'Rustic Hospitality', 'Gente comum o acolhe e esconde quando preciso, sem expor a própria vida ao risco.'),
+  bg('guild_artisan', 'Artesão de Guilda', 'Guild Artisan', 'Você é membro de uma guilda de ofício, com mestres, clientes e regras próprias.',
+    ['insight', 'persuasion'], ['Um tipo de ferramenta de artesão à escolha'], 1, 0,
+    ['Ferramentas de artesão', 'Uma carta de apresentação da guilda', 'Roupas de viajante', 'Uma bolsa com 15 po'],
+    'guild_membership', 'Filiação à Guilda', 'Guild Membership', 'A guilda lhe dá abrigo, comida e apoio, e autoridades e comerciantes locais respeitam sua filiação.'),
+  bg('hermit', 'Eremita', 'Hermit', 'Você passou anos isolado, em contemplação, estudo ou penitência.',
+    ['medicine', 'religion'], ['Kit de herbalismo'], 1, 0,
+    ['Um estojo de pergaminhos com anotações', 'Um cobertor de inverno', 'Roupas comuns', 'Kit de herbalismo', 'Uma bolsa com 5 po'],
+    'discovery', 'Descoberta', 'Discovery', 'O isolamento revelou a você uma descoberta única e importante, a ser combinada com o Mestre.'),
+  bg('noble', 'Nobre', 'Noble', 'Você nasceu em berço de ouro, com título, terras e a expectativa que vêm com eles.',
+    ['history', 'persuasion'], ['Um jogo à escolha'], 1, 0,
+    ['Roupas finas', 'Um anel de sinete', 'Um pergaminho com a linhagem da família', 'Uma bolsa com 25 po'],
+    'position_of_privilege', 'Posição de Privilégio', 'Position of Privilege', 'Sua posição abre portas: tanto nobres quanto gente comum tendem a tratá-lo bem.'),
+  bg('outlander', 'Forasteiro', 'Outlander', 'Você cresceu longe das cidades, em regiões selvagens.',
+    ['athletics', 'survival'], ['Um instrumento musical à escolha'], 1, 0,
+    ['Um cajado', 'Uma armadilha de caça', 'Um troféu de um animal que abateu', 'Roupas de viajante', 'Uma bolsa com 10 po'],
+    'wanderer', 'Andarilho', 'Wanderer', 'Você lembra mapas e a geografia e sempre encontra comida e água fresca para si e até cinco aliados.'),
+  bg('sage', 'Sábio', 'Sage', 'Você passou anos estudando o saber do mundo, entre livros, bibliotecas e mestres.',
+    ['arcana', 'history'], [], 2, 0,
+    ['Um frasco de tinta preta', 'Uma pena', 'Uma faca pequena', 'Uma carta de um colega com uma pergunta ainda sem resposta', 'Roupas comuns', 'Uma bolsa com 10 po'],
+    'researcher', 'Pesquisador', 'Researcher', 'Quando você não sabe uma informação, sabe onde e com quem descobrir.'),
+  bg('sailor', 'Marinheiro', 'Sailor', 'Você navegou em alto-mar e conhece navios, portos e tripulações.',
+    ['athletics', 'perception'], ['Ferramentas de navegador', 'Veículos (aquáticos)'], 0, 0,
+    ['Um porrete de marinheiro', 'Corda de seda de 15 metros', 'Um amuleto da sorte', 'Roupas comuns', 'Uma bolsa com 10 po'],
+    'ships_passage', 'Passagem de Navio', "Ship's Passage", 'Você consegue passagem gratuita em navios, para si e seus companheiros, em troca de ajudar a bordo.'),
+  bg('soldier', 'Soldado', 'Soldier', 'Você serviu em um exército, milícia ou companhia de mercenários.',
+    ['athletics', 'intimidation'], ['Um jogo à escolha', 'Veículos (terrestres)'], 0, 0,
+    ['Uma insígnia de patente', 'Um troféu de um inimigo', 'Um conjunto de dados ou baralho', 'Roupas comuns', 'Uma bolsa com 10 po'],
+    'military_rank', 'Patente Militar', 'Military Rank', 'Soldados da sua antiga organização reconhecem sua patente e lhe devem respeito, acesso e equipamento em ocasiões razoáveis.'),
+  bg('urchin', 'Órfão', 'Urchin', 'Você cresceu nas ruas, sem família, aprendendo a se virar sozinho.',
+    ['sleight_of_hand', 'stealth'], ['Kit de disfarce', 'Ferramentas de ladrão'], 0, 0,
+    ['Uma faca pequena', 'Um mapa da cidade onde cresceu', 'Um rato de estimação', 'Uma lembrança dos pais', 'Roupas comuns', 'Uma bolsa com 10 po'],
+    'city_secrets', 'Segredos da Cidade', 'City Secrets', 'Você conhece atalhos e passagens urbanas e, fora de combate, atravessa a cidade com seus companheiros no dobro da velocidade.'),
   {
     key: 'custom', name: 'Antecedente personalizado', original: 'Customized Background',
     summary: 'Regra do Livro do Jogador: monte um antecedente que combine com o personagem, trocando uma característica, escolhendo duas perícias e duas proficiências entre ferramentas e idiomas.',

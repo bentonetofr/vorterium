@@ -360,8 +360,32 @@ describe('raças', () => {
 })
 
 describe('antecedentes', () => {
-  it('Acólito do SRD e o personalizado', () => {
-    expect(BACKGROUNDS.map((b) => b.key)).toEqual(['acolyte', 'custom'])
+  it('os 13 antecedentes do Livro do Jogador e o personalizado, com o Acólito do SRD em primeiro', () => {
+    expect(BACKGROUNDS.map((b) => b.key)).toEqual([
+      'acolyte', 'charlatan', 'criminal', 'entertainer', 'folk_hero', 'guild_artisan', 'hermit', 'noble', 'outlander', 'sage', 'sailor', 'soldier', 'urchin', 'custom',
+    ])
+    expect(BACKGROUNDS.filter((b) => b.source === 'srd51').map((b) => b.key)).toEqual(['acolyte'])
+    expect(BACKGROUNDS.filter((b) => b.source === 'phb')).toHaveLength(12)
+  })
+
+  it('cada antecedente do livro tem duas perícias, característica e equipamento', () => {
+    for (const b of BACKGROUNDS.filter((x) => !x.custom)) {
+      expect(b.skills, b.key).toHaveLength(2)
+      expect(new Set(b.skills).size, b.key).toBe(2)
+      expect(b.feature, b.key).not.toBeNull()
+      expect(b.feature!.summary.length, b.key).toBeGreaterThan(30)
+      expect(b.equipment.length, b.key).toBeGreaterThan(2)
+      expect(b.name.trim(), b.key).not.toBe('')
+      expect(b.original.trim(), b.key).not.toBe('')
+    }
+    const get = (k: string) => BACKGROUNDS.find((b) => b.key === k)!
+    expect(get('sage').languagesChoices).toBe(2)
+    expect(get('criminal').skills).toEqual(['deception', 'stealth'])
+    expect(get('soldier').tools).toEqual(['Um jogo à escolha', 'Veículos (terrestres)'])
+    expect(unique(BACKGROUNDS.flatMap((b) => (b.feature ? [b.feature.key] : [])))).toBe(true)
+  })
+
+  it('Acólito do SRD', () => {
     const acolyte = BACKGROUNDS[0]
     expect(acolyte.skills).toEqual(['insight', 'religion'])
     expect(acolyte.languagesChoices).toBe(2)

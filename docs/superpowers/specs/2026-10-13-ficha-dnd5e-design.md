@@ -374,6 +374,10 @@ Botão "Automatizar" no cabeçalho da ficha abre uma janela no centro da tela (`
 
 Parágrafos de explicação saíram da ficha e viraram figuras (`components/DndVisuals.tsx`): **medidor de XP** (nível pelo XP, barra, quanto falta e selo "Já dá para subir de nível"), **fórmulas em blocos** para a CD e o ataque de magia (8 + proficiência + modificador), **etiquetas de valor** (deslocamento e bônus da raça, PV por nível, atributo/proficiência/propriedades de cada ataque, armadura/escudo/iniciativa, capacidade e carga, truques e magias de cada classe), **selos de estado** (Estabilizado, Morreu, Sobrecarregado, nível de exaustão, Conjurador multiclasse) e **legendas** com as próprias bolinhas (perícias) e códigos DC/DL/AM (recursos). As regras que sobraram viram dica ao passar o mouse.
 
+### Antecedentes do Livro do Jogador (pedido do usuário em 21/10/2026) — FEITO
+
+Por pedido do usuário, os **13 antecedentes** do Livro do Jogador entram na lista (Acólito, do SRD, e mais Charlatão, Criminoso, Artista, Herói do Povo, Artesão de Guilda, Eremita, Nobre, Forasteiro, Sábio, Marinheiro, Soldado e Órfão), além do personalizado. Os 12 de fora do SRD (`source: 'phb'` em `catalog/misc.data.ts`) levam só o nome, as perícias, as ferramentas e idiomas e um resumo da característica **em palavras nossas**; não há texto copiado. **Pendência jurídica para o Marco 8:** o Livro do Jogador não é conteúdo livre; decidir, na revisão final e na página de créditos, se esses 12 ficam, e por isso eles têm o marcador `phb` para serem filtrados num lugar só.
+
 ### Marco 6: rolagens integradas (M)
 - Coluna `roll_label`, `floor`, crítico por dado mantido, mensagens de atividade (seção 4.5).
 - Cliques na ficha rolam: perícia, salvaguarda, ataque, dano, iniciativa, morte, dado de vida; vantagem/desvantagem.
