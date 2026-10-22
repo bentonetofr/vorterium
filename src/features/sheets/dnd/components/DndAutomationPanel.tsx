@@ -50,14 +50,26 @@ export function DndAutomationPanel({ ctx, onClose }: Props) {
     } finally { setBusy(null) }
   }
 
-  async function allAutomatic() {
+  /** Passa a ficha inteira para automático ou manual de uma vez (uma chamada só para os números). */
+  async function setAll(manual: boolean) {
     if (readOnly || busy) return
     setBusy('all')
     report(null)
     try {
-      for (const item of AUTOMATION_ITEMS) if (manualNow(item)) await apply(item, false)
+      const numeric = AUTOMATION_ITEMS.filter((i) => i.fields)
+      const modes = AUTOMATION_ITEMS.flatMap((i) => (i.mode ? [i.mode] : []))
+      const fields = numeric.flatMap((i) => i.fields ?? [])
+      if (manual) {
+        const seeds = numeric.filter((i) => !manualNow(i)).flatMap((i) => manualSeed(i, derived, form.hp_max))
+        const saved = await saveDndOverrides(sheet.id, seeds)
+        data.setDetails((d) => ({ ...d, overrides: [...d.overrides.filter((o) => !seeds.some((x) => x.field === o.field_key)), ...saved] }))
+      } else {
+        await removeDndOverrides(sheet.id, fields)
+        data.setDetails((d) => ({ ...d, overrides: d.overrides.filter((o) => !fields.includes(o.field_key)) }))
+      }
+      set('manual_modes', manual ? [...modes].sort() : [])
     } catch (err) {
-      report(err instanceof Error ? err.message : 'Não foi possível voltar tudo ao automático.')
+      report(err instanceof Error ? err.message : 'Não foi possível trocar o modo de tudo.')
     } finally { setBusy(null) }
   }
 
@@ -68,6 +80,10 @@ export function DndAutomationPanel({ ctx, onClose }: Props) {
           <div>
             <h3 id="dsh-auto-title" className="dsh-auto__title">Automatizar</h3>
             <p className="dsh-auto__lead">Escolha o que a ficha calcula sozinha pelas regras do livro e o que você prefere preencher à mão.</p>
+            <div className="dsh-auto__all">
+              <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void setAll(false)} disabled={readOnly || busy !== null || manualCount === 0}>Automatizar tudo</button>
+              <button type="button" className="dsh-chip" onClick={() => void setAll(true)} disabled={readOnly || busy !== null || manualCount === AUTOMATION_ITEMS.length}>Manualizar tudo</button>
+            </div>
           </div>
           <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
         </header>
@@ -100,10 +116,7 @@ export function DndAutomationPanel({ ctx, onClose }: Props) {
 
         <footer className="dsh-auto__foot">
           <span className="dsh-faint">{manualCount === 0 ? 'Tudo automático.' : `${manualCount} ${manualCount === 1 ? 'item' : 'itens'} em modo manual.`}</span>
-          <span className="dsh-auto__actions">
-            <button type="button" className="dsh-chip" onClick={() => void allAutomatic()} disabled={readOnly || busy !== null || manualCount === 0}>Tudo automático</button>
-            <button type="button" className="dsh-chip dsh-chip--primary" onClick={onClose}>Fechar</button>
-          </span>
+          <button type="button" className="dsh-chip dsh-chip--primary" onClick={onClose}>Fechar</button>
         </footer>
       </div>
     </ModalOverlay>

@@ -212,7 +212,8 @@ describe('abas', () => {
     for (const item of AUTOMATION_ITEMS) expect(html).toContain(item.title)
     expect(html.match(/>Automático</g)).toHaveLength(AUTOMATION_ITEMS.length)
     expect(html.match(/>Manual</g)).toHaveLength(AUTOMATION_ITEMS.length)
-    expect(html).toContain('Tudo automático')
+    expect(html).toContain('Automatizar tudo')
+    expect(html).toContain('Manualizar tudo')
     expect(html).toContain('Fechar')
   })
 
