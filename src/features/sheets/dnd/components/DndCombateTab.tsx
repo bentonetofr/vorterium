@@ -32,6 +32,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
   const armorMsg = armorWarning(gear, prof.armor)
   const strMsg = strengthWarning(gear, form.strength)
   const exhaustionLevel = EXHAUSTION.levels.find((l) => l.level === form.exhaustion)
+  const activeConditions = CONDITIONS.filter((c) => form.conditions.includes(c.key as never))
 
   function damage(n: number) {
     if (readOnly || n <= 0) return
@@ -234,23 +235,38 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
 
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Condições</h4><span className="dsh-badge">{form.conditions.length ? `${form.conditions.length} ativa${form.conditions.length > 1 ? 's' : ''}` : 'nenhuma'}</span></div>
-        <div className="dsh-chips">
-          {CONDITIONS.map((c) => (
-            <button key={c.key} type="button" disabled={readOnly}
-              className={`dsh-pick${form.conditions.includes(c.key as never) ? ' is-on' : ''}`}
-              onClick={() => toggleCondition(c.key)} title={c.summary} aria-pressed={form.conditions.includes(c.key as never)}>
-              {c.name}
-            </button>
-          ))}
+        <div className="dsh-conds">
+          {CONDITIONS.map((c) => {
+            const on = form.conditions.includes(c.key as never)
+            return (
+              <button key={c.key} type="button" disabled={readOnly} className={`dsh-cond${on ? ' is-on' : ''}`}
+                onClick={() => toggleCondition(c.key)} title={c.summary} aria-pressed={on}>
+                {c.name}
+              </button>
+            )
+          })}
         </div>
+        {activeConditions.length > 0 && (
+          <ul className="dsh-condfx">
+            {activeConditions.map((c) => <li key={c.key}><strong>{c.name}</strong><span>{c.summary}</span></li>)}
+          </ul>
+        )}
         <div className="dsh-field">
           <span className="dsh-label">Exaustão</span>
-          <Pips total={6} filled={form.exhaustion} tone="bad" label="Níveis de exaustão" onChange={readOnly ? undefined : (n) => set('exhaustion', n)} />
+          <div className="dsh-exhaust" role="group" aria-label="Níveis de exaustão">
+            {EXHAUSTION.levels.map((l) => (
+              <button key={l.level} type="button" disabled={readOnly} title={`Nível ${l.level}: ${l.effect}`} aria-pressed={form.exhaustion >= l.level}
+                className={`dsh-exhaust__step${form.exhaustion >= l.level ? ' is-on' : ''}${l.level === 6 ? ' is-death' : ''}`}
+                onClick={() => set('exhaustion', form.exhaustion === l.level ? l.level - 1 : l.level)}>
+                {l.level}
+              </button>
+            ))}
+          </div>
           {exhaustionLevel && <StatusPill tone="bad" title={EXHAUSTION.rule}>Nível {exhaustionLevel.level}: {exhaustionLevel.effect}</StatusPill>}
         </div>
-        <label className="dsh-field">
+        <label className={`dsh-field dsh-field--tile dsh-focus${form.concentrating_on.trim() ? ' is-on' : ''}`}>
           <span className="dsh-label">Concentrando em</span>
-          <input type="text" className="dsh-input" maxLength={160} value={form.concentrating_on} readOnly={readOnly}
+          <input type="text" className="dsh-focus__input" maxLength={160} value={form.concentrating_on} readOnly={readOnly}
             placeholder="Nenhuma magia" onChange={(e) => set('concentrating_on', e.target.value)} />
         </label>
       </section>
