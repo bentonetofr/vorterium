@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Presence } from '../../../../shared/components/Presence'
 import type { DiceRoll, DiceRollContext } from '../../../../shared/types'
 import { parseDiceFormula, recordRoll, rollParsedFormula, type RollExtras, type RollResult } from '../../../dice/services/diceService'
-import { getMyDiceSkin } from '../../../dice3d/diceSkinService'
+import { getMyDiceSkin, onDiceSkinChange } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { revealCheckDc } from '../services/dndCheckService'
 import type { SheetCtx } from '../components/sheetContext'
@@ -42,7 +42,11 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
   const canRoll = !ctx.readOnly && !!ctx.campaignId
   const character = ctx.form.character_name.trim() || 'Personagem'
 
-  useEffect(() => { if (canRoll) void getMyDiceSkin().then(setSkin).catch(() => {}) }, [canRoll])
+  useEffect(() => {
+    if (!canRoll) return
+    void getMyDiceSkin().then(setSkin).catch(() => {})
+    return onDiceSkinChange(setSkin)
+  }, [canRoll])
 
   const report = ctx.report
   const campaignId = ctx.campaignId

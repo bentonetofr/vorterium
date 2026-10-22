@@ -9,6 +9,10 @@ import {
   subscribeToRolls,
 } from '../services/diceService'
 import { getCampaignMembers } from '../../members/services/memberService'
+import { useFeature } from '../../control/siteFeatures'
+import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
+import { DICE_SKINS } from '../../dice3d/skins'
+import { getMyDiceSkin, setMyDiceSkin } from '../../dice3d/diceSkinService'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { isTerraDevastadaFamily } from '../../../shared/constants/systems'
 import type { DiceRoll, DiceRollWithProfile } from '../../../shared/types'
@@ -62,6 +66,18 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
   // Terra Devastada rola testes de pares — atalho de 1d a 6d no topo.
   const { campaign } = useCurrentCampaign()
   const isTerraDevastada = campaign?.id === campaignId && isTerraDevastadaFamily(campaign.system)
+  // D&D: cada um escolhe o conjunto de dados; a mesa vê os dados na cor de quem rolou.
+  const dndFeature = useFeature(DND_FEATURE)
+  const isDnd = campaign?.id === campaignId && campaign.system === 'dnd5e' && dndFeature.visible
+  const [skin, setSkin] = useState<string | null>(null)
+  const [skinError, setSkinError] = useState<string | null>(null)
+  useEffect(() => { if (isDnd) void getMyDiceSkin().then(setSkin).catch(() => setSkin(null)) }, [isDnd])
+  async function pickSkin(id: string) {
+    const before = skin
+    setSkin(id)
+    setSkinError(null)
+    try { await setMyDiceSkin(id) } catch (err) { setSkin(before); setSkinError(err instanceof Error ? err.message : 'Não foi possível salvar.') }
+  }
 
   // ── Rolagem ──
   const [rolling, setRolling]     = useState(false)
@@ -148,7 +164,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
     try {
       const roll = evensPool != null
         ? await rollEvensTest(campaignId, evensPool, { isPrivate })
-        : await rollDice(campaignId, formula, isPrivate)
+        : await rollDice(campaignId, formula, isPrivate, isDnd ? { skin: skin ?? undefined } : undefined)
       onRoll(roll)
       await loadHistory(true)
     } catch (err) {
@@ -211,6 +227,23 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
         </svg>
         Rolagem privada
       </label>
+
+      {/* ── Conjunto de dados (D&D) ── */}
+      {isDnd && (
+        <div className="dice-section">
+          <h4 className="dice-section__title">Seus dados</h4>
+          <div className="dice-skins" role="radiogroup" aria-label="Conjunto de dados">
+            {DICE_SKINS.map((s) => (
+              <button key={s.id} type="button" role="radio" aria-checked={skin === s.id} title={s.name}
+                className={`dice-skin${skin === s.id ? ' is-on' : ''}`} onClick={() => void pickSkin(s.id)}
+                style={{ background: `radial-gradient(circle at 35% 30%, ${s.body}, ${s.bodyEdge} 75%)`, borderColor: s.trim, color: s.ink }}>
+                20
+              </button>
+            ))}
+          </div>
+          <p className="dice-custom__examples-label">{skinError ?? DICE_SKINS.find((s) => s.id === skin)?.name ?? ''}</p>
+        </div>
+      )}
 
       {/* ── Teste de pares (Terra Devastada) ── */}
       {isTerraDevastada && (

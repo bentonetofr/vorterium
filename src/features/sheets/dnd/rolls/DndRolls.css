@@ -140,3 +140,21 @@
 .dtray__total { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1.05; color: #fff7e6; text-shadow: 0 0 18px rgba(232, 184, 92, 0.4); }
 .dtray__parts { font-size: var(--text-xs); color: var(--text-secondary); }
 .dtray__card.is-rolling .dtray__total { color: var(--text-muted); }
+
+/* ── Janelinha da mesa (rolagens dos outros) ── */
+.dtable { position: fixed; left: 16px; bottom: 96px; z-index: 1140; width: 300px; height: 200px; pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity 200ms ease, transform 200ms ease; }
+.dtable.is-on { opacity: 1; transform: none; }
+.dtable__canvas { position: absolute; inset: 0 0 64px; border-radius: 14px; background: radial-gradient(ellipse at 50% 40%, rgba(60, 38, 90, 0.75), rgba(12, 10, 18, 0.9)); border: 1px solid rgba(232, 184, 92, 0.35); overflow: hidden; }
+.dtable__card {
+  position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center; gap: 0 var(--space-3);
+  padding: 8px 14px; text-align: left; pointer-events: auto; cursor: var(--cursor-hand);
+  background: linear-gradient(180deg, rgba(30, 22, 42, 0.97), rgba(12, 10, 18, 0.97)); border: 1px solid rgba(232, 184, 92, 0.45); border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.dtable__who { font-family: var(--font-display); font-size: var(--text-md, 16px); font-weight: 600; color: var(--dsh-bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dtable__label { grid-column: 1; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dsh-bone-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dtable__total { grid-column: 2; grid-row: 1 / span 2; font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1; color: #fff7e6; }
+.dtable__outcome, .dtable__crit { grid-column: 1 / -1; font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.dtable__outcome--success, .dtable__crit { color: #f6d27c; }
+.dtable__outcome--failure, .dtable__crit--bad { color: #ff6b6b; }
+@media (max-width: 640px) { .dtable { left: 8px; bottom: 84px; width: min(300px, calc(100vw - 16px)); } }
