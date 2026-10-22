@@ -97,8 +97,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
   const diePool = Object.entries(derived.hitDice).map(([die, total]) => ({ die: Number(die), total })).sort((a, b) => b.die - a.die)
 
   return (
-    <div className="dsh-tab dsh-cols anim-tab-panel">
-      <div className="dsh-col">
+    <div className="dsh-tab dsh-personagem anim-tab-panel">
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Pontos de vida</h4>
@@ -210,8 +209,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
         )}
       </section>
 
-      </div>
-      <div className="dsh-col">
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Defesa</h4></div>
         <div className="dsh-defense">
@@ -278,7 +275,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
         </label>
       </section>
 
-      </div>
     </div>
   )
 }
