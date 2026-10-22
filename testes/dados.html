@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Teste dos dados 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 50% 0%, #1b2033, #0b0e17 70%); color: #eef1f7; font: 14px/1.4 'Hanken Grotesk', system-ui, sans-serif; }
+      header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; border-bottom: 1px solid #2a3042; }
+      h1 { margin: 0 12px 0 0; font: 600 22px 'EB Garamond', serif; color: #f1e3cf; }
+      button, select, input { padding: 6px 12px; border: 1px solid #3a4157; border-radius: 999px; background: #161b29; color: inherit; font: inherit; cursor: pointer; }
+      button:hover { border-color: #d9363e; }
+      button.primary { background: #d9363e; border-color: #ff969c; color: #fff; }
+      input { width: 54px; }
+      main { display: grid; grid-template-columns: 1fr 420px; gap: 16px; padding: 16px; }
+      .tray { position: relative; height: 560px; border: 1px solid #2a3042; border-radius: 14px; background: radial-gradient(ellipse at 50% 30%, #1d2236, #10131d); overflow: hidden; }
+      .stage { position: relative; height: 420px; border: 1px solid #6b5b3a; border-radius: 18px 18px 50% 50% / 18px 18px 18% 18%; background: radial-gradient(circle at 50% 40%, #2a1f3a, #120d18 75%); overflow: hidden; }
+      .label { font-family: 'Hanken Grotesk'; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #b3a48d; margin: 6px 0; }
+      #out { margin-top: 8px; padding: 10px 12px; background: #0a0d14; border-radius: 10px; font: 13px/1.5 ui-monospace, monospace; min-height: 40px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Dados 3D</h1>
+      <select id="skin"></select>
+      <span class="label">Bandeja:</span>
+      <input id="qty" type="number" min="1" max="20" value="2" />
+      <span id="kinds"></span>
+      <button id="mix">Mistura</button>
+      <span class="label">Palco:</span>
+      <button id="d20" class="primary">d20</button>
+      <button id="adv">Vantagem</button>
+      <label><input id="mute" type="checkbox" style="width:auto" /> sem som</label>
+    </header>
+    <main>
+      <section>
+        <div class="label">Bandeja</div>
+        <div id="tray" class="tray"></div>
+      </section>
+      <section>
+        <div class="label">Palco (painel de teste)</div>
+        <div id="stage" class="stage"></div>
+        <div id="out">Clique num dado.</div>
+      </section>
+    </main>
+    <script type="module" src="./dados.ts"></script>
+  </body>
+</html>
