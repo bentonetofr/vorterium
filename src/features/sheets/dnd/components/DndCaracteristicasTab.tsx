@@ -25,7 +25,6 @@ const RECHARGE_OPTIONS: { value: DndRecharge; label: string }[] = [
 const RECHARGE_LABEL = Object.fromEntries(RECHARGE_OPTIONS.map((r) => [r.value, r.label])) as Record<DndRecharge, string>
 /** Siglas da tabela de recursos: DC (descanso curto), DL (descanso longo), AM (amanhecer). */
 const RECHARGE_SHORT: Record<DndRecharge, string> = { short: 'DC', long: 'DL', dawn: 'AM', manual: 'Manual' }
-const RECHARGE_SHORT_OPTIONS = RECHARGE_OPTIONS.map((r) => ({ value: r.value, label: RECHARGE_SHORT[r.value] }))
 
 const SOURCE_LABEL: Record<DndFeatureSource, string> = {
   class: 'Classe', subclass: 'Subclasse', race: 'Raça', subrace: 'Sub-raça', background: 'Antecedente', feat: 'Talento', item: 'Item', manual: 'Própria',
@@ -123,54 +122,72 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   return (
     <div className="dsh-tab dsh-cols anim-tab-panel">
       <section className="dsh-card dsh-wide">
-        <div className="dsh-card__header"><h4 className="dsh-card__title">Recursos</h4></div>
-        {resources.length === 0 && <p className="dsh-faint">Nenhum recurso ainda.</p>}
+        <div className="dsh-card__header">
+          <h4 className="dsh-card__title">Recursos</h4>
+          {resources.length > 0 && <span className="dsh-badge">{resources.length}</span>}
+        </div>
+        {resources.length === 0 && (
+          <div className="dsh-noattack">
+            <strong>Nenhum recurso ainda</strong>
+            <span>Fúria, Ki, Inspiração de Bardo e outros que a classe dá aparecem sozinhos. Para criar um seu, use o formulário abaixo.</span>
+          </div>
+        )}
         {resources.length > 0 && (
-          <table className="dsh-table dsh-res-table">
-            <thead>
-              <tr>
-                <th scope="col">Nome</th>
-                <th scope="col" title="DC: descanso curto · DL: descanso longo · AM: amanhecer">Recarga</th>
-                <th scope="col">Restante</th>
-                <th scope="col">Total</th>
-                {!readOnly && <th scope="col"><span className="dsh-sr">Remover</span></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {resources.map((r) => {
-                const auto = AUTO_RESOURCE_KEYS.has(r.key) && !form.manual_modes.includes('class_resources')
-                return (
-                <tr key={r.id}>
-                  <th scope="row" className="dsh-res-table__name">{r.label}</th>
-                  <td>
+          <ul className="dsh-resgrid">
+            {resources.map((r) => {
+              const auto = AUTO_RESOURCE_KEYS.has(r.key) && !form.manual_modes.includes('class_resources')
+              const left = Math.min(r.current_value, r.max_value)
+              const locked = readOnly || busy === r.id
+              return (
+                <li key={r.id} className={`dsh-restile${r.max_value > 0 && left === 0 ? ' is-empty' : ''}`}>
+                  <div className="dsh-restile__head">
+                    <strong className="dsh-restile__name">{r.label}</strong>
+                    {!readOnly && !auto && <button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}
+                  </div>
+                  <div className="dsh-restile__use">
+                    {r.max_value > 0 && r.max_value <= 12
+                      ? <Pips total={r.max_value} filled={left} label={`${r.label} restantes`} onChange={locked ? undefined : (n) => void setCurrent(r, n)} />
+                      : <NumberField value={left} min={0} max={r.max_value} label={`${r.label} restantes`} disabled={locked} onChange={(n) => void setCurrent(r, n)} className="dsh-restile__num" />}
+                    <span className="dsh-restile__count" title="Restante / total">
+                      <strong>{left}</strong>/
+                      {readOnly || auto
+                        ? r.max_value
+                        : <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`} disabled={busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-restile__total" />}
+                    </span>
+                  </div>
+                  <div className="dsh-restile__foot">
                     {readOnly || auto
-                      ? <span title={RECHARGE_LABEL[r.recharge]}>{RECHARGE_SHORT[r.recharge]}</span>
-                      : <Select options={RECHARGE_SHORT_OPTIONS} value={r.recharge} onChange={(v) => void patchResource(r, { recharge: v as DndRecharge })} aria-label={`Recarga de ${r.label}`} />}
-                  </td>
-                  <td>
-                    <NumberField value={Math.min(r.current_value, r.max_value)} min={0} max={r.max_value} label={`${r.label} restantes`}
-                      disabled={readOnly || busy === r.id} onChange={(n) => void setCurrent(r, n)} className="dsh-num--sm" />
-                  </td>
-                  <td>
-                    <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`}
-                      disabled={readOnly || auto || busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-num--sm" />
-                  </td>
-                  {!readOnly && (
-                    <td>{auto ? null : <button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}</td>
-                  )}
-                </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      ? <abbr className="dsh-legend__code" title={RECHARGE_LABEL[r.recharge]}>{RECHARGE_SHORT[r.recharge]}</abbr>
+                      : (
+                        <div className="dsh-seg" role="group" aria-label={`Recarga de ${r.label}`}>
+                          {RECHARGE_OPTIONS.map((o) => (
+                            <button key={o.value} type="button" className={`dsh-seg__btn${r.recharge === o.value ? ' is-on' : ''}`} aria-pressed={r.recharge === o.value}
+                              title={o.label} disabled={busy === r.id} onClick={() => { if (r.recharge !== o.value) void patchResource(r, { recharge: o.value }) }}>{RECHARGE_SHORT[o.value]}</button>
+                          ))}
+                        </div>
+                      )}
+                    {auto && <span className="dsh-cardchip" title="O total vem das tabelas do livro. Para editar, ponha os recursos em manual no botão Automatizar.">Total automático</span>}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
         )}
         {!readOnly && (
-          <div className="dsh-add-row">
-            <input type="text" className="dsh-input" value={resLabel} maxLength={80} placeholder="Nome do recurso (ex.: Fúria)"
-              onChange={(e) => setResLabel(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addResource() } }} />
-            <NumberField value={resMax} onChange={setResMax} min={1} max={999} label="Máximo" className="dsh-num--sm" />
-            <Select options={RECHARGE_OPTIONS} value={resRecharge} onChange={(v) => setResRecharge(v as DndRecharge)} aria-label="Recarga" />
-            <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addResource()} disabled={busy === 'res'}>Adicionar</button>
+          <div className="dsh-newattack">
+            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Novo recurso</span>
+              <input type="text" className="dsh-focus__input" value={resLabel} maxLength={80} placeholder="Nome do recurso (ex.: Fúria)"
+                onChange={(e) => setResLabel(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addResource() } }} /></label>
+            <label className="dsh-field dsh-field--tile"><span className="dsh-label">Total</span>
+              <NumberField value={resMax} onChange={setResMax} min={1} max={999} label="Máximo" className="dsh-num--field" /></label>
+            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Recarga</span>
+              <div className="dsh-seg" role="group" aria-label="Recarga">
+                {RECHARGE_OPTIONS.map((o) => (
+                  <button key={o.value} type="button" className={`dsh-seg__btn${resRecharge === o.value ? ' is-on' : ''}`} aria-pressed={resRecharge === o.value}
+                    title={o.label} onClick={() => setResRecharge(o.value)}>{RECHARGE_SHORT[o.value]}</button>
+                ))}
+              </div></div>
+            <button type="button" className="dsh-newattack__add" onClick={() => void addResource()} disabled={busy === 'res'}>+ Adicionar recurso</button>
           </div>
         )}
         <RechargeLegend />
