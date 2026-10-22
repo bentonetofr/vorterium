@@ -90,16 +90,19 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
   const equippable = (i: DndCharacterInventoryItem) => !!i.catalog_entry_key && (!!getArmor(i.catalog_entry_key) || i.catalog_entry_key === SHIELD.key || WEAPONS.some((w) => w.key === i.catalog_entry_key))
 
   return (
-    <div className="dsh-tab dsh-cols anim-tab-panel">
+    <div className="dsh-tab dsh-cols dsh-cols--even anim-tab-panel">
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Moedas</h4>
           <span className="dsh-badge" title="Tudo convertido em peças de ouro">≈ {coinsInGold({ cp: form.coin_cp, sp: form.coin_sp, ep: form.coin_ep, gp: form.coin_gp, pp: form.coin_pp }).toLocaleString('pt-BR')} po</span>
         </div>
         <div className="dsh-coins">
-          {([['coin_cp', 'Cobre', 'pc'], ['coin_sp', 'Prata', 'pp'], ['coin_ep', 'Electro', 'pe'], ['coin_gp', 'Ouro', 'po'], ['coin_pp', 'Platina', 'pl']] as const).map(([k, label, abbr]) => (
-            <label key={k} className="dsh-field" title={`${label} (${abbr})`}><span className="dsh-label">{label}</span>
-              <NumberField value={form[k]} onChange={(n) => set(k, n)} min={0} max={99999999} label={`${label} (${abbr})`} disabled={readOnly} /></label>
+          {([['coin_cp', 'Cobre', 'pc', 'cp'], ['coin_sp', 'Prata', 'pp', 'sp'], ['coin_ep', 'Electro', 'pe', 'ep'], ['coin_gp', 'Ouro', 'po', 'gp'], ['coin_pp', 'Platina', 'pl', 'pt']] as const).map(([k, label, abbr, metal]) => (
+            <label key={k} className={`dsh-coin dsh-coin--${metal}`} title={`${label} (${abbr})`}>
+              <span className="dsh-coin__disc" aria-hidden="true">{abbr}</span>
+              <span className="dsh-coin__label">{label}</span>
+              <NumberField value={form[k]} onChange={(n) => set(k, n)} min={0} max={99999999} label={`${label} (${abbr})`} disabled={readOnly} className="dsh-coin__num" />
+            </label>
           ))}
         </div>
       </section>

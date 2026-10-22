@@ -534,9 +534,31 @@
 .dsh-spell__name { flex: 1; min-width: 120px; font-family: var(--font-display); font-size: var(--text-lg); color: var(--dsh-bone); }
 
 /* Inventário */
-.dsh-coins { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); }
-.dsh-coins .dsh-num { width: 100%; min-height: var(--dsh-ctl); font-size: var(--text-md); }
-.dsh-coins .dsh-label { font-size: 10px; letter-spacing: 0.06em; }
+.dsh-coins { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-2); }
+.dsh-coin {
+  --coin: #b87333;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: var(--space-3) var(--space-1) var(--space-2); cursor: text;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); border: 1px solid var(--border-dim); border-top: 2px solid var(--coin); border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-coin:hover { border-color: var(--border-bright); border-top-color: var(--coin); }
+.dsh-coin:focus-within { border-color: var(--dsh-accent-line); border-top-color: var(--coin); box-shadow: 0 0 0 1px var(--dsh-accent-soft); }
+.dsh-coin--cp { --coin: #c27a3d; }
+.dsh-coin--sp { --coin: #c3cad2; }
+.dsh-coin--ep { --coin: #d9c978; }
+.dsh-coin--gp { --coin: #e6b43c; }
+.dsh-coin--pt { --coin: #b9dcef; }
+.dsh-coin__disc {
+  display: grid; place-items: center; width: 30px; height: 30px; margin-bottom: 2px; font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: rgba(18, 9, 10, 0.78);
+  background: radial-gradient(circle at 32% 28%, #fff9 0, transparent 38%), var(--coin); border: 2px solid rgba(0, 0, 0, 0.28); border-radius: 50%;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2), 0 0 10px -3px var(--coin);
+}
+.dsh-coin__label { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dsh-bone-dim); }
+.dsh-sheet .dsh-coin .dsh-num.dsh-coin__num {
+  width: 100%; min-width: 0; min-height: 0; height: auto; padding: 0; text-align: center; background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--dsh-bone);
+}
+.dsh-sheet .dsh-coin .dsh-num.dsh-coin__num:focus { outline: none; color: var(--dsh-accent); }
 @media (max-width: 520px) { .dsh-coins { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .dsh-item__main { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .dsh-item__name { flex: 1; min-width: 120px; font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--dsh-bone); }
