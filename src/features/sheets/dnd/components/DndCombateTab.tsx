@@ -8,6 +8,7 @@ import { formatSigned } from '../model/format'
 import { createDndAttack, deleteDndAttack, updateDndAttack } from '../services/dndSheetService'
 import { DerivedField, NumberField, Pips } from './DndControls'
 import { ChipRow, StatChip, StatusPill } from './DndVisuals'
+import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -103,32 +104,36 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
           <span className="dsh-badge">{hp} / {hpMax}{form.hp_temp ? ` (+${form.hp_temp})` : ''}</span>
         </div>
         <div className="dsh-trio">
-          <label className="dsh-field"><span className="dsh-label">Atuais</span>
+          <label className="dsh-field dsh-field--tile dsh-hptile"><span className="dsh-label">Atuais</span>
             <NumberField value={hp} onChange={(n) => set('hp_current', n)} min={0} max={hpMax} label="PV atuais" disabled={readOnly} className="dsh-num--field" /></label>
-          <div className="dsh-field"><span className="dsh-label">Máximo</span>
+          <div className="dsh-field dsh-field--tile dsh-hptile dsh-hptile--max"><span className="dsh-label">Máximo</span>
             {derived.hpMax != null
               ? <DerivedField ctx={ctx} field="hp_max" value={derived.hpMax} label="PV máximo" min={1} max={9999} />
               : <NumberField value={form.hp_max} onChange={(n) => set('hp_max', n)} min={1} max={9999} label="PV máximo" disabled={readOnly} className="dsh-num--field" />}
           </div>
-          <label className="dsh-field"><span className="dsh-label">Temporários</span>
+          <label className="dsh-field dsh-field--tile dsh-hptile dsh-hptile--temp"><span className="dsh-label">Temporários</span>
             <NumberField value={form.hp_temp} onChange={(n) => set('hp_temp', n)} min={0} max={9999} label="PV temporários" disabled={readOnly} className="dsh-num--field" /></label>
         </div>
+        <DndDragBar value={hp} max={hpMax} temp={form.hp_temp} onChange={({ hp: nextHp, temp }) => update((f) => ({ ...f, hp_current: nextHp, hp_temp: temp }))} disabled={readOnly} label="Pontos de vida" />
         {!readOnly && (
-          <div className="dsh-add-row">
-            <NumberField value={amount} onChange={setAmount} min={1} max={9999} label="Quantidade" className="dsh-num--sm" />
-            <button type="button" className="dsh-chip dsh-chip--bad" onClick={() => damage(amount)} title="O dano gasta os PV temporários primeiro">Dano</button>
-            <button type="button" className="dsh-chip dsh-chip--good" onClick={() => heal(amount)}>Cura</button>
+          <div className="dsh-hpadjust">
+            <button type="button" className="dsh-hpadjust__btn dsh-hpadjust__btn--bad" onClick={() => damage(amount)} title="O dano gasta os PV temporários primeiro">Dano</button>
+            <label className="dsh-hpadjust__amount"><small>Quantidade</small>
+              <NumberField value={amount} onChange={setAmount} min={1} max={9999} label="Quantidade" className="dsh-hpadjust__num" /></label>
+            <button type="button" className="dsh-hpadjust__btn dsh-hpadjust__btn--good" onClick={() => heal(amount)}>Cura</button>
           </div>
         )}
 
         <div className={`dsh-death${hp === 0 ? ' is-active' : ''}`}>
-          <span className="dsh-label">Salvaguardas contra a morte</span>
-          <div className="dsh-death__row">
-            <span>Sucessos <Pips total={3} filled={form.death_save_successes} tone="good" label="Sucessos" onChange={readOnly ? undefined : (n) => set('death_save_successes', n)} /></span>
-            <span>Falhas <Pips total={3} filled={form.death_save_failures} tone="bad" label="Falhas" onChange={readOnly ? undefined : (n) => set('death_save_failures', n)} /></span>
+          <div className="dsh-death__head">
+            <span className="dsh-label">Salvaguardas contra a morte</span>
+            {form.death_save_failures >= 3 && <StatusPill tone="bad">Morreu</StatusPill>}
+            {form.death_save_successes >= 3 && <StatusPill tone="good">Estabilizado</StatusPill>}
           </div>
-          {form.death_save_failures >= 3 && <StatusPill tone="bad">Morreu</StatusPill>}
-          {form.death_save_successes >= 3 && <StatusPill tone="good">Estabilizado</StatusPill>}
+          <div className="dsh-death__row">
+            <div className="dsh-death__box dsh-death__box--good"><span>Sucessos</span><Pips total={3} filled={form.death_save_successes} tone="good" label="Sucessos" onChange={readOnly ? undefined : (n) => set('death_save_successes', n)} /></div>
+            <div className="dsh-death__box dsh-death__box--bad"><span>Falhas</span><Pips total={3} filled={form.death_save_failures} tone="bad" label="Falhas" onChange={readOnly ? undefined : (n) => set('death_save_failures', n)} /></div>
+          </div>
         </div>
 
         {diePool.length > 0 && (
@@ -138,7 +143,9 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
               const left = hitDiceAvailable(derived.hitDice, form.hit_dice_used, die)
               return (
                 <div key={die} className="dsh-hitdice__row">
-                  <span>d{die} <strong>{left}</strong>/{total}</span>
+                  <span className="dsh-hitdice__die">d{die}</span>
+                  <span className="dsh-hitdice__count"><strong>{left}</strong>/{total}</span>
+                  {total <= 12 && <Pips total={total} filled={left} size="sm" label={`Dados d${die} disponíveis`} />}
                   <button type="button" className="dsh-chip" disabled={readOnly || left < 1} onClick={() => spendDie(die)}>Gastar e rolar</button>
                 </div>
               )
