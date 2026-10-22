@@ -18,6 +18,7 @@ import { DndInventarioTab } from './DndInventarioTab'
 import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
+import { DndRollProvider } from '../rolls/DndRollProvider'
 import './DndSheet.css'
 
 // ────────────────────────────────────────────────────────
@@ -312,6 +313,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       onSubmit={(e: FormEvent) => { e.preventDefault(); void flush() }}
       style={{ '--tab-dir': tabDir } as CSSProperties}
     >
+      <DndRollProvider ctx={ctx}>
       {ownerName && <p className="dsh-sheet__owner">Ficha de <strong>{ownerName}</strong></p>}
       {data.degraded && !readOnly && (
         <p className="dsh-warn dsh-sheet__degraded" role="status">
@@ -366,6 +368,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
           </>
         )}
       </footer>
+      </DndRollProvider>
     </form>
   )
 }

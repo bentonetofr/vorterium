@@ -1071,3 +1071,23 @@
 .dsh-notecard__hint { min-height: 2.9em; }
 .dsh-notecard__count { align-self: flex-end; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--text-muted); }
 .dsh-notecard__count.is-near { color: var(--dsh-warn); }
+
+/* Botão de rolar (d20) ao lado do que rola */
+.dsh-rollbtn {
+  flex-shrink: 0; display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; vertical-align: middle;
+  color: var(--dsh-bone-dim); background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-dim); border-radius: 8px; cursor: var(--cursor-hand);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-rollbtn:hover { color: #fff; background: var(--dsh-accent); border-color: rgba(255, 150, 156, 0.6); box-shadow: 0 0 12px var(--dsh-accent-glow); transform: rotate(-12deg) scale(1.06); }
+.dsh-rollbtn--text { display: inline-flex; gap: 6px; width: auto; padding: 0 10px; font-family: var(--font-label); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.dsh-rollbtn--text:hover { transform: none; }
+.dsh-rollbtn.is-crit { color: #2a1606; background: radial-gradient(circle at 35% 30%, #fff0b8, #c9952f 70%); border-color: #f6d27c; box-shadow: 0 0 14px rgba(246, 210, 124, 0.5); }
+.dsh-ability__head .dsh-rollbtn { margin-left: auto; width: 24px; height: 24px; }
+.dsh-ability__head { align-items: center; }
+.dsh-ability__savebonus { display: inline-flex; align-items: center; gap: 8px; }
+.dsh-skill .dsh-rollbtn { width: 22px; height: 22px; margin-left: 6px; opacity: 0.55; }
+.dsh-skill:hover .dsh-rollbtn { opacity: 1; }
+.dsh-defense__label .dsh-rollbtn, .dsh-spellstat__label .dsh-rollbtn { width: 20px; height: 20px; margin-left: 4px; }
+.dsh-death__head .dsh-rollbtn { margin-left: auto; }
+.dsh-attack__rolls { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dsh-attack__rolls .dsh-rollbtn { height: 30px; padding: 0 14px; }

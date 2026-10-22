@@ -10,6 +10,10 @@ import { DerivedField, NumberField, Pips } from './DndControls'
 import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
+import { RollButton } from '../rolls/RollButton'
+import { useDndRoll } from '../rolls/DndRollProvider'
+import { attackCheck, critDamage, deathCheck, deathResult, initiativeCheck } from '../rolls/checkModel'
+import { parseDiceFormula } from '../../../dice/services/diceService'
 
 // ────────────────────────────────────────────────────────
 // Aba Combate: PV (dano, cura, PV temporários, salvaguardas contra a morte,
@@ -18,6 +22,11 @@ import type { SheetCtx } from './sheetContext'
 // ────────────────────────────────────────────────────────
 
 const WEAPON_OPTIONS = [{ value: '', label: 'Escolher uma arma' }, ...WEAPONS.map((w) => ({ value: w.key, label: w.name }))]
+
+/** A fórmula de dano dá para rolar? ("1d8+3" sim; "especial" não) */
+function validFormula(f: string): boolean {
+  try { parseDiceFormula(f.replace(/\s/g, '')); return true } catch { return false }
+}
 
 export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, update, derived, data, sheet, readOnly, gear, prof, report } = ctx
@@ -28,6 +37,35 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
   const [weaponKey, setWeaponKey] = useState('')
   const [customName, setCustomName] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
+
+  const roller = useDndRoll()
+  const [critReady, setCritReady] = useState<Record<string, boolean>>({})
+
+  function rollDeath() {
+    roller.check(deathCheck(), {
+      onResult: ({ reading }) => {
+        const r = deathResult(reading.natural, reading.total, form.death_save_successes, form.death_save_failures)
+        update((f) => ({ ...f, death_save_successes: r.successes, death_save_failures: r.failures, hp_current: r.revive ? Math.max(1, f.hp_current) : f.hp_current }))
+      },
+    })
+  }
+
+  function rollAttack(a: DndCharacterAttack, view: ReturnType<typeof attackFor>, bonusText: string) {
+    const manual = Number.parseInt(bonusText.replace(/\s/g, ''), 10)
+    const total = Number.isFinite(manual) ? manual : view?.attack.attackBonus ?? 0
+    const ability = view?.attack.ability ?? 'strength'
+    const spec = view
+      ? attackCheck(a.name, a.catalog_entry_key ?? a.id, ability, derived.abilityMods[ability], view.proficient ? derived.proficiencyBonus : null, total)
+      : { ...attackCheck(a.name, a.id, ability, 0, null, total), tiles: [{ id: 'bonus', label: 'Bônus de ataque', value: total, badge: '+' }] }
+    roller.check(spec, { onResult: ({ crit }) => setCritReady((m) => ({ ...m, [a.id]: crit === 'crit' })) })
+  }
+
+  function rollDamage(a: DndCharacterAttack, formula: string, damageType: string | null | undefined) {
+    const crit = !!critReady[a.id]
+    const clean = formula.replace(/\s/g, '')
+    void roller.roll(`${crit ? 'Dano crítico' : 'Dano'}: ${a.name}${damageType ? ` (${damageType})` : ''}`, crit ? critDamage(clean) : clean, { kind: 'damage', key: a.catalog_entry_key ?? a.id })
+    if (crit) setCritReady((m) => ({ ...m, [a.id]: false }))
+  }
 
   const armorMsg = armorWarning(gear, prof.armor)
   const strMsg = strengthWarning(gear, form.strength)
@@ -47,11 +85,14 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     update((f) => ({ ...f, hp_current: Math.min(hpMax, hp + n), death_save_successes: 0, death_save_failures: 0 }))
   }
 
-  function spendDie(die: number) {
+  async function spendDie(die: number) {
     if (readOnly) return
     const next = spendHitDie(derived.hitDice, form.hit_dice_used, die)
     if (!next) return
-    const roll = 1 + Math.floor(Math.random() * die)
+    // com a mesa: o dado cai na bandeja e fica no histórico; sem campanha, sorteio local
+    const rolled = roller.canRoll ? await roller.roll(`Dado de vida (d${die})`, `1d${die}`, { kind: 'hit_die' }) : null
+    if (roller.canRoll && !rolled) return
+    const roll = rolled ? rolled.result : 1 + Math.floor(Math.random() * die)
     const gained = hitDieHealing(roll, derived.abilityMods.constitution)
     update((f) => ({ ...f, hit_dice_used: next, hp_current: Math.min(hpMax, Math.max(0, f.hp_current) + gained) }))
     setLastRoll(`d${die}: ${roll} ${derived.abilityMods.constitution >= 0 ? '+' : '−'} ${Math.abs(derived.abilityMods.constitution)} = ${gained} PV recuperados`)
@@ -127,6 +168,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
         <div className={`dsh-death${hp === 0 ? ' is-active' : ''}`}>
           <div className="dsh-death__head">
             <span className="dsh-label">Salvaguardas contra a morte</span>
+            <RollButton label="Rolar salvaguarda contra a morte" onClick={rollDeath}>Rolar</RollButton>
             {form.death_save_failures >= 3 && <StatusPill tone="bad">Morreu</StatusPill>}
             {form.death_save_successes >= 3 && <StatusPill tone="good">Estabilizado</StatusPill>}
           </div>
@@ -146,7 +188,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                   <span className="dsh-hitdice__die">d{die}</span>
                   <span className="dsh-hitdice__count"><strong>{left}</strong>/{total}</span>
                   {total <= 12 && <Pips total={total} filled={left} size="sm" label={`Dados d${die} disponíveis`} />}
-                  <button type="button" className="dsh-chip" disabled={readOnly || left < 1} onClick={() => spendDie(die)}>Gastar e rolar</button>
+                  <button type="button" className="dsh-chip" disabled={readOnly || left < 1} onClick={() => void spendDie(die)}>Gastar e rolar</button>
                 </div>
               )
             })}
@@ -176,6 +218,15 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                   <span className="dsh-attack__stat dsh-attack__stat--dmg" title="Dano">{dmgText || '-'}{view?.weapon.damageType ? ` ${view.weapon.damageType}` : a.damage_type ? ` ${a.damage_type}` : ''}</span>
                   {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeAttack(a)} disabled={busy === a.id} aria-label={`Remover ${a.name}`}>×</button>}
                 </div>
+                {roller.canRoll && (
+                  <div className="dsh-attack__rolls">
+                    <RollButton label={`Atacar com ${a.name}`} onClick={() => rollAttack(a, view, bonusText)}>Atacar</RollButton>
+                    {dmgText && validFormula(dmgText) && (
+                      <RollButton label={`Dano de ${a.name}`} className={critReady[a.id] ? 'is-crit' : ''}
+                        onClick={() => rollDamage(a, dmgText, view?.weapon.damageType ?? a.damage_type)}>{critReady[a.id] ? 'Dano crítico' : 'Dano'}</RollButton>
+                    )}
+                  </div>
+                )}
                 {view && (
                   <ChipRow>
                     <StatChip label="Atributo">{view.attack.ability === 'strength' ? 'FOR' : 'DES'}</StatChip>
@@ -225,7 +276,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             <span className="dsh-defense__text">{gear.shield ? '+2' : 'Nenhum'}</span>
           </div>
           <div className="dsh-defense__tile">
-            <span className="dsh-defense__label">Iniciativa</span>
+            <span className="dsh-defense__label">Iniciativa <RollButton label="Rolar iniciativa" onClick={() => roller.check(initiativeCheck(derived))} /></span>
             <span className="dsh-defense__text"><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></span>
           </div>
           <label className="dsh-defense__tile dsh-defense__tile--bonus" title="Anel de proteção, estilo de luta Defesa...">

@@ -17,6 +17,9 @@ import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
 import type { SheetCtx } from './sheetContext'
+import { RollButton } from '../rolls/RollButton'
+import { useDndRoll } from '../rolls/DndRollProvider'
+import { spellAttackCheck } from '../rolls/checkModel'
 
 // ────────────────────────────────────────────────────────
 // Aba Magias: conjuração de cada classe (atributo, CD, ataque, truques,
@@ -38,6 +41,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [bookOpen, setBookOpen] = useState(false)
   const catalogMod = useSpellCatalog()
+  const roller = useDndRoll()
 
   const slotRows = data.resources.filter((r) => r.source === 'spell_slots')
   const spells = [...data.details.spells].sort((a, b) => a.spell_level - b.spell_level || a.name.localeCompare(b.name, 'pt-BR'))
@@ -141,7 +145,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
               </span>
             </div>
             <div className="dsh-spellstat" role="group" aria-label="Cálculo do ataque de magia">
-              <span className="dsh-spellstat__label">Ataque de magia</span>
+              <span className="dsh-spellstat__label">Ataque de magia <RollButton label="Rolar ataque de magia" onClick={() => { const spec = spellAttackCheck(derived); if (spec) roller.check(spec) }} /></span>
               <strong className="dsh-spellstat__value"><DerivedField ctx={ctx} field="spell_attack_bonus" value={stats.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} /></strong>
               <span className="dsh-spellstat__terms">
                 <span><small>Prof.</small>{formatSigned(derived.proficiencyBonus)}</span>

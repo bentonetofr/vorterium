@@ -53,6 +53,7 @@ export function DndDiceTray({ job, onDone }: { job: TrayJob | null; onDone: () =
 
   const dismiss = () => { setPhase('leaving'); window.setTimeout(() => { stage?.clear(); onDoneRef.current() }, 380) }
 
+  if (typeof document === 'undefined') return null
   return createPortal(
     <div className="dsh-sheet dtray" aria-live="polite">
       <div ref={hostRef} className="dtray__canvas" aria-hidden="true" />

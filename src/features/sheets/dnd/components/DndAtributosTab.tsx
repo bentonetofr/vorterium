@@ -5,6 +5,9 @@ import { upsertDndSkill } from '../services/dndSheetService'
 import { DerivedField, NumberField, Pips } from './DndControls'
 import { SkillLegend } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
+import { RollButton } from '../rolls/RollButton'
+import { useDndRoll } from '../rolls/DndRollProvider'
+import { abilityCheck, saveCheck, skillCheck } from '../rolls/checkModel'
 import type { AbilityKey } from '../rules/types'
 
 // ────────────────────────────────────────────────────────
@@ -23,6 +26,7 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, derived, data, sheet, readOnly, report } = ctx
   const [busy, setBusy] = useState<string | null>(null)
   const skillRows = new Map(data.details.skills.map((s) => [s.skill_key, s]))
+  const roller = useDndRoll()
 
   async function setSkillLevel(skillKey: (typeof SKILLS)[number]['key'], filled: number) {
     if (readOnly) return
@@ -51,6 +55,7 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
                 <div className="dsh-ability__head">
                   <span className="dsh-ability__name">{a.label}</span>
                   <span className="dsh-ability__short">{a.short}</span>
+                  <RollButton label={`Teste de ${a.label}`} onClick={() => roller.check(abilityCheck(derived, a.key))} />
                 </div>
                 <div className="dsh-ability__body">
                   <span className="dsh-ability__mod" title="Modificador">
@@ -66,7 +71,10 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
                     <input type="checkbox" checked={form[SAVE_FLAG[a.key]]} disabled={readOnly} onChange={(e) => set(SAVE_FLAG[a.key], e.target.checked)} />
                     <span>Salvaguarda</span>
                   </label>
-                  <DerivedField ctx={ctx} field={`save_${a.key}`} value={save.bonus} label={`Salvaguarda de ${a.label}`} signed min={-20} max={30} />
+                  <span className="dsh-ability__savebonus">
+                    <DerivedField ctx={ctx} field={`save_${a.key}`} value={save.bonus} label={`Salvaguarda de ${a.label}`} signed min={-20} max={30} />
+                    <RollButton label={`Rolar salvaguarda de ${a.label}`} onClick={() => roller.check(saveCheck(derived, a.key))} />
+                  </span>
                 </div>
               </div>
             )
@@ -93,6 +101,7 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
                 <span className="dsh-skill__bonus">
                   <DerivedField ctx={ctx} field={`skill_${k.key}`} value={d.bonus} label={`Bônus de ${k.label}`} signed min={-20} max={40} />
                 </span>
+                <RollButton label={`Rolar ${k.label}`} onClick={() => roller.check(skillCheck(derived, k.key))} />
               </li>
             )
           })}

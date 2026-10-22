@@ -32,6 +32,7 @@ import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndItemBrowser } from './DndItemBrowser'
+import { DndRollProvider } from '../rolls/DndRollProvider'
 import { moveHpBar } from './DndDragBar'
 import { DndAutomationPanel } from './DndAutomationPanel'
 import { AUTOMATION_ITEMS } from '../model/automation'
@@ -222,6 +223,22 @@ describe('abas', () => {
     expect(html).toContain('Ver a magia')
     expect(html).not.toContain('Abrir o livro')
     expect(html).not.toContain('Personalizar')
+  })
+
+  it('botões de rolar: aparecem na ficha editável dentro do provedor e somem só de leitura', () => {
+    const ctx = makeCtx()
+    const html = renderToStaticMarkup(<DndRollProvider ctx={ctx}><DndAtributosTab ctx={ctx} /></DndRollProvider>)
+    expect(html.match(/class="dsh-rollbtn/g)).toHaveLength(6 + 6 + 18)
+    expect(html).toContain('aria-label="Rolar Furtividade"')
+    expect(html).toContain('aria-label="Rolar salvaguarda de Destreza"')
+    const ro = makeCtx({ readOnly: true })
+    expect(renderToStaticMarkup(<DndRollProvider ctx={ro}><DndAtributosTab ctx={ro} /></DndRollProvider>)).not.toContain('dsh-rollbtn')
+    expect(renderToStaticMarkup(<DndAtributosTab ctx={makeCtx()} />)).not.toContain('dsh-rollbtn')
+    const combat = renderToStaticMarkup(<DndRollProvider ctx={ctx}><DndCombateTab ctx={ctx} /></DndRollProvider>)
+    expect(combat).toContain('aria-label="Rolar iniciativa"')
+    expect(combat).toContain('aria-label="Rolar salvaguarda contra a morte"')
+    expect(combat).toContain('aria-label="Atacar com Espada longa"')
+    expect(combat).toContain('aria-label="Dano de Espada longa"')
   })
 
   it('Livro de itens: cards de tudo, filtros, o que a ficha já tem e o botão Ver mais', () => {
