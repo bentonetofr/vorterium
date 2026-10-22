@@ -6,7 +6,7 @@ import { coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
 import { itemTitle } from '../model/sheetModel'
 import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
 import { DerivedField, NumberField, Toggle } from './DndControls'
-import { ChipRow, StatChip, StatusPill } from './DndVisuals'
+import { StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -115,13 +115,23 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-load" role="progressbar" aria-label="Carga" aria-valuemin={0} aria-valuemax={Math.round(capacity)} aria-valuenow={Math.round(carried)}>
           <div className={`dsh-load__fill${carried > capacity ? ' is-over' : ''}`} style={{ width: `${pct}%` }} />
         </div>
-        <ChipRow>
-          <StatChip label="Capacidade" title="Força × 7,5 kg">
-            <DerivedField ctx={ctx} field="carry_capacity" value={capacity} label="Capacidade de carga em kg" suffix=" kg" min={0} max={9999} step={0.5} className="dsh-derived--inline" />
-          </StatChip>
-          <StatChip label="Carregando" tone={carried > capacity ? 'bad' : undefined}>{formatKg(carried)}</StatChip>
-          {carried > capacity && <StatusPill tone="bad" title="A mesa decide a penalidade">Sobrecarregado</StatusPill>}
-        </ChipRow>
+        <div className="dsh-loadtiles">
+          <div className={`dsh-loadtile${carried > capacity ? ' is-over' : ''}`}>
+            <span className="dsh-loadtile__label">Carregando</span>
+            <span className="dsh-loadtile__value">{formatKg(carried)}</span>
+          </div>
+          <div className="dsh-loadtile" title="Força × 7,5 kg">
+            <span className="dsh-loadtile__label">Capacidade</span>
+            <span className="dsh-loadtile__value">
+              <DerivedField ctx={ctx} field="carry_capacity" value={capacity} label="Capacidade de carga em kg" suffix=" kg" min={0} max={9999} step={0.5} className="dsh-derived--inline" />
+            </span>
+          </div>
+          <div className="dsh-loadtile">
+            <span className="dsh-loadtile__label">{carried > capacity ? 'Excesso' : 'Livre'}</span>
+            <span className="dsh-loadtile__value">{formatKg(Math.abs(capacity - carried))}</span>
+          </div>
+        </div>
+        {carried > capacity && <StatusPill tone="bad" title="A mesa decide a penalidade">Sobrecarregado</StatusPill>}
       </section>
 
       <section className="dsh-card dsh-wide">
