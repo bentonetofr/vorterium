@@ -11,7 +11,7 @@ import { PACT_SLOT_KEY, spellSlotKey, spellSlotLabel } from '../model/slots'
 import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceService'
-import { DerivedField, NumberField, Pips, Toggle } from './DndControls'
+import { DerivedField, NumberField, Pips } from './DndControls'
 import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndSpellDetails } from './DndSpellDetails'
@@ -225,20 +225,25 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
             {preparedLimit > 0 && <span className={`dsh-badge${preparedCount > preparedLimit ? ' dsh-badge--bad' : ''}`}>Preparadas {preparedCount} / {preparedLimit}</span>}
           </span>
         </div>
-        {spells.length === 0 && <p className="dsh-faint">Nenhuma magia ainda. Busque no livro de magias abaixo ou escreva uma à mão.</p>}
+        {spells.length === 0 && (
+          <div className="dsh-noattack">
+            <strong>Nenhuma magia ainda</strong>
+            <span>Abra o livro de magias abaixo e clique em uma magia para trazê-la, ou escreva uma à mão.</span>
+          </div>
+        )}
         {levels.map((lv) => (
           <div key={lv} className="dsh-spell-group">
             <h5 className="dsh-spell-group__title">{lv === 0 ? 'Truques' : spellLevelLabel(lv)} <span className="dsh-faint">{spells.filter((s) => s.spell_level === lv).length}</span></h5>
             <ul className="dsh-list">
               {spells.filter((s) => s.spell_level === lv).map((s) => {
                 const cat = s.catalog_key ? catalogMod?.getSpell(s.catalog_key) : undefined
-                const meta = [s.school, s.casting_time, s.spell_range, s.duration].filter(Boolean).join(' · ')
+                const meta = [s.school, s.casting_time, s.spell_range, s.duration].filter(Boolean)
+                const isPrepared = s.prepared && s.spell_level > 0
                 return (
-                  <li key={s.id} className="dsh-spell">
+                  <li key={s.id} className={`dsh-spell${isPrepared ? ' is-prepared' : ''}`}>
                     <div className="dsh-spell__main">
                       <span className="dsh-tag">{s.spell_level === 0 ? 'Truque' : `${s.spell_level}º`}</span>
                       <strong className="dsh-spell__name">{s.name}</strong>
-                      {s.spell_level > 0 && <Toggle checked={s.prepared} onChange={readOnly ? undefined : (v) => void patchSpell(s, { prepared: v })} label="Preparada" />}
                       {s.catalog_key ? (
                         <>
                           {s.concentration && <span className="dsh-badge" title="Exige concentração">C</span>}
@@ -246,13 +251,19 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                         </>
                       ) : (
                         <>
-                          <Toggle checked={s.concentration} onChange={readOnly ? undefined : (v) => void patchSpell(s, { concentration: v })} label="Concentração" />
-                          <Toggle checked={s.ritual} onChange={readOnly ? undefined : (v) => void patchSpell(s, { ritual: v })} label="Ritual" />
+                          <button type="button" className={`dsh-flag dsh-flag--sm${s.concentration ? ' is-on' : ''}`} aria-pressed={s.concentration} disabled={readOnly}
+                            onClick={() => void patchSpell(s, { concentration: !s.concentration })}>Concentração</button>
+                          <button type="button" className={`dsh-flag dsh-flag--sm${s.ritual ? ' is-on' : ''}`} aria-pressed={s.ritual} disabled={readOnly}
+                            onClick={() => void patchSpell(s, { ritual: !s.ritual })}>Ritual</button>
                         </>
+                      )}
+                      {s.spell_level > 0 && (
+                        <button type="button" className={`dsh-flag${s.prepared ? ' is-on' : ''}`} aria-pressed={s.prepared} disabled={readOnly || busy === s.id}
+                          title="Magia preparada" onClick={() => void patchSpell(s, { prepared: !s.prepared })}>{s.prepared ? '✓ Preparada' : 'Preparada'}</button>
                       )}
                       {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeSpell(s)} disabled={busy === s.id} aria-label={`Remover ${s.name}`}>×</button>}
                     </div>
-                    {meta && <p className="dsh-spell__meta">{meta}</p>}
+                    {meta.length > 0 && <div className="dsh-spellchips">{meta.map((m) => <span key={m} className="dsh-cardchip">{m}</span>)}</div>}
                     {(cat || !readOnly || s.description) && (
                       <details className="dsh-spell__more">
                         <summary>{cat ? 'Ver a magia' : 'Notas'}</summary>
@@ -275,11 +286,13 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
           </div>
         ))}
         {!readOnly && (
-          <div className="dsh-add-row">
-            <input type="text" className="dsh-input" value={name} maxLength={160} placeholder="Magia própria (nome)"
-              onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addSpell() } }} />
-            <Select options={LEVEL_OPTIONS} value={level} onChange={setLevel} aria-label="Nível da magia" />
-            <button type="button" className="dsh-chip" onClick={() => void addSpell()} disabled={busy === 'new'}>Adicionar</button>
+          <div className="dsh-newattack">
+            <label className="dsh-field dsh-field--tile"><span className="dsh-label">Magia própria</span>
+              <input type="text" className="dsh-focus__input" value={name} maxLength={160} placeholder="Nome da magia"
+                onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addSpell() } }} /></label>
+            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Nível</span>
+              <Select options={LEVEL_OPTIONS} value={level} onChange={setLevel} aria-label="Nível da magia" /></div>
+            <button type="button" className="dsh-newattack__add" onClick={() => void addSpell()} disabled={busy === 'new'}>+ Adicionar magia</button>
           </div>
         )}
       </section>

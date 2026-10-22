@@ -929,3 +929,19 @@
   .dsh-book__head, .dsh-book__filters, .dsh-book__body { padding-left: var(--space-3); padding-right: var(--space-3); }
   .dsh-bookgrid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 }
+
+/* Magias do personagem: botões de preparada, concentração e ritual, etiquetas e destaque das preparadas */
+.dsh-spell { border-left: 3px solid var(--border-base); }
+.dsh-spell.is-prepared { border-left-color: var(--dsh-accent); background: linear-gradient(90deg, var(--dsh-accent-soft), rgba(255, 255, 255, 0.02) 55%); }
+.dsh-flag {
+  min-height: 28px; padding: 0 var(--space-3); font-family: var(--font-label); font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-base); border-radius: 999px; cursor: var(--cursor-hand);
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-flag--sm { min-height: 24px; padding: 0 10px; font-size: 9px; border-color: var(--border-dim); }
+.dsh-flag:hover:not(:disabled):not(.is-on) { color: var(--text-primary); border-color: var(--border-bright); }
+.dsh-flag.is-on { color: #fff; background: var(--dsh-accent); border-color: rgba(255, 150, 156, 0.5); box-shadow: 0 0 10px -2px var(--dsh-accent-glow); }
+.dsh-flag--sm.is-on { background: var(--dsh-accent-soft); color: var(--dsh-bone); border-color: var(--dsh-accent); box-shadow: none; }
+.dsh-flag:disabled { cursor: default; opacity: 0.7; }
+.dsh-spellchips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.dsh-spell-group + .dsh-newattack { margin-top: var(--space-3); }
