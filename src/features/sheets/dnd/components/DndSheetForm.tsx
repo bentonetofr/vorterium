@@ -38,7 +38,7 @@ interface DndSheetFormProps {
   onSave:       (data: DndCharacterSheetUpdateInput) => Promise<void>
   saveError:    string | null
   portraitBusy:     boolean
-  onPortraitChange: (file: File) => void
+  onPortraitChange: (file: File) => Promise<void>
   onPortraitRemove: () => void
 }
 

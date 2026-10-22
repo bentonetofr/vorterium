@@ -88,7 +88,7 @@ function SheetEditor({ sheet, ownerName, readOnly = false, isNpc = false, onShee
     }
   }
 
-  async function portrait(run: () => Promise<DndCharacterSheet>) {
+  async function portrait(run: () => Promise<DndCharacterSheet>): Promise<void> {
     setSaveError(null)
     setPortraitBusy(true)
     try { onSheetUpdated(await run()) } catch (err) {
@@ -100,7 +100,7 @@ function SheetEditor({ sheet, ownerName, readOnly = false, isNpc = false, onShee
     <DndSheetForm
       key={sheet.id} sheet={sheet} ownerName={ownerName} readOnly={readOnly} isNpc={isNpc}
       onSave={handleSave} saveError={saveError} portraitBusy={portraitBusy}
-      onPortraitChange={(file) => void portrait(() => uploadDndPortrait(sheet.id, file))}
+      onPortraitChange={(file) => portrait(() => uploadDndPortrait(sheet.id, file))}
       onPortraitRemove={() => void portrait(() => removeDndPortrait(sheet.id))}
     />
   )

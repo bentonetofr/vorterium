@@ -22,6 +22,8 @@ export const SRD_ATTRIBUTION =
 
 /** Retrato da ficha (bucket dnd-portraits, caminho "<id da ficha>/portrait"). */
 export const DND_PORTRAIT_MAX_BYTES = 2 * 1024 * 1024
+/** Tamanho máximo da imagem escolhida: o editor de enquadramento a reduz para um JPG pequeno antes de enviar. */
+export const DND_PORTRAIT_PICK_MAX_BYTES = 10 * 1024 * 1024
 export const DND_PORTRAIT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 
 /** Nível máximo do personagem: a soma dos níveis das classes não passa de 20 (o banco confere também). */

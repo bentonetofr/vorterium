@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { getBackground, getClass, getRace, getSubrace } from '../catalog'
-import { DND_PORTRAIT_TYPES } from '../constants/dnd'
+import { DND_PORTRAIT_PICK_MAX_BYTES, DND_PORTRAIT_TYPES } from '../constants/dnd'
+import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
 import { classLine } from '../model/sheetModel'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
@@ -19,7 +20,7 @@ import type { SheetCtx } from './sheetContext'
 interface DndHeroProps {
   ctx:              SheetCtx
   portraitBusy:     boolean
-  onPortraitChange: (file: File) => void
+  onPortraitChange: (file: File) => Promise<void>
   onPortraitRemove: () => void
   onShortRest:      () => void
   onLongRest:       () => void
@@ -31,6 +32,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
   const { form, set, update, derived, data, sheet, readOnly } = ctx
   const fileRef = useRef<HTMLInputElement>(null)
   const [autoOpen, setAutoOpen] = useState(false)
+  const [portraitDraft, setPortraitDraft] = useState<File | null>(null)
   const feet = form.speed_unit === 'ft'
 
   const hpMax = derived.hpMax ?? form.hp_max
@@ -52,7 +54,16 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
   function onFile(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     e.target.value = ''
-    if (f) onPortraitChange(f)
+    if (!f) return
+    if (!DND_PORTRAIT_TYPES.includes(f.type as (typeof DND_PORTRAIT_TYPES)[number])) { ctx.report('Escolha uma imagem JPG, PNG ou WebP.'); return }
+    if (f.size > DND_PORTRAIT_PICK_MAX_BYTES) { ctx.report('A imagem deve ter no máximo 10 MB.'); return }
+    ctx.report(null)
+    setPortraitDraft(f)
+  }
+
+  async function savePortrait(file: File) {
+    await onPortraitChange(file)
+    setPortraitDraft(null)
   }
 
   return (
@@ -152,6 +163,14 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
         <DndDragBar value={hp} max={hpMax} temp={form.hp_temp} onChange={({ hp: nextHp, temp }) => update((f) => ({ ...f, hp_current: nextHp, hp_temp: temp }))} disabled={readOnly} label="Pontos de vida" />
       </div>
     </header>
+    <Presence show={!!portraitDraft} exitMs={220}>
+      {() => portraitDraft && (
+        <AvatarCropEditor
+          file={portraitDraft} saving={portraitBusy} onCancel={() => setPortraitDraft(null)} onSave={savePortrait}
+          title="Ajustar retrato" description="Escolha o enquadramento que será exibido no cabeçalho da ficha." confirmLabel="Usar este retrato"
+        />
+      )}
+    </Presence>
     <Presence show={autoOpen}>{() => <DndAutomationPanel ctx={ctx} onClose={() => setAutoOpen(false)} />}</Presence>
     </>
   )

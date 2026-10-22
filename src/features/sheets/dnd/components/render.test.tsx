@@ -38,7 +38,7 @@ import * as spellCatalog from '../catalog/spells'
 import { primeSpellCatalog } from '../hooks/useSpellCatalog'
 
 const hero = (ctx: SheetCtx, isNpc = false) => renderToStaticMarkup(
-  <DndHero ctx={ctx} isNpc={isNpc} portraitBusy={false} onPortraitChange={() => {}} onPortraitRemove={() => {}} onShortRest={() => {}} onLongRest={() => {}} restBusy={false} />,
+  <DndHero ctx={ctx} isNpc={isNpc} portraitBusy={false} onPortraitChange={async () => {}} onPortraitRemove={() => {}} onShortRest={() => {}} onLongRest={() => {}} restBusy={false} />,
 )
 
 describe('cabeçalho', () => {
