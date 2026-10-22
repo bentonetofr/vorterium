@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Presence } from '../../../../shared/components/Presence'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterSpell } from '../../../../shared/types'
 import { getClass, spellListClass } from '../catalog'
@@ -284,17 +285,20 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
       </section>
 
       {!readOnly && (
-        <section className="dsh-card dsh-wide">
-          <div className="dsh-card__header">
+        <section className="dsh-card dsh-wide dsh-bookcta">
+          <div className="dsh-bookcta__text">
             <h4 className="dsh-card__title">Livro de magias</h4>
-            <button type="button" className="dsh-chip" aria-expanded={bookOpen} onClick={() => setBookOpen((o) => !o)}>{bookOpen ? 'Fechar o livro' : 'Abrir o livro'}</button>
+            <p className="dsh-note">Todas as magias do SRD em cards. Clique em uma para levá-la à ficha na hora, ou em "Ver mais" para ler o texto completo.</p>
+            <ChipRow><StatChip label="No livro">{catalogMod ? `${catalogMod.SPELLS.length} magias` : '319 magias'}</StatChip><StatChip label="Fonte">SRD 5.1</StatChip><StatChip label="Filtros">nível · classe · escola</StatChip></ChipRow>
           </div>
-          {!bookOpen && <ChipRow><StatChip label="No livro">319 magias</StatChip><StatChip label="Fonte">SRD 5.1</StatChip><StatChip label="Filtros">nível · escola · classe</StatChip></ChipRow>}
-          {bookOpen && (
-            <DndSpellBrowser catalog={catalogMod?.SPELLS ?? null} have={haveKeys} myClasses={casting?.classes.map((c) => spellListClass(c.classKey, data.classes.find((r) => r.class_key === c.classKey)?.subclass_key)) ?? []}
-              readOnly={readOnly} busy={busy} onAdd={(sp) => void addFromBook(sp)} />
-          )}
+          <button type="button" className="dsh-bookcta__open" aria-haspopup="dialog" onClick={() => setBookOpen(true)}>Abrir o livro</button>
         </section>
+      )}
+      {!readOnly && (
+        <Presence show={bookOpen}>{() => (
+          <DndSpellBrowser catalog={catalogMod?.SPELLS ?? null} have={haveKeys} myClasses={casting?.classes.map((c) => spellListClass(c.classKey, data.classes.find((r) => r.class_key === c.classKey)?.subclass_key)) ?? []}
+            readOnly={readOnly} busy={busy} onAdd={(sp) => void addFromBook(sp)} onClose={() => setBookOpen(false)} />
+        )}</Presence>
       )}
     </div>
   )

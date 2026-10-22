@@ -225,14 +225,17 @@ describe('abas', () => {
 
   it('Livro de magias: lista o catálogo, marca o que já está na ficha e mostra o filtro da ficha', () => {
     const html = renderToStaticMarkup(
-      <DndSpellBrowser catalog={spellCatalog.SPELLS} have={new Set(['fireball'])} myClasses={['wizard']} readOnly={false} busy={null} onAdd={() => {}} />,
+      <DndSpellBrowser catalog={spellCatalog.SPELLS} have={new Set(['jump'])} myClasses={['wizard']} readOnly={false} busy={null} onAdd={() => {}} />,
     )
-    expect(html).toContain('204 magias do livro, mostrando 30')       // classe "Da minha ficha" = Mago
-    expect(html).toContain('Mostrar mais 30')
-    expect(html).toContain('Adicionar')
+    expect(html).toContain('204 magias')                              // classe "Da minha ficha" = Mago
+    expect(html).toContain('Mostrar mais 48')
+    expect(html).toContain('+ Adicionar')
+    expect(html).toContain('✓ Na ficha')                              // Salto já está na ficha
+    expect(html).toContain('Ver mais')
+    expect(html).toContain('Buscar magia')
     expect(html).toContain('Truque')
     const todas = renderToStaticMarkup(<DndSpellBrowser catalog={spellCatalog.SPELLS} have={new Set(['fireball'])} myClasses={[]} readOnly={false} busy={null} onAdd={() => {}} />)
-    expect(todas).toContain('319 magias do livro')
+    expect(todas).toContain('319 magias')
     const so = renderToStaticMarkup(<DndSpellBrowser catalog={null} have={new Set()} myClasses={[]} readOnly={false} busy={null} onAdd={() => {}} />)
     expect(so).toContain('Abrindo o livro de magias')
   })
