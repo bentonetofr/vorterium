@@ -194,7 +194,8 @@ describe('abas', () => {
     const ctx = makeCtx({ data, sheet: makeSheet({ choices: { spellAbility: 'intelligence' } }) })
     const html = renderToStaticMarkup(<DndMagiasTab ctx={ctx} />)
     expect(html).toContain('CD das magias')
-    expect(html).toContain('(escolhido)')
+    expect(html).toContain('<option value="intelligence" selected="">')
+    expect(html).toContain('<small>INT</small>')
     expect(html).not.toContain('Nenhuma das classes do personagem conjura')
   })
 
@@ -380,12 +381,12 @@ describe('abas', () => {
     expect(renderToStaticMarkup(<DndPersonagemTab ctx={ctx} />)).toContain('nível 20')
   })
 
-  it('CD e ataque de magia aparecem como fórmula em blocos', () => {
+  it('CD e ataque de magia aparecem em tiles com a conta em etiquetas', () => {
     const data = makeData({ classes: [cls('wizard', 5, true)] })
     const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data })} />)
-    expect(html).toContain('dsh-eq__tile--result')
-    expect(html).toContain('Cálculo de CD das magias')
-    expect(html).toContain('Cálculo de Ataque de magia')
+    expect(html).toContain('dsh-spellstat__value')
+    expect(html).toContain('Cálculo da CD das magias')
+    expect(html).toContain('Cálculo do ataque de magia')
     expect(html).not.toContain('CD = 8 + bônus de proficiência')
   })
 

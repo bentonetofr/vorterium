@@ -11,7 +11,7 @@ import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceService'
 import { DerivedField, NumberField, Pips, Toggle } from './DndControls'
-import { ChipRow, Equation, StatChip, StatusPill } from './DndVisuals'
+import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
@@ -124,26 +124,30 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
       <div className={`dsh-col${casting ? '' : ' dsh-wide'}`}>
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Conjuração</h4></div>
-        <label className="dsh-field">
+        <label className="dsh-field dsh-field--tile">
           <span className="dsh-label">Atributo de conjuração</span>
           <Select options={ABILITY_OPTIONS} value={form.spell_ability} onChange={(v) => set('spell_ability', v as DndForm['spell_ability'])} disabled={readOnly} aria-label="Atributo de conjuração" />
         </label>
         {stats ? (
-          <>
-            <ChipRow>
-              <StatChip label="Atributo">{ABILITIES.find((a) => a.key === stats.ability)?.label}{stats.chosen ? ' (escolhido)' : ''}</StatChip>
-            </ChipRow>
-            <Equation
-              resultLabel="CD das magias"
-              parts={[{ label: 'Base', value: 8 }, { label: 'Proficiência', value: formatSigned(derived.proficiencyBonus) }, { label: 'Modificador', value: formatSigned(derived.abilityMods[stats.ability]) }]}
-              result={<DerivedField ctx={ctx} field="spell_save_dc" value={stats.saveDc} label="CD das magias" min={0} max={40} />}
-            />
-            <Equation
-              resultLabel="Ataque de magia"
-              parts={[{ label: 'Proficiência', value: formatSigned(derived.proficiencyBonus) }, { label: 'Modificador', value: formatSigned(derived.abilityMods[stats.ability]) }]}
-              result={<DerivedField ctx={ctx} field="spell_attack_bonus" value={stats.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} />}
-            />
-          </>
+          <div className="dsh-spellstats">
+            <div className="dsh-spellstat" role="group" aria-label="Cálculo da CD das magias">
+              <span className="dsh-spellstat__label">CD das magias</span>
+              <strong className="dsh-spellstat__value"><DerivedField ctx={ctx} field="spell_save_dc" value={stats.saveDc} label="CD das magias" min={0} max={40} /></strong>
+              <span className="dsh-spellstat__terms">
+                <span><small>Base</small>8</span>
+                <span><small>Prof.</small>{formatSigned(derived.proficiencyBonus)}</span>
+                <span><small>{ABILITIES.find((a) => a.key === stats.ability)?.short}</small>{formatSigned(derived.abilityMods[stats.ability])}</span>
+              </span>
+            </div>
+            <div className="dsh-spellstat" role="group" aria-label="Cálculo do ataque de magia">
+              <span className="dsh-spellstat__label">Ataque de magia</span>
+              <strong className="dsh-spellstat__value"><DerivedField ctx={ctx} field="spell_attack_bonus" value={stats.attackBonus} label="Bônus de ataque de magia" signed min={-10} max={30} /></strong>
+              <span className="dsh-spellstat__terms">
+                <span><small>Prof.</small>{formatSigned(derived.proficiencyBonus)}</span>
+                <span><small>{ABILITIES.find((a) => a.key === stats.ability)?.short}</small>{formatSigned(derived.abilityMods[stats.ability])}</span>
+              </span>
+            </div>
+          </div>
         ) : (
           <StatusPill tone="warn" title="Escolha um atributo acima para calcular a CD e o ataque de magia à mão, ou use uma classe conjuradora">Nenhuma classe conjuradora</StatusPill>
         )}
@@ -155,14 +159,14 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                 const ab = ABILITIES.find((a) => a.key === c.ability)
                 const learning = def?.spellcasting?.learning ?? 'known'
                 return (
-                  <li key={c.classKey} className="dsh-class">
+                  <li key={c.classKey} className="dsh-class dsh-castclass">
                     <strong className="dsh-class__name">{def?.name ?? c.classKey}</strong>
-                    <ChipRow>
-                      <StatChip label="Atributo">{ab?.short ?? ab?.label}</StatChip>
-                      <StatChip label="Truques">{c.cantripsKnown}</StatChip>
-                      <StatChip label={`Magias que ${LEARNING_LABEL[learning]}`}>{c.spellsKnownOrPrepared}</StatChip>
-                      {c.spellbookSize != null && <StatChip label="Grimório">{c.spellbookSize}</StatChip>}
-                    </ChipRow>
+                    <div className="dsh-castnums">
+                      <span className="dsh-castnum"><small>Atributo</small><strong>{ab?.short ?? ab?.label}</strong></span>
+                      <span className="dsh-castnum"><small>Truques</small><strong>{c.cantripsKnown}</strong></span>
+                      <span className="dsh-castnum"><small>{`Magias que ${LEARNING_LABEL[learning]}`}</small><strong>{c.spellsKnownOrPrepared}</strong></span>
+                      {c.spellbookSize != null && <span className="dsh-castnum"><small>Grimório</small><strong>{c.spellbookSize}</strong></span>}
+                    </div>
                   </li>
                 )
               })}

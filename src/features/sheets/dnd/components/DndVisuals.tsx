@@ -61,24 +61,6 @@ export function XpMeter({ xp, xpLevel, level, toNext }: XpMeterProps) {
   )
 }
 
-export interface EquationPart { label: string; value: ReactNode }
-
-/** Fórmula em blocos: [8] + [Proficiência +3] + [Carisma +2] = [CD 13]. O resultado pode ser um campo editável. */
-export function Equation({ parts, resultLabel, result }: { parts: EquationPart[]; resultLabel: string; result: ReactNode }) {
-  return (
-    <div className="dsh-eq" role="group" aria-label={`Cálculo de ${resultLabel}`}>
-      {parts.map((p, i) => (
-        <span key={p.label} className="dsh-eq__group">
-          {i > 0 && <span className="dsh-eq__op" aria-hidden="true">+</span>}
-          <span className="dsh-eq__tile"><small>{p.label}</small><strong>{p.value}</strong></span>
-        </span>
-      ))}
-      <span className="dsh-eq__op" aria-hidden="true">=</span>
-      <span className="dsh-eq__tile dsh-eq__tile--result"><small>{resultLabel}</small><strong>{result}</strong></span>
-    </div>
-  )
-}
-
 /** Legenda das bolinhas de perícia: sem proficiência, proficiente, especialista e meia proficiência. */
 export function SkillLegend() {
   return (
