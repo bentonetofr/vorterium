@@ -305,11 +305,22 @@ export async function rollDice(
   isPrivate = false,
   extras?: RollExtras,
 ): Promise<DiceRoll> {
+  const parsed = parseDiceFormula(formulaInput)
+  return recordRoll(campaignId, rollParsedFormula(parsed, { floor: !extras?.noFloor }), isPrivate, extras)
+}
+
+/**
+ * Grava uma rolagem já sorteada (o painel do D&D sorteia antes para montar o
+ * contexto com o d20 natural e o sucesso ou a falha).
+ */
+export async function recordRoll(
+  campaignId: string,
+  rolled: RollResult,
+  isPrivate = false,
+  extras?: RollExtras,
+): Promise<DiceRoll> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuário não autenticado.')
-
-  const parsed = parseDiceFormula(formulaInput)
-  const rolled = rollParsedFormula(parsed, { floor: !extras?.noFloor })
 
   const { data, error } = await supabase
     .from('dice_rolls')

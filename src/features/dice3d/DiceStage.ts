@@ -55,6 +55,7 @@ export class DiceStage {
   private raf = 0
   private resizeObs: ResizeObserver
   private disposed = false
+  private idleMesh: THREE.Mesh | null = null
 
   constructor(host: HTMLElement, style: ThrowStyle) {
     this.host = host
@@ -81,7 +82,7 @@ export class DiceStage {
     pmrem.dispose()
 
     this.camera = new THREE.PerspectiveCamera(style === 'stage' ? 30 : 32, 1, 0.1, 200)
-    if (style === 'stage') this.camera.position.set(0, 10.5, 2.6)
+    if (style === 'stage') this.camera.position.set(0, 8.4, 2.1)
     else this.camera.position.set(0, 16.5, 3.4)
     this.camera.lookAt(0, 0, 0)
 
@@ -136,12 +137,35 @@ export class DiceStage {
     if (!this.disposed) this.renderer.render(this.scene, this.camera)
   }
 
-  /** Tira os dados da mesa. */
+  /** Tira os dados da mesa (e o dado parado do palco). */
   clear(): void {
     cancelAnimationFrame(this.raf)
     for (const d of this.live) { this.scene.remove(d.mesh); (d.mesh.material as THREE.Material).dispose() }
     this.live = []
+    if (this.idleMesh) { this.scene.remove(this.idleMesh); (this.idleMesh.material as THREE.Material).dispose(); this.idleMesh = null }
     this.render()
+  }
+
+  /** Antes de rolar: um dado flutuando no meio do palco, girando devagar ("clique para rolar"). */
+  async idle(kind: DieKind, skin?: string): Promise<void> {
+    await ensureDiceFont()
+    this.clear()
+    if (this.disposed) return
+    const mesh = new THREE.Mesh(dieGeometry(kind), dieMaterial(kind, getSkin(skin)))
+    mesh.castShadow = true
+    mesh.scale.setScalar(1.15)
+    this.idleMesh = mesh
+    this.scene.add(mesh)
+    const start = performance.now()
+    const tick = () => {
+      if (this.disposed || this.idleMesh !== mesh) return
+      const t = (performance.now() - start) / 1000
+      mesh.position.set(0, 2.2 + Math.sin(t * 1.6) * 0.18, 0)
+      mesh.rotation.set(0.5 + Math.sin(t * 0.7) * 0.25, t * 0.6, 0.3 + Math.cos(t * 0.5) * 0.2)
+      this.render()
+      this.raf = requestAnimationFrame(tick)
+    }
+    this.raf = requestAnimationFrame(tick)
   }
 
   /** Joga os dados e resolve quando todos param (e os descartados apagam). */
