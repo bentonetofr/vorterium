@@ -44,11 +44,14 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   const [resMax, setResMax] = useState(1)
   const [resRecharge, setResRecharge] = useState<DndRecharge>('long')
   const [featName, setFeatName] = useState('')
+  const [srcFilter, setSrcFilter] = useState<DndFeatureSource | ''>('')
   const [pick, setPick] = useState<Record<ClassOptionKind, string>>({ metamagic: '', invocation: '' })
 
   const resources = data.resources.filter((r) => r.source !== 'spell_slots').sort((a, b) => a.sort_order - b.sort_order || a.label.localeCompare(b.label, 'pt-BR'))
   const features = [...data.features].sort((a, b) =>
     SOURCE_ORDER.indexOf(a.source) - SOURCE_ORDER.indexOf(b.source) || (a.level ?? 0) - (b.level ?? 0) || a.name.localeCompare(b.name, 'pt-BR'))
+  const sourceCounts = SOURCE_ORDER.map((src) => ({ src, n: features.filter((f) => f.source === src).length })).filter((x) => x.n > 0)
+  const shownFeatures = srcFilter ? features.filter((f) => f.source === srcFilter) : features
   const missing = missingFeatures(
     availableFeatures(data.classes, form.race_key || null, form.subrace_key || null, form.background_key || null),
     data.features,
@@ -228,9 +231,22 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             </div>
           )
         })}
-        {features.length === 0 && <p className="dsh-faint">Nenhuma característica ainda.</p>}
+        {features.length === 0 && (
+          <div className="dsh-noattack">
+            <strong>Nenhuma característica ainda</strong>
+            <span>Traga as de raça, classe e antecedente do catálogo, ou escreva uma sua (talento, dádiva, item mágico...).</span>
+          </div>
+        )}
+        {sourceCounts.length > 1 && (
+          <div className="dsh-book__row" role="group" aria-label="Filtrar por origem">
+            <button type="button" className={`dsh-bookchip${srcFilter === '' ? ' is-on' : ''}`} aria-pressed={srcFilter === ''} onClick={() => setSrcFilter('')}>Todas ({features.length})</button>
+            {sourceCounts.map(({ src, n }) => (
+              <button key={src} type="button" className={`dsh-bookchip${srcFilter === src ? ' is-on' : ''}`} aria-pressed={srcFilter === src} onClick={() => setSrcFilter(srcFilter === src ? '' : src)}>{SOURCE_LABEL[src]} ({n})</button>
+            ))}
+          </div>
+        )}
         <ul className="dsh-list">
-          {features.map((f) => {
+          {shownFeatures.map((f) => {
             const cat = f.feature_key ? findCatalogFeature(f.source, f.feature_key) : undefined
             const hasUses = f.uses_max != null
             return (
@@ -239,21 +255,26 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                   <summary>
                     <span className="dsh-tag">{SOURCE_LABEL[f.source]}</span>
                     <strong>{f.name}</strong>
-                    {f.level != null && f.level > 1 && <span className="dsh-faint">nível {f.level}</span>}
-                    {hasUses && <span className="dsh-faint">{f.uses_current ?? 0}/{f.uses_max}</span>}
+                    {f.level != null && f.level > 1 && <span className="dsh-cardchip">nível {f.level}</span>}
+                    {hasUses && <span className="dsh-cardchip dsh-feature__uses-chip" title="Usos restantes / total">usos {f.uses_current ?? 0}/{f.uses_max}</span>}
                   </summary>
                   <div className="dsh-feature__body">
                     {cat && <p className="dsh-feature__summary">{cat.summary}</p>}
                     {cat && cat.origin && <p className="dsh-faint">Origem: {cat.origin}{cat.original ? ` · ${cat.original}` : ''}</p>}
                     <div className="dsh-feature__uses">
-                      <label className="dsh-field dsh-field--inline"><span className="dsh-faint">Usos</span>
-                        <NumberField value={f.uses_max ?? 0} min={0} max={99} label={`Usos de ${f.name}`} disabled={readOnly || busy === f.id} className="dsh-num--sm"
+                      <label className="dsh-itemnum" title="Quantas vezes pode usar entre as recargas (0 = sem limite)"><small>Usos</small>
+                        <NumberField value={f.uses_max ?? 0} min={0} max={99} label={`Usos de ${f.name}`} disabled={readOnly || busy === f.id} className="dsh-itemnum__input"
                           onChange={(n) => void patchFeature(f, n === 0 ? { uses_max: null, uses_current: null, recharge: null } : { uses_max: n, uses_current: Math.min(f.uses_current ?? n, n), recharge: f.recharge ?? 'long' })} /></label>
                       {hasUses && (
                         <>
                           <Pips total={Math.min(f.uses_max ?? 0, 12)} filled={Math.min(f.uses_current ?? 0, 12)} label={`Usos disponíveis de ${f.name}`}
                             onChange={readOnly || busy === f.id ? undefined : (n) => void patchFeature(f, { uses_current: n })} />
-                          <Select options={RECHARGE_OPTIONS} value={f.recharge ?? 'long'} disabled={readOnly} onChange={(v) => void patchFeature(f, { recharge: v as DndRecharge })} aria-label={`Recarga de ${f.name}`} />
+                          <div className="dsh-seg" role="group" aria-label={`Recarga de ${f.name}`}>
+                            {RECHARGE_OPTIONS.map((o) => (
+                              <button key={o.value} type="button" className={`dsh-seg__btn${(f.recharge ?? 'long') === o.value ? ' is-on' : ''}`} aria-pressed={(f.recharge ?? 'long') === o.value}
+                                title={o.label} disabled={readOnly || busy === f.id} onClick={() => { if ((f.recharge ?? 'long') !== o.value) void patchFeature(f, { recharge: o.value }) }}>{RECHARGE_SHORT[o.value]}</button>
+                            ))}
+                          </div>
                         </>
                       )}
                     </div>
@@ -268,10 +289,11 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
           })}
         </ul>
         {!readOnly && (
-          <div className="dsh-add-row">
-            <input type="text" className="dsh-input" value={featName} maxLength={120} placeholder="Característica própria (talento, dádiva, item mágico...)"
-              onChange={(e) => setFeatName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addFeature() } }} />
-            <button type="button" className="dsh-chip" onClick={() => void addFeature()} disabled={busy === 'feat'}>Adicionar</button>
+          <div className="dsh-newattack">
+            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Característica própria</span>
+              <input type="text" className="dsh-focus__input" value={featName} maxLength={120} placeholder="Talento, dádiva, item mágico..."
+                onChange={(e) => setFeatName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addFeature() } }} /></label>
+            <button type="button" className="dsh-newattack__add" onClick={() => void addFeature()} disabled={busy === 'feat'}>+ Adicionar característica</button>
           </div>
         )}
       </section>

@@ -1042,3 +1042,12 @@
 .dsh-sheet .dsh-restile .dsh-num.dsh-restile__total:focus { outline: none; border-bottom-color: var(--dsh-accent); color: var(--dsh-accent); }
 .dsh-restile { min-height: 118px; }
 .dsh-restile__foot { margin-top: auto; }
+
+/* Características: linhas com faixa lateral, etiquetas de nível e usos, controles de usos */
+.dsh-feature { border-left: 3px solid var(--dsh-accent); }
+.dsh-feature:hover { border-left-color: var(--dsh-accent); }
+.dsh-feature summary { padding-top: 10px; padding-bottom: 10px; }
+.dsh-feature summary:hover strong { color: #fff; }
+.dsh-feature__uses-chip { margin-left: auto; color: var(--dsh-bone); border-color: var(--dsh-accent-line); background: var(--dsh-accent-soft); }
+.dsh-feature__uses { gap: var(--space-3); }
+.dsh-feature__body textarea { background: rgba(0, 0, 0, 0.22); }
