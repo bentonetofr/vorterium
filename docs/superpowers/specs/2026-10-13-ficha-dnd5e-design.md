@@ -350,7 +350,15 @@ vezes quando o site atualiza o nível por `upsert` (achado ao reproduzir no banc
 - Compra de pontos, matriz padrão, 4d6.
 - Magias iniciais por classe e pacote de equipamento.
 
-### Marco 5: magias e recursos (G)
+### Marco 5: magias e recursos (G) — FEITO em 21/10/2026
+
+**Catálogo** (`sheets/dnd/catalog/spells/`, gerado a partir do SRD 5.1 com script e traduzido por nós): as **319 magias** (24 truques e 295 de 1º a 9º nível), com escola, tempo, alcance em metros, componentes, duração, classes, texto completo e "Em níveis superiores". Carregado sob demanda (`import()` dinâmico, chunk próprio de ~370 KB) para não pesar no pacote principal. `catalog/spellUtils.ts` tem rótulos e busca sem dados. Testes conferem contagem por nível e por classe contra as listas do SRD, 29 rituais, 126 de concentração, e que não sobrou inglês, medida em pés ou marcação.
+**Opções de classe** (`catalog/classOptions.ts`): 8 de Metamagia e 32 Invocações Místicas, com pré-requisito; o seletor fica na aba Características, com o limite do nível.
+**Aba Magias:** magias agrupadas por nível, com o texto completo do livro, CD/ataque, contagem de truques e preparadas; "Livro de magias" com busca por nome e filtros de nível, escola, classe (inclui "da minha ficha"), ritual e concentração; botão Adicionar; "Personalizar" copia a magia do livro para as notas e vira magia própria (Opção 1 da sugestão do jogador). Magia própria continua possível.
+**Recursos de classe e raça** (`model/classResources.ts`): Fúria, Inspiração de Bardo, Canalizar Divindade, Forma Selvagem, Retomar o Fôlego, Surto de Ação, Indomável, Ki, Cura pelas Mãos, Sentido Divino, Golpe de Sorte, Pontos de Feitiçaria, Recuperação Arcana, Arcana Mística, Arma de Sopro e Resistência Implacável. Máximo e recarga vêm das tabelas e acompanham o nível (sincronizado como os espaços de magia); o descanso curto e o longo recarregam pela recarga de cada um.
+**Migration nova:** `20240207000000_dnd_magias_catalogo.sql` (coluna `catalog_key` em `dnd_character_spells` e índice único por ficha; 108 verificações no Postgres de teste).
+**Qualidade:** 381 testes.
+
 - Catálogo de magias do SRD em lotes por nível (truques e 1º primeiro; depois 2º-3º, 4º-6º, 7º-9º), tradução nossa.
 - Aba Magias: buscar, filtrar por classe/escola/nível, preparar, ritual, concentração, espaços clicáveis.
 - Recursos de classe (Fúria, Ki, Inspiração de Bardo, Canalizar Divindade, Forma Selvagem, Pontos de Feitiçaria, Surto

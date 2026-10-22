@@ -3,7 +3,9 @@ import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterFeature, DndCharacterResource, DndFeatureSource, DndRecharge } from '../../../../shared/types'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { homebrewKeyFromName } from '../catalog/homebrewKey'
-import { availableFeatures, findCatalogFeature, missingFeatures } from '../model/features'
+import { CLASS_OPTIONS, CLASS_OPTION_LABEL, classOptionFeatureKey, type ClassOptionEntry, type ClassOptionKind } from '../catalog/classOptions'
+import { AUTO_RESOURCE_KEYS } from '../model/classResources'
+import { availableFeatures, classOptionAllowance, findCatalogFeature, missingFeatures } from '../model/features'
 import { createDndFeature, removeDndFeature, removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
 import { NumberField, Pips } from './DndControls'
 import type { SheetCtx } from './sheetContext'
@@ -42,8 +44,9 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   const [resMax, setResMax] = useState(1)
   const [resRecharge, setResRecharge] = useState<DndRecharge>('long')
   const [featName, setFeatName] = useState('')
+  const [pick, setPick] = useState<Record<ClassOptionKind, string>>({ metamagic: '', invocation: '' })
 
-  const resources = data.resources.filter((r) => r.source !== 'spell_slots')
+  const resources = data.resources.filter((r) => r.source !== 'spell_slots').sort((a, b) => a.sort_order - b.sort_order || a.label.localeCompare(b.label, 'pt-BR'))
   const features = [...data.features].sort((a, b) =>
     SOURCE_ORDER.indexOf(a.source) - SOURCE_ORDER.indexOf(b.source) || (a.level ?? 0) - (b.level ?? 0) || a.name.localeCompare(b.name, 'pt-BR'))
   const missing = missingFeatures(
@@ -92,6 +95,14 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
     data.setFeatures((fs) => [...fs, ...created])
   })
 
+  const optionKinds = (['metamagic', 'invocation'] as ClassOptionKind[]).filter((k) => classOptionAllowance(k, data.classes) > 0)
+
+  const addOption = (o: ClassOptionEntry) => run(`opt-${o.kind}`, async () => {
+    const saved = await createDndFeature(sheet.id, { source: 'class', feature_key: classOptionFeatureKey(o), name: o.name, level: o.minLevel ?? null, sort_order: data.features.length })
+    data.setFeatures((fs) => [...fs, saved])
+    setPick((p) => ({ ...p, [o.kind]: '' }))
+  })
+
   const addFeature = () => run('feat', async () => {
     const name = featName.trim()
     if (!name) { report('Escreva o nome da característica.'); return }
@@ -112,7 +123,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
     <div className="dsh-tab dsh-cols anim-tab-panel">
       <section className="dsh-card dsh-wide">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Recursos</h4></div>
-        {resources.length === 0 && <p className="dsh-faint">Nenhum recurso. Crie os que o personagem gasta e recarrega, como Fúria, pontos de ki ou Inspiração de Bardo.</p>}
+        {resources.length === 0 && <p className="dsh-faint">Nenhum recurso. Os da classe e da raça (Fúria, Ki, Surto de Ação...) aparecem sozinhos; crie aqui os outros que o personagem gasta e recarrega.</p>}
         {resources.length > 0 && (
           <table className="dsh-table dsh-res-table">
             <thead>
@@ -125,11 +136,13 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
               </tr>
             </thead>
             <tbody>
-              {resources.map((r) => (
+              {resources.map((r) => {
+                const auto = AUTO_RESOURCE_KEYS.has(r.key)
+                return (
                 <tr key={r.id}>
                   <th scope="row" className="dsh-res-table__name">{r.label}</th>
                   <td>
-                    {readOnly
+                    {readOnly || auto
                       ? <span title={RECHARGE_LABEL[r.recharge]}>{RECHARGE_SHORT[r.recharge]}</span>
                       : <Select options={RECHARGE_SHORT_OPTIONS} value={r.recharge} onChange={(v) => void patchResource(r, { recharge: v as DndRecharge })} aria-label={`Recarga de ${r.label}`} />}
                   </td>
@@ -139,13 +152,14 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                   </td>
                   <td>
                     <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`}
-                      disabled={readOnly || busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-num--sm" />
+                      disabled={readOnly || auto || busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-num--sm" />
                   </td>
                   {!readOnly && (
-                    <td><button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button></td>
+                    <td>{auto ? null : <button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}</td>
                   )}
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         )}
@@ -158,7 +172,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addResource()} disabled={busy === 'res'}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note"><strong>DC</strong> recarrega no descanso curto, <strong>DL</strong> no descanso longo e <strong>AM</strong> ao amanhecer; o descanso longo também recarrega o que volta no curto. Os descansos (botões no alto da ficha) recarregam tudo conforme a recarga de cada recurso. Os espaços de magia ficam na aba Magias.</p>
+        <p className="dsh-note">O total e a recarga dos recursos da classe e da raça vêm das tabelas do livro e acompanham o nível. <strong>DC</strong> recarrega no descanso curto, <strong>DL</strong> no descanso longo e <strong>AM</strong> ao amanhecer; o descanso longo também recarrega o que volta no curto. Os descansos (botões no alto da ficha) recarregam tudo conforme a recarga de cada recurso. Os espaços de magia ficam na aba Magias.</p>
       </section>
 
       <section className="dsh-card dsh-wide">
@@ -174,6 +188,28 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             </button>
           </div>
         )}
+        {optionKinds.map((kind) => {
+          const allowed = classOptionAllowance(kind, data.classes)
+          const chosen = new Set(data.features.filter((f) => f.source === 'class' && f.feature_key).map((f) => f.feature_key))
+          const have = CLASS_OPTIONS.filter((o) => o.kind === kind && chosen.has(classOptionFeatureKey(o))).length
+          const level = data.classes.find((c) => c.class_key === (kind === 'metamagic' ? 'sorcerer' : 'warlock'))?.level ?? 0
+          const options = CLASS_OPTIONS.filter((o) => o.kind === kind && !chosen.has(classOptionFeatureKey(o)))
+            .map((o) => ({ value: o.key, label: `${o.name}${o.prerequisite ? ` (${o.prerequisite})` : ''}` }))
+          const selected = CLASS_OPTIONS.find((o) => o.kind === kind && o.key === pick[kind])
+          const unmet = selected?.minLevel != null && level < selected.minLevel
+          return (
+            <div className="dsh-callout" key={kind}>
+              <span><strong>{CLASS_OPTION_LABEL[kind]}</strong>: {have} de {allowed} escolhidas{have > allowed ? ' (passou do limite do nível)' : ''}.</span>
+              {!readOnly && (
+                <>
+                  <Select options={options} value={pick[kind]} onChange={(v) => setPick((p) => ({ ...p, [kind]: v }))} aria-label={`Escolher ${CLASS_OPTION_LABEL[kind]}`} />
+                  <button type="button" className="dsh-chip dsh-chip--primary" disabled={!selected || busy === `opt-${kind}`} onClick={() => selected && void addOption(selected)}>Escolher</button>
+                  {unmet && <span className="dsh-faint">Pede {selected?.prerequisite}; você ainda é de nível {level}.</span>}
+                </>
+              )}
+            </div>
+          )
+        })}
         {features.length === 0 && <p className="dsh-faint">Nenhuma característica ainda.</p>}
         <ul className="dsh-list">
           {features.map((f) => {

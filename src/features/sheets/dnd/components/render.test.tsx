@@ -28,6 +28,9 @@ import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
+import { DndSpellBrowser } from './DndSpellBrowser'
+import * as spellCatalog from '../catalog/spells'
+import { primeSpellCatalog } from '../hooks/useSpellCatalog'
 
 const hero = (ctx: SheetCtx, isNpc = false) => renderToStaticMarkup(
   <DndHero ctx={ctx} isNpc={isNpc} portraitBusy={false} onPortraitChange={() => {}} onPortraitRemove={() => {}} onShortRest={() => {}} onLongRest={() => {}} restBusy={false} />,
@@ -151,6 +154,44 @@ describe('abas', () => {
     expect(html).toContain('CD das magias')
     expect(html).toContain('(escolhido)')
     expect(html).not.toContain('Nenhuma das classes do personagem conjura')
+  })
+
+  it('Magias do livro mostram o texto completo, agrupadas por nível, e podem virar cópia própria', () => {
+    primeSpellCatalog(spellCatalog)
+    const data = makeData({ classes: [cls('wizard', 5, true)] })
+    const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data })} />)
+    expect(html).toContain('Truques')
+    expect(html).toContain('Ver a magia')
+    expect(html).toContain('Tempo de conjuração')
+    expect(html).toContain('45 metros')
+    expect(html).toContain('Em níveis superiores.')
+    expect(html).toContain('Personalizar')
+    expect(html).toContain('Livro de magias')
+    expect(html).toContain('Abrir o livro')
+    expect(html).not.toContain('Buscar magia')       // o livro só abre sob demanda
+  })
+
+  it('Magias em modo leitura: sem livro e sem personalizar', () => {
+    primeSpellCatalog(spellCatalog)
+    const data = makeData({ classes: [cls('wizard', 5, true)] })
+    const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data, readOnly: true })} />)
+    expect(html).toContain('Ver a magia')
+    expect(html).not.toContain('Abrir o livro')
+    expect(html).not.toContain('Personalizar')
+  })
+
+  it('Livro de magias: lista o catálogo, marca o que já está na ficha e mostra o filtro da ficha', () => {
+    const html = renderToStaticMarkup(
+      <DndSpellBrowser catalog={spellCatalog.SPELLS} have={new Set(['fireball'])} myClasses={['wizard']} readOnly={false} busy={null} onAdd={() => {}} />,
+    )
+    expect(html).toContain('204 magias do livro, mostrando 30')       // classe "Da minha ficha" = Mago
+    expect(html).toContain('Mostrar mais 30')
+    expect(html).toContain('Adicionar')
+    expect(html).toContain('Truque')
+    const todas = renderToStaticMarkup(<DndSpellBrowser catalog={spellCatalog.SPELLS} have={new Set(['fireball'])} myClasses={[]} readOnly={false} busy={null} onAdd={() => {}} />)
+    expect(todas).toContain('319 magias do livro')
+    const so = renderToStaticMarkup(<DndSpellBrowser catalog={null} have={new Set()} myClasses={[]} readOnly={false} busy={null} onAdd={() => {}} />)
+    expect(so).toContain('Abrindo o livro de magias')
   })
 
   it('Magias de um não conjurador explica quem conjura', () => {

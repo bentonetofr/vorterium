@@ -219,3 +219,35 @@ export interface GlossaryEntry {
   original: string
   note?:    string
 }
+
+// ── Magias ──────────────────────────────────────────────
+
+export type SpellSchool =
+  | 'abjuration' | 'conjuration' | 'divination' | 'enchantment'
+  | 'evocation' | 'illusion' | 'necromancy' | 'transmutation'
+
+export interface SpellComponents {
+  v:  boolean
+  s:  boolean
+  /** Descrição do componente material (em português); ausente = sem componente material. */
+  m?: string
+}
+
+/** Magia do catálogo (SRD 5.1 ou homebrew). Alcances em metros, como na edição brasileira. */
+export interface SpellEntry extends CatalogBase {
+  /** 0 = truque. */
+  level:         number
+  school:        SpellSchool
+  ritual?:       boolean
+  concentration?: boolean
+  castingTime:   string
+  range:         string
+  components:    SpellComponents
+  duration:      string
+  /** Classes que têm a magia na lista (chaves de classe do catálogo). */
+  classes:       string[]
+  /** Parágrafos do texto; uma linha começando com "• " é um item de lista. */
+  text:          string[]
+  /** "Em Níveis Superiores": o que muda com um espaço de magia maior. */
+  higher?:       string
+}

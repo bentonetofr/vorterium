@@ -2,20 +2,26 @@ import { useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterSpell } from '../../../../shared/types'
 import { getClass } from '../catalog'
+import type { SpellEntry } from '../catalog/types'
+import { SPELL_SCHOOL_LABEL, spellLevelLabel } from '../catalog/spellUtils'
+import { useSpellCatalog } from '../hooks/useSpellCatalog'
 import { ABILITIES } from '../rules/abilities'
 import { PACT_SLOT_KEY, spellSlotKey } from '../model/slots'
 import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { setDndResourceCurrent } from '../services/dndResourceService'
 import { DerivedField, Pips, Toggle } from './DndControls'
+import { DndSpellBrowser } from './DndSpellBrowser'
+import { DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
 // Aba Magias: conjuração de cada classe (atributo, CD, ataque, truques,
 // magias conhecidas ou preparadas), espaços de magia clicáveis e a lista de
-// magias do personagem. A lista é manual por enquanto: o catálogo das 310
-// magias do SRD, com busca, chega no Marco 5.
+// magias do personagem. As magias vêm do livro (catálogo das 319 magias do SRD,
+// com busca e filtros) ou são escritas à mão; uma magia do livro pode virar
+// cópia própria para editar o texto.
 // ────────────────────────────────────────────────────────
 
 const LEVEL_OPTIONS = Array.from({ length: 10 }, (_, level) => ({ value: String(level), label: level === 0 ? 'Truque' : `${level}º nível` }))
@@ -28,9 +34,15 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   const [name, setName] = useState('')
   const [level, setLevel] = useState('1')
   const [busy, setBusy] = useState<string | null>(null)
+  const [bookOpen, setBookOpen] = useState(false)
+  const catalogMod = useSpellCatalog()
 
   const slotRows = data.resources.filter((r) => r.source === 'spell_slots')
   const spells = [...data.details.spells].sort((a, b) => a.spell_level - b.spell_level || a.name.localeCompare(b.name, 'pt-BR'))
+  const cantripCount = data.details.spells.filter((s) => s.spell_level === 0).length
+  const cantripLimit = casting?.classes.reduce((n, c) => n + c.cantripsKnown, 0) ?? 0
+  const haveKeys = new Set(data.details.spells.flatMap((s) => (s.catalog_key ? [s.catalog_key] : [])))
+  const levels = Array.from({ length: 10 }, (_, n) => n).filter((n) => spells.some((s) => s.spell_level === n))
   const preparedCount = data.details.spells.filter((s) => s.prepared && s.spell_level > 0).length
   const preparedLimit = casting?.classes.filter((c) => getClass(c.classKey)?.spellcasting?.learning !== 'known').reduce((n, c) => n + c.spellsKnownOrPrepared, 0) ?? 0
 
@@ -54,17 +66,32 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     if (!clean) { report('Escreva o nome da magia.'); return }
     const saved = await createDndSpell(sheet.id, {
       name: clean, spell_level: Number(level), school: '', casting_time: '', spell_range: '', duration: '',
-      concentration: false, ritual: false, prepared: false, description: '', sort_order: data.details.spells.length,
+      concentration: false, ritual: false, prepared: false, description: '', catalog_key: null, sort_order: data.details.spells.length,
     })
     data.setDetails((d) => ({ ...d, spells: [...d.spells, saved] }))
     setName('')
   })
 
-  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'prepared' | 'concentration' | 'ritual' | 'description'>>) =>
+  const addFromBook = (sp: SpellEntry) => run(sp.key, async () => {
+    const saved = await createDndSpell(sheet.id, {
+      name: sp.name, spell_level: sp.level, school: SPELL_SCHOOL_LABEL[sp.school], casting_time: sp.castingTime, spell_range: sp.range,
+      duration: sp.duration, concentration: !!sp.concentration, ritual: !!sp.ritual, prepared: false, description: '',
+      catalog_key: sp.key, sort_order: data.details.spells.length,
+    })
+    data.setDetails((d) => ({ ...d, spells: [...d.spells, saved] }))
+  })
+
+  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key'>>) =>
     run(s.id, async () => {
       const saved = await updateDndSpell(s.id, patch)
       data.setDetails((d) => ({ ...d, spells: d.spells.map((x) => (x.id === saved.id ? saved : x)) }))
     })
+
+  /** Vira cópia própria: o texto do livro vai para as notas, onde pode ser editado. */
+  const makeOwnCopy = (s: DndCharacterSpell, cat: SpellEntry) => {
+    const text = [...cat.text, ...(cat.higher ? [`Em níveis superiores. ${cat.higher}`] : [])].join('\n\n')
+    return patchSpell(s, { catalog_key: null, description: [text, s.description].filter((x) => x.trim()).join('\n\n---\n\n') })
+  }
 
   const removeSpell = (s: DndCharacterSpell) => run(s.id, async () => {
     await deleteDndSpell(s.id)
@@ -156,41 +183,84 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card dsh-wide">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Magias do personagem</h4>
-          {preparedLimit > 0 && <span className={`dsh-badge${preparedCount > preparedLimit ? ' dsh-badge--bad' : ''}`}>Preparadas {preparedCount} / {preparedLimit}</span>}
+          <span className="dsh-card__badges">
+            {cantripLimit > 0 && <span className={`dsh-badge${cantripCount > cantripLimit ? ' dsh-badge--bad' : ''}`}>Truques {cantripCount} / {cantripLimit}</span>}
+            {preparedLimit > 0 && <span className={`dsh-badge${preparedCount > preparedLimit ? ' dsh-badge--bad' : ''}`}>Preparadas {preparedCount} / {preparedLimit}</span>}
+          </span>
         </div>
-        {spells.length === 0 && <p className="dsh-faint">Nenhuma magia ainda.</p>}
-        <ul className="dsh-list">
-          {spells.map((s) => (
-            <li key={s.id} className="dsh-spell">
-              <div className="dsh-spell__main">
-                <span className="dsh-tag">{s.spell_level === 0 ? 'Truque' : `${s.spell_level}º`}</span>
-                <strong className="dsh-spell__name">{s.name}</strong>
-                {s.spell_level > 0 && <Toggle checked={s.prepared} onChange={readOnly ? undefined : (v) => void patchSpell(s, { prepared: v })} label="Preparada" />}
-                <Toggle checked={s.concentration} onChange={readOnly ? undefined : (v) => void patchSpell(s, { concentration: v })} label="Concentração" />
-                <Toggle checked={s.ritual} onChange={readOnly ? undefined : (v) => void patchSpell(s, { ritual: v })} label="Ritual" />
-                {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeSpell(s)} disabled={busy === s.id} aria-label={`Remover ${s.name}`}>×</button>}
-              </div>
-              {(!readOnly || s.description) && (
-                <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={2} defaultValue={s.description} readOnly={readOnly} maxLength={2000}
-                  placeholder="Notas da magia (alcance, duração, efeito...)" aria-label={`Notas de ${s.name}`}
-                  onBlur={(e) => { if (e.target.value !== s.description) void patchSpell(s, { description: e.target.value }) }} />
-              )}
-            </li>
-          ))}
-        </ul>
+        {spells.length === 0 && <p className="dsh-faint">Nenhuma magia ainda. Busque no livro de magias abaixo ou escreva uma à mão.</p>}
+        {levels.map((lv) => (
+          <div key={lv} className="dsh-spell-group">
+            <h5 className="dsh-spell-group__title">{lv === 0 ? 'Truques' : spellLevelLabel(lv)} <span className="dsh-faint">{spells.filter((s) => s.spell_level === lv).length}</span></h5>
+            <ul className="dsh-list">
+              {spells.filter((s) => s.spell_level === lv).map((s) => {
+                const cat = s.catalog_key ? catalogMod?.getSpell(s.catalog_key) : undefined
+                const meta = [s.school, s.casting_time, s.spell_range, s.duration].filter(Boolean).join(' · ')
+                return (
+                  <li key={s.id} className="dsh-spell">
+                    <div className="dsh-spell__main">
+                      <span className="dsh-tag">{s.spell_level === 0 ? 'Truque' : `${s.spell_level}º`}</span>
+                      <strong className="dsh-spell__name">{s.name}</strong>
+                      {s.spell_level > 0 && <Toggle checked={s.prepared} onChange={readOnly ? undefined : (v) => void patchSpell(s, { prepared: v })} label="Preparada" />}
+                      {s.catalog_key ? (
+                        <>
+                          {s.concentration && <span className="dsh-badge" title="Exige concentração">C</span>}
+                          {s.ritual && <span className="dsh-badge" title="Pode ser conjurada como ritual">R</span>}
+                        </>
+                      ) : (
+                        <>
+                          <Toggle checked={s.concentration} onChange={readOnly ? undefined : (v) => void patchSpell(s, { concentration: v })} label="Concentração" />
+                          <Toggle checked={s.ritual} onChange={readOnly ? undefined : (v) => void patchSpell(s, { ritual: v })} label="Ritual" />
+                        </>
+                      )}
+                      {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeSpell(s)} disabled={busy === s.id} aria-label={`Remover ${s.name}`}>×</button>}
+                    </div>
+                    {meta && <p className="dsh-spell__meta">{meta}</p>}
+                    {(cat || !readOnly || s.description) && (
+                      <details className="dsh-spell__more">
+                        <summary>{cat ? 'Ver a magia' : 'Notas'}</summary>
+                        {cat && <DndSpellDetails spell={cat} />}
+                        {cat && !readOnly && (
+                          <button type="button" className="dsh-link" disabled={busy === s.id} onClick={() => void makeOwnCopy(s, cat)}
+                            title="Troca a magia do livro por uma cópia sua, com o texto nas notas para você editar">
+                            Personalizar (virar cópia própria)
+                          </button>
+                        )}
+                        <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={cat ? 2 : 4} defaultValue={s.description} readOnly={readOnly} maxLength={8000}
+                          placeholder={cat ? 'Suas anotações sobre esta magia' : 'Texto e notas da magia (alcance, duração, efeito...)'} aria-label={`Notas de ${s.name}`}
+                          onBlur={(e) => { if (e.target.value !== s.description) void patchSpell(s, { description: e.target.value }) }} />
+                      </details>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
         {!readOnly && (
           <div className="dsh-add-row">
-            <input type="text" className="dsh-input" value={name} maxLength={160} placeholder="Nome da magia"
+            <input type="text" className="dsh-input" value={name} maxLength={160} placeholder="Magia própria (nome)"
               onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addSpell() } }} />
             <Select options={LEVEL_OPTIONS} value={level} onChange={setLevel} aria-label="Nível da magia" />
-            <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => void addSpell()} disabled={busy === 'new'}>Adicionar</button>
+            <button type="button" className="dsh-chip" onClick={() => void addSpell()} disabled={busy === 'new'}>Adicionar</button>
           </div>
         )}
-        <p className="dsh-note">
-          {stats ? <>Ataque de magia {formatSigned(stats.attackBonus)}, CD {stats.saveDc}. </> : null}
-          A busca no catálogo de magias do livro chega numa próxima atualização.
-        </p>
+        {stats && <p className="dsh-note">Ataque de magia {formatSigned(stats.attackBonus)}, CD {stats.saveDc}.</p>}
       </section>
+
+      {!readOnly && (
+        <section className="dsh-card dsh-wide">
+          <div className="dsh-card__header">
+            <h4 className="dsh-card__title">Livro de magias</h4>
+            <button type="button" className="dsh-chip" aria-expanded={bookOpen} onClick={() => setBookOpen((o) => !o)}>{bookOpen ? 'Fechar o livro' : 'Abrir o livro'}</button>
+          </div>
+          {!bookOpen && <p className="dsh-note">As 319 magias do SRD 5.1, traduzidas, com busca e filtros por nível, escola e classe. Adicione à ficha com um clique.</p>}
+          {bookOpen && (
+            <DndSpellBrowser catalog={catalogMod?.SPELLS ?? null} have={haveKeys} myClasses={casting?.classes.map((c) => c.classKey) ?? []}
+              readOnly={readOnly} busy={busy} onAdd={(sp) => void addFromBook(sp)} />
+          )}
+        </section>
+      )}
     </div>
   )
 }

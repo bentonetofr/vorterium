@@ -1,5 +1,6 @@
 import type { DndFeatureSource } from '../../../../shared/types'
 import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace } from '../catalog'
+import { CLASS_OPTIONS, CLASS_OPTION_LABEL, classOptionFeatureKey, type ClassOptionKind } from '../catalog/classOptions'
 
 // ────────────────────────────────────────────────────────
 // Características que o catálogo dá ao personagem: de classe e subclasse (até
@@ -84,6 +85,14 @@ export function findCatalogFeature(source: DndFeatureSource, key: string): Catal
         for (const f of availableFeatures([{ class_key: c.key, level: 20, subclass_key: s.key }], null, null, null)) registry.set(`${f.source}:${f.key}`, f)
       }
     }
+    for (const o of CLASS_OPTIONS) {
+      const def = getClass(o.classKey)
+      registry.set(`class:${classOptionFeatureKey(o)}`, {
+        source: 'class', key: classOptionFeatureKey(o), name: o.name, original: o.original, level: o.minLevel ?? 1,
+        summary: o.prerequisite ? `Pré-requisito: ${o.prerequisite}. ${o.summary}` : o.summary,
+        origin: `${def?.name ?? o.classKey} (${CLASS_OPTION_LABEL[o.kind]})`,
+      })
+    }
     for (const r of RACES) {
       for (const f of availableFeatures([], r.key, null, null)) registry.set(`${f.source}:${f.key}`, f)
       for (const s of r.subraces) for (const f of availableFeatures([], r.key, s.key, null)) registry.set(`${f.source}:${f.key}`, f)
@@ -97,4 +106,18 @@ export function findCatalogFeature(source: DndFeatureSource, key: string): Catal
 export function missingFeatures(available: readonly CatalogFeatureRef[], have: readonly { source: DndFeatureSource; feature_key: string | null }[]): CatalogFeatureRef[] {
   const owned = new Set(have.filter((h) => h.feature_key).map((h) => `${h.source}:${h.feature_key}`))
   return available.filter((f) => !owned.has(`${f.source}:${f.key}`))
+}
+
+const ALLOWANCE_COLUMN: Record<ClassOptionKind, { classKey: string; column: string }> = {
+  metamagic:  { classKey: 'sorcerer', column: 'metamagic_known' },
+  invocation: { classKey: 'warlock',  column: 'invocations_known' },
+}
+
+/** Quantas opções (Metamagia, Invocações Místicas) a classe permite neste nível dela; 0 se a ficha não tem a classe. */
+export function classOptionAllowance(kind: ClassOptionKind, classes: readonly ClassRowLike[]): number {
+  const { classKey, column } = ALLOWANCE_COLUMN[kind]
+  const row = classes.find((c) => c.class_key === classKey)
+  const col = getClass(classKey)?.progression.find((p) => p.key === column)
+  if (!row || !col) return 0
+  return Number(col.values[Math.max(1, Math.min(20, row.level)) - 1]) || 0
 }

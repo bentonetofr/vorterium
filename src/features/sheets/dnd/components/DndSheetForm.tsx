@@ -5,9 +5,10 @@ import type { DndCharacterFeature, DndCharacterResource, DndCharacterSheet, DndC
 import { useDndSheetData } from '../hooks/useDndSheetData'
 import { classLine, deriveSheet } from '../model/sheetModel'
 import { DERIVED_COLUMNS, formEchoKey, formFromSheet, formToPayload, sheetAfterSave, sheetWithForm, validateForm, withoutDerived, type DndForm } from '../model/sheetForm'
+import { desiredClassResources, planClassResources } from '../model/classResources'
 import { planSlotResources } from '../model/slots'
 import { applyLongRest, applyShortRest, longRestSheet } from '../rules/rest'
-import { saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
+import { removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
 import { DndHero } from './DndHero'
 import { DndPersonagemTab } from './DndPersonagemTab'
 import { DndAtributosTab } from './DndAtributosTab'
@@ -210,6 +211,31 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly, ready, data.degraded, derived.spellcasting, data.resources])
+
+  // ── Recursos de classe e de raça (Fúria, Ki, Surto de Ação...): o máximo vem das tabelas do livro ──
+  const classResSync = useRef(false)
+  useEffect(() => {
+    if (readOnly || !ready || data.degraded || classResSync.current) return
+    const desired = desiredClassResources({
+      classes: data.classes.map((c) => ({ classKey: c.class_key, level: c.level })),
+      abilityMods: derived.abilityMods,
+      raceKey: form.race_key || null,
+    })
+    const { upserts, removals } = planClassResources(desired, data.resources)
+    if (upserts.length === 0 && removals.length === 0) return
+    classResSync.current = true
+    void (async () => {
+      try {
+        const saved: DndCharacterResource[] = []
+        for (const u of upserts) saved.push(await saveDndResource(sheet.id, u))
+        for (const id of removals) await removeDndResource(id)
+        data.setResources((rs) => [...rs.filter((r) => !removals.includes(r.id) && !saved.some((x) => x.key === r.key)), ...saved])
+      } catch {
+        // sem rede: os recursos só não aparecem agora; a ficha segue e tenta de novo na próxima mudança
+      } finally { classResSync.current = false }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, ready, data.degraded, data.classes, derived.abilityMods, form.race_key, data.resources])
 
   // ── Descansos ──
   async function rechargeResourcesAndFeatures(kind: 'short' | 'long') {

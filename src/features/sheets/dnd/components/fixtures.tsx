@@ -52,8 +52,8 @@ export const details = (): DndSheetDetails => ({
   ],
   inventory: [item('chain_mail', 'Cota de malha', true, 27.5), item('shield', 'Escudo', true, 3), item('longsword', 'Espada longa', false, 1.5), item(null, 'Corda', false, 5)],
   spells: [
-    { id: 'p1', sheet_id: 's1', name: 'Bola de Fogo', spell_level: 3, school: '', casting_time: '', spell_range: '', duration: '', concentration: false, ritual: false, prepared: true, description: 'Explode.', sort_order: 0, created_at: now, updated_at: now },
-    { id: 'p2', sheet_id: 's1', name: 'Prestidigitação', spell_level: 0, school: '', casting_time: '', spell_range: '', duration: '', concentration: false, ritual: false, prepared: false, description: '', sort_order: 1, created_at: now, updated_at: now },
+    { id: 'p1', sheet_id: 's1', name: 'Bola de Fogo', spell_level: 3, school: '', casting_time: '', spell_range: '', duration: '', concentration: false, ritual: false, prepared: true, description: 'Explode.', catalog_key: 'fireball', sort_order: 0, created_at: now, updated_at: now },
+    { id: 'p2', sheet_id: 's1', name: 'Prestidigitação', spell_level: 0, school: '', casting_time: '', spell_range: '', duration: '', concentration: false, ritual: false, prepared: false, description: '', catalog_key: null, sort_order: 1, created_at: now, updated_at: now },
   ],
   overrides: [{ id: 'o1', sheet_id: 's1', field_key: 'initiative_bonus', manual_value: '4', reason: '', updated_at: now }],
 })

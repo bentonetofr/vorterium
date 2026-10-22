@@ -906,7 +906,10 @@ export interface DndCharacterSpell {
   concentration: boolean
   ritual: boolean
   prepared: boolean
+  /** Notas do jogador (ou o texto da magia própria). */
   description: string
+  /** Chave da magia no catálogo do SRD; null = magia própria. */
+  catalog_key: string | null
   sort_order: number
   created_at: string
   updated_at: string
