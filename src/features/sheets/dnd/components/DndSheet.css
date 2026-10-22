@@ -754,3 +754,37 @@
   .dsh-abilities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dsh-card { padding: var(--space-4); }
 }
+
+/* Defesa: CA grande ao lado de tiles de armadura, escudo, iniciativa e bônus fixo */
+.dsh-defense { display: grid; grid-template-columns: minmax(104px, 0.8fr) repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.dsh-defense__ac {
+  grid-row: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); padding: var(--space-3);
+  background: radial-gradient(ellipse at 50% 0%, var(--dsh-accent-soft), rgba(0, 0, 0, 0.22) 75%); border: 1px solid var(--dsh-accent-line); border-top: 2px solid var(--dsh-accent); border-radius: var(--radius-md);
+  box-shadow: 0 6px 18px -12px var(--dsh-accent-glow);
+}
+.dsh-defense__value { font-family: var(--font-display); font-size: 52px; font-weight: 600; line-height: 1; color: var(--dsh-bone); }
+.dsh-defense__ac .dsh-defense__label { text-align: center; color: var(--dsh-accent); }
+.dsh-defense__tile {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; padding: 9px 14px 7px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dsh-defense__tile--armor { grid-column: span 2; }
+.dsh-defense__tile--bonus { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; gap: var(--space-3); cursor: text; }
+.dsh-defense__tile:hover { border-color: var(--border-bright); }
+.dsh-defense__tile:focus-within { border-color: var(--dsh-accent-line); box-shadow: 0 0 0 1px var(--dsh-accent-soft); }
+.dsh-defense__tile.is-on { border-color: rgba(139, 224, 164, 0.4); }
+.dsh-defense__label { font-family: var(--font-label); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dsh-bone-dim); }
+.dsh-defense__text { font-family: var(--font-display); font-size: 20px; font-weight: 600; line-height: 30px; color: var(--dsh-bone); }
+.dsh-defense__tile.is-on .dsh-defense__text { color: var(--dsh-good); }
+.dsh-defense__text .dsh-derived { font-size: inherit; line-height: inherit; }
+.dsh-sheet .dsh-defense__tile .dsh-num.dsh-defense__num {
+  width: 5ch; min-height: 0; height: auto; padding: 0; text-align: right; background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--dsh-bone);
+}
+.dsh-sheet .dsh-defense__tile .dsh-num.dsh-defense__num:focus { outline: none; color: var(--dsh-accent); }
+@media (max-width: 420px) {
+  .dsh-defense { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dsh-defense__ac { grid-row: auto; grid-column: 1 / -1; }
+  .dsh-defense__tile--armor { grid-column: 1 / -1; }
+}

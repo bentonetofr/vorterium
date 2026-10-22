@@ -205,19 +205,29 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
       </div>
       <div className="dsh-col">
       <section className="dsh-card">
-        <div className="dsh-card__header">
-          <h4 className="dsh-card__title">Defesa</h4>
-          <span className="dsh-badge">CA {derived.armorClass}</span>
+        <div className="dsh-card__header"><h4 className="dsh-card__title">Defesa</h4></div>
+        <div className="dsh-defense">
+          <div className="dsh-defense__ac" title="Classe de armadura">
+            <span className="dsh-defense__label">Classe de armadura</span>
+            <strong className="dsh-defense__value">{derived.armorClass}</strong>
+          </div>
+          <div className={`dsh-defense__tile dsh-defense__tile--armor${gear.armor ? ' is-on' : ''}`}>
+            <span className="dsh-defense__label">Armadura</span>
+            <span className="dsh-defense__text">{gear.armor ? `${gear.armor.name} (CA ${gear.armor.baseAc})` : 'Nenhuma'}</span>
+          </div>
+          <div className={`dsh-defense__tile${gear.shield ? ' is-on' : ''}`}>
+            <span className="dsh-defense__label">Escudo</span>
+            <span className="dsh-defense__text">{gear.shield ? '+2' : 'Nenhum'}</span>
+          </div>
+          <div className="dsh-defense__tile">
+            <span className="dsh-defense__label">Iniciativa</span>
+            <span className="dsh-defense__text"><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></span>
+          </div>
+          <label className="dsh-defense__tile dsh-defense__tile--bonus" title="Anel de proteção, estilo de luta Defesa...">
+            <span className="dsh-defense__label">Bônus fixo de CA</span>
+            <NumberField value={form.ac_bonus} onChange={(n) => set('ac_bonus', n)} min={-10} max={10} label="Bônus de CA" disabled={readOnly} className="dsh-defense__num" />
+          </label>
         </div>
-        <ChipRow>
-          <StatChip label="Armadura" tone={gear.armor ? 'good' : undefined}>{gear.armor ? `${gear.armor.name} (CA ${gear.armor.baseAc})` : 'Nenhuma'}</StatChip>
-          <StatChip label="Escudo" tone={gear.shield ? 'good' : undefined}>{gear.shield ? '+2' : 'Nenhum'}</StatChip>
-          <StatChip label="Iniciativa"><DerivedField ctx={ctx} field="initiative_bonus" value={derived.initiative} label="Iniciativa" signed min={-20} max={30} /></StatChip>
-        </ChipRow>
-        <label className="dsh-field">
-          <span className="dsh-label" title="Anel de proteção, estilo de luta Defesa...">Bônus fixo de CA</span>
-          <NumberField value={form.ac_bonus} onChange={(n) => set('ac_bonus', n)} min={-10} max={10} label="Bônus de CA" disabled={readOnly} className="dsh-num--field" />
-        </label>
         {armorMsg && <p className="dsh-warn">{armorMsg}</p>}
         {strMsg && <p className="dsh-warn">{strMsg}</p>}
       </section>
