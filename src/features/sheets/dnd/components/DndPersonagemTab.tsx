@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterClass, DndCharacterProficiency } from '../../../../shared/types'
-import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace } from '../catalog'
+import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace, WEAPONS } from '../catalog'
 import { homebrewKeyFromName } from '../catalog/homebrewKey'
 import { levelFromXp, meetsRequirement, xpToNextLevel } from '../rules/progression'
 import { ABILITIES, SKILLS } from '../rules/abilities'
@@ -136,6 +136,17 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
     await removeDndProficiency(p.id)
     data.setProficiencies((ps) => ps.filter((x) => x.id !== p.id))
   })
+
+  // Proficiências por tipo: as que vêm da classe, da raça e do antecedente (nomes em português) e as que a pessoa adicionou (com ×).
+  const weaponName = (w: string) => WEAPON_LABEL[w] ?? WEAPONS.find((x) => x.key === w)?.name ?? w.replace(/_/g, ' ')
+  const extrasOf = (category: DndCharacterProficiency['category']) => data.proficiencies.filter((p) => p.category === category)
+  const addedKeys = (category: DndCharacterProficiency['category']) => new Set(extrasOf(category).map((p) => (category === 'tool' || category === 'language' ? p.label : p.entry_key)))
+  const profGroups = [
+    { kind: 'armor', title: 'Armaduras', none: 'Nenhuma', base: prof.armor.filter((a) => !addedKeys('armor').has(a)).map((a) => ARMOR_LABEL[a] ?? a), extras: extrasOf('armor') },
+    { kind: 'weapon', title: 'Armas', none: 'Nenhuma', base: prof.weapons.filter((w) => !addedKeys('weapon').has(w)).map(weaponName), extras: extrasOf('weapon') },
+    { kind: 'tool', title: 'Ferramentas', none: 'Nenhuma', base: prof.tools.filter((t) => !addedKeys('tool').has(t)), extras: extrasOf('tool') },
+    { kind: 'language', title: 'Idiomas', none: 'Nenhum', base: prof.languages.filter((l) => !addedKeys('language').has(l)), extras: extrasOf('language') },
+  ] as const
 
   const xpLevel = levelFromXp(form.experience)
   const toNext = xpToNextLevel(form.experience)
@@ -284,32 +295,38 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
 
       <section className="dsh-card">
         <div className="dsh-card__header"><h4 className="dsh-card__title">Proficiências e idiomas</h4></div>
-        <dl className="dsh-facts">
-          <dt>Armaduras</dt>
-          <dd>{prof.armor.length ? prof.armor.map((a) => ARMOR_LABEL[a] ?? a).join(', ') : <span className="dsh-faint">Nenhuma</span>}</dd>
-          <dt>Armas</dt>
-          <dd>{prof.weapons.length ? prof.weapons.map((w) => WEAPON_LABEL[w] ?? w.replace(/_/g, ' ')).join(', ') : <span className="dsh-faint">Nenhuma</span>}</dd>
-          <dt>Ferramentas</dt>
-          <dd>{prof.tools.length ? prof.tools.join(', ') : <span className="dsh-faint">Nenhuma</span>}</dd>
-          <dt>Idiomas</dt>
-          <dd>{prof.languages.length ? prof.languages.join(', ') : <span className="dsh-faint">Nenhum</span>}</dd>
-        </dl>
-        {data.proficiencies.length > 0 && (
-          <div className="dsh-chips">
-            {data.proficiencies.map((p) => (
-              <span key={p.id} className="dsh-tag">
-                {PROFICIENCY_KINDS.find((k) => k.value === p.category)?.label}: {p.label}
-                {!readOnly && <button type="button" onClick={() => void removeProficiency(p)} aria-label={`Tirar ${p.label}`}>×</button>}
-              </span>
-            ))}
-          </div>
-        )}
+        <div className="dsh-profs">
+          {profGroups.map((g) => (
+            <div key={g.kind} className={`dsh-prof dsh-prof--${g.kind}`}>
+              <div className="dsh-prof__head">
+                <span className="dsh-prof__title">{g.title}</span>
+                <span className="dsh-prof__count">{g.base.length + g.extras.length}</span>
+              </div>
+              <div className="dsh-prof__chips">
+                {g.base.map((name) => <span key={name} className="dsh-prof__chip">{name}</span>)}
+                {g.extras.map((p) => (
+                  <span key={p.id} className="dsh-prof__chip dsh-prof__chip--extra" title="Adicionada por você">
+                    {p.label}
+                    {!readOnly && <button type="button" onClick={() => void removeProficiency(p)} aria-label={`Tirar ${p.label}`}>×</button>}
+                  </span>
+                ))}
+                {g.base.length + g.extras.length === 0 && <span className="dsh-prof__none">{g.none}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
         {!readOnly && (
-          <div className="dsh-add-row">
-            <Select options={PROFICIENCY_KINDS} value={profKind} onChange={(v) => setProfKind(v as DndCharacterProficiency['category'])} aria-label="Tipo de proficiência" />
-            <input type="text" className="dsh-input" value={profText} maxLength={80} placeholder="Ex.: Ferramentas de ladrão, Élfico"
-              onChange={(e) => setProfText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addProficiency() } }} />
-            <button type="button" className="dsh-chip" onClick={() => void addProficiency()} disabled={!profText.trim() || busy}>Adicionar</button>
+          <div className="dsh-addprof">
+            <div className="dsh-field dsh-field--tile">
+              <span className="dsh-label">Tipo</span>
+              <Select options={PROFICIENCY_KINDS} value={profKind} onChange={(v) => setProfKind(v as DndCharacterProficiency['category'])} aria-label="Tipo de proficiência" />
+            </div>
+            <label className="dsh-field dsh-field--tile">
+              <span className="dsh-label">Nova proficiência</span>
+              <input type="text" className="dsh-tileinput" value={profText} maxLength={80} placeholder="Ex.: Ferramentas de ladrão, Élfico"
+                onChange={(e) => setProfText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addProficiency() } }} />
+            </label>
+            <button type="button" className="dsh-chip dsh-chip--primary dsh-addprof__btn" onClick={() => void addProficiency()} disabled={!profText.trim() || busy}>Adicionar</button>
           </div>
         )}
       </section>

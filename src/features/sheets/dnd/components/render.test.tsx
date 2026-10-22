@@ -130,6 +130,17 @@ describe('abas', () => {
     expect(empty).not.toContain('· vale enquanto não houver classes')
   })
 
+  it('Proficiências e idiomas: um bloco por tipo, com etiquetas em português e as adicionadas com ×', () => {
+    const html = renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx()} />)
+    expect(html).toContain('dsh-profs')
+    for (const t of ['Armaduras', 'Armas', 'Ferramentas', 'Idiomas']) expect(html).toContain(`dsh-prof__title">${t}<`)
+    expect(html).toContain('dsh-prof__chip')
+    expect(html).not.toContain('hand crossbow')            // nomes das armas em português, não a chave em inglês
+    expect(html).toContain('dsh-addprof')
+    expect(html).toContain('Nova proficiência')
+    expect(renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx({ readOnly: true })} />)).not.toContain('dsh-addprof')
+  })
+
   it('Personagem sem classes pede o nível', () => {
     const html = renderToStaticMarkup(<DndPersonagemTab ctx={makeCtx({ data: makeData({ classes: [] }) })} />)
     expect(html).toContain('Vale enquanto o personagem não tem classes')
