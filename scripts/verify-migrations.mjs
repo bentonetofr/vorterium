@@ -112,6 +112,7 @@ const expectedMigrations = [
   '20240207000000_dnd_magias_catalogo.sql',
   '20240208000000_dnd_automatizar.sql',
   '20240209000000_site_feature_access.sql',
+  '20240210000000_dados_3d_dnd.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

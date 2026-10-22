@@ -154,6 +154,35 @@ export interface DiceRoll {
   roll_breakdown: RollBreakdownItem[] | null
   is_private: boolean
   created_at: string
+  /** "Furtividade", "Dano: Espada longa"... (migration 20240210; antes dela, ausente). */
+  roll_label?: string | null
+  roll_context?: DiceRollContext | null
+  /** Conjunto visual dos dados de quem rolou. */
+  dice_skin?: string | null
+  /** O total pode ficar abaixo de 1 (só D&D). */
+  no_floor?: boolean
+}
+
+/** O que a ficha sabia ao rolar (dice_rolls.roll_context). */
+export interface DiceRollContext {
+  system?:       'dnd5e'
+  kind?:         'skill' | 'save' | 'ability' | 'attack' | 'damage' | 'initiative' | 'death' | 'hit_die' | 'custom'
+  /** Chave do teste: perícia (stealth), atributo (dexterity), arma... */
+  key?:          string
+  sheet_id?:     string
+  /** Nome do personagem, para a mesa. */
+  character?:    string
+  dc?:           number | null
+  dc_hidden?:    boolean
+  advantage?:    'normal' | 'advantage' | 'disadvantage'
+  /** Reações usadas: guidance, bless, bardic_inspiration... */
+  reactions?:    string[]
+  /** O d20 que valeu. */
+  natural?:      number
+  outcome?:      'success' | 'failure' | null
+  crit?:         'crit' | 'fumble' | null
+  request_id?:   string
+  rerolled_from?: string
 }
 
 // ── Utilitário genérico para estado assíncrono ──────────

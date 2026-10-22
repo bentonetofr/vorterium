@@ -1,6 +1,6 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { logActivity } from '../../activity/services/activityService'
-import type { DiceRoll, DiceRollWithProfile, DieType, RollBreakdownItem, RollMode } from '../../../shared/types'
+import type { DiceRoll, DiceRollContext, DiceRollWithProfile, DieType, RollBreakdownItem, RollMode } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
 // Constantes
@@ -146,7 +146,7 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-interface RollResult {
+export interface RollResult {
   breakdown: RollBreakdownItem[]
   total: number
   formula: string
@@ -159,7 +159,8 @@ interface RollResult {
   legacyIndividualResults: number[] | null
 }
 
-export function rollParsedFormula(parsed: ParsedFormula): RollResult {
+/** `floor: false` deixa o total abaixo de 1 (testes do D&D). */
+export function rollParsedFormula(parsed: ParsedFormula, opts: { floor?: boolean } = {}): RollResult {
   const breakdown: RollBreakdownItem[] = []
   let total = 0
 
@@ -213,7 +214,7 @@ export function rollParsedFormula(parsed: ParsedFormula): RollResult {
     total += parsed.modifier
   }
 
-  total = Math.max(1, total)
+  if (opts.floor !== false) total = Math.max(1, total)
 
   // Campos legados: refletem o primeiro termo de dado para compatibilidade
   const firstDiceTerm = parsed.terms[0]
@@ -273,6 +274,10 @@ interface RawRollRow {
   roll_breakdown: RollBreakdownItem[] | null
   is_private: boolean
   created_at: string
+  roll_label?: string | null
+  roll_context?: DiceRollContext | null
+  dice_skin?: string | null
+  no_floor?: boolean
   profiles: { id: string; display_name: string } | null
 }
 
@@ -284,16 +289,27 @@ interface RawRollRow {
  * Faz o parse, rola os dados e persiste em dice_rolls.
  * Aceita fórmulas como: "1d20", "2d6+3", "3d4-1", "2#d20", "1#d3+4"
  */
+/** O que a ficha manda junto com a rolagem (migration 20240210). */
+export interface RollExtras {
+  label?:   string
+  context?: DiceRollContext
+  /** Conjunto visual dos dados. */
+  skin?:    string
+  /** Total pode ficar abaixo de 1 (só em campanha de D&D). */
+  noFloor?: boolean
+}
+
 export async function rollDice(
   campaignId: string,
   formulaInput: string,
   isPrivate = false,
+  extras?: RollExtras,
 ): Promise<DiceRoll> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuário não autenticado.')
 
   const parsed = parseDiceFormula(formulaInput)
-  const rolled = rollParsedFormula(parsed)
+  const rolled = rollParsedFormula(parsed, { floor: !extras?.noFloor })
 
   const { data, error } = await supabase
     .from('dice_rolls')
@@ -311,6 +327,13 @@ export async function rollDice(
       formula:            rolled.formula,
       roll_breakdown:     rolled.breakdown,
       is_private:         isPrivate,
+      // só manda as colunas novas quando a ficha pede (os outros sistemas seguem iguais)
+      ...(extras ? {
+        roll_label:   extras.label?.trim().slice(0, 120) || null,
+        roll_context: extras.context ?? null,
+        dice_skin:    extras.skin ?? null,
+        no_floor:     !!extras.noFloor,
+      } : {}),
     })
     .select('*')
     .single()
@@ -319,7 +342,8 @@ export async function rollDice(
   const roll = data as DiceRoll
   // Rolagem privada não gera rastro na aba Atividade — nem pro autor, nem pro mestre.
   if (!isPrivate) {
-    logActivity(campaignId, 'dice_rolled', `Rolagem registrada: ${roll.formula ?? roll.die_type}, resultado ${roll.result}.`)
+    const what = roll.roll_label ? `${roll.roll_label} (${roll.formula ?? roll.die_type})` : (roll.formula ?? roll.die_type)
+    logActivity(campaignId, 'dice_rolled', `Rolagem registrada: ${what}, resultado ${roll.result}.`)
   }
   return roll
 }
@@ -449,6 +473,10 @@ export async function getCampaignRolls(
     roll_breakdown:     (row.roll_breakdown as RollBreakdownItem[] | null) ?? null,
     is_private:         row.is_private ?? false,
     created_at:         row.created_at,
+    roll_label:         row.roll_label ?? null,
+    roll_context:       row.roll_context ?? null,
+    dice_skin:          row.dice_skin ?? null,
+    no_floor:           row.no_floor ?? false,
     profile:            row.profiles,
   }))
 }
