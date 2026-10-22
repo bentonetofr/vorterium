@@ -211,17 +211,19 @@ describe('abas', () => {
     expect(hero(ctx)).not.toContain('class="dsh-hp__temp"')
   })
 
-  it('inspiração é um botão de pressionar com ícone, sem caixinha de marcar', () => {
+  it('inspiração é um tile clicável igual aos outros, com Sim ou Não', () => {
     const ctx = makeCtx()
     ctx.form.inspiration = true
     const on = hero(ctx)
-    expect(on).toContain('dsh-inspire is-on')
+    expect(on).toContain('dsh-stat dsh-stat--click is-on')
     expect(on).toContain('aria-pressed="true"')
-    expect(on).toContain('Inspirado')
+    expect(on).toContain('>Sim<')
     ctx.form.inspiration = false
     const off = hero(ctx)
     expect(off).toContain('aria-pressed="false"')
+    expect(off).toContain('>Não<')
     expect(off).not.toContain('dsh-toggle')
+    expect(off).not.toContain('<svg')
   })
 
   it('botão Automatizar no cabeçalho, só para quem pode editar', () => {

@@ -67,21 +67,13 @@
 .dsh-stat .dsh-derived { font-size: 30px; }
 .dsh-stat--toggle { justify-content: center; }
 
-/* Inspiração: medalhão dourado que acende quando o personagem tem inspiração */
-.dsh-inspire {
-  display: inline-flex; align-items: center; gap: var(--space-2); padding: 5px 14px 5px 10px;
-  font-family: var(--font-label); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-muted); background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-base); border-radius: 999px; cursor: var(--cursor-hand);
-  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-.dsh-inspire__icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; transition: transform var(--transition-base, 0.25s) ease, fill var(--transition-fast); }
-.dsh-inspire:hover:not(:disabled) { color: var(--gilded-bright); border-color: var(--gilded); }
-.dsh-inspire.is-on {
-  color: var(--dsh-ink); background: linear-gradient(135deg, #f7e08e, var(--gilded-bright)); border-color: var(--gilded-bright);
-  box-shadow: 0 0 14px rgba(226, 176, 95, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.dsh-inspire.is-on .dsh-inspire__icon { fill: currentColor; transform: rotate(12deg) scale(1.08); }
-.dsh-inspire:disabled { cursor: default; opacity: 0.7; }
+/* Tile clicável (Inspiração): igual aos outros tiles, o valor acende quando está ligado */
+.dsh-stat--click { font: inherit; cursor: var(--cursor-hand); }
+.dsh-stat--click:disabled { cursor: default; }
+.dsh-stat--click:hover:not(:disabled) { border-color: var(--dsh-accent); background: linear-gradient(180deg, var(--dsh-accent-soft), rgba(0, 0, 0, 0.26)); }
+.dsh-stat__value { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1; color: var(--text-muted); transition: color var(--transition-fast); }
+.dsh-stat--click.is-on { border-color: var(--dsh-accent-line); background: linear-gradient(180deg, var(--dsh-accent-soft), rgba(0, 0, 0, 0.26)); }
+.dsh-stat--click.is-on .dsh-stat__value { color: var(--dsh-bone); }
 @media (max-width: 820px) { .dsh-hero__stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .dsh-hero__id { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; } .dsh-hero__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 

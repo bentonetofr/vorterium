@@ -115,18 +115,13 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
           <span className="dsh-stat__label">Percepção passiva</span>
           <DerivedField ctx={ctx} field="passive_perception" value={derived.passivePerception} label="Percepção passiva" min={0} max={99} />
         </div>
-        <div className="dsh-stat dsh-stat--toggle">
+        <button
+          type="button" className={`dsh-stat dsh-stat--click${form.inspiration ? ' is-on' : ''}`} aria-pressed={form.inspiration} disabled={readOnly}
+          onClick={() => set('inspiration', !form.inspiration)} title="Clique para alternar. Com inspiração, você ganha vantagem em uma jogada."
+        >
           <span className="dsh-stat__label">Inspiração</span>
-          <button
-            type="button" className={`dsh-inspire${form.inspiration ? ' is-on' : ''}`} aria-pressed={form.inspiration} disabled={readOnly}
-            onClick={() => set('inspiration', !form.inspiration)} title={form.inspiration ? 'Inspirado: gaste para ter vantagem em uma jogada' : 'Sem inspiração'}
-          >
-            <svg className="dsh-inspire__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.3 6.1 20.5l1.3-6.6L2.5 9.4l6.6-.8L12 2.5z" />
-            </svg>
-            <span>{form.inspiration ? 'Inspirado' : 'Sem'}</span>
-          </button>
-        </div>
+          <strong className="dsh-stat__value">{form.inspiration ? 'Sim' : 'Não'}</strong>
+        </button>
       </div>
 
       <div className={`dsh-hp dsh-hp--${tone}`}>
