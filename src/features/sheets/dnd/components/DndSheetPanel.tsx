@@ -28,8 +28,9 @@ interface DndSheetPanelProps {
 }
 
 export function DndSheetPanel({ campaignId, userRole }: DndSheetPanelProps) {
-  // Guardado no Painel de controle: só o dono do site usa a ficha (o banco
-  // também só deixa ele, migration 20240203000000).
+  // Guardado no Painel de controle: só o dono do site e as contas liberadas por
+  // e-mail usam a ficha (o banco também só deixa eles, dnd_open() nas migrations
+  // 20240203000000 e 20240209000000).
   const feature = useFeature(DND_FEATURE)
   return (
     <section className="sheet-panel">

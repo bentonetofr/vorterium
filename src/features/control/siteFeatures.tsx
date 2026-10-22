@@ -69,7 +69,7 @@ export const SITE_FEATURES: SiteFeature[] = [
   {
     key: DND_FEATURE,
     name: 'D&D 5e',
-    description: 'Sistema D&D 5e (regras de 2014, conteúdo do SRD 5.1) com ficha, criador de personagem e rolagens integradas, em construção por marcos. Guardado, só você consegue criar campanha de D&D; para todo mundo o cartão segue "Em breve".',
+    description: 'Sistema D&D 5e (regras de 2014, conteúdo do SRD 5.1) com ficha, criador de personagem e rolagens integradas, em construção por marcos. Guardado, só você e as contas liberadas por e-mail (tabela site_feature_access) criam campanha de D&D; para todo mundo o cartão segue "Em breve".',
     where: 'Criação de campanha e a aba Ficha das campanhas de D&D',
   },
 ]
@@ -146,16 +146,51 @@ export function useSiteFeatures(): Store {
   return useSyncExternalStore(subscribe, () => store)
 }
 
+// ── Acesso liberado pelo e-mail ─────────────────────────
+// Além do dono, o dono do site pode liberar um recurso guardado para contas
+// específicas (tabela site_feature_access, pelo SQL Editor). Essas pessoas
+// veem e usam o recurso como jogador e como mestre, sem o site inteiro ver.
+
+const accessCache = new Map<string, Promise<string[]>>()
+
+/** Os recursos guardados liberados pra esta conta. (Sem a migration, nenhum.) */
+export function loadFeatureAccess(userId: string): Promise<string[]> {
+  let cached = accessCache.get(userId)
+  if (!cached) {
+    cached = Promise.resolve(supabase.rpc('my_feature_access'))
+      .then(({ data, error }) => (error || !Array.isArray(data) ? [] : (data as string[])))
+      .catch(() => [] as string[])
+    accessCache.set(userId, cached)
+  }
+  return cached
+}
+
+/** As chaves dos recursos liberados pra conta logada (vazio enquanto confere). */
+export function useFeatureAccess(): ReadonlySet<string> {
+  const { user } = useAuth()
+  const [access, setAccess] = useState<{ id: string; keys: string[] } | null>(null)
+  useEffect(() => {
+    if (!user?.id) return
+    let alive = true
+    void loadFeatureAccess(user.id).then((keys) => { if (alive) setAccess({ id: user.id, keys }) })
+    return () => { alive = false }
+  }, [user?.id])
+  return new Set(user?.id && access?.id === user.id ? access.keys : [])
+}
+
 /**
  * Um recurso: `on` = está no site pra todos; `visible` = aparece pra quem
- * está vendo (no site, ou guardado mas é o dono testando); `guarded` = o
- * dono está vendo algo que ainda está guardado (bom pra pôr um selo).
+ * está vendo (no site, ou guardado mas é o dono testando ou uma conta com
+ * acesso liberado); `guarded` = alguém está vendo algo que ainda está
+ * guardado (bom pra pôr um selo).
  */
 export function useFeature(key: string): { on: boolean; visible: boolean; guarded: boolean } {
   const { rows } = useSiteFeatures()
   const owner = useIsSiteOwner()
+  const allowed = useFeatureAccess().has(key)
   const on = rows[key]?.enabled === true
-  return { on, visible: on || owner, guarded: !on && owner }
+  const early = owner || allowed
+  return { on, visible: on || early, guarded: !on && early }
 }
 
 /** Mostra o conteúdo só se o recurso estiver no site (ou pro dono, testando). */
