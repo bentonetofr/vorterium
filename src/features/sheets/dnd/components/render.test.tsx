@@ -41,7 +41,7 @@ import * as spellCatalog from '../catalog/spells'
 import { primeSpellCatalog } from '../hooks/useSpellCatalog'
 
 const hero = (ctx: SheetCtx, isNpc = false) => renderToStaticMarkup(
-  <DndHero ctx={ctx} isNpc={isNpc} portraitBusy={false} onPortraitChange={async () => {}} onPortraitRemove={() => {}} onShortRest={() => {}} onLongRest={() => {}} restBusy={false} />,
+  <DndHero ctx={ctx} isNpc={isNpc} portraitBusy={false} onPortraitChange={async () => {}} onPortraitRemove={() => {}} onShortRest={() => {}} onLongRest={() => {}} restBusy={false} onImport={() => {}} />,
 )
 
 describe('cabeçalho', () => {
@@ -370,6 +370,12 @@ describe('abas', () => {
   it('botão Automatizar no cabeçalho, só para quem pode editar', () => {
     expect(hero(makeCtx())).toContain('Automatizar')
     expect(hero(makeCtx({ readOnly: true }))).not.toContain('Automatizar')
+  })
+
+  it('botão Importar PDF no cabeçalho, só para quem pode editar e fora de NPC', () => {
+    expect(hero(makeCtx())).toContain('Importar PDF')
+    expect(hero(makeCtx({ readOnly: true }))).not.toContain('Importar PDF')
+    expect(hero(makeCtx(), true)).not.toContain('Importar PDF')
   })
 
   it('janela Automatizar: lista vertical com descrição à esquerda e Automático/Manual à direita', () => {

@@ -26,9 +26,11 @@ interface DndHeroProps {
   onLongRest:       () => void
   restBusy:         boolean
   isNpc:            boolean
+  /** Abre a janela de importar a ficha por PDF. */
+  onImport:         () => void
 }
 
-export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove, onShortRest, onLongRest, restBusy, isNpc }: DndHeroProps) {
+export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove, onShortRest, onLongRest, restBusy, isNpc, onImport }: DndHeroProps) {
   const { form, set, update, derived, data, sheet, readOnly } = ctx
   const fileRef = useRef<HTMLInputElement>(null)
   const [autoOpen, setAutoOpen] = useState(false)
@@ -101,6 +103,10 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
             {!readOnly && (
               <button type="button" className="dsh-chip dsh-chip--primary" onClick={() => setAutoOpen(true)}
                 title="Escolha o que a ficha calcula sozinha e o que você preenche à mão.">Automatizar</button>
+            )}
+            {!readOnly && !isNpc && (
+              <button type="button" className="dsh-chip" onClick={onImport}
+                title="Preenche a ficha a partir do PDF da sua ficha (a ficha preenchível JohnBard DnD 5e CS).">Importar PDF</button>
             )}
           </div>
         </div>

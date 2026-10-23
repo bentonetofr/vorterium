@@ -33,14 +33,19 @@ Mapa da ficha (7 páginas): p1 = atributos, perícias, salvaguardas, PV, ataques
 - **Textos sem lugar na ficha** (aparência, idade, altura, olhos, facção, aliados): escolher o destino (História, Notas, Aparência na História).
 - **Divergências de números**: CA, deslocamento, iniciativa, dados de vida, espaços de magia.
 
-## Etapas
+## Estado (23/10/2026)
 
-1. Leitura do PDF (campos, posição) e modelo "JohnBard 1.4" → `PdfRead`, com testes sobre os campos do exemplo.
-2. Casamento com o catálogo e rascunho da ficha (`plan`), com testes.
-3. Conferência contra o motor de regras e geração das perguntas.
-4. Janela de perguntas em cards (UI) e resumo final.
-5. Gravação, botão na ficha ("Importar ficha (PDF)"), recarregar a ficha, testes e revisão.
-6. Depois: outros modelos de PDF (ficha oficial da Wizards, D&D Beyond) conforme o usuário trouxer exemplos.
+Etapas 1 a 5 FEITAS: leitura do PDF (`import/pdfFields.ts`, `models/johnbard.ts`), casamento com o catálogo (`match.ts`, `text.ts`), planejador por perguntas (`plan.ts` e `steps/*`: basics, proficiency, gear, spells, features, combat, verify), gravação com cópia de segurança e desfazer (`importService.ts`), janela em cards (`DndImportWizard.tsx`, `ImportQuestionCard.tsx`, `wizardState.ts`) e botão "Importar PDF" no cabeçalho da ficha (`DndHero`, `DndSheetForm`; o salvamento automático espera enquanto grava). Testes sobre a ficha do Dandrelis (`johnbard.test.ts`, `match.test.ts`, `plan.test.ts`, `importService.test.ts`). Página de teste sem login: `testes/importar-ficha.html` (com um PDF em `testes/_ficha-exemplo.pdf`, fora do git) e ensaio no terminal `scripts/import-ficha-dry-run.ts`.
+
+Nunca foi testado logado no site real (só com banco de mentira e no terminal).
+
+A conferência (etapa 3) é o que dá a garantia: no exemplo ela achou 14 diferenças reais (Versatilidade de Bardo que o PDF não somou, CA desatualizada, CD de magia 1 abaixo) e explicou a causa de cada uma.
+
+## Próximos passos
+
+- Outros modelos de PDF (ficha oficial da Wizards, D&D Beyond) conforme o usuário trouxer exemplos: cada um é um arquivo novo em `models/` que devolve o mesmo `SheetRead`.
+- Aliases de nomes de características em português que diferem do catálogo (hoje só "Versatilidade" e "Aptidão", vistos na ficha de exemplo): `ALIASES` em `steps/features.ts`.
+- Recursos usados (Inspiração de Bardo restante etc.) e retrato do personagem não são importados.
 
 ## Limites conhecidos
 

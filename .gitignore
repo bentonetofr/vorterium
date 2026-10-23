@@ -24,3 +24,4 @@ Thumbs.db
 npm-debug.log*
 
 __pycache__/
+testes/_*.pdf

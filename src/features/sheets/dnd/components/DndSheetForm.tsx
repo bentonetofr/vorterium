@@ -19,6 +19,8 @@ import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
 import { DndRollProvider } from '../rolls/DndRollProvider'
+import { DndImportWizard } from '../import/DndImportWizard'
+import { Presence } from '../../../../shared/components/Presence'
 import './DndSheet.css'
 
 // ────────────────────────────────────────────────────────
@@ -65,6 +67,9 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
   const [notice, setNotice] = useState<string | null>(null)
   const [restBusy, setRestBusy] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('personagem')
+  // importar a ficha por PDF: enquanto grava, o salvamento automático espera (senão gravaria a ficha antiga por cima)
+  const [importOpen, setImportOpen] = useState(false)
+  const importLock = useRef(false)
   const tabDir = useTabDirection(TAB_IDS, activeTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveTab)
 
@@ -127,7 +132,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
   }, [ready])
 
   const flush = useCallback(async (): Promise<void> => {
-    if (readOnly || !readyRef.current || !baselined.current) return
+    if (readOnly || !readyRef.current || !baselined.current || importLock.current) return
     if (inFlight.current) { queued.current = true; return }
     const invalid = validateForm(formRef.current)
     if (invalid) { setError(invalid); setSaveState('error'); return }
@@ -324,7 +329,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       <DndHero
         ctx={ctx} isNpc={isNpc} portraitBusy={portraitBusy}
         onPortraitChange={onPortraitChange} onPortraitRemove={onPortraitRemove}
-        onShortRest={() => void shortRest()} onLongRest={() => void longRest()} restBusy={restBusy}
+        onShortRest={() => void shortRest()} onLongRest={() => void longRest()} restBusy={restBusy} onImport={() => setImportOpen(true)}
       />
 
       <nav ref={tabsRef} className="campaign-tabs dsh-tabs" role="tablist" aria-label="Seções da ficha">
@@ -350,6 +355,10 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         <div id="dsh-tabpanel-caracteristicas" role="tabpanel" hidden={activeTab !== 'caracteristicas'}>{activeTab === 'caracteristicas' && <DndCaracteristicasTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-historia" role="tabpanel" hidden={activeTab !== 'historia'}>{activeTab === 'historia' && <DndHistoriaTab ctx={ctx} />}</div>
       </div>
+
+      <Presence show={importOpen}>
+        {() => <DndImportWizard sheet={sheet} data={data} saveSheet={onSave} lock={(on) => { importLock.current = on }} onClose={() => setImportOpen(false)} />}
+      </Presence>
 
       <footer className="dsh-sheet__footer">
         {(error || saveError) && <p className="dsh-warn" role="alert">{error ?? saveError}</p>}

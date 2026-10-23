@@ -86,8 +86,8 @@ function verify(c: Ctx): void {
     id: 'diverge', section: 'Conferência', kind: 'choice',
     title: `${list.length === 1 ? 'Um número do PDF é diferente' : `${list.length} números do PDF são diferentes`} do que o sistema calcula`,
     body: [
-      ...list.slice(0, 12).map((x) => `• ${x.label}: PDF ${fmt(x.pdf, x.kind)} · sistema ${fmt(x.system, x.kind)}`),
-      ...(list.length > 12 ? [`… e mais ${list.length - 12}`] : []),
+      ...list.slice(0, 24).map((x) => `• ${x.label}: PDF ${fmt(x.pdf, x.kind)} · sistema ${fmt(x.system, x.kind)}`),
+      ...(list.length > 24 ? [`… e mais ${list.length - 24}`] : []),
       ...(reasons.length ? ['', ...reasons] : []),
     ].join('\n'),
     options: [
