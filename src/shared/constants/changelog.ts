@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.0',
+    date:    '2026-10-23',
+    title:   'TEMOS D&D NO SITE!',
+    items: [
+      'O D&D 5e (regras de 2014, conteúdo do SRD 5.1 em português) está liberado pra todo mundo. Escolha D&D 5e ao criar a campanha, e cada jogador cria o personagem na aba Ficha (o mestre também cria fichas de NPC).',
+      'Ficha completa que se calcula sozinha: atributos, salvaguardas, 18 perícias, proficiência, iniciativa, CA, deslocamento (metros ou pés), visão no escuro, percepção passiva, carga, PV com dados de vida, PV temporários, salvaguardas contra a morte, condições e exaustão. O botão Automatizar deixa qualquer valor manual, até negativo.',
+      'Criador de personagem: 9 raças com sub-raças, 12 classes com 40 subclasses, 14 antecedentes e multiclasse até o nível 20. O antecedente já dá as perícias dele, e dá para digitar raça, classe, subclasse e antecedente próprios.',
+      'Magias: livro com as 319 magias do SRD (busca e filtros), espaços de magia, Magia de Pacto do Bruxo, CD e ataque de magia e magias próprias no mesmo cartão das do livro. Combate: ataques com bônus e dano, Crítico, descrição da arma ocultável. Inventário: livro com 111 itens, moedas, carga e itens próprios com descrição.',
+      'Dados 3D rolando na mesa: clique no d20 de uma perícia, salvaguarda, ataque ou dano e o painel de teste (estilo Baldur’s Gate 3) abre com CD, vantagem, Bênção, Orientação, Inspiração de Bardo e bônus de situação. Os dados têm física de verdade e três conjuntos (madeira velha, granito e plástico marmorizado), e a mesa vê a sua rolagem ao vivo.',
+      'O botão de dados do canto virou o rolador de D&D: rolagem rápida, fórmulas como 1d20+5, 2#d20+5 (o maior de dois) e 2@d20+5 (o menor), até 100 dados de uma vez, rolagem privada e os recentes da mesa.',
+      'Mestre: peça testes para a mesa com a CD que quiser, oculta ou revelada depois da rolagem. Fichas: importe o PDF da ficha JohnBard DnD 5e pelo botão Importar PDF, com perguntas em cartões, conferência das contas e desfazer.',
+    ],
+  },
+  {
     version: '1.76',
     date:    '2026-10-17',
     title:   'Vortable mais estável, e todo erro com um código',

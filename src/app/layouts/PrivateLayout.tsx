@@ -7,6 +7,7 @@ import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { DndWatchRolls }      from '../../features/sheets/dnd/rolls/DndWatchRolls'
 import { DndCheckNotice }     from '../../features/sheets/dnd/rolls/DndCheckNotice'
+import { PatchNotice }        from '../../features/patch/PatchNotice'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
 import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
@@ -294,6 +295,7 @@ function PrivateLayoutContent() {
     <CritWolf />
     <DndWatchRolls />
     <DndCheckNotice />
+    <PatchNotice />
     <VortablePip />
     <DocumentOverlay />
     <LivroHost />

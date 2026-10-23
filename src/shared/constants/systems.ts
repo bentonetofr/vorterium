@@ -41,8 +41,8 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
   {
     id:          'dnd5e',
     label:       'D&D 5e',
-    description: 'Sistema de fantasia em desenvolvimento. A ficha completa será disponibilizada futuramente.',
-    status:      'coming-soon',
+    description: 'Regras de 2014 e conteúdo do SRD 5.1: ficha completa e automática, criador de personagem, livro de magias e itens, dados 3D e rolagens na mesa.',
+    status:      'available',
     icon:        '⚔',
     art:         '/sistemas/dnd5e.webp',
     accent:      '232, 128, 58',

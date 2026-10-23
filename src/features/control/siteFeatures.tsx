@@ -15,7 +15,8 @@ import { DND_FEATURE } from '../sheets/dnd/constants/dnd'
 //
 // Recurso novo: põe aqui em SITE_FEATURES e, no lugar dele no site, usa
 // useFeature('chave').visible (ou <Feature name="chave">…</Feature>).
-// Sem linha no banco = guardado.
+// Sem linha no banco = guardado. Recursos que já são do site pra sempre
+// (PERMANENT_FEATURES) não dependem do banco nem aparecem no painel.
 // ────────────────────────────────────────────────────────
 
 /** Onde o dono está ao mexer no painel (ex.: qual campanha está aberta). */
@@ -36,6 +37,9 @@ export interface SiteFeature {
   /** Ao ligar/desligar (ex.: abrir o jogo na campanha aberta). Pode devolver um aviso. */
   onToggle?:   (enabled: boolean, ctx: FeatureContext) => Promise<string | void>
 }
+
+/** Recursos que já foram pro site de vez: sempre ligados, mesmo sem linha no banco (o D&D 5e, no patch 2.0). */
+export const PERMANENT_FEATURES: ReadonlySet<string> = new Set([DND_FEATURE])
 
 export const SITE_FEATURES: SiteFeature[] = [
   {
@@ -65,12 +69,6 @@ export const SITE_FEATURES: SiteFeature[] = [
     name: 'Vampiro: A Máscara',
     description: 'Sistema novo (5ª edição): campanhas de Vampiro com ficha própria (clã, atributos e perícias, Vitalidade e Força de Vontade com dano superficial e agravado, Fome, Humanidade com manchas e Potência de Sangue). Guardado, só você cria campanha de Vampiro e só você vê, cria e edita fichas de Vampiro (mesmo convidando alguém).',
     where: 'Criação de campanha e a aba Ficha das campanhas de Vampiro',
-  },
-  {
-    key: DND_FEATURE,
-    name: 'D&D 5e',
-    description: 'Sistema D&D 5e (regras de 2014, conteúdo do SRD 5.1) com ficha, criador de personagem e rolagens integradas, em construção por marcos. Guardado, só você e as contas liberadas por e-mail (tabela site_feature_access) criam campanha de D&D; para todo mundo o cartão segue "Em breve".',
-    where: 'Criação de campanha e a aba Ficha das campanhas de D&D',
   },
 ]
 
@@ -188,7 +186,7 @@ export function useFeature(key: string): { on: boolean; visible: boolean; guarde
   const { rows } = useSiteFeatures()
   const owner = useIsSiteOwner()
   const allowed = useFeatureAccess().has(key)
-  const on = rows[key]?.enabled === true
+  const on = PERMANENT_FEATURES.has(key) || rows[key]?.enabled === true
   const early = owner || allowed
   return { on, visible: on || early, guarded: !on && early }
 }
