@@ -26,8 +26,8 @@ function fake(formula: string, label: string, context: DiceRollContext, skin: st
 
 const PEOPLE = [
   { id: 'a', player: 'Bruna', character: 'Zé Capivara', skin: DICE_SKINS[0].id },
-  { id: 'b', player: 'Maria', character: 'Lyra', skin: DICE_SKINS[4].id },
-  { id: 'c', player: 'Nicolas', character: 'Grum', skin: DICE_SKINS[5].id },
+  { id: 'b', player: 'Maria', character: 'Lyra', skin: DICE_SKINS[1].id },
+  { id: 'c', player: 'Nicolas', character: 'Grum', skin: DICE_SKINS[2].id },
 ]
 
 function Page() {

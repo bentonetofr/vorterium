@@ -45,7 +45,7 @@ const SPECS: [string, () => CheckSpec][] = [
 
 function App() {
   const [spec, setSpec] = useState<CheckSpec | null>(null)
-  const [skin, setSkin] = useState('vortice')
+  const [skin, setSkin] = useState('madeira')
   const [inspired, setInspired] = useState(true)
   const [tray, setTray] = useState<TrayJob | null>(null)
   const [log, setLog] = useState('')

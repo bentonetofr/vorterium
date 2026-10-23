@@ -14,7 +14,7 @@ import { DndDiceWindow } from '../src/features/sheets/dnd/rolls/DndDiceWindow'
 const sb = supabase as any
 sb.auth.getUser = async () => ({ data: { user: { id: 'u1' } } })
 const rows: any[] = []
-let skin = 'vortice'
+let skin = 'madeira'
 sb.from = () => {
   const q: any = {
     insert: (row: any) => { q.row = { ...row, id: `r${rows.length + 1}`, created_at: new Date().toISOString() }; return q },
