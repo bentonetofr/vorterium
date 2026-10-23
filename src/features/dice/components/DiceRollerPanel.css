@@ -356,12 +356,3 @@
 .dice-custom__example-chip { transition: all var(--transition-fast), transform 160ms var(--ease-spring); }
 .dice-custom__example-chip:active { transform: scale(0.92); }
 .dice-history__result { display: inline-block; animation: m-bump 420ms var(--ease-spring) backwards; }
-
-/* Conjunto de dados (D&D) */
-.dice-skins { display: flex; flex-wrap: wrap; gap: 8px; }
-.dice-skin {
-  display: grid; place-items: center; width: 34px; height: 34px; padding: 0; font: 700 11px 'EB Garamond', Georgia, serif;
-  border: 2px solid; border-radius: 50%; cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease;
-}
-.dice-skin:hover { transform: scale(1.08); }
-.dice-skin.is-on { box-shadow: 0 0 0 2px var(--bg-surface, #12151f), 0 0 0 4px var(--danger, #d9363e); }

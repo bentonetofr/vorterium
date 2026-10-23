@@ -248,10 +248,10 @@ export function rollParsedFormula(parsed: ParsedFormula, opts: { floor?: boolean
 }
 
 function buildFormulaString(parsed: ParsedFormula): string {
-  const parts: string[] = parsed.terms.map((t) => t.notation)
-  if (parsed.modifier > 0)  parts.push(`+${parsed.modifier}`)
-  if (parsed.modifier < 0)  parts.push(`${parsed.modifier}`)
-  return parts.join('')
+  const dice = parsed.terms.map((t) => t.notation).join('+')
+  if (parsed.modifier > 0)  return `${dice}+${parsed.modifier}`
+  if (parsed.modifier < 0)  return `${dice}${parsed.modifier}`
+  return dice
 }
 
 // ────────────────────────────────────────────────────────

@@ -1,21 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   EVENS_MAX_DICE,
   QUICK_FORMULAS,
-  getCampaignRolls,
   parseDiceFormula,
   rollDice,
   rollEvensTest,
-  subscribeToRolls,
 } from '../services/diceService'
-import { getCampaignMembers } from '../../members/services/memberService'
-import { useFeature } from '../../control/siteFeatures'
-import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
-import { DICE_SKINS } from '../../dice3d/skins'
-import { getMyDiceSkin, setMyDiceSkin } from '../../dice3d/diceSkinService'
+import { formatRelativeTime, useRecentRolls } from '../useRecentRolls'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { isTerraDevastadaFamily } from '../../../shared/constants/systems'
-import type { DiceRoll, DiceRollWithProfile } from '../../../shared/types'
+import type { DiceRoll } from '../../../shared/types'
 import './DiceRollerPanel.css'
 import { Loader } from '../../../shared/components/Loader'
 
@@ -38,18 +32,6 @@ const RECENT_ROLLS_LIMIT = 3
 // Utilitários de display
 // ────────────────────────────────────────────────────────
 
-function formatRelativeTime(iso: string): string {
-  const diff    = Date.now() - new Date(iso).getTime()
-  const seconds = Math.floor(diff / 1000)
-  if (seconds < 5)   return 'agora'
-  if (seconds < 60)  return `${seconds}s atrás`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60)  return `${minutes}min atrás`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24)    return `${hours}h atrás`
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
 function signStr(n: number): string {
   return n > 0 ? `+${n}` : `${n}`
 }
@@ -66,18 +48,6 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
   // Terra Devastada rola testes de pares — atalho de 1d a 6d no topo.
   const { campaign } = useCurrentCampaign()
   const isTerraDevastada = campaign?.id === campaignId && isTerraDevastadaFamily(campaign.system)
-  // D&D: cada um escolhe o conjunto de dados; a mesa vê os dados na cor de quem rolou.
-  const dndFeature = useFeature(DND_FEATURE)
-  const isDnd = campaign?.id === campaignId && campaign.system === 'dnd5e' && dndFeature.visible
-  const [skin, setSkin] = useState<string | null>(null)
-  const [skinError, setSkinError] = useState<string | null>(null)
-  useEffect(() => { if (isDnd) void getMyDiceSkin().then(setSkin).catch(() => setSkin(null)) }, [isDnd])
-  async function pickSkin(id: string) {
-    const before = skin
-    setSkin(id)
-    setSkinError(null)
-    try { await setMyDiceSkin(id) } catch (err) { setSkin(before); setSkinError(err instanceof Error ? err.message : 'Não foi possível salvar.') }
-  }
 
   // ── Rolagem ──
   const [rolling, setRolling]     = useState(false)
@@ -91,70 +61,9 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
   // ── Rolagem privada — reseta toda vez que o popover reabre, de propósito ──
   const [isPrivate, setIsPrivate] = useState(false)
 
-  // ── Histórico ──
-  const [history, setHistory]           = useState<DiceRollWithProfile[]>([])
-  const [histLoading, setHistLoading]   = useState(true)
-  const [histRefreshing, setHistRefreshing] = useState(false)
-  const [histError, setHistError]       = useState<string | null>(null)
-
-  // Perfis dos membros — resolve o autor de rolagens que chegam pelo
-  // Realtime, cujo payload só traz as colunas cruas (sem join de perfil).
-  const memberProfilesRef = useRef<Map<string, DiceRollWithProfile['profile']>>(new Map())
-
-  // ── Carregar histórico ──
-  const loadHistory = useCallback(async (refresh = false) => {
-    if (refresh) setHistRefreshing(true)
-    else { setHistLoading(true); setHistError(null) }
-    try {
-      const data = await getCampaignRolls(campaignId, RECENT_ROLLS_LIMIT)
-      // Mescla por id em vez de substituir: se uma rolagem de outro
-      // jogador chegou via Realtime enquanto essa busca estava em voo,
-      // ela não desaparece só porque essa resposta (tirada antes) não a tinha.
-      setHistory((prev) => {
-        const merged = new Map(data.map((r) => [r.id, r]))
-        for (const r of prev) {
-          if (!merged.has(r.id)) merged.set(r.id, r)
-        }
-        return Array.from(merged.values())
-          .sort((a, b) => b.created_at.localeCompare(a.created_at))
-          .slice(0, RECENT_ROLLS_LIMIT)
-      })
-      setHistError(null)
-    } catch (err) {
-      setHistError(err instanceof Error ? err.message : 'Erro ao carregar histórico.')
-    } finally {
-      setHistLoading(false)
-      setHistRefreshing(false)
-    }
-  }, [campaignId])
-
-  useEffect(() => { loadHistory() }, [loadHistory])
-
-  useEffect(() => {
-    let cancelled = false
-    getCampaignMembers(campaignId)
-      .then((members) => {
-        if (!cancelled) memberProfilesRef.current = new Map(members.map((m) => [m.user_id, m.profile]))
-      })
-      .catch(() => { /* sem o mapa, rolagem de outro jogador cai no nome genérico */ })
-    return () => { cancelled = true }
-  }, [campaignId])
-
-  // ── Realtime: rolagem de outro jogador/mestre entra na lista na hora,
-  // sem precisar clicar em "Atualizar". A própria rolagem já é tratada
-  // pelo `loadHistory(true)` em `executeRoll`, então ignora aqui pra não
-  // duplicar. ──
-  useEffect(() => {
-    const unsubscribe = subscribeToRolls(campaignId, (row: DiceRoll) => {
-      if (row.user_id === currentUserId) return
-      setHistory((prev) => {
-        if (prev.some((r) => r.id === row.id)) return prev
-        const profile = memberProfilesRef.current.get(row.user_id) ?? { id: row.user_id, display_name: 'Alguém' }
-        return [{ ...row, profile }, ...prev].slice(0, RECENT_ROLLS_LIMIT)
-      })
-    })
-    return unsubscribe
-  }, [campaignId, currentUserId])
+  // ── Histórico (carrega e recebe as rolagens dos outros ao vivo) ──
+  const { history, loading: histLoading, refreshing: histRefreshing, error: histError, reload: loadHistory } =
+    useRecentRolls(campaignId, currentUserId, RECENT_ROLLS_LIMIT)
 
   // ── Executar rolagem ──
   async function executeRoll(formula: string, evensPool?: number) {
@@ -164,7 +73,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
     try {
       const roll = evensPool != null
         ? await rollEvensTest(campaignId, evensPool, { isPrivate })
-        : await rollDice(campaignId, formula, isPrivate, isDnd ? { skin: skin ?? undefined } : undefined)
+        : await rollDice(campaignId, formula, isPrivate)
       onRoll(roll)
       await loadHistory(true)
     } catch (err) {
@@ -227,23 +136,6 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll }: DiceRolle
         </svg>
         Rolagem privada
       </label>
-
-      {/* ── Conjunto de dados (D&D) ── */}
-      {isDnd && (
-        <div className="dice-section">
-          <h4 className="dice-section__title">Seus dados</h4>
-          <div className="dice-skins" role="radiogroup" aria-label="Conjunto de dados">
-            {DICE_SKINS.map((s) => (
-              <button key={s.id} type="button" role="radio" aria-checked={skin === s.id} title={s.name}
-                className={`dice-skin${skin === s.id ? ' is-on' : ''}`} onClick={() => void pickSkin(s.id)}
-                style={{ background: `radial-gradient(circle at 35% 30%, ${s.body}, ${s.bodyEdge} 75%)`, borderColor: s.trim, color: s.ink }}>
-                20
-              </button>
-            ))}
-          </div>
-          <p className="dice-custom__examples-label">{skinError ?? DICE_SKINS.find((s) => s.id === skin)?.name ?? ''}</p>
-        </div>
-      )}
 
       {/* ── Teste de pares (Terra Devastada) ── */}
       {isTerraDevastada && (

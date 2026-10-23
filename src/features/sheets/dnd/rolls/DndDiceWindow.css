@@ -1,0 +1,59 @@
+/* ════════════════════════════════════════════════════════
+   Janela de dados do D&D (centro da tela): a vitrine dos conjuntos de dados.
+   Não depende do CSS da ficha: as cores próprias ficam em .ddw.
+   ════════════════════════════════════════════════════════ */
+
+.ddw {
+  --ddw-accent:      #d9363e;
+  --ddw-accent-soft: rgba(217, 54, 62, 0.16);
+  --ddw-accent-line: rgba(217, 54, 62, 0.4);
+  --ddw-bone:        #f1e3cf;
+  --ddw-bone-dim:    #b3a48d;
+  --ddw-gold:        #e8b85c;
+  position: relative; display: flex; flex-direction: column; width: min(860px, 100%); max-height: min(92vh, 840px); overflow: hidden;
+  font-family: var(--font-body);
+  background: var(--bg-surface); border: 1px solid var(--ddw-accent-line); border-radius: var(--radius-lg); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+.ddw :where(button, input) { font-family: inherit; }
+
+/* ── Cabeçalho ── */
+.ddw__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-dim); background: radial-gradient(ellipse at 0% 0%, var(--ddw-accent-soft), transparent 60%);
+}
+.ddw__title { margin: 0; font-family: var(--font-display); font-size: var(--text-2xl, 28px); font-weight: 600; color: var(--ddw-bone); }
+.ddw__title span { margin-right: 8px; color: var(--ddw-accent); }
+.ddw__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-4) var(--space-5) var(--space-5); }
+.ddw-error { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: #ff7a7a; }
+
+/* ── A vitrine ── */
+.ddw-vitrine { position: relative; display: flex; flex-direction: column; gap: var(--space-4); }
+.ddw-vitrine__intro { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+.ddw-skins { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--space-3); }
+.ddw-skin {
+  --skin-glow: #d9363e;
+  position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-3) var(--space-2) var(--space-3); text-align: center;
+  background: radial-gradient(ellipse at 50% 34%, rgba(255, 255, 255, 0.07), transparent 62%), linear-gradient(180deg, #1a1426, #0d0a14);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-md); cursor: var(--cursor-hand);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ddw-skin:hover, .ddw-skin:focus-visible { border-color: var(--skin-glow); box-shadow: 0 10px 26px -14px var(--skin-glow); outline: none; }
+.ddw-skin.is-on { border-color: var(--ddw-gold); box-shadow: 0 0 0 1px rgba(232, 184, 92, 0.5), 0 10px 30px -14px rgba(232, 184, 92, 0.6); }
+.ddw-skin__pedestal { position: relative; display: grid; place-items: center; width: 100%; height: 136px; }
+.ddw-skin__pedestal::before {      /* brilho no chão da vitrine, na cor do conjunto */
+  content: ''; position: absolute; left: 14%; right: 14%; bottom: 6px; height: 26px; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--skin-glow) 55%, transparent), transparent 70%); opacity: 0.8;
+}
+.ddw-skin__swatch { position: relative; display: grid; place-items: center; width: 86px; height: 86px; font: 700 28px 'EB Garamond', Georgia, serif; border: 3px solid; border-radius: 50%; }
+.ddw-skin__name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--ddw-bone); }
+.ddw-skin__state { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
+.ddw-skin.is-on .ddw-skin__state { color: var(--ddw-gold); }
+
+@media (max-width: 640px) {
+  .ddw { max-height: 94vh; }
+  .ddw__head { padding: var(--space-3); }
+  .ddw__title { font-size: var(--text-xl); }
+  .ddw__body { padding: var(--space-3); }
+  .ddw-skins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ddw-skin__pedestal { height: 112px; }
+}

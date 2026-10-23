@@ -11,8 +11,8 @@ import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts
 import type { DiceRoll, RollBreakdownItem } from '../../../shared/types'
 import { useFeature } from '../../control/siteFeatures'
 import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
-import { DndDiceTray, type TrayJob } from '../../sheets/dnd/rolls/DndDiceTray'
-import { DEFAULT_SKIN } from '../../dice3d/skins'
+import { DndDiceWindow } from '../../sheets/dnd/rolls/DndDiceWindow'
+import { DieShapeIcon } from './DieShapeIcon'
 import './DiceFab.css'
 
 // Duração do "quique" antes de assentar no resultado final.
@@ -54,35 +54,6 @@ function collectDiceSides(roll: DiceRoll): number[] {
     for (let i = 0; i < b.quantity; i++) sides.push(b.sides)
   }
   return sides.length > 0 ? sides.slice(0, MAX_BOUNCING_DICE) : [20]
-}
-
-// d6 usa as faces de dado reais do Unicode (⚀-⚅); os outros tipos não têm face
-// própria no Unicode, então desenham o contorno minimalista do sólido.
-function DieShapeIcon({ sides }: { sides: number }) {
-  const common = {
-    width: 16,
-    height: 16,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.6,
-    strokeLinejoin: 'round' as const,
-    strokeLinecap: 'round' as const,
-  }
-  switch (sides) {
-    case 4:  return <svg {...common}><polygon points="12,3 21,19 3,19" /></svg>
-    case 8:  return <svg {...common}><polygon points="12,3 21,12 12,21 3,12" /></svg>
-    case 10: return <svg {...common}><polygon points="12,2 20,9 17,20 7,20 4,9" /></svg>
-    case 12: return <svg {...common}><polygon points="12,2 20,7 20,17 12,22 4,17 4,7" /></svg>
-    default: return (
-      // d20 e demais (d100...): hexágono facetado — "arredondado" de longe, mas
-      // um dado nunca é redondo de verdade, então marca as facetas com raios internos.
-      <svg {...common}>
-        <polygon points="12,2 20,7 20,17 12,22 4,17 4,7" />
-        <path d="M12,2 L12,12 M20,7 L12,12 M20,17 L12,12 M12,22 L12,12 M4,17 L12,12 M4,7 L12,12" />
-      </svg>
-    )
-  }
 }
 
 function totalClass(roll: DiceRoll): string {
@@ -182,11 +153,10 @@ export function DiceFab() {
   // Terra Devastada Adaptada: o resultado aparece no visual de The Last of Us.
   const { campaign } = useCurrentCampaign()
   const adapted = campaign?.id === campaignId && campaign?.system === 'terra_devastada_adaptada'
-  // D&D: os dados rolam em 3D na bandeja, no conjunto de quem rolou.
+  // D&D: em vez do painel do canto, abre uma janela no centro com a vitrine dos
+  // conjuntos de dados (as rolagens ficam nos botões da ficha).
   const dndFeature = useFeature(DND_FEATURE)
   const dnd = campaign?.id === campaignId && campaign?.system === 'dnd5e' && dndFeature.visible
-  const [trayJob, setTrayJob] = useState<TrayJob | null>(null)
-  const trayIdRef = useRef(0)
   useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
 
   // ── Notificação de resultado ──
@@ -215,10 +185,6 @@ export function DiceFab() {
   }, [])
 
   function handleRoll(roll: DiceRoll) {
-    if (dnd) {
-      setTrayJob({ id: ++trayIdRef.current, label: roll.roll_label ?? roll.formula ?? roll.die_type, roll, skin: roll.dice_skin ?? DEFAULT_SKIN })
-      return
-    }
     if (cycleRef.current !== null)   window.clearInterval(cycleRef.current)
     if (dismissRef.current !== null) window.clearTimeout(dismissRef.current)
 
@@ -269,7 +235,6 @@ export function DiceFab() {
 
   return (
     <>
-      {dnd && <DndDiceTray job={trayJob} onDone={() => setTrayJob(null)} />}
       {(activeRoll || displayRoll !== null) && portalTo(toastSlot,
         <div key={toastKey} className={`dice-toast${adapted ? ' dice-toast--tda' : ''}`} role="status" aria-live="polite">
           <div className="dice-toast__header">
@@ -315,7 +280,13 @@ export function DiceFab() {
         </div>,
       )}
 
-      {(isOpen || !instant) && (
+      {dnd && (
+        <Presence show={isOpen} exitMs={180}>
+          {() => <DndDiceWindow onClose={close} />}
+        </Presence>
+      )}
+
+      {!dnd && (isOpen || !instant) && (
       <Presence show={isOpen} exitMs={180}>
         {(state) => (
         <div className="dice-fab__popover fab-panel anim-pop" data-state={state} data-fab-panel="dice" role="dialog" aria-label="Rolagem de dados">
