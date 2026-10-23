@@ -9,17 +9,17 @@ import * as THREE from 'three'
 // ────────────────────────────────────────────────────────
 
 /** A câmera de um dado só: perto, o dado ocupa boa parte do palco. */
-export const BASE_CAMERA = { fov: 30, y: 8.4, z: 2.1 } as const
+export const BASE_CAMERA = { fov: 30, y: 8.4, z: 1.2 } as const
 
 /** A que distância (em múltiplos da base) a câmera pode chegar: com 100 dados. */
-export const MAX_CAMERA_SCALE = 9
+export const MAX_CAMERA_SCALE = 10
 
 /**
  * Área de chão que cada dado pede para deitar sem tocar nos outros (uma folga sobre o que ele ocupa).
  * Poucos dados cabem mais apertados; com muitos, a folga cresce, senão sempre sobra algum torto.
  */
 export function floorPerDie(count: number): number {
-  return count <= 12 ? 7 : count <= 30 ? 11 : 14
+  return count <= 12 ? 6 : count <= 30 ? 10 : 13
 }
 
 /** O retângulo do chão que a câmera vê, menos uma margem: ali os dados podem parar. */
@@ -43,18 +43,66 @@ export function placeCamera(camera: THREE.PerspectiveCamera, scale: number): voi
   camera.updateMatrixWorld(true)
 }
 
+/** A mesa onde os dados caem: o centro dela em z (`dz`) e a meia largura e meia profundidade. */
+export interface TableArena { halfW: number; halfD: number; dz: number }
+
+/** A caixa da tela (em coordenadas -1 a 1) em que cada dado inteiro precisa ficar visível. */
+export interface ScreenBox {
+  /** Metade da largura: dados vão até ±x. */
+  x:      number
+  top:    number
+  bottom: number
+}
+
+/** O maior dado (raio do vértice mais longe), para conferir que ele cabe inteiro na caixa. */
+const DIE_REACH = 1.2
+
 /**
- * Afasta a câmera, de pouco em pouco, até o chão visível ter `floorPerDie` por dado
- * (ou chegar ao limite). Devolve quantas vezes mais longe ficou e o chão resultante.
+ * O maior retângulo de chão em que um dado, em qualquer ponto dele, aparece INTEIRO dentro da caixa da
+ * tela (o dado parado tem o centro na altura do raio, e o topo mais perto da câmera, então "aparece maior"
+ * e mais para fora). Começa pelo chão que a caixa mostra e encolhe até todos os cantos cabem.
  */
-export function fitCamera(camera: THREE.PerspectiveCamera, count: number, margin: number): { scale: number; arena: { halfW: number; halfD: number } } {
+export function boxArena(camera: THREE.PerspectiveCamera, box: ScreenBox): TableArena {
+  camera.updateMatrixWorld(true)
+  const ray = new THREE.Raycaster()
+  const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+  const hit = (x: number, y: number) => {
+    ray.setFromCamera(new THREE.Vector2(x, y), camera)
+    const p = new THREE.Vector3()
+    return ray.ray.intersectPlane(floor, p) ? p : new THREE.Vector3()
+  }
+  const zNear = hit(0, box.bottom).z
+  const zFar = hit(0, box.top).z
+  let halfW = Math.min(Math.abs(hit(box.x, box.bottom).x), Math.abs(hit(-box.x, box.bottom).x))
+  let halfD = Math.abs(zNear - zFar) / 2
+  const dz = (zNear + zFar) / 2
+  const R = DIE_REACH
+  const fits = () => {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const h of [0, 2 * R]) {
+      const p = new THREE.Vector3(sx * (halfW + R * 0.2), h, dz + sz * (halfD + R * 0.2)).project(camera)
+      if (Math.abs(p.x) > box.x || p.y > box.top || p.y < box.bottom) return false
+    }
+    return true
+  }
+  for (let i = 0; i < 80 && !fits() && halfW > 1.2 && halfD > 1.0; i++) { halfW *= 0.97; halfD *= 0.97 }
+  return { halfW: Math.max(1.2, halfW), halfD: Math.max(1.0, halfD), dz }
+}
+
+/** A caixa de sempre, quando a tela não diz nada: quase toda a largura, com folga em cima e embaixo. */
+export const DEFAULT_BOX: ScreenBox = { x: 0.95, top: 0.8, bottom: -0.8 }
+
+/**
+ * Afasta a câmera, de pouco em pouco, até a mesa visível ter `floorPerDie` por dado
+ * (ou chegar ao limite). Devolve quantas vezes mais longe ficou e a mesa resultante.
+ */
+export function fitCamera(camera: THREE.PerspectiveCamera, count: number, box: ScreenBox = DEFAULT_BOX): { scale: number; arena: TableArena } {
   let scale = 1
   placeCamera(camera, scale)
-  let arena = floorArena(camera, margin)
-  while (scale < MAX_CAMERA_SCALE && 4 * arena.halfW * arena.halfD < count * floorPerDie(count)) {
+  let arena = boxArena(camera, box)
+  while (count > 1 && scale < MAX_CAMERA_SCALE && 4 * arena.halfW * arena.halfD < count * floorPerDie(count)) {
     scale = Math.min(MAX_CAMERA_SCALE, scale * 1.06)
     placeCamera(camera, scale)
-    arena = floorArena(camera, margin)
+    arena = boxArena(camera, box)
   }
   return { scale, arena }
 }

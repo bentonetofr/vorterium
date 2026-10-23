@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { alignments, labelForValue, labelText, numberUp, polyhedron, quatFromM3, upIndex, type DieKind, type V3 } from './polyhedra'
-import { BASE_CAMERA, fitCamera, floorArena, placeCamera } from './camera'
+import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from './camera'
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
 import { dieGeometry, dieMaterial, ensureDiceFont } from './dieMesh'
 import { getSkin } from './skins'
@@ -54,6 +54,8 @@ interface Throw {
   nextSound: number
   /** Deslocamento da faixa do chão em x. */
   dx:      number
+  /** Deslocamento da mesa em z (a câmera do palco largo não olha para o meio do chão). */
+  dz:      number
   phase:   'run' | 'settle' | 'rest'
   settleStart: number
   resolve: () => void
@@ -147,9 +149,19 @@ export class DiceStage {
     this.render()
   }
 
-  /** Palco largo: a câmera se afasta conforme a quantidade de dados (ver camera.ts) e devolve o chão visível. */
-  private fitCamera(count: number): { halfW: number; halfD: number } {
-    const fit = fitCamera(this.camera, count, 1.7)
+  /**
+   * A caixa da tela em que os dados precisam aparecer inteiros: o palco todo, menos o que o título e o total
+   * cobrem (o elemento diz quantos px em `data-insets="cima,baixo"`) e um respiro dos lados.
+   */
+  private screenBox(): ScreenBox {
+    const h = Math.max(1, this.host.clientHeight)
+    const [top, bottom] = (this.host.dataset.insets ?? '0,0').split(',').map((n) => Number(n) || 0)
+    return { x: 0.94, top: 1 - (2 * (top + 10)) / h, bottom: -1 + (2 * (bottom + 10)) / h }
+  }
+
+  /** Palco largo: a câmera se afasta conforme a quantidade de dados (ver camera.ts) e devolve a mesa visível. */
+  private fitCamera(count: number): { halfW: number; halfD: number; dz: number } {
+    const fit = fitCamera(this.camera, count, this.screenBox())
     this.render()
     return fit.arena
   }
@@ -193,7 +205,7 @@ export class DiceStage {
     if (this.style === 'wide') placeCamera(this.camera, 1)
     const mesh = new THREE.Mesh(dieGeometry(kind), dieMaterial(kind, getSkin(skin)))
     mesh.castShadow = true
-    mesh.scale.setScalar(1.15)
+    mesh.scale.setScalar(this.style === 'wide' ? 0.78 : 1.15)
     this.idleMesh = mesh
     this.scene.add(mesh)
     const start = performance.now()
@@ -225,7 +237,9 @@ export class DiceStage {
     await ensureDiceFont()
     if (this.disposed || dice.length === 0) return { done: Promise.resolve(), remove: () => {} }
     if (this.idleMesh) this.clear()
-    const arena = this.style === 'wide' ? this.fitCamera(dice.length) : this.arena()
+    const table = this.style === 'wide' ? this.fitCamera(dice.length) : null
+    const arena = table ? { halfW: table.halfW, halfD: table.halfD } : this.arena()
+    const dz = table?.dz ?? 0
     let dx = 0
     if (opts.lane && opts.lane.count > 1) {
       const w = arena.halfW / opts.lane.count
@@ -239,7 +253,7 @@ export class DiceStage {
       const p = polyhedron(d.kind)
       // a face lida é a que fica de frente para a câmera (no d4, o vértice de cima)
       const fr = sim.frames[i], o = (sim.steps - 1) * 7
-      const toCam: V3 = [this.camera.position.x - (fr[o] + dx), this.camera.position.y - fr[o + 1], this.camera.position.z - fr[o + 2]]
+      const toCam: V3 = [this.camera.position.x - (fr[o] + dx), this.camera.position.y - fr[o + 1], this.camera.position.z - (fr[o + 2] + dz)]
       const body = new THREE.Quaternion(fr[o + 3], fr[o + 4], fr[o + 5], fr[o + 6])
       const up = p.readsVertex ? sim.up[i] : upIndex(p, [body.x, body.y, body.z, body.w], toCam)
       const label = labelForValue(d.kind, d.value)
@@ -269,7 +283,7 @@ export class DiceStage {
     const th: Throw = {
       // lançamentos que demoraram (dados empurrados até pararem planos) tocam um pouco mais rápido
       dice: live, sim, start: performance.now(), speed: opts.speed ?? Math.min(1.8, Math.max(1, sim.steps / (STEP_HZ * 3.6))), sound: opts.sound !== false,
-      sounds: [...sim.impacts].sort((x, y) => x.step - y.step), nextSound: 0, dx, phase: 'run', settleStart: 0, resolve,
+      sounds: [...sim.impacts].sort((x, y) => x.step - y.step), nextSound: 0, dx, dz, phase: 'run', settleStart: 0, resolve,
     }
     this.throws.push(th)
     if (!this.raf) this.raf = requestAnimationFrame(this.loop)
@@ -310,7 +324,7 @@ export class DiceStage {
     const f = Math.min(1, t - i0)
     for (const d of th.dice) {
       const a = i0 * 7, b = i1 * 7, fr = d.frames
-      d.mesh.position.set(th.dx + fr[a] + (fr[b] - fr[a]) * f, fr[a + 1] + (fr[b + 1] - fr[a + 1]) * f, fr[a + 2] + (fr[b + 2] - fr[a + 2]) * f)
+      d.mesh.position.set(th.dx + fr[a] + (fr[b] - fr[a]) * f, fr[a + 1] + (fr[b + 1] - fr[a + 1]) * f, th.dz + fr[a + 2] + (fr[b + 2] - fr[a + 2]) * f)
       this.q0.set(fr[a + 3], fr[a + 4], fr[a + 5], fr[a + 6])
       this.q1.set(fr[b + 3], fr[b + 4], fr[b + 5], fr[b + 6])
       d.mesh.quaternion.slerpQuaternions(this.q0, this.q1, f).premultiply(d.yaw).multiply(d.fix)

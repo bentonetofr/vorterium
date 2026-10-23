@@ -41,6 +41,10 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
   const [spin, setSpin] = useState<number | null>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const { stage, simple } = useDiceStage(stageRef, 'wide')
+  const stageNow = useRef(stage)
+  stageNow.current = stage
+  const simpleNow = useRef(simple)
+  simpleNow.current = simple
   const closeRef = useRef(onClose)
   closeRef.current = onClose
 
@@ -77,7 +81,10 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
       const saved = await recordRoll(campaignId, rolled, isPrivate, { label: 'Rolagem livre', skin, noFloor: true, context: freeContext('') })
       const reading = readFree(saved.roll_breakdown ?? [], saved.result)
       const dice = stageDiceFor(saved.roll_breakdown ?? [], skin)
-      if (stage) await stage.roll(dice, { skin })
+      // o 3D baixa na primeira vez: se a pessoa rolou antes de ele ficar pronto, espera um pouco
+      let st = stageNow.current
+      for (let i = 0; i < 60 && !st && !simpleNow.current; i++) { await new Promise((r) => setTimeout(r, 75)); st = stageNow.current }
+      if (st) await st.roll(dice, { skin })
       else await new Promise<void>((resolve) => {
         const end = performance.now() + 900
         const tick = () => { if (performance.now() < end) { setSpin(1 + Math.floor(Math.random() * 20)); requestAnimationFrame(tick) } else { setSpin(reading.total); resolve() } }
@@ -91,7 +98,7 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
     } finally {
       release()
     }
-  }, [campaignId, skin, stage, done])
+  }, [campaignId, skin, done])
 
   const reading = done?.reading
   return (
@@ -102,7 +109,7 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
         <div className="dcp__frame">
           <h3 className="dcp__title">Rolagem de dados<span>{done ? freeLabel(done.formula) : 'escolha os dados abaixo'}</span></h3>
           <div className="dcp__stage" aria-live="polite">
-            <div ref={stageRef} className="dcp__canvas" aria-hidden="true" />
+            <div ref={stageRef} className="dcp__canvas" data-insets="68,64" aria-hidden="true" />
             {simple && <span className="dcp__simple" aria-hidden="true">{spin ?? 'd20'}</span>}
             {phase === 'idle' && <span className="dcp__hint">Role pelo painel de baixo</span>}
           </div>

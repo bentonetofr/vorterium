@@ -96,7 +96,7 @@ describe('física do lançamento', () => {
     const cam = new THREE.PerspectiveCamera(30, 704 / 480, 0.1, 200)
     const sizes: number[] = []
     for (const n of [1, 10, 50, 100]) {
-      const { scale, arena } = fitCamera(cam, n, 1.7)
+      const { scale, arena } = fitCamera(cam, n)
       sizes.push(scale)
       if (n === 1) expect(scale).toBe(1)
       if (n > 50) continue
@@ -110,4 +110,25 @@ describe('física do lançamento', () => {
     expect(sizes[2]).toBeLessThan(sizes[3])
     expect(sizes[3]).toBeLessThanOrEqual(MAX_CAMERA_SCALE)
   }, 60000)
+
+  it('a mesa cabe na tela: nenhum dado termina cortado pela borda', () => {
+    const cam = new THREE.PerspectiveCamera(30, 704 / 560, 0.1, 200)
+    for (const n of [1, 6, 20]) {
+      const { arena } = fitCamera(cam, n)
+      const kinds = Array.from({ length: n }, (_, i) => (['d20', 'd6', 'd8', 'd12', 'd10', 'd4'] as const)[i % 6])
+      for (const seed of [51, 52, 53]) {
+        const sim = simulateThrow(kinds, { arena, style: 'wide', seed })
+        const o = (sim.steps - 1) * 7
+        kinds.forEach((k, i) => {
+          const r = DIE_RADIUS[k]
+          const f = sim.frames[i]
+          for (const [dx, dy, dz] of [[r, 0, 0], [-r, 0, 0], [0, r, 0], [0, 0, r], [0, 0, -r]]) {
+            const p = new THREE.Vector3(f[o] + dx, f[o + 1] + dy, f[o + 2] + arena.dz + dz).project(cam)
+            expect(Math.abs(p.x), `${n} dados, semente ${seed}, dado ${i} (x)`).toBeLessThan(1)
+            expect(Math.abs(p.y), `${n} dados, semente ${seed}, dado ${i} (y)`).toBeLessThan(1)
+          }
+        })
+      }
+    }
+  })
 })

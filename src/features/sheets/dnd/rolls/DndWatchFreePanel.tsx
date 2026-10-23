@@ -71,11 +71,10 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
         </div>
 
         <div className="dcp__frame">
-          <div className="dcp__dc"><small className="dcp__nodc">Sem CD</small></div>
           <h3 className="dcp__title">Rolagem livre<span>{formula}{who !== player ? ` · ${who}` : ''}</span></h3>
 
           <div className="dcp__stage">
-            <div ref={stageRef} className="dcp__canvas" aria-hidden="true" />
+            <div ref={stageRef} className="dcp__canvas" data-insets="68,64" aria-hidden="true" />
             {simple && <span className="dcp__simple" aria-hidden="true">{spin ?? formula.split(' ')[0]}</span>}
             {!done && <span className="dcp__hint">{who} está rolando…</span>}
           </div>
