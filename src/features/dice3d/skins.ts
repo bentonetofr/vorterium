@@ -24,6 +24,11 @@ export interface DiceSkin {
   inkMetal:  boolean
   /** Translúcido, como cristal. */
   glass?:    boolean
+  /** Conjunto detalhado: a superfície (veios, rachaduras, entalhes) é pintada por dieSurfaces.ts e ganha mapa de relevo. */
+  surface?:  'wood' | 'stone' | 'plastic'
+  /** Força do relevo (padrão 1) e do verniz (padrão pelo material). */
+  bump?:     number
+  clearcoat?: number
 }
 
 export const DICE_SKINS: readonly DiceSkin[] = [
@@ -33,6 +38,10 @@ export const DICE_SKINS: readonly DiceSkin[] = [
   { id: 'osso',      name: 'Osso',             body: '#e9dfc9', bodyEdge: '#b9a782', ink: '#3b1d12', trim: '#7d5a3c', glow: '#000000', glowPower: 0, roughness: 0.7, metalness: 0, inkMetal: false },
   { id: 'cristal',   name: 'Cristal Lilás',    body: '#8f7ae6', bodyEdge: '#4b3aa0', ink: '#ffffff', trim: '#e7e0ff', glow: '#c9b8ff', glowPower: 0.35, roughness: 0.08, metalness: 0, inkMetal: false, glass: true },
   { id: 'ouro',      name: 'Ouro',             body: '#c9952f', bodyEdge: '#7a5414', ink: '#2a1606', trim: '#fff0b8', glow: '#000000', glowPower: 0, roughness: 0.28, metalness: 0.9, inkMetal: false },
+  // Conjuntos detalhados (superfície pintada, com relevo): ver docs/superpowers/specs/2026-10-22-colecao-de-dados.md
+  { id: 'madeira',   name: 'Madeira Velha',    body: '#76492a', bodyEdge: '#2b190a', ink: '#120801', trim: '#6b4423', glow: '#000000', glowPower: 0, roughness: 0.9, metalness: 0, inkMetal: false, surface: 'wood', bump: 1.6, clearcoat: 0 },
+  { id: 'granito',   name: 'Granito',          body: '#6c6f77', bodyEdge: '#32353b', ink: '#1b1e23', trim: '#2c2f35', glow: '#000000', glowPower: 0, roughness: 0.82, metalness: 0.04, inkMetal: false, surface: 'stone', bump: 1.4, clearcoat: 0.04 },
+  { id: 'plastico',  name: 'Plástico Marmorizado', body: '#1f50d8', bodyEdge: '#0a1f70', ink: '#ffffff', trim: '#cfe0ff', glow: '#000000', glowPower: 0, roughness: 0.14, metalness: 0, inkMetal: false, surface: 'plastic', bump: 0.6, clearcoat: 0.95 },
   { id: 'jade',      name: 'Jade',             body: '#1f6b4f', bodyEdge: '#0a3324', ink: '#f2e7c9', trim: '#bfe8c9', glow: '#7dffc0', glowPower: 0.2, roughness: 0.3, metalness: 0.05, inkMetal: false },
 ]
 

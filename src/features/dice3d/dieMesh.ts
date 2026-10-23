@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { centroid, labelText, numberUp, polyhedron, type DieKind, type V3 } from './polyhedra'
 import { DIE_RADIUS } from './simulate'
+import { SURFACES, hashString, hexToRgb, mulberry32, type FacePaint } from './dieSurfaces'
 import type { DiceSkin } from './skins'
 
 // ────────────────────────────────────────────────────────
@@ -10,7 +11,12 @@ import type { DiceSkin } from './skins'
 // conjunto; cada dado na tela tem o próprio material (para poder apagar).
 // ────────────────────────────────────────────────────────
 
-const ATLAS = 1024
+/** Tamanho do atlas: os conjuntos detalhados pedem mais pixels nos dados de muitas faces (cada face é pequena). */
+function atlasSize(kind: DieKind, skin: DiceSkin): number {
+  if (!skin.surface) return 1024
+  const faces = polyhedron(kind).faces.length
+  return faces >= 20 ? 2048 : faces >= 10 ? 1536 : 1024
+}
 
 type V2 = [number, number]
 
@@ -97,21 +103,21 @@ export function dieGeometry(kind: DieKind): THREE.BufferGeometry {
 
 const NUMBER_SIZE: Record<DieKind, number> = { d4: 0.2, d6: 0.5, d8: 0.36, d10: 0.32, d100: 0.27, d12: 0.36, d20: 0.3 }
 
-interface Atlas { map: THREE.CanvasTexture; emissive: THREE.CanvasTexture; rm: THREE.CanvasTexture }
+interface Atlas { map: THREE.CanvasTexture; emissive: THREE.CanvasTexture | null; rm: THREE.CanvasTexture; bump: THREE.CanvasTexture | null }
 const atlases = new Map<string, Atlas>()
-
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace('#', '')
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
-}
 
 function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
   const p = polyhedron(kind)
   const lay = getLayout(kind)
+  const ATLAS = atlasSize(kind, skin)
   const cw = ATLAS / lay.cols, ch = ATLAS / lay.rows
   const make = () => { const c = document.createElement('canvas'); c.width = ATLAS; c.height = ATLAS; return c }
   const color = make(), glow = make(), rm = make()
   const cx = color.getContext('2d')!, gx = glow.getContext('2d')!, rx = rm.getContext('2d')!
+  // relevo (só nos conjuntos detalhados): cinza médio é plano, claro sobe e escuro afunda
+  const bump = skin.surface ? make() : null
+  const bx = bump?.getContext('2d') ?? null
+  if (bx) { bx.fillStyle = 'rgb(128, 128, 128)'; bx.fillRect(0, 0, ATLAS, ATLAS) }
 
   cx.fillStyle = skin.bodyEdge; cx.fillRect(0, 0, ATLAS, ATLAS)
   gx.fillStyle = '#000'; gx.fillRect(0, 0, ATLAS, ATLAS)
@@ -139,25 +145,34 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
       ctx.closePath()
     }
 
-    // corpo: degradê do centro para as bordas, como pedra lapidada
     const radius = Math.max(...poly.map(([x, y]) => Math.hypot(x - center[0], y - center[1])))
-    const grad = cx.createRadialGradient(center[0], center[1] - radius * 0.2, radius * 0.1, center[0], center[1], radius * 1.05)
-    grad.addColorStop(0, skin.body)
-    grad.addColorStop(1, skin.bodyEdge)
-    cx.fillStyle = grad
-    path(cx, -0.06); cx.fill()
+    // conjunto detalhado: a superfície inteira (e os números) vêm do pintor do material
+    const paint: FacePaint | null = bx && skin.surface ? {
+      cx, bx, rx, poly, center, radius, skin, k: ATLAS / 1024, rnd: mulberry32(hashString(`${skin.id}:${kind}:${i}`)),
+    } : null
+    if (paint && skin.surface) SURFACES[skin.surface].face(paint)
+    else {
+      // corpo: degradê do centro para as bordas, como pedra lapidada
+      const grad = cx.createRadialGradient(center[0], center[1] - radius * 0.2, radius * 0.1, center[0], center[1], radius * 1.05)
+      grad.addColorStop(0, skin.body)
+      grad.addColorStop(1, skin.bodyEdge)
+      cx.fillStyle = grad
+      path(cx, -0.06); cx.fill()
 
-    // friso por dentro da borda
-    const trimW = Math.max(2, Math.min(cw, ch) * 0.018)
-    for (const [ctx, style] of [[cx, skin.trim], [gx, glowColor]] as const) {
-      ctx.lineWidth = trimW
-      ctx.strokeStyle = style
-      ctx.lineJoin = 'round'
-      path(ctx, 0.13); ctx.stroke()
+      // friso por dentro da borda
+      const trimW = Math.max(2, Math.min(cw, ch) * 0.018)
+      for (const [ctx, style] of [[cx, skin.trim], [gx, glowColor]] as const) {
+        ctx.lineWidth = trimW
+        ctx.strokeStyle = style
+        ctx.lineJoin = 'round'
+        path(ctx, 0.13); ctx.stroke()
+      }
     }
 
     // números
-    const drawNumber = (text: string, x: number, y: number, angle: number, px: number, underline: boolean) => {
+    const drawNumber = paint && skin.surface
+      ? (text: string, x: number, y: number, angle: number, px: number, underline: boolean) => SURFACES[skin.surface!].number(paint, text, x, y, angle, px, underline)
+      : (text: string, x: number, y: number, angle: number, px: number, underline: boolean) => {
       for (const [ctx, mode] of [[cx, 'color'], [gx, 'glow'], [rx, 'rm']] as const) {
         ctx.save()
         ctx.translate(x, y)
@@ -202,7 +217,8 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
     t.needsUpdate = true
     return t
   }
-  return { map: tex(color, true), emissive: tex(glow, true), rm: tex(rm, false) }
+  const bumpTex = bump ? tex(bump, false) : null
+  return { map: tex(color, true), emissive: skin.glowPower > 0 ? tex(glow, true) : null, rm: tex(rm, false), bump: bumpTex }
 }
 
 function atlasFor(kind: DieKind, skin: DiceSkin): Atlas {
@@ -216,9 +232,10 @@ export function dieMaterial(kind: DieKind, skin: DiceSkin): THREE.MeshPhysicalMa
   const a = atlasFor(kind, skin)
   const m = new THREE.MeshPhysicalMaterial({
     map: a.map,
-    emissiveMap: a.emissive, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 1,
+    ...(a.emissive ? { emissiveMap: a.emissive, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 1 } : {}),
+    ...(a.bump ? { bumpMap: a.bump, bumpScale: skin.bump ?? 1 } : {}),
     roughnessMap: a.rm, metalnessMap: a.rm, roughness: 1, metalness: 1,
-    clearcoat: skin.glass ? 0.3 : 0.12, clearcoatRoughness: 0.45,
+    clearcoat: skin.clearcoat ?? (skin.glass ? 0.3 : 0.12), clearcoatRoughness: skin.surface === 'plastic' ? 0.08 : 0.45,
     flatShading: true,
   })
   if (skin.glass) {
@@ -236,6 +253,6 @@ export async function ensureDiceFont(): Promise<void> {
 
 /** Limpa as texturas (usado ao trocar muito de conjunto). */
 export function disposeDiceAtlases(): void {
-  for (const a of atlases.values()) { a.map.dispose(); a.emissive.dispose(); a.rm.dispose() }
+  for (const a of atlases.values()) { a.map.dispose(); a.emissive?.dispose(); a.rm.dispose(); a.bump?.dispose() }
   atlases.clear()
 }
