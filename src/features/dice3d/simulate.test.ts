@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DIE_KINDS, polyhedron, upIndex, type Quat } from './polyhedra'
-import { DIE_RADIUS, seededRandom, simulateThrow } from './simulate'
+import { DIE_RADIUS, badDice, restHeight, seededRandom, simulateThrow } from './simulate'
 
 const arena = { halfW: 7, halfD: 4.5 }
 
@@ -49,5 +49,44 @@ describe('física do lançamento', () => {
       expect(Math.abs(end.pos[0])).toBeLessThan(3)
       expect(Math.abs(end.pos[2])).toBeLessThan(2.4)
     }
+  })
+
+  it('nenhum dado termina torto, em cima de outro ou atravessando outro', () => {
+    const wide = { halfW: 5.2, halfD: 3.2 }
+    for (const seed of [11, 12, 13, 14, 15, 16]) {
+      const kinds = ['d20', 'd6', 'd6', 'd8', 'd12'] as const
+      const sim = simulateThrow(kinds, { arena: wide, style: 'wide', seed })
+      expect(badDice(kinds, sim), `5 dados, semente ${seed}`).toBe(0)
+    }
+    for (const seed of [21, 22, 23, 24]) {
+      const kinds = ['d6', 'd6', 'd6', 'd6', 'd6', 'd6', 'd6', 'd6'] as const
+      const sim = simulateThrow(kinds, { arena, style: 'tray', seed })
+      expect(badDice(kinds, sim), `8 d6, semente ${seed}`).toBe(0)
+    }
+  })
+
+  it.each(DIE_KINDS)('o %s sozinho sempre termina deitado numa face', (kind) => {
+    for (const seed of [31, 32, 33, 34, 35, 36, 37, 38]) {
+      const sim = simulateThrow([kind], { arena: { halfW: 3, halfD: 2.4 }, style: 'stage', seed })
+      expect(badDice([kind], sim), `${kind} semente ${seed}`).toBe(0)
+      expect(restHeight(kind)).toBeGreaterThan(0)
+    }
+  })
+
+  it('a conferência pega dado torto e dado em cima de outro', () => {
+    const steps = 2
+    const frames = (x: number, y: number, z: number, q: number[]) => new Float32Array([x, y, z, ...q, x, y, z, ...q])
+    const flat = [0, 0, 0, 1]
+    const h = restHeight('d6')
+    const ok = { steps, frames: [frames(0, h, 0, flat), frames(5, h, 0, flat)], up: [0, 0], impacts: [], settled: true }
+    const poly = polyhedron('d6')
+    const upIdx = (q: Quat) => upIndex(poly, q)
+    ok.up = [upIdx([0, 0, 0, 1]), upIdx([0, 0, 0, 1])]
+    expect(badDice(['d6', 'd6'], ok)).toBe(0)
+    const stacked = { ...ok, frames: [frames(0, h, 0, flat), frames(0.2, h * 3, 0, flat)] }
+    expect(badDice(['d6', 'd6'], stacked)).toBe(1)
+    const tilt = Math.sin((20 * Math.PI) / 180 / 2)
+    const tilted = { ...ok, frames: [frames(0, h, 0, [tilt, 0, 0, Math.cos((20 * Math.PI) / 180 / 2)]), frames(5, h, 0, flat)] }
+    expect(badDice(['d6', 'd6'], { ...tilted, up: [upIdx([tilt, 0, 0, Math.cos((20 * Math.PI) / 180 / 2)]), ok.up[1]] })).toBe(1)
   })
 })

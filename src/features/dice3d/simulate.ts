@@ -1,5 +1,5 @@
 import * as CANNON from 'cannon-es'
-import { polyhedron, upIndex, type DieKind, type Quat } from './polyhedra'
+import { polyhedron, rotate, upIndex, type DieKind, type Quat, type V3 } from './polyhedra'
 
 // ────────────────────────────────────────────────────────
 // Física dos dados (cannon-es), rodada inteira ANTES de mostrar: o lançamento
@@ -15,7 +15,8 @@ const MAX_SECONDS = 6
 /** Tamanho de cada dado (raio do vértice mais distante), em unidades do mundo. */
 export const DIE_RADIUS: Record<DieKind, number> = { d4: 1.2, d6: 1.0, d8: 1.08, d10: 1.05, d100: 1.05, d12: 1.1, d20: 1.15 }
 
-export type ThrowStyle = 'tray' | 'stage'
+/** 'tray': bandeja de baixo da tela; 'stage': o palco do painel de teste; 'wide': o palco largo da rolagem livre (câmera mais longe, mais chão). */
+export type ThrowStyle = 'tray' | 'stage' | 'wide'
 
 export interface SimOptions {
   /** Metade da largura (x) e da profundidade (z) do chão onde os dados podem ficar. */
@@ -58,7 +59,63 @@ function dieShape(kind: DieKind): CANNON.ConvexPolyhedron {
   })
 }
 
+/** Altura do centro de um dado deitado numa face (a distância do centro ao plano da face). */
+export function restHeight(kind: DieKind): number {
+  const p = polyhedron(kind)
+  const h = p.faces.map((f, i) => { const v = p.vertices[f[0]], n = p.normals[i]; return v[0] * n[0] + v[1] * n[1] + v[2] * n[2] })
+  return (h.reduce((a, b) => a + b, 0) / h.length) * DIE_RADIUS[kind]
+}
+
+/** Cada dado precisa terminar deitado numa face (nada torto, apoiado em parede ou em outro dado). */
+const MAX_TILT_COS = Math.cos((3.5 * Math.PI) / 180)
+
+/**
+ * Quantos dados terminaram errados: tortos (a face de cima não está na vertical),
+ * em cima de outro dado (centro acima da altura de repouso) ou atravessando outro
+ * (a esfera inscrita de um entra na do outro, o que um sólido não faz).
+ */
+export function badDice(kinds: readonly DieKind[], sim: SimResult): number {
+  const o = (sim.steps - 1) * 7
+  const bad = new Set<number>()
+  const end = sim.frames.map((f) => ({ p: [f[o], f[o + 1], f[o + 2]] as V3, q: [f[o + 3], f[o + 4], f[o + 5], f[o + 6]] as Quat }))
+  kinds.forEach((kind, i) => {
+    const poly = polyhedron(kind)
+    const item = (poly.readsVertex ? poly.vertices : poly.normals)[sim.up[i]]
+    const tilt = rotate(end[i].q, item)[1] / Math.hypot(item[0], item[1], item[2])
+    if (tilt < MAX_TILT_COS) bad.add(i)
+    if (end[i].p[1] > restHeight(kind) * 1.18) bad.add(i)
+  })
+  for (let a = 0; a < kinds.length; a++) for (let b = a + 1; b < kinds.length; b++) {
+    const need = (restHeight(kinds[a]) + restHeight(kinds[b])) * 0.98
+    if (Math.hypot(end[a].p[0] - end[b].p[0], end[a].p[1] - end[b].p[1], end[a].p[2] - end[b].p[2]) < need) { bad.add(a); bad.add(b) }
+  }
+  return bad.size
+}
+
+/** Quantas tentativas valem a pena: a conta cresce com o quadrado dos dados. */
+function attemptsFor(count: number): number {
+  return count <= 6 ? 14 : count <= 16 ? 10 : count <= 40 ? 6 : 2
+}
+
+/**
+ * Lança os dados e confere o resultado: se algum terminar torto ou em cima/dentro de outro,
+ * lança de novo com outra semente (a mesma semente dá sempre a mesma sequência de tentativas).
+ * Fica com a primeira boa ou, se nenhuma for, com a que teve menos dados errados.
+ */
 export function simulateThrow(kinds: readonly DieKind[], opts: SimOptions): SimResult {
+  let best: SimResult | null = null
+  let bestBad = Infinity
+  const tries = attemptsFor(kinds.length)
+  for (let k = 0; k < tries; k++) {
+    const sim = simulateOnce(kinds, { ...opts, seed: (opts.seed + Math.imul(k, 0x9e3779b1)) >>> 0 })
+    const bad = badDice(kinds, sim)
+    if (bad < bestBad) { best = sim; bestBad = bad }
+    if (bad === 0) break
+  }
+  return best as SimResult
+}
+
+function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
   const rnd = seededRandom(opts.seed)
   const { halfW, halfD } = opts.arena
 
@@ -96,10 +153,19 @@ export function simulateThrow(kinds: readonly DieKind[], opts: SimOptions): SimR
     body.linearDamping = 0.14
     body.angularDamping = 0.22
     const r = DIE_RADIUS[kind]
-    if (opts.style === 'stage') {
+    if (opts.style !== 'tray') {
       // um dado jogado de perto, de baixo para o fundo, batendo nas paredes da moldura
-      body.position.set((rnd() - 0.5) * halfW * 0.6, 2.2 + rnd() * 1.2, halfD * 0.55)
-      body.velocity.set((rnd() - 0.5) * 9, 2 + rnd() * 2, -(9 + rnd() * 5))
+      if (kinds.length <= 3) {
+        body.position.set((rnd() - 0.5) * halfW * 0.6, 2.2 + rnd() * 1.2, halfD * 0.55)
+        body.velocity.set((rnd() - 0.5) * 9, 2 + rnd() * 2, -(9 + rnd() * 5))
+      } else {
+        // muitos dados: saem espalhados em grade, do fundo para a frente, para não nascerem uns dentro dos outros
+        const cols = Math.ceil(Math.sqrt((kinds.length * halfW) / halfD))
+        const rows = Math.ceil(kinds.length / cols)
+        const col = i % cols, row = Math.floor(i / cols)
+        body.position.set(((col + 0.5) / cols - 0.5) * halfW * 1.7 + (rnd() - 0.5) * 0.3, 2.2 + rnd() * 1.2 + row * 0.5, halfD * (rows > 1 ? 0.85 - (0.6 * row) / (rows - 1) : 0.55))
+        body.velocity.set((rnd() - 0.5) * 6, 1 + rnd() * 2, -(3 + rnd() * 4))
+      }
     } else {
       // vários dados jogados de um lado da bandeja, como uma mão soltando
       const row = Math.floor(i / 4), col = i % 4

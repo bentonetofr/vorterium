@@ -107,8 +107,9 @@ export class DiceStage {
     this.scene.environmentIntensity = 0.35
     pmrem.dispose()
 
-    this.camera = new THREE.PerspectiveCamera(style === 'stage' ? 30 : 32, 1, 0.1, 200)
+    this.camera = new THREE.PerspectiveCamera(style === 'tray' ? 32 : 30, 1, 0.1, 200)
     if (style === 'stage') this.camera.position.set(0, 8.4, 2.1)
+    else if (style === 'wide') this.camera.position.set(0, 12.6, 3.15)
     else this.camera.position.set(0, 16.5, 3.4)
     this.camera.lookAt(0, 0, 0)
 
@@ -118,7 +119,8 @@ export class DiceStage {
     key.castShadow = true
     key.shadow.mapSize.set(style === 'stage' ? 1024 : 2048, style === 'stage' ? 1024 : 2048)
     const sc = key.shadow.camera
-    sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 50
+    const reach = style === 'wide' ? 30 : 16
+    sc.left = -reach; sc.right = reach; sc.top = reach; sc.bottom = -reach; sc.near = 1; sc.far = style === 'wide' ? 90 : 50
     key.shadow.bias = -0.0004
     key.shadow.radius = 4
     this.scene.add(key)
@@ -144,6 +146,25 @@ export class DiceStage {
     this.render()
   }
 
+  /**
+   * Palco largo: com muitos dados o chão de sempre não comporta todos deitados sem se
+   * sobreporem, então a câmera se afasta até o chão visível dar espaço (até 3 vezes mais longe).
+   */
+  private fitCamera(count: number): void {
+    this.camera.position.set(0, 12.6, 3.15)
+    this.camera.lookAt(0, 0, 0)
+    this.camera.updateMatrixWorld(true)
+    const a = this.arena()
+    const area = 4 * a.halfW * a.halfD
+    const needed = count * 7.3 * 2.6
+    const scale = Math.max(1, Math.min(3, Math.sqrt(needed / area)))
+    if (scale > 1) {
+      this.camera.position.set(0, 12.6 * scale, 3.15 * scale)
+      this.camera.lookAt(0, 0, 0)
+    }
+    this.camera.updateMatrixWorld(true)
+  }
+
   /** O retângulo do chão que a câmera vê, menos uma margem: ali os dados podem parar. */
   private arena(): { halfW: number; halfD: number } {
     const ray = new THREE.Raycaster()
@@ -155,7 +176,7 @@ export class DiceStage {
     }
     const halfW = Math.min(Math.abs(hit(-1, 0).x), Math.abs(hit(1, 0).x), Math.abs(hit(-1, -0.6).x), Math.abs(hit(1, -0.6).x))
     const halfD = Math.min(Math.abs(hit(0, 1).z), Math.abs(hit(0, -1).z))
-    const margin = this.style === 'stage' ? 1.7 : 1.45
+    const margin = this.style === 'tray' ? 1.45 : 1.7
     return { halfW: Math.max(2, halfW - margin), halfD: Math.max(1.6, halfD - margin) }
   }
 
@@ -224,6 +245,7 @@ export class DiceStage {
     await ensureDiceFont()
     if (this.disposed || dice.length === 0) return { done: Promise.resolve(), remove: () => {} }
     if (this.idleMesh) this.clear()
+    if (this.style === 'wide') this.fitCamera(dice.length)
     const arena = this.arena()
     let dx = 0
     if (opts.lane && opts.lane.count > 1) {
@@ -252,7 +274,7 @@ export class DiceStage {
       }
       // no palco (um dado só), gira tudo em torno do eixo vertical para o número ficar reto
       const yaw = new THREE.Quaternion()
-      if (this.style === 'stage' && !p.readsVertex) {
+      if (this.style !== 'tray' && !p.readsVertex) {
         const dir = new THREE.Vector3(...numberUp(p, p.labels.indexOf(label))).applyQuaternion(fix).applyQuaternion(body)
         yaw.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dir.x, -dir.z))
       }

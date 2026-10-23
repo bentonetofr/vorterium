@@ -49,7 +49,7 @@ function plan(formula: string): FreeReading {
 
 export function DndFreeRollPanel({ formula, character, skin, perform, onBack, onClose }: Props) {
   const stageRef = useRef<HTMLDivElement>(null)
-  const { stage, simple } = useDiceStage(stageRef, 'stage')
+  const { stage, simple } = useDiceStage(stageRef, 'wide')
   const [phase, setPhase] = useState<'ready' | 'rolling' | 'done'>('ready')
   const [done, setDone] = useState<{ roll: DiceRoll; reading: FreeReading } | null>(null)
   const [spin, setSpin] = useState<number | null>(null)
@@ -86,7 +86,7 @@ export function DndFreeRollPanel({ formula, character, skin, perform, onBack, on
   const planned = plan(formula)
   return (
     <ModalOverlay onClose={onClose} closeDisabled={phase === 'rolling'}>
-      <div className="dsh-sheet dcp" role="dialog" aria-modal="true" aria-labelledby="dcp-title">
+      <div className="dsh-sheet dcp dcp--free" role="dialog" aria-modal="true" aria-labelledby="dcp-title">
         <button type="button" className="modal-close dcp__close" onClick={onClose} disabled={phase === 'rolling'} aria-label="Fechar">×</button>
 
         <div className="dcp__frame">

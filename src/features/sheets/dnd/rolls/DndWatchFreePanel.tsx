@@ -29,7 +29,7 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
   const reading = useMemo(() => readFree(roll.roll_breakdown ?? [], roll.result), [roll])
   const skin = roll.dice_skin ?? DEFAULT_SKIN
   const stageRef = useRef<HTMLDivElement>(null)
-  const { stage, simple } = useDiceStage(stageRef, 'stage')
+  const { stage, simple } = useDiceStage(stageRef, 'wide')
   const [phase, setPhase] = useState<'rolling' | 'done'>('rolling')
   const [spin, setSpin] = useState<number | null>(null)
   const [leaving, setLeaving] = useState(false)
@@ -64,7 +64,7 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
   const done = phase === 'done'
   return (
     <div className="dwatch">
-      <div className={`dsh-sheet dcp dcp--watch${leaving ? ' is-leaving' : ''}`} role="status" aria-live="polite" aria-label={`${player} está fazendo uma rolagem livre`}>
+      <div className={`dsh-sheet dcp dcp--free dcp--watch${leaving ? ' is-leaving' : ''}`} role="status" aria-live="polite" aria-label={`${player} está fazendo uma rolagem livre`}>
         <button type="button" className="modal-close dcp__close" onClick={() => onDoneRef.current()} aria-label="Fechar">×</button>
         <div className="dcp__watchtag" title={roll.roll_context?.character ? `${player} rolando com ${roll.roll_context.character}` : undefined}>
           <span aria-hidden="true">◉</span> {player} {done ? 'rolou' : 'está rolando'}{roll.is_private && <span title="Rolagem privada"> 🔒</span>}
