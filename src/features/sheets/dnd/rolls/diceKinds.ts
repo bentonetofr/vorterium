@@ -30,7 +30,7 @@ export function stageDiceFor(breakdown: readonly RollBreakdownItem[], skin?: str
       } else if (KIND_OF[term.sides]) out.push({ kind: KIND_OF[term.sides], value, skin, dim })
     })
   }
-  return out.slice(0, 30)
+  return out.slice(0, 200)
 }
 
 /** A conta da rolagem em texto, ex.: "1d20 [14] + 3". */

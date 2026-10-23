@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { alignments, labelForValue, labelText, numberUp, polyhedron, quatFromM3, upIndex, type DieKind, type V3 } from './polyhedra'
+import { BASE_CAMERA, fitCamera, floorArena, placeCamera } from './camera'
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
 import { dieGeometry, dieMaterial, ensureDiceFont } from './dieMesh'
 import { getSkin } from './skins'
@@ -109,7 +110,7 @@ export class DiceStage {
 
     this.camera = new THREE.PerspectiveCamera(style === 'tray' ? 32 : 30, 1, 0.1, 200)
     if (style === 'stage') this.camera.position.set(0, 8.4, 2.1)
-    else if (style === 'wide') this.camera.position.set(0, 12.6, 3.15)
+    else if (style === 'wide') this.camera.position.set(0, BASE_CAMERA.y, BASE_CAMERA.z)
     else this.camera.position.set(0, 16.5, 3.4)
     this.camera.lookAt(0, 0, 0)
 
@@ -146,38 +147,16 @@ export class DiceStage {
     this.render()
   }
 
-  /**
-   * Palco largo: com muitos dados o chão de sempre não comporta todos deitados sem se
-   * sobreporem, então a câmera se afasta até o chão visível dar espaço (até 3 vezes mais longe).
-   */
-  private fitCamera(count: number): void {
-    this.camera.position.set(0, 12.6, 3.15)
-    this.camera.lookAt(0, 0, 0)
-    this.camera.updateMatrixWorld(true)
-    const a = this.arena()
-    const area = 4 * a.halfW * a.halfD
-    const needed = count * 7.3 * 2.6
-    const scale = Math.max(1, Math.min(3, Math.sqrt(needed / area)))
-    if (scale > 1) {
-      this.camera.position.set(0, 12.6 * scale, 3.15 * scale)
-      this.camera.lookAt(0, 0, 0)
-    }
-    this.camera.updateMatrixWorld(true)
+  /** Palco largo: a câmera se afasta conforme a quantidade de dados (ver camera.ts) e devolve o chão visível. */
+  private fitCamera(count: number): { halfW: number; halfD: number } {
+    const fit = fitCamera(this.camera, count, 1.7)
+    this.render()
+    return fit.arena
   }
 
   /** O retângulo do chão que a câmera vê, menos uma margem: ali os dados podem parar. */
   private arena(): { halfW: number; halfD: number } {
-    const ray = new THREE.Raycaster()
-    const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
-    const hit = (x: number, y: number) => {
-      ray.setFromCamera(new THREE.Vector2(x, y), this.camera)
-      const p = new THREE.Vector3()
-      return ray.ray.intersectPlane(floor, p) ? p : new THREE.Vector3()
-    }
-    const halfW = Math.min(Math.abs(hit(-1, 0).x), Math.abs(hit(1, 0).x), Math.abs(hit(-1, -0.6).x), Math.abs(hit(1, -0.6).x))
-    const halfD = Math.min(Math.abs(hit(0, 1).z), Math.abs(hit(0, -1).z))
-    const margin = this.style === 'tray' ? 1.45 : 1.7
-    return { halfW: Math.max(2, halfW - margin), halfD: Math.max(1.6, halfD - margin) }
+    return floorArena(this.camera, this.style === 'tray' ? 1.45 : 1.7)
   }
 
   private render(): void {
@@ -211,6 +190,7 @@ export class DiceStage {
     await ensureDiceFont()
     this.clear()
     if (this.disposed) return
+    if (this.style === 'wide') placeCamera(this.camera, 1)
     const mesh = new THREE.Mesh(dieGeometry(kind), dieMaterial(kind, getSkin(skin)))
     mesh.castShadow = true
     mesh.scale.setScalar(1.15)
@@ -245,8 +225,7 @@ export class DiceStage {
     await ensureDiceFont()
     if (this.disposed || dice.length === 0) return { done: Promise.resolve(), remove: () => {} }
     if (this.idleMesh) this.clear()
-    if (this.style === 'wide') this.fitCamera(dice.length)
-    const arena = this.arena()
+    const arena = this.style === 'wide' ? this.fitCamera(dice.length) : this.arena()
     let dx = 0
     if (opts.lane && opts.lane.count > 1) {
       const w = arena.halfW / opts.lane.count
@@ -288,7 +267,8 @@ export class DiceStage {
     let resolve: () => void = () => {}
     const done = new Promise<void>((r) => { resolve = r })
     const th: Throw = {
-      dice: live, sim, start: performance.now(), speed: opts.speed ?? 1, sound: opts.sound !== false,
+      // lançamentos que demoraram (dados empurrados até pararem planos) tocam um pouco mais rápido
+      dice: live, sim, start: performance.now(), speed: opts.speed ?? Math.min(1.8, Math.max(1, sim.steps / (STEP_HZ * 3.6))), sound: opts.sound !== false,
       sounds: [...sim.impacts].sort((x, y) => x.step - y.step), nextSound: 0, dx, phase: 'run', settleStart: 0, resolve,
     }
     this.throws.push(th)

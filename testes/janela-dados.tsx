@@ -9,7 +9,7 @@ import '../src/index.css'
 import { Presence } from '../src/shared/components/Presence'
 import { supabase } from '../src/shared/lib/supabase'
 import { CurrentCampaignProvider } from '../src/features/campaigns/CurrentCampaignContext'
-import { DndDiceWindow } from '../src/features/sheets/dnd/rolls/DndDiceWindow'
+import { DndDiceCard } from '../src/features/sheets/dnd/rolls/DndDiceCard'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const sb = supabase as any
@@ -31,17 +31,14 @@ sb.from = () => {
 }
 
 function Page() {
+  const [open, setOpen] = useState(true)
   return (
-    <div style={{ position: 'fixed', inset: 0, color: '#eee' }}>
-      <div className="dice-fab__popover fab-panel anim-pop" role="dialog" aria-label="Rolagem de dados" style={{ right: 24, bottom: 24 }}>
-        <div className="dice-fab__popover-header">
-          <span className="dice-fab__popover-icon" aria-hidden="true">⚄</span>
-          <span className="dice-fab__popover-title">Rolagem de dados</span>
-          <button type="button" className="dice-fab__popover-close" aria-label="Fechar rolagem de dados">✕</button>
-        </div>
-        <CurrentCampaignProvider><DndDiceWindow campaignId="c1" currentUserId="u1" /></CurrentCampaignProvider>
+    <CurrentCampaignProvider>
+      <div style={{ padding: 24, color: '#eee' }}>
+        <button onClick={() => setOpen(true)} style={{ padding: '8px 16px' }}>Abrir o cartão de dados</button>
+        {open && <DndDiceCard campaignId="c1" currentUserId="u1" onClose={() => setOpen(false)} />}
       </div>
-    </div>
+    </CurrentCampaignProvider>
   )
 }
 

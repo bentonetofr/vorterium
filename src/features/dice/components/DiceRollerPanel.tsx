@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   EVENS_MAX_DICE,
   QUICK_FORMULAS,
@@ -23,12 +23,10 @@ interface DiceRollerPanelProps {
   /** Chamado com a rolagem assim que ela é registrada — o DiceFab exibe o resultado como notificação. */
   onRoll: (roll: DiceRoll) => void
   /**
-   * D&D: em vez de sortear aqui, entrega a fórmula (já conferida) para a janela de dados
-   * abrir o painel de rolagem dos testes. Quem rola grava a rolagem e avisa em `refreshKey`.
+   * D&D: em vez de sortear aqui, entrega a fórmula (já conferida) para o cartão de dados
+   * rolar no palco 3D. Os botões ficam travados até a promessa terminar, e os recentes recarregam.
    */
-  onRequestRoll?: (formula: string, isPrivate: boolean) => void
-  /** Muda quando uma rolagem feita fora deste painel foi gravada: recarrega os recentes. */
-  refreshKey?: number
+  onRequestRoll?: (formula: string, isPrivate: boolean) => Promise<void> | void
 }
 
 // Quantas rolagens recentes aparecem no popover — histórico completo
@@ -51,7 +49,7 @@ const EXAMPLE_FORMULAS = ['2d6+3', '2#d20', '2@d20', '1#d3+4']
 
 const EVENS_POOLS = Array.from({ length: EVENS_MAX_DICE }, (_, i) => i + 1)
 
-export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRoll, refreshKey }: DiceRollerPanelProps) {
+export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRoll }: DiceRollerPanelProps) {
   // Terra Devastada rola testes de pares — atalho de 1d a 6d no topo.
   const { campaign } = useCurrentCampaign()
   const isTerraDevastada = campaign?.id === campaignId && isTerraDevastadaFamily(campaign.system)
@@ -72,11 +70,15 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
   const { history, loading: histLoading, refreshing: histRefreshing, error: histError, reload: loadHistory } =
     useRecentRolls(campaignId, currentUserId, RECENT_ROLLS_LIMIT)
 
-  useEffect(() => { if (refreshKey) void loadHistory(true) }, [refreshKey, loadHistory])
-
   // ── Executar rolagem ──
   async function executeRoll(formula: string, evensPool?: number) {
-    if (onRequestRoll && evensPool == null) { setRollError(null); setFormulaError(null); onRequestRoll(formula, isPrivate); return }
+    if (onRequestRoll && evensPool == null) {
+      setRollError(null); setFormulaError(null); setRolling(true)
+      try { await onRequestRoll(formula, isPrivate); await loadHistory(true) }
+      catch (err) { setRollError(err instanceof Error ? err.message : 'Não foi possível registrar a rolagem.') }
+      finally { setRolling(false) }
+      return
+    }
     setRollError(null)
     setFormulaError(null)
     setRolling(true)

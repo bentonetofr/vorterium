@@ -11,6 +11,9 @@ import { polyhedron, rotate, upIndex, type DieKind, type Quat, type V3 } from '.
 
 export const STEP_HZ = 60
 const MAX_SECONDS = 6
+/** Tempo a mais, só para os empurrões nos dados que pararam tortos. */
+const NUDGE_SECONDS = 3
+const MAX_NUDGES = 8
 
 /** Tamanho de cada dado (raio do vértice mais distante), em unidades do mundo. */
 export const DIE_RADIUS: Record<DieKind, number> = { d4: 1.2, d6: 1.0, d8: 1.08, d10: 1.05, d100: 1.05, d12: 1.1, d20: 1.15 }
@@ -94,7 +97,7 @@ export function badDice(kinds: readonly DieKind[], sim: SimResult): number {
 
 /** Quantas tentativas valem a pena: a conta cresce com o quadrado dos dados. */
 function attemptsFor(count: number): number {
-  return count <= 6 ? 14 : count <= 16 ? 10 : count <= 40 ? 6 : 2
+  return count <= 6 ? 14 : count <= 16 ? 10 : count <= 40 ? 5 : count <= 70 ? 3 : 2
 }
 
 /**
@@ -121,8 +124,9 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
 
   const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82 * 3.2, 0) })
   world.allowSleep = true
-  world.broadphase = new CANNON.NaiveBroadphase()
-  ;(world.solver as CANNON.GSSolver).iterations = 14
+  // com muitos dados, a varredura por eixo evita testar todos contra todos
+  world.broadphase = kinds.length > 24 ? new CANNON.SAPBroadphase(world) : new CANNON.NaiveBroadphase()
+  ;(world.solver as CANNON.GSSolver).iterations = kinds.length > 40 ? 8 : 14
 
   const floorMat = new CANNON.Material('chao')
   const wallMat = new CANNON.Material('parede')
@@ -184,7 +188,9 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
     return body
   })
 
-  const maxSteps = STEP_HZ * MAX_SECONDS
+  // muitos dados levam mais tempo para parar planos
+  const lastStep = STEP_HZ * (MAX_SECONDS + (kinds.length > 40 ? NUDGE_SECONDS * 2.5 : NUDGE_SECONDS))
+  const maxSteps = Math.round(lastStep)
   const frames = bodies.map(() => new Float32Array(maxSteps * 7))
   const record = () => bodies.forEach((b, i) => {
     const o = step * 7, f = frames[i]
@@ -192,12 +198,31 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
     f[o + 3] = b.quaternion.x; f[o + 4] = b.quaternion.y; f[o + 5] = b.quaternion.z; f[o + 6] = b.quaternion.w
   })
 
+  /** O dado parou torto (apoiado em outro dado ou na parede, ou sobre outro)? */
+  const crooked = (b: CANNON.Body, i: number): boolean => {
+    const poly = polyhedron(kinds[i])
+    const item = (poly.readsVertex ? poly.vertices : poly.normals)[upIndex(poly, [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w] as Quat)]
+    const cos = rotate([b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w] as Quat, item)[1] / Math.hypot(item[0], item[1], item[2])
+    return cos < MAX_TILT_COS || b.position.y > restHeight(kinds[i]) * 1.18
+  }
+
   let settled = false
+  let nudges = 0
   while (step < maxSteps) {
     record()
     step++
     world.step(1 / STEP_HZ)
-    if (step > STEP_HZ * 0.6 && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) { settled = true; break }
+    if (step > STEP_HZ * 0.6 && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) {
+      const wrong = bodies.flatMap((b, i) => (crooked(b, i) ? [b] : []))
+      // quem parou torto leva um empurrãozinho para tombar numa face (os vizinhos acordam se for preciso)
+      if (wrong.length === 0 || nudges >= MAX_NUDGES || step > lastStep - 40) { settled = true; break }
+      nudges++
+      for (const b of wrong) {
+        b.wakeUp()
+        b.velocity.set((rnd() - 0.5) * 5, 3 + rnd() * 2, (rnd() - 0.5) * 5)
+        b.angularVelocity.set((rnd() - 0.5) * 18, (rnd() - 0.5) * 18, (rnd() - 0.5) * 18)
+      }
+    }
   }
   if (step < maxSteps) record()
   const steps = Math.min(step + 1, maxSteps)

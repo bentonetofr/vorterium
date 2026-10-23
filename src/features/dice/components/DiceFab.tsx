@@ -11,7 +11,7 @@ import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts
 import type { DiceRoll, RollBreakdownItem } from '../../../shared/types'
 import { useFeature } from '../../control/siteFeatures'
 import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
-import { DndDiceWindow } from '../../sheets/dnd/rolls/DndDiceWindow'
+import { DndDiceCard } from '../../sheets/dnd/rolls/DndDiceCard'
 import { DieShapeIcon } from './DieShapeIcon'
 import './DiceFab.css'
 
@@ -153,8 +153,8 @@ export function DiceFab() {
   // Terra Devastada Adaptada: o resultado aparece no visual de The Last of Us.
   const { campaign } = useCurrentCampaign()
   const adapted = campaign?.id === campaignId && campaign?.system === 'terra_devastada_adaptada'
-  // D&D: o painel do canto ganha duas abas: o rolador (a rolagem livre abre o painel de
-  // teste e a mesa vê) e a vitrine dos conjuntos de dados.
+  // D&D: em vez do painel do canto, abre o cartão de dados no centro (o palco 3D dos testes
+  // com o rolador embaixo e a vitrine dos conjuntos de dados), sem escurecer o fundo.
   const dndFeature = useFeature(DND_FEATURE)
   const dnd = campaign?.id === campaignId && campaign?.system === 'dnd5e' && dndFeature.visible
   useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
@@ -280,7 +280,13 @@ export function DiceFab() {
         </div>,
       )}
 
-      {(isOpen || !instant) && (
+      {dnd && (
+        <Presence show={isOpen} exitMs={180}>
+          {() => <DndDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} />}
+        </Presence>
+      )}
+
+      {!dnd && (isOpen || !instant) && (
       <Presence show={isOpen} exitMs={180}>
         {(state) => (
         <div className="dice-fab__popover fab-panel anim-pop" data-state={state} data-fab-panel="dice" role="dialog" aria-label="Rolagem de dados">
@@ -296,9 +302,7 @@ export function DiceFab() {
               ✕
             </button>
           </div>
-          {dnd
-            ? <DndDiceWindow campaignId={campaignId} currentUserId={user.id} />
-            : <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />}
+          <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />
         </div>
         )}
       </Presence>

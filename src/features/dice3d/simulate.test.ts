@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import * as THREE from 'three'
+import { MAX_CAMERA_SCALE, fitCamera } from './camera'
 import { DIE_KINDS, polyhedron, upIndex, type Quat } from './polyhedra'
 import { DIE_RADIUS, badDice, restHeight, seededRandom, simulateThrow } from './simulate'
 
@@ -89,4 +91,23 @@ describe('física do lançamento', () => {
     const tilted = { ...ok, frames: [frames(0, h, 0, [tilt, 0, 0, Math.cos((20 * Math.PI) / 180 / 2)]), frames(5, h, 0, flat)] }
     expect(badDice(['d6', 'd6'], { ...tilted, up: [upIdx([tilt, 0, 0, Math.cos((20 * Math.PI) / 180 / 2)]), ok.up[1]] })).toBe(1)
   })
+
+  it('com muitos dados a câmera se afasta e todos terminam planos e separados', () => {
+    const cam = new THREE.PerspectiveCamera(30, 704 / 480, 0.1, 200)
+    const sizes: number[] = []
+    for (const n of [1, 10, 50, 100]) {
+      const { scale, arena } = fitCamera(cam, n, 1.7)
+      sizes.push(scale)
+      if (n === 1) expect(scale).toBe(1)
+      if (n > 50) continue
+      const kinds = Array.from({ length: n }, (_, i) => (['d20', 'd6', 'd8', 'd12', 'd10', 'd4'] as const)[i % 6])
+      let ok = 0
+      for (const seed of [41, 42, 43]) ok += badDice(kinds, simulateThrow(kinds, { arena, style: 'wide', seed })) === 0 ? 1 : 0
+      expect(ok, `${n} dados`).toBeGreaterThanOrEqual(2)
+    }
+    expect(sizes[0]).toBeLessThan(sizes[1])
+    expect(sizes[1]).toBeLessThan(sizes[2])
+    expect(sizes[2]).toBeLessThan(sizes[3])
+    expect(sizes[3]).toBeLessThanOrEqual(MAX_CAMERA_SCALE)
+  }, 60000)
 })
