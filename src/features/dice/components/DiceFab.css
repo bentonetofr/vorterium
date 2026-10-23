@@ -24,6 +24,13 @@
   background: var(--accent-bright);
   transform: translateY(-2px);
 }
+/* Botão de rolagem: vermelho (o botão da ficha do Vortable troca a cor por conta própria). */
+.dice-fab:not(.sheet-fab):not(:disabled) {
+  background: #d9363e;
+  border-color: rgba(255, 150, 156, 0.55);
+  color: #fff;
+}
+.dice-fab:not(.sheet-fab):hover:not(:disabled) { background: #e84a52; }
 .dice-fab:disabled {
   background: var(--bg-overlay);
   border-color: var(--border-base);
