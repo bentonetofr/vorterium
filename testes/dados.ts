@@ -55,6 +55,21 @@ $('adv').onclick = () => {
   void throwOn(stage, [{ kind: 'd20', value: a, dim: a < b }, { kind: 'd20', value: b, dim: b <= a }])
 }
 
+// vários lançamentos ao mesmo tempo, cada um na sua faixa e no conjunto de um jogador
+$('multi').onclick = async () => {
+  const lanes = Math.min(3, tray.laneCount())
+  tray.clear()
+  const skins = DICE_SKINS.slice(0, lanes)
+  out.textContent = `${lanes} faixa(s)`
+  await Promise.all(skins.map(async (s, i) => {
+    const dice = [{ kind: 'd8' as DieKind, value: roll('d8') }, { kind: 'd8' as DieKind, value: roll('d8') }, { kind: 'd6' as DieKind, value: roll('d6') }].map((d) => ({ ...d, skin: s.id }))
+    const h = await tray.addThrow(dice, { skin: s.id, lane: { index: i, count: lanes } })
+    await h.done
+    out.textContent += `
+${s.name}: ${tray.readFaces().join(' ')}`
+  }))
+}
+
 // ── Só o som (para ouvir e comparar sem rolar nada) ──
 $('snd-floor').onclick = () => playDiceHit(0.9, false)
 $('snd-dice').onclick = () => playDiceHit(0.8, true)

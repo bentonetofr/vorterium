@@ -7,6 +7,7 @@ import {
   BARDIC_DICE, REACTIONS, checkContext, checkFormula, judge, readCheck, tilesTotal,
   type Advantage, type CheckReading, type CheckSpec, type ChosenReaction, type Crit, type Outcome,
 } from './checkModel'
+import { markRollBusy } from './rollActivity'
 import { useDiceStage } from './useDiceStage'
 import './DndRolls.css'
 
@@ -57,6 +58,7 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
   const chosen: ChosenReaction[] = Object.entries(picked).map(([key, die]) => ({ key, die }))
   const bonus = tilesTotal(spec.tiles)
 
+  useEffect(() => markRollBusy(), [])   // os testes dos outros esperam este painel fechar
   useEffect(() => { if (stage && phase === 'ready') void stage.idle('d20', skin) }, [stage, phase, skin])
 
   async function roll(rerolledFrom?: string) {

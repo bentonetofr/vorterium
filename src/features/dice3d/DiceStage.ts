@@ -24,7 +24,14 @@ export interface StageDie {
   dim?:   boolean
 }
 
-export interface RollOptions { skin?: string; seed?: number; sound?: boolean; speed?: number }
+export interface RollOptions {
+  skin?: string; seed?: number; sound?: boolean; speed?: number
+  /** Vários lançamentos ao mesmo tempo: cada um usa a sua faixa do chão (`index` de 0 a `count - 1`). */
+  lane?: { index: number; count: number }
+}
+
+/** Um lançamento em andamento ou parado na mesa. `done` resolve quando os dados param; `remove` tira só os dados dele. */
+export interface ThrowHandle { done: Promise<void>; remove: () => void }
 
 interface LiveDie {
   mesh:   THREE.Mesh
@@ -33,6 +40,22 @@ interface LiveDie {
   /** Giro em torno do eixo vertical aplicado em todo o lançamento (só no palco). */
   yaw:    THREE.Quaternion
   dim:    boolean
+}
+
+/** Um lançamento: os dados dele, a gravação da física e o ponto em que está. */
+interface Throw {
+  dice:    LiveDie[]
+  sim:     SimResult
+  start:   number
+  speed:   number
+  sound:   boolean
+  sounds:  SimResult['impacts']
+  nextSound: number
+  /** Deslocamento da faixa do chão em x. */
+  dx:      number
+  phase:   'run' | 'settle' | 'rest'
+  settleStart: number
+  resolve: () => void
 }
 
 /** Tem WebGL e a pessoa não pediu menos movimento? Senão, a tela usa o modo simples. */
@@ -51,7 +74,7 @@ export class DiceStage {
   private renderer: THREE.WebGLRenderer
   private scene = new THREE.Scene()
   private camera: THREE.PerspectiveCamera
-  private live: LiveDie[] = []
+  private throws: Throw[] = []
   private raf = 0
   private resizeObs: ResizeObserver
   private disposed = false
@@ -140,13 +163,26 @@ export class DiceStage {
     if (!this.disposed) this.renderer.render(this.scene, this.camera)
   }
 
+  /** Os dados que estão na mesa agora (de todos os lançamentos). */
+  private get live(): LiveDie[] { return this.throws.flatMap((t) => t.dice) }
+
+  /** Quantos lançamentos cabem lado a lado no chão que a câmera vê (1 a 3). */
+  laneCount(): number {
+    return Math.max(1, Math.min(3, Math.floor((this.arena().halfW * 2) / 5.5)))
+  }
+
   /** Tira os dados da mesa (e o dado parado do palco). */
   clear(): void {
     cancelAnimationFrame(this.raf)
-    for (const d of this.live) { this.scene.remove(d.mesh); (d.mesh.material as THREE.Material).dispose() }
-    this.live = []
+    this.raf = 0
+    for (const t of this.throws) this.dropDice(t)
+    this.throws = []
     if (this.idleMesh) { this.scene.remove(this.idleMesh); (this.idleMesh.material as THREE.Material).dispose(); this.idleMesh = null }
     this.render()
+  }
+
+  private dropDice(t: Throw): void {
+    for (const d of t.dice) { this.scene.remove(d.mesh); (d.mesh.material as THREE.Material).dispose() }
   }
 
   /** Antes de rolar: um dado flutuando no meio do palco, girando devagar ("clique para rolar"). */
@@ -171,19 +207,38 @@ export class DiceStage {
     this.raf = requestAnimationFrame(tick)
   }
 
-  /** Joga os dados e resolve quando todos param (e os descartados apagam). */
+  /** Joga os dados (tirando os que estavam na mesa) e resolve quando todos param e os descartados apagam. */
   async roll(dice: readonly StageDie[], opts: RollOptions = {}): Promise<void> {
     await ensureDiceFont()
     this.clear()
-    if (this.disposed || dice.length === 0) return
-    const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31)
-    const sim: SimResult = simulateThrow(dice.map((d) => d.kind), { arena: this.arena(), style: this.style, seed })
+    const handle = await this.addThrow(dice, opts)
+    await handle.done
+  }
 
-    this.live = dice.map((d, i) => {
+  /**
+   * Joga os dados SEM tirar os que já estão na mesa: vários lançamentos
+   * rolam juntos, cada um na sua faixa (`opts.lane`), e cada um pode sair da
+   * mesa sozinho (`remove`).
+   */
+  async addThrow(dice: readonly StageDie[], opts: RollOptions = {}): Promise<ThrowHandle> {
+    await ensureDiceFont()
+    if (this.disposed || dice.length === 0) return { done: Promise.resolve(), remove: () => {} }
+    if (this.idleMesh) this.clear()
+    const arena = this.arena()
+    let dx = 0
+    if (opts.lane && opts.lane.count > 1) {
+      const w = arena.halfW / opts.lane.count
+      dx = -arena.halfW + (2 * opts.lane.index + 1) * w
+      arena.halfW = w
+    }
+    const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31)
+    const sim: SimResult = simulateThrow(dice.map((d) => d.kind), { arena, style: this.style, seed })
+
+    const live: LiveDie[] = dice.map((d, i) => {
       const p = polyhedron(d.kind)
       // a face lida é a que fica de frente para a câmera (no d4, o vértice de cima)
       const fr = sim.frames[i], o = (sim.steps - 1) * 7
-      const toCam: V3 = [this.camera.position.x - fr[o], this.camera.position.y - fr[o + 1], this.camera.position.z - fr[o + 2]]
+      const toCam: V3 = [this.camera.position.x - (fr[o] + dx), this.camera.position.y - fr[o + 1], this.camera.position.z - fr[o + 2]]
       const body = new THREE.Quaternion(fr[o + 3], fr[o + 4], fr[o + 5], fr[o + 6])
       const up = p.readsVertex ? sim.up[i] : upIndex(p, [body.x, body.y, body.z, body.w], toCam)
       const label = labelForValue(d.kind, d.value)
@@ -208,64 +263,80 @@ export class DiceStage {
       return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim }
     })
 
-    const speed = opts.speed ?? 1
-    const sounds = [...sim.impacts].sort((a, b) => a.step - b.step)
-    let nextSound = 0
-    const q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion()
-    const start = performance.now()
+    let resolve: () => void = () => {}
+    const done = new Promise<void>((r) => { resolve = r })
+    const th: Throw = {
+      dice: live, sim, start: performance.now(), speed: opts.speed ?? 1, sound: opts.sound !== false,
+      sounds: [...sim.impacts].sort((x, y) => x.step - y.step), nextSound: 0, dx, phase: 'run', settleStart: 0, resolve,
+    }
+    this.throws.push(th)
+    if (!this.raf) this.raf = requestAnimationFrame(this.loop)
+    return { done, remove: () => this.removeThrow(th) }
+  }
 
-    await new Promise<void>((resolve) => {
-      const tick = () => {
-        if (this.disposed) { resolve(); return }
-        const t = ((performance.now() - start) / 1000) * STEP_HZ * speed
-        const i0 = Math.min(Math.floor(t), sim.steps - 1)
-        const i1 = Math.min(i0 + 1, sim.steps - 1)
-        const f = Math.min(1, t - i0)
-        for (const d of this.live) {
-          const a = i0 * 7, b = i1 * 7, fr = d.frames
-          d.mesh.position.set(fr[a] + (fr[b] - fr[a]) * f, fr[a + 1] + (fr[b + 1] - fr[a + 1]) * f, fr[a + 2] + (fr[b + 2] - fr[a + 2]) * f)
-          q0.set(fr[a + 3], fr[a + 4], fr[a + 5], fr[a + 6])
-          q1.set(fr[b + 3], fr[b + 4], fr[b + 5], fr[b + 6])
-          d.mesh.quaternion.slerpQuaternions(q0, q1, f).premultiply(d.yaw).multiply(d.fix)
-          // entrada: cresce nos primeiros quadros, como se viesse da mão
-          const grow = Math.min(1, 0.55 + t / 10)
-          d.mesh.scale.setScalar(grow)
-        }
-        if (opts.sound !== false) {
-          while (nextSound < sounds.length && sounds[nextSound].step <= t) {
-            playDiceHit(sounds[nextSound].strength, sounds[nextSound].withDie)
-            nextSound++
-          }
-        }
-        this.render()
-        if (i0 >= sim.steps - 1) { resolve(); return }
-        this.raf = requestAnimationFrame(tick)
+  private removeThrow(t: Throw): void {
+    const i = this.throws.indexOf(t)
+    if (i < 0) return
+    this.dropDice(t)
+    this.throws.splice(i, 1)
+    this.render()
+  }
+
+  private q0 = new THREE.Quaternion()
+  private q1 = new THREE.Quaternion()
+
+  /** Um quadro: cada lançamento em andamento toca a gravação (ou dá o pulinho final), e a cena é desenhada uma vez. */
+  private loop = (): void => {
+    this.raf = 0
+    if (this.disposed) { for (const t of this.throws) t.resolve(); return }
+    const now = performance.now()
+    let running = false
+    for (const t of this.throws) {
+      if (t.phase === 'run') this.stepRun(t, now)
+      if (t.phase === 'settle') this.stepSettle(t, now)
+      if (t.phase !== 'rest') running = true
+    }
+    this.render()
+    if (running) this.raf = requestAnimationFrame(this.loop)
+  }
+
+  private stepRun(th: Throw, now: number): void {
+    const sim = th.sim
+    const t = ((now - th.start) / 1000) * STEP_HZ * th.speed
+    const i0 = Math.min(Math.floor(t), sim.steps - 1)
+    const i1 = Math.min(i0 + 1, sim.steps - 1)
+    const f = Math.min(1, t - i0)
+    for (const d of th.dice) {
+      const a = i0 * 7, b = i1 * 7, fr = d.frames
+      d.mesh.position.set(th.dx + fr[a] + (fr[b] - fr[a]) * f, fr[a + 1] + (fr[b + 1] - fr[a + 1]) * f, fr[a + 2] + (fr[b + 2] - fr[a + 2]) * f)
+      this.q0.set(fr[a + 3], fr[a + 4], fr[a + 5], fr[a + 6])
+      this.q1.set(fr[b + 3], fr[b + 4], fr[b + 5], fr[b + 6])
+      d.mesh.quaternion.slerpQuaternions(this.q0, this.q1, f).premultiply(d.yaw).multiply(d.fix)
+      // entrada: cresce nos primeiros quadros, como se viesse da mão
+      d.mesh.scale.setScalar(Math.min(1, 0.55 + t / 10))
+    }
+    if (th.sound) {
+      while (th.nextSound < th.sounds.length && th.sounds[th.nextSound].step <= t) {
+        playDiceHit(th.sounds[th.nextSound].strength, th.sounds[th.nextSound].withDie)
+        th.nextSound++
       }
-      this.raf = requestAnimationFrame(tick)
-    })
-
-    await this.settle()
+    }
+    if (i0 >= sim.steps - 1) {
+      // fim do lançamento: os descartados (ex.: o d20 que perdeu na vantagem) ficam translúcidos
+      th.phase = 'settle'
+      th.settleStart = now
+      for (const d of th.dice) if (d.dim) { const m = d.mesh.material as THREE.MeshPhysicalMaterial; m.transparent = true; m.depthWrite = false; m.needsUpdate = true }
+    }
   }
 
   /** Fim do lançamento: os que valem dão um pulinho e os descartados apagam. */
-  private settle(): Promise<void> {
-    const start = performance.now()
-    const dur = 360
-    for (const d of this.live) if (d.dim) { const m = d.mesh.material as THREE.MeshPhysicalMaterial; m.transparent = true; m.depthWrite = false; m.needsUpdate = true }
-    return new Promise((resolve) => {
-      const tick = () => {
-        if (this.disposed) { resolve(); return }
-        const k = Math.min(1, (performance.now() - start) / dur)
-        for (const d of this.live) {
-          if (d.dim) (d.mesh.material as THREE.MeshPhysicalMaterial).opacity = 1 - 0.7 * k
-          else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.1)
-        }
-        this.render()
-        if (k < 1) this.raf = requestAnimationFrame(tick)
-        else resolve()
-      }
-      this.raf = requestAnimationFrame(tick)
-    })
+  private stepSettle(th: Throw, now: number): void {
+    const k = Math.min(1, (now - th.settleStart) / 360)
+    for (const d of th.dice) {
+      if (d.dim) (d.mesh.material as THREE.MeshPhysicalMaterial).opacity = 1 - 0.7 * k
+      else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.1)
+    }
+    if (k >= 1) { th.phase = 'rest'; th.resolve() }
   }
 
   /** O número que cada dado mostra agora, lido pela face de frente para a câmera (para conferir). */
@@ -294,8 +365,8 @@ export class DiceStage {
     this.disposed = true
     cancelAnimationFrame(this.raf)
     this.resizeObs.disconnect()
-    for (const d of this.live) (d.mesh.material as THREE.Material).dispose()
-    this.live = []
+    for (const t of this.throws) { this.dropDice(t); t.resolve() }
+    this.throws = []
     this.renderer.dispose()
     this.renderer.domElement.remove()
   }

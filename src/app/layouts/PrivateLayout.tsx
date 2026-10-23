@@ -5,7 +5,7 @@ import { ThemeToggle } from '../../shared/components/ThemeToggle'
 import { AppLogo }     from '../../shared/components/AppLogo'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
-import { DndTableRolls }      from '../../features/sheets/dnd/rolls/DndTableRolls'
+import { DndWatchRolls }      from '../../features/sheets/dnd/rolls/DndWatchRolls'
 import { DndCheckNotice }     from '../../features/sheets/dnd/rolls/DndCheckNotice'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
 import { ChatFab }            from '../../features/chat/components/ChatFab'
@@ -292,7 +292,7 @@ function PrivateLayoutContent() {
       </nav>
     </div>
     <CritWolf />
-    <DndTableRolls />
+    <DndWatchRolls />
     <DndCheckNotice />
     <VortablePip />
     <DocumentOverlay />

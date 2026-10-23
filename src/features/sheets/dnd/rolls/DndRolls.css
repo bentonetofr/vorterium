@@ -141,23 +141,38 @@
 .dtray__parts { font-size: var(--text-xs); color: var(--text-secondary); }
 .dtray__card.is-rolling .dtray__total { color: var(--text-muted); }
 
-/* ── Janelinha da mesa (rolagens dos outros) ── */
-.dtable { position: fixed; left: 16px; bottom: 96px; z-index: 1140; width: 300px; height: 200px; pointer-events: none; opacity: 0; transform: translateY(10px); transition: opacity 200ms ease, transform 200ms ease; }
-.dtable.is-on { opacity: 1; transform: none; }
-.dtable__canvas { position: absolute; inset: 0 0 64px; border-radius: 14px; background: radial-gradient(ellipse at 50% 40%, rgba(60, 38, 90, 0.75), rgba(12, 10, 18, 0.9)); border: 1px solid rgba(232, 184, 92, 0.35); overflow: hidden; }
-.dtable__card {
-  position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; align-items: center; gap: 0 var(--space-3);
-  padding: 8px 14px; text-align: left; pointer-events: auto; cursor: var(--cursor-hand);
-  background: linear-gradient(180deg, rgba(30, 22, 42, 0.97), rgba(12, 10, 18, 0.97)); border: 1px solid rgba(232, 184, 92, 0.45); border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+/* ── Rolagens dos outros jogadores ── */
+.dwatch { position: fixed; inset: 0; z-index: 1120; display: grid; place-items: center; padding: var(--space-4); pointer-events: none; background: rgba(4, 7, 16, 0.35); animation: dcp-rise 260ms var(--ease-out) both; }
+.dwatch .dcp { pointer-events: auto; }
+.dcp--watch { border-color: rgba(143, 190, 255, 0.55); box-shadow: 0 0 0 4px rgba(12, 10, 18, 0.9), 0 0 0 5px rgba(143, 190, 255, 0.3), 0 30px 80px rgba(0, 0, 0, 0.7); transition: opacity 320ms ease, transform 320ms ease; }
+.dcp--watch.is-leaving { opacity: 0; transform: translateY(10px) scale(0.98); }
+.dcp--watch .dcp__frame { border-color: rgba(143, 190, 255, 0.45); }
+.dcp--watch .dcp__stage { cursor: default; }
+.dcp--watch.is-success .dcp__frame { border-color: rgba(246, 210, 124, 0.8); }
+.dcp--watch.is-failure .dcp__frame { border-color: rgba(255, 107, 107, 0.6); }
+.dcp__watchtag {
+  display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% - 56px); padding: 4px 14px; align-self: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-label); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #cfe3ff;
+  background: rgba(143, 190, 255, 0.12); border: 1px solid rgba(143, 190, 255, 0.5); border-radius: 999px;
 }
-.dtable__who { font-family: var(--font-display); font-size: var(--text-md, 16px); font-weight: 600; color: var(--dsh-bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dtable__label { grid-column: 1; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dsh-bone-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dtable__total { grid-column: 2; grid-row: 1 / span 2; font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1; color: #fff7e6; }
-.dtable__outcome, .dtable__crit { grid-column: 1 / -1; font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
-.dtable__outcome--success, .dtable__crit { color: #f6d27c; }
-.dtable__outcome--failure, .dtable__crit--bad { color: #ff6b6b; }
-@media (max-width: 640px) { .dtable { left: 8px; bottom: 84px; width: min(300px, calc(100vw - 16px)); } }
+.dcp__watchtag > span:first-child { color: #8fbeff; animation: dcp-pulse 1.8s ease-in-out infinite; }
+.dcp--watch .dcp__hint { border-color: rgba(143, 190, 255, 0.55); }
+
+/* bandeja dos outros: um cartão por rolagem, cada um na faixa dos seus dados e na cor do conjunto */
+.dwtray__cards { position: absolute; left: 0; right: 0; bottom: calc(100% - 24px); display: grid; gap: var(--space-3); padding: 0 var(--space-4); justify-items: center; }
+.dwtray__card {
+  --skin: #8fbeff;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 170px; max-width: 100%; padding: var(--space-2) var(--space-4); pointer-events: none;
+  background: linear-gradient(180deg, rgba(30, 22, 42, 0.96), rgba(12, 10, 18, 0.96)); border: 1px solid var(--skin); border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 18px -6px var(--skin); animation: dcp-rise 360ms var(--ease-out) both;
+}
+.dwtray__card.is-leaving { animation: dtray-out 380ms ease-in forwards; }
+.dwtray__card.is-rolling .dtray__total { color: var(--text-muted); }
+.dwtray__who { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: var(--text-md, 16px); font-weight: 600; color: var(--dsh-bone); }
+.dwtray__who > span:first-child { color: var(--skin); font-size: 10px; }
+.dwtray__card .dtray__total { font-size: 32px; }
+.dwtray__card .dtray__label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) { .dwtray__card { min-width: 0; padding: 6px 10px; } .dwtray__card .dtray__total { font-size: 26px; } .dwtray__card .dtray__parts { display: none; } }
 
 /* ── Aviso de pedido de teste (fora da ficha) ── */
 .dcnotice {

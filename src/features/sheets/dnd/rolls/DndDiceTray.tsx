@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { DiceRoll } from '../../../../shared/types'
-import { stageDiceFor } from './diceKinds'
+import { partsText, stageDiceFor } from './diceKinds'
 import { useDiceStage } from './useDiceStage'
 import './DndRolls.css'
 
@@ -15,15 +15,6 @@ import './DndRolls.css'
 export interface TrayJob { id: number; label: string; roll: DiceRoll; skin: string }
 
 const HOLD_MS = 4200
-
-function partsText(roll: DiceRoll): string {
-  const bits: string[] = []
-  for (const b of roll.roll_breakdown ?? []) {
-    if (b.type === 'modifier') bits.push(b.value >= 0 ? `+ ${b.value}` : `− ${Math.abs(b.value)}`)
-    else if ('results' in b) bits.push(`${bits.length ? '+ ' : ''}${(b as { notation: string }).notation} [${(b as { results: number[] }).results.join(', ')}]`)
-  }
-  return bits.join(' ')
-}
 
 export function DndDiceTray({ job, onDone }: { job: TrayJob | null; onDone: () => void }) {
   const hostRef = useRef<HTMLDivElement>(null)

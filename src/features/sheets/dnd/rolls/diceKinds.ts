@@ -1,4 +1,4 @@
-import type { RollBreakdownItem } from '../../../../shared/types'
+import type { DiceRoll, RollBreakdownItem } from '../../../../shared/types'
 import type { DieKind } from '../../../dice3d/polyhedra'
 import type { StageDie } from '../../../dice3d/DiceStage'
 
@@ -31,4 +31,14 @@ export function stageDiceFor(breakdown: readonly RollBreakdownItem[], skin?: str
     })
   }
   return out.slice(0, 30)
+}
+
+/** A conta da rolagem em texto, ex.: "1d20 [14] + 3". */
+export function partsText(roll: DiceRoll): string {
+  const bits: string[] = []
+  for (const b of roll.roll_breakdown ?? []) {
+    if (b.type === 'modifier') bits.push(b.value >= 0 ? `+ ${b.value}` : `− ${Math.abs(b.value)}`)
+    else if ('results' in b) bits.push(`${bits.length ? '+ ' : ''}${(b as { notation: string }).notation} [${(b as { results: number[] }).results.join(', ')}]`)
+  }
+  return bits.join(' ')
 }
