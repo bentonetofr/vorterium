@@ -1,0 +1,229 @@
+/* ═══════════════════════════════════════════════════════
+   Ficha de D&D 5e: animações
+   Usa as curvas e keyframes globais (shared/theme/motion.css). Em "menos
+   movimento" o motion.css já zera tudo, e o motion.ts não anima as saídas.
+   Só transform, opacity e sombras: nada que refaça o layout a cada quadro.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Entrada: cabeçalho, números da mesa e cartões das abas em cascata ── */
+.dsh-hero { animation: m-page-in 480ms var(--ease-out) backwards; }
+.dsh-hero__stats > * { animation: m-item-in 420ms var(--ease-out) backwards; }
+.dsh-hero__stats > :nth-child(2) { animation-delay: 35ms; }
+.dsh-hero__stats > :nth-child(3) { animation-delay: 70ms; }
+.dsh-hero__stats > :nth-child(4) { animation-delay: 105ms; }
+.dsh-hero__stats > :nth-child(5) { animation-delay: 140ms; }
+.dsh-hero__stats > :nth-child(6) { animation-delay: 175ms; }
+.dsh-hero__stats > :nth-child(7) { animation-delay: 210ms; }
+
+.anim-tab-panel > .dsh-card,
+.anim-tab-panel > .dsh-col > .dsh-card,
+.anim-tab-panel > .dsh-notes > .dsh-card { animation: m-item-in 440ms var(--ease-out) backwards; }
+/* cartões soltos na aba */
+.anim-tab-panel > .dsh-card:nth-child(2) { animation-delay: 60ms; }
+.anim-tab-panel > .dsh-card:nth-child(3) { animation-delay: 120ms; }
+.anim-tab-panel > .dsh-card:nth-child(n + 4) { animation-delay: 170ms; }
+/* cartões em colunas: a 2ª coluna e o 2º cartão de cada coluna um pouco depois */
+.anim-tab-panel > .dsh-col:nth-child(2) > .dsh-card { animation-delay: 60ms; }
+.anim-tab-panel > .dsh-col > .dsh-card:nth-child(2) { animation-delay: 120ms; }
+.anim-tab-panel > .dsh-col:nth-child(2) > .dsh-card:nth-child(2) { animation-delay: 170ms; }
+/* anotações (três lado a lado), depois dos cartões de cima */
+.anim-tab-panel > .dsh-notes > .dsh-card:nth-child(1) { animation-delay: 140ms; }
+.anim-tab-panel > .dsh-notes > .dsh-card:nth-child(2) { animation-delay: 190ms; }
+.anim-tab-panel > .dsh-notes > .dsh-card:nth-child(3) { animation-delay: 240ms; }
+
+/* ── Linhas das listas: entram uma a uma; as recém-adicionadas acendem ── */
+.dsh-list > li, .dsh-resgrid > li, .dsh-slots > li, .dsh-auto__list > li {
+  animation: m-item-in 380ms var(--ease-out) backwards;
+}
+.dsh-list > li:nth-child(2), .dsh-resgrid > li:nth-child(2), .dsh-slots > li:nth-child(2) { animation-delay: 30ms; }
+.dsh-list > li:nth-child(3), .dsh-resgrid > li:nth-child(3), .dsh-slots > li:nth-child(3) { animation-delay: 60ms; }
+.dsh-list > li:nth-child(4), .dsh-resgrid > li:nth-child(4), .dsh-slots > li:nth-child(4) { animation-delay: 90ms; }
+.dsh-list > li:nth-child(5), .dsh-resgrid > li:nth-child(5), .dsh-slots > li:nth-child(5) { animation-delay: 120ms; }
+.dsh-list > li:nth-child(n + 6), .dsh-resgrid > li:nth-child(n + 6), .dsh-slots > li:nth-child(n + 6) { animation-delay: 150ms; }
+/* (só onde a classe de "ligado" não troca a animação: senão desligar faria a entrada tocar de novo) */
+.dsh-spell-group, .dsh-abilities > *, .dsh-coins > *, .dsh-passives > *, .dsh-skills > li { animation: m-item-in 380ms var(--ease-out) backwards; }
+.dsh-abilities > :nth-child(2), .dsh-coins > :nth-child(2), .dsh-passives > :nth-child(2) { animation-delay: 40ms; }
+.dsh-abilities > :nth-child(3), .dsh-coins > :nth-child(3), .dsh-passives > :nth-child(3) { animation-delay: 80ms; }
+.dsh-abilities > :nth-child(4), .dsh-coins > :nth-child(4) { animation-delay: 120ms; }
+.dsh-abilities > :nth-child(5), .dsh-coins > :nth-child(5) { animation-delay: 160ms; }
+.dsh-abilities > :nth-child(6) { animation-delay: 200ms; }
+.dsh-skills > li:nth-child(n + 2) { animation-delay: 30ms; }
+.dsh-skills > li:nth-child(n + 4) { animation-delay: 60ms; }
+.dsh-skills > li:nth-child(n + 7) { animation-delay: 90ms; }
+.dsh-skills > li:nth-child(n + 10) { animation-delay: 120ms; }
+.dsh-skills > li:nth-child(n + 13) { animation-delay: 150ms; }
+.dsh-skills > li:nth-child(n + 16) { animation-delay: 180ms; }
+.dsh-sheet .is-new.is-new { animation: m-item-in 420ms var(--ease-spring) backwards, dsh-new 1500ms var(--ease-out); }
+@keyframes dsh-new {
+  0%, 15% { box-shadow: 0 0 0 1px var(--dsh-accent), 0 0 24px var(--dsh-accent-glow); background-color: var(--dsh-accent-soft); }
+  100%    { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; }
+}
+
+/* etiquetas de proficiência, efeitos das condições e selos de estado surgem com um estalo */
+.dsh-prof__chip, .dsh-condfx > li, .dsh-pill, .dsh-tag { animation: dsh-pop 320ms var(--ease-spring) backwards; }
+.dsh-condfx > li { transform-origin: left center; animation-name: m-form-in; }
+@keyframes dsh-pop {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Avisos, chamadas e estados vazios */
+.dsh-warn, .dsh-callout { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+.dsh-noattack { animation: m-item-in 420ms var(--ease-out) backwards; }
+.dsh-noattack strong { display: inline-block; animation: dsh-float 4s ease-in-out 600ms infinite; }
+@keyframes dsh-float { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
+
+/* ── Abrir e fechar: textos das características, magias, itens e armas ── */
+.dsh-feature details[open] > .dsh-feature__body,
+.dsh-spell__more[open] > :not(summary),
+.dsh-attack__desc > :not(button) { animation: m-form-in 300ms var(--ease-out) backwards; }
+.dsh-spell__more[open] > :not(summary):nth-child(3) { animation-delay: 40ms; }
+.dsh-spell__more[open] > :not(summary):nth-child(n + 4) { animation-delay: 80ms; }
+.dsh-feature summary::before, .dsh-spell__more > summary::before { transition: transform 260ms var(--ease-spring); }
+.dsh-feature details[open] > summary { animation: dsh-summary-on 420ms var(--ease-out); }
+@keyframes dsh-summary-on { from { background: var(--dsh-accent-soft); } }
+
+/* ── Números que mudaram: pulinho e um clarão (key do motion.ts) ── */
+.dsh-bump { display: inline-block; animation: dsh-bump 460ms var(--ease-spring); }
+@keyframes dsh-bump {
+  0%   { transform: scale(1.28); color: #fff; text-shadow: 0 0 14px var(--dsh-accent-glow); }
+  100% { transform: none; text-shadow: 0 0 0 transparent; }
+}
+
+/* ── Interruptores que ligam: estalam ── */
+.dsh-cond.is-on, .dsh-flag.is-on, .dsh-seg__btn.is-on, .dsh-pick.is-on, .dsh-bookchip.is-on,
+.dsh-exhaust__step.is-on, .dsh-auto__choice button.is-on { animation: dsh-on 340ms var(--ease-spring); }
+@keyframes dsh-on {
+  0%   { transform: scale(0.86); }
+  55%  { transform: scale(1.07); }
+  100% { transform: none; }
+}
+.dsh-exhaust__step.is-on.is-death { animation: dsh-on 340ms var(--ease-spring), dsh-doom 1.6s ease-in-out 340ms infinite; }
+@keyframes dsh-doom { 50% { box-shadow: 0 0 16px rgba(255, 122, 122, 0.65); } }
+
+/* Bolinhas: a que enche estala com um anel; a que esvazia encolhe e volta */
+.dsh-pip.is-on { animation: dsh-pip-on 380ms var(--ease-spring); }
+.dsh-pip:not(.is-on) { animation: dsh-pip-off 260ms var(--ease-out); }
+@keyframes dsh-pip-on {
+  0%   { transform: scale(0.4); box-shadow: 0 0 0 0 var(--dsh-accent-glow); }
+  60%  { transform: scale(1.25); box-shadow: 0 0 0 6px transparent; }
+  100% { transform: none; }
+}
+@keyframes dsh-pip-off { from { transform: scale(0.7); } }
+
+/* Caixas de salvaguarda e o interruptor de Inspiração */
+.dsh-ability__save input[type='checkbox']:checked { animation: dsh-pip-on 380ms var(--ease-spring); }
+.dsh-ability.is-prof { transition: border-color var(--transition-fast), box-shadow 400ms var(--ease-out); }
+/* (o brilho vai no número: o tile já tem a animação de entrada do cabeçalho) */
+.dsh-stat--click.is-on .dsh-stat__value { display: inline-block; animation: dsh-inspire 900ms var(--ease-spring); }
+@keyframes dsh-inspire {
+  0%   { transform: scale(0.6); text-shadow: 0 0 0 transparent; }
+  40%  { transform: scale(1.25); color: #fff0b8; text-shadow: 0 0 18px rgba(246, 210, 124, 0.9); }
+  100% { transform: none; text-shadow: 0 0 0 transparent; }
+}
+
+/* ── Barras: enchem ao aparecer ── */
+.dsh-hp__fill, .dsh-hp__temp, .dsh-hp__lag, .dsh-load__fill, .dsh-xp__fill { transform-origin: left center; animation: dsh-grow 700ms var(--ease-out) 120ms backwards; }
+@keyframes dsh-grow { from { transform: scaleX(0); } }
+
+/* PV: a parte perdida fica clara um instante e escorre atrás da barra (o "rastro" do dano) */
+.dsh-hp__track { position: relative; }
+.dsh-hp__fill, .dsh-hp__temp { position: relative; z-index: 1; }
+.dsh-hp__lag {
+  position: absolute; top: 0; bottom: 0; left: 0; z-index: 0; border-radius: 999px;
+  background: linear-gradient(180deg, #ff5a62, var(--dsh-accent-dark)); box-shadow: 0 0 8px var(--dsh-accent-glow);
+  transition: width 560ms var(--ease-out) 360ms;
+}
+/* sem PV e rolando salvaguardas contra a morte: o quadro pulsa como um coração */
+.dsh-hp--down, .dsh-death.is-active { animation: dsh-heartbeat 1.6s ease-in-out infinite; }
+@keyframes dsh-heartbeat {
+  0%, 45%, 100% { box-shadow: 0 0 10px rgba(255, 122, 122, 0.15); }
+  12%           { box-shadow: 0 0 20px 1px rgba(255, 122, 122, 0.45); }
+  24%           { box-shadow: 0 0 8px rgba(255, 122, 122, 0.2); }
+  34%           { box-shadow: 0 0 24px 2px rgba(255, 122, 122, 0.5); }
+}
+/* sobrecarregado: o trilho da carga pulsa (no trilho, para não reiniciar o enchimento da barra) */
+.dsh-load:has(> .is-over) { animation: dsh-overload 1.8s ease-in-out 900ms infinite; }
+@keyframes dsh-overload { 50% { box-shadow: 0 0 14px rgba(240, 180, 74, 0.55), inset 0 1px 3px rgba(0, 0, 0, 0.5); } }
+
+/* ── Botões: brilho passando nos principais, afundar no clique ── */
+.dsh-chip--primary, .dsh-newattack__add, .dsh-bookcta__open { position: relative; overflow: hidden; }
+.dsh-chip--primary::after, .dsh-newattack__add::after, .dsh-bookcta__open::after {
+  content: ''; position: absolute; inset: 0; width: 45%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+}
+@media (hover: hover) {
+  .dsh-chip--primary:hover:not(:disabled)::after, .dsh-newattack__add:hover:not(:disabled)::after, .dsh-bookcta__open:hover::after { animation: m-glint 720ms var(--ease-out); }
+  .dsh-bookcta__open:hover { transform: translateY(-2px); }
+  .dsh-x:hover:not(:disabled) { transform: rotate(90deg); }
+  .dsh-card { transition: border-color var(--transition-fast), box-shadow 320ms var(--ease-out); }
+  .dsh-card:hover { box-shadow: 0 8px 26px rgba(0, 0, 0, 0.26); }
+  .dsh-stat:not(.dsh-stat--click):hover { transform: translateY(-2px); }
+  .dsh-restile, .dsh-ability, .dsh-coin, .dsh-passive, .dsh-spellstat, .dsh-defense__ac { transition: border-color var(--transition-fast), box-shadow 320ms var(--ease-out), transform 260ms var(--ease-out); }
+  .dsh-restile:hover, .dsh-ability:hover, .dsh-coin:hover, .dsh-passive:hover { transform: translateY(-2px); }
+  .dsh-portrait__img img { transition: transform 500ms var(--ease-out); }
+  .dsh-portrait__img:hover:not(:disabled) img { transform: scale(1.07); }
+  /* (o rótulo é item do botão flex, então já aceita transform sem mudar o display, que esconde o nome curto) */
+  .dsh-tabs .campaign-tab__label { transition: transform 200ms var(--ease-spring); }
+  .dsh-tabs .campaign-tab:hover .campaign-tab__label { transform: translateY(-1px); }
+}
+/* no toque, o "passar o mouse" gruda depois do toque: sem levantar nem girar */
+@media (hover: none) {
+  .dsh-pip:hover:not(:disabled), .dsh-bookcard:hover, .dsh-rollbtn:hover { transform: none; }
+}
+
+.dsh-chip, .dsh-mini, .dsh-pick, .dsh-cond, .dsh-flag, .dsh-seg__btn, .dsh-exhaust__step, .dsh-bookchip, .dsh-hpadjust__btn,
+.dsh-newattack__add, .dsh-bookcta__open, .dsh-x, .dsh-stat--click, .dsh-bookcard__more, .dsh-numsign, .dsh-link, .dsh-portrait__remove, .dsh-stat__edit {
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease,
+              box-shadow var(--motion-base) var(--ease-out), opacity var(--motion-fast) ease, transform 220ms var(--ease-spring);
+}
+.dsh-auto__choice button { transition: color var(--motion-fast) ease, background var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), transform 220ms var(--ease-spring); }
+.dsh-rollbtn { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-base) var(--ease-out), transform 260ms var(--ease-spring); }
+
+.dsh-chip:active:not(:disabled), .dsh-mini:active:not(:disabled), .dsh-pick:active:not(:disabled), .dsh-cond:active:not(:disabled),
+.dsh-flag:active:not(:disabled), .dsh-seg__btn:active:not(:disabled), .dsh-exhaust__step:active:not(:disabled), .dsh-bookchip:active,
+.dsh-newattack__add:active:not(:disabled), .dsh-bookcta__open:active, .dsh-stat--click:active:not(:disabled), .dsh-bookcard__more:active,
+.dsh-auto__choice button:active:not(:disabled), .dsh-link:active:not(:disabled), .dsh-stat__edit:active:not(:disabled) {
+  transform: scale(0.94); transition-duration: 70ms;
+}
+.dsh-hpadjust__btn:active { transform: scale(0.95); transition-duration: 70ms; }
+.dsh-x:active:not(:disabled), .dsh-portrait__remove:active, .dsh-numsign:active { transform: scale(0.8); transition-duration: 70ms; }
+.dsh-rollbtn:active:not(:disabled) { transform: rotate(-28deg) scale(0.86); transition-duration: 80ms; }
+.dsh-pip:active:not(:disabled) { transform: scale(0.82); transition-duration: 60ms; }
+.dsh-bookcard:active { transform: scale(0.97); transition-duration: 70ms; }
+.dsh-portrait__img:active:not(:disabled) { transform: scale(0.96); }
+.dsh-portrait__img { transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform 220ms var(--ease-spring); }
+.dsh-portrait__img img { animation: m-img-reveal 620ms var(--ease-out) backwards; }
+
+/* campos ganham um fio de luz ao focar */
+.dsh-field--tile:focus-within, .dsh-itemnum:focus-within, .dsh-ability__scorebox:focus-within, .dsh-coin:focus-within, .dsh-hpadjust__amount:focus-within {
+  animation: dsh-focus 520ms var(--ease-out);
+}
+@keyframes dsh-focus { from { box-shadow: 0 0 0 4px var(--dsh-accent-soft); } }
+
+/* Abas da ficha: o fio do destaque deslizante em vermelho, a cor da ficha */
+.dsh-tabs .tab-indicator::after { background: linear-gradient(90deg, transparent, var(--dsh-accent), transparent); }
+
+/* ── Livro de magias e de itens ── */
+.dsh-bookgrid > li { animation: m-item-in 360ms var(--ease-out) backwards; }
+.dsh-bookgrid > li:nth-child(2) { animation-delay: 20ms; }
+.dsh-bookgrid > li:nth-child(3) { animation-delay: 40ms; }
+.dsh-bookgrid > li:nth-child(4) { animation-delay: 60ms; }
+.dsh-bookgrid > li:nth-child(5) { animation-delay: 80ms; }
+.dsh-bookgrid > li:nth-child(6) { animation-delay: 100ms; }
+.dsh-bookgrid > li:nth-child(7) { animation-delay: 120ms; }
+.dsh-bookgrid > li:nth-child(8) { animation-delay: 140ms; }
+.dsh-bookgrid > li:nth-child(n + 9) { animation-delay: 160ms; }
+.dsh-bookcard.is-owned .dsh-bookcard__state { display: inline-block; animation: dsh-pop 320ms var(--ease-spring); }
+.dsh-book__detail { animation: dsh-slide-in 340ms var(--ease-out) backwards; }
+@keyframes dsh-slide-in { from { opacity: 0; transform: translateX(32px); } }
+.dsh-book__count, .dsh-book__empty { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+
+/* ── Rodapé: estado do salvamento e avisos ── */
+.dsh-save__text { display: inline-flex; align-items: center; gap: var(--space-2); animation: m-alert-in 260ms var(--ease-out) backwards; }
+.dsh-save--saved .dsh-save__text { animation: m-alert-in 260ms var(--ease-out) backwards, dsh-saved 1200ms var(--ease-out); }
+@keyframes dsh-saved { 0% { text-shadow: 0 0 12px rgba(139, 224, 164, 0.8); } 100% { text-shadow: 0 0 0 transparent; } }
+.dsh-save--error .dsh-save__text { animation: m-alert-in 260ms var(--ease-out) backwards, m-shake 420ms var(--ease-out) 120ms; }
+.dsh-notice { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+.dsh-sheet__footer > .dsh-chip { animation: dsh-pop 280ms var(--ease-spring) backwards; }

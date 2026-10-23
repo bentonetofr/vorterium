@@ -8,6 +8,8 @@ import { DndDiceVitrine } from './DndDiceVitrine'
 import { freeContext, freeLabel, readFree, resultsText, type FreeGroup, type FreeReading } from './freeRoll'
 import { markRollBusy } from './rollActivity'
 import { useDiceStage } from './useDiceStage'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 import './DndDiceWindow.css'
 

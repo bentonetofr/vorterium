@@ -10,6 +10,8 @@ import {
 } from '../services/dndCheckService'
 import { CHECK_CHOICES } from './checkRequests'
 import { judge } from './checkModel'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────

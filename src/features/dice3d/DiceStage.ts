@@ -61,6 +61,10 @@ interface Throw {
   resolve: () => void
 }
 
+/** Altura em que o dado parado (antes de rolar) flutua sobre o chão. */
+const IDLE_HEIGHT = 2.2
+const IDLE_PLANE = new THREE.Plane(new THREE.Vector3(0, 1, 0), -IDLE_HEIGHT)
+
 /** Tem WebGL e a pessoa não pediu menos movimento? Senão, a tela usa o modo simples. */
 export function diceStageSupported(): boolean {
   if (typeof window === 'undefined') return false
@@ -82,6 +86,7 @@ export class DiceStage {
   private resizeObs: ResizeObserver
   private disposed = false
   private idleMesh: THREE.Mesh | null = null
+  private idleRay = new THREE.Raycaster()
 
   constructor(host: HTMLElement, style: ThrowStyle) {
     this.host = host
@@ -209,15 +214,28 @@ export class DiceStage {
     this.idleMesh = mesh
     this.scene.add(mesh)
     const start = performance.now()
+    const home = new THREE.Vector3(0, IDLE_HEIGHT, 0)
     const tick = () => {
       if (this.disposed || this.idleMesh !== mesh) return
       const t = (performance.now() - start) / 1000
-      mesh.position.set(0, 2.2 + Math.sin(t * 1.6) * 0.18, 0)
+      if (this.style === 'wide') this.idleHome(home)
+      mesh.position.set(home.x, home.y + Math.sin(t * 1.6) * 0.18, home.z)
       mesh.rotation.set(0.5 + Math.sin(t * 0.7) * 0.25, t * 0.6, 0.3 + Math.cos(t * 0.5) * 0.2)
       this.render()
       this.raf = requestAnimationFrame(tick)
     }
     this.raf = requestAnimationFrame(tick)
+  }
+
+  /**
+   * Onde o dado parado do palco largo flutua: no meio da caixa livre da tela (entre o título e o total), e
+   * não em cima do meio do chão, que com a câmera inclinada aparece mais para cima. Recalculado a cada
+   * quadro, então acompanha o palco quando ele muda de tamanho.
+   */
+  private idleHome(out: THREE.Vector3): void {
+    const box = this.screenBox()
+    this.idleRay.setFromCamera(new THREE.Vector2(0, (box.top + box.bottom) / 2), this.camera)
+    if (!this.idleRay.ray.intersectPlane(IDLE_PLANE, out)) out.set(0, IDLE_HEIGHT, 0)
   }
 
   /** Joga os dados (tirando os que estavam na mesa) e resolve quando todos param e os descartados apagam. */

@@ -4,6 +4,8 @@ import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { stageDiceFor } from './diceKinds'
 import { freeLabel, readFree, resultsText } from './freeRoll'
 import { useDiceStage } from './useDiceStage'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────

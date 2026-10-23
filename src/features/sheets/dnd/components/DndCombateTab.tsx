@@ -7,9 +7,10 @@ import { armorWarning, attackFor, strengthWarning } from '../model/sheetModel'
 import { formatSigned } from '../model/format'
 import { createDndAttack, deleteDndAttack, updateDndAttack } from '../services/dndSheetService'
 import { DerivedField, NumberField, Pips } from './DndControls'
-import { ChipRow, StatChip, StatusPill } from './DndVisuals'
+import { Bump, ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
+import { leaveThen, useFreshKeys } from './motion'
 import { RollButton } from '../rolls/RollButton'
 import { useDndRoll } from '../rolls/DndRollProvider'
 import { attackCheck, critDamage, damageFormulaOf, deathCheck, deathResult, initiativeCheck } from '../rolls/checkModel'
@@ -145,10 +146,9 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
       data.setDetails((d) => ({ ...d, attacks: d.attacks.map((x) => (x.id === saved.id ? saved : x)) }))
     })
 
-  const removeAttack = (a: DndCharacterAttack) => run(a.id, async () => {
-    await deleteDndAttack(a.id)
-    data.setDetails((d) => ({ ...d, attacks: d.attacks.filter((x) => x.id !== a.id) }))
-  })
+  const removeAttack = (a: DndCharacterAttack, from: Element) => run(a.id, () => leaveThen(from, () => deleteDndAttack(a.id),
+    () => data.setDetails((d) => ({ ...d, attacks: d.attacks.filter((x) => x.id !== a.id) }))))
+  const isNew = useFreshKeys(data.details.attacks.map((a) => a.id))
 
   const diePool = Object.entries(derived.hitDice).map(([die, total]) => ({ die: Number(die), total })).sort((a, b) => b.die - a.die)
 
@@ -157,7 +157,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Pontos de vida</h4>
-          <span className="dsh-badge">{hp} / {hpMax}{form.hp_temp ? ` (+${form.hp_temp})` : ''}</span>
+          <span className="dsh-badge"><Bump value={`${hp}/${hpMax}/${form.hp_temp}`}>{hp} / {hpMax}{form.hp_temp ? ` (+${form.hp_temp})` : ''}</Bump></span>
         </div>
         <div className="dsh-trio">
           <label className="dsh-field dsh-field--tile dsh-hptile"><span className="dsh-label">Atuais</span>
@@ -201,13 +201,13 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
               return (
                 <div key={die} className="dsh-hitdice__row">
                   <span className="dsh-hitdice__die">d{die}</span>
-                  <span className="dsh-hitdice__count"><strong>{left}</strong>/{total}</span>
+                  <span className="dsh-hitdice__count"><strong><Bump value={left} /></strong>/{total}</span>
                   {total <= 12 && <Pips total={total} filled={left} size="sm" label={`Dados d${die} disponíveis`} />}
                   <button type="button" className="dsh-chip" disabled={readOnly || left < 1} onClick={() => void spendDie(die)}>Gastar e rolar</button>
                 </div>
               )
             })}
-            {lastRoll && <StatusPill tone="good">{lastRoll}</StatusPill>}
+            {lastRoll && <StatusPill key={lastRoll} tone="good">{lastRoll}</StatusPill>}
           </div>
         )}
       </section>
@@ -226,12 +226,12 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             const bonusText = a.attack_bonus.trim() || (view ? formatSigned(view.attack.attackBonus) : '')
             const dmgText = a.damage.trim() || view?.attack.damageFormula || ''
             return (
-              <li key={a.id} className="dsh-attack">
+              <li key={a.id} className={`dsh-attack${isNew(a.id) ? ' is-new' : ''}`}>
                 <div className="dsh-attack__main">
                   <strong className="dsh-attack__name">{a.name}</strong>
                   <span className="dsh-attack__stat" title="Bônus de ataque">{bonusText || '-'}</span>
                   <span className="dsh-attack__stat dsh-attack__stat--dmg" title="Dano">{dmgText || '-'}{view?.weapon.damageType ? ` ${view.weapon.damageType}` : a.damage_type ? ` ${a.damage_type}` : ''}</span>
-                  {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeAttack(a)} disabled={busy === a.id} aria-label={`Remover ${a.name}`}>×</button>}
+                  {!readOnly && <button type="button" className="dsh-x" onClick={(e) => void removeAttack(a, e.currentTarget)} disabled={busy === a.id} aria-label={`Remover ${a.name}`}>×</button>}
                 </div>
                 {roller.canRoll && (
                   <div className="dsh-attack__rolls">
@@ -321,7 +321,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
       </section>
 
       <section className="dsh-card">
-        <div className="dsh-card__header"><h4 className="dsh-card__title">Condições</h4><span className="dsh-badge">{form.conditions.length ? `${form.conditions.length} ativa${form.conditions.length > 1 ? 's' : ''}` : 'nenhuma'}</span></div>
+        <div className="dsh-card__header"><h4 className="dsh-card__title">Condições</h4><span className="dsh-badge"><Bump value={form.conditions.length}>{form.conditions.length ? `${form.conditions.length} ativa${form.conditions.length > 1 ? 's' : ''}` : 'nenhuma'}</Bump></span></div>
         <div className="dsh-conds">
           {CONDITIONS.map((c) => {
             const on = form.conditions.includes(c.key as never)

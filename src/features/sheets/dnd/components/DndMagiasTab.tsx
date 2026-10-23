@@ -12,11 +12,12 @@ import { formatSigned } from '../model/format'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceService'
 import { DerivedField, NumberField, Pips } from './DndControls'
-import { ChipRow, StatChip, StatusPill } from './DndVisuals'
+import { Bump, ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndOwnSpellDetails, DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
 import type { SheetCtx } from './sheetContext'
+import { leaveThen, useFreshKeys } from './motion'
 import { RollButton } from '../rolls/RollButton'
 import { useDndRoll } from '../rolls/DndRollProvider'
 import { spellAttackCheck } from '../rolls/checkModel'
@@ -125,10 +126,9 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     return patchSpell(s, { catalog_key: null, description: [text, s.description].filter((x) => x.trim()).join('\n\n---\n\n') })
   }
 
-  const removeSpell = (s: DndCharacterSpell) => run(s.id, async () => {
-    await deleteDndSpell(s.id)
-    data.setDetails((d) => ({ ...d, spells: d.spells.filter((x) => x.id !== s.id) }))
-  })
+  const removeSpell = (s: DndCharacterSpell, from: Element) => run(s.id, () => leaveThen(from, () => deleteDndSpell(s.id),
+    () => data.setDetails((d) => ({ ...d, spells: d.spells.filter((x) => x.id !== s.id) }))))
+  const isNew = useFreshKeys(data.details.spells.map((s) => s.id))
 
   if (!casting && spells.length === 0 && readOnly) return <div className="dsh-tab"><p className="dsh-faint">Este personagem não conjura magias.</p></div>
 
@@ -218,7 +218,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                     <Pips total={max} filled={available} label={`Espaços de ${lv}º nível disponíveis`}
                       onChange={readOnly || !row || busy === key ? undefined : (n) => setSlots(key, n)} />
                   )}
-                  <span className="dsh-faint">{max > 0 ? `${available}/${max}` : ''}</span>
+                  <span className="dsh-faint">{max > 0 ? <Bump value={`${available}/${max}`} /> : ''}</span>
                 </li>
               )
             })}
@@ -249,8 +249,8 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Magias do personagem</h4>
           <span className="dsh-card__badges">
-            {cantripLimit > 0 && <span className={`dsh-badge${cantripCount > cantripLimit ? ' dsh-badge--bad' : ''}`}>Truques {cantripCount} / {cantripLimit}</span>}
-            {preparedLimit > 0 && <span className={`dsh-badge${preparedCount > preparedLimit ? ' dsh-badge--bad' : ''}`}>Preparadas {preparedCount} / {preparedLimit}</span>}
+            {cantripLimit > 0 && <span className={`dsh-badge${cantripCount > cantripLimit ? ' dsh-badge--bad' : ''}`}>Truques <Bump value={cantripCount} /> / {cantripLimit}</span>}
+            {preparedLimit > 0 && <span className={`dsh-badge${preparedCount > preparedLimit ? ' dsh-badge--bad' : ''}`}>Preparadas <Bump value={preparedCount} /> / {preparedLimit}</span>}
           </span>
         </div>
         {spells.length === 0 && (
@@ -268,7 +268,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                 const meta = [s.school, s.casting_time, s.spell_range, s.duration].filter(Boolean)
                 const isPrepared = s.prepared && s.spell_level > 0
                 return (
-                  <li key={s.id} className={`dsh-spell${isPrepared ? ' is-prepared' : ''}`}>
+                  <li key={s.id} className={`dsh-spell${isPrepared ? ' is-prepared' : ''}${isNew(s.id) ? ' is-new' : ''}`}>
                     <div className="dsh-spell__main">
                       <span className="dsh-tag">{s.spell_level === 0 ? 'Truque' : `${s.spell_level}º`}</span>
                       <strong className="dsh-spell__name">{s.name}</strong>
@@ -289,7 +289,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                         <button type="button" className={`dsh-flag${s.prepared ? ' is-on' : ''}`} aria-pressed={s.prepared} disabled={readOnly || busy === s.id}
                           title="Magia preparada" onClick={() => void patchSpell(s, { prepared: !s.prepared })}>{s.prepared ? '✓ Preparada' : 'Preparada'}</button>
                       )}
-                      {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeSpell(s)} disabled={busy === s.id} aria-label={`Remover ${s.name}`}>×</button>}
+                      {!readOnly && <button type="button" className="dsh-x" onClick={(e) => void removeSpell(s, e.currentTarget)} disabled={busy === s.id} aria-label={`Remover ${s.name}`}>×</button>}
                     </div>
                     {meta.length > 0 && <div className="dsh-spellchips">{meta.map((m) => <span key={m} className="dsh-cardchip">{m}</span>)}</div>}
                     {(cat || !readOnly || s.description) && (

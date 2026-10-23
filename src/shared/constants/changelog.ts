@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.1',
+    date:    '2026-10-23',
+    title:   'Ficha de D&D com animações e feita para o celular',
+    items: [
+      'Tudo na ficha de D&D se mexe: as abas entram deslizando e os cartões aparecem em cascata, botões afundam no clique, interruptores e bolinhas estalam ao ligar, e os números (CA, perícias, modificadores, contadores) dão um pulinho quando a conta muda.',
+      'Adicionar e remover: ataque, magia, item, recurso, característica, classe ou proficiência novos entram com um brilho, e os removidos encolhem e saem da lista em vez de sumir de uma vez.',
+      'Barra de PV: o dano faz a barra tremer e deixa um rastro vermelho que escorre atrás dela; a cura acende em verde. Sem PV, o quadro pulsa como um coração.',
+      'A ficha se arruma pela largura que tem, não pela da tela: no painel da ficha do Vortable, no mestre e no celular ela troca de colunas sozinha. No celular as sete abas ficam numa grade, todas à vista, os botões são maiores para o dedo, os campos não dão zoom no iPhone e os livros de magias e de itens ocupam a tela inteira.',
+      'Cartão de dados sem barra de rolagem: ele cabe inteiro na tela, com o palco dos dados maior e o dado no meio. Na tela larga, rolagem rápida e fórmulas ficam de um lado e os recentes do outro.',
+      'O site abre mais rápido: o código da ficha de D&D só é baixado quando alguém abre uma ficha de D&D.',
+    ],
+  },
+  {
     version: '2.0',
     date:    '2026-10-23',
     title:   'TEMOS D&D NO SITE!',

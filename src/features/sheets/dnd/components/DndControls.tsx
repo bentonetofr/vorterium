@@ -2,6 +2,7 @@ import { useEffect, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { DndDerivedField } from '../../../../shared/types'
 import { saveDndOverride } from '../services/dndSheetService'
 import type { SheetCtx } from './sheetContext'
+import { useChangeTick } from './motion'
 
 // ────────────────────────────────────────────────────────
 // Peças da ficha de D&D: campo numérico, bolinhas clicáveis (espaços de
@@ -145,6 +146,9 @@ export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow
   const number = `${signed && shown >= 0 ? '+' : ''}${String(shown).replace('.', ',')}`
   const text = `${number}${onUnitClick ? '' : (suffix ?? '')}`
   const unit = suffix?.trim()
+  // o número dá um pulinho quando a conta muda (subiu de nível, trocou a armadura...), não ao abrir a aba
+  const tick = useChangeTick(text)
+  const valueClass = `dsh-derived__value${tick ? ' dsh-bump' : ''}`
   const unitEl = unit ? (onUnitClick && !readOnly
     ? <button type="button" className="dsh-derived__suffix dsh-derived__unit" onClick={onUnitClick} title={unitTitle}>{unit}</button>
     : <span className="dsh-derived__suffix">{unit}</span>) : null
@@ -167,8 +171,8 @@ export function DerivedField({ ctx, field, value, label, show = (n) => n, unshow
       {override && !readOnly
         ? <><ManualBox value={shown} onCommit={saveManual} label={label} min={min} max={max} step={step} />{unitEl}</>
         : onUnitClick
-          ? <><strong className="dsh-derived__value" aria-label={label}>{text}</strong>{unitEl}</>
-          : <strong className="dsh-derived__value" aria-label={label}>{text}</strong>}
+          ? <><strong key={tick} className={valueClass} aria-label={label}>{text}</strong>{unitEl}</>
+          : <strong key={tick} className={valueClass} aria-label={label}>{text}</strong>}
     </span>
   )
 }

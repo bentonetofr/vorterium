@@ -1,4 +1,19 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { prefersReducedMotion } from './motion'
+
+const HURT_FRAMES: Keyframe[] = [
+  { transform: 'none', boxShadow: '0 0 0 0 rgba(255, 90, 90, 0)' },
+  { transform: 'translateX(-5px)', boxShadow: '0 0 16px 2px rgba(255, 90, 90, 0.7)', offset: 0.15 },
+  { transform: 'translateX(4px)', offset: 0.35 },
+  { transform: 'translateX(-2px)', offset: 0.55 },
+  { transform: 'translateX(1px)', offset: 0.75 },
+  { transform: 'none', boxShadow: '0 0 0 0 rgba(255, 90, 90, 0)' },
+]
+const HEAL_FRAMES: Keyframe[] = [
+  { boxShadow: '0 0 0 0 rgba(139, 224, 164, 0)' },
+  { boxShadow: '0 0 18px 3px rgba(139, 224, 164, 0.65)', offset: 0.3 },
+  { boxShadow: '0 0 0 0 rgba(139, 224, 164, 0)' },
+]
 
 // ────────────────────────────────────────────────────────
 // Barra arrastável de PV, igual à do Altherium: uma linha branca marca o fim
@@ -56,6 +71,17 @@ export function DndDragBar({ value, max, temp = 0, onChange, disabled = false, l
   const tempPct = scale > 0 ? round(Math.max(0, Math.min(100 - pct, (tempPts / scale) * 100))) : 0
   const endPct = round(Math.min(100, pct + tempPct))
 
+  // Dano treme a barra e acende em vermelho; cura acende em verde. Ao arrastar não (seria um tremor contínuo).
+  const prevTotal = useRef(total)
+  useEffect(() => {
+    const before = prevTotal.current
+    prevTotal.current = total
+    const track = trackRef.current
+    if (dragging || before === total || !track || prefersReducedMotion() || typeof track.animate !== 'function') return
+    const hurt = total < before
+    track.animate(hurt ? HURT_FRAMES : HEAL_FRAMES, { duration: hurt ? 460 : 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' })
+  }, [total, dragging])
+
   function targetAt(clientX: number): number {
     const rect = trackRef.current!.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
@@ -111,6 +137,8 @@ export function DndDragBar({ value, max, temp = 0, onChange, disabled = false, l
       onKeyDown={handleKeyDown}
     >
       <div ref={trackRef} className="dsh-hp__track">
+        {/* rastro do dano: acompanha o fim da barra com atraso, então a parte perdida fica clara um instante */}
+        <div className="dsh-hp__lag" style={{ width: `${endPct}%` }} aria-hidden="true" />
         <div className="dsh-hp__fill" style={{ width: `${pct}%` }} />
         {tempPct > 0 && <div className="dsh-hp__temp" style={{ width: `${tempPct}%` }} title={`${tempPts} PV temporários`} />}
       </div>

@@ -8,8 +8,9 @@ import { itemTitle } from '../model/sheetModel'
 import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
 import { DerivedField, NumberField } from './DndControls'
 import { DndItemBrowser } from './DndItemBrowser'
-import { ChipRow, StatChip, StatusPill } from './DndVisuals'
+import { Bump, ChipRow, StatChip, StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
+import { leaveThen, useFreshKeys } from './motion'
 
 // ────────────────────────────────────────────────────────
 // Aba Inventário: itens do catálogo e próprios (quantidade, peso, equipado),
@@ -83,10 +84,9 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
 
   const setWeight = (item: DndCharacterInventoryItem, weight: number) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { weight })) })
 
-  const removeItem = (item: DndCharacterInventoryItem) => run(item.id, async () => {
-    await deleteDndInventoryItem(item.id)
-    data.setDetails((d) => ({ ...d, inventory: d.inventory.filter((i) => i.id !== item.id) }))
-  })
+  const removeItem = (item: DndCharacterInventoryItem, from: Element) => run(item.id, () => leaveThen(from, () => deleteDndInventoryItem(item.id),
+    () => data.setDetails((d) => ({ ...d, inventory: d.inventory.filter((i) => i.id !== item.id) }))))
+  const isNew = useFreshKeys(items.map((i) => i.id))
 
   const equippable = (i: DndCharacterInventoryItem) => !!i.catalog_entry_key && (!!getArmor(i.catalog_entry_key) || i.catalog_entry_key === SHIELD.key || WEAPONS.some((w) => w.key === i.catalog_entry_key))
 
@@ -95,7 +95,7 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
       <section className="dsh-card">
         <div className="dsh-card__header">
           <h4 className="dsh-card__title">Moedas</h4>
-          <span className="dsh-badge" title="Tudo convertido em peças de ouro">≈ {coinsInGold({ cp: form.coin_cp, sp: form.coin_sp, ep: form.coin_ep, gp: form.coin_gp, pp: form.coin_pp }).toLocaleString('pt-BR')} po</span>
+          <span className="dsh-badge" title="Tudo convertido em peças de ouro">≈ <Bump value={coinsInGold({ cp: form.coin_cp, sp: form.coin_sp, ep: form.coin_ep, gp: form.coin_gp, pp: form.coin_pp }).toLocaleString('pt-BR')} /> po</span>
         </div>
         <div className="dsh-coins">
           {([['coin_cp', 'Cobre', 'pc', 'cp'], ['coin_sp', 'Prata', 'pp', 'sp'], ['coin_ep', 'Electro', 'pe', 'ep'], ['coin_gp', 'Ouro', 'po', 'gp'], ['coin_pp', 'Platina', 'pl', 'pt']] as const).map(([k, label, abbr, metal]) => (
@@ -119,7 +119,7 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-loadtiles">
           <div className={`dsh-loadtile${carried > capacity ? ' is-over' : ''}`}>
             <span className="dsh-loadtile__label">Carregando</span>
-            <span className="dsh-loadtile__value">{formatKg(carried)}</span>
+            <span className="dsh-loadtile__value"><Bump value={formatKg(carried)} /></span>
           </div>
           <div className="dsh-loadtile" title="Força × 7,5 kg">
             <span className="dsh-loadtile__label">Capacidade</span>
@@ -136,7 +136,7 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
       </section>
 
       <section className="dsh-card dsh-wide">
-        <div className="dsh-card__header"><h4 className="dsh-card__title">Itens</h4><span className="dsh-badge">{items.length}</span></div>
+        <div className="dsh-card__header"><h4 className="dsh-card__title">Itens</h4><span className="dsh-badge"><Bump value={items.length} /></span></div>
         {items.length === 0 && (
           <div className="dsh-noattack">
             <strong>Nenhum item ainda</strong>
@@ -147,7 +147,7 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
           {items.map((i) => {
             const armor = i.catalog_entry_key ? getArmor(i.catalog_entry_key) : undefined
             return (
-              <li key={i.id} className={`dsh-item${i.equipped ? ' is-equipped' : ''}`}>
+              <li key={i.id} className={`dsh-item${i.equipped ? ' is-equipped' : ''}${isNew(i.id) ? ' is-new' : ''}`}>
                 <div className="dsh-item__main">
                   <strong className="dsh-item__name">{itemTitle(i.name, i.catalog_entry_key)}</strong>
                   {armor && <span className="dsh-tag">CA {armor.baseAc}</span>}
@@ -160,7 +160,7 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
                     <NumberField value={i.quantity} min={1} max={9999} label={`Quantidade de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setQuantity(i, n)} className="dsh-itemnum__input" /></label>
                   <label className="dsh-itemnum"><small>Kg</small>
                     <NumberField value={i.weight} min={0} max={99999} step={0.1} label={`Peso de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setWeight(i, n)} className="dsh-itemnum__input" /></label>
-                  {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeItem(i)} disabled={busy === i.id} aria-label={`Remover ${i.name}`}>×</button>}
+                  {!readOnly && <button type="button" className="dsh-x" onClick={(e) => void removeItem(i, e.currentTarget)} disabled={busy === i.id} aria-label={`Remover ${i.name}`}>×</button>}
                 </div>
                 {i.notes && (i.notes.length <= 90 && !i.notes.includes('\n')
                   ? <div className="dsh-spellchips">{i.notes.split(' · ').map((n) => <span key={n} className="dsh-cardchip">{n}</span>)}</div>

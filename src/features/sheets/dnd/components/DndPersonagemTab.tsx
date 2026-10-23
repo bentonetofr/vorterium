@@ -14,6 +14,7 @@ import { removeDndClass, saveDndClass } from '../services/dndClassService'
 import { NumberField } from './DndControls'
 import { BonusTiles, ChipRow, StatChip, XpMeter } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
+import { leaveThen, useFreshKeys } from './motion'
 
 // ────────────────────────────────────────────────────────
 // Aba Personagem: raça, antecedente, tendência, classes e níveis (multiclasse),
@@ -150,9 +151,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
     applyInitialSaves(row.class_key)
   })
 
-  const removeClass = (row: DndCharacterClass) => run(async () => {
-    await removeDndClass(row.id)
-    data.setClasses((cs) => cs.filter((c) => c.id !== row.id))
+  const removeClass = (row: DndCharacterClass, from: Element) => run(async () => {
+    await leaveThen(from, () => removeDndClass(row.id), () => data.setClasses((cs) => cs.filter((c) => c.id !== row.id)))
     if (form.class_names[row.class_key]) update((f) => { const rest = { ...f.class_names }; delete rest[row.class_key]; return { ...f, class_names: rest } })
     // sem classe inicial, a primeira que sobrar assume
     const rest = data.classes.filter((c) => c.id !== row.id)
@@ -178,10 +178,10 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
     setProfText('')
   })
 
-  const removeProficiency = (p: DndCharacterProficiency) => run(async () => {
-    await removeDndProficiency(p.id)
-    data.setProficiencies((ps) => ps.filter((x) => x.id !== p.id))
-  })
+  const removeProficiency = (p: DndCharacterProficiency, from: Element) => run(() => leaveThen(from, () => removeDndProficiency(p.id),
+    () => data.setProficiencies((ps) => ps.filter((x) => x.id !== p.id))))
+  const isNewClass = useFreshKeys(data.classes.map((c) => c.id))
+  const isNewProf = useFreshKeys(data.proficiencies.map((p) => p.id))
 
   // Proficiências por tipo: as que vêm da classe, da raça e do antecedente (nomes em português) e as que a pessoa adicionou (com ×).
   const weaponName = (w: string) => WEAPON_LABEL[w] ?? WEAPONS.find((x) => x.key === w)?.name ?? w.replace(/_/g, ' ')
@@ -295,7 +295,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
             const rollLevels = Array.from({ length: Math.max(0, row.level - firstRollable + 1) }, (_, i) => firstRollable + i)
             const blocked = data.classes.length > 1 && !!def && !meetsRequirement(scores, def.multiclass.requirement)
             return (
-              <li key={row.id} className="dsh-class">
+              <li key={row.id} className={`dsh-class${isNewClass(row.id) ? ' is-new' : ''}`}>
                 <div className="dsh-class__main">
                   <strong className="dsh-class__name">{def?.name ?? className(row.class_key, form.class_names)}{row.is_initial && <span className="dsh-tag">inicial</span>}</strong>
                   <label className="dsh-class__level">
@@ -303,7 +303,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
                     <NumberField value={row.level} onChange={(n) => void setLevel(row, n)} min={1} max={Math.max(1, 20 - others)} label={`Nível de ${def?.name ?? row.class_key}`} disabled={readOnly || busy} />
                   </label>
                   {!readOnly && (
-                    <button type="button" className="dsh-x" onClick={() => void removeClass(row)} disabled={busy} aria-label={`Tirar ${def?.name ?? row.class_key}`}>×</button>
+                    <button type="button" className="dsh-x" onClick={(e) => void removeClass(row, e.currentTarget)} disabled={busy} aria-label={`Tirar ${def?.name ?? row.class_key}`}>×</button>
                   )}
                 </div>
                 {subOptions && (
@@ -382,9 +382,9 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
               <div className="dsh-prof__chips">
                 {g.base.map((name) => <span key={name} className="dsh-prof__chip">{name}</span>)}
                 {g.extras.map((p) => (
-                  <span key={p.id} className="dsh-prof__chip dsh-prof__chip--extra" title="Adicionada por você">
+                  <span key={p.id} className={`dsh-prof__chip dsh-prof__chip--extra${isNewProf(p.id) ? ' is-new' : ''}`} title="Adicionada por você" data-leave="">
                     {p.label}
-                    {!readOnly && <button type="button" onClick={() => void removeProficiency(p)} aria-label={`Tirar ${p.label}`}>×</button>}
+                    {!readOnly && <button type="button" onClick={(e) => void removeProficiency(p, e.currentTarget)} aria-label={`Tirar ${p.label}`}>×</button>}
                   </span>
                 ))}
                 {g.base.length + g.extras.length === 0 && <span className="dsh-prof__none">{g.none}</span>}

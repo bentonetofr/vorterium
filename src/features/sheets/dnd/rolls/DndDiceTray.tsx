@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import type { DiceRoll } from '../../../../shared/types'
 import { partsText, stageDiceFor } from './diceKinds'
 import { useDiceStage } from './useDiceStage'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────

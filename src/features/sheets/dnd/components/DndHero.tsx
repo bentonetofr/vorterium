@@ -92,7 +92,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
             aria-label={sheet.portrait_url ? 'Trocar o retrato' : 'Enviar um retrato'}
           >
             {sheet.portrait_url
-              ? <img src={sheet.portrait_url} alt="" />
+              ? <img key={sheet.portrait_url} src={sheet.portrait_url} alt="" />
               : <span className="dsh-portrait__empty" aria-hidden="true">{initialClass ? initialClass.name.charAt(0) : '⚔'}</span>}
             {portraitBusy && <span className="dsh-portrait__busy"><span className="spinner spinner--sm" /></span>}
           </button>
@@ -173,7 +173,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
           onClick={() => set('inspiration', !form.inspiration)} title="Clique para alternar. Com inspiração, você ganha vantagem em uma jogada."
         >
           <span className="dsh-stat__label">Inspiração</span>
-          <strong className="dsh-stat__value">{form.inspiration ? 'Sim' : 'Não'}</strong>
+          <strong key={String(form.inspiration)} className="dsh-stat__value">{form.inspiration ? 'Sim' : 'Não'}</strong>
         </button>
       </div>
 

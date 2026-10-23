@@ -7,6 +7,8 @@ import { useFeature } from '../../../control/siteFeatures'
 import { DND_FEATURE } from '../constants/dnd'
 import { listOpenCheckRequests, listRequestAnswers, subscribeToCheckRequests, type DndCheckRequest } from '../services/dndCheckService'
 import { dismiss, isDismissed, isSheetListening, requestOpen } from './checkRequests'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────

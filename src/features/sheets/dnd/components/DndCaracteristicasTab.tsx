@@ -8,8 +8,9 @@ import { AUTO_RESOURCE_KEYS } from '../model/classResources'
 import { availableFeatures, classOptionAllowance, findCatalogFeature, missingFeatures } from '../model/features'
 import { createDndFeature, removeDndFeature, removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
 import { NumberField, Pips } from './DndControls'
-import { RechargeLegend } from './DndVisuals'
+import { Bump, RechargeLegend } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
+import { leaveThen, useFreshKeys } from './motion'
 
 // ────────────────────────────────────────────────────────
 // Aba Características: recursos que gastam e recarregam (Fúria, Ki, Inspiração
@@ -85,10 +86,10 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
 
   const setCurrent = (r: DndCharacterResource, value: number) => run(r.id, async () => { replaceResource(await setDndResourceCurrent(r, value)) })
 
-  const removeResource = (r: DndCharacterResource) => run(r.id, async () => {
-    await removeDndResource(r.id)
-    data.setResources((rs) => rs.filter((x) => x.id !== r.id))
-  })
+  const removeResource = (r: DndCharacterResource, from: Element) => run(r.id, () => leaveThen(from, () => removeDndResource(r.id),
+    () => data.setResources((rs) => rs.filter((x) => x.id !== r.id))))
+  const isNewResource = useFreshKeys(data.resources.map((r) => r.id))
+  const isNewFeature = useFreshKeys(data.features.map((f) => f.id))
 
   const importFeatures = () => run('import', async () => {
     const created: DndCharacterFeature[] = []
@@ -117,10 +118,8 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'notes' | 'uses_current' | 'uses_max' | 'recharge'>>) =>
     run(f.id, async () => { replaceFeature(await updateDndFeature(f.id, patch)) })
 
-  const removeFeature = (f: DndCharacterFeature) => run(f.id, async () => {
-    await removeDndFeature(f.id)
-    data.setFeatures((fs) => fs.filter((x) => x.id !== f.id))
-  })
+  const removeFeature = (f: DndCharacterFeature, from: Element) => run(f.id, () => leaveThen(from, () => removeDndFeature(f.id),
+    () => data.setFeatures((fs) => fs.filter((x) => x.id !== f.id))))
 
   return (
     <div className="dsh-tab dsh-cols anim-tab-panel">
@@ -142,17 +141,17 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
               const left = Math.min(r.current_value, r.max_value)
               const locked = readOnly || busy === r.id
               return (
-                <li key={r.id} className={`dsh-restile${r.max_value > 0 && left === 0 ? ' is-empty' : ''}`}>
+                <li key={r.id} className={`dsh-restile${r.max_value > 0 && left === 0 ? ' is-empty' : ''}${isNewResource(r.id) ? ' is-new' : ''}`}>
                   <div className="dsh-restile__head">
                     <strong className="dsh-restile__name">{r.label}</strong>
-                    {!readOnly && !auto && <button type="button" className="dsh-x" onClick={() => void removeResource(r)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}
+                    {!readOnly && !auto && <button type="button" className="dsh-x" onClick={(e) => void removeResource(r, e.currentTarget)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}
                   </div>
                   <div className="dsh-restile__use">
                     {r.max_value > 0 && r.max_value <= 12
                       ? <Pips total={r.max_value} filled={left} label={`${r.label} restantes`} onChange={locked ? undefined : (n) => void setCurrent(r, n)} />
                       : <NumberField value={left} min={0} max={r.max_value} label={`${r.label} restantes`} disabled={locked} onChange={(n) => void setCurrent(r, n)} className="dsh-restile__num" />}
                     <span className="dsh-restile__count" title="Restante / total">
-                      <strong>{left}</strong>/
+                      <strong><Bump value={left} /></strong>/
                       {readOnly || auto
                         ? r.max_value
                         : <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`} disabled={busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-restile__total" />}
@@ -250,7 +249,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             const cat = f.feature_key ? findCatalogFeature(f.source, f.feature_key) : undefined
             const hasUses = f.uses_max != null
             return (
-              <li key={f.id} className="dsh-feature">
+              <li key={f.id} className={`dsh-feature${isNewFeature(f.id) ? ' is-new' : ''}`}>
                 <details>
                   <summary>
                     <span className="dsh-tag">{SOURCE_LABEL[f.source]}</span>
@@ -259,7 +258,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                     {hasUses && <span className="dsh-cardchip dsh-feature__uses-chip" title="Usos restantes / total">usos {f.uses_current ?? 0}/{f.uses_max}</span>}
                     {!readOnly && (
                       <button type="button" className="dsh-x dsh-feature__x" disabled={busy === f.id} aria-label={`Remover ${f.name}`} title="Remover da ficha"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeFeature(f) }}>×</button>
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeFeature(f, e.currentTarget) }}>×</button>
                     )}
                   </summary>
                   <div className="dsh-feature__body">
@@ -285,7 +284,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                     <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={2} defaultValue={f.notes} readOnly={readOnly} maxLength={2000}
                       placeholder="Anotações sobre esta característica" aria-label={`Anotações de ${f.name}`}
                       onBlur={(e) => { if (e.target.value !== f.notes) void patchFeature(f, { notes: e.target.value }) }} />
-                    {!readOnly && <button type="button" className="dsh-link dsh-link--danger" onClick={() => void removeFeature(f)} disabled={busy === f.id}>Remover da ficha</button>}
+                    {!readOnly && <button type="button" className="dsh-link dsh-link--danger" onClick={(e) => void removeFeature(f, e.currentTarget)} disabled={busy === f.id}>Remover da ficha</button>}
                   </div>
                 </details>
               </li>

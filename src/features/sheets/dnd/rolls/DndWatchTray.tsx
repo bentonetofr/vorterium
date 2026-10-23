@@ -5,6 +5,8 @@ import type { ThrowHandle } from '../../../dice3d/DiceStage'
 import { DEFAULT_SKIN, getSkin } from '../../../dice3d/skins'
 import { partsText, stageDiceFor } from './diceKinds'
 import { useDiceStage } from './useDiceStage'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────

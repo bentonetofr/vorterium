@@ -22,6 +22,7 @@ import { DndRollProvider } from '../rolls/DndRollProvider'
 import { DndImportWizard } from '../import/DndImportWizard'
 import { Presence } from '../../../../shared/components/Presence'
 import './DndSheet.css'
+import './DndMotion.css'
 
 // ────────────────────────────────────────────────────────
 // Ficha de D&D 5e (2014): cabeçalho, sete abas e salvamento automático igual
@@ -49,14 +50,15 @@ const AUTOSAVE_DELAY_MS = 800
 type SaveState = 'saved' | 'pending' | 'saving' | 'error'
 
 type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'inventario' | 'caracteristicas' | 'historia'
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'personagem',      label: 'Personagem' },
-  { id: 'atributos',       label: 'Atributos e Perícias' },
-  { id: 'combate',         label: 'Combate' },
-  { id: 'magias',          label: 'Magias' },
-  { id: 'inventario',      label: 'Inventário' },
-  { id: 'caracteristicas', label: 'Características' },
-  { id: 'historia',        label: 'História' },
+/** `short`: o nome na grade de abas do celular, onde o completo não cabe. */
+const TABS: { id: TabId; label: string; short: string }[] = [
+  { id: 'personagem',      label: 'Personagem',           short: 'Personagem' },
+  { id: 'atributos',       label: 'Atributos e Perícias', short: 'Atributos' },
+  { id: 'combate',         label: 'Combate',              short: 'Combate' },
+  { id: 'magias',          label: 'Magias',               short: 'Magias' },
+  { id: 'inventario',      label: 'Inventário',           short: 'Inventário' },
+  { id: 'caracteristicas', label: 'Características',      short: 'Características' },
+  { id: 'historia',        label: 'História',             short: 'História' },
 ]
 const TAB_IDS = TABS.map((t) => t.id)
 
@@ -335,12 +337,13 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       <nav ref={tabsRef} className="campaign-tabs dsh-tabs" role="tablist" aria-label="Seções da ficha">
         {TABS.map((tab) => (
           <button
-            key={tab.id} type="button" role="tab"
+            key={tab.id} type="button" role="tab" aria-label={tab.label}
             aria-selected={activeTab === tab.id} aria-controls={`dsh-tabpanel-${tab.id}`}
             className={`campaign-tab ${activeTab === tab.id ? 'campaign-tab--active' : ''}`}
             onClick={() => selectTab(tab.id)}
           >
-            <span className="campaign-tab__label">{tab.label}</span>
+            <span className="campaign-tab__label dsh-tabs__full">{tab.label}</span>
+            <span className="campaign-tab__label dsh-tabs__short" aria-hidden="true">{tab.short}</span>
           </button>
         ))}
         <TabIndicator activeKey={activeTab} />
@@ -362,14 +365,16 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
 
       <footer className="dsh-sheet__footer">
         {(error || saveError) && <p className="dsh-warn" role="alert">{error ?? saveError}</p>}
-        {notice && !error && <p className="dsh-note" role="status">{notice}</p>}
+        {notice && !error && <p key={notice} className="dsh-note dsh-notice" role="status">{notice}</p>}
         {!readOnly && (
           <>
             <span className={`dsh-save dsh-save--${saveState}`} role="status" aria-live="polite">
-              {saveState === 'saved'   && '✓ Tudo salvo'}
-              {saveState === 'pending' && 'Alterações pendentes…'}
-              {saveState === 'saving'  && <><span className="spinner spinner--sm" /> Salvando…</>}
-              {saveState === 'error'   && 'Erro ao salvar'}
+              <span key={saveState} className="dsh-save__text">
+                {saveState === 'saved'   && '✓ Tudo salvo'}
+                {saveState === 'pending' && 'Alterações pendentes…'}
+                {saveState === 'saving'  && <><span className="spinner spinner--sm" /> Salvando…</>}
+                {saveState === 'error'   && 'Erro ao salvar'}
+              </span>
             </span>
             {(saveState === 'pending' || saveState === 'error') && (
               <button type="submit" className="dsh-chip">{saveState === 'error' ? 'Tentar de novo' : 'Salvar agora'}</button>

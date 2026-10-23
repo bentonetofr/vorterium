@@ -1,12 +1,19 @@
 import type { ReactNode } from 'react'
 import { xpForLevel } from '../rules/progression'
 import { Pips } from './DndControls'
+import { useChangeTick } from './motion'
 
 // ────────────────────────────────────────────────────────
 // Peças visuais da ficha que trocam parágrafos de explicação por figuras:
 // medidor de XP, fórmulas em blocos, etiquetas de valor, selos de estado e
 // legendas com as próprias bolinhas.
 // ────────────────────────────────────────────────────────
+
+/** Número ou texto que dá um pulinho quando muda (e não ao aparecer). */
+export function Bump({ value, children }: { value: unknown; children?: ReactNode }) {
+  const tick = useChangeTick(value)
+  return <span key={tick} className={tick ? 'dsh-bump' : undefined}>{children ?? String(value)}</span>
+}
 
 /** Etiqueta com nome pequeno e valor em destaque: "Deslocamento · 9 m". */
 export function StatChip({ label, children, tone, title }: { label: string; children: ReactNode; tone?: 'good' | 'bad' | 'warn'; title?: string }) {

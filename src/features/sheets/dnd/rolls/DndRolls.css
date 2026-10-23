@@ -1,5 +1,8 @@
 /* ════════════════════════════════════════════════════════
    Rolagens do D&D: painel de teste (estilo Baldur's Gate 3) e bandeja de dados
+   Usa as cores e os botões da ficha (DndSheet.css e DndMotion.css): cada peça
+   das rolagens importa os três, porque elas aparecem no site todo e a ficha só
+   é baixada quando abre (CampaignSheetPanel).
    ════════════════════════════════════════════════════════ */
 
 /* ── Painel de teste ───────────────────────────────────── */

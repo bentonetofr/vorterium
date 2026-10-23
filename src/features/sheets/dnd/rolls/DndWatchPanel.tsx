@@ -7,6 +7,8 @@ import { judge, type CheckKind } from './checkModel'
 import { stageDiceFor } from './diceKinds'
 import { useDiceStage } from './useDiceStage'
 import { watchedCheck } from './watchModel'
+import '../components/DndSheet.css'
+import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────
