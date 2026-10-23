@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════
-   Janela de dados do D&D (centro da tela): a vitrine dos conjuntos de dados.
+   Painel de dados do D&D (a janela do canto): abas do rolador e da vitrine dos conjuntos.
    Não depende do CSS da ficha: as cores próprias ficam em .ddw.
    ════════════════════════════════════════════════════════ */
 
@@ -10,20 +10,12 @@
   --ddw-bone:        #f1e3cf;
   --ddw-bone-dim:    #b3a48d;
   --ddw-gold:        #e8b85c;
-  position: relative; display: flex; flex-direction: column; width: min(380px, 100%); max-height: min(92vh, 840px); overflow: hidden;
+  display: flex; flex-direction: column; flex: 1; min-height: 0;
   font-family: var(--font-body);
-  background: var(--bg-surface); border: 1px solid var(--ddw-accent-line); border-radius: var(--radius-lg); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
 }
 .ddw :where(button, input) { font-family: inherit; }
 
-/* ── Cabeçalho ── */
-.ddw__head {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-dim); background: radial-gradient(ellipse at 0% 0%, var(--ddw-accent-soft), transparent 60%);
-}
-.ddw__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl, 22px); font-weight: 600; color: var(--ddw-bone); }
-.ddw__title span { margin-right: 8px; color: var(--ddw-accent); }
-.ddw__tabs { display: flex; gap: var(--space-1); padding: var(--space-2) var(--space-4) 0; border-bottom: 1px solid var(--border-dim); }
+.ddw__tabs { display: flex; gap: var(--space-1); padding: var(--space-2) var(--space-4) 0; border-bottom: 1px solid var(--border-dim); flex-shrink: 0; }
 .ddw__tab {
   padding: var(--space-2) var(--space-4); font-family: var(--font-label); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--text-muted); background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: var(--cursor-hand);
@@ -57,16 +49,10 @@
 .ddw-skin__state { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
 .ddw-skin.is-on .ddw-skin__state { color: var(--ddw-gold); }
 
-/* ── A rolagem livre: usa os estilos do rolador do site (DiceRollerPanel.css) ── */
-.ddw .ddw-free { padding: 0; overflow: visible; }
-
 @media (max-width: 640px) {
   .ddw__tabs { padding: var(--space-2) var(--space-3) 0; }
 }
 @media (max-width: 640px) {
-  .ddw { max-height: 94vh; }
-  .ddw__head { padding: var(--space-3); }
-  .ddw__title { font-size: var(--text-xl); }
   .ddw__body { padding: var(--space-3); }
   .ddw-skins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ddw-skin__pedestal { height: 112px; }

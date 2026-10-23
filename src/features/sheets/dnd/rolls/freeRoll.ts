@@ -1,18 +1,12 @@
 import type { DiceRoll, DiceRollContext, RollBreakdownItem } from '../../../../shared/types'
 
 // ────────────────────────────────────────────────────────
-// A rolagem livre da janela de dados: uma fórmula escrita à mão (1d20+5,
-// 2#d20+5 para o maior de dois, 2@d20+5 para o menor), como no rolador dos
-// outros sistemas do site. Sem tela: o contexto que vai gravado com a
+// A rolagem livre da janela de dados: o rolador do site (rolagem rápida e
+// fórmula escrita à mão: 1d20+5, 2#d20+5 para o maior de dois, 2@d20+5 para o
+// menor). Sem tela: o contexto que vai gravado com a
 // rolagem e a leitura da rolagem gravada em grupos de dados (para o painel de
 // quem rola e para o de quem assiste).
 // ────────────────────────────────────────────────────────
-
-/** Atalhos de uma rolagem só, na ordem do rolador do site. */
-export const FREE_QUICK = ['1d4', '1d6', '1d8', '1d10', '1d12', '1d20', '1d100'] as const
-
-/** Exemplos da sintaxe: soma, o maior de dois, o menor de dois. */
-export const FREE_EXAMPLES = ['1d20+5', '2#d20+5', '2@d20+5', '2d6+3'] as const
 
 /** "2d6+1d8-2" como se lê: "2d6 + 1d8 - 2". */
 export function freeLabel(formula: string): string {

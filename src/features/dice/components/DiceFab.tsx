@@ -153,8 +153,8 @@ export function DiceFab() {
   // Terra Devastada Adaptada: o resultado aparece no visual de The Last of Us.
   const { campaign } = useCurrentCampaign()
   const adapted = campaign?.id === campaignId && campaign?.system === 'terra_devastada_adaptada'
-  // D&D: em vez do painel do canto, abre uma janela no centro com a vitrine dos
-  // conjuntos de dados (as rolagens ficam nos botões da ficha).
+  // D&D: o painel do canto ganha duas abas: o rolador (a rolagem livre abre o painel de
+  // teste e a mesa vê) e a vitrine dos conjuntos de dados.
   const dndFeature = useFeature(DND_FEATURE)
   const dnd = campaign?.id === campaignId && campaign?.system === 'dnd5e' && dndFeature.visible
   useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
@@ -280,13 +280,7 @@ export function DiceFab() {
         </div>,
       )}
 
-      {dnd && (
-        <Presence show={isOpen} exitMs={180}>
-          {() => <DndDiceWindow campaignId={campaignId} onClose={close} />}
-        </Presence>
-      )}
-
-      {!dnd && (isOpen || !instant) && (
+      {(isOpen || !instant) && (
       <Presence show={isOpen} exitMs={180}>
         {(state) => (
         <div className="dice-fab__popover fab-panel anim-pop" data-state={state} data-fab-panel="dice" role="dialog" aria-label="Rolagem de dados">
@@ -302,7 +296,9 @@ export function DiceFab() {
               ✕
             </button>
           </div>
-          <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />
+          {dnd
+            ? <DndDiceWindow campaignId={campaignId} currentUserId={user.id} />
+            : <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />}
         </div>
         )}
       </Presence>

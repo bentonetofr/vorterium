@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DiceRoll, RollBreakdownItem } from '../../../../shared/types'
-import { FREE_EXAMPLES, FREE_QUICK, freeContext, freeLabel, idleKindOf, isFreeRoll, readFree, resultsText } from './freeRoll'
+import { freeContext, freeLabel, idleKindOf, isFreeRoll, readFree, resultsText } from './freeRoll'
 import { parseDiceFormula } from '../../../dice/services/diceService'
 
 function roll(breakdown: RollBreakdownItem[], context: DiceRoll['roll_context']): DiceRoll {
@@ -13,8 +13,8 @@ function roll(breakdown: RollBreakdownItem[], context: DiceRoll['roll_context'])
 const sum = (sides: number, results: number[]): RollBreakdownItem => ({ type: 'sum', notation: `${results.length}d${sides}`, quantity: results.length, sides, results, subtotal: results.reduce((a, b) => a + b, 0) })
 
 describe('rolagem livre', () => {
-  it('os atalhos e exemplos são fórmulas que o sorteador aceita', () => {
-    for (const f of [...FREE_QUICK, ...FREE_EXAMPLES]) expect(() => parseDiceFormula(f)).not.toThrow()
+  it('o rótulo da fórmula e o dado parado no painel', () => {
+    for (const f of ['1d20+5', '2#d20+5', '2@d20+5']) expect(() => parseDiceFormula(f)).not.toThrow()
     expect(freeLabel('2d6+1d8-2')).toBe('2d6 + 1d8 - 2')
     expect(freeLabel('2#d20 + 5')).toBe('2#d20 + 5')
     expect(idleKindOf('2#d20+5')).toBe('d20')
