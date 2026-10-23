@@ -117,19 +117,32 @@ export class DiceShowcase {
     this.camera.aspect = w / h
     this.camera.position.set(0, 0, CAMERA_DISTANCE)
     this.camera.updateProjectionMatrix()
+    this.place()
+    this.renderer.render(this.scene, this.camera)
+  }
+
+  /**
+   * Põe cada dado no centro do elemento dele. Roda a cada quadro (e não só ao
+   * redimensionar) porque a janela se mexe sozinha: a animação de abrir, a
+   * rolagem da lista e a grade reorganizando mudam a posição sem avisar.
+   */
+  private place(): void {
+    const { w, h } = this.size()
     const box = this.host.getBoundingClientRect()
+    // com a janela crescendo na animação de abrir, os retângulos vêm em px já escalados: volta para os da página
+    const k = box.width > 0 ? box.width / w : 1
     for (const s of this.slots) {
       const r = s.el.getBoundingClientRect()
-      s.mesh.userData.base = (Math.min(r.width, r.height) * 0.46) / DIE_RADIUS.d20
-      s.mesh.position.set(r.left - box.left + r.width / 2 - w / 2, h / 2 - (r.top - box.top + r.height / 2), 0)
+      s.mesh.userData.base = (Math.min(r.width, r.height) / k * 0.46) / DIE_RADIUS.d20
+      s.mesh.position.set((r.left - box.left + r.width / 2) / k - w / 2, h / 2 - (r.top - box.top + r.height / 2) / k, 0)
     }
-    this.renderer.render(this.scene, this.camera)
   }
 
   private tick = (now: number): void => {
     if (this.disposed) return
     const dt = Math.min(0.05, (now - this.last) / 1000)
     this.last = now
+    this.place()
     for (const s of this.slots) {
       const hot = this.hover === s.id
       s.spin += dt * (hot ? HOVER_SPEED : SPIN_SPEED)
