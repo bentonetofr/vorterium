@@ -1156,6 +1156,38 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
 .dsh-attack__rolls { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .dsh-attack__rolls .dsh-rollbtn { height: 30px; padding: 0 14px; }
 
+/* ── Lápis e lixeira no canto de cima de cada cartão (DndCardTools) ── */
+.has-tools { position: relative; }
+/* a primeira linha do cartão deixa o canto livre para os dois botões */
+.has-tools > :first-child { padding-right: 78px; }
+.dsh-feature.has-tools > details { padding-right: 0; }
+.dsh-feature__edit { padding: 0 var(--space-4) var(--space-4); }
+.dsh-feature.has-tools > details > summary { padding-right: 86px; }
+.dsh-tools { position: absolute; top: 8px; right: 8px; z-index: 1; display: inline-flex; gap: 4px; }
+.dsh-tool {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0;
+  color: var(--dsh-bone-dim); background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border-dim); border-radius: 9px; cursor: var(--cursor-hand);
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 200ms var(--ease-spring);
+}
+.dsh-tool:hover:not(:disabled) { color: var(--dsh-bone); border-color: var(--border-bright); background: rgba(255, 255, 255, 0.06); }
+.dsh-tool.is-on { color: #fff; background: var(--dsh-accent); border-color: rgba(255, 150, 156, 0.6); box-shadow: 0 0 12px var(--dsh-accent-glow); }
+.dsh-tool--bad:hover:not(:disabled) { color: var(--dsh-bad); border-color: rgba(255, 122, 122, 0.55); background: rgba(255, 122, 122, 0.1); }
+.dsh-tool:active:not(:disabled) { transform: scale(0.86); transition-duration: 70ms; }
+.dsh-tool:disabled { opacity: 0.4; cursor: default; }
+@media (hover: hover) { .dsh-tool:hover:not(:disabled) svg { transform: rotate(-8deg); } .dsh-tool svg { transition: transform 200ms var(--ease-spring); } }
+
+/* o painel de edição: campos em grade e o Concluir */
+.dsh-editbox {
+  display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3);
+  background: rgba(0, 0, 0, 0.22); border: 1px dashed var(--dsh-accent-line); border-radius: var(--radius-md);
+  animation: m-form-in 300ms var(--ease-out) backwards;
+}
+.dsh-editbox__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.dsh-editbox__fields > .dsh-editbox__wide { grid-column: 1 / -1; }
+.dsh-editbox__done { align-self: flex-end; }
+.dsh-editbox .dsh-chiprow { grid-column: 1 / -1; }
+@container dsh (max-width: 440px) { .dsh-editbox__fields { grid-template-columns: minmax(0, 1fr); } }
+
 /* ── Abas: numa ficha estreita (celular) viram uma grade de 4 + 3, todas à vista, sem rolar para o lado ── */
 .dsh-tabs__short { display: none; }
 @container dsh (max-width: 560px) {
@@ -1173,6 +1205,9 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
   .dsh-pip { width: 24px; height: 24px; }
   .dsh-pips--sm .dsh-pip { width: 18px; height: 18px; }
   .dsh-x { width: 36px; height: 36px; font-size: 18px; }
+  .dsh-tool { width: 36px; height: 36px; }
+  .has-tools > :first-child { padding-right: 88px; }
+  .dsh-feature.has-tools > details > summary { padding-right: 96px; }
   .dsh-rollbtn { width: 34px; height: 34px; }
   .dsh-ability__head .dsh-rollbtn, .dsh-skill .dsh-rollbtn { width: 32px; height: 32px; }
   .dsh-skill .dsh-rollbtn { opacity: 0.85; }

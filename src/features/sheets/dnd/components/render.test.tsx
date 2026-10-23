@@ -202,7 +202,7 @@ describe('abas', () => {
     expect(html).not.toContain('Nenhuma das classes do personagem conjura')
   })
 
-  it('Magias do livro mostram o texto completo, agrupadas por nível, e podem virar cópia própria', () => {
+  it('Magias do livro mostram o texto completo, agrupadas por nível, com lápis e lixeira (o lápis abre o Personalizar)', () => {
     primeSpellCatalog(spellCatalog)
     const data = makeData({ classes: [cls('wizard', 5, true)] })
     const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data })} />)
@@ -211,7 +211,8 @@ describe('abas', () => {
     expect(html).toContain('Tempo de conjuração')
     expect(html).toContain('45 metros')
     expect(html).toContain('Em níveis superiores.')
-    expect(html).toContain('Personalizar')
+    expect(html).toContain('aria-label="Editar Bola de Fogo"')
+    expect(html).toContain('aria-label="Excluir Bola de Fogo"')
     expect(html).toContain('Livro de magias')
     expect(html).toContain('Abrir o livro')
     expect(html).not.toContain('Buscar magia')       // o livro só abre sob demanda
@@ -433,9 +434,9 @@ describe('abas', () => {
 
   it('recursos de classe em modo manual: total e recarga editáveis', () => {
     const base = makeCtx({ data: makeData({ resources: [resource('rage', 'Fúria', 2, 3, 'long', 'class')] }) })
-    expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).not.toContain('aria-label="Remover Fúria"')
+    expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).not.toContain('aria-label="Excluir Fúria"')
     base.form.manual_modes = ['class_resources']
-    expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).toContain('aria-label="Remover Fúria"')
+    expect(renderToStaticMarkup(<DndCaracteristicasTab ctx={base} />)).toContain('aria-label="Excluir Fúria"')
   })
 
   it('Experiência é um medidor com nível, barra e quanto falta, e não um parágrafo', () => {

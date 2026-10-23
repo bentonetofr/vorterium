@@ -11,6 +11,7 @@ import { DndItemBrowser } from './DndItemBrowser'
 import { Bump, ChipRow, StatChip, StatusPill } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 import { leaveThen, useFreshKeys } from './motion'
+import { CardTools, EditBox, EditField } from './DndCardTools'
 
 // ────────────────────────────────────────────────────────
 // Aba Inventário: itens do catálogo e próprios (quantidade, peso, equipado),
@@ -82,6 +83,9 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
 
   const setNotes = (item: DndCharacterInventoryItem, notes: string) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { notes: notes.trim().slice(0, NOTES_MAX) })) })
 
+  const [editing, setEditing] = useState<string | null>(null)
+  const renameItem = (item: DndCharacterInventoryItem, name: string) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { name })) })
+
   const setWeight = (item: DndCharacterInventoryItem, weight: number) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { weight })) })
 
   const removeItem = (item: DndCharacterInventoryItem, from: Element) => run(item.id, () => leaveThen(from, () => deleteDndInventoryItem(item.id),
@@ -147,9 +151,10 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
           {items.map((i) => {
             const armor = i.catalog_entry_key ? getArmor(i.catalog_entry_key) : undefined
             return (
-              <li key={i.id} className={`dsh-item${i.equipped ? ' is-equipped' : ''}${isNew(i.id) ? ' is-new' : ''}`}>
+              <li key={i.id} className={`dsh-item${i.equipped ? ' is-equipped' : ''}${isNew(i.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
                 <div className="dsh-item__main">
-                  <strong className="dsh-item__name">{itemTitle(i.name, i.catalog_entry_key)}</strong>
+                  {/* o nome que a pessoa deu (editável no lápis); sem nome, o do livro */}
+                  <strong className="dsh-item__name">{i.name.trim() || itemTitle(i.name, i.catalog_entry_key)}</strong>
                   {armor && <span className="dsh-tag">CA {armor.baseAc}</span>}
                   {i.catalog_entry_key === SHIELD.key && <span className="dsh-tag">+{SHIELD.acBonus}</span>}
                   {equippable(i) && (
@@ -160,18 +165,24 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
                     <NumberField value={i.quantity} min={1} max={9999} label={`Quantidade de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setQuantity(i, n)} className="dsh-itemnum__input" /></label>
                   <label className="dsh-itemnum"><small>Kg</small>
                     <NumberField value={i.weight} min={0} max={99999} step={0.1} label={`Peso de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setWeight(i, n)} className="dsh-itemnum__input" /></label>
-                  {!readOnly && <button type="button" className="dsh-x" onClick={(e) => void removeItem(i, e.currentTarget)} disabled={busy === i.id} aria-label={`Remover ${i.name}`}>×</button>}
                 </div>
-                {i.notes && (i.notes.length <= 90 && !i.notes.includes('\n')
+                {!readOnly && (
+                  <CardTools name={i.name} editing={editing === i.id} onEdit={() => setEditing(editing === i.id ? null : i.id)}
+                    onDelete={(from) => void removeItem(i, from)} busy={busy === i.id} />
+                )}
+                {i.notes && editing !== i.id && (i.notes.length <= 90 && !i.notes.includes('\n')
                   ? <div className="dsh-spellchips">{i.notes.split(' · ').map((n) => <span key={n} className="dsh-cardchip">{n}</span>)}</div>
                   : <div className="dsh-itemdesc">{i.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>)}
-                {!readOnly && (
-                  <details className="dsh-spell__more">
-                    <summary>{i.notes ? 'Editar a descrição' : 'Adicionar descrição'}</summary>
-                    <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={3} defaultValue={i.notes} maxLength={NOTES_MAX}
-                      placeholder="Descrição do item: o que faz, propriedades, dano, raridade... Use ' · ' para separar em etiquetas curtas." aria-label={`Descrição de ${i.name}`}
-                      onBlur={(e) => { if (e.target.value.trim() !== i.notes) void setNotes(i, e.target.value) }} />
-                  </details>
+                {editing === i.id && !readOnly && (
+                  <EditBox onDone={() => setEditing(null)}>
+                    <EditField label="Nome" value={i.name} required max={160} wide onSave={(name) => void renameItem(i, name)} />
+                    <label className="dsh-field dsh-field--tile"><span className="dsh-label">Quantidade</span>
+                      <NumberField value={i.quantity} min={1} max={9999} label={`Quantidade de ${i.name}`} disabled={busy === i.id} onChange={(n) => void setQuantity(i, n)} className="dsh-num--field" /></label>
+                    <label className="dsh-field dsh-field--tile"><span className="dsh-label">Peso (kg, cada)</span>
+                      <NumberField value={i.weight} min={0} max={99999} step={0.1} label={`Peso de ${i.name}`} disabled={busy === i.id} onChange={(n) => void setWeight(i, n)} className="dsh-num--field" /></label>
+                    <EditField label="Descrição" value={i.notes} multiline rows={3} max={NOTES_MAX}
+                      placeholder="O que faz, propriedades, dano, raridade... Use ' · ' para separar em etiquetas curtas." onSave={(notes) => void setNotes(i, notes)} />
+                  </EditBox>
                 )}
               </li>
             )

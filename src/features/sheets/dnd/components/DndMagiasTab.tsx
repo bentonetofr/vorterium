@@ -18,6 +18,7 @@ import { DndOwnSpellDetails, DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
 import type { SheetCtx } from './sheetContext'
 import { leaveThen, useFreshKeys } from './motion'
+import { CardTools, EditBox, EditField } from './DndCardTools'
 import { RollButton } from '../rolls/RollButton'
 import { useDndRoll } from '../rolls/DndRollProvider'
 import { spellAttackCheck } from '../rolls/checkModel'
@@ -114,7 +115,8 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     data.setDetails((d) => ({ ...d, spells: [...d.spells, saved] }))
   })
 
-  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key' | 'school' | 'casting_time' | 'spell_range' | 'duration'>>) =>
+  const [editing, setEditing] = useState<string | null>(null)
+  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'name' | 'spell_level' | 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key' | 'school' | 'casting_time' | 'spell_range' | 'duration'>>) =>
     run(s.id, async () => {
       const saved = await updateDndSpell(s.id, patch)
       data.setDetails((d) => ({ ...d, spells: d.spells.map((x) => (x.id === saved.id ? saved : x)) }))
@@ -268,56 +270,62 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                 const meta = [s.school, s.casting_time, s.spell_range, s.duration].filter(Boolean)
                 const isPrepared = s.prepared && s.spell_level > 0
                 return (
-                  <li key={s.id} className={`dsh-spell${isPrepared ? ' is-prepared' : ''}${isNew(s.id) ? ' is-new' : ''}`}>
+                  <li key={s.id} className={`dsh-spell${isPrepared ? ' is-prepared' : ''}${isNew(s.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
                     <div className="dsh-spell__main">
                       <span className="dsh-tag">{s.spell_level === 0 ? 'Truque' : `${s.spell_level}º`}</span>
                       <strong className="dsh-spell__name">{s.name}</strong>
-                      {s.catalog_key ? (
-                        <>
-                          {s.concentration && <span className="dsh-badge" title="Exige concentração">C</span>}
-                          {s.ritual && <span className="dsh-badge" title="Pode ser conjurada como ritual">R</span>}
-                        </>
-                      ) : (
-                        <>
-                          <button type="button" className={`dsh-flag dsh-flag--sm${s.concentration ? ' is-on' : ''}`} aria-pressed={s.concentration} disabled={readOnly}
-                            onClick={() => void patchSpell(s, { concentration: !s.concentration })}>Concentração</button>
-                          <button type="button" className={`dsh-flag dsh-flag--sm${s.ritual ? ' is-on' : ''}`} aria-pressed={s.ritual} disabled={readOnly}
-                            onClick={() => void patchSpell(s, { ritual: !s.ritual })}>Ritual</button>
-                        </>
-                      )}
+                      {s.concentration && <span className="dsh-badge" title="Exige concentração">C</span>}
+                      {s.ritual && <span className="dsh-badge" title="Pode ser conjurada como ritual">R</span>}
                       {s.spell_level > 0 && (
                         <button type="button" className={`dsh-flag${s.prepared ? ' is-on' : ''}`} aria-pressed={s.prepared} disabled={readOnly || busy === s.id}
                           title="Magia preparada" onClick={() => void patchSpell(s, { prepared: !s.prepared })}>{s.prepared ? '✓ Preparada' : 'Preparada'}</button>
                       )}
-                      {!readOnly && <button type="button" className="dsh-x" onClick={(e) => void removeSpell(s, e.currentTarget)} disabled={busy === s.id} aria-label={`Remover ${s.name}`}>×</button>}
                     </div>
+                    {!readOnly && (
+                      <CardTools name={s.name} editing={editing === s.id} onEdit={() => setEditing(editing === s.id ? null : s.id)}
+                        onDelete={(from) => void removeSpell(s, from)} busy={busy === s.id} />
+                    )}
                     {meta.length > 0 && <div className="dsh-spellchips">{meta.map((m) => <span key={m} className="dsh-cardchip">{m}</span>)}</div>}
-                    {(cat || !readOnly || s.description) && (
-                      <details className="dsh-spell__more">
-                        <summary>{cat || s.description || meta.length > 0 ? 'Ver a magia' : 'Descrição'}</summary>
-                        {cat && <DndSpellDetails spell={cat} />}
-                        {!cat && (s.description.trim() || meta.length > 0) && <DndOwnSpellDetails spell={s} />}
-                        {!cat && !readOnly && (
-                          <div className="dsh-spellform">
+                    {editing === s.id && !readOnly ? (
+                      <EditBox onDone={() => setEditing(null)}>
+                        <EditField label="Nome" value={s.name} required max={160} onSave={(name) => void patchSpell(s, { name })} />
+                        <div className="dsh-field dsh-field--tile"><span className="dsh-label">Nível</span>
+                          <Select options={LEVEL_OPTIONS} value={String(s.spell_level)} disabled={busy === s.id} onChange={(v) => void patchSpell(s, { spell_level: Number(v) })} aria-label={`Nível de ${s.name}`} /></div>
+                        {!cat && (
+                          <>
                             <div className="dsh-field dsh-field--tile"><span className="dsh-label">Escola</span>
                               <Select options={SCHOOL_OPTIONS.some((o) => o.value === s.school) ? SCHOOL_OPTIONS : [...SCHOOL_OPTIONS, { value: s.school, label: s.school }]} value={s.school} disabled={busy === s.id}
                                 onChange={(v) => void patchSpell(s, { school: v })} aria-label={`Escola de ${s.name}`} /></div>
-                            {([['casting_time', 'Tempo de conjuração', '1 ação'], ['spell_range', 'Alcance', '18 metros'], ['duration', 'Duração', 'Instantânea']] as const).map(([k, label, ph]) => (
-                              <label key={k} className="dsh-field dsh-field--tile"><span className="dsh-label">{label}</span>
-                                <input type="text" className="dsh-tileinput" defaultValue={s[k]} maxLength={80} placeholder={ph} aria-label={`${label} de ${s.name}`}
-                                  onBlur={(e) => { if (e.target.value.trim() !== s[k]) void patchSpell(s, { [k]: e.target.value.trim() }) }} /></label>
-                            ))}
-                          </div>
+                            <EditField label="Tempo de conjuração" value={s.casting_time} max={80} placeholder="1 ação" onSave={(casting_time) => void patchSpell(s, { casting_time })} />
+                            <EditField label="Alcance" value={s.spell_range} max={80} placeholder="18 metros" onSave={(spell_range) => void patchSpell(s, { spell_range })} />
+                            <EditField label="Duração" value={s.duration} max={80} placeholder="Instantânea" onSave={(duration) => void patchSpell(s, { duration })} />
+                            <ChipRow>
+                              <button type="button" className={`dsh-flag dsh-flag--sm${s.concentration ? ' is-on' : ''}`} aria-pressed={s.concentration}
+                                onClick={() => void patchSpell(s, { concentration: !s.concentration })}>Concentração</button>
+                              <button type="button" className={`dsh-flag dsh-flag--sm${s.ritual ? ' is-on' : ''}`} aria-pressed={s.ritual}
+                                onClick={() => void patchSpell(s, { ritual: !s.ritual })}>Ritual</button>
+                            </ChipRow>
+                          </>
                         )}
-                        {cat && !readOnly && (
-                          <button type="button" className="dsh-link" disabled={busy === s.id} onClick={() => void makeOwnCopy(s, cat)}
-                            title="Troca a magia do livro por uma cópia sua, com o texto nas notas para você editar">
-                            Personalizar (virar cópia própria)
+                        <EditField label={cat ? 'Suas anotações' : 'Texto da magia'} value={s.description} multiline rows={cat ? 3 : 6} max={8000}
+                          placeholder={cat ? 'Suas anotações sobre esta magia' : 'O texto da magia. Uma linha começando com "• " vira item de lista; linhas separadas viram parágrafos.'}
+                          onSave={(description) => void patchSpell(s, { description })} />
+                        {cat && (
+                          <button type="button" className="dsh-link dsh-editbox__wide" disabled={busy === s.id} onClick={() => void makeOwnCopy(s, cat)}
+                            title="Troca a magia do livro por uma cópia sua, com o texto nas notas para você editar tudo">
+                            Personalizar (virar cópia própria, para editar escola, alcance e o texto)
                           </button>
                         )}
-                        <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={cat ? 2 : 5} defaultValue={s.description} readOnly={readOnly} maxLength={8000}
-                          placeholder={cat ? 'Suas anotações sobre esta magia' : 'O texto da magia. Uma linha começando com "• " vira item de lista; linhas separadas viram parágrafos.'} aria-label={`Notas de ${s.name}`}
-                          onBlur={(e) => { if (e.target.value !== s.description) void patchSpell(s, { description: e.target.value }) }} />
+                      </EditBox>
+                    ) : (cat || s.description.trim() || meta.length > 0) && (
+                      <details className="dsh-spell__more">
+                        <summary>Ver a magia</summary>
+                        {cat && <DndSpellDetails spell={cat} />}
+                        {!cat && <DndOwnSpellDetails spell={s} />}
+                        {cat && s.description.trim() && (
+                          <div className="dsh-attack__desctext"><span className="dsh-label">Suas anotações</span>
+                            {s.description.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>
+                        )}
                       </details>
                     )}
                   </li>

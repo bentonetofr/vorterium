@@ -11,6 +11,7 @@ import { Bump, ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
 import { leaveThen, useFreshKeys } from './motion'
+import { CardTools, EditBox, EditField } from './DndCardTools'
 import { RollButton } from '../rolls/RollButton'
 import { useDndRoll } from '../rolls/DndRollProvider'
 import { attackCheck, critDamage, damageFormulaOf, deathCheck, deathResult, initiativeCheck } from '../rolls/checkModel'
@@ -140,7 +141,8 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     setWeaponKey(''); setCustomName('')
   })
 
-  const patchAttack = (a: DndCharacterAttack, patch: Partial<Pick<DndCharacterAttack, 'attack_bonus' | 'damage' | 'notes'>>) =>
+  const [editing, setEditing] = useState<string | null>(null)
+  const patchAttack = (a: DndCharacterAttack, patch: Partial<Pick<DndCharacterAttack, 'name' | 'attack_bonus' | 'damage' | 'damage_type' | 'notes'>>) =>
     run(a.id, async () => {
       const saved = await updateDndAttack(a.id, patch)
       data.setDetails((d) => ({ ...d, attacks: d.attacks.map((x) => (x.id === saved.id ? saved : x)) }))
@@ -226,23 +228,26 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             const bonusText = a.attack_bonus.trim() || (view ? formatSigned(view.attack.attackBonus) : '')
             const dmgText = a.damage.trim() || view?.attack.damageFormula || ''
             return (
-              <li key={a.id} className={`dsh-attack${isNew(a.id) ? ' is-new' : ''}`}>
+              <li key={a.id} className={`dsh-attack${isNew(a.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
                 <div className="dsh-attack__main">
                   <strong className="dsh-attack__name">{a.name}</strong>
                   <span className="dsh-attack__stat" title="Bônus de ataque">{bonusText || '-'}</span>
-                  <span className="dsh-attack__stat dsh-attack__stat--dmg" title="Dano">{dmgText || '-'}{view?.weapon.damageType ? ` ${view.weapon.damageType}` : a.damage_type ? ` ${a.damage_type}` : ''}</span>
-                  {!readOnly && <button type="button" className="dsh-x" onClick={(e) => void removeAttack(a, e.currentTarget)} disabled={busy === a.id} aria-label={`Remover ${a.name}`}>×</button>}
+                  <span className="dsh-attack__stat dsh-attack__stat--dmg" title="Dano">{dmgText || '-'}{a.damage_type ? ` ${a.damage_type}` : view?.weapon.damageType ? ` ${view.weapon.damageType}` : ''}</span>
                 </div>
+                {!readOnly && (
+                  <CardTools name={a.name} editing={editing === a.id} onEdit={() => setEditing(editing === a.id ? null : a.id)}
+                    onDelete={(from) => void removeAttack(a, from)} busy={busy === a.id} />
+                )}
                 {roller.canRoll && (
                   <div className="dsh-attack__rolls">
                     <RollButton label={`Atacar com ${a.name}`} onClick={() => rollAttack(a, view, bonusText)}>Atacar</RollButton>
                     {dmgText && validFormula(damageFormulaOf(dmgText)) && (
                       <>
                         <RollButton label={`Dano de ${a.name}`} className={critReady[a.id] ? 'is-crit' : ''}
-                          onClick={() => rollDamage(a, dmgText, view?.weapon.damageType ?? a.damage_type)}>{critReady[a.id] ? 'Dano crítico' : 'Dano'}</RollButton>
+                          onClick={() => rollDamage(a, dmgText, a.damage_type || view?.weapon.damageType)}>{critReady[a.id] ? 'Dano crítico' : 'Dano'}</RollButton>
                         {!critReady[a.id] && (
                           <RollButton label={`Dano crítico de ${a.name} (dobra os dados)`} className="is-crit"
-                            onClick={() => rollDamage(a, dmgText, view?.weapon.damageType ?? a.damage_type, true)}>Crítico</RollButton>
+                            onClick={() => rollDamage(a, dmgText, a.damage_type || view?.weapon.damageType, true)}>Crítico</RollButton>
                         )}
                       </>
                     )}
@@ -255,25 +260,22 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                     {view.weapon.properties.map((prop) => <StatusPill key={prop}>{prop}</StatusPill>)}
                   </ChipRow>
                 )}
-                {!readOnly && (
-                  <div className="dsh-attack__edit">
-                    <input className="dsh-input dsh-input--sm" defaultValue={a.attack_bonus} placeholder="Bônus (manual)" aria-label={`Bônus manual de ${a.name}`}
-                      onBlur={(e) => { if (e.target.value !== a.attack_bonus) void patchAttack(a, { attack_bonus: e.target.value.slice(0, 40) }) }} />
-                    <input className="dsh-input dsh-input--sm" defaultValue={a.damage} placeholder="Dano (manual)" aria-label={`Dano manual de ${a.name}`}
-                      onBlur={(e) => { if (e.target.value !== a.damage) void patchAttack(a, { damage: e.target.value.slice(0, 200) }) }} />
-                  </div>
+                {editing === a.id && !readOnly && (
+                  <EditBox onDone={() => setEditing(null)}>
+                    <EditField label="Nome" value={a.name} required onSave={(name) => void patchAttack(a, { name })} />
+                    <EditField label="Tipo de dano" value={a.damage_type} max={40} placeholder={view?.weapon.damageType ?? 'cortante, perfurante...'} onSave={(damage_type) => void patchAttack(a, { damage_type })} />
+                    <EditField label="Bônus de ataque" value={a.attack_bonus} max={40} placeholder={view ? `${formatSigned(view.attack.attackBonus)} (automático)` : '+5'} onSave={(attack_bonus) => void patchAttack(a, { attack_bonus })} />
+                    <EditField label="Dano" value={a.damage} max={200} placeholder={view ? `${view.attack.damageFormula} (automático)` : '1d8+3'} onSave={(damage) => void patchAttack(a, { damage })} />
+                    <EditField label="Descrição" value={a.notes} multiline max={DESC_MAX} placeholder="Habilidades, propriedades especiais, o que a arma faz..." onSave={(notes) => void patchAttack(a, { notes })} />
+                  </EditBox>
                 )}
-                {(a.notes.trim() || !readOnly) && (
+                {a.notes.trim() && editing !== a.id && (
                   <div className="dsh-attack__desc">
                     <button type="button" className="dsh-link dsh-attack__desctoggle" aria-expanded={!!openDesc[a.id]} onClick={() => toggleDesc(a.id)}
                       title={openDesc[a.id] ? 'Esconder a descrição' : 'Mostrar a descrição'}>
-                      {openDesc[a.id] ? '▾' : '▸'} Descrição{!openDesc[a.id] && a.notes.trim() ? ' •' : ''}
+                      {openDesc[a.id] ? '▾' : '▸'} Descrição{!openDesc[a.id] ? ' •' : ''}
                     </button>
-                    {openDesc[a.id] && (readOnly
-                      ? <div className="dsh-attack__desctext">{a.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>
-                      : <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={4} defaultValue={a.notes} maxLength={DESC_MAX}
-                          placeholder="Descrição da arma: habilidades, propriedades especiais, o que ela faz..." aria-label={`Descrição de ${a.name}`}
-                          onBlur={(e) => { if (e.target.value.trim() !== a.notes) void patchAttack(a, { notes: e.target.value.trim().slice(0, DESC_MAX) }) }} />)}
+                    {openDesc[a.id] && <div className="dsh-attack__desctext">{a.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>}
                   </div>
                 )}
               </li>

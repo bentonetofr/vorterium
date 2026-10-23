@@ -11,6 +11,7 @@ import { NumberField, Pips } from './DndControls'
 import { Bump, RechargeLegend } from './DndVisuals'
 import type { SheetCtx } from './sheetContext'
 import { leaveThen, useFreshKeys } from './motion'
+import { CardTools, EditBox, EditField } from './DndCardTools'
 
 // ────────────────────────────────────────────────────────
 // Aba Características: recursos que gastam e recarregam (Fúria, Ki, Inspiração
@@ -78,9 +79,10 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
     setResLabel('')
   })
 
-  const patchResource = (r: DndCharacterResource, patch: { max_value?: number; recharge?: DndRecharge }) => run(r.id, async () => {
+  const [editing, setEditing] = useState<string | null>(null)
+  const patchResource = (r: DndCharacterResource, patch: { max_value?: number; recharge?: DndRecharge; label?: string }) => run(r.id, async () => {
     const max = patch.max_value ?? r.max_value
-    const saved = await saveDndResource(sheet.id, { key: r.key, label: r.label, max_value: max, current_value: Math.min(r.current_value, max), recharge: patch.recharge ?? r.recharge, source: r.source })
+    const saved = await saveDndResource(sheet.id, { key: r.key, label: patch.label ?? r.label, max_value: max, current_value: Math.min(r.current_value, max), recharge: patch.recharge ?? r.recharge, source: r.source })
     replaceResource(saved)
   })
 
@@ -115,7 +117,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
     setFeatName('')
   })
 
-  const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'notes' | 'uses_current' | 'uses_max' | 'recharge'>>) =>
+  const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'name' | 'level' | 'notes' | 'uses_current' | 'uses_max' | 'recharge'>>) =>
     run(f.id, async () => { replaceFeature(await updateDndFeature(f.id, patch)) })
 
   const removeFeature = (f: DndCharacterFeature, from: Element) => run(f.id, () => leaveThen(from, () => removeDndFeature(f.id),
@@ -141,35 +143,41 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
               const left = Math.min(r.current_value, r.max_value)
               const locked = readOnly || busy === r.id
               return (
-                <li key={r.id} className={`dsh-restile${r.max_value > 0 && left === 0 ? ' is-empty' : ''}${isNewResource(r.id) ? ' is-new' : ''}`}>
+                <li key={r.id} className={`dsh-restile${r.max_value > 0 && left === 0 ? ' is-empty' : ''}${isNewResource(r.id) ? ' is-new' : ''}${readOnly || auto ? '' : ' has-tools'}`}>
                   <div className="dsh-restile__head">
                     <strong className="dsh-restile__name">{r.label}</strong>
-                    {!readOnly && !auto && <button type="button" className="dsh-x" onClick={(e) => void removeResource(r, e.currentTarget)} disabled={busy === r.id} aria-label={`Remover ${r.label}`}>×</button>}
                   </div>
+                  {!readOnly && !auto && (
+                    <CardTools name={r.label} editing={editing === r.id} onEdit={() => setEditing(editing === r.id ? null : r.id)}
+                      onDelete={(from) => void removeResource(r, from)} busy={busy === r.id} />
+                  )}
                   <div className="dsh-restile__use">
                     {r.max_value > 0 && r.max_value <= 12
                       ? <Pips total={r.max_value} filled={left} label={`${r.label} restantes`} onChange={locked ? undefined : (n) => void setCurrent(r, n)} />
                       : <NumberField value={left} min={0} max={r.max_value} label={`${r.label} restantes`} disabled={locked} onChange={(n) => void setCurrent(r, n)} className="dsh-restile__num" />}
                     <span className="dsh-restile__count" title="Restante / total">
-                      <strong><Bump value={left} /></strong>/
-                      {readOnly || auto
-                        ? r.max_value
-                        : <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`} disabled={busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-restile__total" />}
+                      <strong><Bump value={left} /></strong>/{r.max_value}
                     </span>
                   </div>
-                  <div className="dsh-restile__foot">
-                    {readOnly || auto
-                      ? <abbr className="dsh-legend__code" title={RECHARGE_LABEL[r.recharge]}>{RECHARGE_SHORT[r.recharge]}</abbr>
-                      : (
+                  {editing === r.id && !readOnly && !auto ? (
+                    <EditBox onDone={() => setEditing(null)}>
+                      <EditField label="Nome" value={r.label} required max={80} wide onSave={(label) => void patchResource(r, { label })} />
+                      <label className="dsh-field dsh-field--tile"><span className="dsh-label">Total</span>
+                        <NumberField value={r.max_value} min={0} max={999} label={`Total de ${r.label}`} disabled={busy === r.id} onChange={(n) => void patchResource(r, { max_value: n })} className="dsh-num--field" /></label>
+                      <div className="dsh-field dsh-field--tile"><span className="dsh-label">Recarga</span>
                         <div className="dsh-seg" role="group" aria-label={`Recarga de ${r.label}`}>
                           {RECHARGE_OPTIONS.map((o) => (
                             <button key={o.value} type="button" className={`dsh-seg__btn${r.recharge === o.value ? ' is-on' : ''}`} aria-pressed={r.recharge === o.value}
                               title={o.label} disabled={busy === r.id} onClick={() => { if (r.recharge !== o.value) void patchResource(r, { recharge: o.value }) }}>{RECHARGE_SHORT[o.value]}</button>
                           ))}
-                        </div>
-                      )}
-                    {auto && <span className="dsh-cardchip" title="O total vem das tabelas do livro. Para editar, ponha os recursos em manual no botão Automatizar.">Total automático</span>}
-                  </div>
+                        </div></div>
+                    </EditBox>
+                  ) : (
+                    <div className="dsh-restile__foot">
+                      <abbr className="dsh-legend__code" title={RECHARGE_LABEL[r.recharge]}>{RECHARGE_SHORT[r.recharge]}</abbr>
+                      {auto && <span className="dsh-cardchip" title="O total vem das tabelas do livro. Para editar, ponha os recursos em manual no botão Automatizar.">Total automático</span>}
+                    </div>
+                  )}
                 </li>
               )
             })}
@@ -249,44 +257,57 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
             const cat = f.feature_key ? findCatalogFeature(f.source, f.feature_key) : undefined
             const hasUses = f.uses_max != null
             return (
-              <li key={f.id} className={`dsh-feature${isNewFeature(f.id) ? ' is-new' : ''}`}>
+              <li key={f.id} className={`dsh-feature${isNewFeature(f.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
                 <details>
                   <summary>
                     <span className="dsh-tag">{SOURCE_LABEL[f.source]}</span>
                     <strong>{f.name}</strong>
                     {f.level != null && f.level > 1 && <span className="dsh-cardchip">nível {f.level}</span>}
                     {hasUses && <span className="dsh-cardchip dsh-feature__uses-chip" title="Usos restantes / total">usos {f.uses_current ?? 0}/{f.uses_max}</span>}
-                    {!readOnly && (
-                      <button type="button" className="dsh-x dsh-feature__x" disabled={busy === f.id} aria-label={`Remover ${f.name}`} title="Remover da ficha"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeFeature(f, e.currentTarget) }}>×</button>
-                    )}
                   </summary>
                   <div className="dsh-feature__body">
                     {cat && <p className="dsh-feature__summary">{cat.summary}</p>}
                     {cat && cat.origin && <p className="dsh-faint">Origem: {cat.origin}{cat.original ? ` · ${cat.original}` : ''}</p>}
-                    <div className="dsh-feature__uses">
-                      <label className="dsh-itemnum" title="Quantas vezes pode usar entre as recargas (0 = sem limite)"><small>Usos</small>
-                        <NumberField value={f.uses_max ?? 0} min={0} max={99} label={`Usos de ${f.name}`} disabled={readOnly || busy === f.id} className="dsh-itemnum__input"
+                    {hasUses && (
+                      <div className="dsh-feature__uses">
+                        <Pips total={Math.min(f.uses_max ?? 0, 12)} filled={Math.min(f.uses_current ?? 0, 12)} label={`Usos disponíveis de ${f.name}`}
+                          onChange={readOnly || busy === f.id ? undefined : (n) => void patchFeature(f, { uses_current: n })} />
+                        <abbr className="dsh-legend__code" title={RECHARGE_LABEL[f.recharge ?? 'long']}>{RECHARGE_SHORT[f.recharge ?? 'long']}</abbr>
+                      </div>
+                    )}
+                    {f.notes.trim()
+                      ? <div className="dsh-attack__desctext">{f.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>
+                      : !cat && !hasUses && <p className="dsh-faint">Sem descrição. Use o lápis para escrever o que esta característica faz.</p>}
+                  </div>
+                </details>
+                {!readOnly && (
+                  <CardTools name={f.name} editing={editing === f.id} onEdit={() => setEditing(editing === f.id ? null : f.id)}
+                    onDelete={(from) => void removeFeature(f, from)} busy={busy === f.id} />
+                )}
+                {editing === f.id && !readOnly && (
+                  <div className="dsh-feature__edit">
+                    <EditBox onDone={() => setEditing(null)}>
+                      <EditField label="Nome" value={f.name} required wide onSave={(name) => void patchFeature(f, { name })} />
+                      <label className="dsh-field dsh-field--tile" title="Nível em que o personagem ganhou (0 = sem nível)"><span className="dsh-label">Nível</span>
+                        <NumberField value={f.level ?? 0} min={0} max={20} label={`Nível de ${f.name}`} disabled={busy === f.id} className="dsh-num--field"
+                          onChange={(n) => void patchFeature(f, { level: n === 0 ? null : n })} /></label>
+                      <label className="dsh-field dsh-field--tile" title="Quantas vezes pode usar entre as recargas (0 = sem limite)"><span className="dsh-label">Usos</span>
+                        <NumberField value={f.uses_max ?? 0} min={0} max={99} label={`Usos de ${f.name}`} disabled={busy === f.id} className="dsh-num--field"
                           onChange={(n) => void patchFeature(f, n === 0 ? { uses_max: null, uses_current: null, recharge: null } : { uses_max: n, uses_current: Math.min(f.uses_current ?? n, n), recharge: f.recharge ?? 'long' })} /></label>
                       {hasUses && (
-                        <>
-                          <Pips total={Math.min(f.uses_max ?? 0, 12)} filled={Math.min(f.uses_current ?? 0, 12)} label={`Usos disponíveis de ${f.name}`}
-                            onChange={readOnly || busy === f.id ? undefined : (n) => void patchFeature(f, { uses_current: n })} />
+                        <div className="dsh-field dsh-field--tile dsh-editbox__wide"><span className="dsh-label">Recarga</span>
                           <div className="dsh-seg" role="group" aria-label={`Recarga de ${f.name}`}>
                             {RECHARGE_OPTIONS.map((o) => (
                               <button key={o.value} type="button" className={`dsh-seg__btn${(f.recharge ?? 'long') === o.value ? ' is-on' : ''}`} aria-pressed={(f.recharge ?? 'long') === o.value}
-                                title={o.label} disabled={readOnly || busy === f.id} onClick={() => { if ((f.recharge ?? 'long') !== o.value) void patchFeature(f, { recharge: o.value }) }}>{RECHARGE_SHORT[o.value]}</button>
+                                title={o.label} disabled={busy === f.id} onClick={() => { if ((f.recharge ?? 'long') !== o.value) void patchFeature(f, { recharge: o.value }) }}>{RECHARGE_SHORT[o.value]}</button>
                             ))}
-                          </div>
-                        </>
+                          </div></div>
                       )}
-                    </div>
-                    <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={2} defaultValue={f.notes} readOnly={readOnly} maxLength={2000}
-                      placeholder="Anotações sobre esta característica" aria-label={`Anotações de ${f.name}`}
-                      onBlur={(e) => { if (e.target.value !== f.notes) void patchFeature(f, { notes: e.target.value }) }} />
-                    {!readOnly && <button type="button" className="dsh-link dsh-link--danger" onClick={(e) => void removeFeature(f, e.currentTarget)} disabled={busy === f.id}>Remover da ficha</button>}
+                      <EditField label={cat ? 'Anotações' : 'Descrição'} value={f.notes} multiline rows={3} max={2000}
+                        placeholder={cat ? 'Anotações sobre esta característica' : 'O que esta característica faz'} onSave={(notes) => void patchFeature(f, { notes })} />
+                    </EditBox>
                   </div>
-                </details>
+                )}
               </li>
             )
           })}
