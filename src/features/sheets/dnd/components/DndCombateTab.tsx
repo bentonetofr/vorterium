@@ -21,6 +21,15 @@ import { parseDiceFormula } from '../../../dice/services/diceService'
 // concentração e ataques com arma. As contas de ataque saem do motor.
 // ────────────────────────────────────────────────────────
 
+/** Tamanho máximo da descrição de uma arma. */
+const DESC_MAX = 4000
+const DESC_KEY = 'vorterium.dnd.attackDescOpen'
+
+/** Quais descrições de arma estão abertas (lembrado neste aparelho; nada disso é essencial). */
+function loadOpen(): Record<string, boolean> {
+  try { return JSON.parse(localStorage.getItem(DESC_KEY) ?? '{}') as Record<string, boolean> } catch { return {} }
+}
+
 const WEAPON_OPTIONS = [{ value: '', label: 'Escolher uma arma' }, ...WEAPONS.map((w) => ({ value: w.key, label: w.name }))]
 
 /** A fórmula de dano dá para rolar? ("1d8+3" sim; "especial" não) */
@@ -40,6 +49,12 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
 
   const roller = useDndRoll()
   const [critReady, setCritReady] = useState<Record<string, boolean>>({})
+  const [openDesc, setOpenDesc] = useState<Record<string, boolean>>(loadOpen)
+  const toggleDesc = (id: string) => setOpenDesc((m) => {
+    const next = { ...m, [id]: !m[id] }
+    try { localStorage.setItem(DESC_KEY, JSON.stringify(next)) } catch { /* sem armazenamento: só não lembra */ }
+    return next
+  })
 
   function rollDeath() {
     roller.check(deathCheck(), {
@@ -246,8 +261,19 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                       onBlur={(e) => { if (e.target.value !== a.attack_bonus) void patchAttack(a, { attack_bonus: e.target.value.slice(0, 40) }) }} />
                     <input className="dsh-input dsh-input--sm" defaultValue={a.damage} placeholder="Dano (manual)" aria-label={`Dano manual de ${a.name}`}
                       onBlur={(e) => { if (e.target.value !== a.damage) void patchAttack(a, { damage: e.target.value.slice(0, 200) }) }} />
-                    <input className="dsh-input dsh-input--sm" defaultValue={a.notes} placeholder="Notas" aria-label={`Notas de ${a.name}`}
-                      onBlur={(e) => { if (e.target.value !== a.notes) void patchAttack(a, { notes: e.target.value.slice(0, 300) }) }} />
+                  </div>
+                )}
+                {(a.notes.trim() || !readOnly) && (
+                  <div className="dsh-attack__desc">
+                    <button type="button" className="dsh-link dsh-attack__desctoggle" aria-expanded={!!openDesc[a.id]} onClick={() => toggleDesc(a.id)}
+                      title={openDesc[a.id] ? 'Esconder a descrição' : 'Mostrar a descrição'}>
+                      {openDesc[a.id] ? '▾' : '▸'} Descrição{!openDesc[a.id] && a.notes.trim() ? ' •' : ''}
+                    </button>
+                    {openDesc[a.id] && (readOnly
+                      ? <div className="dsh-attack__desctext">{a.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>
+                      : <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={4} defaultValue={a.notes} maxLength={DESC_MAX}
+                          placeholder="Descrição da arma: habilidades, propriedades especiais, o que ela faz..." aria-label={`Descrição de ${a.name}`}
+                          onBlur={(e) => { if (e.target.value.trim() !== a.notes) void patchAttack(a, { notes: e.target.value.trim().slice(0, DESC_MAX) }) }} />)}
                   </div>
                 )}
               </li>

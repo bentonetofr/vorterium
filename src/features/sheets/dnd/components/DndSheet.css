@@ -868,6 +868,10 @@
 @media (max-width: 480px) { .dsh-newattack { grid-template-columns: 1fr; } }
 .dsh-spellform { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
 @media (max-width: 480px) { .dsh-spellform { grid-template-columns: 1fr; } }
+.dsh-attack__desc { display: flex; flex-direction: column; gap: var(--space-1); }
+.dsh-attack__desctoggle { align-self: flex-start; }
+.dsh-attack__desctext { display: flex; flex-direction: column; gap: var(--space-1); }
+.dsh-attack__desctext .dsh-note { margin: 0; }
 .dsh-itemdesc { display: flex; flex-direction: column; gap: var(--space-1); }
 .dsh-itemdesc .dsh-note { margin: 0; }
 .dsh-rollbtn:disabled { opacity: 0.4; cursor: not-allowed; }
