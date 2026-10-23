@@ -71,7 +71,7 @@ export function DndFreeRollTab({ formula, onFormula, isPrivate, onPrivate, onRol
                 onClick={() => { onFormula(f); setError(null); inputRef.current?.focus() }}>{f}</button>
             ))}
           </div>
-          <p className="dice-custom__examples-label">Some dados e números com + e −. <b>2#d20</b> rola dois e fica com o maior (vantagem); <b>2@d20</b> fica com o menor (desvantagem).</p>
+          <p className="dice-custom__examples-label"><b>2#d20</b> = o maior de dois · <b>2@d20</b> = o menor de dois</p>
           {error && <div className="dice-feedback dice-feedback--error" role="alert">{error}</div>}
           {!canRoll && <div className="dice-feedback dice-feedback--error" role="alert">Abra uma campanha para rolar.</div>}
         </div>
