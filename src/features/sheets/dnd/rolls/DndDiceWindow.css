@@ -4,9 +4,9 @@
    ════════════════════════════════════════════════════════ */
 
 .ddw {
-  --ddw-accent:      #7a45c0;
-  --ddw-accent-soft: rgba(122, 69, 192, 0.16);
-  --ddw-accent-line: rgba(122, 69, 192, 0.4);
+  --ddw-accent:      #d9363e;
+  --ddw-accent-soft: rgba(217, 54, 62, 0.16);
+  --ddw-accent-line: rgba(217, 54, 62, 0.4);
   --ddw-bone:        #f1e3cf;
   --ddw-bone-dim:    #b3a48d;
   --ddw-gold:        #e8b85c;
@@ -31,7 +31,7 @@
 .ddw-vitrine__intro { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
 .ddw-skins { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--space-3); }
 .ddw-skin {
-  --skin-glow: #7a45c0;
+  --skin-glow: #d9363e;
   position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-3) var(--space-2) var(--space-3); text-align: center;
   background: radial-gradient(ellipse at 50% 34%, rgba(255, 255, 255, 0.07), transparent 62%), linear-gradient(180deg, #1a1426, #0d0a14);
   border: 1px solid var(--border-dim); border-radius: var(--radius-md); cursor: var(--cursor-hand);

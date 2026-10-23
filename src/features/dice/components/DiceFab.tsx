@@ -310,7 +310,7 @@ export function DiceFab() {
 
       <button
         type="button"
-        className={`dice-fab${isOpen ? ' dice-fab--open' : ''}${dnd ? ' dice-fab--dnd' : ''}`}
+        className={`dice-fab${isOpen ? ' dice-fab--open' : ''}`}
         onClick={handleToggle}
         aria-label={isOpen ? 'Fechar rolagem de dados' : 'Abrir rolagem de dados'}
         aria-expanded={isOpen}

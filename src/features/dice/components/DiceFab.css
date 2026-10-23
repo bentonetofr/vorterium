@@ -31,9 +31,6 @@
   color: #fff;
 }
 .dice-fab:not(.sheet-fab):hover:not(:disabled) { background: #e84a52; }
-/* campanhas de D&D: o botão segue o roxo do sistema */
-.dice-fab--dnd:not(.sheet-fab):not(:disabled) { background: #7a45c0; border-color: rgba(196, 160, 240, 0.55); }
-.dice-fab--dnd:not(.sheet-fab):hover:not(:disabled) { background: #9460d8; }
 .dice-fab:disabled {
   background: var(--bg-overlay);
   border-color: var(--border-base);
