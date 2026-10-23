@@ -1,6 +1,6 @@
 // ────────────────────────────────────────────────────────
 // Prévia das abas da ficha de D&D com a ficha de exemplo (só no `npm run dev`;
-// fora do build): /testes/ficha-abas.html?aba=atributos|combate|magias|personagem
+// fora do build): /testes/ficha-abas.html?aba=atributos|combate|magias|personagem|cabecalho
 // Sem banco e sem login. `?manual=1` deixa os valores calculados em modo manual.
 // ────────────────────────────────────────────────────────
 import { createRoot } from 'react-dom/client'
@@ -8,6 +8,7 @@ import '../src/index.css'
 import '../src/features/sheets/dnd/components/DndSheet.css'
 import { cls, makeCtx, makeData, makeSheet, now, resource } from '../src/features/sheets/dnd/components/fixtures'
 import { DndAtributosTab } from '../src/features/sheets/dnd/components/DndAtributosTab'
+import { DndHero } from '../src/features/sheets/dnd/components/DndHero'
 import { DndCombateTab } from '../src/features/sheets/dnd/components/DndCombateTab'
 import { DndMagiasTab } from '../src/features/sheets/dnd/components/DndMagiasTab'
 import { DndPersonagemTab } from '../src/features/sheets/dnd/components/DndPersonagemTab'
@@ -29,7 +30,11 @@ const data = makeData({
 })
 const ctx = makeCtx({ sheet: makeSheet(klass ? { class_key: klass } : {}), data })
 
-const TABS = { atributos: DndAtributosTab, combate: DndCombateTab, magias: DndMagiasTab, personagem: DndPersonagemTab } as const
+const noop = () => {}
+const Hero = ({ ctx: c }: { ctx: typeof ctx }) => (
+  <DndHero ctx={c} isNpc portraitBusy={false} onPortraitChange={async () => {}} onPortraitRemove={noop} onShortRest={noop} onLongRest={noop} restBusy={false} onImport={noop} />
+)
+const TABS = { atributos: DndAtributosTab, combate: DndCombateTab, magias: DndMagiasTab, personagem: DndPersonagemTab, cabecalho: Hero } as const
 const Tab = TABS[tab as keyof typeof TABS] ?? DndAtributosTab
 createRoot(document.getElementById('root')!).render(
   <div className="dsh-sheet" style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}><Tab ctx={ctx} /></div>,

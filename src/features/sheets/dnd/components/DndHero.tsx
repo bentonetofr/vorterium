@@ -3,6 +3,7 @@ import { getBackground, getClass, getRace, getSubrace } from '../catalog'
 import { DND_PORTRAIT_PICK_MAX_BYTES, DND_PORTRAIT_TYPES } from '../constants/dnd'
 import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
 import { classLine } from '../model/sheetModel'
+import { formatMeters } from '../model/format'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { DndAutomationPanel } from './DndAutomationPanel'
@@ -43,6 +44,8 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
 
   const race = form.race_key ? getRace(form.race_key) : undefined
   const subrace = form.race_key && form.subrace_key ? getSubrace(form.race_key, form.subrace_key) : undefined
+  /** Visão no escuro da raça, em pés (0 = visão normal). */
+  const vision = race?.darkvision ?? 0
   const background = form.background_key ? getBackground(form.background_key) : undefined
   const initialClass = getClass(data.classes.find((c) => c.is_initial)?.class_key ?? data.classes[0]?.class_key ?? '')
   const hasIdentity = !!race || !!form.race_custom.trim() || data.classes.length > 0 || !!sheet.class_name?.trim() || !!background
@@ -129,6 +132,10 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
             suffix={feet ? ' ft' : ' m'} min={0} max={feet ? 1000 : 300} step={feet ? 5 : 0.5}
             onUnitClick={() => set('speed_unit', feet ? 'm' : 'ft')} unitTitle={feet ? 'Em pés. Clique para ver em metros.' : 'Em metros. Clique para ver em pés.'}
           />
+        </div>
+        <div className="dsh-stat" title={vision > 0 ? 'Visão no escuro: enxerga na penumbra como se fosse luz plena e no escuro como se fosse penumbra, nesta distância (só em tons de cinza).' : race ? 'Visão normal: sem visão no escuro.' : 'Escolha a raça para ver a visão no escuro.'}>
+          <span className="dsh-stat__label">Visão</span>
+          <strong className={`dsh-stat__value${vision > 0 ? ' dsh-stat__value--bone' : ''}`}>{vision > 0 ? (feet ? `${vision} ft` : formatMeters(vision)) : race ? 'Normal' : '—'}</strong>
         </div>
         <div className="dsh-stat">
           <span className="dsh-stat__label">Proficiência</span>
