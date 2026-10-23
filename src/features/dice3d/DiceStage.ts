@@ -75,6 +75,9 @@ export class DiceStage {
     el.style.height = '100%'
     el.style.pointerEvents = 'none'
     host.appendChild(el)
+    // contexto perdido (o navegador tira de quem passa do limite): some, em vez de ficar um retângulo em branco por cima da tela
+    el.addEventListener('webglcontextlost', (e) => { e.preventDefault(); el.style.visibility = 'hidden' })
+    el.addEventListener('webglcontextrestored', () => { el.style.visibility = ''; this.render() })
 
     const pmrem = new THREE.PMREMGenerator(this.renderer)
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture

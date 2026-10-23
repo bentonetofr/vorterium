@@ -23,11 +23,11 @@ const MAX_QUEUE = 5
 
 function TableRollsInner({ campaignId, userId }: { campaignId: string; userId: string }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const { stage } = useDiceStage(hostRef, 'tray')
   const [queue, setQueue] = useState<DiceRoll[]>([])
   const [shown, setShown] = useState(false)
   const names = useRef(new Map<string, string>())
   const current = queue[0] ?? null
+  const { stage, simple } = useDiceStage(hostRef, 'tray', !!current)
 
   useEffect(() => {
     let alive = true
@@ -46,6 +46,7 @@ function TableRollsInner({ campaignId, userId }: { campaignId: string; userId: s
 
   useEffect(() => {
     if (!current) return
+    if (!stage && !simple) return   // espera o motor 3D ligar
     let alive = true
     const timers: number[] = []
     setShown(false)
@@ -57,7 +58,7 @@ function TableRollsInner({ campaignId, userId }: { campaignId: string; userId: s
       timers.push(window.setTimeout(() => { if (alive) { stage?.clear(); next() } }, HOLD_MS))
     })
     return () => { alive = false; timers.forEach((t) => window.clearTimeout(t)) }
-  }, [current, stage, next])
+  }, [current, stage, simple, next])
 
   const ctx = current?.roll_context
   const who = ctx?.character || (current ? names.current.get(current.user_id) : '') || 'Alguém'

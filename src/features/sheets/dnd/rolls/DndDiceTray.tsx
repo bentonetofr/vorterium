@@ -27,7 +27,7 @@ function partsText(roll: DiceRoll): string {
 
 export function DndDiceTray({ job, onDone }: { job: TrayJob | null; onDone: () => void }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const { stage, simple } = useDiceStage(hostRef, 'tray')
+  const { stage, simple } = useDiceStage(hostRef, 'tray', !!job)
   const [phase, setPhase] = useState<'idle' | 'rolling' | 'shown' | 'leaving'>('idle')
   const onDoneRef = useRef(onDone)
   onDoneRef.current = onDone

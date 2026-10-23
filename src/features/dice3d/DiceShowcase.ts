@@ -60,6 +60,8 @@ export class DiceShowcase {
     el.style.height = '100%'
     el.style.pointerEvents = 'none'
     host.appendChild(el)
+    el.addEventListener('webglcontextlost', (e) => { e.preventDefault(); el.style.visibility = 'hidden' })
+    el.addEventListener('webglcontextrestored', () => { el.style.visibility = '' })
 
     const pmrem = new THREE.PMREMGenerator(this.renderer)
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
