@@ -7,7 +7,7 @@
 import { DiceStage, diceStageSupported, type StageDie } from '../src/features/dice3d/DiceStage'
 import { facesCount, type DieKind } from '../src/features/dice3d/polyhedra'
 import { DICE_SKINS } from '../src/features/dice3d/skins'
-import { setDiceSoundMuted } from '../src/features/dice3d/sound'
+import { playDiceHit, playDiceRattle, setDiceSoundMuted } from '../src/features/dice3d/sound'
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 const out = $('out')
@@ -54,3 +54,9 @@ $('adv').onclick = () => {
   const a = roll('d20'), b = roll('d20')
   void throwOn(stage, [{ kind: 'd20', value: a, dim: a < b }, { kind: 'd20', value: b, dim: b <= a }])
 }
+
+// ── Só o som (para ouvir e comparar sem rolar nada) ──
+$('snd-floor').onclick = () => playDiceHit(0.9, false)
+$('snd-dice').onclick = () => playDiceHit(0.8, true)
+$('snd-soft').onclick = () => playDiceHit(0.25, false)
+$('snd-rattle').onclick = () => playDiceRattle()
