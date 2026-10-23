@@ -43,7 +43,10 @@ export function readJohnBard(fields: readonly PdfField[]): SheetRead {
 
   /** O texto do campo (o primeiro que não está vazio; o mesmo campo pode aparecer em mais de uma página). */
   const text = (name: string): string => {
-    for (const f of byName.get(name) ?? []) if (typeof f.value === 'string' && f.value.trim() !== '') return f.value.trim()
+    for (const f of byName.get(name) ?? []) {
+      // o texto "Type or Select" é só a dica das listas (Classe, Raça, Tendência...) quando nada foi escolhido
+      if (typeof f.value === 'string' && f.value.trim() !== '' && !(f.kind === 'choice' && /^type or select$/i.test(f.value.trim()))) return f.value.trim()
+    }
     return ''
   }
   const checked = (name: string): boolean => (byName.get(name) ?? []).some((f) => f.value === true)
