@@ -33,7 +33,7 @@ import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
 import { DndItemBrowser } from './DndItemBrowser'
 import { DndRollProvider } from '../rolls/DndRollProvider'
-import { DndCheckRequestCard } from '../rolls/DndCheckRequestCard'
+import { DndCheckRequestCard, DndCheckRequestDialog } from '../rolls/DndCheckRequestCard'
 import { moveHpBar } from './DndDragBar'
 import { DndAutomationPanel } from './DndAutomationPanel'
 import { AUTOMATION_ITEMS } from '../model/automation'
@@ -226,8 +226,15 @@ describe('abas', () => {
     expect(html).not.toContain('Personalizar')
   })
 
-  it('mestre: card de pedir teste com os jogadores, o teste, a CD e a vantagem', () => {
-    const html = renderToStaticMarkup(<DndCheckRequestCard campaignId="c1" players={[{ userId: 'u1', name: 'Lia' }, { userId: 'u2', name: 'Bran' }]} />)
+  it('mestre: só um botão "Pedir teste" na lista (o formulário fica na janelinha)', () => {
+    const html = renderToStaticMarkup(<DndCheckRequestCard campaignId="c1" players={[{ userId: 'u1', name: 'Lia' }]} />)
+    expect(html).toContain('>Pedir teste<')
+    expect(html).not.toContain('CD oculta')
+    expect(html).not.toContain('>Lia<')
+  })
+
+  it('mestre: janelinha de pedir teste com os jogadores, o teste, a CD e a vantagem', () => {
+    const html = renderToStaticMarkup(<DndCheckRequestDialog campaignId="c1" players={[{ userId: 'u1', name: 'Lia' }, { userId: 'u2', name: 'Bran' }]} open={[]} answers={[]} hiddenDc={{}} refresh={async () => {}} onClose={() => {}} />)
     expect(html).toContain('Pedir teste')
     expect(html).toContain('>Lia<')
     expect(html).toContain('>Bran<')
