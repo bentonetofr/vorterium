@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DiceRoll } from '../../../../shared/types'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { playDiceFlourish } from '../../../dice3d/sound'
+import { revealCheckDc } from '../services/dndCheckService'
+import { judge, type CheckKind } from './checkModel'
 import { useDiceStage } from './useDiceStage'
 import { watchedCheck } from './watchModel'
 import './DndRolls.css'
@@ -11,7 +13,9 @@ import './DndRolls.css'
 // (CD no topo, d20, bônus, Sucesso ou Falha, efeito no 20 e no 1), mas com o
 // dado rolando sozinho, sem controles, na moldura azul e com a etiqueta de
 // quem está rolando. Não bloqueia o site: some sozinho depois do resultado
-// (mais rápido quando há outro teste esperando) ou no ×.
+// (mais rápido quando há outro teste esperando) ou no ×. Com a CD oculta, quem
+// tem direito a ela (o mestre, ou quem já respondeu ao pedido) vê a CD e o
+// resultado no fim; os outros só veem o dado e o total.
 // ────────────────────────────────────────────────────────
 
 interface Props {
@@ -35,6 +39,7 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
   const [phase, setPhase] = useState<'rolling' | 'done'>('rolling')
   const [spin, setSpin] = useState<number | null>(null)
   const [leaving, setLeaving] = useState(false)
+  const [revealed, setRevealed] = useState<number | null>(null)
   const onDoneRef = useRef(onDone)
   onDoneRef.current = onDone
   const hurryRef = useRef(hurry)
@@ -55,6 +60,8 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
       if (!alive) return
       if (w.crit) playDiceFlourish(w.crit)
       setPhase('done')
+      const requestId = roll.roll_context?.request_id
+      if (w.dcHidden && requestId) void revealCheckDc(requestId).then((dc) => { if (alive && dc != null) setRevealed(dc) })
       const hold = hurryRef.current ? HOLD_FAST_MS : HOLD_MS
       timers.push(window.setTimeout(() => { if (alive) setLeaving(true) }, hold))
       timers.push(window.setTimeout(() => { if (alive) onDoneRef.current() }, hold + 360))
@@ -64,8 +71,11 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
   }, [roll.id, stage, simple])
 
   const done = phase === 'done'
-  const dcText = w.dcHidden ? '?' : w.dc != null ? String(w.dc) : null
-  const resultClass = done ? `${w.outcome ? ` is-${w.outcome}` : ''}${w.crit ? ` is-${w.crit}` : ''}` : ''
+  const dcText = w.dcHidden ? (revealed != null ? String(revealed) : '?') : w.dc != null ? String(w.dc) : null
+  const outcome = w.dcHidden
+    ? (revealed != null && roll.roll_context?.kind ? judge(roll.roll_context.kind as CheckKind, w.reading.natural, w.reading.total, revealed).outcome : null)
+    : w.outcome
+  const resultClass = done ? `${outcome ? ` is-${outcome}` : ''}${w.crit ? ` is-${w.crit}` : ''}` : ''
   const who = w.character || player
 
   return (
@@ -78,7 +88,7 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
 
         <div className="dcp__frame">
           <div className="dcp__dc">
-            {dcText ? <><small>Classe de dificuldade</small><strong className={w.dcHidden ? 'is-hidden' : ''}>{dcText}</strong></> : <small className="dcp__nodc">Sem CD</small>}
+            {dcText ? <><small>Classe de dificuldade</small><strong className={w.dcHidden && revealed == null ? 'is-hidden' : ''}>{dcText}</strong></> : <small className="dcp__nodc">Sem CD</small>}
           </div>
           <h3 className="dcp__title">{w.label}{who !== player && <span>{who}</span>}</h3>
 
@@ -93,7 +103,7 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
             <div className="dcp__result">
               <span className="dcp__natural">{w.reading.d20s.length > 1 ? `${w.reading.d20s.join(' e ')} → ` : ''}<strong>{w.reading.natural}</strong> no d20</span>
               <span className="dcp__total">Total <strong>{w.reading.total}</strong></span>
-              {w.outcome && <span className={`dcp__outcome dcp__outcome--${w.outcome}`}>{w.outcome === 'success' ? 'Sucesso' : 'Falha'}</span>}
+              {outcome && <span className={`dcp__outcome dcp__outcome--${outcome}`}>{outcome === 'success' ? 'Sucesso' : 'Falha'}</span>}
               {w.crit === 'crit' && <span className="dcp__critlabel">20 natural!</span>}
               {w.crit === 'fumble' && <span className="dcp__critlabel dcp__critlabel--bad">1 natural</span>}
             </div>
