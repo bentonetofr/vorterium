@@ -6,15 +6,17 @@ import { useFeature } from '../../../control/siteFeatures'
 import { subscribeToRolls } from '../../../dice/services/diceService'
 import { getCampaignMembers } from '../../../members/services/memberService'
 import { DND_FEATURE } from '../constants/dnd'
+import { DndWatchFreePanel } from './DndWatchFreePanel'
 import { DndWatchPanel } from './DndWatchPanel'
 import { DndWatchTray } from './DndWatchTray'
+import { isFreeRoll } from './freeRoll'
 import { useRollBusy } from './rollActivity'
 import { isCheckRoll } from './watchModel'
 
 // ────────────────────────────────────────────────────────
 // As rolagens dos outros jogadores, vistas por quem não rolou, nas campanhas
-// de D&D. Testes (perícia, salvaguarda, ataque...) abrem o mesmo painel de
-// teste de quem rola, um de cada vez, com a etiqueta de quem rolou. Dano e os
+// de D&D. Testes (perícia, salvaguarda, ataque...) e a rolagem livre da janela
+// de dados abrem o mesmo painel de quem rola, um de cada vez, com a etiqueta de quem rolou. Dano e os
 // outros dados rolam na bandeja de baixo, todos ao mesmo tempo, com o
 // resultado de cada um. Rolagem privada só chega a quem pode ver (RLS).
 // ────────────────────────────────────────────────────────
@@ -38,7 +40,7 @@ function WatchInner({ campaignId, userId }: { campaignId: string; userId: string
   useEffect(() => subscribeToRolls(campaignId, (row) => {
     if (row.user_id === userId) return
     const add = (list: DiceRoll[]) => (list.some((r) => r.id === row.id) ? list : [...list, row].slice(-MAX_WAITING))
-    if (isCheckRoll(row)) setChecks(add)
+    if (isCheckRoll(row) || isFreeRoll(row)) setChecks(add)
     else setDrops(add)
   }), [campaignId, userId])
 
@@ -50,7 +52,9 @@ function WatchInner({ campaignId, userId }: { campaignId: string; userId: string
   const current = !busy ? checks[0] : undefined
   return (
     <>
-      {current && <DndWatchPanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />}
+      {current && (isFreeRoll(current)
+        ? <DndWatchFreePanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />
+        : <DndWatchPanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />)}
       <DndWatchTray pending={drops} take={takeDrop} nameOf={nameOf} />
     </>
   )

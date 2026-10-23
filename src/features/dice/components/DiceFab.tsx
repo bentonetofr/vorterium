@@ -282,7 +282,7 @@ export function DiceFab() {
 
       {dnd && (
         <Presence show={isOpen} exitMs={180}>
-          {() => <DndDiceWindow onClose={close} />}
+          {() => <DndDiceWindow campaignId={campaignId} onClose={close} />}
         </Presence>
       )}
 

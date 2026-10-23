@@ -870,12 +870,8 @@
 @media (max-width: 480px) { .dsh-spellform { grid-template-columns: 1fr; } }
 .dsh-itemdesc { display: flex; flex-direction: column; gap: var(--space-1); }
 .dsh-itemdesc .dsh-note { margin: 0; }
-.dsh-freeroll { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); align-items: end; margin-top: var(--space-3); }
-.dsh-freeroll__btns { display: flex; gap: var(--space-2); padding-bottom: 6px; }
-.dsh-freeroll__hint { grid-column: 1 / -1; margin: 0; }
 .dsh-rollbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .dsh-feature__x { margin-left: auto; }
-@media (max-width: 480px) { .dsh-freeroll { grid-template-columns: 1fr; } }
 
 /* Conjuração: CD e ataque de magia em tiles grandes e números por classe */
 .dsh-spellstats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }

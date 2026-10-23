@@ -40,9 +40,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
 
   const roller = useDndRoll()
   const [critReady, setCritReady] = useState<Record<string, boolean>>({})
-  const [freeText, setFreeText] = useState('')
-  const freeFormula = damageFormulaOf(freeText)
-  const freeOk = freeFormula !== '' && validFormula(freeFormula)
 
   function rollDeath() {
     roller.check(deathCheck(), {
@@ -61,11 +58,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
       ? attackCheck(a.name, a.catalog_entry_key ?? a.id, ability, derived.abilityMods[ability], view.proficient ? derived.proficiencyBonus : null, total)
       : { ...attackCheck(a.name, a.id, ability, 0, null, total), tiles: [{ id: 'bonus', label: 'Bônus de ataque', value: total, badge: '+' }] }
     roller.check(spec, { onResult: ({ crit }) => setCritReady((m) => ({ ...m, [a.id]: crit === 'crit' })) })
-  }
-
-  function rollFree(crit: boolean) {
-    if (!freeOk) return
-    void roller.roll(crit ? 'Rolagem livre (crítico)' : 'Rolagem livre', crit ? critDamage(freeFormula) : freeFormula, { kind: 'damage', key: 'free' })
   }
 
   function rollDamage(a: DndCharacterAttack, formula: string, damageType: string | null | undefined, forceCrit = false) {
@@ -262,18 +254,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             )
           })}
         </ul>
-        {roller.canRoll && (
-          <div className="dsh-freeroll">
-            <label className="dsh-field dsh-field--tile dsh-freeroll__field"><span className="dsh-label">Rolagem livre de dano</span>
-              <input type="text" className="dsh-focus__input" value={freeText} maxLength={120} placeholder="Ex.: 1d8+3 cortante + 2d6 fogo"
-                onChange={(e) => setFreeText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); rollFree(false) } }} aria-label="Fórmula de dano livre" /></label>
-            <div className="dsh-freeroll__btns">
-              <RollButton label="Rolar a fórmula" onClick={() => rollFree(false)} disabled={!freeOk}>Rolar</RollButton>
-              <RollButton label="Rolar a fórmula como crítico (dobra os dados)" className="is-crit" onClick={() => rollFree(true)} disabled={!freeOk}>Crítico</RollButton>
-            </div>
-            {freeText.trim() && <p className="dsh-faint dsh-freeroll__hint">{freeOk ? `Rola ${freeFormula}; o crítico rola ${critDamage(freeFormula)}.` : 'Escreva dados e números, como 2d6+3.'}</p>}
-          </div>
-        )}
         {!readOnly && (
           <div className="dsh-newattack">
             <div className="dsh-field dsh-field--tile dsh-newattack__weapon"><span className="dsh-label">Arma do catálogo</span>

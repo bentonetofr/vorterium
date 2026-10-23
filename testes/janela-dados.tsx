@@ -34,7 +34,7 @@ function Page() {
   return (
     <div style={{ padding: 24, color: '#eee' }}>
       <button onClick={() => setOpen(true)} style={{ padding: '8px 16px' }}>Abrir a janela</button>
-      <Presence show={open} exitMs={180}>{() => <DndDiceWindow onClose={() => setOpen(false)} />}</Presence>
+      <Presence show={open} exitMs={180}>{() => <DndDiceWindow campaignId="c1" onClose={() => setOpen(false)} />}</Presence>
     </div>
   )
 }
