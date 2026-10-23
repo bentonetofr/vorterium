@@ -418,7 +418,18 @@
 .dsh-ability__name { font-family: var(--font-label); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dsh-accent); }
 .dsh-ability__short { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em; color: var(--text-muted); }
 .dsh-ability__body { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.dsh-ability__mod { font-family: var(--font-display); font-size: 44px; line-height: 1; color: var(--dsh-bone); }
+.dsh-ability__mod { display: flex; flex-direction: column; align-items: center; gap: 2px; font-family: var(--font-display); font-size: 44px; line-height: 1; color: var(--dsh-bone); }
+.dsh-ability__mod small { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dsh-accent); }
+.dsh-skills__note { margin: 0 0 var(--space-3); font-size: var(--text-xs); line-height: 1.45; }
+.dsh-skills__note strong { color: var(--dsh-bone); }
+/* botão ± dos campos que aceitam negativo: só em telas de toque */
+.dsh-numwrap { display: contents; }
+.dsh-numsign { display: none; }
+@media (pointer: coarse) {
+  .dsh-numwrap { display: inline-flex; align-items: center; gap: 4px; }
+  .dsh-numsign { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; color: var(--text-secondary); background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-base); border-radius: var(--radius-md); cursor: var(--cursor-hand); }
+  .dsh-numsign:active { color: var(--dsh-bone); border-color: var(--dsh-accent); }
+}
 .dsh-ability__scorebox {
   display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 12px 3px; min-width: 66px;
   background: rgba(0, 0, 0, 0.28); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
@@ -770,6 +781,8 @@
 }
 .dsh-defense__value { font-family: var(--font-display); font-size: 52px; font-weight: 600; line-height: 1; color: var(--dsh-bone); }
 .dsh-defense__ac .dsh-defense__label { text-align: center; color: var(--dsh-accent); }
+.dsh-defense__value .dsh-derived { font: inherit; }
+.dsh-sheet .dsh-defense__value .dsh-num.dsh-num--manual { width: 2.2em; font: inherit; text-align: center; }
 .dsh-defense__tile {
   display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; padding: 9px 14px 7px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)); border: 1px solid var(--border-dim); border-radius: var(--radius-md);

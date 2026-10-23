@@ -73,6 +73,16 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     data.setResources((rs) => [...rs.filter((r) => r.key !== key), saved])
   })
 
+  /** Magia de Pacto (Bruxo): poucos espaços, todos do mesmo nível, que voltam no descanso curto. No modo manual o total e o nível são digitados. */
+  const setPact = (total: number, lvl: number) => run(PACT_SLOT_KEY, async () => {
+    const row = data.resources.find((r) => r.key === PACT_SLOT_KEY)
+    const saved = await saveDndResource(sheet.id, {
+      key: PACT_SLOT_KEY, label: `Pacto (${lvl}º nível)`, max_value: total, current_value: Math.min(row?.current_value ?? total, total),
+      recharge: 'short', source: 'spell_slots', sort_order: 20,
+    })
+    data.setResources((rs) => [...rs.filter((r) => r.key !== PACT_SLOT_KEY), saved])
+  })
+
   const setSlots = (key: string, filled: number) => {
     const row = slotRows.find((r) => r.key === key)
     if (!row || readOnly) return
@@ -122,7 +132,10 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   if (!casting && spells.length === 0 && readOnly) return <div className="dsh-tab"><p className="dsh-faint">Este personagem não conjura magias.</p></div>
 
   const stats = derived.spellStats
-  const pact = data.resources.find((r) => r.key === PACT_SLOT_KEY && r.max_value > 0)
+  const pactRow = data.resources.find((r) => r.key === PACT_SLOT_KEY)
+  const pact = pactRow && pactRow.max_value > 0 ? pactRow : undefined
+  const pactLevel = casting?.pact?.level ?? Math.max(1, Math.min(5, Number(/(\d)/.exec(pactRow?.label ?? '')?.[1] ?? 1)))
+  const showPact = (!!casting?.pact && !!pact) || manualSlots
 
   return (
     <div className="dsh-tab dsh-cols dsh-cols--even anim-tab-panel">
@@ -186,7 +199,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-col">
         <section className="dsh-card">
           <div className="dsh-card__header"><h4 className="dsh-card__title" title="Bolinha cheia é um espaço disponível; clique para gastar. O descanso longo recarrega todos.">Espaços de magia</h4></div>
-          {!manualSlots && slotRows.filter((r) => r.max_value > 0).length === 0 && <p className="dsh-faint">Sem espaços de magia neste nível.</p>}
+          {!manualSlots && !pact && slotRows.filter((r) => r.max_value > 0).length === 0 && <p className="dsh-faint">Sem espaços de magia neste nível.</p>}
           <ul className="dsh-slots">
             {slotList.map(({ level: lv, max }) => {
               const key = spellSlotKey(lv)
@@ -208,12 +221,22 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                 </li>
               )
             })}
-            {casting?.pact && pact && (
-              <li className="dsh-slot">
-                <span className="dsh-slot__label">Pacto ({casting.pact.level}º nível)</span>
-                <Pips total={pact.max_value} filled={Math.min(pact.current_value, pact.max_value)} tone="good" label="Espaços de Pacto disponíveis"
-                  onChange={readOnly || busy === PACT_SLOT_KEY ? undefined : (n) => setSlots(PACT_SLOT_KEY, n)} />
-                <span className="dsh-faint">{Math.min(pact.current_value, pact.max_value)}/{pact.max_value} · voltam no descanso curto</span>
+            {showPact && (
+              <li className="dsh-slot dsh-slot--pact">
+                <span className="dsh-slot__label" title="Magia de Pacto do Bruxo: poucos espaços, todos do nível mais alto que ele consegue, e voltam no descanso curto.">Pacto ({pactLevel}º nível)</span>
+                {manualSlots && (
+                  <>
+                    <NumberField value={pactRow?.max_value ?? 0} min={0} max={4} label="Total de espaços de Pacto" disabled={readOnly || busy === PACT_SLOT_KEY}
+                      onChange={(n) => void setPact(n, pactLevel)} className="dsh-num--sm" />
+                    <NumberField value={pactLevel} min={1} max={5} label="Nível dos espaços de Pacto" disabled={readOnly || busy === PACT_SLOT_KEY}
+                      onChange={(n) => void setPact(pactRow?.max_value ?? 0, n)} className="dsh-num--sm" />
+                  </>
+                )}
+                {pact && (
+                  <Pips total={pact.max_value} filled={Math.min(pact.current_value, pact.max_value)} tone="good" label="Espaços de Pacto disponíveis"
+                    onChange={readOnly || busy === PACT_SLOT_KEY ? undefined : (n) => setSlots(PACT_SLOT_KEY, n)} />
+                )}
+                <span className="dsh-faint">{pact ? `${Math.min(pact.current_value, pact.max_value)}/${pact.max_value} · todos do ${pactLevel}º nível · voltam no descanso curto` : manualSlots ? 'total e nível do Pacto (voltam no descanso curto)' : ''}</span>
               </li>
             )}
           </ul>

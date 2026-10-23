@@ -265,7 +265,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-defense">
           <div className="dsh-defense__ac" title="Classe de armadura">
             <span className="dsh-defense__label">Classe de armadura</span>
-            <strong className="dsh-defense__value">{derived.armorClass}</strong>
+            <span className="dsh-defense__value"><DerivedField ctx={ctx} field="armor_class" value={derived.armorClass} label="Classe de Armadura" min={0} max={99} /></span>
           </div>
           <div className={`dsh-defense__tile dsh-defense__tile--armor${gear.armor ? ' is-on' : ''}`}>
             <span className="dsh-defense__label">Armadura</span>

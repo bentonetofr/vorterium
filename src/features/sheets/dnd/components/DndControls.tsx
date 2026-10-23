@@ -34,7 +34,7 @@ export function NumberField({ value, onChange, min = -Infinity, max = Infinity, 
     onChange(Math.max(min, Math.min(max, step < 1 ? n : Math.floor(n))))
   }
 
-  return (
+  const input = (
     <input
       type="text" inputMode={step < 1 || min < 0 ? 'decimal' : 'numeric'} autoComplete="off"
       className={`dsh-num ${className}`} value={text} disabled={disabled} placeholder={placeholder}
@@ -43,6 +43,15 @@ export function NumberField({ value, onChange, min = -Infinity, max = Infinity, 
       onBlur={() => setText(String(value))}
       onFocus={(e) => e.target.select()}
     />
+  )
+  if (min >= 0 || disabled) return input
+  // campos que aceitam negativo ganham um botão ± (só aparece em telas de toque, onde o teclado numérico não tem o sinal de menos)
+  return (
+    <span className="dsh-numwrap">
+      {input}
+      <button type="button" className="dsh-numsign" tabIndex={-1} aria-label={`Trocar o sinal de ${label}`} title="Trocar o sinal (+ ou −)"
+        onMouseDown={(e) => e.preventDefault()} onClick={() => onChange(Math.max(min, Math.min(max, -value)))}>±</button>
+    </span>
   )
 }
 

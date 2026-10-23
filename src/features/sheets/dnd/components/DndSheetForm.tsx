@@ -82,7 +82,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
 
   // Se alguma tabela da ficha nova não carregou, não dá pra saber as classes: o nível não é enviado.
   const hasClasses = data.classes.length > 0 || data.degraded
-  const classText = data.classes.length > 0 ? classLine(data.classes) : (sheet.class_name ?? '')
+  const classText = data.classes.length > 0 ? classLine(data.classes, null, form.class_names) : (sheet.class_name ?? '')
   // Com tabelas sem carregar, o cálculo está incompleto: os números calculados não são gravados.
   const payload = useMemo(() => {
     const body = formToPayload(sheet, form, derived, classText, hasClasses)

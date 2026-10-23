@@ -58,10 +58,11 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
                   <RollButton label={`Teste de ${a.label}`} onClick={() => roller.check(abilityCheck(derived, a.key))} />
                 </div>
                 <div className="dsh-ability__body">
-                  <span className="dsh-ability__mod" title="Modificador">
+                  <span className="dsh-ability__mod" title="Modificador: é o que se soma nas rolagens">
+                    <small>Modificador</small>
                     <DerivedField ctx={ctx} field={`mod_${a.key}`} value={derived.abilityMods[a.key]} label={`Modificador de ${a.label}`} signed min={-10} max={20} />
                   </span>
-                  <label className="dsh-ability__scorebox" title="Valor do atributo">
+                  <label className="dsh-ability__scorebox" title="Valor do atributo (de 1 a 30): dele sai o modificador">
                     <small>Valor</small>
                     <NumberField value={form[a.key]} onChange={(n) => set(a.key, n)} min={1} max={30} label={a.label} disabled={readOnly} className="dsh-ability__score" />
                   </label>
@@ -87,6 +88,7 @@ export function DndAtributosTab({ ctx }: { ctx: SheetCtx }) {
           <h4 className="dsh-card__title">Perícias</h4>
           <span className="dsh-badge">{data.details.skills.filter((s) => s.proficient).length} com proficiência</span>
         </div>
+        <p className="dsh-faint dsh-skills__note">O número de cada perícia é o <strong>bônus total</strong> (modificador do atributo + proficiência), o que se soma ao d20. As bolinhas marcam proficiência e especialização.</p>
         <ul className="dsh-skills">
           {SKILLS.map((k) => {
             const row = skillRows.get(k.key)

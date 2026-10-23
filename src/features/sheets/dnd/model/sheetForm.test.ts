@@ -134,6 +134,21 @@ describe('formToPayload', () => {
     expect(formFromSheet(makeSheet()).speed_unit).toBe('m')
   })
 
+  it('raça digitada à mão vai na coluna race (só sem raça do catálogo) e classes próprias guardam o nome nas escolhas', () => {
+    const sheet = makeSheet({ race_key: null, subrace_key: null, race: 'Aasimar', choices: {} })
+    const run = (f: ReturnType<typeof formFromSheet>) => formToPayload(sheet, f, deriveSheet({ sheet: sheetWithForm(sheet, f), classes: [], details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] }, proficiencies: [] }).derived, '', false)
+    const form = formFromSheet(sheet)
+    expect(form.race_custom).toBe('Aasimar')
+    expect(run(form).race).toBe('Aasimar')
+    expect(run({ ...form, race_custom: '  Tabaxi ' }).race).toBe('Tabaxi')
+    expect(run({ ...form, race_key: 'elf', race_custom: 'Tabaxi' }).race).toBe('Elfo')       // raça do catálogo vence
+    expect(formFromSheet(makeSheet({ race_key: 'elf', race: 'Elfo' })).race_custom).toBe('')
+    expect(validateForm({ ...form, race_custom: 'x'.repeat(81) })).toMatch(/raça/)
+    expect(run({ ...form, class_names: { artifice: 'Artífice' } }).choices).toEqual({ classNames: { artifice: 'Artífice' } })
+    expect(run(form).choices).toEqual({})
+    expect(formFromSheet(makeSheet({ choices: { classNames: { artifice: 'Artífice', ruim: 3, vazio: '  ' } } })).class_names).toEqual({ artifice: 'Artífice' })
+  })
+
   it('condições em ordem fixa e dados de vida só com valores positivos', () => {
     const sheet = makeSheet()
     const form = { ...formFromSheet(sheet), conditions: ['prone', 'blinded'] as const, hit_dice_used: { '10': 0, '8': 2 } }

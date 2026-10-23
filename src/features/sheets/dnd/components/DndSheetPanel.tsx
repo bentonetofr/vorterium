@@ -7,6 +7,7 @@ import { getClass, getRace, getSubrace } from '../catalog'
 import { DND_FEATURE } from '../constants/dnd'
 import { DndCheckRequestCard } from '../rolls/DndCheckRequestCard'
 import { classLine } from '../model/sheetModel'
+import { classNamesOf } from '../model/sheetForm'
 import { formatMeters } from '../model/format'
 import {
   ensureMyDndSheet, getCampaignDndSheets, listDndClassesForSheets, subscribeToCampaignDndSheets, subscribeToDndClasses,
@@ -217,7 +218,7 @@ function MasterView({ campaignId }: { campaignId: string }) {
               </div>
               <span className="sheet-card__char">
                 {s.character_name ? <strong>{s.character_name}</strong> : 'Sem nome'}
-                {` · ${[subrace?.name ?? race?.name ?? s.race, classLine(rows, s.class_name) === 'Sem classe' ? null : classLine(rows, s.class_name)].filter(Boolean).join(' · ') || 'sem raça e classe'}`}
+                {` · ${[subrace?.name ?? race?.name ?? s.race, classLine(rows, s.class_name, classNamesOf(s.choices)) === 'Sem classe' ? null : classLine(rows, s.class_name, classNamesOf(s.choices))].filter(Boolean).join(' · ') || 'sem raça e classe'}`}
                 {` · nível ${s.level}`}
               </span>
               <div className="sheet-card__bars"><CardStats sheet={s} /></div>

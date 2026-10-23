@@ -267,11 +267,16 @@ export function clampHp(current: number, max: number): number {
 
 // ── Textos ──────────────────────────────────────────────
 
+/** O nome de uma classe: o do catálogo, o digitado à mão (choices.classNames) ou a chave. */
+export function className(classKey: string, names: Readonly<Record<string, string>> = {}): string {
+  return getClass(classKey)?.name ?? names[classKey] ?? classKey
+}
+
 /** "Guerreiro 5 / Mago 3" (classe inicial primeiro); sem classes, o texto livre antigo. */
-export function classLine(classes: readonly DndCharacterClass[], fallback?: string | null): string {
+export function classLine(classes: readonly DndCharacterClass[], fallback?: string | null, names: Readonly<Record<string, string>> = {}): string {
   if (classes.length === 0) return fallback?.trim() || 'Sem classe'
   const ordered = [...classes].sort((a, b) => Number(b.is_initial) - Number(a.is_initial))
-  return ordered.map((c) => `${getClass(c.class_key)?.name ?? c.class_key} ${c.level}`).join(' / ')
+  return ordered.map((c) => `${className(c.class_key, names)} ${c.level}`).join(' / ')
 }
 
 /** Nome do item do inventário: o do catálogo quando há chave, senão o digitado. */

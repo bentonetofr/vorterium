@@ -121,7 +121,7 @@ export async function applyImport({ sheet, draft, saveSheet }: ApplyOptions): Pr
     const classRows: DndCharacterClass[] = draft.classes.map((c, i) => ({
       id: `c${i}`, sheet_id: id, class_key: c.class_key, level: c.level, subclass_key: c.subclass_key, is_initial: c.is_initial, hp_rolls: c.hp_rolls, created_at: '', updated_at: '',
     }))
-    await saveSheet(formToPayload(sheet, draft.form, bundle.derived, classLine(classRows, sheet.class_name), classRows.length > 0))
+    await saveSheet(formToPayload(sheet, draft.form, bundle.derived, classLine(classRows, sheet.class_name, draft.form.class_names), classRows.length > 0))
   } catch (err) {
     try { await restore(id, snap) } catch { /* o aviso abaixo diz o que fazer */ }
     throw new Error(`${err instanceof Error ? err.message : 'Não foi possível importar a ficha.'} A ficha foi devolvida ao que era antes da importação.`)

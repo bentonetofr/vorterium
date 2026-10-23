@@ -45,10 +45,10 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
   const subrace = form.race_key && form.subrace_key ? getSubrace(form.race_key, form.subrace_key) : undefined
   const background = form.background_key ? getBackground(form.background_key) : undefined
   const initialClass = getClass(data.classes.find((c) => c.is_initial)?.class_key ?? data.classes[0]?.class_key ?? '')
-  const hasIdentity = !!race || data.classes.length > 0 || !!sheet.class_name?.trim() || !!background
+  const hasIdentity = !!race || !!form.race_custom.trim() || data.classes.length > 0 || !!sheet.class_name?.trim() || !!background
   const subline = hasIdentity ? [
-    subrace?.name ?? race?.name,
-    classLine(data.classes, sheet.class_name),
+    subrace?.name ?? race?.name ?? (form.race_custom.trim() || undefined),
+    classLine(data.classes, sheet.class_name, form.class_names),
     `nível ${derived.totalLevel}`,
     background?.name,
   ].filter(Boolean).join(' · ') : ''

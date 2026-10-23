@@ -5,9 +5,11 @@ import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace, WEAPONS 
 import { homebrewKeyFromName } from '../catalog/homebrewKey'
 import { levelFromXp, meetsRequirement, xpToNextLevel } from '../rules/progression'
 import { ABILITIES, SKILLS } from '../rules/abilities'
-import { saveColumns } from '../model/sheetModel'
+import { AUTOMATION_ITEMS, isItemManual } from '../model/automation'
+import { className, saveColumns } from '../model/sheetModel'
 import { formatMeters } from '../model/format'
-import { addDndProficiency, removeDndProficiency } from '../services/dndSheetService'
+import { DND_TEXT_LIMITS } from '../model/sheetForm'
+import { addDndProficiency, removeDndProficiency, upsertDndSkill } from '../services/dndSheetService'
 import { removeDndClass, saveDndClass } from '../services/dndClassService'
 import { NumberField } from './DndControls'
 import { BonusTiles, ChipRow, StatChip, XpMeter } from './DndVisuals'
@@ -25,7 +27,8 @@ const ALIGNMENTS = [
   'Leal e Mau', 'Neutro e Mau', 'Caótico e Mau',
 ]
 
-const RACE_OPTIONS = [{ value: '', label: 'Escolher raça' }, ...RACES.map((r) => ({ value: r.key, label: r.name }))]
+const OTHER = '__other'
+const RACE_OPTIONS = [{ value: '', label: 'Escolher raça' }, ...RACES.map((r) => ({ value: r.key, label: r.name })), { value: OTHER, label: 'Outra raça (digitar)' }]
 const BACKGROUND_OPTIONS = [{ value: '', label: 'Escolher antecedente' }, ...BACKGROUNDS.map((b) => ({ value: b.key, label: b.name }))]
 const ALIGNMENT_OPTIONS = [{ value: '', label: 'Sem tendência' }, ...ALIGNMENTS.map((a) => ({ value: a, label: a }))]
 
@@ -41,6 +44,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, update, data, readOnly, derived, prof, report } = ctx
   const [busy, setBusy] = useState(false)
   const [newClass, setNewClass] = useState('')
+  const [customClass, setCustomClass] = useState('')
+  const [otherRace, setOtherRace] = useState(() => !!form.race_custom.trim())
   const [profKind, setProfKind] = useState<DndCharacterProficiency['category']>('tool')
   const [profText, setProfText] = useState('')
 
@@ -53,7 +58,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const totalLevel = data.classes.reduce((n, c) => n + c.level, 0)
   const scores = { strength: form.strength, dexterity: form.dexterity, constitution: form.constitution, intelligence: form.intelligence, wisdom: form.wisdom, charisma: form.charisma }
   const takenKeys = new Set(data.classes.map((c) => c.class_key))
-  const addOptions = [{ value: '', label: 'Adicionar classe' }, ...CLASSES.filter((c) => !takenKeys.has(c.key)).map((c) => ({ value: c.key, label: c.name }))]
+  const addOptions = [{ value: '', label: 'Adicionar classe' }, ...CLASSES.filter((c) => !takenKeys.has(c.key)).map((c) => ({ value: c.key, label: c.name })), { value: OTHER, label: 'Outra classe (digitar)' }]
 
   async function run(job: () => Promise<void>) {
     setBusy(true)
@@ -76,11 +81,39 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const addClass = () => run(async () => {
     if (!newClass) return
     const first = data.classes.length === 0
-    const saved = await saveDndClass(ctx.sheet.id, { class_key: newClass, level: 1, is_initial: first })
+    let key = newClass
+    // classe digitada à mão: se o nome é de uma classe do catálogo, usa ela; senão cria uma classe própria (sem dado de vida nem magias do livro)
+    if (newClass === OTHER) {
+      const label = customClass.trim().slice(0, 80)
+      if (!label) { report('Escreva o nome da classe.'); return }
+      key = homebrewKeyFromName(label)
+      const catalog = CLASSES.find((c) => c.key === key || c.name.toLowerCase() === label.toLowerCase() || c.original.toLowerCase() === label.toLowerCase())
+      if (catalog) key = catalog.key
+      if (takenKeys.has(key)) { report('Esta classe já está na ficha.'); return }
+      if (!catalog) update((f) => ({ ...f, class_names: { ...f.class_names, [key]: label } }))
+    }
+    const saved = await saveDndClass(ctx.sheet.id, { class_key: key, level: 1, is_initial: first })
     replaceClass(saved)
-    if (first) applyInitialSaves(newClass)
+    if (first) applyInitialSaves(key)
     setNewClass('')
+    setCustomClass('')
   })
+
+  /** Antecedente no modo automático: as perícias que ele dá já entram como proficientes (o que já era proficiente fica como está). */
+  const pickBackground = (key: string) => {
+    set('background_key', key)
+    const def = key ? getBackground(key) : undefined
+    const skillsItem = AUTOMATION_ITEMS.find((i) => i.id === 'skills')!
+    const manual = isItemManual(skillsItem, new Set(data.details.overrides.map((o) => o.field_key)), form.manual_modes)
+    if (!def || def.custom || manual || readOnly) return
+    const missing = def.skills.filter((k) => !data.details.skills.some((s) => s.skill_key === k && s.proficient))
+    if (missing.length === 0) return
+    void run(async () => {
+      const saved = [] as Awaited<ReturnType<typeof upsertDndSkill>>[]
+      for (const k of missing) saved.push(await upsertDndSkill(ctx.sheet.id, k, true, false))
+      data.setDetails((d) => ({ ...d, skills: [...d.skills.filter((s) => !saved.some((x) => x.skill_key === s.skill_key)), ...saved] }))
+    })
+  }
 
   const setLevel = (row: DndCharacterClass, level: number) => run(async () => {
     const others = totalLevel - row.level
@@ -108,6 +141,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const removeClass = (row: DndCharacterClass) => run(async () => {
     await removeDndClass(row.id)
     data.setClasses((cs) => cs.filter((c) => c.id !== row.id))
+    if (form.class_names[row.class_key]) update((f) => { const rest = { ...f.class_names }; delete rest[row.class_key]; return { ...f, class_names: rest } })
     // sem classe inicial, a primeira que sobrar assume
     const rest = data.classes.filter((c) => c.id !== row.id)
     if (row.is_initial && rest.length > 0) {
@@ -158,9 +192,19 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-fields">
         <div className={`dsh-field dsh-field--tile${subraceOptions ? '' : ' dsh-field--full'}`}>
           <span className="dsh-label">Raça</span>
-          <Select options={RACE_OPTIONS} value={form.race_key} disabled={readOnly}
-            onChange={(v) => update((f) => ({ ...f, race_key: v, subrace_key: '' }))} aria-label="Raça" />
+          <Select options={RACE_OPTIONS} value={form.race_key || (otherRace ? OTHER : '')} disabled={readOnly}
+            onChange={(v) => {
+              if (v === OTHER) { setOtherRace(true); update((f) => ({ ...f, race_key: '', subrace_key: '' })) }
+              else { setOtherRace(false); update((f) => ({ ...f, race_key: v, subrace_key: '', race_custom: '' })) }
+            }} aria-label="Raça" />
         </div>
+        {!form.race_key && otherRace && (
+          <label className="dsh-field dsh-field--tile dsh-field--full">
+            <span className="dsh-label">Nome da raça</span>
+            <input type="text" className="dsh-tileinput" value={form.race_custom} maxLength={DND_TEXT_LIMITS.race_custom} disabled={readOnly}
+              placeholder="Ex.: Aasimar, Genasi, Tabaxi" aria-label="Nome da raça" onChange={(e) => set('race_custom', e.target.value)} />
+          </label>
+        )}
         {subraceOptions && (
           <div className="dsh-field dsh-field--tile">
             <span className="dsh-label">Sub-raça</span>
@@ -169,7 +213,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         )}
         <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Antecedente</span>
-          <Select options={BACKGROUND_OPTIONS} value={form.background_key} disabled={readOnly} onChange={(v) => set('background_key', v)} aria-label="Antecedente" />
+          <Select options={BACKGROUND_OPTIONS} value={form.background_key} disabled={readOnly} onChange={pickBackground} aria-label="Antecedente" />
         </div>
         <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Tendência</span>
@@ -233,7 +277,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
             return (
               <li key={row.id} className="dsh-class">
                 <div className="dsh-class__main">
-                  <strong className="dsh-class__name">{def?.name ?? row.class_key}{row.is_initial && <span className="dsh-tag">inicial</span>}</strong>
+                  <strong className="dsh-class__name">{def?.name ?? className(row.class_key, form.class_names)}{row.is_initial && <span className="dsh-tag">inicial</span>}</strong>
                   <label className="dsh-class__level">
                     <span className="dsh-class__level-label">Nível</span>
                     <NumberField value={row.level} onChange={(n) => void setLevel(row, n)} min={1} max={Math.max(1, 20 - others)} label={`Nível de ${def?.name ?? row.class_key}`} disabled={readOnly || busy} />
@@ -253,7 +297,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
                   <button type="button" className="dsh-link" onClick={() => void makeInitial(row)} disabled={busy}>Tornar a classe inicial (a do 1º nível)</button>
                 )}
                 {blocked && <p className="dsh-warn">Para a multiclasse, {def?.name} pede atributo 13 ou mais ({def!.multiclass.requirement.abilities.map((a) => ABILITIES.find((x) => x.key === a)?.short).join(def!.multiclass.requirement.mode === 'all' ? ' e ' : ' ou ')}).</p>}
-                {data.hpMode === 'rolled' && rollLevels.length > 0 && (
+                {!def && <p className="dsh-faint">Classe fora do catálogo: sem dado de vida nem magias do livro. Escreva os PV máximos no alto da ficha e as magias na aba Magias.</p>}
+                {def && data.hpMode === 'rolled' && rollLevels.length > 0 && (
                   <div className="dsh-rolls">
                     <span className="dsh-label" title="Escreva o valor tirado no dado de cada nível; 0 usa a média">PV rolados · d{dieSize}</span>
                     <div className="dsh-rolls__grid">
@@ -278,7 +323,14 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
               <span className="dsh-label">Adicionar classe</span>
               <Select options={addOptions} value={newClass} onChange={setNewClass} aria-label="Adicionar classe" />
             </div>
-            <button type="button" className="dsh-chip dsh-chip--primary dsh-addclass__btn" onClick={() => void addClass()} disabled={!newClass || busy}>Adicionar</button>
+            {newClass === OTHER && (
+              <label className="dsh-field dsh-field--tile">
+                <span className="dsh-label">Nome da classe</span>
+                <input type="text" className="dsh-tileinput" value={customClass} maxLength={80} placeholder="Ex.: Artífice, Mago de Sangue" aria-label="Nome da classe"
+                  onChange={(e) => setCustomClass(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addClass() } }} />
+              </label>
+            )}
+            <button type="button" className="dsh-chip dsh-chip--primary dsh-addclass__btn" onClick={() => void addClass()} disabled={!newClass || busy || (newClass === OTHER && !customClass.trim())}>Adicionar</button>
           </div>
         )}
         <BonusTiles

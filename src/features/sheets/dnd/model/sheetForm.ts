@@ -12,7 +12,7 @@ import { clampHp, derivedColumns, spellAbilityOf } from './sheetModel'
 // ────────────────────────────────────────────────────────
 
 export const DND_TEXT_LIMITS = {
-  character_name: 120, player_name: 120, alignment: 80,
+  character_name: 120, player_name: 120, alignment: 80, race_custom: 80,
   concentrating_on: 160, personality_traits: 2000, ideals: 2000, bonds: 2000, flaws: 2000, backstory: 12000, notes: 12000,
   notes_racial: 6000, notes_background: 6000, notes_class: 6000,
 } as const
@@ -23,6 +23,8 @@ export interface DndForm {
   alignment:      string
   race_key:       string
   subrace_key:    string
+  /** Raça digitada à mão (fora do catálogo): vale quando não há raça do catálogo; vai na coluna `race`. */
+  race_custom:    string
   background_key: string
   experience:     number
   /** Nível digitado: só vale enquanto a ficha não tem classes (com classes, o nível é a soma delas). */
@@ -60,6 +62,8 @@ export interface DndForm {
   manual_modes:      ManualMode[]
   /** Unidade em que o deslocamento é mostrado: metros (padrão da edição brasileira) ou pés; vai em `choices.speedUnit`. */
   speed_unit:        'm' | 'ft'
+  /** Nomes das classes digitadas à mão (fora do catálogo), por chave da classe; vai em `choices.classNames`. */
+  class_names:       Record<string, string>
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -70,6 +74,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     alignment:      s.alignment ?? '',
     race_key:       s.race_key ?? '',
     subrace_key:    s.subrace_key ?? '',
+    race_custom:    s.race_key ? '' : (s.race ?? ''),
     background_key: s.background_key ?? '',
     experience:     s.experience,
     level:          s.level,
@@ -102,7 +107,18 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     notes_class:      typeof choices.notesClass === 'string' ? choices.notesClass : '',
     speed_unit:       choices.speedUnit === 'ft' ? 'ft' : 'm',
     manual_modes:     Array.isArray(choices.manualModes) ? choices.manualModes.filter(isManualMode).sort() : [],
+    class_names:      classNamesOf(choices),
   }
+}
+
+/** Os nomes das classes digitadas à mão, guardados nas escolhas da ficha (`choices.classNames`). */
+export function classNamesOf(choices: unknown): Record<string, string> {
+  const raw = (choices as { classNames?: unknown } | null | undefined)?.classNames
+  const out: Record<string, string> = {}
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) if (typeof v === 'string' && v.trim()) out[k] = v.trim().slice(0, 80)
+  }
+  return out
 }
 
 /** A ficha como o motor a enxerga: a linha do banco com o que está no formulário por cima. */
@@ -126,6 +142,7 @@ export function validateForm(f: DndForm): string | null {
   if (over(f.character_name, L.character_name)) return `O nome deve ter no máximo ${L.character_name} caracteres.`
   if (over(f.player_name, L.player_name)) return `O nome do jogador deve ter no máximo ${L.player_name} caracteres.`
   if (over(f.alignment, L.alignment)) return `A tendência deve ter no máximo ${L.alignment} caracteres.`
+  if (over(f.race_custom, L.race_custom)) return `A raça deve ter no máximo ${L.race_custom} caracteres.`
   if (over(f.concentrating_on, L.concentrating_on)) return `A concentração deve ter no máximo ${L.concentrating_on} caracteres.`
   for (const k of ['personality_traits', 'ideals', 'bonds', 'flaws', 'backstory', 'notes', 'notes_racial', 'notes_background', 'notes_class'] as const) {
     if (over(f[k], L[k])) return `Esse campo passa do limite de ${L[k]} caracteres.`
@@ -164,12 +181,14 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   setNote(choices, 'notesRacial', f.notes_racial)
   setNote(choices, 'notesBackground', f.notes_background)
   setNote(choices, 'notesClass', f.notes_class)
+  if (Object.keys(f.class_names).length > 0) choices.classNames = f.class_names
+  else delete choices.classNames
 
   return {
     character_name: f.character_name.trim() || null,
     player_name:    f.player_name.trim() || null,
     alignment:      f.alignment.trim() || null,
-    race:           race?.name ?? null,
+    race:           race?.name ?? (f.race_key ? null : f.race_custom.trim() || null),
     background:     background?.name ?? null,
     class_name:     classText ? classText.slice(0, 80) : null,
     race_key:       f.race_key || null,

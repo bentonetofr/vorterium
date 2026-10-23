@@ -218,6 +218,8 @@ describe('textos e utilitários', () => {
     expect(classLine([], 'Ladino')).toBe('Ladino')
     expect(classLine([])).toBe('Sem classe')
     expect(classLine([makeClass('meu_homebrew', 2, { is_initial: true })])).toBe('meu_homebrew 2')
+    // classe digitada à mão: o nome vem das escolhas da ficha
+    expect(classLine([makeClass('artifice', 3, { is_initial: true }), makeClass('wizard', 1)], null, { artifice: 'Artífice' })).toBe('Artífice 3 / Mago 1')
   })
 
   it('itemTitle usa o nome do catálogo quando há chave', () => {
