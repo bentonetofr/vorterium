@@ -33,7 +33,7 @@ export function emptyDraft(existing: DndCharacterSheet): ImportDraft {
   const form = formFromSheet(existing)
   return {
     // o que o PDF não traz de transitório volta ao começo; os textos só mudam se o PDF tiver o campo
-    form: { ...form, conditions: [], concentrating_on: '', hit_dice_used: {}, manual_modes: [], class_names: {}, race_custom: '', ac_bonus: 0, spell_ability: '', exhaustion: 0, death_save_failures: 0, death_save_successes: 0, inspiration: false },
+    form: { ...form, conditions: [], concentrating_on: '', hit_dice_used: {}, manual_modes: [], class_names: {}, vision_ft: null, race_custom: '', ac_bonus: 0, spell_ability: '', exhaustion: 0, death_save_failures: 0, death_save_successes: 0, inspiration: false },
     classes: [], skills: [], attacks: [], inventory: [], spells: [], proficiencies: [], features: [], overrides: [], slotsUsed: {}, report: [],
   }
 }

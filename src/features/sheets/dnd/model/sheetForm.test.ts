@@ -134,6 +134,18 @@ describe('formToPayload', () => {
     expect(formFromSheet(makeSheet()).speed_unit).toBe('m')
   })
 
+  it('a visão no escuro digitada vai nas escolhas; sem ela vale a da raça e nada é gravado', () => {
+    const sheet = makeSheet({ choices: { outro: 'x' } })
+    const run = (f: ReturnType<typeof formFromSheet>) => formToPayload(sheet, f, deriveSheet({ sheet: sheetWithForm(sheet, f), classes: [], details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] }, proficiencies: [] }).derived, '', false)
+    const form = formFromSheet(sheet)
+    expect(form.vision_ft).toBeNull()
+    expect(run(form).choices).toEqual({ outro: 'x' })
+    expect(run({ ...form, vision_ft: 120 }).choices).toEqual({ outro: 'x', visionFt: 120 })
+    expect(run({ ...form, vision_ft: 0 }).choices).toEqual({ outro: 'x', visionFt: 0 })
+    expect(formFromSheet(makeSheet({ choices: { visionFt: 90 } })).vision_ft).toBe(90)
+    expect(formFromSheet(makeSheet({ choices: { visionFt: 'lixo' } })).vision_ft).toBeNull()
+  })
+
   it('raça digitada à mão vai na coluna race (só sem raça do catálogo) e classes próprias guardam o nome nas escolhas', () => {
     const sheet = makeSheet({ race_key: null, subrace_key: null, race: 'Aasimar', choices: {} })
     const run = (f: ReturnType<typeof formFromSheet>) => formToPayload(sheet, f, deriveSheet({ sheet: sheetWithForm(sheet, f), classes: [], details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] }, proficiencies: [] }).derived, '', false)

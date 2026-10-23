@@ -44,8 +44,19 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
 
   const race = form.race_key ? getRace(form.race_key) : undefined
   const subrace = form.race_key && form.subrace_key ? getSubrace(form.race_key, form.subrace_key) : undefined
-  /** Visão no escuro da raça, em pés (0 = visão normal). */
-  const vision = race?.darkvision ?? 0
+  /** Visão no escuro, em pés (0 = visão normal): a digitada na ficha ou, sem ela, a da raça. */
+  const raceVision = race?.darkvision ?? 0
+  const vision = form.vision_ft ?? raceVision
+  const [editVision, setEditVision] = useState(false)
+  const [visionDraft, setVisionDraft] = useState(0)
+  const toShown = (ft: number) => (feet ? ft : Math.round(ft * 0.3 * 100) / 100)
+  const fromShown = (n: number) => Math.max(0, feet ? Math.round(n) : Math.round(n / 0.3))
+  function startVision() { setVisionDraft(toShown(vision)); setEditVision(true) }
+  function commitVision() {
+    setEditVision(false)
+    const ft = fromShown(visionDraft)
+    set('vision_ft', ft === raceVision ? null : ft)
+  }
   const background = form.background_key ? getBackground(form.background_key) : undefined
   const initialClass = getClass(data.classes.find((c) => c.is_initial)?.class_key ?? data.classes[0]?.class_key ?? '')
   const hasIdentity = !!race || !!form.race_custom.trim() || data.classes.length > 0 || !!sheet.class_name?.trim() || !!background
@@ -133,9 +144,21 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
             onUnitClick={() => set('speed_unit', feet ? 'm' : 'ft')} unitTitle={feet ? 'Em pés. Clique para ver em metros.' : 'Em metros. Clique para ver em pés.'}
           />
         </div>
-        <div className="dsh-stat" title={vision > 0 ? 'Visão no escuro: enxerga na penumbra como se fosse luz plena e no escuro como se fosse penumbra, nesta distância (só em tons de cinza).' : race ? 'Visão normal: sem visão no escuro.' : 'Escolha a raça para ver a visão no escuro.'}>
-          <span className="dsh-stat__label">Visão</span>
-          <strong className={`dsh-stat__value${vision > 0 ? ' dsh-stat__value--bone' : ''}`}>{vision > 0 ? (feet ? `${vision} ft` : formatMeters(vision)) : race ? 'Normal' : '—'}</strong>
+        <div className="dsh-stat" title={vision > 0 ? 'Visão no escuro: enxerga na penumbra como se fosse luz plena e no escuro como se fosse penumbra, nesta distância (só em tons de cinza).' : race || form.vision_ft !== null ? 'Visão normal: sem visão no escuro.' : 'Escolha a raça para ver a visão no escuro.'}>
+          <span className="dsh-stat__label">Visão{form.vision_ft !== null && !readOnly && (
+            <button type="button" className="dsh-stat__reset" onClick={() => set('vision_ft', null)} title="Voltar à visão da raça" aria-label="Voltar à visão da raça">↺</button>
+          )}</span>
+          {editVision && !readOnly ? (
+            <span className="dsh-derived" onBlur={commitVision} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitVision() } else if (e.key === 'Escape') setEditVision(false) }}>
+              <NumberField value={visionDraft} onChange={setVisionDraft} min={0} max={feet ? 1000 : 300} step={feet ? 5 : 0.5} label={feet ? 'Visão no escuro em pés' : 'Visão no escuro em metros'} className="dsh-num--manual" />
+              <span className="dsh-derived__suffix">{feet ? 'ft' : 'm'}</span>
+            </span>
+          ) : (
+            <button type="button" className={`dsh-stat__value dsh-stat__edit${vision > 0 ? ' dsh-stat__value--bone' : ''}`} disabled={readOnly} onClick={startVision}
+              aria-label="Visão no escuro" title={readOnly ? undefined : 'Clique para personalizar a visão no escuro'}>
+              {vision > 0 ? (feet ? `${vision} ft` : formatMeters(vision)) : race || form.vision_ft !== null ? 'Normal' : '—'}
+            </button>
+          )}
         </div>
         <div className="dsh-stat">
           <span className="dsh-stat__label">Proficiência</span>

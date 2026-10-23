@@ -62,6 +62,8 @@ export interface DndForm {
   manual_modes:      ManualMode[]
   /** Unidade em que o deslocamento é mostrado: metros (padrão da edição brasileira) ou pés; vai em `choices.speedUnit`. */
   speed_unit:        'm' | 'ft'
+  /** Visão no escuro digitada à mão, em pés (null = a da raça; 0 = visão normal); vai em `choices.visionFt`. */
+  vision_ft:         number | null
   /** Nomes das classes digitadas à mão (fora do catálogo), por chave da classe; vai em `choices.classNames`. */
   class_names:       Record<string, string>
 }
@@ -108,6 +110,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     speed_unit:       choices.speedUnit === 'ft' ? 'ft' : 'm',
     manual_modes:     Array.isArray(choices.manualModes) ? choices.manualModes.filter(isManualMode).sort() : [],
     class_names:      classNamesOf(choices),
+    vision_ft:        typeof choices.visionFt === 'number' && Number.isFinite(choices.visionFt) ? clampInt(choices.visionFt, 0, 1000) : null,
   }
 }
 
@@ -176,6 +179,8 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   else delete choices.spellAbility
   if (f.speed_unit === 'ft') choices.speedUnit = 'ft'
   else delete choices.speedUnit
+  if (f.vision_ft !== null) choices.visionFt = clampInt(f.vision_ft, 0, 1000)
+  else delete choices.visionFt
   if (f.manual_modes.length > 0) choices.manualModes = [...f.manual_modes].sort()
   else delete choices.manualModes
   setNote(choices, 'notesRacial', f.notes_racial)
