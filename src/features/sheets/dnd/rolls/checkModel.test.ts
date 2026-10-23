@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { computeDerived } from '../rules/derive'
 import {
-  abilityCheck, attackCheck, checkContext, checkFormula, critDamage, deathCheck, deathResult, initiativeCheck, judge,
+  abilityCheck, attackCheck, checkContext, checkFormula, critDamage, damageFormulaOf, deathCheck, deathResult, initiativeCheck, judge,
   readCheck, saveCheck, skillCheck, spellAttackCheck, tilesTotal,
 } from './checkModel'
 import type { RollBreakdownItem } from '../../../../shared/types'
@@ -110,5 +110,11 @@ describe('fórmula, leitura e julgamento', () => {
     expect(critDamage('1d8+3')).toBe('2d8+3')
     expect(critDamage('2d6+1d4+2')).toBe('4d6+2d4+2')
     expect(critDamage('d12')).toBe('2d12')
+    expect(damageFormulaOf('1d8+3 cortante + 2d6 fogo')).toBe('1d8+3+2d6')
+    expect(damageFormulaOf('2d6 + 3 de dano radiante')).toBe('2d6+3')
+    expect(damageFormulaOf('1d6+1d4 + 2')).toBe('1d6+1d4+2')
+    expect(damageFormulaOf('1d10 +4 (perfurante) mais 1d6 necrótico')).toBe('1d10+4+1d6')
+    expect(damageFormulaOf('especial')).toBe('')
+    expect(damageFormulaOf('')).toBe('')
   })
 })

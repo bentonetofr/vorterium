@@ -29,7 +29,7 @@ const ALIGNMENTS = [
 
 const OTHER = '__other'
 const RACE_OPTIONS = [{ value: '', label: 'Escolher raça' }, ...RACES.map((r) => ({ value: r.key, label: r.name })), { value: OTHER, label: 'Outra raça (digitar)' }]
-const BACKGROUND_OPTIONS = [{ value: '', label: 'Escolher antecedente' }, ...BACKGROUNDS.map((b) => ({ value: b.key, label: b.name }))]
+const BACKGROUND_OPTIONS = [{ value: '', label: 'Escolher antecedente' }, ...BACKGROUNDS.map((b) => ({ value: b.key, label: b.name })), { value: OTHER, label: 'Outro antecedente (digitar)' }]
 const ALIGNMENT_OPTIONS = [{ value: '', label: 'Sem tendência' }, ...ALIGNMENTS.map((a) => ({ value: a, label: a }))]
 
 const PROFICIENCY_KINDS: { value: DndCharacterProficiency['category']; label: string }[] = [
@@ -46,6 +46,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const [newClass, setNewClass] = useState('')
   const [customClass, setCustomClass] = useState('')
   const [otherRace, setOtherRace] = useState(() => !!form.race_custom.trim())
+  const [otherBackground, setOtherBackground] = useState(() => !!form.background_custom.trim())
+  const [otherSub, setOtherSub] = useState<Record<string, boolean>>({})
   const [profKind, setProfKind] = useState<DndCharacterProficiency['category']>('tool')
   const [profText, setProfText] = useState('')
 
@@ -100,8 +102,11 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   })
 
   /** Antecedente no modo automático: as perícias que ele dá já entram como proficientes (o que já era proficiente fica como está). */
-  const pickBackground = (key: string) => {
-    set('background_key', key)
+  const pickBackground = (pick: string) => {
+    if (pick === OTHER) { setOtherBackground(true); update((f) => ({ ...f, background_key: '' })); return }
+    setOtherBackground(false)
+    const key = pick
+    update((f) => ({ ...f, background_key: key, background_custom: '' }))
     const def = key ? getBackground(key) : undefined
     const skillsItem = AUTOMATION_ITEMS.find((i) => i.id === 'skills')!
     const manual = isItemManual(skillsItem, new Set(data.details.overrides.map((o) => o.field_key)), form.manual_modes)
@@ -121,9 +126,16 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
     replaceClass(await saveDndClass(ctx.sheet.id, { class_key: row.class_key, level: Math.min(level, max), hp_rolls: row.hp_rolls.slice(0, Math.min(level, max)) }))
   })
 
-  const setSubclass = (row: DndCharacterClass, key: string) => run(async () => {
-    replaceClass(await saveDndClass(ctx.sheet.id, { class_key: row.class_key, level: row.level, subclass_key: key || null }))
+  const replaceSubclassKey = (row: DndCharacterClass, key: string | null) => run(async () => {
+    if (row.subclass_key === key) return
+    replaceClass(await saveDndClass(ctx.sheet.id, { class_key: row.class_key, level: row.level, subclass_key: key }))
   })
+  const setSubclass = (row: DndCharacterClass, pick: string) => {
+    if (pick === OTHER) { setOtherSub((m) => ({ ...m, [row.class_key]: true })); void replaceSubclassKey(row, null); return }
+    setOtherSub((m) => ({ ...m, [row.class_key]: false }))
+    if (form.subclass_names[row.class_key]) update((f) => { const rest = { ...f.subclass_names }; delete rest[row.class_key]; return { ...f, subclass_names: rest } })
+    void replaceSubclassKey(row, pick || null)
+  }
 
   // As rolagens de PV guardadas são "uma por nível acima do 1º do personagem": na classe inicial a
   // primeira posição é o nível 2 da classe; nas outras é o nível 1. Trocar a inicial desloca uma casa.
@@ -213,8 +225,15 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
         )}
         <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Antecedente</span>
-          <Select options={BACKGROUND_OPTIONS} value={form.background_key} disabled={readOnly} onChange={pickBackground} aria-label="Antecedente" />
+          <Select options={BACKGROUND_OPTIONS} value={form.background_key || (otherBackground ? OTHER : '')} disabled={readOnly} onChange={pickBackground} aria-label="Antecedente" />
         </div>
+        {!form.background_key && otherBackground && (
+          <label className="dsh-field dsh-field--tile dsh-field--full">
+            <span className="dsh-label">Nome do antecedente</span>
+            <input type="text" className="dsh-tileinput" value={form.background_custom} maxLength={DND_TEXT_LIMITS.background_custom} disabled={readOnly}
+              placeholder="Ex.: Mercador de Saltmore" aria-label="Nome do antecedente" onChange={(e) => set('background_custom', e.target.value)} />
+          </label>
+        )}
         <div className="dsh-field dsh-field--tile">
           <span className="dsh-label">Tendência</span>
           <Select options={ALIGNMENT_OPTIONS} value={ALIGNMENTS.includes(form.alignment) ? form.alignment : ''} disabled={readOnly}
@@ -269,7 +288,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
           {data.classes.map((row) => {
             const def = getClass(row.class_key)
             const others = totalLevel - row.level
-            const subOptions = def ? [{ value: '', label: row.level >= def.subclassLevel ? 'Escolher subclasse' : `Subclasse no nível ${def.subclassLevel}` }, ...def.subclasses.map((s) => ({ value: s.key, label: s.name }))] : null
+            const subOptions = def ? [{ value: '', label: row.level >= def.subclassLevel ? 'Escolher subclasse' : `Subclasse no nível ${def.subclassLevel}` }, ...def.subclasses.map((s) => ({ value: s.key, label: s.name })), { value: OTHER, label: 'Outra (digitar)' }] : null
+            const customSub = !row.subclass_key && (!!form.subclass_names[row.class_key] || !!otherSub[row.class_key])
             const dieSize = def?.hitDie ?? 8
             const firstRollable = row.is_initial ? 2 : 1
             const rollLevels = Array.from({ length: Math.max(0, row.level - firstRollable + 1) }, (_, i) => firstRollable + i)
@@ -289,9 +309,17 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
                 {subOptions && (
                   <div className="dsh-field dsh-field--tile">
                     <span className="dsh-label">{def?.subclasses[0]?.kind ?? 'Subclasse'}</span>
-                    <Select options={subOptions} value={row.subclass_key ?? ''} disabled={readOnly || busy || row.level < (def?.subclassLevel ?? 1)}
-                      onChange={(v) => void setSubclass(row, v)} aria-label={`Subclasse de ${def?.name}`} />
+                    <Select options={subOptions} value={row.subclass_key ?? (customSub ? OTHER : '')} disabled={readOnly || busy || row.level < (def?.subclassLevel ?? 1)}
+                      onChange={(v) => setSubclass(row, v)} aria-label={`Subclasse de ${def?.name}`} />
                   </div>
+                )}
+                {(customSub || !def) && (
+                  <label className="dsh-field dsh-field--tile">
+                    <span className="dsh-label">Nome da subclasse</span>
+                    <input type="text" className="dsh-tileinput" value={form.subclass_names[row.class_key] ?? ''} maxLength={DND_TEXT_LIMITS.subclass_name} disabled={readOnly}
+                      placeholder="Ex.: Caminho do Sangue" aria-label={`Nome da subclasse de ${def?.name ?? className(row.class_key, form.class_names)}`}
+                      onChange={(e) => update((f) => ({ ...f, subclass_names: { ...f.subclass_names, [row.class_key]: e.target.value } }))} />
+                  </label>
                 )}
                 {!row.is_initial && data.classes.length > 1 && !readOnly && (
                   <button type="button" className="dsh-link" onClick={() => void makeInitial(row)} disabled={busy}>Tornar a classe inicial (a do 1º nível)</button>

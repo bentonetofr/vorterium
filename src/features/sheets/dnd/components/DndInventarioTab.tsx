@@ -17,9 +17,13 @@ import type { SheetCtx } from './sheetContext'
 // armadura por vez). Pesos em kg, como no livro brasileiro.
 // ────────────────────────────────────────────────────────
 
+/** Tamanho máximo da descrição de um item. */
+const NOTES_MAX = 4000
+
 export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, derived, data, sheet, readOnly, report, prof } = ctx
   const [customName, setCustomName] = useState('')
+  const [customNotes, setCustomNotes] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [bookOpen, setBookOpen] = useState(false)
 
@@ -42,10 +46,11 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
     const name = customName.trim()
     if (!name) { report('Escreva o nome do item, ou abra o livro de itens para escolher um do catálogo.'); return }
     const saved = await createDndInventoryItem(sheet.id, {
-      name, quantity: 1, weight: 0, equipped: false, notes: '', catalog_entry_key: null, sort_order: items.length,
+      name, quantity: 1, weight: 0, equipped: false, notes: customNotes.trim().slice(0, NOTES_MAX), catalog_entry_key: null, sort_order: items.length,
     })
     data.setDetails((d) => ({ ...d, inventory: [...d.inventory, saved] }))
     setCustomName('')
+    setCustomNotes('')
   })
 
   /** Do livro: item novo entra com 1; se já tem, soma 1 na quantidade. */
@@ -73,6 +78,8 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
   })
 
   const setQuantity = (item: DndCharacterInventoryItem, quantity: number) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { quantity })) })
+
+  const setNotes = (item: DndCharacterInventoryItem, notes: string) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { notes: notes.trim().slice(0, NOTES_MAX) })) })
 
   const setWeight = (item: DndCharacterInventoryItem, weight: number) => run(item.id, async () => { replace(await updateDndInventoryItem(item.id, { weight })) })
 
@@ -155,9 +162,17 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
                     <NumberField value={i.weight} min={0} max={99999} step={0.1} label={`Peso de ${i.name}`} disabled={readOnly || busy === i.id} onChange={(n) => void setWeight(i, n)} className="dsh-itemnum__input" /></label>
                   {!readOnly && <button type="button" className="dsh-x" onClick={() => void removeItem(i)} disabled={busy === i.id} aria-label={`Remover ${i.name}`}>×</button>}
                 </div>
-                {i.notes && (i.notes.length <= 90
+                {i.notes && (i.notes.length <= 90 && !i.notes.includes('\n')
                   ? <div className="dsh-spellchips">{i.notes.split(' · ').map((n) => <span key={n} className="dsh-cardchip">{n}</span>)}</div>
-                  : <p className="dsh-note">{i.notes}</p>)}
+                  : <div className="dsh-itemdesc">{i.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>)}
+                {!readOnly && (
+                  <details className="dsh-spell__more">
+                    <summary>{i.notes ? 'Editar a descrição' : 'Adicionar descrição'}</summary>
+                    <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={3} defaultValue={i.notes} maxLength={NOTES_MAX}
+                      placeholder="Descrição do item: o que faz, propriedades, dano, raridade... Use ' · ' para separar em etiquetas curtas." aria-label={`Descrição de ${i.name}`}
+                      onBlur={(e) => { if (e.target.value.trim() !== i.notes) void setNotes(i, e.target.value) }} />
+                  </details>
+                )}
               </li>
             )
           })}
@@ -167,6 +182,9 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
             <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Item próprio</span>
               <input type="text" className="dsh-focus__input" value={customName} maxLength={160} placeholder="Nome do item"
                 onChange={(e) => setCustomName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addItem() } }} /></label>
+            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Descrição (opcional)</span>
+              <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={2} value={customNotes} maxLength={NOTES_MAX} placeholder="O que o item faz, propriedades, dano, raridade..."
+                onChange={(e) => setCustomNotes(e.target.value)} /></label>
             <button type="button" className="dsh-newattack__add" onClick={() => void addItem()} disabled={busy === 'new'}>+ Adicionar item</button>
           </div>
         )}

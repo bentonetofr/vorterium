@@ -4,7 +4,7 @@ import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterSpell } from '../../../../shared/types'
 import { getClass, spellListClass } from '../catalog'
 import type { SpellEntry } from '../catalog/types'
-import { SPELL_SCHOOL_LABEL, spellLevelLabel } from '../catalog/spellUtils'
+import { SPELL_SCHOOL_LABEL, SPELL_SCHOOLS, spellLevelLabel } from '../catalog/spellUtils'
 import { useSpellCatalog } from '../hooks/useSpellCatalog'
 import { ABILITIES } from '../rules/abilities'
 import { PACT_SLOT_KEY, spellSlotKey, spellSlotLabel } from '../model/slots'
@@ -14,7 +14,7 @@ import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceS
 import { DerivedField, NumberField, Pips } from './DndControls'
 import { ChipRow, StatChip, StatusPill } from './DndVisuals'
 import { DndSpellBrowser } from './DndSpellBrowser'
-import { DndSpellDetails } from './DndSpellDetails'
+import { DndOwnSpellDetails, DndSpellDetails } from './DndSpellDetails'
 import type { DndForm } from '../model/sheetForm'
 import type { SheetCtx } from './sheetContext'
 import { RollButton } from '../rolls/RollButton'
@@ -30,6 +30,7 @@ import { spellAttackCheck } from '../rolls/checkModel'
 // ────────────────────────────────────────────────────────
 
 const LEVEL_OPTIONS = Array.from({ length: 10 }, (_, level) => ({ value: String(level), label: level === 0 ? 'Truque' : `${level}º nível` }))
+const SCHOOL_OPTIONS = [{ value: '', label: 'Sem escola' }, ...SPELL_SCHOOLS.map((k) => ({ value: SPELL_SCHOOL_LABEL[k], label: SPELL_SCHOOL_LABEL[k] }))]
 const ABILITY_OPTIONS = [{ value: '', label: 'Automático (pela classe)' }, ...ABILITIES.map((a) => ({ value: a.key, label: a.label }))]
 const LEARNING_LABEL = { known: 'conhece', prepared: 'prepara', 'prepared-half': 'prepara', spellbook: 'prepara (do grimório)' } as const
 
@@ -112,7 +113,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     data.setDetails((d) => ({ ...d, spells: [...d.spells, saved] }))
   })
 
-  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key'>>) =>
+  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key' | 'school' | 'casting_time' | 'spell_range' | 'duration'>>) =>
     run(s.id, async () => {
       const saved = await updateDndSpell(s.id, patch)
       data.setDetails((d) => ({ ...d, spells: d.spells.map((x) => (x.id === saved.id ? saved : x)) }))
@@ -293,16 +294,29 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                     {meta.length > 0 && <div className="dsh-spellchips">{meta.map((m) => <span key={m} className="dsh-cardchip">{m}</span>)}</div>}
                     {(cat || !readOnly || s.description) && (
                       <details className="dsh-spell__more">
-                        <summary>{cat ? 'Ver a magia' : 'Notas'}</summary>
+                        <summary>{cat || s.description || meta.length > 0 ? 'Ver a magia' : 'Descrição'}</summary>
                         {cat && <DndSpellDetails spell={cat} />}
+                        {!cat && (s.description.trim() || meta.length > 0) && <DndOwnSpellDetails spell={s} />}
+                        {!cat && !readOnly && (
+                          <div className="dsh-spellform">
+                            <div className="dsh-field dsh-field--tile"><span className="dsh-label">Escola</span>
+                              <Select options={SCHOOL_OPTIONS.some((o) => o.value === s.school) ? SCHOOL_OPTIONS : [...SCHOOL_OPTIONS, { value: s.school, label: s.school }]} value={s.school} disabled={busy === s.id}
+                                onChange={(v) => void patchSpell(s, { school: v })} aria-label={`Escola de ${s.name}`} /></div>
+                            {([['casting_time', 'Tempo de conjuração', '1 ação'], ['spell_range', 'Alcance', '18 metros'], ['duration', 'Duração', 'Instantânea']] as const).map(([k, label, ph]) => (
+                              <label key={k} className="dsh-field dsh-field--tile"><span className="dsh-label">{label}</span>
+                                <input type="text" className="dsh-tileinput" defaultValue={s[k]} maxLength={80} placeholder={ph} aria-label={`${label} de ${s.name}`}
+                                  onBlur={(e) => { if (e.target.value.trim() !== s[k]) void patchSpell(s, { [k]: e.target.value.trim() }) }} /></label>
+                            ))}
+                          </div>
+                        )}
                         {cat && !readOnly && (
                           <button type="button" className="dsh-link" disabled={busy === s.id} onClick={() => void makeOwnCopy(s, cat)}
                             title="Troca a magia do livro por uma cópia sua, com o texto nas notas para você editar">
                             Personalizar (virar cópia própria)
                           </button>
                         )}
-                        <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={cat ? 2 : 4} defaultValue={s.description} readOnly={readOnly} maxLength={8000}
-                          placeholder={cat ? 'Suas anotações sobre esta magia' : 'Texto e notas da magia (alcance, duração, efeito...)'} aria-label={`Notas de ${s.name}`}
+                        <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={cat ? 2 : 5} defaultValue={s.description} readOnly={readOnly} maxLength={8000}
+                          placeholder={cat ? 'Suas anotações sobre esta magia' : 'O texto da magia. Uma linha começando com "• " vira item de lista; linhas separadas viram parágrafos.'} aria-label={`Notas de ${s.name}`}
                           onBlur={(e) => { if (e.target.value !== s.description) void patchSpell(s, { description: e.target.value }) }} />
                       </details>
                     )}

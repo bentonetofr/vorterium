@@ -15,12 +15,12 @@ export function D20Icon({ size = 16 }: { size?: number }) {
   )
 }
 
-export function RollButton({ label, onClick, children, className = '' }: { label: string; onClick: () => void; children?: ReactNode; className?: string }) {
+export function RollButton({ label, onClick, children, className = '', disabled }: { label: string; onClick: () => void; children?: ReactNode; className?: string; disabled?: boolean }) {
   const { canRoll } = useDndRoll()
   if (!canRoll) return null
   const click = (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); onClick() }
   return (
-    <button type="button" className={`dsh-rollbtn${children ? ' dsh-rollbtn--text' : ''} ${className}`} onClick={click} title={label} aria-label={label}>
+    <button type="button" className={`dsh-rollbtn${children ? ' dsh-rollbtn--text' : ''} ${className}`} onClick={click} title={label} aria-label={label} disabled={disabled}>
       <D20Icon />
       {children && <span>{children}</span>}
     </button>

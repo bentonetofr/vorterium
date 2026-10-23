@@ -12,7 +12,7 @@ import { clampHp, derivedColumns, spellAbilityOf } from './sheetModel'
 // ────────────────────────────────────────────────────────
 
 export const DND_TEXT_LIMITS = {
-  character_name: 120, player_name: 120, alignment: 80, race_custom: 80,
+  character_name: 120, player_name: 120, alignment: 80, race_custom: 80, background_custom: 80, subclass_name: 80,
   concentrating_on: 160, personality_traits: 2000, ideals: 2000, bonds: 2000, flaws: 2000, backstory: 12000, notes: 12000,
   notes_racial: 6000, notes_background: 6000, notes_class: 6000,
 } as const
@@ -26,6 +26,8 @@ export interface DndForm {
   /** Raça digitada à mão (fora do catálogo): vale quando não há raça do catálogo; vai na coluna `race`. */
   race_custom:    string
   background_key: string
+  /** Antecedente digitado à mão (fora do catálogo): vale quando não há antecedente do catálogo; vai na coluna `background`. */
+  background_custom: string
   experience:     number
   /** Nível digitado: só vale enquanto a ficha não tem classes (com classes, o nível é a soma delas). */
   level:          number
@@ -62,6 +64,8 @@ export interface DndForm {
   manual_modes:      ManualMode[]
   /** Unidade em que o deslocamento é mostrado: metros (padrão da edição brasileira) ou pés; vai em `choices.speedUnit`. */
   speed_unit:        'm' | 'ft'
+  /** Subclasses digitadas à mão (fora do catálogo), por chave da classe; vai em `choices.subclassNames`. */
+  subclass_names:    Record<string, string>
   /** Visão no escuro digitada à mão, em pés (null = a da raça; 0 = visão normal); vai em `choices.visionFt`. */
   vision_ft:         number | null
   /** Nomes das classes digitadas à mão (fora do catálogo), por chave da classe; vai em `choices.classNames`. */
@@ -78,6 +82,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     subrace_key:    s.subrace_key ?? '',
     race_custom:    s.race_key ? '' : (s.race ?? ''),
     background_key: s.background_key ?? '',
+    background_custom: s.background_key ? '' : (s.background ?? ''),
     experience:     s.experience,
     level:          s.level,
     inspiration:    s.inspiration,
@@ -110,13 +115,16 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     speed_unit:       choices.speedUnit === 'ft' ? 'ft' : 'm',
     manual_modes:     Array.isArray(choices.manualModes) ? choices.manualModes.filter(isManualMode).sort() : [],
     class_names:      classNamesOf(choices),
+    subclass_names:   namesOf(choices, 'subclassNames'),
     vision_ft:        typeof choices.visionFt === 'number' && Number.isFinite(choices.visionFt) ? clampInt(choices.visionFt, 0, 1000) : null,
   }
 }
 
 /** Os nomes das classes digitadas à mão, guardados nas escolhas da ficha (`choices.classNames`). */
-export function classNamesOf(choices: unknown): Record<string, string> {
-  const raw = (choices as { classNames?: unknown } | null | undefined)?.classNames
+export function classNamesOf(choices: unknown): Record<string, string> { return namesOf(choices, 'classNames') }
+
+function namesOf(choices: unknown, field: 'classNames' | 'subclassNames'): Record<string, string> {
+  const raw = (choices as Record<string, unknown> | null | undefined)?.[field]
   const out: Record<string, string> = {}
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
     for (const [k, v] of Object.entries(raw as Record<string, unknown>)) if (typeof v === 'string' && v.trim()) out[k] = v.trim().slice(0, 80)
@@ -146,6 +154,7 @@ export function validateForm(f: DndForm): string | null {
   if (over(f.player_name, L.player_name)) return `O nome do jogador deve ter no máximo ${L.player_name} caracteres.`
   if (over(f.alignment, L.alignment)) return `A tendência deve ter no máximo ${L.alignment} caracteres.`
   if (over(f.race_custom, L.race_custom)) return `A raça deve ter no máximo ${L.race_custom} caracteres.`
+  if (over(f.background_custom, L.background_custom)) return `O antecedente deve ter no máximo ${L.background_custom} caracteres.`
   if (over(f.concentrating_on, L.concentrating_on)) return `A concentração deve ter no máximo ${L.concentrating_on} caracteres.`
   for (const k of ['personality_traits', 'ideals', 'bonds', 'flaws', 'backstory', 'notes', 'notes_racial', 'notes_background', 'notes_class'] as const) {
     if (over(f[k], L[k])) return `Esse campo passa do limite de ${L[k]} caracteres.`
@@ -188,13 +197,16 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   setNote(choices, 'notesClass', f.notes_class)
   if (Object.keys(f.class_names).length > 0) choices.classNames = f.class_names
   else delete choices.classNames
+  const subNames = Object.fromEntries(Object.entries(f.subclass_names).map(([k, v]) => [k, v.trim().slice(0, DND_TEXT_LIMITS.subclass_name)]).filter(([, v]) => v))
+  if (Object.keys(subNames).length > 0) choices.subclassNames = subNames
+  else delete choices.subclassNames
 
   return {
     character_name: f.character_name.trim() || null,
     player_name:    f.player_name.trim() || null,
     alignment:      f.alignment.trim() || null,
     race:           race?.name ?? (f.race_key ? null : f.race_custom.trim() || null),
-    background:     background?.name ?? null,
+    background:     background?.name ?? (f.background_key ? null : f.background_custom.trim() || null),
     class_name:     classText ? classText.slice(0, 80) : null,
     race_key:       f.race_key || null,
     subrace_key:    f.subrace_key || null,

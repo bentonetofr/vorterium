@@ -257,6 +257,10 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                     <strong>{f.name}</strong>
                     {f.level != null && f.level > 1 && <span className="dsh-cardchip">nível {f.level}</span>}
                     {hasUses && <span className="dsh-cardchip dsh-feature__uses-chip" title="Usos restantes / total">usos {f.uses_current ?? 0}/{f.uses_max}</span>}
+                    {!readOnly && (
+                      <button type="button" className="dsh-x dsh-feature__x" disabled={busy === f.id} aria-label={`Remover ${f.name}`} title="Remover da ficha"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeFeature(f) }}>×</button>
+                    )}
                   </summary>
                   <div className="dsh-feature__body">
                     {cat && <p className="dsh-feature__summary">{cat.summary}</p>}

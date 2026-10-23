@@ -203,6 +203,18 @@ export function checkContext(spec: CheckSpec, opts: { advantage: Advantage; reac
   }
 }
 
+/**
+ * A fórmula rolável de um texto de dano escrito à mão: tira as palavras (tipos de dano, "de", "extra"...)
+ * e junta o resto numa soma ("1d8+3 cortante + 2d6 fogo" → "1d8+3+2d6"). Vazio quando não sobra nada.
+ */
+export function damageFormulaOf(text: string): string {
+  let s = text.toLowerCase().replace(/(\d*d\d+)|[a-zà-ÿ]+/g, (m: string, dice?: string) => (dice ? m : ' '))
+  s = s.replace(/[^0-9d+\-\s]/g, ' ')
+  s = s.replace(/(\d)\s+(?=\d|d)/g, '$1+')
+  s = s.replace(/([+\-])\s*(?=[+\-])/g, '')
+  return s.replace(/^[\s+]+|[\s+\-]+$/g, '').replace(/\s+/g, '')
+}
+
 /** Dobra os dados de uma fórmula de dano para o crítico ("1d8+3" → "2d8+3"). */
 export function critDamage(formula: string): string {
   return formula.replace(/(\d*)d(\d+)/g, (_, q: string, s: string) => `${(q ? Number(q) : 1) * 2}d${s}`)

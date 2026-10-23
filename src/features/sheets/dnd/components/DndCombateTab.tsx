@@ -12,7 +12,7 @@ import { DndDragBar } from './DndDragBar'
 import type { SheetCtx } from './sheetContext'
 import { RollButton } from '../rolls/RollButton'
 import { useDndRoll } from '../rolls/DndRollProvider'
-import { attackCheck, critDamage, deathCheck, deathResult, initiativeCheck } from '../rolls/checkModel'
+import { attackCheck, critDamage, damageFormulaOf, deathCheck, deathResult, initiativeCheck } from '../rolls/checkModel'
 import { parseDiceFormula } from '../../../dice/services/diceService'
 
 // ────────────────────────────────────────────────────────
@@ -40,6 +40,9 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
 
   const roller = useDndRoll()
   const [critReady, setCritReady] = useState<Record<string, boolean>>({})
+  const [freeText, setFreeText] = useState('')
+  const freeFormula = damageFormulaOf(freeText)
+  const freeOk = freeFormula !== '' && validFormula(freeFormula)
 
   function rollDeath() {
     roller.check(deathCheck(), {
@@ -60,9 +63,14 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     roller.check(spec, { onResult: ({ crit }) => setCritReady((m) => ({ ...m, [a.id]: crit === 'crit' })) })
   }
 
-  function rollDamage(a: DndCharacterAttack, formula: string, damageType: string | null | undefined) {
-    const crit = !!critReady[a.id]
-    const clean = formula.replace(/\s/g, '')
+  function rollFree(crit: boolean) {
+    if (!freeOk) return
+    void roller.roll(crit ? 'Rolagem livre (crítico)' : 'Rolagem livre', crit ? critDamage(freeFormula) : freeFormula, { kind: 'damage', key: 'free' })
+  }
+
+  function rollDamage(a: DndCharacterAttack, formula: string, damageType: string | null | undefined, forceCrit = false) {
+    const crit = forceCrit || !!critReady[a.id]
+    const clean = damageFormulaOf(formula)
     void roller.roll(`${crit ? 'Dano crítico' : 'Dano'}: ${a.name}${damageType ? ` (${damageType})` : ''}`, crit ? critDamage(clean) : clean, { kind: 'damage', key: a.catalog_entry_key ?? a.id })
     if (crit) setCritReady((m) => ({ ...m, [a.id]: false }))
   }
@@ -221,9 +229,15 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                 {roller.canRoll && (
                   <div className="dsh-attack__rolls">
                     <RollButton label={`Atacar com ${a.name}`} onClick={() => rollAttack(a, view, bonusText)}>Atacar</RollButton>
-                    {dmgText && validFormula(dmgText) && (
-                      <RollButton label={`Dano de ${a.name}`} className={critReady[a.id] ? 'is-crit' : ''}
-                        onClick={() => rollDamage(a, dmgText, view?.weapon.damageType ?? a.damage_type)}>{critReady[a.id] ? 'Dano crítico' : 'Dano'}</RollButton>
+                    {dmgText && validFormula(damageFormulaOf(dmgText)) && (
+                      <>
+                        <RollButton label={`Dano de ${a.name}`} className={critReady[a.id] ? 'is-crit' : ''}
+                          onClick={() => rollDamage(a, dmgText, view?.weapon.damageType ?? a.damage_type)}>{critReady[a.id] ? 'Dano crítico' : 'Dano'}</RollButton>
+                        {!critReady[a.id] && (
+                          <RollButton label={`Dano crítico de ${a.name} (dobra os dados)`} className="is-crit"
+                            onClick={() => rollDamage(a, dmgText, view?.weapon.damageType ?? a.damage_type, true)}>Crítico</RollButton>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -239,7 +253,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                     <input className="dsh-input dsh-input--sm" defaultValue={a.attack_bonus} placeholder="Bônus (manual)" aria-label={`Bônus manual de ${a.name}`}
                       onBlur={(e) => { if (e.target.value !== a.attack_bonus) void patchAttack(a, { attack_bonus: e.target.value.slice(0, 40) }) }} />
                     <input className="dsh-input dsh-input--sm" defaultValue={a.damage} placeholder="Dano (manual)" aria-label={`Dano manual de ${a.name}`}
-                      onBlur={(e) => { if (e.target.value !== a.damage) void patchAttack(a, { damage: e.target.value.slice(0, 80) }) }} />
+                      onBlur={(e) => { if (e.target.value !== a.damage) void patchAttack(a, { damage: e.target.value.slice(0, 200) }) }} />
                     <input className="dsh-input dsh-input--sm" defaultValue={a.notes} placeholder="Notas" aria-label={`Notas de ${a.name}`}
                       onBlur={(e) => { if (e.target.value !== a.notes) void patchAttack(a, { notes: e.target.value.slice(0, 300) }) }} />
                   </div>
@@ -248,6 +262,18 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
             )
           })}
         </ul>
+        {roller.canRoll && (
+          <div className="dsh-freeroll">
+            <label className="dsh-field dsh-field--tile dsh-freeroll__field"><span className="dsh-label">Rolagem livre de dano</span>
+              <input type="text" className="dsh-focus__input" value={freeText} maxLength={120} placeholder="Ex.: 1d8+3 cortante + 2d6 fogo"
+                onChange={(e) => setFreeText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); rollFree(false) } }} aria-label="Fórmula de dano livre" /></label>
+            <div className="dsh-freeroll__btns">
+              <RollButton label="Rolar a fórmula" onClick={() => rollFree(false)} disabled={!freeOk}>Rolar</RollButton>
+              <RollButton label="Rolar a fórmula como crítico (dobra os dados)" className="is-crit" onClick={() => rollFree(true)} disabled={!freeOk}>Crítico</RollButton>
+            </div>
+            {freeText.trim() && <p className="dsh-faint dsh-freeroll__hint">{freeOk ? `Rola ${freeFormula}; o crítico rola ${critDamage(freeFormula)}.` : 'Escreva dados e números, como 2d6+3.'}</p>}
+          </div>
+        )}
         {!readOnly && (
           <div className="dsh-newattack">
             <div className="dsh-field dsh-field--tile dsh-newattack__weapon"><span className="dsh-label">Arma do catálogo</span>
