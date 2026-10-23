@@ -121,11 +121,14 @@ export const tilesTotal = (tiles: readonly BonusTile[]) => tiles.reduce((s, t) =
 
 export interface ChosenReaction { key: string; die: number }
 
-/** "1d20+5", "2#d20+1d4+5" (vantagem), "2@d20-1" (desvantagem). */
-export function checkFormula(spec: CheckSpec, advantage: Advantage, reactions: readonly ChosenReaction[]): string {
+/** Bônus ou ônus de situação aceito no painel (−20 a +20). */
+export const SITUATIONAL_MAX = 20
+
+/** "1d20+5", "2#d20+1d4+5" (vantagem), "2@d20-1" (desvantagem). `situational` soma ao bônus (para casos da mesa, como −2 por estar colado no inimigo). */
+export function checkFormula(spec: CheckSpec, advantage: Advantage, reactions: readonly ChosenReaction[], situational = 0): string {
   const d20 = advantage === 'advantage' ? '2#d20' : advantage === 'disadvantage' ? '2@d20' : '1d20'
   const extra = reactions.map((r) => `+1d${r.die}`).join('')
-  const mod = tilesTotal(spec.tiles)
+  const mod = tilesTotal(spec.tiles) + situational
   return `${d20}${extra}${mod > 0 ? `+${mod}` : mod < 0 ? `${mod}` : ''}`
 }
 
@@ -179,7 +182,7 @@ export function deathResult(natural: number, total: number, successes: number, f
 }
 
 /** O contexto que vai gravado com a rolagem (dice_rolls.roll_context). */
-export function checkContext(spec: CheckSpec, opts: { advantage: Advantage; reactions: readonly ChosenReaction[]; natural: number; total: number; character: string; sheetId: string; rerolledFrom?: string }): DiceRollContext {
+export function checkContext(spec: CheckSpec, opts: { advantage: Advantage; reactions: readonly ChosenReaction[]; natural: number; total: number; character: string; sheetId: string; rerolledFrom?: string; situational?: number }): DiceRollContext {
   const { outcome, crit } = judge(spec.kind, opts.natural, opts.total, spec.dc)
   return {
     system: 'dnd5e',
@@ -196,6 +199,7 @@ export function checkContext(spec: CheckSpec, opts: { advantage: Advantage; reac
     crit,
     request_id: spec.requestId,
     rerolled_from: opts.rerolledFrom,
+    situational: opts.situational ? opts.situational : undefined,
   }
 }
 

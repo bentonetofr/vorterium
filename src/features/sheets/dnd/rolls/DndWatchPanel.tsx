@@ -4,6 +4,7 @@ import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { playDiceFlourish } from '../../../dice3d/sound'
 import { revealCheckDc } from '../services/dndCheckService'
 import { judge, type CheckKind } from './checkModel'
+import { stageDiceFor } from './diceKinds'
 import { useDiceStage } from './useDiceStage'
 import { watchedCheck } from './watchModel'
 import './DndRolls.css'
@@ -49,8 +50,9 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
     if (!stage && !simple) return   // espera o motor 3D ligar
     let alive = true
     const timers: number[] = []
-    const { d20s, keptIndex, natural } = w.reading
-    const dice = d20s.map((v, i) => ({ kind: 'd20' as const, value: v, dim: d20s.length > 1 && i !== keptIndex }))
+    const natural = w.reading.natural
+    // todos os dados da rolagem (os d20 e os das reações)
+    const dice = stageDiceFor(roll.roll_breakdown ?? [], skin)
     const play = stage ? stage.roll(dice, { skin }) : new Promise<void>((resolve) => {
       const end = performance.now() + 900
       const tick = () => { if (!alive) return resolve(); if (performance.now() < end) { setSpin(1 + Math.floor(Math.random() * 20)); requestAnimationFrame(tick) } else { setSpin(natural); resolve() } }
@@ -106,16 +108,24 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
               {outcome && <span className={`dcp__outcome dcp__outcome--${outcome}`}>{outcome === 'success' ? 'Sucesso' : 'Falha'}</span>}
               {w.crit === 'crit' && <span className="dcp__critlabel">20 natural!</span>}
               {w.crit === 'fumble' && <span className="dcp__critlabel dcp__critlabel--bad">1 natural</span>}
+              {w.dcHidden && revealed == null && <span className="dcp__nodcnote">A CD não foi revelada.</span>}
             </div>
           )}
         </div>
 
         <ul className="dcp__tiles" aria-label="Bônus">
-          {w.bonus !== 0 && (
+          {w.bonus - w.situational !== 0 && (
             <li className="dcp__tile">
-              <span className="dcp__tile-value">{signed(w.bonus)}</span>
+              <span className="dcp__tile-value">{signed(w.bonus - w.situational)}</span>
               <span className="dcp__tile-badge">+</span>
               <span className="dcp__tile-label">Bônus</span>
+            </li>
+          )}
+          {w.situational !== 0 && (
+            <li className="dcp__tile">
+              <span className="dcp__tile-value">{signed(w.situational)}</span>
+              <span className="dcp__tile-badge">±</span>
+              <span className="dcp__tile-label">Situação</span>
             </li>
           )}
           {w.reactions.map((r, i) => (

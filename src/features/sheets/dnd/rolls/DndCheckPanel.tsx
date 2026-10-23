@@ -3,8 +3,9 @@ import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import type { DiceRoll } from '../../../../shared/types'
 import type { RollExtras, RollResult } from '../../../dice/services/diceService'
 import { playDiceFlourish } from '../../../dice3d/sound'
+import { stageDiceFor } from './diceKinds'
 import {
-  BARDIC_DICE, REACTIONS, checkContext, checkFormula, judge, readCheck, tilesTotal,
+  BARDIC_DICE, REACTIONS, SITUATIONAL_MAX, checkContext, checkFormula, judge, readCheck, tilesTotal,
   type Advantage, type CheckReading, type CheckSpec, type ChosenReaction, type Crit, type Outcome,
 } from './checkModel'
 import { markRollBusy } from './rollActivity'
@@ -53,10 +54,12 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
   const [spin, setSpin] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [usedInspiration, setUsedInspiration] = useState(false)
+  /** Bônus ou ônus de situação digitado na hora (−2 por estar colado no inimigo, +1 por ajuda...). */
+  const [situational, setSituational] = useState(0)
 
   const reactions = REACTIONS.filter((r) => r.applies.includes(spec.kind))
   const chosen: ChosenReaction[] = Object.entries(picked).map(([key, die]) => ({ key, die }))
-  const bonus = tilesTotal(spec.tiles)
+  const bonus = tilesTotal(spec.tiles) + situational
 
   useEffect(() => markRollBusy(), [])   // os testes dos outros esperam este painel fechar
   useEffect(() => { if (stage && phase === 'ready') void stage.idle('d20', skin) }, [stage, phase, skin])
@@ -66,16 +69,17 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
     setPhase('rolling')
     setError(null)
     try {
-      const formula = checkFormula(spec, advantage, chosen)
+      const formula = checkFormula(spec, advantage, chosen, situational)
       const saved = await perform(formula, (rolled) => {
         const r = readCheck(rolled.breakdown, rolled.total)
         return {
           label: spec.label, skin, noFloor: true,
-          context: checkContext(spec, { advantage, reactions: chosen, natural: r.natural, total: r.total, character, sheetId, rerolledFrom }),
+          context: checkContext(spec, { advantage, reactions: chosen, natural: r.natural, total: r.total, character, sheetId, rerolledFrom, situational }),
         }
       })
       const reading = readCheck(saved.roll_breakdown ?? [], saved.result)
-      const dice = reading.d20s.map((v, i) => ({ kind: 'd20' as const, value: v, dim: reading.d20s.length > 1 && i !== reading.keptIndex }))
+      // todos os dados da rolagem rolam: os d20 (os dois, na vantagem) e os das reações (d4, d6...)
+      const dice = stageDiceFor(saved.roll_breakdown ?? [], skin)
       if (stage) await stage.roll(dice, { skin })
       else await new Promise<void>((resolve) => {
         const end = performance.now() + 900
@@ -135,6 +139,7 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
               {done.outcome && <span className={`dcp__outcome dcp__outcome--${done.outcome}`}>{done.outcome === 'success' ? 'Sucesso' : 'Falha'}</span>}
               {crit === 'crit' && <span className="dcp__critlabel">20 natural!</span>}
               {crit === 'fumble' && <span className="dcp__critlabel dcp__critlabel--bad">1 natural</span>}
+              {spec.dcHidden && done.dc == null && <span className="dcp__nodcnote">O mestre não revelou a CD.</span>}
             </div>
           )}
         </div>
@@ -148,6 +153,13 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
                 ))}
               </div>
             )}
+            <div className="dcp__situ" role="group" aria-label="Bônus ou ônus de situação" title="Para casos da mesa: por exemplo, o mestre narra −2 no ataque com arco por estar colado no inimigo.">
+              <span className="dcp__situ-label">Bônus ou ônus de situação</span>
+              <button type="button" className="dsh-mini" onClick={() => setSituational((n) => Math.max(-SITUATIONAL_MAX, n - 1))} aria-label="Diminuir o bônus de situação">−</button>
+              <input type="number" inputMode="numeric" className="dcp__situ-input" value={situational} min={-SITUATIONAL_MAX} max={SITUATIONAL_MAX} aria-label="Bônus ou ônus de situação"
+                onChange={(e) => { const n = Math.trunc(Number(e.target.value)); setSituational(Number.isFinite(n) ? Math.max(-SITUATIONAL_MAX, Math.min(SITUATIONAL_MAX, n)) : 0) }} />
+              <button type="button" className="dsh-mini" onClick={() => setSituational((n) => Math.min(SITUATIONAL_MAX, n + 1))} aria-label="Aumentar o bônus de situação">+</button>
+            </div>
             {reactions.length > 0 && (
               <div className="dcp__reactions" role="group" aria-label="Reações">
                 {reactions.map((r) => {
@@ -181,6 +193,13 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
               <span className="dcp__tile-label">{t.label}</span>
             </li>
           ))}
+          {situational !== 0 && (
+            <li className="dcp__tile">
+              <span className="dcp__tile-value">{signed(situational)}</span>
+              <span className="dcp__tile-badge">±</span>
+              <span className="dcp__tile-label">Situação</span>
+            </li>
+          )}
           {chosen.map((r, i) => {
             const def = REACTIONS.find((x) => x.key === r.key)
             const val = done?.reading.reactionValues[i]
@@ -192,7 +211,7 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
               </li>
             )
           })}
-          {spec.tiles.length === 0 && chosen.length === 0 && <li className="dcp__tile dcp__tile--empty"><span className="dcp__tile-label">Sem bônus</span></li>}
+          {spec.tiles.length === 0 && chosen.length === 0 && situational === 0 && <li className="dcp__tile dcp__tile--empty"><span className="dcp__tile-label">Sem bônus</span></li>}
         </ul>
         <div className="dcp__bonus">Bônus total <strong>{signed(bonus)}</strong>{chosen.length > 0 && <span> + {chosen.map((r) => `d${r.die}`).join(' + ')}</span>}</div>
 

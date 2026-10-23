@@ -41,5 +41,7 @@ describe('rolagens dos outros jogadores', () => {
     const w = watchedCheck(roll([d20(10), bless, { type: 'modifier', value: 2 }], { kind: 'attack', natural: 10, reactions: ['bless'] }, 15))
     expect(w.reactions).toEqual([{ label: 'Bênção', die: 4, value: 3 }])
     expect(w.bonus).toBe(2)
+    expect(w.situational).toBe(0)
+    expect(watchedCheck(roll([d20(10), { type: 'modifier', value: 4 }], { kind: 'attack', natural: 10, situational: -2 })).situational).toBe(-2)
   })
 })

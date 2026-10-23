@@ -112,6 +112,15 @@
 .dcp__tile--reaction .dcp__tile-badge { color: #fff; background: radial-gradient(circle at 35% 30%, #ff8a90, var(--dsh-accent) 70%); }
 .dcp__tile--empty { min-width: 160px; }
 
+.dcp__situ { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
+.dcp__situ-label { margin-right: 4px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dsh-bone-dim); }
+.dcp__situ-input {
+  width: 56px; min-height: 28px; text-align: center; font-family: var(--font-label); font-size: var(--text-sm); color: var(--dsh-bone);
+  background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-base); border-radius: var(--radius-md); outline: none; -moz-appearance: textfield;
+}
+.dcp__situ-input::-webkit-outer-spin-button, .dcp__situ-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dcp__situ-input:focus { border-color: var(--dsh-accent-line); }
+.dcp__nodcnote { flex-basis: 100%; text-align: center; font-size: var(--text-xs); color: var(--text-muted); }
 .dcp__bonus { font-family: var(--font-display); font-size: var(--text-lg); color: var(--dsh-bone); }
 .dcp__bonus strong { margin-left: 6px; font-size: 24px; color: #fff7e6; }
 .dcp__bonus span { margin-left: 4px; font-size: var(--text-sm); color: var(--dsh-warn); }

@@ -23,6 +23,8 @@ export interface DndCheckRequest {
   /** null quando a CD é oculta (ou não tem CD). */
   dc:          number | null
   dc_hidden:   boolean
+  /** CD oculta: o jogador a descobre depois de rolar (padrão) ou só o mestre a vê (migration 20240211). */
+  dc_reveal?:  boolean
   advantage:   DndAdvantage
   status:      'open' | 'closed'
   created_at:  string
@@ -37,10 +39,12 @@ export interface NewCheckRequest {
   label:      string
   dc?:        number | null
   dcHidden?:  boolean
+  /** Revelar a CD oculta a quem já rolou (padrão: sim). */
+  dcReveal?:  boolean
   advantage?: DndAdvantage
 }
 
-const MIGRATION_HINT = 'Confira se a migration 20240210 (dados 3D do D&D) já rodou.'
+const MIGRATION_HINT = 'Confira se as migrations 20240210 (dados 3D do D&D) e 20240211 (revelar a CD) já rodaram.'
 
 export async function createCheckRequest(req: NewCheckRequest): Promise<DndCheckRequest> {
   const { data: { user } } = await supabase.auth.getUser()
@@ -49,6 +53,8 @@ export async function createCheckRequest(req: NewCheckRequest): Promise<DndCheck
   const { data, error } = await supabase.from('dnd_check_requests').insert({
     campaign_id: req.campaignId, master_id: user.id, targets: req.targets, kind: req.kind, check_key: req.key ?? null,
     label: req.label.trim().slice(0, 80), dc: hidden ? null : req.dc ?? null, dc_hidden: hidden, advantage: req.advantage ?? 'normal',
+    // só manda a coluna nova quando o mestre escolheu NÃO revelar (o banco sem a migration 20240211 segue funcionando no padrão)
+    ...(hidden && req.dcReveal === false ? { dc_reveal: false } : {}),
   }).select('*').single()
   if (error) throw new Error(`Não foi possível pedir o teste. ${MIGRATION_HINT}`)
   const saved = data as DndCheckRequest

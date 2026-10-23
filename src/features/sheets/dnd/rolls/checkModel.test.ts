@@ -64,6 +64,10 @@ describe('fórmula, leitura e julgamento', () => {
     expect(checkFormula(spec, 'advantage', [{ key: 'guidance', die: 4 }])).toBe('2#d20+1d4+8')
     expect(checkFormula(saveCheck(derived, 'charisma'), 'disadvantage', [])).toBe('2@d20-1')
     expect(checkFormula(deathCheck(), 'normal', [])).toBe('1d20')
+    // bônus ou ônus de situação soma ao modificador (−2 por estar colado no inimigo)
+    expect(checkFormula(spec, 'normal', [], -2)).toBe('1d20+6')
+    expect(checkFormula(spec, 'advantage', [{ key: 'guidance', die: 4 }, { key: 'bardic', die: 12 }], 3)).toBe('2#d20+1d4+1d12+11')
+    expect(checkFormula(deathCheck(), 'normal', [], -3)).toBe('1d20-3')
   })
 
   it('lê a rolagem gravada: os d20, qual valeu e as reações', () => {

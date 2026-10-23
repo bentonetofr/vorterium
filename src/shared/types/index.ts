@@ -179,6 +179,8 @@ export interface DiceRollContext {
   reactions?:    string[]
   /** O d20 que valeu. */
   natural?:      number
+  /** Bônus ou ônus de situação digitado na hora (ex.: −2 por estar colado no inimigo); já está somado no total. */
+  situational?:  number
   outcome?:      'success' | 'failure' | null
   crit?:         'crit' | 'fumble' | null
   request_id?:   string

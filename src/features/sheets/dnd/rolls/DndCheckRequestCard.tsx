@@ -46,6 +46,7 @@ export function DndCheckRequestDialog({ campaignId, players, open, answers, hidd
   const [custom, setCustom] = useState('')
   const [dc, setDc] = useState('15')
   const [hidden, setHidden] = useState(false)
+  const [reveal, setReveal] = useState(true)
   const [advantage, setAdvantage] = useState<DndAdvantage>('normal')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +63,7 @@ export function DndCheckRequestDialog({ campaignId, players, open, answers, hidd
     try {
       await createCheckRequest({
         campaignId, targets: [...targets], kind: choice === CUSTOM ? 'custom' : picked!.kind, key: choice === CUSTOM ? null : picked!.key,
-        label, dc: picked?.kind === 'death' ? 10 : dcNum, dcHidden: hidden && dcNum != null, advantage,
+        label, dc: picked?.kind === 'death' ? 10 : dcNum, dcHidden: hidden && dcNum != null, dcReveal: reveal, advantage,
       })
       await refresh()
     } catch (err) {
@@ -113,7 +114,13 @@ export function DndCheckRequestDialog({ campaignId, players, open, answers, hidd
         <div className="dcq__row">
           {picked?.kind !== 'death' && (
             <button type="button" className={`dsh-flag dsh-flag--sm${hidden ? ' is-on' : ''}`} aria-pressed={hidden} disabled={dcNum == null}
-              onClick={() => setHidden((h) => !h)} title="O jogador vê “CD ?” e só descobre depois de rolar">CD oculta</button>
+              onClick={() => setHidden((h) => !h)} title="O jogador vê “CD ?” antes de rolar">CD oculta</button>
+          )}
+          {picked?.kind !== 'death' && hidden && dcNum != null && (
+            <button type="button" className={`dsh-flag dsh-flag--sm${reveal ? ' is-on' : ''}`} aria-pressed={reveal} onClick={() => setReveal((r) => !r)}
+              title={reveal ? 'Depois de rolar, o jogador descobre a CD e vê se passou. Clique para manter a CD só com você.' : 'A CD fica só com você: o jogador não descobre nem depois de rolar. Clique para revelar depois da rolagem.'}>
+              {reveal ? 'Revela depois de rolar' : 'Não revela a CD'}
+            </button>
           )}
           <div className="dsh-seg" role="group" aria-label="Vantagem">
             {ADV.map((a) => <button key={a.value} type="button" className={`dsh-seg__btn${advantage === a.value ? ' is-on' : ''}`} aria-pressed={advantage === a.value} onClick={() => setAdvantage(a.value)}>{a.label}</button>)}

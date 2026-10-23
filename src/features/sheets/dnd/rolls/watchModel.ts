@@ -28,8 +28,10 @@ export interface WatchedCheck {
   dcHidden:  boolean
   advantage: Advantage
   reading:   CheckReading
-  /** Soma dos bônus fixos (o que a ficha deu). */
+  /** Soma dos bônus fixos (o que a ficha deu mais o bônus de situação). */
   bonus:     number
+  /** A parte do bônus que a pessoa digitou na hora (situação da mesa). */
+  situational: number
   reactions: { label: string; die: number; value: number }[]
   outcome:   Outcome
   crit:      Crit
@@ -51,7 +53,7 @@ export function watchedCheck(roll: DiceRoll): WatchedCheck {
     dc: c.dc_hidden ? null : c.dc ?? null,
     dcHidden: !!c.dc_hidden,
     advantage: c.advantage ?? 'normal',
-    reading, bonus, reactions,
+    reading, bonus, reactions, situational: c.situational ?? 0,
     outcome: c.dc_hidden ? null : c.outcome ?? null,
     crit: c.crit ?? (reading.natural === 20 ? 'crit' : reading.natural === 1 ? 'fumble' : null),
   }
