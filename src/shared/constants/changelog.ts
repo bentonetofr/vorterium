@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.2',
+    date:    '2026-10-23',
+    title:   'Um presente para os betas do D&D',
+    items: [
+      'Quem testou o D&D antes de todo mundo ganhou o Dado de Betinha Tester: resina transparente com um emoji nerd de brinquedo dentro de cada dado, de óculos, sorrisão e luvinhas. Ele aparece numa vitrine girando, com o mascote, na primeira vez que os betas entram, e fica na aba "Meus dados" do cartão de dados. É exclusivo, mas a mesa inteira vê quando um beta rola com ele.',
+      'Os números de todos os dados ficaram maiores, para ler de longe na mesa. No dado de resina eles têm contorno escuro, e as faces de trás ficam apagadas para não se misturarem com as da frente.',
+    ],
+  },
+  {
     version: '2.1',
     date:    '2026-10-23',
     title:   'Ficha de D&D com animações e feita para o celular',

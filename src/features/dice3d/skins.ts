@@ -31,7 +31,17 @@ export interface DiceSkin {
   /** Força do relevo (padrão 1) e do verniz (padrão pelo material). */
   bump?:     number
   clearcoat?: number
+  /** Resina transparente de verdade (dá para ver dentro); os números e o friso ficam opacos. */
+  resin?:    boolean
+  /** Brinquedinho preso dentro da resina (toys.ts). */
+  toy?:      'nerd'
+  /** Exclusivo: só escolhe quem tem este recurso liberado pelo e-mail (site_feature_access). Todos veem o dado na mesa. */
+  exclusive?: string
 }
+
+/** Recurso de acesso do dado dos betas do D&D (migration 20240213). */
+export const BETINHA_FEATURE = 'dado-betinha'
+export const BETINHA_SKIN = 'betinha'
 
 export const ALL_SKINS: readonly DiceSkin[] = [
   // Os conjuntos iniciais: são os únicos que existem para o jogador por enquanto (superfície detalhada).
@@ -39,6 +49,8 @@ export const ALL_SKINS: readonly DiceSkin[] = [
   { id: 'madeira',   name: 'Madeira Velha',    body: '#76492a', bodyEdge: '#2b190a', ink: '#120801', trim: '#6b4423', glow: '#000000', glowPower: 0, roughness: 0.9, metalness: 0, inkMetal: false, surface: 'wood', bump: 1.6, clearcoat: 0 },
   { id: 'granito',   name: 'Granito',          body: '#6c6f77', bodyEdge: '#32353b', ink: '#1b1e23', trim: '#2c2f35', glow: '#000000', glowPower: 0, roughness: 0.82, metalness: 0.04, inkMetal: false, surface: 'stone', bump: 1.4, clearcoat: 0.04 },
   { id: 'plastico',  name: 'Plástico Marmorizado', body: '#1f50d8', bodyEdge: '#0a1f70', ink: '#ffffff', trim: '#cfe0ff', glow: '#000000', glowPower: 0, roughness: 0.14, metalness: 0, inkMetal: false, surface: 'plastic', bump: 0.6, clearcoat: 0.95 },
+  // Exclusivo dos betas do D&D: resina transparente com o emoji nerd de brinquedo dentro.
+  { id: BETINHA_SKIN, name: 'Dado de Betinha Tester', body: '#f2fffd', bodyEdge: '#9fe8de', ink: '#ffffff', trim: '#ffffff', glow: '#000000', glowPower: 0, roughness: 0.05, metalness: 0, inkMetal: false, resin: true, toy: 'nerd', exclusive: BETINHA_FEATURE, clearcoat: 1 },
   // Guardados: não aparecem nem podem ser usados até virarem prêmio de conquista (e serem refeitos com o mesmo detalhe).
   { id: 'vortice',   name: 'Pedra do Vórtice', body: '#1d1a24', bodyEdge: '#0c0a10', ink: '#e8b85c', trim: '#d9363e', glow: '#ff3b45', glowPower: 0.55, roughness: 0.55, metalness: 0.15, inkMetal: true, hidden: true },
   { id: 'obsidiana', name: 'Obsidiana',        body: '#121218', bodyEdge: '#050507', ink: '#d9dce6', trim: '#6b7084', glow: '#9fb4ff', glowPower: 0.25, roughness: 0.18, metalness: 0.35, inkMetal: true, hidden: true },
@@ -49,11 +61,20 @@ export const ALL_SKINS: readonly DiceSkin[] = [
   { id: 'jade',      name: 'Jade',             body: '#1f6b4f', bodyEdge: '#0a3324', ink: '#f2e7c9', trim: '#bfe8c9', glow: '#7dffc0', glowPower: 0.2, roughness: 0.3, metalness: 0.05, inkMetal: false, hidden: true },
 ]
 
-/** Os conjuntos que o jogador tem: só os iniciais. Qualquer outro id (rolagens e perfis antigos) cai no padrão. */
-export const DICE_SKINS: readonly DiceSkin[] = ALL_SKINS.filter((s) => !s.hidden)
+/** Os conjuntos de todo jogador: só os iniciais. */
+export const DICE_SKINS: readonly DiceSkin[] = ALL_SKINS.filter((s) => !s.hidden && !s.exclusive)
+
+/** Os que existem na mesa: os de todos e os exclusivos (quem não tem acesso também vê o dado de quem tem). */
+const SHOWN_SKINS: readonly DiceSkin[] = ALL_SKINS.filter((s) => !s.hidden)
+
+/** Os conjuntos que esta conta pode escolher: os de todos e os exclusivos liberados para ela. */
+export function skinsFor(access: ReadonlySet<string>): DiceSkin[] {
+  return SHOWN_SKINS.filter((s) => !s.exclusive || access.has(s.exclusive))
+}
 
 export const DEFAULT_SKIN = 'madeira'
 
+/** O conjunto pelo id. Qualquer outro id (rolagens e perfis antigos, guardados) cai no padrão. */
 export function getSkin(id: string | null | undefined): DiceSkin {
-  return DICE_SKINS.find((s) => s.id === id) ?? DICE_SKINS[0]
+  return SHOWN_SKINS.find((s) => s.id === id) ?? DICE_SKINS[0]
 }

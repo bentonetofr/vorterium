@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { dieGeometry, dieMaterial, ensureDiceFont } from './dieMesh'
+import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { DIE_RADIUS } from './simulate'
 import { getSkin } from './skins'
 
@@ -85,9 +85,8 @@ export class DiceShowcase {
     await ensureDiceFont()
     if (this.disposed) return
     this.clearSlots()
-    const geo = dieGeometry('d20')
     this.slots = items.map((it, i) => {
-      const mesh = new THREE.Mesh(geo, dieMaterial('d20', getSkin(it.id)))
+      const mesh = makeDieMesh('d20', getSkin(it.id))
       this.scene.add(mesh)
       return { id: it.id, el: it.el, mesh, spin: i * 0.9, phase: i * 1.7, grow: 1 }
     })
@@ -101,7 +100,7 @@ export class DiceShowcase {
   setHover(id: string | null): void { this.hover = id }
 
   private clearSlots(): void {
-    for (const s of this.slots) { this.scene.remove(s.mesh); (s.mesh.material as THREE.Material).dispose() }
+    for (const s of this.slots) { this.scene.remove(s.mesh); disposeDieMesh(s.mesh) }
     this.slots = []
   }
 

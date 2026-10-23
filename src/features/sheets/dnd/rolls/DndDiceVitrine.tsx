@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { DICE_SKINS } from '../../../dice3d/skins'
+import { skinsFor } from '../../../dice3d/skins'
+import { useFeatureAccess } from '../../../control/siteFeatures'
 import type { DiceShowcase } from '../../../dice3d/DiceShowcase'
 
 // ────────────────────────────────────────────────────────
@@ -17,6 +18,9 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
   const pedestals = useRef(new Map<string, HTMLElement>())
   const showcase = useRef<DiceShowcase | null>(null)
   const [simple, setSimple] = useState(false)
+  // os conjuntos de todos e os exclusivos liberados para esta conta (o dos betas chega quando o acesso carrega)
+  const skins = skinsFor(useFeatureAccess())
+  const skinKey = skins.map((s) => s.id).join(',')
 
   useEffect(() => {
     let alive = true
@@ -27,12 +31,12 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
       try {
         made = new showMod.DiceShowcase(hostRef.current)
         showcase.current = made
-        const items = DICE_SKINS.flatMap((s) => { const el = pedestals.current.get(s.id); return el ? [{ id: s.id, el }] : [] })
+        const items = skinKey.split(',').flatMap((id) => { const el = pedestals.current.get(id); return el ? [{ id, el }] : [] })
         void made.show(items)
       } catch { setSimple(true) }
     }).catch(() => { if (alive) setSimple(true) })
     return () => { alive = false; showcase.current = null; made?.dispose() }
-  }, [])
+  }, [skinKey])
 
   const hover = (id: string | null) => showcase.current?.setHover(id)
 
@@ -40,7 +44,7 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
     <div className="ddw-vitrine" ref={hostRef}>
       <p className="ddw-vitrine__intro">Escolha o conjunto de dados. É com ele que os seus dados rolam na mesa, e é assim que os outros jogadores os veem.</p>
       <ul className="ddw-skins">
-        {DICE_SKINS.map((s) => {
+        {skins.map((s) => {
           const on = skin === s.id
           return (
             <li key={s.id}>
@@ -52,6 +56,7 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
                     <span className="ddw-skin__swatch" style={{ background: `radial-gradient(circle at 35% 30%, ${s.body}, ${s.bodyEdge} 75%)`, borderColor: s.trim, color: s.ink }}>20</span>
                   )}
                 </span>
+                {s.exclusive && <span className="ddw-skin__tag">Exclusivo</span>}
                 <strong className="ddw-skin__name">{s.name}</strong>
                 <span className="ddw-skin__state">{on ? 'Em uso' : 'Usar estes dados'}</span>
               </button>

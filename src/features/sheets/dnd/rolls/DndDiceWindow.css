@@ -48,6 +48,12 @@
 .ddw-skin__name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--ddw-bone); }
 .ddw-skin__state { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
 .ddw-skin.is-on .ddw-skin__state { color: var(--ddw-gold); }
+/* selo dos conjuntos exclusivos (o dos betas) */
+.ddw-skin__tag {
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%); padding: 2px 9px; white-space: nowrap;
+  font-family: var(--font-label); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #2a1606; background: linear-gradient(180deg, #fff1a8, #f0c040); border-radius: 999px; box-shadow: 0 0 12px rgba(240, 192, 64, 0.45);
+}
 
 /* ════════════════════════════════════════════════════════
    O cartão de dados (.dcp--hub) cabe inteiro na tela, sem barra de rolagem.

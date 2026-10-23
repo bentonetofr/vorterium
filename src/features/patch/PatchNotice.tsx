@@ -15,7 +15,11 @@ import './PatchNotice.css'
 
 const seenKey = (userId: string) => `vorterium:patch-visto:${PATCH_VERSION}:${userId}`
 
-function alreadySeen(userId: string): boolean {
+/** Avisado quando o aviso de patch fecha (o presente dos betas espera ele, para não abrirem juntos). */
+export const PATCH_CLOSED_EVENT = 'vorterium:patch-fechado'
+
+/** Esta conta já viu o aviso do patch atual neste aparelho? */
+export function alreadySeen(userId: string): boolean {
   try { return localStorage.getItem(seenKey(userId)) === '1' } catch { return false }
 }
 
@@ -118,6 +122,7 @@ export function PatchNotice() {
   const finish = useCallback(() => {
     if (userId) markSeen(userId)
     setOpen(false)
+    window.dispatchEvent(new Event(PATCH_CLOSED_EVENT))
   }, [userId])
 
   if (!userId) return null

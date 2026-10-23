@@ -3,7 +3,8 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { alignments, labelForValue, labelText, numberUp, polyhedron, quatFromM3, upIndex, type DieKind, type V3 } from './polyhedra'
 import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from './camera'
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
-import { dieGeometry, dieMaterial, ensureDiceFont } from './dieMesh'
+import { dieToy, disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
+import { aimToy } from './toys'
 import { getSkin } from './skins'
 import { playDiceHit } from './sound'
 
@@ -194,12 +195,12 @@ export class DiceStage {
     this.raf = 0
     for (const t of this.throws) this.dropDice(t)
     this.throws = []
-    if (this.idleMesh) { this.scene.remove(this.idleMesh); (this.idleMesh.material as THREE.Material).dispose(); this.idleMesh = null }
+    if (this.idleMesh) { this.scene.remove(this.idleMesh); disposeDieMesh(this.idleMesh); this.idleMesh = null }
     this.render()
   }
 
   private dropDice(t: Throw): void {
-    for (const d of t.dice) { this.scene.remove(d.mesh); (d.mesh.material as THREE.Material).dispose() }
+    for (const d of t.dice) { this.scene.remove(d.mesh); disposeDieMesh(d.mesh) }
   }
 
   /** Antes de rolar: um dado flutuando no meio do palco, girando devagar ("clique para rolar"). */
@@ -208,7 +209,7 @@ export class DiceStage {
     this.clear()
     if (this.disposed) return
     if (this.style === 'wide') placeCamera(this.camera, 1)
-    const mesh = new THREE.Mesh(dieGeometry(kind), dieMaterial(kind, getSkin(skin)))
+    const mesh = makeDieMesh(kind, getSkin(skin))
     mesh.castShadow = true
     mesh.scale.setScalar(this.style === 'wide' ? 0.78 : 1.15)
     this.idleMesh = mesh
@@ -289,7 +290,9 @@ export class DiceStage {
         const dir = new THREE.Vector3(...numberUp(p, p.labels.indexOf(label))).applyQuaternion(fix).applyQuaternion(body)
         yaw.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dir.x, -dir.z))
       }
-      const mesh = new THREE.Mesh(dieGeometry(d.kind), dieMaterial(d.kind, getSkin(d.skin ?? opts.skin)))
+      const mesh = makeDieMesh(d.kind, getSkin(d.skin ?? opts.skin))
+      const toy = dieToy(mesh)
+      if (toy && !p.readsVertex) aimToy(toy, d.kind, p.labels.indexOf(label))
       mesh.castShadow = true
       mesh.userData.kind = d.kind
       this.scene.add(mesh)
@@ -359,7 +362,11 @@ export class DiceStage {
       // fim do lançamento: os descartados (ex.: o d20 que perdeu na vantagem) ficam translúcidos
       th.phase = 'settle'
       th.settleStart = now
-      for (const d of th.dice) if (d.dim) { const m = d.mesh.material as THREE.MeshPhysicalMaterial; m.transparent = true; m.depthWrite = false; m.needsUpdate = true }
+      for (const d of th.dice) if (d.dim) {
+      const m = d.mesh.material as THREE.MeshPhysicalMaterial; m.transparent = true; m.depthWrite = false; m.needsUpdate = true
+      // o brinquedo da resina (materiais divididos entre os dados) não apaga junto: sai de cena
+      for (const c of d.mesh.children) c.visible = false
+    }
     }
   }
 

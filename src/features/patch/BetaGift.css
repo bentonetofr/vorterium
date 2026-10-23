@@ -1,0 +1,151 @@
+/* ═══════════════════════════════════════════════════════
+   O presente dos betas do D&D: janela de parabéns com o mascote e o dado de
+   resina girando numa vitrine de vidro (luz de cima, pedestal que brilha na
+   cor da resina). O dado é um canvas só por cima da área .beta__show
+   (DiceShowcase), centrado no .beta__pedestal.
+   ═══════════════════════════════════════════════════════ */
+
+.beta {
+  --beta-gold: #f0c040;
+  --beta-aqua: #8fe3d6;
+  --beta-aqua-soft: rgba(143, 227, 214, 0.18);
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-3);
+  width: min(600px, 100%); max-height: min(94vh, 820px); max-height: min(94dvh, 820px); overflow: hidden;
+  padding: var(--space-5) var(--space-6) var(--space-4); text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(240, 192, 64, 0.16), transparent 55%),
+    radial-gradient(ellipse at 50% 62%, var(--beta-aqua-soft), transparent 55%),
+    var(--bg-surface);
+  border: 1px solid rgba(240, 192, 64, 0.5); border-radius: 26px;
+  box-shadow: 0 0 0 4px var(--bg-base, #0b0f1a), 0 0 0 5px rgba(240, 192, 64, 0.3), 0 30px 90px rgba(0, 0, 0, 0.65), 0 0 60px rgba(143, 227, 214, 0.12);
+}
+
+.beta__close {
+  position: absolute; top: 10px; right: 12px; z-index: 4; width: 34px; height: 34px; display: grid; place-items: center;
+  font-size: 22px; line-height: 1; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 50%;
+  cursor: var(--cursor-hand); transition: color var(--transition-fast), border-color var(--transition-fast), transform 200ms var(--ease-spring);
+}
+.beta__close:hover { color: var(--text-primary); border-color: var(--border-base); transform: rotate(90deg); }
+
+/* confete caindo atrás de tudo */
+.beta__confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.beta__confetti i {
+  position: absolute; top: -14px; left: calc(4% + var(--i) * 6.8%); width: 8px; height: 13px; border-radius: 2px;
+  background: hsl(calc(var(--i) * 47deg) 90% 64%); opacity: 0.85;
+  animation: beta-fall calc(3.4s + var(--i) * 0.23s) linear calc(var(--i) * -0.41s) infinite;
+}
+.beta__confetti i:nth-child(3n) { width: 6px; height: 6px; border-radius: 50%; }
+@keyframes beta-fall {
+  from { transform: translateY(-20px) rotate(0deg); }
+  to   { transform: translateY(840px) rotate(540deg); }
+}
+
+.beta__badge {
+  position: relative; z-index: 1; padding: 4px 14px; font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: #2a1606; background: linear-gradient(180deg, #fff1a8, var(--beta-gold)); border-radius: 999px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 18px rgba(240, 192, 64, 0.4);
+  animation: m-pop-in 420ms var(--ease-spring) 120ms backwards;
+}
+.beta__title {
+  position: relative; z-index: 1; margin: 0; font-family: var(--font-display); font-size: clamp(30px, 7vw, 40px); font-weight: 700; line-height: 1.05;
+  color: #fff4cf; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), 0 0 26px rgba(240, 192, 64, 0.45);
+  animation: beta-title 700ms var(--ease-spring) 200ms backwards;
+}
+@keyframes beta-title { from { opacity: 0; transform: scale(0.6) rotate(-4deg); } }
+.beta__lead {
+  position: relative; z-index: 1; margin: 0; max-width: 460px; font-size: var(--text-sm); line-height: 1.6; color: var(--text-secondary);
+  animation: m-item-in 420ms var(--ease-out) 320ms backwards;
+}
+.beta__lead strong { color: #fff4cf; }
+
+/* ── A vitrine ── */
+.beta__show {
+  position: relative; z-index: 1; display: flex; align-items: flex-end; justify-content: center; gap: var(--space-2); width: 100%;
+  flex: 1 1 auto; min-height: 200px;
+}
+.beta__case {
+  position: relative; display: grid; place-items: center; width: 250px; max-width: 62%; aspect-ratio: 1 / 1.05;
+  animation: m-pop-in 520ms var(--ease-spring) 380ms backwards;
+}
+/* a luz que cai de cima na vitrine */
+.beta__light {
+  position: absolute; left: 50%; top: -6%; width: 78%; height: 88%; transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(255, 250, 220, 0.2), rgba(143, 227, 214, 0.1) 60%, transparent);
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); filter: blur(6px);
+  animation: beta-light 3.6s ease-in-out infinite;
+}
+@keyframes beta-light { 50% { opacity: 0.6; } }
+.beta__pedestal { position: relative; z-index: 1; width: 78%; aspect-ratio: 1; display: grid; place-items: center; cursor: var(--cursor-hand); }
+/* o pedestal: um disco que brilha na cor da resina */
+.beta__base {
+  position: absolute; left: 50%; bottom: 3%; width: 74%; height: 15%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 40%, #2a3a46, #10161d 70%);
+  box-shadow: 0 0 0 2px rgba(240, 192, 64, 0.45), 0 -6px 30px rgba(143, 227, 214, 0.45), inset 0 3px 8px rgba(255, 255, 255, 0.12);
+}
+.beta__base::after {
+  content: ''; position: absolute; inset: 18% 20%; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(143, 227, 214, 0.75), transparent 70%); filter: blur(4px);
+  animation: beta-glow 2.6s ease-in-out infinite;
+}
+@keyframes beta-glow { 50% { opacity: 0.45; } }
+/* o vidro da vitrine: cantos e um reflexo que passa devagar */
+.beta__glass {
+  position: absolute; inset: 0 2% 6%; border: 1px solid rgba(220, 245, 255, 0.28); border-radius: 18px 18px 8px 8px; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.1), transparent 30%, transparent 70%, rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 0 30px rgba(143, 227, 214, 0.08); overflow: hidden;
+}
+.beta__glass::after {
+  content: ''; position: absolute; top: -20%; bottom: -20%; width: 22%; left: -40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent); transform: skewX(-18deg);
+  animation: beta-shine 5.5s ease-in-out 1.2s infinite;
+}
+@keyframes beta-shine { 0%, 60% { left: -40%; } 100% { left: 130%; } }
+.beta__swatch {
+  display: grid; place-items: center; width: 60%; aspect-ratio: 1; border-radius: 50%; border: 3px solid #fff;
+  font: 700 30px 'EB Garamond', Georgia, serif; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ── O mascote ── */
+.beta__mascot {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 128px; flex-shrink: 0; margin-bottom: 4%;
+  animation: m-pop-in 520ms var(--ease-spring) 560ms backwards;
+}
+.beta__mascot img { width: 118px; height: auto; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5)); animation: beta-bob 2.2s ease-in-out infinite; user-select: none; }
+@keyframes beta-bob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-7px) rotate(3deg); } }
+.beta__bubble {
+  position: relative; padding: 6px 12px; font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap;
+  color: #2a1606; background: #fff4cf; border-radius: 14px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  animation: beta-bubble 2.2s ease-in-out infinite;
+}
+.beta__bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+@keyframes beta-bubble { 50% { transform: translateY(-3px) scale(1.04); } }
+
+/* ── Plaquinha e botões ── */
+.beta__plate {
+  position: relative; z-index: 1; display: flex; flex-direction: column; gap: 2px; padding: var(--space-2) var(--space-5);
+  background: linear-gradient(180deg, rgba(240, 192, 64, 0.16), rgba(240, 192, 64, 0.05)); border: 1px solid rgba(240, 192, 64, 0.45); border-radius: 12px;
+  animation: m-item-in 420ms var(--ease-out) 640ms backwards;
+}
+.beta__plate strong { font-family: var(--font-display); font-size: var(--text-xl); color: #fff4cf; }
+.beta__plate span { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+
+.beta__foot { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; }
+.beta__hint, .beta__ok, .beta__err { margin: 0; font-size: var(--text-xs); color: var(--text-muted); }
+.beta__ok { color: #8be0a4; animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+.beta__err { color: #ff9a9a; }
+.beta__actions { display: flex; gap: var(--space-3); }
+.beta__use { min-width: 170px; }
+
+@media (max-width: 520px) {
+  .beta { padding: var(--space-5) var(--space-4) var(--space-4); gap: var(--space-2); border-radius: 22px; }
+  .beta__lead { font-size: var(--text-xs); }
+  .beta__mascot { position: absolute; left: 0; bottom: 0; width: 86px; z-index: 2; margin: 0; }
+  .beta__mascot img { width: 78px; }
+  .beta__bubble { font-size: 10px; padding: 4px 8px; }
+  .beta__case { width: 230px; max-width: 78%; }
+  .beta__plate { padding: var(--space-2) var(--space-4); }
+  .beta__plate strong { font-size: var(--text-lg); }
+  .beta__actions { width: 100%; }
+  .beta__actions .btn { flex: 1; }
+  .beta__use { min-width: 0; }
+}
