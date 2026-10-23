@@ -85,5 +85,7 @@ grant execute on function public.dnd_open() to authenticated;
 
 -- ── Liberação de agora ──────────────────────────────────
 insert into public.site_feature_access (feature, email)
-values ('dnd5e', 'nicolas@campinas.com')
+values ('dnd5e', 'nicolas@campinas.com'),
+       ('dnd5e', 'mariacoutinho016@gmail.com'),
+       ('dnd5e', 'brunaferreirapedroso@gmail.com')
 on conflict do nothing;
