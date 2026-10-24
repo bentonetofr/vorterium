@@ -28,6 +28,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'O quadro da Visão, no alto da ficha, ganhou o botãozinho "Visão no escuro" para marcar e desmarcar.',
       'Nenhuma rolagem cai solta pela tela do Vortable. Dano, dado de vida e as outras rolagens agora rolam num cartão com a mesma moldura dos testes de perícia e atributo (para você, fica até fechar no × ou no Esc; para a mesa, é o cartão azul que some sozinho).',
       'Física dos dados refeita: eles rolam bem mais antes de dar o resultado (pelo menos 2,6 segundos de rolagem, quicando e girando mais), e o bug dos dados presos e grudados num canto foi corrigido. A causa era o chão da rolagem livre com um dado só: ficava menor que o próprio d20, que entalava nas paredes. Agora o chão tem um tamanho mínimo e a câmera se afasta o necessário; o lançamento é conferido e refeito se o dado terminar torto ou rolar pouco.',
+      'Dados quase parados não dão mais pulinhos: o empurrão que endireitava um dado torto saltava e virava o resultado de repente; agora o dado só escorrega e tomba, e o resto de quique no fim é amortecido (se terminar torto, o lançamento é refeito antes de aparecer). Só numa multidão de dados o empurrão ainda salta.',
     ],
   },
   {

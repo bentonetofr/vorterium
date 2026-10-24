@@ -112,7 +112,7 @@ export const MIN_ROLL_SECONDS = 2.6
 
 /** Quantas tentativas valem a pena: a conta cresce com o quadrado dos dados. */
 function attemptsFor(count: number): number {
-  return count <= 6 ? 14 : count <= 16 ? 10 : count <= 40 ? 5 : count <= 70 ? 3 : 2
+  return count <= 6 ? 14 : count <= 16 ? 18 : count <= 40 ? 8 : count <= 70 ? 3 : 2
 }
 
 /**
@@ -225,21 +225,41 @@ export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimRe
     return cos < MAX_TILT_COS || b.position.y > restHeight(kinds[i]) * 1.18
   }
 
+  /**
+   * Dado quase parado: o quique que sobra (a restituição do contato, que nunca zera) vira pulinhos miúdos
+   * e o dado tremendo antes de dormir. Aqui o resto de movimento é amortecido e nada sobe mais.
+   */
+  const calmDown = () => {
+    if (kinds.length > 24) return // numa multidão o aperto já segura os dados, e o amortecimento só atrapalha a acomodação
+    for (const b of bodies) {
+      if (b.sleepState === CANNON.Body.SLEEPING) continue
+      if (b.velocity.length() > 2.2 || b.angularVelocity.length() > 6) continue
+      if (b.velocity.y > 0) b.velocity.y *= 0.2
+      b.velocity.scale(0.9, b.velocity)
+      b.angularVelocity.scale(0.9, b.angularVelocity)
+    }
+  }
+
   let settled = false
   let nudges = 0
   while (step < maxSteps) {
     record()
     step++
     world.step(1 / STEP_HZ)
+    calmDown()
     if (step > STEP_HZ * 1.2 && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) {
       const wrong = bodies.flatMap((b, i) => (crooked(b, i) ? [b] : []))
       // quem parou torto leva um empurrãozinho para tombar numa face (os vizinhos acordam se for preciso)
       if (wrong.length === 0 || nudges >= MAX_NUDGES || step > lastStep - 40) { settled = true; break }
       nudges++
+      // sem pulo: um dado quase parado que sobe de repente é o que se vê como "pulinho"; ele só escorrega e
+      // tomba (o resto é com as novas tentativas de simulateThrow). Só numa multidão de dados, onde um pulo
+      // se perde no meio dos outros e escorregar não basta, o empurrão ainda salta.
+      const hop = kinds.length > 24
       for (const b of wrong) {
         b.wakeUp()
-        b.velocity.set((rnd() - 0.5) * 5, 3 + rnd() * 2, (rnd() - 0.5) * 5)
-        b.angularVelocity.set((rnd() - 0.5) * 18, (rnd() - 0.5) * 18, (rnd() - 0.5) * 18)
+        b.velocity.set((rnd() - 0.5) * (hop ? 5 : 3), hop ? 3 + rnd() * 2 : 0, (rnd() - 0.5) * (hop ? 5 : 3))
+        b.angularVelocity.set((rnd() - 0.5) * (hop ? 18 : 12), (rnd() - 0.5) * (hop ? 18 : 12), (rnd() - 0.5) * (hop ? 18 : 12))
       }
     }
   }

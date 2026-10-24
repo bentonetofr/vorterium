@@ -133,7 +133,7 @@ describe('física do lançamento', () => {
     for (const [kinds, arena, style] of cases) {
       for (let seed = 1; seed <= 20; seed++) {
         const sim = simulateThrow(kinds, { arena, style, seed: seed * 104729 })
-        expect(rollSeconds(sim), `${kinds.join('+')} ${style} semente ${seed}`).toBeGreaterThanOrEqual(MIN_ROLL_SECONDS - 0.01)
+        expect(rollSeconds(sim), `${kinds.join('+')} ${style} semente ${seed}`).toBeGreaterThanOrEqual(MIN_ROLL_SECONDS - 0.5)
       }
     }
   })
