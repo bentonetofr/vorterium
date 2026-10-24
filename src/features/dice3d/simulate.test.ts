@@ -138,6 +138,16 @@ describe('física do lançamento', () => {
     }
   })
 
+  it('o bolão (d100) junto de outros dados termina deitado e sem ficar por cima de nenhum', () => {
+    const arena = { halfW: 4.3, halfD: 2.6 }
+    for (const kinds of [['d100', 'd100'], ['d100', 'd20', 'd6']] as const) {
+      for (const seed of [61, 62, 63, 64]) {
+        const sim = simulateThrow(kinds, { arena, style: 'wide', seed })
+        expect(badDice(kinds, sim), `${kinds.join('+')} semente ${seed}`).toBe(0)
+      }
+    }
+  })
+
   it('a mesa cabe na tela: nenhum dado termina cortado pela borda', () => {
     const cam = new THREE.PerspectiveCamera(30, 704 / 560, 0.1, 200)
     for (const n of [1, 6, 20]) {

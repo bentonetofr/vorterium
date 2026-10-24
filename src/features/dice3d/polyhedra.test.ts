@@ -9,7 +9,7 @@ const SHAPE: Record<DieKind, { faces: number; vertices: number; symmetries: numb
   d6:   { faces: 6,  vertices: 8,  symmetries: 24 },
   d8:   { faces: 8,  vertices: 6,  symmetries: 24 },
   d10:  { faces: 10, vertices: 12, symmetries: 10 },
-  d100: { faces: 10, vertices: 12, symmetries: 10 },
+  d100: { faces: 100, vertices: 196, symmetries: 1 },
   d12:  { faces: 12, vertices: 20, symmetries: 60 },
   d20:  { faces: 20, vertices: 12, symmetries: 60 },
 }
@@ -53,7 +53,9 @@ describe('sólidos dos dados', () => {
       const n = p.labels.length
       expect(new Set(p.labels).size, kind).toBe(n)
       if (kind === 'd4') { expect([...p.labels].sort()).toEqual([1, 2, 3, 4]); continue }
-      const zero = kind === 'd10' || kind === 'd100'
+      // o bolão tem os números de 1 a 100 espalhados, sem faces opostas certinhas
+      if (kind === 'd100') { expect([...p.labels].sort((a, b) => a - b)).toEqual(Array.from({ length: 100 }, (_, i) => i + 1)); continue }
+      const zero = kind === 'd10'
       expect(Math.min(...p.labels), kind).toBe(zero ? 0 : 1)
       p.normals.forEach((nm, i) => {
         const opp = p.normals.findIndex((m) => dot(m, nm) < -0.999)
@@ -67,10 +69,10 @@ describe('sólidos dos dados', () => {
     expect(labelForValue('d20', 17)).toBe(17)
     expect(labelForValue('d10', 10)).toBe(0)
     expect(labelForValue('d10', 7)).toBe(7)
-    expect(labelForValue('d100', 0)).toBe(0)
-    expect(labelForValue('d100', 90)).toBe(9)
-    expect(labelText('d100', 0)).toBe('00')
-    expect(labelText('d100', 4)).toBe('40')
+    expect(labelForValue('d100', 1)).toBe(1)
+    expect(labelForValue('d100', 73)).toBe(73)
+    expect(labelForValue('d100', 100)).toBe(100)
+    expect(labelText('d100', 100)).toBe('100')
     expect(labelText('d10', 0)).toBe('0')
   })
 
@@ -91,7 +93,8 @@ describe('sólidos dos dados', () => {
   })
 
   it('para qualquer face de cima e qualquer número, o giro de simetria mostra o número em cima', () => {
-    for (const kind of DIE_KINDS) {
+    // (o bolão não gira: ele troca os números de lugar no desenho, ver dieMesh.test)
+    for (const kind of DIE_KINDS.filter((k) => k !== 'd100')) {
       const p = polyhedron(kind)
       for (let seed = 1; seed <= 12; seed++) {
         const body = randomQuat(seed * 7919 + kind.length)
@@ -102,6 +105,18 @@ describe('sólidos dos dados', () => {
           expect(p.labels[upIndex(p, shown)], `${kind} semente ${seed} número ${label}`).toBe(label)
         }
       }
+    }
+  })
+
+  it('bolão: o número sorteado aparece na face de frente trocando só duas células', async () => {
+    const { ballCells } = await import('./dieMesh')
+    const p = polyhedron('d100')
+    for (const [face, label] of [[0, 1], [37, 100], [99, 55], [12, p.labels[12]]] as const) {
+      const { cellOf, labels } = ballCells(face, label)
+      expect(labels[face], `face ${face}`).toBe(label)
+      expect(new Set(labels).size).toBe(100)
+      expect(cellOf.filter((c, i) => c !== i).length).toBeLessThanOrEqual(2)
+      expect(new Set(cellOf).size).toBe(100)
     }
   })
 })

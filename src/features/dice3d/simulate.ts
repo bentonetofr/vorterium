@@ -14,9 +14,15 @@ const MAX_SECONDS = 6
 /** Tempo a mais, só para os empurrões nos dados que pararam tortos. */
 const NUDGE_SECONDS = 3
 const MAX_NUDGES = 8
+const GROUP_WORLD = 1, GROUP_DIE = 2, GROUP_BALL = 4
+/** Quanto do giro e do deslize o bolão (d100) mantém a cada passo enquanto toca o chão. */
+const ROLL_SPIN_KEEP = 0.978
+const ROLL_SLIDE_KEEP = 0.993
+/** Giro (rad/s por unidade de seno do desvio) com que o bolão tomba para a faceta de baixo. */
+const SETTLE_PULL = 9
 
 /** Tamanho de cada dado (raio do vértice mais distante), em unidades do mundo. */
-export const DIE_RADIUS: Record<DieKind, number> = { d4: 1.2, d6: 1.0, d8: 1.08, d10: 1.05, d100: 1.05, d12: 1.1, d20: 1.15 }
+export const DIE_RADIUS: Record<DieKind, number> = { d4: 1.2, d6: 1.0, d8: 1.08, d10: 1.05, d100: 1.35, d12: 1.1, d20: 1.15 }
 
 /** 'tray': bandeja de baixo da tela; 'stage': o palco do painel de teste; 'wide': o palco largo da rolagem livre (câmera mais longe, mais chão). */
 export type ThrowStyle = 'tray' | 'stage' | 'wide'
@@ -73,6 +79,20 @@ export function restHeight(kind: DieKind): number {
 const MAX_TILT_COS = Math.cos((3.5 * Math.PI) / 180)
 
 /**
+ * O quanto o dado está deitado: cosseno do desvio da face de apoio (de cima, nos dados com face oposta paralela).
+ * O bolão não tem face oposta paralela, então ali vale a face de baixo, a que toca a mesa.
+ */
+function restTilt(kind: DieKind, q: Quat, up: number): number {
+  const poly = polyhedron(kind)
+  if (kind === 'd100') {
+    const n = poly.normals[upIndex(poly, q, [0, -1, 0])]
+    return -rotate(q, n)[1]
+  }
+  const item = (poly.readsVertex ? poly.vertices : poly.normals)[up]
+  return rotate(q, item)[1] / Math.hypot(item[0], item[1], item[2])
+}
+
+/**
  * Quantos dados terminaram errados: tortos (a face de cima não está na vertical),
  * em cima de outro dado (centro acima da altura de repouso) ou atravessando outro
  * (a esfera inscrita de um entra na do outro, o que um sólido não faz).
@@ -82,10 +102,7 @@ export function badDice(kinds: readonly DieKind[], sim: SimResult): number {
   const bad = new Set<number>()
   const end = sim.frames.map((f) => ({ p: [f[o], f[o + 1], f[o + 2]] as V3, q: [f[o + 3], f[o + 4], f[o + 5], f[o + 6]] as Quat }))
   kinds.forEach((kind, i) => {
-    const poly = polyhedron(kind)
-    const item = (poly.readsVertex ? poly.vertices : poly.normals)[sim.up[i]]
-    const tilt = rotate(end[i].q, item)[1] / Math.hypot(item[0], item[1], item[2])
-    if (tilt < MAX_TILT_COS) bad.add(i)
+    if (restTilt(kind, end[i].q, sim.up[i]) < MAX_TILT_COS) bad.add(i)
     if (end[i].p[1] > restHeight(kind) * 1.18) bad.add(i)
   })
   for (let a = 0; a < kinds.length; a++) for (let b = a + 1; b < kinds.length; b++) {
@@ -172,9 +189,17 @@ export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimRe
   let step = 0
 
   const bodies = kinds.map((kind, i) => {
-    const body = new CANNON.Body({ mass: 1, material: dieMat, shape: dieShape(kind), allowSleep: true, sleepSpeedLimit: 0.16, sleepTimeLimit: 0.22 + 0.1 * loose })
+    const ball = kind === 'd100'
+    const body = new CANNON.Body({
+      mass: 1, material: dieMat, shape: dieShape(kind), allowSleep: true, sleepSpeedLimit: 0.16, sleepTimeLimit: 0.22 + 0.1 * loose,
+      // o choque entre dois sólidos de muitas faces é caro demais (o bolão tem ~300 arestas): o bolão só bate no chão e nas
+      // paredes e passa pelos outros dados; a conferência do fim (badDice) refaz o lançamento se algum terminar por cima de outro
+      collisionFilterGroup: ball ? GROUP_BALL : GROUP_DIE, collisionFilterMask: ball ? GROUP_WORLD : GROUP_WORLD | GROUP_DIE,
+    })
     body.linearDamping = 0.14 - 0.09 * loose
     body.angularDamping = 0.22 - 0.14 * loose
+    // a bola de 100 faces rola como uma esfera: sem um pouco mais de "atrito de rolar" ela passaria o tempo todo rolando
+    if (kind === 'd100') { body.linearDamping += 0.06; body.angularDamping += 0.15 }
     const r = DIE_RADIUS[kind]
     if (opts.style !== 'tray') {
       // um dado jogado de perto, de baixo para o fundo, batendo nas paredes da moldura
@@ -197,6 +222,8 @@ export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimRe
     }
     body.quaternion.setFromEuler(rnd() * Math.PI * 2, rnd() * Math.PI * 2, rnd() * Math.PI * 2)
     body.angularVelocity.set((rnd() - 0.5) * 70, (rnd() - 0.5) * 70, (rnd() - 0.5) * 70)
+    // a bola de 100 faces perde força rápido no chão: sai da mão com mais empurrão e mais giro para rolar o tempo de um dado
+    if (ball) { body.velocity.scale(1.35, body.velocity); body.angularVelocity.scale(1.4, body.angularVelocity) }
     body.addEventListener('collide', (e: { body: CANNON.Body; contact: CANNON.ContactEquation }) => {
       const v = Math.abs(e.contact.getImpactVelocityAlongNormal())
       if (v < 1.2 || step - lastSound[i] < 4) return
@@ -219,9 +246,8 @@ export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimRe
 
   /** O dado parou torto (apoiado em outro dado ou na parede, ou sobre outro)? */
   const crooked = (b: CANNON.Body, i: number): boolean => {
-    const poly = polyhedron(kinds[i])
-    const item = (poly.readsVertex ? poly.vertices : poly.normals)[upIndex(poly, [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w] as Quat)]
-    const cos = rotate([b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w] as Quat, item)[1] / Math.hypot(item[0], item[1], item[2])
+    const q = [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w] as Quat
+    const cos = restTilt(kinds[i], q, upIndex(polyhedron(kinds[i]), q))
     return cos < MAX_TILT_COS || b.position.y > restHeight(kinds[i]) * 1.18
   }
 
@@ -240,12 +266,68 @@ export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimRe
     }
   }
 
+  /**
+   * Resistência ao rolar do bolão: uma esfera quase perfeita, apoiada no chão, rolaria quase para sempre. A
+   * bola de 100 faces de verdade perde força a cada faceta que bate no chão; aqui, enquanto ela toca o chão,
+   * giro e deslize perdem um pouco a cada passo.
+   */
+  /**
+   * O bolão não colide de verdade com os outros dados (ver os filtros acima); no lugar, os dois se tratam como
+   * esferas que não se atravessam: se chegam perto demais, são afastados e a parte que se aproximava é cortada.
+   */
+  const pairs: [number, number][] = []
+  kinds.forEach((a, i) => { for (let j = i + 1; j < kinds.length; j++) if (a === 'd100' || kinds[j] === 'd100') pairs.push([i, j]) })
+  const repelBalls = () => {
+    for (const [i, j] of pairs) {
+      const a = bodies[i], b = bodies[j]
+      const dx = a.position.x - b.position.x, dy = a.position.y - b.position.y, dz = a.position.z - b.position.z
+      const d = Math.hypot(dx, dy, dz) || 1e-6
+      const min = (restHeight(kinds[i]) + restHeight(kinds[j])) * 1.04
+      if (d >= min) continue
+      const nx = dx / d, ny = dy / d, nz = dz / d, push = (min - d) / 2
+      a.position.x += nx * push; a.position.y += ny * push; a.position.z += nz * push
+      b.position.x -= nx * push; b.position.y -= ny * push; b.position.z -= nz * push
+      const approach = (a.velocity.x - b.velocity.x) * nx + (a.velocity.y - b.velocity.y) * ny + (a.velocity.z - b.velocity.z) * nz
+      if (approach < 0) {
+        const k = approach * 0.65 // tira a velocidade que se aproximava e devolve um pouco (quique)
+        a.velocity.x -= nx * k; a.velocity.y -= ny * k; a.velocity.z -= nz * k
+        b.velocity.x += nx * k; b.velocity.y += ny * k; b.velocity.z += nz * k
+        a.wakeUp(); b.wakeUp()
+      }
+    }
+  }
+
+  const ballPoly = kinds.includes('d100') ? polyhedron('d100') : null
+  const rollResist = () => {
+    bodies.forEach((b, i) => {
+      if (!ballPoly || kinds[i] !== 'd100' || b.sleepState === CANNON.Body.SLEEPING || b.position.y > DIE_RADIUS.d100 * 1.04) return
+      b.angularVelocity.scale(ROLL_SPIN_KEEP, b.angularVelocity)
+      b.velocity.x *= ROLL_SLIDE_KEEP
+      b.velocity.z *= ROLL_SLIDE_KEEP
+      // quase parada, apoiada numa quina entre duas facetas: tomba devagar para a faceta mais próxima (uma
+      // esfera facetada de verdade faria isso sozinha; a conta do motor trava no equilíbrio instável)
+      if (b.velocity.length() < 2.5 && b.angularVelocity.length() < 5) {
+        const q: Quat = [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w]
+        const f = rotate(q, ballPoly.normals[upIndex(ballPoly, q, [0, -1, 0])]) // faceta mais baixa, no mundo
+        // eixo que leva essa faceta para baixo: f × (0, −1, 0)
+        const axis: V3 = [f[2], 0, -f[0]]
+        const sin = Math.hypot(axis[0], axis[1], axis[2])
+        if (sin > 0.015) {
+          b.wakeUp()
+          b.angularVelocity.set(axis[0] * SETTLE_PULL, axis[1] * SETTLE_PULL, axis[2] * SETTLE_PULL)
+        }
+      }
+    })
+  }
+
   let settled = false
   let nudges = 0
   while (step < maxSteps) {
     record()
     step++
+    repelBalls()
     world.step(1 / STEP_HZ)
+    rollResist()
     calmDown()
     if (step > STEP_HZ * 1.2 && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) {
       const wrong = bodies.flatMap((b, i) => (crooked(b, i) ? [b] : []))

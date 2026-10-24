@@ -276,9 +276,11 @@ export class DiceStage {
       const body = new THREE.Quaternion(fr[o + 3], fr[o + 4], fr[o + 5], fr[o + 6])
       const up = p.readsVertex ? sim.up[i] : upIndex(p, [body.x, body.y, body.z, body.w], toCam)
       const label = labelForValue(d.kind, d.value)
+      // bolão: não há simetria que troque os números; a face de frente é que passa a mostrar o número sorteado
+      const ball = d.kind === 'd100'
       // entre as simetrias possíveis, a que deixa o número mais em pé na tela (topo da tela = −z)
       let fix = new THREE.Quaternion(), best = -Infinity
-      for (const m of alignments(p, up, label)) {
+      for (const m of ball ? [] : alignments(p, up, label)) {
         const q = new THREE.Quaternion(...quatFromM3(m))
         const face = p.readsVertex ? -1 : p.labels.indexOf(label)
         const score = face < 0 ? 0 : -new THREE.Vector3(...numberUp(p, face)).applyQuaternion(q).applyQuaternion(body).z
@@ -287,12 +289,12 @@ export class DiceStage {
       // no palco (um dado só), gira tudo em torno do eixo vertical para o número ficar reto
       const yaw = new THREE.Quaternion()
       if (this.style !== 'tray' && !p.readsVertex) {
-        const dir = new THREE.Vector3(...numberUp(p, p.labels.indexOf(label))).applyQuaternion(fix).applyQuaternion(body)
+        const dir = new THREE.Vector3(...numberUp(p, ball ? up : p.labels.indexOf(label))).applyQuaternion(fix).applyQuaternion(body)
         yaw.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dir.x, -dir.z))
       }
-      const mesh = makeDieMesh(d.kind, getSkin(d.skin ?? opts.skin))
+      const mesh = makeDieMesh(d.kind, getSkin(d.skin ?? opts.skin), ball ? { face: up, label } : undefined)
       const toy = dieToy(mesh)
-      if (toy && !p.readsVertex) aimToy(toy, d.kind, p.labels.indexOf(label))
+      if (toy && !p.readsVertex) aimToy(toy, d.kind, ball ? up : p.labels.indexOf(label))
       mesh.castShadow = true
       mesh.userData.kind = d.kind
       this.scene.add(mesh)
@@ -388,7 +390,8 @@ export class DiceStage {
       const q = d.mesh.quaternion
       const toCam: V3 = [this.camera.position.x - d.mesh.position.x, this.camera.position.y - d.mesh.position.y, this.camera.position.z - d.mesh.position.z]
       const i = upIndex(p, p.readsVertex ? [q.x, q.y, q.z, q.w] : [q.x, q.y, q.z, q.w], p.readsVertex ? [0, 1, 0] : toCam)
-      return labelText(kind, p.labels[i])
+      const labels = (d.mesh.userData.faceLabels as number[] | undefined) ?? p.labels
+      return labelText(kind, labels[i])
     })
   }
 

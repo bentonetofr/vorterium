@@ -1,5 +1,5 @@
 // ────────────────────────────────────────────────────────
-// Geometria dos dados (d4, d6, d8, d10, d%, d12, d20), sem desenho e sem
+// Geometria dos dados (d4, d6, d8, d10, d12, d20 e o d100 "bolão" de 100 faces), sem desenho e sem
 // física: vértices, faces (em sentido anti-horário vistas de fora), número
 // de cada face (no d4, de cada vértice), leitura da face de cima e o grupo
 // de rotações que levam o sólido nele mesmo.
@@ -25,7 +25,7 @@ export interface Polyhedron {
   /** Faces, cada uma uma lista de vértices em sentido anti-horário vista de fora. */
   faces:       number[][]
   normals:     V3[]
-  /** Número de cada face (d4: de cada vértice). d10: 0 a 9; d%: 0 a 9 (dezenas). */
+  /** Número de cada face (d4: de cada vértice). d10: 0 a 9; d100: 1 a 100, embaralhados. */
   labels:      number[]
   /** d4: o resultado é o número do vértice de cima. */
   readsVertex: boolean
@@ -100,6 +100,61 @@ function d10Vertices(): V3[] {
   return [[0, h, 0], [0, -h, 0], ...ring]
 }
 
+// ── O d100 "bolão": 100 faces quase esféricas ───────────
+
+/** Quantas faces tem o d100. */
+export const BALL_FACES = 100
+
+/**
+ * Esfera de 100 faces: 100 pontos bem espalhados (espiral de Fibonacci) viram os pontos de apoio das faces,
+ * e cada face é o plano que encosta na esfera num deles. Os vértices do sólido são os cruzamentos de três
+ * planos vizinhos (o fecho convexo dos pontos diz quais são os vizinhos).
+ */
+function ballSolid(): { vertices: V3[]; faces: number[][] } {
+  const n = BALL_FACES
+  const golden = Math.PI * (3 - Math.sqrt(5))
+  const pts: V3[] = Array.from({ length: n }, (_, i) => {
+    const z = 1 - (2 * i + 1) / n
+    const r = Math.sqrt(1 - z * z)
+    return [r * Math.cos(i * golden), z, r * Math.sin(i * golden)]
+  })
+  // triângulos do fecho convexo: o plano de três pontos que deixa todos os outros do mesmo lado
+  const tris: { ids: [number, number, number]; v: V3 }[] = []
+  for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) for (let c = b + 1; c < n; c++) {
+    let nm = cross(sub(pts[b], pts[a]), sub(pts[c], pts[a]))
+    const l = len(nm)
+    if (l < 1e-9) continue
+    nm = scale(nm, 1 / l)
+    let d = dot(nm, pts[a])
+    if (d < 0) { nm = scale(nm, -1); d = -d }
+    let ok = true
+    for (let k = 0; k < n && ok; k++) if (k !== a && k !== b && k !== c && dot(nm, pts[k]) > d - 1e-9) ok = false
+    if (ok) tris.push({ ids: [a, b, c], v: scale(nm, 1 / d) })
+  }
+  const faces = pts.map((p, i) => {
+    const mine = tris.map((t, idx) => (t.ids.includes(i) ? idx : -1)).filter((idx) => idx >= 0)
+    const c = centroid(mine.map((idx) => tris[idx].v))
+    // uma direção qualquer no plano da face como referência; ordena em sentido anti-horário visto de fora
+    const ref = Math.abs(p[1]) < 0.9 ? [0, 1, 0] as V3 : [1, 0, 0] as V3
+    const u = norm(sub(ref, scale(p, dot(ref, p))))
+    const w = cross(p, u)
+    return mine.sort((x, y) => {
+      const px = sub(tris[x].v, c), py = sub(tris[y].v, c)
+      return Math.atan2(dot(px, w), dot(px, u)) - Math.atan2(dot(py, w), dot(py, u))
+    })
+  })
+  return { vertices: tris.map((t) => t.v), faces }
+}
+
+/** Números 1 a 100 espalhados pelas faces (sempre na mesma ordem: sorteio com semente fixa), como na bola de verdade. */
+function ballLabels(): number[] {
+  const labels = Array.from({ length: BALL_FACES }, (_, i) => i + 1)
+  let a = 0x1d100
+  const rnd = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+  for (let i = labels.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [labels[i], labels[j]] = [labels[j], labels[i]] }
+  return labels
+}
+
 function rawVertices(kind: DieKind): V3[] {
   switch (kind) {
     case 'd4':  return [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]]
@@ -115,8 +170,9 @@ function rawVertices(kind: DieKind): V3[] {
     case 'd20':
       return [-1, 1].flatMap((s) => [-1, 1].flatMap((t): V3[] => [[0, s, t * PHI], [s, t * PHI, 0], [t * PHI, 0, s]]))
     case 'd10':
-    case 'd100':
       return d10Vertices()
+    case 'd100':
+      return ballSolid().vertices
   }
 }
 
@@ -227,11 +283,14 @@ export function polyhedron(kind: DieKind): Polyhedron {
   const raw = rawVertices(kind)
   const r = Math.max(...raw.map(len))
   const vertices = raw.map((v) => scale(v, 1 / r))
-  const faces = hullFaces(vertices)
+  const ball = kind === 'd100'
+  const faces = ball ? ballSolid().faces : hullFaces(vertices)
   const normals = faces.map((f) => faceNormal(vertices, f))
   const readsVertex = kind === 'd4'
-  const labels = readsVertex ? [1, 2, 3, 4] : assignLabels(kind, normals)
-  const p: Polyhedron = { kind, vertices, faces, normals, labels, readsVertex, symmetries: findSymmetries(vertices, faces) }
+  // o bolão não tem simetria que troque os números: quem mostra o resultado é o desenho (dieMesh.ts), face por face
+  const labels = readsVertex ? [1, 2, 3, 4] : ball ? ballLabels() : assignLabels(kind, normals)
+  const symmetries: M3[] = ball ? [[1, 0, 0, 0, 1, 0, 0, 0, 1]] : findSymmetries(vertices, faces)
+  const p: Polyhedron = { kind, vertices, faces, normals, labels, readsVertex, symmetries }
   cache.set(kind, p)
   return p
 }
@@ -241,16 +300,15 @@ export function facesCount(kind: DieKind): number {
   return polyhedron(kind).labels.length
 }
 
-/** O número que vai na face para um valor sorteado. d10: 10 vira 0. d%: 0, 10 ... 90 viram 0 ... 9. */
+/** O número que vai na face para um valor sorteado. d10: 10 vira 0. d100: 1 a 100, como saiu. */
 export function labelForValue(kind: DieKind, value: number): number {
   if (kind === 'd10') return ((value % 10) + 10) % 10
-  if (kind === 'd100') return Math.floor(((value % 100) + 100) % 100 / 10)
+  if (kind === 'd100') return Math.min(BALL_FACES, Math.max(1, Math.round(value)))
   return value
 }
 
 /** Como o número aparece escrito na face. */
-export function labelText(kind: DieKind, label: number): string {
-  if (kind === 'd100') return label === 0 ? '00' : `${label}0`
+export function labelText(_kind: DieKind, label: number): string {
   return String(label)
 }
 
@@ -274,6 +332,14 @@ export function upIndex(p: Polyhedron, q: Quat, toward: V3 = [0, 1, 0]): number 
  * A textura (dieMesh.ts) desenha o número nessa direção.
  */
 export function numberUp(p: Polyhedron, face: number): V3 {
+  if (p.kind === 'd100') {
+    // no bolão todo número fica de pé em direção ao polo de cima (como na foto); nas faces dos polos, para o fundo
+    const n = p.normals[face]
+    for (const ref of [[0, 1, 0], [0, 0, -1]] as V3[]) {
+      const along = sub(ref, scale(n, dot(ref, n)))
+      if (len(along) > 0.2) return norm(along)
+    }
+  }
   const f = p.faces[face]
   const pts = f.map((v) => p.vertices[v])
   const c = centroid(pts)

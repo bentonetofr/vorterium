@@ -16,7 +16,7 @@ import { makeToy } from './toys'
 function atlasSize(kind: DieKind, skin: DiceSkin): number {
   if (!skin.surface) return 1024
   const faces = polyhedron(kind).faces.length
-  return faces >= 20 ? 2048 : faces >= 10 ? 1536 : 1024
+  return faces >= 100 ? 4096 : faces >= 20 ? 2048 : faces >= 10 ? 1536 : 1024
 }
 
 type V2 = [number, number]
@@ -50,10 +50,12 @@ function layout(kind: DieKind): DieLayout {
     const right = cross3(up, n)
     const flat = pts.map((q): V2 => { const d = sub3(q, c); return [dot3(d, right), dot3(d, up)] })
     const extent = Math.max(...flat.map(([x, y]) => Math.max(Math.abs(x), Math.abs(y))))
-    const s = 0.46 / extent
+    // bolão: toda célula é um círculo igual (qualquer face mostra qualquer célula), então a face cabe num círculo
+    const reach = Math.max(...flat.map(([x, y]) => Math.hypot(x, y)))
+    const s = kind === 'd100' ? 0.43 / reach : 0.46 / extent
     // centraliza a forma na célula (o triângulo e a pipa ficam mais altos que largos)
     const ys = flat.map(([, y]) => y)
-    const shiftY = -(Math.max(...ys) + Math.min(...ys)) / 2
+    const shiftY = kind === 'd100' ? 0 : -(Math.max(...ys) + Math.min(...ys)) / 2
     return {
       points: flat.map(([x, y]): V2 => [0.5 + x * s, 0.5 + (y + shiftY) * s]),
       cell: { col: i % cols, row: Math.floor(i / cols) },
@@ -69,8 +71,13 @@ const getLayout = (kind: DieKind) => { let l = layouts.get(kind); if (!l) { l = 
 
 const geometries = new Map<DieKind, THREE.BufferGeometry>()
 
-export function dieGeometry(kind: DieKind): THREE.BufferGeometry {
-  const hit = geometries.get(kind)
+/**
+ * `cellOf` (só no bolão): qual célula do atlas cada face mostra. O bolão não tem simetria que troque os
+ * números, então, para o número sorteado aparecer na face de frente, duas faces trocam de célula. Essa
+ * geometria é só daquele dado (não entra no cache) e quem a cria solta com disposeDieMesh.
+ */
+export function dieGeometry(kind: DieKind, cellOf?: readonly number[]): THREE.BufferGeometry {
+  const hit = cellOf ? undefined : geometries.get(kind)
   if (hit) return hit
   const p = polyhedron(kind)
   const lay = getLayout(kind)
@@ -79,9 +86,10 @@ export function dieGeometry(kind: DieKind): THREE.BufferGeometry {
   p.faces.forEach((f, i) => {
     const n = p.normals[i]
     const L = lay.faces[i]
+    const cellFace = lay.faces[cellOf?.[i] ?? i]
     const cw = 1 / lay.cols, ch = 1 / lay.rows
     // célula i: coluna da esquerda para a direita, linha de cima para baixo (v da textura cresce para cima)
-    const u0 = L.cell.col * cw, v0 = 1 - (L.cell.row + 1) * ch
+    const u0 = cellFace.cell.col * cw, v0 = 1 - (cellFace.cell.row + 1) * ch
     for (let k = 1; k < f.length - 1; k++) {
       for (const j of [0, k, k + 1]) {
         const v = p.vertices[f[j]]
@@ -96,13 +104,14 @@ export function dieGeometry(kind: DieKind): THREE.BufferGeometry {
   g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3))
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
   g.computeBoundingSphere()
-  geometries.set(kind, g)
+  if (cellOf) g.userData.owned = true
+  else geometries.set(kind, g)
   return g
 }
 
 // ── Texturas ────────────────────────────────────────────
 
-const NUMBER_SIZE: Record<DieKind, number> = { d4: 0.2, d6: 0.5, d8: 0.36, d10: 0.32, d100: 0.27, d12: 0.36, d20: 0.3 }
+const NUMBER_SIZE: Record<DieKind, number> = { d4: 0.2, d6: 0.5, d8: 0.36, d10: 0.32, d100: 0.3, d12: 0.36, d20: 0.3 }
 
 /** `alpha` (só na resina): escuro deixa ver através (o corpo), branco é tinta opaca (números e friso). */
 interface Atlas { map: THREE.CanvasTexture; emissive: THREE.CanvasTexture | null; rm: THREE.CanvasTexture; bump: THREE.CanvasTexture | null; alpha: THREE.CanvasTexture | null }
@@ -142,7 +151,10 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
     const L = lay.faces[i]
     const ox = L.cell.col * cw, oy = L.cell.row * ch
     const toPx = ([u, v]: V2): V2 => [ox + u * cw, oy + (1 - v) * ch]
-    const poly = L.points.map(toPx)
+    // bolão: toda célula é o mesmo círculo (um polígono de 24 lados), para qualquer face poder mostrar qualquer célula
+    const poly = kind === 'd100'
+      ? Array.from({ length: 24 }, (_, k): V2 => [ox + cw / 2 + Math.cos((k * Math.PI) / 12) * cw * 0.5, oy + ch / 2 + Math.sin((k * Math.PI) / 12) * ch * 0.5])
+      : L.points.map(toPx)
     const center: V2 = [poly.reduce((s, q) => s + q[0], 0) / poly.length, poly.reduce((s, q) => s + q[1], 0) / poly.length]
     const path = (ctx: CanvasRenderingContext2D, inset: number) => {
       ctx.beginPath()
@@ -231,7 +243,7 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
       const text = labelText(kind, label)
       const big = p.labels.length >= 9 && (text === '6' || text === '9')
       // na pipa do d10 o número fica um pouco para o lado largo
-      const y = kind === 'd10' || kind === 'd100' ? center[1] + radius * 0.12 : center[1]
+      const y = kind === 'd10' ? center[1] + radius * 0.12 : center[1]
       drawNumber(text, center[0], y, 0, fontPx(1), big)
     }
   })
@@ -282,16 +294,37 @@ export function dieMaterial(kind: DieKind, skin: DiceSkin): THREE.MeshPhysicalMa
   return m
 }
 
-/** Um dado pronto para a cena: a geometria, o material do conjunto e, na resina, o brinquedo dentro. */
-export function makeDieMesh(kind: DieKind, skin: DiceSkin): THREE.Mesh {
-  const mesh = new THREE.Mesh(dieGeometry(kind), dieMaterial(kind, skin))
+/** Troca de células do bolão para a face `face` mostrar o número `label` (a face que tinha esse número fica com o dela). */
+export function ballCells(face: number, label: number): { cellOf: number[]; labels: number[] } {
+  const p = polyhedron('d100')
+  const cellOf = p.faces.map((_, i) => i)
+  const labels = [...p.labels]
+  const holder = p.labels.indexOf(label)
+  if (holder >= 0 && holder !== face) {
+    cellOf[face] = holder
+    cellOf[holder] = face
+    labels[face] = label
+    labels[holder] = p.labels[face]
+  }
+  return { cellOf, labels }
+}
+
+/**
+ * Um dado pronto para a cena: a geometria, o material do conjunto e, na resina, o brinquedo dentro.
+ * `show` (só no bolão): a face que vai ficar de frente e o número que ela precisa mostrar.
+ */
+export function makeDieMesh(kind: DieKind, skin: DiceSkin, show?: { face: number; label: number }): THREE.Mesh {
+  const ball = kind === 'd100' && show ? ballCells(show.face, show.label) : null
+  const geometry = dieGeometry(kind, ball?.cellOf)
+  const mesh = new THREE.Mesh(geometry, dieMaterial(kind, skin))
+  if (ball) mesh.userData.faceLabels = ball.labels
   if (skin.resin) {
     // o lado de dentro das faces de trás: dá a espessura do bloco de resina, mas apagado, para os números
     // de trás (espelhados) não brigarem com os da frente. Desenha antes da frente (renderOrder).
     const back = dieMaterial(kind, skin)
     back.side = THREE.BackSide
     back.opacity = 0.32
-    const inside = new THREE.Mesh(dieGeometry(kind), back)
+    const inside = new THREE.Mesh(geometry, back)
     inside.renderOrder = 1
     mesh.renderOrder = 2
     mesh.add(inside)
@@ -308,6 +341,7 @@ export function dieToy(mesh: THREE.Object3D): THREE.Object3D | undefined {
 /** Solta os materiais próprios do dado (o da frente e o das faces de trás; o brinquedo é dividido entre todos). */
 export function disposeDieMesh(mesh: THREE.Mesh): void {
   (mesh.material as THREE.Material).dispose()
+  if (mesh.geometry.userData.owned) mesh.geometry.dispose()
   for (const c of mesh.children) if (c instanceof THREE.Mesh && !c.userData.toy) (c.material as THREE.Material).dispose()
 }
 
