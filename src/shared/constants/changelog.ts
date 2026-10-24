@@ -24,6 +24,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Sons: volume geral e um volume (com botão de mudo e de testar) para cada tipo de som: Dados, Notificações, Chat e Jogos e Vortable. Dá para silenciar tudo de uma vez sem perder os volumes escolhidos.',
       'Aparência: troca do modo claro e escuro (que saiu do botão do canto) e tamanho do texto em quatro níveis.',
       'Acessibilidade: reduzir animações, alto contraste, mais espaço entre letras e linhas, contorno bem visível na seleção pelo teclado e desligar as partículas e o brilho de clique. Há também Restaurar padrões.',
+      'O × dos cartões de rolagem saiu de cima da borda dourada e ficou dentro da moldura, com folga do canto.',
     ],
   },
   {
