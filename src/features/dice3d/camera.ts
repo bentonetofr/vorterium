@@ -19,7 +19,7 @@ export const MAX_CAMERA_SCALE = 10
  * Poucos dados cabem mais apertados; com muitos, a folga cresce, senão sempre sobra algum torto.
  */
 export function floorPerDie(count: number): number {
-  return count <= 12 ? 6 : count <= 30 ? 10 : 13
+  return count <= 2 ? 6 : count <= 12 ? 8 : count <= 30 ? 11 : 13
 }
 
 /** O retângulo do chão que a câmera vê, menos uma margem: ali os dados podem parar. */
@@ -92,14 +92,20 @@ export function boxArena(camera: THREE.PerspectiveCamera, box: ScreenBox): Table
 export const DEFAULT_BOX: ScreenBox = { x: 0.95, top: 0.8, bottom: -0.8 }
 
 /**
- * Afasta a câmera, de pouco em pouco, até a mesa visível ter `floorPerDie` por dado
+ * O menor chão em que um dado rola de verdade: menor que isso, o dado (um d20 tem mais de 2 de largura)
+ * fica entalado entre as paredes e termina preso num canto ou apoiado nelas.
+ */
+export const MIN_ARENA = { halfW: 2.4, halfD: 1.7 } as const
+
+/**
+ * Afasta a câmera, de pouco em pouco, até a mesa visível ter `floorPerDie` por dado e o tamanho mínimo
  * (ou chegar ao limite). Devolve quantas vezes mais longe ficou e a mesa resultante.
  */
 export function fitCamera(camera: THREE.PerspectiveCamera, count: number, box: ScreenBox = DEFAULT_BOX): { scale: number; arena: TableArena } {
   let scale = 1
   placeCamera(camera, scale)
   let arena = boxArena(camera, box)
-  while (count > 1 && scale < MAX_CAMERA_SCALE && 4 * arena.halfW * arena.halfD < count * floorPerDie(count)) {
+  while (scale < MAX_CAMERA_SCALE && (arena.halfW < MIN_ARENA.halfW || arena.halfD < MIN_ARENA.halfD || 4 * arena.halfW * arena.halfD < count * floorPerDie(count))) {
     scale = Math.min(MAX_CAMERA_SCALE, scale * 1.06)
     placeCamera(camera, scale)
     arena = boxArena(camera, box)

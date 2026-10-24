@@ -302,8 +302,8 @@ export class DiceStage {
     let resolve: () => void = () => {}
     const done = new Promise<void>((r) => { resolve = r })
     const th: Throw = {
-      // lançamentos que demoraram (dados empurrados até pararem planos) tocam um pouco mais rápido
-      dice: live, sim, start: performance.now(), speed: opts.speed ?? Math.min(1.8, Math.max(1, sim.steps / (STEP_HZ * 3.6))), sound: opts.sound !== false,
+      // só os lançamentos muito longos (dados empurrados até pararem planos) tocam um pouco mais rápido; o resto, no tempo real
+      dice: live, sim, start: performance.now(), speed: opts.speed ?? Math.min(1.25, Math.max(1, sim.steps / (STEP_HZ * 7))), sound: opts.sound !== false,
       sounds: [...sim.impacts].sort((x, y) => x.step - y.step), nextSound: 0, dx, dz, phase: 'run', settleStart: 0, resolve,
     }
     this.throws.push(th)

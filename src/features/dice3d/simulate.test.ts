@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { MAX_CAMERA_SCALE, fitCamera } from './camera'
+import { MAX_CAMERA_SCALE, MIN_ARENA, fitCamera } from './camera'
 import { DIE_KINDS, polyhedron, upIndex, type Quat } from './polyhedra'
-import { DIE_RADIUS, badDice, restHeight, seededRandom, simulateThrow } from './simulate'
+import { DIE_RADIUS, MIN_ROLL_SECONDS, badDice, restHeight, rollSeconds, seededRandom, simulateThrow } from './simulate'
 
 const arena = { halfW: 7, halfD: 4.5 }
 
@@ -98,7 +98,9 @@ describe('física do lançamento', () => {
     for (const n of [1, 10, 50, 100]) {
       const { scale, arena } = fitCamera(cam, n)
       sizes.push(scale)
-      if (n === 1) expect(scale).toBe(1)
+      if (n === 1) expect(scale).toBeLessThan(2)
+      expect(arena.halfW, `${n} dados, largura`).toBeGreaterThanOrEqual(MIN_ARENA.halfW - 0.01)
+      expect(arena.halfD, `${n} dados, profundidade`).toBeGreaterThanOrEqual(MIN_ARENA.halfD - 0.01)
       if (n > 50) continue
       const kinds = Array.from({ length: n }, (_, i) => (['d20', 'd6', 'd8', 'd12', 'd10', 'd4'] as const)[i % 6])
       let ok = 0
@@ -110,6 +112,31 @@ describe('física do lançamento', () => {
     expect(sizes[2]).toBeLessThan(sizes[3])
     expect(sizes[3]).toBeLessThanOrEqual(MAX_CAMERA_SCALE)
   }, 60000)
+
+  it('um dado só no palco largo tem chão para rolar e não fica preso nas paredes', () => {
+    const cam = new THREE.PerspectiveCamera(30, 704 / 480, 0.1, 200)
+    const { arena } = fitCamera(cam, 1)
+    for (const kind of ['d20', 'd12', 'd10', 'd8'] as const) {
+      for (let seed = 1; seed <= 25; seed++) {
+        const sim = simulateThrow([kind], { arena, style: 'wide', seed: seed * 7919 })
+        expect(badDice([kind], sim), `${kind} semente ${seed}`).toBe(0)
+      }
+    }
+  })
+
+  it('os dados rolam bastante antes de dar o resultado', () => {
+    const cases: [readonly ('d20' | 'd6')[], { halfW: number; halfD: number }, 'stage' | 'wide'][] = [
+      [['d20'], { halfW: 3, halfD: 2.4 }, 'stage'],
+      [['d20'], { halfW: 3, halfD: 1.8 }, 'wide'],
+      [['d6', 'd6'], { halfW: 3, halfD: 1.8 }, 'wide'],
+    ]
+    for (const [kinds, arena, style] of cases) {
+      for (let seed = 1; seed <= 20; seed++) {
+        const sim = simulateThrow(kinds, { arena, style, seed: seed * 104729 })
+        expect(rollSeconds(sim), `${kinds.join('+')} ${style} semente ${seed}`).toBeGreaterThanOrEqual(MIN_ROLL_SECONDS - 0.01)
+      }
+    }
+  })
 
   it('a mesa cabe na tela: nenhum dado termina cortado pela borda', () => {
     const cam = new THREE.PerspectiveCamera(30, 704 / 560, 0.1, 200)

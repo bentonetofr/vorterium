@@ -95,6 +95,21 @@ export function badDice(kinds: readonly DieKind[], sim: SimResult): number {
   return bad.size
 }
 
+/** Segundos em que algum dado ainda se mexe de verdade (mais de 1,2 por segundo): o tempo de rolagem que se vê. */
+export function rollSeconds(sim: SimResult): number {
+  let last = 0
+  for (let s = 1; s < sim.steps; s++) {
+    for (const f of sim.frames) {
+      const o = s * 7, p = o - 7
+      if (Math.hypot(f[o] - f[p], f[o + 1] - f[p + 1], f[o + 2] - f[p + 2]) * STEP_HZ > 1.2) { last = s; break }
+    }
+  }
+  return last / STEP_HZ
+}
+
+/** O dado precisa rolar pelo menos isto antes de mostrar o resultado (um lançamento mais curto é sorteado de novo). */
+export const MIN_ROLL_SECONDS = 2.6
+
 /** Quantas tentativas valem a pena: a conta cresce com o quadrado dos dados. */
 function attemptsFor(count: number): number {
   return count <= 6 ? 14 : count <= 16 ? 10 : count <= 40 ? 5 : count <= 70 ? 3 : 2
@@ -111,18 +126,22 @@ export function simulateThrow(kinds: readonly DieKind[], opts: SimOptions): SimR
   const tries = attemptsFor(kinds.length)
   for (let k = 0; k < tries; k++) {
     const sim = simulateOnce(kinds, { ...opts, seed: (opts.seed + Math.imul(k, 0x9e3779b1)) >>> 0 })
-    const bad = badDice(kinds, sim)
-    if (bad < bestBad) { best = sim; bestBad = bad }
-    if (bad === 0) break
+    // dado torto pesa muito mais que rolagem curta; entre os sem defeito, vale o que rolou o tempo pedido
+    const score = badDice(kinds, sim) * 10 + Math.max(0, MIN_ROLL_SECONDS - rollSeconds(sim))
+    if (score < bestBad) { best = sim; bestBad = score }
+    if (score === 0) break
   }
   return best as SimResult
 }
 
-function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
+export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
   const rnd = seededRandom(opts.seed)
   const { halfW, halfD } = opts.arena
 
-  const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82 * 3.2, 0) })
+  // poucos dados rolam soltos e por mais tempo (gravidade mais leve, quicam e giram mais); com muitos, a
+  // mesa lota, então o lançamento é mais seco para todos pararem planos sem ficarem uns sobre os outros
+  const loose = Math.min(1, Math.max(0, (8 - kinds.length) / 6))
+  const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82 * (3.2 - 0.9 * loose), 0) })
   world.allowSleep = true
   // com muitos dados, a varredura por eixo evita testar todos contra todos
   world.broadphase = kinds.length > 24 ? new CANNON.SAPBroadphase(world) : new CANNON.NaiveBroadphase()
@@ -131,8 +150,8 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
   const floorMat = new CANNON.Material('chao')
   const wallMat = new CANNON.Material('parede')
   const dieMat = new CANNON.Material('dado')
-  world.addContactMaterial(new CANNON.ContactMaterial(floorMat, dieMat, { friction: 0.32, restitution: 0.42 }))
-  world.addContactMaterial(new CANNON.ContactMaterial(wallMat, dieMat, { friction: 0.05, restitution: 0.6 }))
+  world.addContactMaterial(new CANNON.ContactMaterial(floorMat, dieMat, { friction: 0.22 + 0.1 * (1 - loose), restitution: 0.42 + 0.18 * loose }))
+  world.addContactMaterial(new CANNON.ContactMaterial(wallMat, dieMat, { friction: 0.05, restitution: 0.72 }))
   world.addContactMaterial(new CANNON.ContactMaterial(dieMat, dieMat, { friction: 0.12, restitution: 0.45 }))
 
   const plane = (mat: CANNON.Material, pos: CANNON.Vec3, axis: CANNON.Vec3, angle: number) => {
@@ -153,22 +172,22 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
   let step = 0
 
   const bodies = kinds.map((kind, i) => {
-    const body = new CANNON.Body({ mass: 1, material: dieMat, shape: dieShape(kind), allowSleep: true, sleepSpeedLimit: 0.22, sleepTimeLimit: 0.22 })
-    body.linearDamping = 0.14
-    body.angularDamping = 0.22
+    const body = new CANNON.Body({ mass: 1, material: dieMat, shape: dieShape(kind), allowSleep: true, sleepSpeedLimit: 0.16, sleepTimeLimit: 0.22 + 0.1 * loose })
+    body.linearDamping = 0.14 - 0.09 * loose
+    body.angularDamping = 0.22 - 0.14 * loose
     const r = DIE_RADIUS[kind]
     if (opts.style !== 'tray') {
       // um dado jogado de perto, de baixo para o fundo, batendo nas paredes da moldura
       if (kinds.length <= 3) {
-        body.position.set((rnd() - 0.5) * halfW * 0.6, 2.2 + rnd() * 1.2, halfD * 0.55)
-        body.velocity.set((rnd() - 0.5) * 9, 2 + rnd() * 2, -(9 + rnd() * 5))
+        body.position.set((rnd() - 0.5) * halfW * 0.6, 2.8 + rnd() * 1.2, halfD * 0.55)
+        body.velocity.set((rnd() - 0.5) * 16, 6 + rnd() * 4, -(13 + rnd() * 6))
       } else {
         // muitos dados: saem espalhados em grade, do fundo para a frente, para não nascerem uns dentro dos outros
         const cols = Math.ceil(Math.sqrt((kinds.length * halfW) / halfD))
         const rows = Math.ceil(kinds.length / cols)
         const col = i % cols, row = Math.floor(i / cols)
         body.position.set(((col + 0.5) / cols - 0.5) * halfW * 1.7 + (rnd() - 0.5) * 0.3, 2.2 + rnd() * 1.2 + row * 0.5, halfD * (rows > 1 ? 0.85 - (0.6 * row) / (rows - 1) : 0.55))
-        body.velocity.set((rnd() - 0.5) * 6, 1 + rnd() * 2, -(3 + rnd() * 4))
+        body.velocity.set((rnd() - 0.5) * 9, 2 + rnd() * 3, -(5 + rnd() * 5))
       }
     } else {
       // vários dados jogados de um lado da bandeja, como uma mão soltando
@@ -177,7 +196,7 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
       body.velocity.set(-(11 + rnd() * 6), 1 + rnd() * 2, (rnd() - 0.5) * 7)
     }
     body.quaternion.setFromEuler(rnd() * Math.PI * 2, rnd() * Math.PI * 2, rnd() * Math.PI * 2)
-    body.angularVelocity.set((rnd() - 0.5) * 40, (rnd() - 0.5) * 40, (rnd() - 0.5) * 40)
+    body.angularVelocity.set((rnd() - 0.5) * 70, (rnd() - 0.5) * 70, (rnd() - 0.5) * 70)
     body.addEventListener('collide', (e: { body: CANNON.Body; contact: CANNON.ContactEquation }) => {
       const v = Math.abs(e.contact.getImpactVelocityAlongNormal())
       if (v < 1.2 || step - lastSound[i] < 4) return
@@ -212,7 +231,7 @@ function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimResult {
     record()
     step++
     world.step(1 / STEP_HZ)
-    if (step > STEP_HZ * 0.6 && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) {
+    if (step > STEP_HZ * 1.2 && bodies.every((b) => b.sleepState === CANNON.Body.SLEEPING)) {
       const wrong = bodies.flatMap((b, i) => (crooked(b, i) ? [b] : []))
       // quem parou torto leva um empurrãozinho para tombar numa face (os vizinhos acordam se for preciso)
       if (wrong.length === 0 || nudges >= MAX_NUDGES || step > lastStep - 40) { settled = true; break }
