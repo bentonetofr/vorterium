@@ -1188,7 +1188,14 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
 .dsh-sheet .dsh-num.dsh-castnum__input { text-align: center; }
 .dsh-sheet .dsh-num.dsh-loadtile__input { text-align: left; }
 .dsh-sheet .dsh-num.dsh-hitdice__total:focus, .dsh-sheet .dsh-num.dsh-castnum__input:focus, .dsh-sheet .dsh-num.dsh-loadtile__input:focus { outline: none; border-bottom-color: var(--dsh-accent); color: var(--dsh-accent); }
-.dsh-hitdice__add { max-width: 260px; }
+/* no manual, os números parecem texto comum: o traço só aparece ao passar o mouse ou clicar */
+.dsh-hitdice__dieinput {
+  width: 2.6ch; padding: 0; background: transparent; border: 0; border-bottom: 1px solid transparent; outline: none;
+  cursor: text; transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.dsh-sheet .dsh-num.dsh-hitdice__total, .dsh-sheet .dsh-num.dsh-castnum__input, .dsh-sheet .dsh-num.dsh-loadtile__input { border-bottom-color: transparent; }
+.dsh-hitdice__dieinput:hover, .dsh-sheet .dsh-num.dsh-hitdice__total:hover, .dsh-sheet .dsh-num.dsh-castnum__input:hover, .dsh-sheet .dsh-num.dsh-loadtile__input:hover { border-bottom-color: var(--border-bright); }
+.dsh-hitdice__dieinput:focus { border-bottom-color: var(--dsh-accent); color: var(--dsh-accent); }
 
 /* o painel de edição: campos em grade e o Concluir */
 .dsh-editbox {

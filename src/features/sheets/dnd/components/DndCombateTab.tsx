@@ -160,7 +160,19 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     else delete next[String(die)]
     return { ...f, manual_hit_dice: next }
   })
-  const missingDice = [6, 8, 10, 12].filter((d) => !derived.hitDice[d])
+  /** Troca o tipo de um dado de vida (clicando no "d10" e escrevendo outro): os dados dele passam para o novo tipo. */
+  const setDieType = (from: number, text: string, input: HTMLInputElement) => {
+    const to = Number(text.replace(/[^0-9]/g, ''))
+    if (![4, 6, 8, 10, 12, 20].includes(to)) { input.value = `d${from}`; return }
+    if (to === from) return
+    update((f) => {
+      const next = { ...f.manual_hit_dice }
+      const moved = next[String(from)] ?? 0
+      delete next[String(from)]
+      next[String(to)] = Math.min(99, (next[String(to)] ?? 0) + moved)
+      return { ...f, manual_hit_dice: next }
+    })
+  }
   const diePool = Object.entries(derived.hitDice).map(([die, total]) => ({ die: Number(die), total })).sort((a, b) => b.die - a.die)
 
   return (
@@ -211,7 +223,11 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
               const left = hitDiceAvailable(derived.hitDice, form.hit_dice_used, die)
               return (
                 <div key={die} className="dsh-hitdice__row">
-                  <span className="dsh-hitdice__die">d{die}</span>
+                  {manualDice && !readOnly
+                    ? <input key={die} type="text" className="dsh-hitdice__die dsh-hitdice__dieinput" defaultValue={`d${die}`} maxLength={3} aria-label={`Tipo do dado de vida d${die}`}
+                        title="Clique para trocar o dado (d6, d8, d10, d12)" onFocus={(e) => e.target.select()}
+                        onBlur={(e) => setDieType(die, e.target.value, e.target)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur() } }} />
+                    : <span className="dsh-hitdice__die">d{die}</span>}
                   <span className="dsh-hitdice__count"><strong><Bump value={left} /></strong>/
                     {manualDice && !readOnly
                       ? <NumberField value={total} min={0} max={99} label={`Total de dados d${die} (0 tira)`} onChange={(n) => setDieTotal(die, n)} className="dsh-hitdice__total" />
@@ -222,11 +238,6 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
                 </div>
               )
             })}
-            {manualDice && !readOnly && missingDice.length > 0 && (
-              <div className="dsh-field dsh-field--tile dsh-hitdice__add"><span className="dsh-label">Pôr outro dado</span>
-                <Select options={[{ value: '', label: 'Escolher o dado' }, ...missingDice.map((d) => ({ value: String(d), label: `d${d}` }))]} value=""
-                  onChange={(v) => { if (v) setDieTotal(Number(v), 1) }} aria-label="Pôr outro tipo de dado de vida" /></div>
-            )}
             {lastRoll && <StatusPill key={lastRoll} tone="good">{lastRoll}</StatusPill>}
           </div>
         )}
