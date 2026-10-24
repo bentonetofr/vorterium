@@ -1,3 +1,4 @@
+import { soundVolume } from '../settings/settingsStore'
 // ────────────────────────────────────────────────────────
 // Som dos dados gerado na hora (Web Audio), sem arquivos. Um dado batendo numa
 // mesa de madeira tem duas partes:
@@ -116,9 +117,11 @@ function ring(a: AudioContext, out: AudioNode, t: number, p: Partial_, volume: n
 
 /** Uma batida: força de 0 a 1; `withDie` = dado com dado (mais estalo, menos madeira). */
 export function playDiceHit(strength: number, withDie: boolean): void {
-  if (muted) return
+  const level = soundVolume('dice')
+  if (muted || level === 0) return
   const a = audio()
   if (!a || !bus) return
+  bus.gain.value = 0.9 * level
   const now = a.currentTime
   // muitas batidas no mesmo instante viram só um chiado: descarta as mais fracas
   while (recent.length && now - recent[0] > 0.05) recent.shift()
@@ -155,9 +158,11 @@ export function playDiceRattle(): void {
 
 /** Acorde curto para o crítico (dourado, subindo) ou a falha (grave, caindo). */
 export function playDiceFlourish(kind: 'crit' | 'fumble'): void {
-  if (muted) return
+  const level = soundVolume('dice')
+  if (muted || level === 0) return
   const a = audio()
   if (!a || !bus) return
+  bus.gain.value = 0.9 * level
   const t = a.currentTime
   const notes = kind === 'crit' ? [523.25, 659.25, 783.99, 1046.5] : [220, 174.61, 130.81]
   notes.forEach((f, i) => {

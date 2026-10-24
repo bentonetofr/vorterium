@@ -25,7 +25,7 @@ export function ClickEffects() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
     function burst(x: number, y: number) {
-      if (reduceMotion.matches) return
+      if (reduceMotion.matches || root.hasAttribute('data-reduce-motion') || root.hasAttribute('data-no-effects')) return
       const fx = document.createElement('span')
       fx.className = 'click-fx'
       fx.style.left = `${x}px`

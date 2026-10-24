@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4',
+    date:    '2026-10-24',
+    title:   'Configurações do site',
+    items: [
+      'A engrenagem no lugar do botão de modo claro e escuro abre as Configurações do site, com três abas: Sons, Aparência e Acessibilidade. Tudo vale na hora e fica guardado no seu navegador, também na tela de entrada.',
+      'Sons: volume geral e um volume (com botão de mudo e de testar) para cada tipo de som: Dados, Notificações, Chat e Jogos e Vortable. Dá para silenciar tudo de uma vez sem perder os volumes escolhidos.',
+      'Aparência: troca do modo claro e escuro (que saiu do botão do canto) e tamanho do texto em quatro níveis.',
+      'Acessibilidade: reduzir animações, alto contraste, mais espaço entre letras e linhas, contorno bem visível na seleção pelo teclado e desligar as partículas e o brilho de clique. Há também Restaurar padrões.',
+    ],
+  },
+  {
     version: '2.3',
     date:    '2026-10-24',
     title:   'Ficha de D&D: tudo pode ser manual',

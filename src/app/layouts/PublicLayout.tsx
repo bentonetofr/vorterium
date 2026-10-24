@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { MagicParticles } from '../../shared/components/MagicParticles'
-import { ThemeToggle }    from '../../shared/components/ThemeToggle'
+import { SettingsButton } from '../../features/settings/SettingsButton'
 import './PublicLayout.css'
 
 export function PublicLayout() {
@@ -14,7 +14,7 @@ export function PublicLayout() {
       <MagicParticles />
 
       <div className="public-layout__theme-toggle">
-        <ThemeToggle />
+        <SettingsButton />
       </div>
 
       <main className={`public-layout__main${isLanding ? ' public-layout__main--landing' : ''}`}>

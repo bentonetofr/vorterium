@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 // ────────────────────────────────────────────────────────
 // Sons das criaturas do Vortable, sintetizados na hora (Web Audio): nada de arquivo de áudio.
 // Cada som tem um pouco de aleatoriedade, então nunca soa exatamente igual duas vezes.
@@ -332,6 +333,9 @@ function startSound(a: BaseAudioContext, def: SoundDef, dest: AudioNode, wetDest
 
 /** Toca um som já (volume 0–1; distância: perto, longe ou muito longe). */
 export function playCreatureSound(id: string, volume = 0.8, distance: SoundDistance = 0): void {
+  const level = soundVolume('game')
+  if (level === 0) return
+  volume *= level
   const def = BY_ID.get(id)
   const a = audio()
   if (!def || !a || !master || !reverb || !noiseBuf) return

@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 // ────────────────────────────────────────────────────────
 // Os sons dos joguinhos (o Livro Bloqueado e a Torre do Observatório) —
 // gerados na hora com Web Audio (sem arquivo, sem download), no mesmo
@@ -26,7 +27,7 @@ let muted = (() => { try { return localStorage.getItem(KEY) === 'off' } catch { 
 const listeners = new Set<(on: boolean) => void>()
 
 function audio(): AudioContext | null {
-  if (muted) return null
+  if (muted || soundVolume('game') === 0) return null
   try {
     const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!Ctor) return null
@@ -36,6 +37,7 @@ function audio(): AudioContext | null {
       master.gain.value = VOLUME
       master.connect(ctx.destination)
     }
+    if (master) master.gain.value = VOLUME * soundVolume('game')
     if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
     return ctx
   } catch {

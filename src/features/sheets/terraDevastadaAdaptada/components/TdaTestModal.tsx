@@ -1,3 +1,4 @@
+import { soundVolume } from '../../../settings/settingsStore'
 import { useState } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { rollEvensTest } from '../../../dice/services/diceService'
@@ -352,8 +353,10 @@ function truncate(text: string, max: number): string {
 
 export function playRollSound() {
   try {
+    const gain = soundVolume('dice')
+    if (gain === 0) return
     const audio = new Audio('/dice-roll.mp3')
-    audio.volume = 0.6
+    audio.volume = 0.6 * gain
     void audio.play().catch(() => { /* autoplay bloqueado — o som é só um extra */ })
   } catch {
     /* sem Audio API */

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
-import { ThemeToggle } from '../../shared/components/ThemeToggle'
+import { SettingsButton } from '../../features/settings/SettingsButton'
 import { AppLogo }     from '../../shared/components/AppLogo'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
@@ -208,7 +208,7 @@ function PrivateLayoutContent() {
 
         <div className="sidebar__footer">
           <div className="sidebar__footer-actions">
-            <ThemeToggle />
+            <SettingsButton />
             <button className="btn btn-ghost sidebar__signout" onClick={handleSignOut}>
               Sair
             </button>
@@ -228,7 +228,7 @@ function PrivateLayoutContent() {
         <div className="topbar__row">
           <AppLogo size="sm" showText />
           <div className="topbar__actions">
-            <ThemeToggle />
+            <SettingsButton />
             <button
               className="topbar__btn"
               onClick={handleSignOut}

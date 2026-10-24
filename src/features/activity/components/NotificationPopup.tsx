@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
 import {
@@ -23,8 +24,10 @@ const NOTIFY_SOUND_URL = '/notify.mp3'
 
 function playNotifySound() {
   try {
+    const gain = soundVolume('notify')
+    if (gain === 0) return
     const audio = new Audio(NOTIFY_SOUND_URL)
-    audio.volume = 0.6
+    audio.volume = 0.6 * gain
     void audio.play().catch(() => {
       // autoplay bloqueado pelo navegador ou outro erro — nunca deve
       // impedir o pop-up de aparecer, o som é só um extra

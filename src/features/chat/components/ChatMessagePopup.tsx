@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/AuthProvider'
@@ -31,8 +32,10 @@ const NOTIFY_SOUND_URL = '/notify.mp3'
 
 function playNotifySound() {
   try {
+    const gain = soundVolume('chat')
+    if (gain === 0) return
     const audio = new Audio(NOTIFY_SOUND_URL)
-    audio.volume = 0.6
+    audio.volume = 0.6 * gain
     void audio.play().catch(() => { /* autoplay bloqueado — o aviso aparece mesmo assim */ })
   } catch { /* sem Audio API */ }
 }

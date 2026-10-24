@@ -10,7 +10,9 @@ import { useRef, useState } from 'react'
 const LEAVE_MS = 280
 
 export function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  if (typeof window === 'undefined') return false
+  // a opção "Reduzir animações" das Configurações do site vale tanto quanto o pedido do sistema
+  return document.documentElement.hasAttribute('data-reduce-motion') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
 /**

@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 // ────────────────────────────────────────────────────────
 // Sons dos lobos do crítico — gerados na hora com Web Audio (sem arquivo,
 // sem download). Os tempos batem com as animações de 2,5 s (CritWolf.css):
@@ -27,7 +28,7 @@ function audio(): AudioContext | null {
 
 function output(ac: AudioContext): GainNode {
   const master = ac.createGain()
-  master.gain.value = MASTER_VOLUME
+  master.gain.value = MASTER_VOLUME * soundVolume('dice')
   master.connect(ac.destination)
   return master
 }

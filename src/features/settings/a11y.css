@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════════════
+   Opções de acessibilidade das Configurações.
+   O settingsStore marca o <html> com data-reduce-motion, data-high-contrast,
+   data-roomy-text, data-strong-focus e data-no-effects; o tamanho do texto
+   vai direto no font-size do <html> (o site mede texto em rem).
+   ═══════════════════════════════════════════════════════════ */
+
+/* Reduzir animações: tudo acontece de uma vez, sem mover. */
+[data-reduce-motion="on"] *,
+[data-reduce-motion="on"] *::before,
+[data-reduce-motion="on"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Sem partículas e sem anel de clique. */
+[data-no-effects="on"] .magic-particles,
+[data-no-effects="on"] .click-fx-layer { display: none !important; }
+
+/* Alto contraste: texto no máximo e bordas que aparecem. */
+:root[data-high-contrast="on"] {
+  --text-primary: #ffffff;
+  --text-secondary: #f4ead9;
+  --text-muted: #d9cbb6;
+  --border-dim: rgba(255, 224, 160, 0.45);
+  --border-base: #d8bf94;
+  --border-bright: #fff0cf;
+  --accent-bright: #ffd48a;
+}
+:root[data-theme="light"][data-high-contrast="on"] {
+  --text-primary: #000000;
+  --text-secondary: #1c1204;
+  --text-muted: #3a2c14;
+  --border-dim: rgba(60, 40, 5, 0.55);
+  --border-base: rgba(60, 40, 5, 0.8);
+  --border-bright: #2a1c04;
+  --accent: #6a4500;
+  --accent-bright: #7a5000;
+}
+
+/* Mais espaço no texto (medidas das recomendações de legibilidade WCAG 1.4.12). */
+[data-roomy-text="on"] body {
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  word-spacing: 0.12em;
+}
+[data-roomy-text="on"] p { margin-bottom: 0.4em; }
+
+/* Seleção do teclado bem visível. */
+[data-strong-focus="on"] :focus-visible {
+  outline: 3px solid #ffd54a !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.55) !important;
+}

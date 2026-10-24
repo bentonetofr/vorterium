@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/AuthProvider'
@@ -26,8 +27,10 @@ const ROLL_SOUND_URL = '/dice-roll.mp3'
 
 function playRollSound() {
   try {
+    const gain = soundVolume('dice')
+    if (gain === 0) return
     const audio = new Audio(ROLL_SOUND_URL)
-    audio.volume = 0.6
+    audio.volume = 0.6 * gain
     void audio.play().catch(() => {
       // autoplay bloqueado pelo navegador ou outro erro — nunca deve
       // impedir a rolagem em si, o som é só um extra

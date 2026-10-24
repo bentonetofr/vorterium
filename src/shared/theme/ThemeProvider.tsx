@@ -12,6 +12,7 @@ const STORAGE_KEY = 'campaign-lab-theme'
 interface ThemeContextValue {
   theme: Theme
   toggleTheme: () => void
+  setTheme: (theme: Theme) => void
 }
 
 // ────────────────────────────────────────────────────────
@@ -21,6 +22,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'dark',
   toggleTheme: () => {},
+  setTheme: () => {},
 })
 
 // ────────────────────────────────────────────────────────
@@ -92,7 +94,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   )

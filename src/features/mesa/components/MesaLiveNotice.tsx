@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -46,8 +47,10 @@ function saveDismissed(set: Set<string>) {
 
 function playNotifySound() {
   try {
+    const gain = soundVolume('notify')
+    if (gain === 0) return
     const audio = new Audio('/notify.mp3')
-    audio.volume = 0.6
+    audio.volume = 0.6 * gain
     void audio.play().catch(() => {})
   } catch {
     // sem Audio API

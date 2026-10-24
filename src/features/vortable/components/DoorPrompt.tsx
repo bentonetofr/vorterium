@@ -1,16 +1,19 @@
+import { soundVolume } from '../../settings/settingsStore'
 import { useEffect, useRef } from 'react'
 import type { DoorRequest } from '../net/VortableNet'
 import './DoorPrompt.css'
 
 /** Um toque curto avisando o mestre (o navegador pode não deixar tocar antes do primeiro clique; aí fica só o aviso na tela). */
 function chime() {
+  const level = soundVolume('game')
+  if (level === 0) return
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!Ctx) return
     const ctx = new Ctx()
     const gain = ctx.createGain()
     gain.gain.setValueAtTime(0.0001, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.12 * level, ctx.currentTime + 0.02)
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5)
     gain.connect(ctx.destination)
     for (const [i, f] of [660, 880].entries()) {

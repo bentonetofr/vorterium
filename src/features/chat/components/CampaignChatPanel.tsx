@@ -1,3 +1,4 @@
+import { soundVolume } from '../../settings/settingsStore'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EmojiPickerButton } from '../../../shared/components/EmojiPicker'
 import {
@@ -56,8 +57,10 @@ const NEW_MESSAGE_SOUND_URL = '/win-notify.mp3'
 
 function playNewMessageSound() {
   try {
+    const gain = soundVolume('chat')
+    if (gain === 0) return
     const audio = new Audio(NEW_MESSAGE_SOUND_URL)
-    audio.volume = 0.6
+    audio.volume = 0.6 * gain
     void audio.play().catch(() => {
       // autoplay bloqueado pelo navegador ou outro erro — nunca deve
       // quebrar o chat, o som é só um extra

@@ -3,6 +3,8 @@ import { AuthProvider } from '../../features/auth/AuthProvider'
 import { AppRouter } from '../router'
 import { ClickEffects } from '../../shared/components/ClickEffects'
 import { DialogHost } from '../../shared/components/dialogs'
+import '../../features/settings/settingsStore' // aplica as configurações guardadas antes da primeira tela
+import '../../features/settings/a11y.css'
 
 /**
  * Composição de todos os providers globais da aplicação.
