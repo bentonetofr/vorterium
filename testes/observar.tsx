@@ -3,7 +3,7 @@
 // build): /testes/observar.html. Sorteios falsos, sem banco nem login: abre o
 // painel de teste de "outro jogador" e a bandeja com vários jogadores juntos.
 // ────────────────────────────────────────────────────────
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../src/index.css'
 import '../src/features/sheets/dnd/components/DndSheet.css'
@@ -11,7 +11,7 @@ import type { DiceRoll, DiceRollContext } from '../src/shared/types'
 import { parseDiceFormula, rollParsedFormula } from '../src/features/dice/services/diceService'
 import { DICE_SKINS } from '../src/features/dice3d/skins'
 import { DndWatchPanel } from '../src/features/sheets/dnd/rolls/DndWatchPanel'
-import { DndWatchTray } from '../src/features/sheets/dnd/rolls/DndWatchTray'
+import { DndWatchFreePanel } from '../src/features/sheets/dnd/rolls/DndWatchFreePanel'
 
 let n = 0
 function fake(formula: string, label: string, context: DiceRollContext, skin: string, user: string): DiceRoll {
@@ -33,7 +33,6 @@ const PEOPLE = [
 function Page() {
   const [panel, setPanel] = useState<DiceRoll | null>(null)
   const [pending, setPending] = useState<DiceRoll[]>([])
-  const take = useCallback((id: string) => setPending((l) => l.filter((r) => r.id !== id)), [])
   const who = new Map(PEOPLE.map((p) => [p.id, p]))
 
   const check = (hidden = false) => {
@@ -51,7 +50,7 @@ function Page() {
       <button onClick={() => check(true)}>Teste com CD oculta</button>
       <button onClick={damage}>Dano de 3 jogadores juntos</button>
       {panel && <DndWatchPanel key={panel.id} roll={panel} player={who.get(panel.user_id)?.player ?? '?'} hurry={false} onDone={() => setPanel(null)} />}
-      <DndWatchTray pending={pending} take={take} nameOf={(r) => who.get(r.user_id)?.character ?? '?'} />
+      {pending[0] && <DndWatchFreePanel key={pending[0].id} roll={pending[0]} player={who.get(pending[0].user_id)?.player ?? '?'} hurry={pending.length > 1} onDone={() => setPending((l) => l.slice(1))} />}
     </div>
   )
 }

@@ -2,17 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DiceRoll } from '../../../../shared/types'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { stageDiceFor } from './diceKinds'
-import { freeLabel, readFree, resultsText } from './freeRoll'
+import { freeLabel, isFreeRoll, readFree, resultsText } from './freeRoll'
 import { useDiceStage } from './useDiceStage'
 import '../components/DndSheet.css'
 import '../components/DndMotion.css'
 import './DndRolls.css'
 
 // ────────────────────────────────────────────────────────
-// A rolagem livre de outra pessoa, vista por quem não rolou: o mesmo painel
-// de quem rola (moldura azul, etiqueta de quem está rolando, dados rolando
-// sozinhos, tiles e total). Some sozinho depois do resultado, como o painel de
-// teste dos outros.
+// O cartão de uma rolagem que não é teste (dano, dado de vida, rolagem livre):
+// a mesma moldura do painel de teste, com o palco 3D, os dados rolando, os
+// tiles e o total. Toda rolagem do D&D acontece num cartão destes ou no painel
+// de teste; nenhuma cai solta pela tela.
+//  - Vista por quem não rolou: moldura azul, etiqueta de quem está rolando, e
+//    some sozinho depois do resultado.
+//  - Da própria pessoa (`mine`): moldura dourada, fica até fechar no × ou Esc.
 // ────────────────────────────────────────────────────────
 
 interface Props {
@@ -21,13 +24,15 @@ interface Props {
   /** Tem outra rolagem esperando: não demora no resultado. */
   hurry:  boolean
   onDone: () => void
+  /** A rolagem é de quem está vendo (fica na tela até fechar). */
+  mine?:  boolean
 }
 
 const HOLD_MS = 3600
 const HOLD_FAST_MS = 1600
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 
-export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
+export function DndWatchFreePanel({ roll, player, hurry, onDone, mine = false }: Props) {
   const reading = useMemo(() => readFree(roll.roll_breakdown ?? [], roll.result), [roll])
   const skin = roll.dice_skin ?? DEFAULT_SKIN
   const stageRef = useRef<HTMLDivElement>(null)
@@ -41,6 +46,15 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
   hurryRef.current = hurry
   const who = roll.roll_context?.character || player
   const formula = roll.formula ? freeLabel(roll.formula) : ''
+  // a rolagem livre leva esse nome; dano, dado de vida e as outras levam o rótulo da ficha
+  const title = isFreeRoll(roll) ? 'Rolagem livre' : roll.roll_label || 'Rolagem'
+
+  useEffect(() => {
+    if (!mine) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onDoneRef.current() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [mine])
 
   useEffect(() => {
     if (!stage && !simple) return   // espera o motor 3D ligar
@@ -55,6 +69,7 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
     void play.then(() => {
       if (!alive) return
       setPhase('done')
+      if (mine) return   // a da própria pessoa fica até ela fechar
       const hold = hurryRef.current ? HOLD_FAST_MS : HOLD_MS
       timers.push(window.setTimeout(() => { if (alive) setLeaving(true) }, hold))
       timers.push(window.setTimeout(() => { if (alive) onDoneRef.current() }, hold + 360))
@@ -66,19 +81,22 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone }: Props) {
   const done = phase === 'done'
   return (
     <div className="dwatch">
-      <div className={`dsh-sheet dcp dcp--free dcp--watch${leaving ? ' is-leaving' : ''}`} role="status" aria-live="polite" aria-label={`${player} está fazendo uma rolagem livre`}>
+      <div className={`dsh-sheet dcp dcp--free${mine ? ' dcp--mine' : ' dcp--watch'}${leaving ? ' is-leaving' : ''}`} role="status" aria-live="polite"
+        aria-label={mine ? `${title}: rolando` : `${player} está rolando: ${title}`}>
         <button type="button" className="modal-close dcp__close" onClick={() => onDoneRef.current()} aria-label="Fechar">×</button>
-        <div className="dcp__watchtag" title={roll.roll_context?.character ? `${player} rolando com ${roll.roll_context.character}` : undefined}>
-          <span aria-hidden="true">◉</span> {player} {done ? 'rolou' : 'está rolando'}{roll.is_private && <span title="Rolagem privada"> 🔒</span>}
-        </div>
+        {!mine && (
+          <div className="dcp__watchtag" title={roll.roll_context?.character ? `${player} rolando com ${roll.roll_context.character}` : undefined}>
+            <span aria-hidden="true">◉</span> {player} {done ? 'rolou' : 'está rolando'}{roll.is_private && <span title="Rolagem privada"> 🔒</span>}
+          </div>
+        )}
 
         <div className="dcp__frame">
-          <h3 className="dcp__title">Rolagem livre<span>{formula}{who !== player ? ` · ${who}` : ''}</span></h3>
+          <h3 className="dcp__title">{title}<span>{formula}{!mine && who !== player ? ` · ${who}` : ''}</span></h3>
 
           <div className="dcp__stage">
             <div ref={stageRef} className="dcp__canvas" data-insets="68,64" aria-hidden="true" />
             {simple && <span className="dcp__simple" aria-hidden="true">{spin ?? formula.split(' ')[0]}</span>}
-            {!done && <span className="dcp__hint">{who} está rolando…</span>}
+            {!done && <span className="dcp__hint">{mine ? 'Rolando…' : `${who} está rolando…`}</span>}
           </div>
 
           {done && (

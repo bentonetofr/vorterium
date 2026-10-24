@@ -14,7 +14,7 @@ import { DICE_SKINS } from '../src/features/dice3d/skins'
 import { computeDerived } from '../src/features/sheets/dnd/rules/derive'
 import { attackCheck, deathCheck, initiativeCheck, saveCheck, skillCheck, type CheckSpec } from '../src/features/sheets/dnd/rolls/checkModel'
 import { DndCheckPanel } from '../src/features/sheets/dnd/rolls/DndCheckPanel'
-import { DndDiceTray, type TrayJob } from '../src/features/sheets/dnd/rolls/DndDiceTray'
+import { DndWatchFreePanel } from '../src/features/sheets/dnd/rolls/DndWatchFreePanel'
 
 const derived = computeDerived({
   abilities: { strength: 16, dexterity: 17, constitution: 12, intelligence: 10, wisdom: 13, charisma: 8 },
@@ -47,11 +47,11 @@ function App() {
   const [spec, setSpec] = useState<CheckSpec | null>(null)
   const [skin, setSkin] = useState('madeira')
   const [inspired, setInspired] = useState(true)
-  const [tray, setTray] = useState<TrayJob | null>(null)
+  const [card, setCard] = useState<DiceRoll | null>(null)
   const [log, setLog] = useState('')
   const damage = (formula: string, label: string) => {
     const rolled = rollParsedFormula(parseDiceFormula(formula))
-    setTray({ id: ++n, label, roll: fakeRoll(rolled, { label }), skin })
+    setCard({ ...fakeRoll(rolled, { label }), id: `r${++n}`, dice_skin: skin })
   }
   return (
     <div className="dsh-sheet" style={{ minHeight: '100vh', padding: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -80,7 +80,7 @@ function App() {
           onClose={() => setSpec(null)}
         />
       )}
-      <DndDiceTray job={tray} onDone={() => setTray(null)} />
+      {card && <DndWatchFreePanel key={card.id} roll={card} player="Lia Sombra" hurry={false} mine onDone={() => setCard(null)} />}
     </div>
   )
 }

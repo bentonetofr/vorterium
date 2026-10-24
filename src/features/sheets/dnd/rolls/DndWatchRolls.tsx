@@ -8,24 +8,21 @@ import { getCampaignMembers } from '../../../members/services/memberService'
 import { DND_FEATURE } from '../constants/dnd'
 import { DndWatchFreePanel } from './DndWatchFreePanel'
 import { DndWatchPanel } from './DndWatchPanel'
-import { DndWatchTray } from './DndWatchTray'
-import { isFreeRoll } from './freeRoll'
 import { useRollBusy } from './rollActivity'
 import { isCheckRoll } from './watchModel'
 
 // ────────────────────────────────────────────────────────
 // As rolagens dos outros jogadores, vistas por quem não rolou, nas campanhas
-// de D&D. Testes (perícia, salvaguarda, ataque...) e a rolagem livre da janela
-// de dados abrem o mesmo painel de quem rola, um de cada vez, com a etiqueta de quem rolou. Dano e os
-// outros dados rolam na bandeja de baixo, todos ao mesmo tempo, com o
-// resultado de cada um. Rolagem privada só chega a quem pode ver (RLS).
+// de D&D. Testes (perícia, salvaguarda, ataque...) abrem o painel de teste; a
+// rolagem livre, o dano, o dado de vida e os outros abrem o cartão de rolagem.
+// Um de cada vez, com a etiqueta de quem rolou; nada cai solto pela tela.
+// Rolagem privada só chega a quem pode ver (RLS).
 // ────────────────────────────────────────────────────────
 
 const MAX_WAITING = 8
 
 function WatchInner({ campaignId, userId }: { campaignId: string; userId: string }) {
   const [checks, setChecks] = useState<DiceRoll[]>([])
-  const [drops, setDrops] = useState<DiceRoll[]>([])
   const names = useRef(new Map<string, string>())
   const busy = useRollBusy()
 
@@ -40,22 +37,18 @@ function WatchInner({ campaignId, userId }: { campaignId: string; userId: string
   useEffect(() => subscribeToRolls(campaignId, (row) => {
     if (row.user_id === userId) return
     const add = (list: DiceRoll[]) => (list.some((r) => r.id === row.id) ? list : [...list, row].slice(-MAX_WAITING))
-    if (isCheckRoll(row) || isFreeRoll(row)) setChecks(add)
-    else setDrops(add)
+    setChecks(add)
   }), [campaignId, userId])
 
   const playerOf = useCallback((r: DiceRoll) => names.current.get(r.user_id) ?? 'Alguém', [])
-  const nameOf = useCallback((r: DiceRoll) => r.roll_context?.character || playerOf(r), [playerOf])
-  const takeDrop = useCallback((id: string) => setDrops((l) => l.filter((r) => r.id !== id)), [])
   const nextCheck = useCallback(() => setChecks((l) => l.slice(1)), [])
 
   const current = !busy ? checks[0] : undefined
   return (
     <>
-      {current && (isFreeRoll(current)
-        ? <DndWatchFreePanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />
-        : <DndWatchPanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />)}
-      <DndWatchTray pending={drops} take={takeDrop} nameOf={nameOf} />
+      {current && (isCheckRoll(current)
+        ? <DndWatchPanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />
+        : <DndWatchFreePanel key={current.id} roll={current} player={playerOf(current)} hurry={checks.length > 1} onDone={nextCheck} />)}
     </>
   )
 }

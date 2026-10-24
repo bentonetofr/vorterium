@@ -26,6 +26,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Importar ficha por PDF: classe, raça e antecedente que não estão no livro do sistema não travam mais a importação. Eles entram como próprios, com o nome do PDF, e a importação pergunta o que o livro diria (dado de vida, subclasse, se a classe conjura e com qual atributo, e se a raça enxerga no escuro). O resto você muda na ficha.',
       'Dados de vida aparecem em toda ficha, também na criada do zero no site: classe própria (fora do livro) ou ficha sem classe entram com d8, e é só clicar no "d8" para trocar.',
       'O quadro da Visão, no alto da ficha, ganhou o botãozinho "Visão no escuro" para marcar e desmarcar.',
+      'Nenhuma rolagem cai solta pela tela do Vortable. Dano, dado de vida e as outras rolagens agora rolam num cartão com a mesma moldura dos testes de perícia e atributo (para você, fica até fechar no × ou no Esc; para a mesa, é o cartão azul que some sozinho).',
     ],
   },
   {

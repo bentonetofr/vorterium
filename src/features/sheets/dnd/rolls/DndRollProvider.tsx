@@ -10,11 +10,13 @@ import { dismiss, isDismissed, onPendingOpen, sheetListening, specFromRequest, t
 import type { SheetCtx } from '../components/sheetContext'
 import type { CheckSpec } from './checkModel'
 import { DndCheckPanel, type CheckDone } from './DndCheckPanel'
-import { DndDiceTray, type TrayJob } from './DndDiceTray'
+import { DndWatchFreePanel } from './DndWatchFreePanel'
+import { createPortal } from 'react-dom'
 
 // ────────────────────────────────────────────────────────
 // Liga as rolagens à ficha: `check` abre o painel de teste (d20 com CD e
-// bônus) e `roll` joga dano e outros dados na bandeja. Tudo é gravado em
+// bônus) e `roll` abre o cartão de rolagem (a mesma moldura, com dano e os
+// outros dados rolando no palco). Tudo é gravado em
 // dice_rolls com rótulo, contexto e o conjunto de dados de quem rolou, e a
 // mesa vê pelo histórico. Sem permissão de editar (ficha de outra pessoa),
 // `canRoll` fica false e os botões de rolar não aparecem.
@@ -24,7 +26,7 @@ export interface DndRollApi {
   canRoll: boolean
   /** Abre o painel de teste. `onResult` recebe o resultado (ex.: aplicar a salvaguarda contra a morte). */
   check:   (spec: CheckSpec, opts?: { onResult?: (done: CheckDone) => void }) => void
-  /** Joga a fórmula na bandeja (dano, dado de vida...). Devolve a rolagem gravada (ou null se deu erro). */
+  /** Rola a fórmula no cartão de rolagem (dano, dado de vida...). Devolve a rolagem gravada (ou null se deu erro). */
   roll:    (label: string, formula: string, context?: Partial<DiceRollContext>) => Promise<DiceRoll | null>
 }
 
@@ -44,7 +46,7 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
   // o painel continua na tela durante a animação de saída
   const lastOpen = useRef(open)
   if (open) lastOpen.current = open
-  const [tray, setTray] = useState<TrayJob | null>(null)
+  const [card, setCard] = useState<DiceRoll | null>(null)
   const trayId = useRef(0)
   const canRoll = !ctx.readOnly && !!ctx.campaignId
   const character = ctx.form.character_name.trim() || 'Personagem'
@@ -74,7 +76,7 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
         const saved = await recordRoll(campaignId, rolled, false, {
           label, skin, context: { system: 'dnd5e', sheet_id: sheetId, character, ...context },
         })
-        setTray({ id: ++trayId.current, label, roll: saved, skin })
+        setCard(saved)
         return saved
       } catch (err) {
         report(err instanceof Error ? err.message : 'Não foi possível rolar.')
@@ -83,7 +85,7 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
     },
   }), [canRoll, campaignId, sheetId, character, skin, report])
 
-  const closeTray = useCallback(() => setTray(null), [])
+  const closeCard = useCallback(() => setCard(null), [])
 
   // ── Pedidos de teste do mestre: na própria ficha do jogador, o painel abre sozinho ──
   const ownerId = ctx.sheet.user_id
@@ -142,7 +144,8 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
               onResult={lastOpen.current.onResult} onClose={closePanel}
             />
           )}</Presence>
-          <DndDiceTray job={tray} onDone={closeTray} />
+          {/* no body: dentro da ficha (que mede a própria largura) o position: fixed ficaria preso a ela */}
+          {card && createPortal(<DndWatchFreePanel key={card.id} roll={card} player={character} hurry={false} mine onDone={closeCard} />, document.body)}
         </>
       )}
     </RollContext.Provider>
