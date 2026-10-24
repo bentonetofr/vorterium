@@ -116,6 +116,7 @@ const expectedMigrations = [
   '20240211000000_dnd_check_dc_reveal.sql',
   '20240212000000_dnd_aberto_pro_site.sql',
   '20240213000000_dado_betinha.sql',
+  '20240214000000_dev_observador.sql',
 ]
 
 const actualMigrations = readdirSync(migrationDirectory)

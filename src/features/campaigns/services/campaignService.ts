@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { isObserver } from '../../../shared/lib/observer'
 import { ensureProfile } from '../../users/services/profileService'
 import { logActivity } from '../../activity/services/activityService'
 import { isSupportedSystem } from '../../../shared/constants/systems'
@@ -269,7 +270,15 @@ export async function getCampaignWithRole(
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') return null // sem acesso ou não existe
+    if (error.code === 'PGRST116') {
+      // conta dev (observadora): não é membro, mas lê qualquer campanha e a vê como o mestre vê
+      if (isObserver()) {
+        const { data: found, error: foundError } = await supabase.from('campaigns').select('*').eq('id', campaignId).maybeSingle()
+        if (foundError || !found) return null
+        return { ...(found as Campaign), role: 'master', observer: true }
+      }
+      return null // sem acesso ou não existe
+    }
     throw new Error('Não foi possível carregar a campanha.')
   }
 

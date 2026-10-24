@@ -1,0 +1,33 @@
+.observer-bar {
+  position: sticky;
+  top: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: linear-gradient(90deg, rgba(40, 30, 8, 0.96), rgba(22, 28, 48, 0.96));
+  border-bottom: 1px solid var(--gilded);
+  color: var(--accent-bright);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+.observer-bar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6fe39a;
+  box-shadow: 0 0 8px #6fe39a;
+  animation: observer-pulse 1.8s ease-in-out infinite;
+}
+@keyframes observer-pulse { 50% { opacity: 0.35; } }
+.observer-bar__text { color: var(--text-secondary); flex: 1 1 220px; }
+.observer-bar__link { color: var(--accent-bright); text-decoration: underline; white-space: nowrap; }
+
+/* Campos travados: leem, mas não parecem editáveis. */
+[data-observer="on"] input[readonly]:not([type=search]),
+[data-observer="on"] textarea[readonly] { cursor: default; }
+[data-observer="on"] input:disabled,
+[data-observer="on"] select:disabled { cursor: not-allowed; }

@@ -309,3 +309,4 @@
   .dev-table { display: block; overflow-x: auto; }
   .dev-feed__item { grid-template-columns: 1fr; gap: 2px; }
 }
+.dev-live { margin-left: auto; white-space: nowrap; }

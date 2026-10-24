@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { observerFetch } from './observer'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -20,6 +21,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   // navegador atrasa os timers da página e o servidor derrubava o canal (ex.: o mestre olhando uma ficha
   // em outra aba durante a sessão do Vortable).
   realtime: { worker: true },
+  // modo observador (conta dev): barra tudo que escreve — ver observer.ts
+  global: { fetch: observerFetch },
 })
 
 let channelSeq = 0

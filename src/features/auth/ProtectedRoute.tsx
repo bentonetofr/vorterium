@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
 import { useIsDeveloper } from '../dev/services/devService'
 import { Loader } from '../../shared/components/Loader'
+import { isCampaignView } from '../../shared/lib/observer'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -37,7 +38,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (isDev) return <Navigate to="/dev" replace />
+  // Exceção: dentro de uma campanha (menos o Vortable) a conta dev entra como observadora, com a visão do
+  // mestre e só leitura (shared/lib/observer.ts). O resto do site dos jogadores continua fechado pra ela.
+  if (isDev && !isCampaignView(location.pathname)) return <Navigate to="/dev" replace />
 
   return <>{children}</>
 }

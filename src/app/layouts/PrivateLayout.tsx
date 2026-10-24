@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { SettingsButton } from '../../features/settings/SettingsButton'
+import { ObserverGuard } from '../../features/dev/ObserverGuard'
+import { useObserver } from '../../shared/lib/observer'
 import { AppLogo }     from '../../shared/components/AppLogo'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
@@ -80,6 +82,8 @@ function PrivateLayoutContent() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const { campaign, chatUnread, privateUnread } = useCurrentCampaign()
+  // conta dev vendo a campanha: só leitura, sem avisos, dados, notas nem jogos (ver shared/lib/observer.ts)
+  const observer = useObserver()
   const [mobileCampaignMenuOpen, setMobileCampaignMenuOpen] = useState(false)
   // celular e tablet: os botões do canto (sino, dado, chat...) ficam recolhidos num só, pra não taparem formulários e botões
   const compact = useMediaQuery(COMPACT_QUERY)
@@ -268,6 +272,7 @@ function PrivateLayoutContent() {
       </header>
 
       <main className="private-layout__main">
+        {observer && <ObserverGuard />}
         <div key={pageKey} className="private-layout__page anim-page">
           <Outlet />
         </div>
@@ -293,20 +298,22 @@ function PrivateLayoutContent() {
         ))}
       </nav>
     </div>
-    <CritWolf />
+    {!observer && <CritWolf />}
     <DndWatchRolls />
-    <DndCheckNotice />
-    <PatchNotice />
-    <BetaGiftNotice />
-    <VortablePip />
+    {!observer && <DndCheckNotice />}
+    {!observer && <PatchNotice />}
+    {!observer && <BetaGiftNotice />}
+    {!observer && <VortablePip />}
     <DocumentOverlay />
-    <LivroHost />
-    <TorreHost />
+    {!observer && <LivroHost />}
+    {!observer && <TorreHost />}
     <div className={`dice-fab-wrapper${compact ? ` site-tools${toolsFolded ? ' site-tools--folded' : ''}` : ''}`}>
-      <FabToasts>
-        <MesaLiveNotice />
-        <NotificationPopup />
-      </FabToasts>
+      {!observer && (
+        <FabToasts>
+          <MesaLiveNotice />
+          <NotificationPopup />
+        </FabToasts>
+      )}
       {compact && !panelOpen && (
         <button
           type="button"
@@ -323,15 +330,15 @@ function PrivateLayoutContent() {
           {!toolsOpen && unreadTotal > 0 && <span className="site-tools__badge">{unreadTotal > 99 ? '99+' : unreadTotal}</span>}
         </button>
       )}
-      <GameDockSlot />
-      <ControlFab />
-      <NotificationBell />
-      <VortableFab mode="enter" />
-      <DiceFab />
+      {!observer && <GameDockSlot />}
+      {!observer && <ControlFab />}
+      {!observer && <NotificationBell />}
+      {!observer && <VortableFab mode="enter" />}
+      {!observer && <DiceFab />}
       <ChatFab />
-      <NotebookFab />
+      {!observer && <NotebookFab />}
       <DocumentsFab />
-      <ChatMessagePopup />
+      {!observer && <ChatMessagePopup />}
     </div>
     </>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../shared/lib/supabase'
+import { setObserver } from '../../../shared/lib/observer'
 
 // ────────────────────────────────────────────────────────
 // Painel do desenvolvedor. A conta dev (tabela app_developers, só pelo
@@ -18,6 +19,8 @@ export function checkIsDeveloper(userId: string): Promise<boolean> {
     cached = Promise.resolve(supabase.rpc('is_developer'))
       .then(({ data, error }) => !error && data === true)
       .catch(() => false)
+      // conta dev = observadora: no site dos jogadores ela só lê (ver observer.ts)
+      .then((dev) => { if (dev) setObserver(true); return dev })
     devCache.set(userId, cached)
   }
   return cached
@@ -38,6 +41,7 @@ export function useIsDeveloper(userId: string | null | undefined): boolean | und
 
 export function forgetDeveloperCheck() {
   devCache.clear()
+  setObserver(false)
 }
 
 // ── Visão geral ─────────────────────────────────────────

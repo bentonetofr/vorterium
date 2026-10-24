@@ -58,6 +58,8 @@ export interface CampaignMemberWithProfile {
 /** Campanha enriquecida com o papel do usuário autenticado */
 export interface CampaignWithRole extends Campaign {
   role: 'master' | 'player'
+  /** Conta de desenvolvedor vendo a campanha com a visão do mestre, só leitura (não é membro dela). */
+  observer?: boolean
 }
 
 export interface CharacterSheet {

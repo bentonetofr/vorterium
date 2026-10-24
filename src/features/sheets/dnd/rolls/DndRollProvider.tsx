@@ -5,6 +5,7 @@ import { parseDiceFormula, recordRoll, rollParsedFormula, type RollExtras, type 
 import { getMyDiceSkin, onDiceSkinChange } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { supabase } from '../../../../shared/lib/supabase'
+import { isObserver } from '../../../../shared/lib/observer'
 import { listOpenCheckRequests, listRequestAnswers, revealCheckDc, subscribeToCheckRequests, type DndCheckRequest } from '../services/dndCheckService'
 import { dismiss, isDismissed, onPendingOpen, sheetListening, specFromRequest, takePending } from './checkRequests'
 import type { SheetCtx } from '../components/sheetContext'
@@ -48,7 +49,8 @@ export function DndRollProvider({ ctx, children }: { ctx: SheetCtx; children: Re
   if (open) lastOpen.current = open
   const [card, setCard] = useState<DiceRoll | null>(null)
   const trayId = useRef(0)
-  const canRoll = !ctx.readOnly && !!ctx.campaignId
+  // a conta dev (observadora) só olha: não rola
+  const canRoll = !ctx.readOnly && !!ctx.campaignId && !isObserver()
   const character = ctx.form.character_name.trim() || 'Personagem'
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { supabase, uniqueChannel } from '../../shared/lib/supabase'
+import { useObserver } from '../../shared/lib/observer'
 import { useAuth } from '../auth/AuthProvider'
 import { LIVRO_FEATURE, livroOpenHere, livroToggle, closeMine as livroCloseMine } from '../livro/livroService'
 import { TORRE_FEATURE, torreOpenHere, torreToggle, closeMine as torreCloseMine } from '../torre/torreService'
@@ -187,7 +188,9 @@ export function useFeature(key: string): { on: boolean; visible: boolean; guarde
   const owner = useIsSiteOwner()
   const allowed = useFeatureAccess().has(key)
   const on = PERMANENT_FEATURES.has(key) || rows[key]?.enabled === true
-  const early = owner || allowed
+  // a conta dev (observadora) vê tudo o que a campanha usa, inclusive o que ainda está guardado
+  const observer = useObserver()
+  const early = owner || allowed || observer
   return { on, visible: on || early, guarded: !on && early }
 }
 

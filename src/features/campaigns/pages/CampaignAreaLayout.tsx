@@ -186,7 +186,7 @@ export function CampaignAreaLayout() {
                 textTransform: 'uppercase',
               }}
             >
-              {formatRole(campaign.role)}
+              {campaign.observer ? 'Observador · só leitura' : formatRole(campaign.role)}
             </span>
             <span className={`campaign-status ${getCampaignStatusClass(campaign.status)}`}>
               {getCampaignStatusLabel(campaign.status)}

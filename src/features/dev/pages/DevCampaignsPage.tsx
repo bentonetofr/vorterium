@@ -88,6 +88,7 @@ export function DevCampaignPage() {
               {typeof data.campaign.cover_url === 'string' && <img className="dev-hero__cover" src={data.campaign.cover_url} alt="" />}
               <div>
                 <h1 className="dev-page__title">{data.campaign.name}</h1>
+                <Link to={`/campanhas/${data.campaign.id}`} className="btn btn-primary dev-live">Ver ao vivo como mestre</Link>
                 <p className="dev-muted">{getSystemLabel(data.campaign.system)} · {data.members.length} membros · criada {fmtAgo(data.campaign.created_at as string)}</p>
               </div>
             </header>
