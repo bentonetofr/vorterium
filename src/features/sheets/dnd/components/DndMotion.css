@@ -227,3 +227,63 @@
 .dsh-save--error .dsh-save__text { animation: m-alert-in 260ms var(--ease-out) backwards, m-shake 420ms var(--ease-out) 120ms; }
 .dsh-notice { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
 .dsh-sheet__footer > .dsh-chip { animation: dsh-pop 280ms var(--ease-spring) backwards; }
+
+
+/* ═══════════════════════════════════════════════════════
+   Fluidez: o que anima só usa transform e opacity (vai para a placa de vídeo, não refaz layout nem repinta)
+   ═══════════════════════════════════════════════════════ */
+
+/* Listas compridas: só as primeiras entram em cascata. Centenas de animações ao mesmo tempo engasgam o celular. */
+.dsh-list > li:nth-child(n + 13), .dsh-resgrid > li:nth-child(n + 13), .dsh-slots > li:nth-child(n + 13),
+.dsh-auto__list > li:nth-child(n + 13), .dsh-skills > li:nth-child(n + 19), .dsh-bookgrid > li:nth-child(n + 17) { animation: none; }
+
+/* Barras de PV, experiência e carga: um brilho passa de tempos em tempos (só transform: custa quase nada) */
+.dsh-hp__fill, .dsh-xp__fill, .dsh-load__fill { position: relative; overflow: hidden; }
+.dsh-hp__fill::after, .dsh-xp__fill::after, .dsh-load__fill::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 38%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  transform: translate3d(-130%, 0, 0) skewX(-18deg);
+  animation: dsh-sheen 5s ease-in-out 1.4s infinite;
+}
+@keyframes dsh-sheen {
+  0%, 62% { transform: translate3d(-130%, 0, 0) skewX(-18deg); }
+  100%    { transform: translate3d(330%, 0, 0) skewX(-18deg); }
+}
+.dsh-drag--dragging .dsh-hp__fill::after { animation: none; }
+
+/* Esqueleto da ficha enquanto carrega */
+.dsh-skel { display: flex; flex-direction: column; gap: var(--space-5); animation: m-page-in 320ms var(--ease-out) backwards; }
+.dsh-skel__block { position: relative; display: block; overflow: hidden; background: var(--bg-overlay); border: 1px solid var(--border-base); border-radius: var(--radius-lg); }
+.dsh-skel__block::after {
+  content: ''; position: absolute; inset: 0; transform: translate3d(-100%, 0, 0);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: dsh-skel-sheen 1.5s ease-in-out infinite;
+}
+@keyframes dsh-skel-sheen { to { transform: translate3d(100%, 0, 0); } }
+.dsh-skel__hero { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-5); }
+.dsh-skel__avatar { width: 96px; height: 96px; border-radius: 50%; }
+.dsh-skel__lines { display: flex; flex-direction: column; gap: var(--space-2); }
+.dsh-skel__line { height: 14px; width: 70%; border-radius: 999px; }
+.dsh-skel__line--title { height: 34px; width: 48%; }
+.dsh-skel__line--short { width: 36%; }
+.dsh-skel__stats { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-3); }
+.dsh-skel__stat { height: 84px; }
+.dsh-skel__tabs { height: 42px; }
+.dsh-skel__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4); }
+.dsh-skel__card { height: 190px; }
+@media (max-width: 640px) {
+  .dsh-skel__stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dsh-skel__stats > :nth-child(n + 5) { display: none; }
+  .dsh-skel__avatar { width: 72px; height: 72px; }
+}
+
+/* Botão de rolar: o dado balança ao passar o mouse; o foco do teclado desliza até o botão */
+@media (hover: hover) {
+  .dsh-rollbtn:hover:not(:disabled) { transform: rotate(16deg) scale(1.1); }
+}
+.dsh-sheet :focus-visible { transition: outline-offset 160ms var(--ease-out); }
+
+/* Cartões e abas: quando a tela pede menos movimento, a entrada é só um desvanecer curto (o resto zera no motion.css) */
+@media (prefers-reduced-motion: reduce) {
+  .dsh-hp__fill::after, .dsh-xp__fill::after, .dsh-load__fill::after, .dsh-skel__block::after { animation: none; }
+}

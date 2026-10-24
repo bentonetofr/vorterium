@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useDeferredValue, useMemo, useState, type ReactNode } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Select } from '../../../../shared/components/Select'
 import type { SpellEntry } from '../catalog/types'
@@ -47,14 +47,16 @@ export function DndSpellBrowser({ catalog, have, myClasses, readOnly, busy, onAd
   const [shown, setShown] = useState(PAGE)
   const [detail, setDetail] = useState<SpellEntry | null>(null)
 
+  // a busca roda com a letra um instante depois, sem segurar a digitação
+  const searchText = useDeferredValue(text)
   const results = useMemo(() => {
     if (!catalog) return []
     const base = searchSpells({
-      text, level: level === '' ? undefined : Number(level), school: school ? school as SpellEntry['school'] : undefined,
+      text: searchText, level: level === '' ? undefined : Number(level), school: school ? school as SpellEntry['school'] : undefined,
       classKey: cls && cls !== 'mine' ? cls : undefined, ritual: ritual || undefined, concentration: conc || undefined,
     }, catalog)
     return cls === 'mine' ? base.filter((s) => s.classes.some((c) => myClasses.includes(c))) : base
-  }, [catalog, text, level, school, cls, ritual, conc, myClasses])
+  }, [catalog, searchText, level, school, cls, ritual, conc, myClasses])
 
   const reset = <T,>(set: (v: T) => void) => (v: T) => { set(v); setShown(PAGE) }
   const close = onClose ?? (() => {})

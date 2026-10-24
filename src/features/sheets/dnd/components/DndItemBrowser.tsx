@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useDeferredValue, useMemo, useState, type ReactNode } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import {
   ITEM_KINDS, ITEM_KIND_LABEL, groupsOf, searchItems, weaponDamageTypes, weaponProperties,
@@ -60,11 +60,12 @@ export function DndItemBrowser({ owned, prof, readOnly, busy, onAdd, onClose }: 
   const damageTypes = useMemo(weaponDamageTypes, [])
   const weaponsOnly = kind === 'weapon'
 
+  const searchText = useDeferredValue(text)
   const results = useMemo(() => searchItems({
-    text, kind: kind || undefined, group: group || undefined, range: weaponsOnly && range ? range : undefined,
+    text: searchText, kind: kind || undefined, group: group || undefined, range: weaponsOnly && range ? range : undefined,
     damageType: weaponsOnly && damage ? damage : undefined, property: weaponsOnly && property ? property : undefined,
     usable: usable ? prof : undefined, sort,
-  }), [text, kind, group, range, damage, property, usable, prof, sort, weaponsOnly])
+  }), [searchText, kind, group, range, damage, property, usable, prof, sort, weaponsOnly])
 
   const reset = <T,>(set: (v: T) => void) => (v: T) => { set(v); setShown(PAGE) }
   const pickKind = (k: ItemKind | '') => { setKind(k); setGroup(''); setRange(''); setDamage(''); setProperty(''); setShown(PAGE) }

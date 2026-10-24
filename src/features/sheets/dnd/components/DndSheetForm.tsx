@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { Suspense, lazy, memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../shared/components/TabIndicator'
 import { confirmDialog } from '../../../../shared/components/dialogs'
 import type { DndCharacterFeature, DndCharacterResource, DndCharacterSheet, DndCharacterSheetUpdateInput } from '../../../../shared/types'
@@ -10,6 +10,7 @@ import { planSlotResources } from '../model/slots'
 import { applyLongRest, applyShortRest, longRestSheet } from '../rules/rest'
 import { removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
 import { DndHero } from './DndHero'
+import { DndSkeleton } from './DndSkeleton'
 import { DndPersonagemTab } from './DndPersonagemTab'
 import { DndAtributosTab } from './DndAtributosTab'
 import { DndCombateTab } from './DndCombateTab'
@@ -19,7 +20,8 @@ import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
 import type { SheetCtx } from './sheetContext'
 import { DndRollProvider } from '../rolls/DndRollProvider'
-import { DndImportWizard } from '../import/DndImportWizard'
+// o assistente de importar PDF só é baixado quando alguém abre
+const DndImportWizard = lazy(() => import('../import/DndImportWizard').then((m) => ({ default: m.DndImportWizard })))
 import { Presence } from '../../../../shared/components/Presence'
 import './DndSheet.css'
 import './DndMotion.css'
@@ -61,6 +63,18 @@ const TABS: { id: TabId; label: string; short: string }[] = [
   { id: 'historia',        label: 'História',             short: 'História' },
 ]
 const TAB_IDS = TABS.map((t) => t.id)
+
+// O cabeçalho e as abas só desenham de novo quando a ficha muda de fato (o `ctx` é o mesmo objeto enquanto o
+// formulário, os dados e as contas não mudam): trocar o estado de salvamento, um aviso ou abrir o assistente
+// não refaz a ficha inteira.
+const Hero = memo(DndHero)
+const PersonagemTab = memo(DndPersonagemTab)
+const AtributosTab = memo(DndAtributosTab)
+const CombateTab = memo(DndCombateTab)
+const MagiasTab = memo(DndMagiasTab)
+const InventarioTab = memo(DndInventarioTab)
+const CaracteristicasTab = memo(DndCaracteristicasTab)
+const HistoriaTab = memo(DndHistoriaTab)
 
 export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false, onSave, saveError, portraitBusy, onPortraitChange, onPortraitRemove }: DndSheetFormProps) {
   const data = useDndSheetData(sheet.id, sheet.campaign_id)
@@ -305,13 +319,20 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
     } finally { setRestBusy(false) }
   }
 
-  const ctx: SheetCtx = {
-    sheet, form, set, update, data, derived, gear, prof,
-    readOnly, campaignId: sheet.campaign_id,
-    report: (msg) => setError(msg),
-  }
+  const report = useCallback((msg: string | null) => setError(msg), [])
+  const campaignId = sheet.campaign_id
+  const ctx: SheetCtx = useMemo(() => ({
+    sheet, form, set, update, data, derived, gear, prof, readOnly, campaignId, report,
+  }), [sheet, form, set, update, data, derived, gear, prof, readOnly, campaignId, report])
 
-  if (data.loading) return <div className="sheet-loading"><span className="spinner" /></div>
+  // os botões do cabeçalho não mudam de identidade a cada render (senão o cabeçalho memorizado desenharia de novo)
+  const shortRestRef = useRef(shortRest); shortRestRef.current = shortRest
+  const longRestRef = useRef(longRest); longRestRef.current = longRest
+  const onShortRest = useCallback(() => { void shortRestRef.current() }, [])
+  const onLongRest = useCallback(() => { void longRestRef.current() }, [])
+  const onImport = useCallback(() => setImportOpen(true), [])
+
+  if (data.loading) return <DndSkeleton />
   if (data.error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{data.error}</div>
 
   return (
@@ -328,10 +349,10 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         </p>
       )}
 
-      <DndHero
+      <Hero
         ctx={ctx} isNpc={isNpc} portraitBusy={portraitBusy}
         onPortraitChange={onPortraitChange} onPortraitRemove={onPortraitRemove}
-        onShortRest={() => void shortRest()} onLongRest={() => void longRest()} restBusy={restBusy} onImport={() => setImportOpen(true)}
+        onShortRest={onShortRest} onLongRest={onLongRest} restBusy={restBusy} onImport={onImport}
       />
 
       <nav ref={tabsRef} className="campaign-tabs dsh-tabs" role="tablist" aria-label="Seções da ficha">
@@ -350,17 +371,17 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       </nav>
 
       <div className="dsh-tab-panels" style={panelsStyle}>
-        <div id="dsh-tabpanel-personagem" role="tabpanel" hidden={activeTab !== 'personagem'}>{activeTab === 'personagem' && <DndPersonagemTab ctx={ctx} />}</div>
-        <div id="dsh-tabpanel-atributos" role="tabpanel" hidden={activeTab !== 'atributos'}>{activeTab === 'atributos' && <DndAtributosTab ctx={ctx} />}</div>
-        <div id="dsh-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>{activeTab === 'combate' && <DndCombateTab ctx={ctx} />}</div>
-        <div id="dsh-tabpanel-magias" role="tabpanel" hidden={activeTab !== 'magias'}>{activeTab === 'magias' && <DndMagiasTab ctx={ctx} />}</div>
-        <div id="dsh-tabpanel-inventario" role="tabpanel" hidden={activeTab !== 'inventario'}>{activeTab === 'inventario' && <DndInventarioTab ctx={ctx} />}</div>
-        <div id="dsh-tabpanel-caracteristicas" role="tabpanel" hidden={activeTab !== 'caracteristicas'}>{activeTab === 'caracteristicas' && <DndCaracteristicasTab ctx={ctx} />}</div>
-        <div id="dsh-tabpanel-historia" role="tabpanel" hidden={activeTab !== 'historia'}>{activeTab === 'historia' && <DndHistoriaTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-personagem" role="tabpanel" hidden={activeTab !== 'personagem'}>{activeTab === 'personagem' && <PersonagemTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-atributos" role="tabpanel" hidden={activeTab !== 'atributos'}>{activeTab === 'atributos' && <AtributosTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>{activeTab === 'combate' && <CombateTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-magias" role="tabpanel" hidden={activeTab !== 'magias'}>{activeTab === 'magias' && <MagiasTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-inventario" role="tabpanel" hidden={activeTab !== 'inventario'}>{activeTab === 'inventario' && <InventarioTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-caracteristicas" role="tabpanel" hidden={activeTab !== 'caracteristicas'}>{activeTab === 'caracteristicas' && <CaracteristicasTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-historia" role="tabpanel" hidden={activeTab !== 'historia'}>{activeTab === 'historia' && <HistoriaTab ctx={ctx} />}</div>
       </div>
 
       <Presence show={importOpen}>
-        {() => <DndImportWizard sheet={sheet} data={data} saveSheet={onSave} lock={(on) => { importLock.current = on }} onClose={() => setImportOpen(false)} />}
+        {() => <Suspense fallback={null}><DndImportWizard sheet={sheet} data={data} saveSheet={onSave} lock={(on) => { importLock.current = on }} onClose={() => setImportOpen(false)} /></Suspense>}
       </Presence>
 
       <footer className="dsh-sheet__footer">

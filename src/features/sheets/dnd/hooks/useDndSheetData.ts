@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import type {
   DndCharacterClass, DndCharacterFeature, DndCharacterProficiency, DndCharacterResource, DndHpMode, DndSheetDetails,
 } from '../../../../shared/types'
@@ -72,9 +72,11 @@ export function useDndSheetData(sheetId: string, campaignId: string): DndSheetDa
     return () => { alive = false }
   }, [load])
 
-  return {
+  // o mesmo objeto enquanto nada mudou: a ficha inteira usa isto numa dependência, e um objeto novo a cada
+  // render refaria as contas e os componentes à toa
+  return useMemo(() => ({
     loading, error, degraded, classes, details, proficiencies, resources, features, hpMode,
     setClasses, setDetails, setProficiencies, setResources, setFeatures,
     reload: load,
-  }
+  }), [loading, error, degraded, classes, details, proficiencies, resources, features, hpMode, load])
 }

@@ -24,6 +24,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Sons: volume geral e um volume (com botão de mudo e de testar) para cada tipo de som: Dados, Notificações, Chat e Jogos e Vortable. Dá para silenciar tudo de uma vez sem perder os volumes escolhidos.',
       'Aparência: troca do modo claro e escuro (que saiu do botão do canto) e tamanho do texto em quatro níveis.',
       'Acessibilidade: reduzir animações, alto contraste, mais espaço entre letras e linhas, contorno bem visível na seleção pelo teclado e desligar as partículas e o brilho de clique. Há também Restaurar padrões.',
+      'Ficha de D&D mais leve e fluida: a ficha só redesenha o que mudou (salvar, avisos e abrir janelas não refazem tudo), o painel Automatizar e o importador de PDF só carregam quando você abre, arrastar a barra de PV acompanha o dedo sem engasgar e a busca de magias e itens não segura a digitação. Listas compridas animam só as primeiras linhas.',
+      'Novas animações na ficha: um brilho passa pelas barras de PV, experiência e carga, o dado de rolar balança ao passar o mouse e a ficha carrega com um esqueleto cinza brilhando no lugar do ícone girando.',
       'O × dos cartões de rolagem saiu de cima da borda dourada e ficou dentro da moldura, com folga do canto.',
       'O botão Pedir teste do mestre, na lista de fichas, ficou pequeno e alinhado à esquerda, sem ocupar uma linha inteira no meio da tela.',
     ],

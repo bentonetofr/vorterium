@@ -105,9 +105,23 @@ export function DndDragBar({ value, max, temp = 0, onChange, disabled = false, l
     emitTarget(targetAt(e.clientX))
   }
 
+  // o ponteiro manda dezenas de eventos por quadro: só o último de cada quadro vira cálculo e desenho
+  const moveFrame = useRef(0)
+  const moveX = useRef(0)
+  const emitRef = useRef(emitTarget)
+  emitRef.current = emitTarget
+  const targetRef = useRef(targetAt)
+  targetRef.current = targetAt
+  useEffect(() => () => cancelAnimationFrame(moveFrame.current), [])
+
   function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
     if (!dragging) return
-    emitTarget(targetAt(e.clientX))
+    moveX.current = e.clientX
+    if (moveFrame.current) return
+    moveFrame.current = requestAnimationFrame(() => {
+      moveFrame.current = 0
+      if (trackRef.current) emitRef.current(targetRef.current(moveX.current))
+    })
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
@@ -132,8 +146,8 @@ export function DndDragBar({ value, max, temp = 0, onChange, disabled = false, l
       tabIndex={usable ? 0 : -1}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={() => setDragging(false)}
-      onPointerCancel={() => setDragging(false)}
+      onPointerUp={(e) => { cancelAnimationFrame(moveFrame.current); moveFrame.current = 0; if (dragging) emitTarget(targetAt(e.clientX)); setDragging(false) }}
+      onPointerCancel={() => { cancelAnimationFrame(moveFrame.current); moveFrame.current = 0; setDragging(false) }}
       onKeyDown={handleKeyDown}
     >
       <div ref={trackRef} className="dsh-hp__track">

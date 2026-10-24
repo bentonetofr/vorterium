@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { Suspense, lazy, useRef, useState, type ChangeEvent } from 'react'
 import { getBackground, getClass, getRace, getSubrace } from '../catalog'
 import { DND_PORTRAIT_PICK_MAX_BYTES, DND_PORTRAIT_TYPES } from '../constants/dnd'
 import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
@@ -6,7 +6,8 @@ import { classLine } from '../model/sheetModel'
 import { formatMeters } from '../model/format'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
-import { DndAutomationPanel } from './DndAutomationPanel'
+// o painel Automatizar só é baixado quando alguém abre
+const DndAutomationPanel = lazy(() => import('./DndAutomationPanel').then((m) => ({ default: m.DndAutomationPanel })))
 import { Presence } from '../../../../shared/components/Presence'
 import { DerivedField, NumberField } from './DndControls'
 import { DndDragBar } from './DndDragBar'
@@ -213,7 +214,7 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
         />
       )}
     </Presence>
-    <Presence show={autoOpen}>{() => <DndAutomationPanel ctx={ctx} onClose={() => setAutoOpen(false)} />}</Presence>
+    <Presence show={autoOpen}>{() => <Suspense fallback={null}><DndAutomationPanel ctx={ctx} onClose={() => setAutoOpen(false)} /></Suspense>}</Presence>
     </>
   )
 }
