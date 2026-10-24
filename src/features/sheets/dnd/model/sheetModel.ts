@@ -230,6 +230,31 @@ export function manualSpellCountsOf(choices: unknown): Record<string, SpellCount
   return out
 }
 
+/** Chave dos dados de vida de uma ficha sem classe (só o nível digitado). */
+export const NO_CLASS_DIE = '_sem_classe'
+
+/**
+ * Dado de vida das classes fora do livro (e da ficha sem classe), por chave da classe (`choices.homebrewHitDie`).
+ * Sem escolha, vale d8. As do livro têm o dado delas (hitDieOf).
+ */
+export function homebrewHitDieOf(choices: unknown): Record<string, number> {
+  const raw = (choices as Record<string, unknown> | null | undefined)?.homebrewHitDie
+  const out: Record<string, number> = {}
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) if (typeof v === 'number' && [4, 6, 8, 10, 12, 20].includes(v)) out[k] = v
+  }
+  return out
+}
+
+/** Quais dados de vida vêm de classes fora do livro (ou da ficha sem classe): por lados do dado, as chaves das classes. */
+export function homebrewDiceSources(classes: readonly { class_key: string }[], choices: unknown): Record<number, string[]> {
+  const hb = homebrewHitDieOf(choices)
+  const out: Record<number, string[]> = {}
+  const keys = classes.length > 0 ? classes.filter((c) => hitDieOf(c.class_key) == null).map((c) => c.class_key) : [NO_CLASS_DIE]
+  for (const k of keys) (out[hb[k] ?? 8] ??= []).push(k)
+  return out
+}
+
 /** Peso carregado digitado em kg (modo manual), ou null (`choices.carriedKg`). */
 export function manualCarriedOf(choices: unknown): number | null {
   const v = (choices as Record<string, unknown> | null | undefined)?.carriedKg
@@ -275,16 +300,29 @@ export function buildDerivedInput(b: SheetBundle): { input: DerivedInput; gear: 
 
 export function deriveSheet(b: SheetBundle): DerivedBundle {
   const { input, gear, prof } = buildDerivedInput(b)
-  return { input, derived: withManualCounts(computeDerived(input), b.sheet), gear, prof }
+  return { input, derived: withManualCounts(computeDerived(input), b.sheet, b.classes), gear, prof }
 }
 
-/** Dados de vida e truques/magias conhecidas no modo manual do Automatizar: o digitado no lugar da tabela do livro. */
-function withManualCounts(derived: Derived, sheet: DndCharacterSheet): Derived {
+/**
+ * Dados de vida e truques/magias conhecidas no modo manual do Automatizar: o digitado no lugar da tabela do
+ * livro. No automático, as classes fora do livro (e a ficha sem classe) entram com o dado delas (d8 se ninguém escolheu).
+ */
+function withManualCounts(derived: Derived, sheet: DndCharacterSheet, classes: readonly DndCharacterClass[]): Derived {
   const modes = manualModesOf(sheet)
   let out = derived
   if (modes.includes('hit_dice')) {
     const dice = manualHitDiceOf(sheet.choices)
     out = { ...out, hitDice: Object.fromEntries(Object.entries(dice).map(([d, n]) => [Number(d), n])) }
+  } else {
+    const hb = homebrewHitDieOf(sheet.choices)
+    const extra = classes.length > 0
+      ? classes.filter((c) => hitDieOf(c.class_key) == null).map((c) => ({ die: hb[c.class_key] ?? 8, n: c.level }))
+      : [{ die: hb[NO_CLASS_DIE] ?? 8, n: Math.max(1, Math.min(20, sheet.level)) }]
+    if (extra.length) {
+      const hitDice = { ...out.hitDice }
+      for (const { die, n } of extra) hitDice[die] = (hitDice[die] ?? 0) + n
+      out = { ...out, hitDice }
+    }
   }
   if (modes.includes('spell_counts') && out.spellcasting) {
     const counts = manualSpellCountsOf(sheet.choices)

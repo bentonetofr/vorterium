@@ -18,11 +18,14 @@ describe('importação: identidade, classe, origem e atributos', () => {
   })
 
   it('parseClasses entende vários jeitos de escrever', () => {
-    expect(parseClasses('Bard Nível 5').rows.map((r) => [r.def.key, r.level])).toEqual([['bard', 5]])
-    expect(parseClasses('Bardo 3 / Mago 2').rows.map((r) => [r.def.key, r.level])).toEqual([['bard', 3], ['wizard', 2]])
-    expect(parseClasses('Guerreiro (Campeão) 5').rows.map((r) => [r.def.key, r.level])).toEqual([['fighter', 5]])
+    expect(parseClasses('Bard Nível 5').rows.map((r) => [r.key, r.level])).toEqual([['bard', 5]])
+    expect(parseClasses('Bardo 3 / Mago 2').rows.map((r) => [r.key, r.level])).toEqual([['bard', 3], ['wizard', 2]])
+    expect(parseClasses('Guerreiro (Campeão) 5').rows.map((r) => [r.key, r.level])).toEqual([['fighter', 5]])
     expect(parseClasses('Fighter level 4, Rogue 1').rows).toHaveLength(2)
-    expect(parseClasses('Artífice 3').problem).toMatch(/Artífice/)
+    // classe que o livro não tem entra como classe própria, com o nome do PDF
+    const own = parseClasses('Artífice 3')
+    expect(own.problem).toBeNull()
+    expect(own.rows[0]).toMatchObject({ def: null, name: 'Artífice', level: 3 })
     expect(parseClasses('Bardo').problem).not.toBeNull()
     expect(parseClasses('Bardo 15 / Mago 8').problem).toMatch(/20/)
     expect(parseClasses('').problem).not.toBeNull()
@@ -50,9 +53,13 @@ describe('importação: identidade, classe, origem e atributos', () => {
     expect(first.done).toBe(false)
     if (first.done) return
     expect(first.question).toMatchObject({ id: 'classes', kind: 'text' })
-    const bad = runImport(base, { classes: 'Artífice 3' })
+    const bad = runImport(base, { classes: 'Bardo' })
     expect(bad.done).toBe(false)
-    if (!bad.done) expect(bad.question.error).toMatch(/Artífice/)
+    if (!bad.done) expect(bad.question.error).toBeTruthy()
+    // classe que o livro não tem: aceita como própria e pergunta o dado de vida
+    const own = runImport(base, { classes: 'Artífice 3' })
+    expect(own.done).toBe(false)
+    if (!own.done) expect(own.question.id).toBe('hb-die:artifice')
     const ok = runImport(base, { classes: 'Bardo 3 / Mago 2', 'subclass:bard': 'lore' })
     expect(ok.done).toBe(false)
     if (!ok.done) expect(ok.question.id).toBe('subclass:wizard')   // Mago escolhe a escola no nível 2
@@ -164,5 +171,41 @@ describe('importação completa da ficha do Dandrelis', () => {
     const again = runImport(dandrelisInput(), trimmed)
     expect(again.done).toBe(false)
     if (!again.done) expect(again.question.id).toBe('diverge')
+  })
+
+  it('classe e raça fora do livro: entram como próprias, com perguntas pelo que o livro daria', () => {
+    const input = dandrelisInput()
+    input.read.identity.classText = 'Caçador de Sangue 4'
+    input.read.identity.raceText = 'Tabaxi'
+    input.read.combat.vision = ''
+    const answers: Record<string, string | number | string[]> = {}
+    const asked: string[] = []
+    let r = runImport(input, answers)
+    // responde as perguntas da classe e da raça próprias e o que vier, com a primeira opção
+    for (let guard = 0; guard < 80 && !r.done; guard++) {
+      const q = r.question
+      asked.push(q.id)
+      if (q.id.startsWith('hb-die:')) answers[q.id] = '10'
+      else if (q.id.startsWith('hb-sub:')) answers[q.id] = 'Ordem do Lycan'
+      else if (q.id.startsWith('hb-cast:')) answers[q.id] = 'intelligence'
+      else if (q.id === 'race') answers[q.id] = 'own'
+      else if (q.id === 'hb-vision') answers[q.id] = '60'
+      else if (q.kind === 'choice') answers[q.id] = q.recommended ?? q.options[0].value
+      else if (q.kind === 'multi') answers[q.id] = q.options.filter((o) => o.checked).map((o) => o.value)
+      else if (q.kind === 'number') answers[q.id] = q.defaultValue ?? q.min
+      else answers[q.id] = q.defaultValue || 'x'
+      r = runImport(input, answers)
+    }
+    expect(r.done).toBe(true)
+    if (!r.done) return
+    expect(asked).toEqual(expect.arrayContaining(['hb-die:cacador_de_sangue', 'hb-sub:cacador_de_sangue', 'hb-cast:cacador_de_sangue', 'race', 'hb-vision']))
+    const f = r.draft.form
+    expect(r.draft.classes[0]).toMatchObject({ class_key: 'cacador_de_sangue', level: 4, is_initial: true })
+    expect(f.class_names.cacador_de_sangue).toBe('Caçador de Sangue')
+    expect(f.homebrew_hit_die.cacador_de_sangue).toBe(10)
+    expect(f.subclass_names.cacador_de_sangue).toBe('Ordem do Lycan')
+    expect(f.race_custom).toBe('Tabaxi')
+    expect(f.race_key).toBe('')
+    expect(f.vision_ft).toBe(60)
   })
 })

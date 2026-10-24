@@ -3,7 +3,7 @@ import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterAttack } from '../../../../shared/types'
 import { CONDITIONS, EXHAUSTION, WEAPONS, getWeapon } from '../catalog'
 import { hitDiceAvailable, hitDieHealing, spendHitDie } from '../rules/rest'
-import { armorWarning, attackFor, strengthWarning } from '../model/sheetModel'
+import { armorWarning, attackFor, homebrewDiceSources, strengthWarning } from '../model/sheetModel'
 import { formatSigned } from '../model/format'
 import { createDndAttack, deleteDndAttack, updateDndAttack } from '../services/dndSheetService'
 import { DerivedField, NumberField, Pips } from './DndControls'
@@ -160,11 +160,18 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     else delete next[String(die)]
     return { ...f, manual_hit_dice: next }
   })
+  // classes fora do livro (e ficha sem classe): o dado delas também se troca clicando no "d8"
+  const homebrewDice = homebrewDiceSources(data.classes, { homebrewHitDie: form.homebrew_hit_die })
   /** Troca o tipo de um dado de vida (clicando no "d10" e escrevendo outro): os dados dele passam para o novo tipo. */
   const setDieType = (from: number, text: string, input: HTMLInputElement) => {
     const to = Number(text.replace(/[^0-9]/g, ''))
     if (![4, 6, 8, 10, 12, 20].includes(to)) { input.value = `d${from}`; return }
     if (to === from) return
+    if (!manualDice) {
+      const keys = homebrewDice[from] ?? []
+      update((f) => ({ ...f, homebrew_hit_die: { ...f.homebrew_hit_die, ...Object.fromEntries(keys.map((k) => [k, to])) } }))
+      return
+    }
     update((f) => {
       const next = { ...f.manual_hit_dice }
       const moved = next[String(from)] ?? 0
@@ -223,7 +230,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
               const left = hitDiceAvailable(derived.hitDice, form.hit_dice_used, die)
               return (
                 <div key={die} className="dsh-hitdice__row">
-                  {manualDice && !readOnly
+                  {(manualDice || homebrewDice[die]) && !readOnly
                     ? <input key={die} type="text" className="dsh-hitdice__die dsh-hitdice__dieinput" defaultValue={`d${die}`} maxLength={3} aria-label={`Tipo do dado de vida d${die}`}
                         title="Clique para trocar o dado (d6, d8, d10, d12)" onFocus={(e) => e.target.select()}
                         onBlur={(e) => setDieType(die, e.target.value, e.target)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur() } }} />

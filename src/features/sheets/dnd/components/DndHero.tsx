@@ -159,6 +159,12 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
               {vision > 0 ? (feet ? `${vision} ft` : formatMeters(vision)) : race || form.vision_ft !== null ? 'Normal' : '—'}
             </button>
           )}
+          {/* marcar liga a visão no escuro (a distância da raça, ou 18 m); desmarcar deixa visão normal */}
+          <label className={`dsh-stat__check${vision > 0 ? ' is-on' : ''}`}>
+            <input type="checkbox" checked={vision > 0} disabled={readOnly}
+              onChange={(e) => set('vision_ft', e.target.checked ? (raceVision > 0 ? raceVision : 60) : 0)} />
+            <span>Visão no escuro</span>
+          </label>
         </div>
         <div className="dsh-stat">
           <span className="dsh-stat__label">Proficiência</span>

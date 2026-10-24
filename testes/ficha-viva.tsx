@@ -3,7 +3,7 @@
 // /testes/ficha-viva.html. Cabeçalho, as sete abas, salvar, adicionar e remover
 // de verdade, num banco falso na memória (_ficha-viva-db.ts), sem login.
 // `?largura=820` põe a ficha numa caixa dessa largura (o painel do Vortable);
-// `?atraso=800` deixa a "rede" mais lenta.
+// `?atraso=800` deixa a "rede" mais lenta; `?vazia=1` abre uma ficha nova.
 // ────────────────────────────────────────────────────────
 import { seedFakeDb } from './_ficha-viva-db'
 import { useState } from 'react'
@@ -21,7 +21,9 @@ const params = new URLSearchParams(location.search)
 const width = Number(params.get('largura')) || undefined
 
 const example = details()
-seedFakeDb({
+// `?vazia=1`: ficha nova, como recém-criada no site (sem classes, itens nem magias)
+const empty = params.get('vazia') === '1'
+seedFakeDb(empty ? {} : {
   dnd_character_skills: example.skills,
   dnd_character_attacks: example.attacks,
   dnd_character_inventory: example.inventory,
@@ -33,7 +35,7 @@ seedFakeDb({
 })
 
 function Preview() {
-  const [sheet, setSheet] = useState<DndCharacterSheet>(() => makeSheet())
+  const [sheet, setSheet] = useState<DndCharacterSheet>(() => (empty ? makeSheet({ character_name: null, race_key: null, subrace_key: null, background_key: null, class_key: null, level: 1, hp_current: 10, hp_max: 10, hp_temp: 0, conditions: [], exhaustion: 0, experience: 0 }) : makeSheet()))
   async function save(data: DndCharacterSheetUpdateInput) {
     await new Promise((r) => setTimeout(r, 300))
     setSheet((s) => ({ ...s, ...data, updated_at: new Date().toISOString() }) as DndCharacterSheet)

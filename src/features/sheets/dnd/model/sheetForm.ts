@@ -2,7 +2,7 @@ import type { DndCharacterSheet, DndCharacterSheetUpdateInput, DndCondition } fr
 import { getBackground, getRace } from '../catalog'
 import type { AbilityKey, Derived } from '../rules/types'
 import { isManualMode, type ManualMode } from './automation'
-import { clampHp, derivedColumns, manualCarriedOf, manualHitDiceOf, manualSpellCountsOf, spellAbilityOf, type SpellCounts } from './sheetModel'
+import { clampHp, derivedColumns, homebrewHitDieOf, manualCarriedOf, manualHitDiceOf, manualSpellCountsOf, spellAbilityOf, type SpellCounts } from './sheetModel'
 
 // ────────────────────────────────────────────────────────
 // O que a pessoa edita na ficha D&D (os campos da própria linha da ficha) e
@@ -76,6 +76,8 @@ export interface DndForm {
   manual_spell_counts: Record<string, SpellCounts>
   /** Peso carregado digitado em kg (null = a soma dos itens); vai em `choices.carriedKg`. */
   carried_kg:        number | null
+  /** Dado de vida das classes fora do livro (e da ficha sem classe), por chave; vai em `choices.homebrewHitDie`. */
+  homebrew_hit_die:  Record<string, number>
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -126,6 +128,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     manual_hit_dice:  manualHitDiceOf(choices),
     manual_spell_counts: manualSpellCountsOf(choices),
     carried_kg:       manualCarriedOf(choices),
+    homebrew_hit_die: homebrewHitDieOf(choices),
   }
 }
 
@@ -154,7 +157,7 @@ export function sheetWithForm(sheet: DndCharacterSheet, f: DndForm): DndCharacte
     wisdom_save_proficient: f.wisdom_save_proficient, charisma_save_proficient: f.charisma_save_proficient,
     choices: {
       ...(sheet.choices ?? {}), acBonus: f.ac_bonus, spellAbility: f.spell_ability || undefined, manualModes: f.manual_modes,
-      manualHitDice: f.manual_hit_dice, manualSpellCounts: f.manual_spell_counts, carriedKg: f.carried_kg ?? undefined,
+      manualHitDice: f.manual_hit_dice, manualSpellCounts: f.manual_spell_counts, carriedKg: f.carried_kg ?? undefined, homebrewHitDie: f.homebrew_hit_die,
     },
   }
 }
@@ -215,6 +218,8 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   else delete choices.manualSpellCounts
   if (f.carried_kg !== null) choices.carriedKg = manualCarriedOf({ carriedKg: f.carried_kg })
   else delete choices.carriedKg
+  if (Object.keys(f.homebrew_hit_die).length > 0) choices.homebrewHitDie = homebrewHitDieOf({ homebrewHitDie: f.homebrew_hit_die })
+  else delete choices.homebrewHitDie
   const subNames = Object.fromEntries(Object.entries(f.subclass_names).map(([k, v]) => [k, v.trim().slice(0, DND_TEXT_LIMITS.subclass_name)]).filter(([, v]) => v))
   if (Object.keys(subNames).length > 0) choices.subclassNames = subNames
   else delete choices.subclassNames

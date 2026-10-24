@@ -23,6 +23,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       'O botão Automatizar da ficha de D&D ganhou mais 8 itens. Agora tudo o que a ficha calcula sozinha pode virar manual: visão no escuro, peso carregado, proficiência em salvaguardas, perícias do antecedente, proficiências e idiomas, ataques com arma, dados de vida, e truques e magias conhecidas.',
       'Em manual, cada um começa com o valor de hoje e você muda à vontade: tira ou põe qualquer proficiência (até as da classe e da raça), escreve quantos dados de vida de cada tipo tem, quantos truques e magias cada classe conhece, e quanto carrega. Voltar para Automático devolve as contas do livro.',
       'As características do livro também podem virar suas: no lápis, "Personalizar o texto" copia o texto do livro para você editar.',
+      'Importar ficha por PDF: classe, raça e antecedente que não estão no livro do sistema não travam mais a importação. Eles entram como próprios, com o nome do PDF, e a importação pergunta o que o livro diria (dado de vida, subclasse, se a classe conjura e com qual atributo, e se a raça enxerga no escuro). O resto você muda na ficha.',
+      'Dados de vida aparecem em toda ficha, também na criada do zero no site: classe própria (fora do livro) ou ficha sem classe entram com d8, e é só clicar no "d8" para trocar.',
+      'O quadro da Visão, no alto da ficha, ganhou o botãozinho "Visão no escuro" para marcar e desmarcar.',
     ],
   },
   {
