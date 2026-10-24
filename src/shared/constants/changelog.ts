@@ -25,6 +25,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Aparência: troca do modo claro e escuro (que saiu do botão do canto) e tamanho do texto em quatro níveis.',
       'Acessibilidade: reduzir animações, alto contraste, mais espaço entre letras e linhas, contorno bem visível na seleção pelo teclado e desligar as partículas e o brilho de clique. Há também Restaurar padrões.',
       'O × dos cartões de rolagem saiu de cima da borda dourada e ficou dentro da moldura, com folga do canto.',
+      'O botão Pedir teste do mestre, na lista de fichas, ficou pequeno e alinhado à esquerda, sem ocupar uma linha inteira no meio da tela.',
     ],
   },
   {
