@@ -328,11 +328,11 @@ export async function listDndProficiencies(sheetId: string): Promise<DndCharacte
 }
 
 export async function addDndProficiency(
-  sheetId: string, category: DndCharacterProficiency['category'], entryKey: string, label: string,
+  sheetId: string, category: DndCharacterProficiency['category'], entryKey: string, label: string, source = 'manual',
 ): Promise<DndCharacterProficiency> {
   const { data, error } = await supabase
     .from('dnd_character_proficiencies')
-    .upsert({ sheet_id: sheetId, category, entry_key: entryKey, label, source: 'manual' }, { onConflict: 'sheet_id,category,entry_key' })
+    .upsert({ sheet_id: sheetId, category, entry_key: entryKey, label, source }, { onConflict: 'sheet_id,category,entry_key' })
     .select('*')
     .single()
   if (error) throw new Error('Não foi possível adicionar a proficiência.')

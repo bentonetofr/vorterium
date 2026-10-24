@@ -117,7 +117,7 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
     setFeatName('')
   })
 
-  const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'name' | 'level' | 'notes' | 'uses_current' | 'uses_max' | 'recharge'>>) =>
+  const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'name' | 'level' | 'notes' | 'uses_current' | 'uses_max' | 'recharge' | 'feature_key'>>) =>
     run(f.id, async () => { replaceFeature(await updateDndFeature(f.id, patch)) })
 
   const removeFeature = (f: DndCharacterFeature, from: Element) => run(f.id, () => leaveThen(from, () => removeDndFeature(f.id),
@@ -305,6 +305,13 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                       )}
                       <EditField label={cat ? 'Anotações' : 'Descrição'} value={f.notes} multiline rows={3} max={2000}
                         placeholder={cat ? 'Anotações sobre esta característica' : 'O que esta característica faz'} onSave={(notes) => void patchFeature(f, { notes })} />
+                      {cat && (
+                        <button type="button" className="dsh-link dsh-editbox__wide" disabled={busy === f.id}
+                          title="Troca o texto do livro por uma cópia sua, na descrição, para editar"
+                          onClick={() => void patchFeature(f, { feature_key: null, notes: [cat.summary, f.notes].filter((x) => x.trim()).join('\n\n').slice(0, 2000) })}>
+                          Personalizar o texto (virar característica própria)
+                        </button>
+                      )}
                     </EditBox>
                   </div>
                 )}

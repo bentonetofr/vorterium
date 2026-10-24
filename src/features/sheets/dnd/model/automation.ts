@@ -13,14 +13,15 @@ import type { Derived } from '../rules/types'
 // ────────────────────────────────────────────────────────
 
 /** Comportamentos automáticos da ficha que podem ser desligados. */
-export type ManualMode = 'spell_slots' | 'class_resources'
-export const MANUAL_MODES: readonly ManualMode[] = ['spell_slots', 'class_resources']
+export type ManualMode =
+  | 'spell_slots' | 'class_resources' | 'proficiencies' | 'hit_dice' | 'spell_counts' | 'save_profs' | 'background_skills' | 'attacks'
+export const MANUAL_MODES: readonly ManualMode[] = ['spell_slots', 'class_resources', 'proficiencies', 'hit_dice', 'spell_counts', 'save_profs', 'background_skills', 'attacks']
 
 export function isManualMode(value: unknown): value is ManualMode {
   return typeof value === 'string' && (MANUAL_MODES as readonly string[]).includes(value)
 }
 
-export type AutomationGroup = 'Valores do personagem' | 'Atributos e perícias' | 'Recursos'
+export type AutomationGroup = 'Valores do personagem' | 'Atributos e perícias' | 'Proficiências e equipamento' | 'Recursos'
 
 export interface AutomationItem {
   id:          string
@@ -31,6 +32,8 @@ export interface AutomationItem {
   fields?:     readonly DndDerivedField[]
   /** Comportamento automático que desliga (itens de recursos). */
   mode?:       ManualMode
+  /** Valor guardado nas escolhas da ficha: manual quando tem número (visão no escuro, peso carregado). */
+  value?:      'vision' | 'carried'
 }
 
 const abilityFields = <P extends 'mod' | 'save'>(prefix: P) => ABILITIES.map((a) => `${prefix}_${a.key}` as DndDerivedField)
@@ -44,21 +47,34 @@ export const AUTOMATION_ITEMS: readonly AutomationItem[] = [
   { id: 'carry', group: 'Valores do personagem', title: 'Capacidade de carga', description: 'Força × 7,5 kg.', fields: ['carry_capacity'] },
   { id: 'spell_dc', group: 'Valores do personagem', title: 'CD das magias', description: '8 + proficiência + modificador do atributo de conjuração.', fields: ['spell_save_dc'] },
   { id: 'spell_attack', group: 'Valores do personagem', title: 'Ataque de magia', description: 'Proficiência + modificador do atributo de conjuração.', fields: ['spell_attack_bonus'] },
+  { id: 'vision', group: 'Valores do personagem', title: 'Visão no escuro', description: 'A da raça (anão, elfo, meio-orc...). Manual: você escreve a distância no cabeçalho.', value: 'vision' },
 
   { id: 'ability_mods', group: 'Atributos e perícias', title: 'Modificadores de atributo', description: 'Os seis modificadores, calculados do valor de cada atributo ((valor − 10) ÷ 2, para baixo).', fields: abilityFields('mod') },
   { id: 'saves', group: 'Atributos e perícias', title: 'Salvaguardas', description: 'Modificador do atributo mais a proficiência, quando a classe dá.', fields: abilityFields('save') },
   { id: 'skills', group: 'Atributos e perícias', title: 'Perícias', description: 'As 18 perícias: modificador do atributo, proficiência e especialização.', fields: SKILLS.map((s) => `skill_${s.key}` as DndDerivedField) },
   { id: 'passives', group: 'Atributos e perícias', title: 'Percepções passivas', description: '10 + o bônus de Percepção, Intuição e Investigação.', fields: ['passive_perception', 'passive_insight', 'passive_investigation'] },
+  { id: 'save_profs', group: 'Atributos e perícias', title: 'Proficiência em salvaguardas', description: 'A classe inicial marca as salvaguardas dela sozinha ao entrar ou trocar. Manual: só você marca.', mode: 'save_profs' },
+  { id: 'background_skills', group: 'Atributos e perícias', title: 'Perícias do antecedente', description: 'Escolher o antecedente marca as perícias que ele dá. Manual: o antecedente não marca nada.', mode: 'background_skills' },
+
+  { id: 'proficiencies', group: 'Proficiências e equipamento', title: 'Proficiências e idiomas', description: 'Armas, armaduras, ferramentas e idiomas da classe e da raça entram sozinhos. Manual: a lista toda vira sua, para tirar ou pôr o que quiser.', mode: 'proficiencies' },
+  { id: 'attacks', group: 'Proficiências e equipamento', title: 'Ataques com arma', description: 'O bônus e o dano das armas do livro saem do atributo e da proficiência. Manual: você escreve o bônus e o dano de cada uma.', mode: 'attacks' },
+  { id: 'carried', group: 'Proficiências e equipamento', title: 'Peso carregado', description: 'A soma do peso dos itens do inventário. Manual: você escreve quanto carrega.', value: 'carried' },
 
   { id: 'spell_slots', group: 'Recursos', title: 'Espaços de magia', description: 'O total de cada nível vem da classe e do nível (e da multiclasse). Manual: você escreve o total de cada nível.', mode: 'spell_slots' },
   { id: 'class_resources', group: 'Recursos', title: 'Recursos de classe e raça', description: 'Fúria, Ki, Surto de Ação, Inspiração de Bardo e outros: criados sozinhos, com total e recarga pelo livro. Manual: você mexe no total e na recarga.', mode: 'class_resources' },
+  { id: 'hit_dice', group: 'Recursos', title: 'Dados de vida', description: 'Um dado da classe por nível (d12 do Bárbaro, d6 do Mago...). Manual: você escreve quantos dados de cada tipo tem.', mode: 'hit_dice' },
+  { id: 'spell_counts', group: 'Recursos', title: 'Truques e magias conhecidas', description: 'Quantos truques e magias cada classe conhece ou prepara, pela tabela do livro. Manual: você escreve os números.', mode: 'spell_counts' },
 ]
 
-export const AUTOMATION_GROUPS: readonly AutomationGroup[] = ['Valores do personagem', 'Atributos e perícias', 'Recursos']
+export const AUTOMATION_GROUPS: readonly AutomationGroup[] = ['Valores do personagem', 'Atributos e perícias', 'Proficiências e equipamento', 'Recursos']
 
-/** O item está manual? Números: algum campo dele tem valor digitado. Recursos: o comportamento está desligado. */
-export function isItemManual(item: AutomationItem, overrideKeys: ReadonlySet<string>, manualModes: readonly string[]): boolean {
+/** Valores guardados nas escolhas da ficha que deixam um item manual (null = automático). */
+export interface ManualValues { vision: number | null; carried: number | null }
+
+/** O item está manual? Números: algum campo dele tem valor digitado. Comportamentos: estão desligados. Valores: têm número. */
+export function isItemManual(item: AutomationItem, overrideKeys: ReadonlySet<string>, manualModes: readonly string[], values?: ManualValues): boolean {
   if (item.mode) return manualModes.includes(item.mode)
+  if (item.value) return values?.[item.value] != null
   return (item.fields ?? []).some((f) => overrideKeys.has(f))
 }
 

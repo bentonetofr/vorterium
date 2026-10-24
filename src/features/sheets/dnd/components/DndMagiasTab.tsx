@@ -62,6 +62,16 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   }
 
   const manualSlots = form.manual_modes.includes('spell_slots')
+  // Truques e magias conhecidas em modo manual (Automatizar): os números de cada classe são digitados
+  const manualCounts = form.manual_modes.includes('spell_counts') && !readOnly
+  type CastClass = NonNullable<typeof casting>['classes'][number]
+  const setCount = (c: CastClass, patch: Partial<{ cantrips: number; spells: number; spellbook: number }>) => ctx.update((f) => ({
+    ...f,
+    manual_spell_counts: {
+      ...f.manual_spell_counts,
+      [c.classKey]: { cantrips: c.cantripsKnown, spells: c.spellsKnownOrPrepared, spellbook: c.spellbookSize, ...patch },
+    },
+  }))
   const slotList = manualSlots
     ? Array.from({ length: 9 }, (_, i) => ({ level: i + 1, max: slotRows.find((r) => r.key === spellSlotKey(i + 1))?.max_value ?? 0 }))
     : (casting?.slots ?? []).map((max, i) => ({ level: i + 1, max }))
@@ -184,9 +194,15 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                     <strong className="dsh-class__name">{def?.name ?? c.classKey}</strong>
                     <div className="dsh-castnums">
                       <span className="dsh-castnum"><small>Atributo</small><strong>{ab?.short ?? ab?.label}</strong></span>
-                      <span className="dsh-castnum"><small>Truques</small><strong>{c.cantripsKnown}</strong></span>
-                      <span className="dsh-castnum"><small>{`Magias que ${LEARNING_LABEL[learning]}`}</small><strong>{c.spellsKnownOrPrepared}</strong></span>
-                      {c.spellbookSize != null && <span className="dsh-castnum"><small>Grimório</small><strong>{c.spellbookSize}</strong></span>}
+                      <span className="dsh-castnum"><small>Truques</small>{manualCounts
+                        ? <NumberField value={c.cantripsKnown} min={0} max={99} label={`Truques de ${def?.name ?? c.classKey}`} onChange={(n) => setCount(c, { cantrips: n })} className="dsh-castnum__input" />
+                        : <strong>{c.cantripsKnown}</strong>}</span>
+                      <span className="dsh-castnum"><small>{`Magias que ${LEARNING_LABEL[learning]}`}</small>{manualCounts
+                        ? <NumberField value={c.spellsKnownOrPrepared} min={0} max={99} label={`Magias de ${def?.name ?? c.classKey}`} onChange={(n) => setCount(c, { spells: n })} className="dsh-castnum__input" />
+                        : <strong>{c.spellsKnownOrPrepared}</strong>}</span>
+                      {c.spellbookSize != null && <span className="dsh-castnum"><small>Grimório</small>{manualCounts
+                        ? <NumberField value={c.spellbookSize} min={0} max={99} label={`Grimório de ${def?.name ?? c.classKey}`} onChange={(n) => setCount(c, { spellbook: n })} className="dsh-castnum__input" />
+                        : <strong>{c.spellbookSize}</strong>}</span>}
                     </div>
                   </li>
                 )

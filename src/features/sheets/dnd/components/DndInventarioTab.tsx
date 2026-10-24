@@ -31,7 +31,9 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
 
   const items = data.details.inventory
   const capacity = derived.carryCapacity
-  const carried = inventoryWeightKg(items)
+  // peso carregado: a soma dos itens, ou o digitado (Automatizar > Peso carregado em manual)
+  const manualCarried = form.carried_kg !== null
+  const carried = form.carried_kg ?? inventoryWeightKg(items)
   const pct = Math.min(100, (carried / Math.max(1, capacity)) * 100)
   const owned = new Map<string, number>()
   for (const i of items) if (i.catalog_entry_key) owned.set(i.catalog_entry_key, (owned.get(i.catalog_entry_key) ?? 0) + i.quantity)
@@ -123,7 +125,9 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
         <div className="dsh-loadtiles">
           <div className={`dsh-loadtile${carried > capacity ? ' is-over' : ''}`}>
             <span className="dsh-loadtile__label">Carregando</span>
-            <span className="dsh-loadtile__value"><Bump value={formatKg(carried)} /></span>
+            <span className="dsh-loadtile__value">{manualCarried && !readOnly
+              ? <NumberField value={carried} min={0} max={99999} step={0.1} label="Peso carregado em kg" onChange={(n) => set('carried_kg', n)} className="dsh-loadtile__input" />
+              : <Bump value={formatKg(carried)} />}</span>
           </div>
           <div className="dsh-loadtile" title="Força × 7,5 kg">
             <span className="dsh-loadtile__label">Capacidade</span>

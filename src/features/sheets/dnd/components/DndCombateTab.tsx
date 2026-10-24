@@ -152,6 +152,15 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     () => data.setDetails((d) => ({ ...d, attacks: d.attacks.filter((x) => x.id !== a.id) }))))
   const isNew = useFreshKeys(data.details.attacks.map((a) => a.id))
 
+  // Dados de vida em modo manual (Automatizar): o total de cada tipo é digitado; 0 tira o tipo
+  const manualDice = form.manual_modes.includes('hit_dice')
+  const setDieTotal = (die: number, n: number) => update((f) => {
+    const next = { ...f.manual_hit_dice }
+    if (n > 0) next[String(die)] = n
+    else delete next[String(die)]
+    return { ...f, manual_hit_dice: next }
+  })
+  const missingDice = [6, 8, 10, 12].filter((d) => !derived.hitDice[d])
   const diePool = Object.entries(derived.hitDice).map(([die, total]) => ({ die: Number(die), total })).sort((a, b) => b.die - a.die)
 
   return (
@@ -195,7 +204,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
           </div>
         </div>
 
-        {diePool.length > 0 && (
+        {(diePool.length > 0 || manualDice) && (
           <div className="dsh-hitdice">
             <span className="dsh-label">Dados de vida</span>
             {diePool.map(({ die, total }) => {
@@ -203,12 +212,21 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
               return (
                 <div key={die} className="dsh-hitdice__row">
                   <span className="dsh-hitdice__die">d{die}</span>
-                  <span className="dsh-hitdice__count"><strong><Bump value={left} /></strong>/{total}</span>
+                  <span className="dsh-hitdice__count"><strong><Bump value={left} /></strong>/
+                    {manualDice && !readOnly
+                      ? <NumberField value={total} min={0} max={99} label={`Total de dados d${die} (0 tira)`} onChange={(n) => setDieTotal(die, n)} className="dsh-hitdice__total" />
+                      : total}
+                  </span>
                   {total <= 12 && <Pips total={total} filled={left} size="sm" label={`Dados d${die} disponíveis`} />}
                   <button type="button" className="dsh-chip" disabled={readOnly || left < 1} onClick={() => void spendDie(die)}>Gastar e rolar</button>
                 </div>
               )
             })}
+            {manualDice && !readOnly && missingDice.length > 0 && (
+              <div className="dsh-field dsh-field--tile dsh-hitdice__add"><span className="dsh-label">Pôr outro dado</span>
+                <Select options={[{ value: '', label: 'Escolher o dado' }, ...missingDice.map((d) => ({ value: String(d), label: `d${d}` }))]} value=""
+                  onChange={(v) => { if (v) setDieTotal(Number(v), 1) }} aria-label="Pôr outro tipo de dado de vida" /></div>
+            )}
             {lastRoll && <StatusPill key={lastRoll} tone="good">{lastRoll}</StatusPill>}
           </div>
         )}

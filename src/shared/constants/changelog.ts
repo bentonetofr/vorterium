@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3',
+    date:    '2026-10-24',
+    title:   'Ficha de D&D: tudo pode ser manual',
+    items: [
+      'O botão Automatizar da ficha de D&D ganhou mais 8 itens. Agora tudo o que a ficha calcula sozinha pode virar manual: visão no escuro, peso carregado, proficiência em salvaguardas, perícias do antecedente, proficiências e idiomas, ataques com arma, dados de vida, e truques e magias conhecidas.',
+      'Em manual, cada um começa com o valor de hoje e você muda à vontade: tira ou põe qualquer proficiência (até as da classe e da raça), escreve quantos dados de vida de cada tipo tem, quantos truques e magias cada classe conhece, e quanto carrega. Voltar para Automático devolve as contas do livro.',
+      'As características do livro também podem virar suas: no lápis, "Personalizar o texto" copia o texto do livro para você editar.',
+    ],
+  },
+  {
     version: '2.2',
     date:    '2026-10-23',
     title:   'Um presente para os betas do D&D',

@@ -1176,6 +1176,20 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
 .dsh-tool:disabled { opacity: 0.4; cursor: default; }
 @media (hover: hover) { .dsh-tool:hover:not(:disabled) svg { transform: rotate(-8deg); } .dsh-tool svg { transition: transform 200ms var(--ease-spring); } }
 
+/* números que viram campo no modo manual do Automatizar (dados de vida, truques e magias, peso carregado) */
+.dsh-sheet .dsh-num.dsh-hitdice__total {
+  width: 3.2ch; min-width: 0; min-height: 0; height: auto; padding: 0 0 1px; text-align: left; background: transparent; border: 0; border-bottom: 1px dashed var(--border-bright); border-radius: 0; box-shadow: none;
+  font-family: var(--font-body); font-size: var(--text-xs); color: var(--text-secondary);
+}
+.dsh-sheet .dsh-num.dsh-castnum__input, .dsh-sheet .dsh-num.dsh-loadtile__input {
+  width: 100%; min-width: 0; min-height: 0; height: auto; padding: 0 0 1px; background: transparent; border: 0; border-bottom: 1px dashed var(--border-bright); border-radius: 0; box-shadow: none;
+  font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--dsh-bone);
+}
+.dsh-sheet .dsh-num.dsh-castnum__input { text-align: center; }
+.dsh-sheet .dsh-num.dsh-loadtile__input { text-align: left; }
+.dsh-sheet .dsh-num.dsh-hitdice__total:focus, .dsh-sheet .dsh-num.dsh-castnum__input:focus, .dsh-sheet .dsh-num.dsh-loadtile__input:focus { outline: none; border-bottom-color: var(--dsh-accent); color: var(--dsh-accent); }
+.dsh-hitdice__add { max-width: 260px; }
+
 /* o painel de edição: campos em grade e o Concluir */
 .dsh-editbox {
   display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3);

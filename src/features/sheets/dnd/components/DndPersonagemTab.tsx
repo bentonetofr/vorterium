@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterClass, DndCharacterProficiency } from '../../../../shared/types'
-import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace, WEAPONS } from '../catalog'
+import { BACKGROUNDS, CLASSES, RACES, getBackground, getClass, getRace } from '../catalog'
 import { homebrewKeyFromName } from '../catalog/homebrewKey'
 import { levelFromXp, meetsRequirement, xpToNextLevel } from '../rules/progression'
 import { ABILITIES, SKILLS } from '../rules/abilities'
-import { AUTOMATION_ITEMS, isItemManual } from '../model/automation'
-import { className, saveColumns } from '../model/sheetModel'
+import { PROFICIENCY_COPY_SOURCE, className, proficiencyName, saveColumns } from '../model/sheetModel'
 import { formatMeters } from '../model/format'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
 import { addDndProficiency, removeDndProficiency, upsertDndSkill } from '../services/dndSheetService'
@@ -38,8 +37,6 @@ const PROFICIENCY_KINDS: { value: DndCharacterProficiency['category']; label: st
   { value: 'tool', label: 'Ferramenta' }, { value: 'language', label: 'Idioma' },
 ]
 
-const ARMOR_LABEL: Record<string, string> = { light: 'Leve', medium: 'Média', heavy: 'Pesada', shield: 'Escudos' }
-const WEAPON_LABEL: Record<string, string> = { simple: 'Armas simples', martial: 'Armas marciais' }
 
 export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, update, data, readOnly, derived, prof, report } = ctx
@@ -75,8 +72,9 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
     return next.sort((a, b) => Number(b.is_initial) - Number(a.is_initial))
   })
 
-  /** A classe inicial dá as proficiências de salvaguarda (a multiclasse não dá). */
+  /** A classe inicial dá as proficiências de salvaguarda (a multiclasse não dá). Em manual (Automatizar), só a pessoa marca. */
   function applyInitialSaves(classKey: string) {
+    if (form.manual_modes.includes('save_profs')) return
     const def = getClass(classKey)
     if (def) update((f) => ({ ...f, ...saveColumns(def.saves) }))
   }
@@ -109,8 +107,7 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
     const key = pick
     update((f) => ({ ...f, background_key: key, background_custom: '' }))
     const def = key ? getBackground(key) : undefined
-    const skillsItem = AUTOMATION_ITEMS.find((i) => i.id === 'skills')!
-    const manual = isItemManual(skillsItem, new Set(data.details.overrides.map((o) => o.field_key)), form.manual_modes)
+    const manual = form.manual_modes.includes('background_skills')
     if (!def || def.custom || manual || readOnly) return
     const missing = def.skills.filter((k) => !data.details.skills.some((s) => s.skill_key === k && s.proficient))
     if (missing.length === 0) return
@@ -184,11 +181,11 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
   const isNewProf = useFreshKeys(data.proficiencies.map((p) => p.id))
 
   // Proficiências por tipo: as que vêm da classe, da raça e do antecedente (nomes em português) e as que a pessoa adicionou (com ×).
-  const weaponName = (w: string) => WEAPON_LABEL[w] ?? WEAPONS.find((x) => x.key === w)?.name ?? w.replace(/_/g, ' ')
+  const weaponName = (w: string) => proficiencyName('weapon', w)
   const extrasOf = (category: DndCharacterProficiency['category']) => data.proficiencies.filter((p) => p.category === category)
   const addedKeys = (category: DndCharacterProficiency['category']) => new Set(extrasOf(category).map((p) => (category === 'tool' || category === 'language' ? p.label : p.entry_key)))
   const profGroups = [
-    { kind: 'armor', title: 'Armaduras', none: 'Nenhuma', base: prof.armor.filter((a) => !addedKeys('armor').has(a)).map((a) => ARMOR_LABEL[a] ?? a), extras: extrasOf('armor') },
+    { kind: 'armor', title: 'Armaduras', none: 'Nenhuma', base: prof.armor.filter((a) => !addedKeys('armor').has(a)).map((a) => proficiencyName('armor', a)), extras: extrasOf('armor') },
     { kind: 'weapon', title: 'Armas', none: 'Nenhuma', base: prof.weapons.filter((w) => !addedKeys('weapon').has(w)).map(weaponName), extras: extrasOf('weapon') },
     { kind: 'tool', title: 'Ferramentas', none: 'Nenhuma', base: prof.tools.filter((t) => !addedKeys('tool').has(t)), extras: extrasOf('tool') },
     { kind: 'language', title: 'Idiomas', none: 'Nenhum', base: prof.languages.filter((l) => !addedKeys('language').has(l)), extras: extrasOf('language') },
@@ -382,7 +379,8 @@ export function DndPersonagemTab({ ctx }: { ctx: SheetCtx }) {
               <div className="dsh-prof__chips">
                 {g.base.map((name) => <span key={name} className="dsh-prof__chip">{name}</span>)}
                 {g.extras.map((p) => (
-                  <span key={p.id} className={`dsh-prof__chip dsh-prof__chip--extra${isNewProf(p.id) ? ' is-new' : ''}`} title="Adicionada por você" data-leave="">
+                  <span key={p.id} className={`dsh-prof__chip${p.source === PROFICIENCY_COPY_SOURCE ? '' : ' dsh-prof__chip--extra'}${isNewProf(p.id) ? ' is-new' : ''}`}
+                    title={p.source === PROFICIENCY_COPY_SOURCE ? 'Da classe ou da raça (em modo manual: dá para tirar)' : 'Adicionada por você'} data-leave="">
                     {p.label}
                     {!readOnly && <button type="button" onClick={(e) => void removeProficiency(p, e.currentTarget)} aria-label={`Tirar ${p.label}`}>×</button>}
                   </span>

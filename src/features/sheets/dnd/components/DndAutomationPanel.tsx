@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
-import { AUTOMATION_GROUPS, AUTOMATION_ITEMS, isItemManual, manualSeed, type AutomationItem } from '../model/automation'
-import { removeDndOverrides, saveDndOverrides } from '../services/dndSheetService'
+import type { DndCharacterAttack, DndCharacterProficiency } from '../../../../shared/types'
+import { getRace } from '../catalog'
+import { homebrewKeyFromName } from '../catalog/homebrewKey'
+import { AUTOMATION_GROUPS, AUTOMATION_ITEMS, isItemManual, manualSeed, type AutomationItem, type ManualMode } from '../model/automation'
+import { formatSigned, inventoryWeightKg } from '../model/format'
+import { PROFICIENCY_COPY_SOURCE, attackFor, proficiencyName } from '../model/sheetModel'
+import { addDndProficiency, removeDndOverrides, removeDndProficiency, saveDndOverrides, updateDndAttack } from '../services/dndSheetService'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -17,20 +22,85 @@ interface Props {
 }
 
 export function DndAutomationPanel({ ctx, onClose }: Props) {
-  const { form, set, derived, data, sheet, readOnly, report } = ctx
+  const { form, update, derived, data, sheet, readOnly, report, prof } = ctx
   const [busy, setBusy] = useState<string | null>(null)
 
   const overrideKeys = new Set<string>(data.details.overrides.map((o) => o.field_key))
-  const manualNow = (item: AutomationItem) => isItemManual(item, overrideKeys, form.manual_modes)
+  const values = { vision: form.vision_ft, carried: form.carried_kg }
+  const manualNow = (item: AutomationItem) => isItemManual(item, overrideKeys, form.manual_modes, values)
   const manualCount = AUTOMATION_ITEMS.filter(manualNow).length
+
+  const setMode = (mode: ManualMode, manual: boolean) =>
+    update((f) => ({ ...f, manual_modes: (manual ? [...f.manual_modes.filter((m) => m !== mode), mode] : f.manual_modes.filter((m) => m !== mode)).sort() }))
+
+  /** Proficiências manuais: as da classe e da raça viram linhas da ficha (para tirar ou pôr); de volta ao automático, as cópias saem. */
+  async function proficiencies(manual: boolean) {
+    type Row = [DndCharacterProficiency['category'], string, string]
+    if (manual) {
+      // as de hoje, menos as que a ficha já tem na lista
+      const textual = (cat: string) => cat === 'tool' || cat === 'language'
+      const have = new Set(data.proficiencies.map((p) => `${p.category}:${textual(p.category) ? p.label : p.entry_key}`))
+      const rows: Row[] = [
+        ...prof.armor.map((a): Row => ['armor', a, proficiencyName('armor', a)]),
+        ...prof.weapons.map((w): Row => ['weapon', w, proficiencyName('weapon', w)]),
+        ...prof.tools.map((t): Row => ['tool', homebrewKeyFromName(t), t]),
+        ...prof.languages.map((l): Row => ['language', homebrewKeyFromName(l), l]),
+      ].filter(([cat, key, label]) => !have.has(`${cat}:${textual(cat) ? label : key}`))
+      const saved: DndCharacterProficiency[] = []
+      for (const [cat, key, label] of rows) saved.push(await addDndProficiency(sheet.id, cat, key, label, PROFICIENCY_COPY_SOURCE))
+      data.setProficiencies((ps) => [...ps.filter((p) => !saved.some((x) => x.id === p.id)), ...saved])
+    } else {
+      const copies = data.proficiencies.filter((p) => p.source === PROFICIENCY_COPY_SOURCE)
+      for (const p of copies) await removeDndProficiency(p.id)
+      data.setProficiencies((ps) => ps.filter((p) => p.source !== PROFICIENCY_COPY_SOURCE))
+    }
+    setMode('proficiencies', manual)
+  }
+
+  /** Ataques manuais: as armas do livro ganham o bônus e o dano de hoje escritos; de volta ao automático, eles saem. */
+  async function attacks(manual: boolean) {
+    const saved: DndCharacterAttack[] = []
+    for (const a of data.details.attacks) {
+      const view = a.catalog_entry_key ? attackFor(a.catalog_entry_key, derived, prof.weapons) : null
+      if (!view) continue
+      const patch = manual
+        ? { attack_bonus: a.attack_bonus.trim() || formatSigned(view.attack.attackBonus), damage: a.damage.trim() || view.attack.damageFormula || '' }
+        : { attack_bonus: '', damage: '' }
+      if (patch.attack_bonus === a.attack_bonus && patch.damage === a.damage) continue
+      saved.push(await updateDndAttack(a.id, patch))
+    }
+    if (saved.length) data.setDetails((d) => ({ ...d, attacks: d.attacks.map((x) => saved.find((s) => s.id === x.id) ?? x) }))
+    setMode('attacks', manual)
+  }
 
   async function apply(item: AutomationItem, manual: boolean) {
     if (manual === manualNow(item)) return
-    if (item.mode) {
-      const mode = item.mode
-      set('manual_modes', (manual ? [...form.manual_modes, mode] : form.manual_modes.filter((m) => m !== mode)).sort())
+    if (item.value === 'vision') {
+      const race = form.race_key ? getRace(form.race_key) : undefined
+      update((f) => ({ ...f, vision_ft: manual ? (f.vision_ft ?? race?.darkvision ?? 0) : null }))
       return
     }
+    if (item.value === 'carried') {
+      const carried = Math.round(inventoryWeightKg(data.details.inventory) * 10) / 10
+      update((f) => ({ ...f, carried_kg: manual ? carried : null }))
+      return
+    }
+    if (item.mode === 'proficiencies') return proficiencies(manual)
+    if (item.mode === 'attacks') return attacks(manual)
+    if (item.mode === 'hit_dice') {
+      // começa com os dados de hoje; de volta ao automático, o digitado sai
+      const seed = Object.fromEntries(Object.entries(derived.hitDice).map(([d, n]) => [String(d), n]))
+      update((f) => ({ ...f, manual_hit_dice: manual ? seed : {} }))
+      setMode('hit_dice', manual)
+      return
+    }
+    if (item.mode === 'spell_counts') {
+      const seed = Object.fromEntries((derived.spellcasting?.classes ?? []).map((c) => [c.classKey, { cantrips: c.cantripsKnown, spells: c.spellsKnownOrPrepared, spellbook: c.spellbookSize }]))
+      update((f) => ({ ...f, manual_spell_counts: manual ? seed : {} }))
+      setMode('spell_counts', manual)
+      return
+    }
+    if (item.mode) { setMode(item.mode, manual); return }
     const fields = item.fields ?? []
     if (manual) {
       const saved = await saveDndOverrides(sheet.id, manualSeed(item, derived, form.hp_max))
@@ -50,14 +120,13 @@ export function DndAutomationPanel({ ctx, onClose }: Props) {
     } finally { setBusy(null) }
   }
 
-  /** Passa a ficha inteira para automático ou manual de uma vez (uma chamada só para os números). */
+  /** Passa a ficha inteira para automático ou manual de uma vez (os números numa chamada só; o resto item a item). */
   async function setAll(manual: boolean) {
     if (readOnly || busy) return
     setBusy('all')
     report(null)
     try {
       const numeric = AUTOMATION_ITEMS.filter((i) => i.fields)
-      const modes = AUTOMATION_ITEMS.flatMap((i) => (i.mode ? [i.mode] : []))
       const fields = numeric.flatMap((i) => i.fields ?? [])
       if (manual) {
         const seeds = numeric.filter((i) => !manualNow(i)).flatMap((i) => manualSeed(i, derived, form.hp_max))
@@ -67,7 +136,7 @@ export function DndAutomationPanel({ ctx, onClose }: Props) {
         await removeDndOverrides(sheet.id, fields)
         data.setDetails((d) => ({ ...d, overrides: d.overrides.filter((o) => !fields.includes(o.field_key)) }))
       }
-      set('manual_modes', manual ? [...modes].sort() : [])
+      for (const item of AUTOMATION_ITEMS.filter((i) => !i.fields)) await apply(item, manual)
     } catch (err) {
       report(err instanceof Error ? err.message : 'Não foi possível trocar o modo de tudo.')
     } finally { setBusy(null) }

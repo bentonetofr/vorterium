@@ -4,7 +4,7 @@ import type { DerivedInput } from '../rules/types'
 import { AUTOMATION_GROUPS, AUTOMATION_ITEMS, MANUAL_MODES, computedValue, isItemManual, isManualMode, manualSeed } from './automation'
 import { formFromSheet, formToPayload, sheetWithForm } from './sheetForm'
 import { deriveSheet } from './sheetModel'
-import { makeSheet } from '../components/fixtures'
+import { cls, details, makeSheet } from '../components/fixtures'
 import migrationSql from '../../../../../supabase/migrations/20240208000000_dnd_automatizar.sql?raw'
 
 const base: DerivedInput = {
@@ -17,14 +17,15 @@ const base: DerivedInput = {
 describe('itens do Automatizar', () => {
   const byId = (id: string) => AUTOMATION_ITEMS.find((i) => i.id === id)!
 
-  it('14 itens em 3 grupos, com título e descrição', () => {
-    expect(AUTOMATION_ITEMS).toHaveLength(14)
-    expect(new Set(AUTOMATION_ITEMS.map((i) => i.id)).size).toBe(14)
+  it('22 itens em 4 grupos, com título e descrição', () => {
+    expect(AUTOMATION_ITEMS).toHaveLength(22)
+    expect(new Set(AUTOMATION_ITEMS.map((i) => i.id)).size).toBe(22)
     for (const i of AUTOMATION_ITEMS) {
       expect(AUTOMATION_GROUPS).toContain(i.group)
       expect(i.title.trim(), i.id).not.toBe('')
       expect(i.description.trim().length, i.id).toBeGreaterThan(10)
-      expect(Boolean(i.fields) !== Boolean(i.mode), i.id).toBe(true)
+      // cada item é de um tipo só: números, comportamento ou valor nas escolhas
+      expect([i.fields, i.mode, i.value].filter(Boolean), i.id).toHaveLength(1)
     }
   })
 
@@ -53,7 +54,7 @@ describe('itens do Automatizar', () => {
   })
 
   it('os modos manuais conhecidos', () => {
-    expect(MANUAL_MODES).toEqual(['spell_slots', 'class_resources'])
+    expect(MANUAL_MODES).toEqual(['spell_slots', 'class_resources', 'proficiencies', 'hit_dice', 'spell_counts', 'save_profs', 'background_skills', 'attacks'])
     expect(isManualMode('spell_slots')).toBe(true)
     expect(isManualMode('outro')).toBe(false)
     expect(isManualMode(3)).toBe(false)
@@ -128,5 +129,44 @@ describe('modos manuais no formulário', () => {
   it('a ficha lê só os modos conhecidos', () => {
     expect(formFromSheet(makeSheet({ choices: { manualModes: ['spell_slots', 'lixo', 3, 'class_resources'] } })).manual_modes).toEqual(['class_resources', 'spell_slots'])
     expect(formFromSheet(makeSheet()).manual_modes).toEqual([])
+  })
+})
+
+describe('modos manuais com valores digitados', () => {
+  const withChoices = (choices: Record<string, unknown>) => makeSheet({ choices })
+
+  it('dados de vida digitados valem no lugar da tabela do livro só com o modo ligado', () => {
+    const classes = [cls('fighter', 3, true)]
+    const bundle = (choices: Record<string, unknown>) => deriveSheet({ sheet: withChoices(choices), classes, details: details(), proficiencies: [] })
+    expect(bundle({ manualHitDice: { 8: 2 } }).derived.hitDice).toEqual({ 10: 3 })
+    expect(bundle({ manualModes: ['hit_dice'], manualHitDice: { 8: 2, 12: 1 } }).derived.hitDice).toEqual({ 8: 2, 12: 1 })
+  })
+
+  it('truques e magias digitados trocam os números da classe', () => {
+    const classes = [cls('wizard', 3, true)]
+    const derived = deriveSheet({ sheet: withChoices({ manualModes: ['spell_counts'], manualSpellCounts: { wizard: { cantrips: 9, spells: 7, spellbook: 20 } } }), classes, details: details(), proficiencies: [] }).derived
+    expect(derived.spellcasting?.classes[0]).toMatchObject({ cantripsKnown: 9, spellsKnownOrPrepared: 7, spellbookSize: 20 })
+  })
+
+  it('proficiências em manual: só as da lista da ficha', () => {
+    const classes = [cls('fighter', 3, true)]
+    const auto = deriveSheet({ sheet: withChoices({}), classes, details: details(), proficiencies: [] }).prof
+    const manual = deriveSheet({ sheet: withChoices({ manualModes: ['proficiencies'] }), classes, details: details(), proficiencies: [] }).prof
+    expect(auto.armor.length).toBeGreaterThan(0)
+    expect(manual.armor).toEqual([])
+    expect(manual.weapons).toEqual([])
+  })
+
+  it('o formulário lê e grava os valores digitados nas escolhas', () => {
+    const sheet = withChoices({ manualHitDice: { 10: 4, 3: 2 }, manualSpellCounts: { bard: { cantrips: 2, spells: 5 } }, carriedKg: 12.34 })
+    const form = formFromSheet(sheet)
+    expect(form.manual_hit_dice).toEqual({ 10: 4 })
+    expect(form.manual_spell_counts).toEqual({ bard: { cantrips: 2, spells: 5, spellbook: null } })
+    expect(form.carried_kg).toBe(12.3)
+    const derived = deriveSheet({ sheet, classes: [], details: details(), proficiencies: [] }).derived
+    const out = formToPayload(sheet, { ...form, carried_kg: null, manual_hit_dice: {} }, derived, '', false).choices as Record<string, unknown>
+    expect(out.carriedKg).toBeUndefined()
+    expect(out.manualHitDice).toBeUndefined()
+    expect(out.manualSpellCounts).toEqual({ bard: { cantrips: 2, spells: 5, spellbook: null } })
   })
 })

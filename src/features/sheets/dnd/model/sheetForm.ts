@@ -2,7 +2,7 @@ import type { DndCharacterSheet, DndCharacterSheetUpdateInput, DndCondition } fr
 import { getBackground, getRace } from '../catalog'
 import type { AbilityKey, Derived } from '../rules/types'
 import { isManualMode, type ManualMode } from './automation'
-import { clampHp, derivedColumns, spellAbilityOf } from './sheetModel'
+import { clampHp, derivedColumns, manualCarriedOf, manualHitDiceOf, manualSpellCountsOf, spellAbilityOf, type SpellCounts } from './sheetModel'
 
 // ────────────────────────────────────────────────────────
 // O que a pessoa edita na ficha D&D (os campos da própria linha da ficha) e
@@ -70,6 +70,12 @@ export interface DndForm {
   vision_ft:         number | null
   /** Nomes das classes digitadas à mão (fora do catálogo), por chave da classe; vai em `choices.classNames`. */
   class_names:       Record<string, string>
+  /** Dados de vida digitados (Automatizar > Dados de vida em manual), por lados; vai em `choices.manualHitDice`. */
+  manual_hit_dice:   Record<string, number>
+  /** Truques e magias conhecidas digitados (Automatizar > Truques e magias em manual), por classe; vai em `choices.manualSpellCounts`. */
+  manual_spell_counts: Record<string, SpellCounts>
+  /** Peso carregado digitado em kg (null = a soma dos itens); vai em `choices.carriedKg`. */
+  carried_kg:        number | null
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -117,6 +123,9 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     class_names:      classNamesOf(choices),
     subclass_names:   namesOf(choices, 'subclassNames'),
     vision_ft:        typeof choices.visionFt === 'number' && Number.isFinite(choices.visionFt) ? clampInt(choices.visionFt, 0, 1000) : null,
+    manual_hit_dice:  manualHitDiceOf(choices),
+    manual_spell_counts: manualSpellCountsOf(choices),
+    carried_kg:       manualCarriedOf(choices),
   }
 }
 
@@ -143,7 +152,10 @@ export function sheetWithForm(sheet: DndCharacterSheet, f: DndForm): DndCharacte
     strength_save_proficient: f.strength_save_proficient, dexterity_save_proficient: f.dexterity_save_proficient,
     constitution_save_proficient: f.constitution_save_proficient, intelligence_save_proficient: f.intelligence_save_proficient,
     wisdom_save_proficient: f.wisdom_save_proficient, charisma_save_proficient: f.charisma_save_proficient,
-    choices: { ...(sheet.choices ?? {}), acBonus: f.ac_bonus, spellAbility: f.spell_ability || undefined, manualModes: f.manual_modes },
+    choices: {
+      ...(sheet.choices ?? {}), acBonus: f.ac_bonus, spellAbility: f.spell_ability || undefined, manualModes: f.manual_modes,
+      manualHitDice: f.manual_hit_dice, manualSpellCounts: f.manual_spell_counts, carriedKg: f.carried_kg ?? undefined,
+    },
   }
 }
 
@@ -197,6 +209,12 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   setNote(choices, 'notesClass', f.notes_class)
   if (Object.keys(f.class_names).length > 0) choices.classNames = f.class_names
   else delete choices.classNames
+  if (Object.keys(f.manual_hit_dice).length > 0) choices.manualHitDice = manualHitDiceOf({ manualHitDice: f.manual_hit_dice })
+  else delete choices.manualHitDice
+  if (Object.keys(f.manual_spell_counts).length > 0) choices.manualSpellCounts = manualSpellCountsOf({ manualSpellCounts: f.manual_spell_counts })
+  else delete choices.manualSpellCounts
+  if (f.carried_kg !== null) choices.carriedKg = manualCarriedOf({ carriedKg: f.carried_kg })
+  else delete choices.carriedKg
   const subNames = Object.fromEntries(Object.entries(f.subclass_names).map(([k, v]) => [k, v.trim().slice(0, DND_TEXT_LIMITS.subclass_name)]).filter(([, v]) => v))
   if (Object.keys(subNames).length > 0) choices.subclassNames = subNames
   else delete choices.subclassNames

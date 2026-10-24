@@ -154,6 +154,20 @@ export function strengthWarning(gear: EquippedGear, strength: number): string | 
   return need && strength < need ? `Força ${strength} menor que a exigida (${need}): o deslocamento cai 3 metros.` : null
 }
 
+// ── Nomes das proficiências ────────────────────────────
+
+const ARMOR_LABEL: Record<string, string> = { light: 'Leve', medium: 'Média', heavy: 'Pesada', shield: 'Escudos' }
+const WEAPON_LABEL: Record<string, string> = { simple: 'Armas simples', martial: 'Armas marciais' }
+
+/** Nome em português de uma proficiência de armadura (categoria) ou de arma (grupo ou arma do catálogo). */
+export function proficiencyName(category: 'armor' | 'weapon', key: string): string {
+  if (category === 'armor') return ARMOR_LABEL[key] ?? key
+  return WEAPON_LABEL[key] ?? getWeapon(key)?.name ?? key.replace(/_/g, ' ')
+}
+
+/** De onde vem a cópia das proficiências da classe e da raça quando elas viram manuais (Automatizar). */
+export const PROFICIENCY_COPY_SOURCE = 'copia'
+
 // ── Montagem do cálculo ─────────────────────────────────
 
 export interface DerivedBundle {
@@ -176,6 +190,50 @@ export function spellAbilityOf(sheet: DndCharacterSheet): AbilityKey | undefined
 export function acBonusOf(sheet: DndCharacterSheet): number {
   const v = (sheet.choices as Record<string, unknown> | undefined)?.acBonus
   return typeof v === 'number' && Number.isFinite(v) ? Math.max(-10, Math.min(10, Math.floor(v))) : 0
+}
+
+// ── Valores manuais do botão Automatizar guardados nas escolhas da ficha ──
+
+/** Os comportamentos desligados no Automatizar (`choices.manualModes`). */
+export function manualModesOf(sheet: DndCharacterSheet): string[] {
+  const v = (sheet.choices as Record<string, unknown> | undefined)?.manualModes
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+}
+
+/** Dados de vida digitados (modo manual): quantos de cada tipo, por lados do dado (`choices.manualHitDice`). */
+export function manualHitDiceOf(choices: unknown): Record<string, number> {
+  const raw = (choices as Record<string, unknown> | null | undefined)?.manualHitDice
+  const out: Record<string, number> = {}
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [die, n] of Object.entries(raw as Record<string, unknown>)) {
+      if (/^(4|6|8|10|12|20)$/.test(die) && typeof n === 'number' && Number.isFinite(n) && n > 0) out[die] = Math.min(99, Math.floor(n))
+    }
+  }
+  return out
+}
+
+/** Truques e magias de uma classe digitados à mão. */
+export interface SpellCounts { cantrips: number; spells: number; spellbook: number | null }
+
+/** Truques e magias conhecidas por classe digitados (modo manual), por chave da classe (`choices.manualSpellCounts`). */
+export function manualSpellCountsOf(choices: unknown): Record<string, SpellCounts> {
+  const raw = (choices as Record<string, unknown> | null | undefined)?.manualSpellCounts
+  const out: Record<string, SpellCounts> = {}
+  const int = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.min(99, Math.floor(n))) : 0)
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [key, v] of Object.entries(raw as Record<string, unknown>)) {
+      if (!v || typeof v !== 'object') continue
+      const c = v as Record<string, unknown>
+      out[key] = { cantrips: int(c.cantrips), spells: int(c.spells), spellbook: c.spellbook == null ? null : int(c.spellbook) }
+    }
+  }
+  return out
+}
+
+/** Peso carregado digitado em kg (modo manual), ou null (`choices.carriedKg`). */
+export function manualCarriedOf(choices: unknown): number | null {
+  const v = (choices as Record<string, unknown> | null | undefined)?.carriedKg
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(99999, Math.round(v * 10) / 10) : null
 }
 
 export function buildDerivedInput(b: SheetBundle): { input: DerivedInput; gear: EquippedGear; prof: ProficiencySets } {
@@ -209,12 +267,39 @@ export function buildDerivedInput(b: SheetBundle): { input: DerivedInput; gear: 
     },
     overrides: manualOverrides(details),
   }
-  return { input, gear, prof: proficiencySets(classes, sheet.race_key, sheet.subrace_key, b.proficiencies) }
+  // proficiências em modo manual: só as da lista da ficha (as da classe e da raça foram copiadas para ela)
+  const manualProf = manualModesOf(sheet).includes('proficiencies')
+  const prof = manualProf ? proficiencySets([], null, null, b.proficiencies) : proficiencySets(classes, sheet.race_key, sheet.subrace_key, b.proficiencies)
+  return { input, gear, prof }
 }
 
 export function deriveSheet(b: SheetBundle): DerivedBundle {
   const { input, gear, prof } = buildDerivedInput(b)
-  return { input, derived: computeDerived(input), gear, prof }
+  return { input, derived: withManualCounts(computeDerived(input), b.sheet), gear, prof }
+}
+
+/** Dados de vida e truques/magias conhecidas no modo manual do Automatizar: o digitado no lugar da tabela do livro. */
+function withManualCounts(derived: Derived, sheet: DndCharacterSheet): Derived {
+  const modes = manualModesOf(sheet)
+  let out = derived
+  if (modes.includes('hit_dice')) {
+    const dice = manualHitDiceOf(sheet.choices)
+    out = { ...out, hitDice: Object.fromEntries(Object.entries(dice).map(([d, n]) => [Number(d), n])) }
+  }
+  if (modes.includes('spell_counts') && out.spellcasting) {
+    const counts = manualSpellCountsOf(sheet.choices)
+    out = {
+      ...out,
+      spellcasting: {
+        ...out.spellcasting,
+        classes: out.spellcasting.classes.map((c) => {
+          const m = counts[c.classKey]
+          return m ? { ...c, cantripsKnown: m.cantrips, spellsKnownOrPrepared: m.spells, spellbookSize: c.spellbookSize == null ? null : (m.spellbook ?? c.spellbookSize) } : c
+        }),
+      },
+    }
+  }
+  return out
 }
 
 // ── Ataques com arma ────────────────────────────────────
