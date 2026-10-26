@@ -182,3 +182,76 @@ export function playDiceFlourish(kind: 'crit' | 'fumble'): void {
     o.stop(start + 1)
   })
 }
+
+// ── Crítico (20 natural) ────────────────────────────────
+
+/** As notas do crítico: um arpejo dourado que sobe em Dó maior até a oitava, mais o acorde final que fica soando. */
+export const CRIT_ARPEGGIO = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98] as const
+export const CRIT_CHORD = [523.25, 783.99, 1046.5, 1318.51] as const
+
+/** Um sino: fundamental + parcial inarmônico (razão 2,76), que morre antes. */
+function bell(a: AudioContext, out: AudioNode, t: number, freq: number, peak: number, life: number): void {
+  for (const [ratio, level, decay] of [[1, 1, life], [2.76, 0.35, life * 0.45], [5.4, 0.12, life * 0.2]] as const) {
+    const o = a.createOscillator()
+    o.type = 'sine'
+    o.frequency.value = freq * ratio
+    const g = a.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(peak * level, t + 0.012)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + decay)
+    o.connect(g).connect(out)
+    o.start(t)
+    o.stop(t + decay + 0.05)
+  }
+}
+
+/**
+ * O som do 20 natural: uma pancada grave (o "whoom" da explosão), um chiado
+ * que sobe e brilha, um arpejo de sinos subindo e o acorde final que
+ * ressoa. Tudo gerado na hora, no volume dos sons dos dados.
+ */
+export function playCritSound(): void {
+  const level = soundVolume('dice')
+  if (muted || level === 0) return
+  const a = audio()
+  if (!a || !bus) return
+  bus.gain.value = 0.9 * level
+  const t = a.currentTime + 0.01
+
+  // pancada grave: seno que cai de tom
+  const boom = a.createOscillator()
+  boom.type = 'sine'
+  boom.frequency.setValueAtTime(150, t)
+  boom.frequency.exponentialRampToValueAtTime(42, t + 0.35)
+  const bg = a.createGain()
+  bg.gain.setValueAtTime(0.0001, t)
+  bg.gain.exponentialRampToValueAtTime(0.5, t + 0.012)
+  bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
+  boom.connect(bg).connect(bus)
+  boom.start(t)
+  boom.stop(t + 0.55)
+
+  // chiado que sobe e brilha (ruído filtrado, passando de grave a agudo)
+  if (noise) {
+    const src = a.createBufferSource()
+    src.buffer = noise
+    src.loop = true
+    const bp = a.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.Q.value = 1.4
+    bp.frequency.setValueAtTime(900, t)
+    bp.frequency.exponentialRampToValueAtTime(9000, t + 0.7)
+    const ng = a.createGain()
+    ng.gain.setValueAtTime(0.0001, t)
+    ng.gain.exponentialRampToValueAtTime(0.22, t + 0.25)
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.85)
+    src.connect(bp).connect(ng).connect(bus)
+    src.start(t)
+    src.stop(t + 0.9)
+  }
+
+  // arpejo de sinos
+  CRIT_ARPEGGIO.forEach((f, i) => bell(a, bus!, t + 0.08 + i * 0.065, f, 0.1 + i * 0.012, 0.9))
+  // acorde final, mais longo
+  CRIT_CHORD.forEach((f, i) => bell(a, bus!, t + 0.5, f * (i % 2 ? 1.003 : 0.997), 0.09, 1.9))
+}

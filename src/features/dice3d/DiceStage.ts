@@ -5,7 +5,9 @@ import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from 
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
 import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { getSkin } from './skins'
-import { playDiceHit } from './sound'
+import { playCritSound, playDiceHit } from './sound'
+import { CritBurst, disposeCritTextures } from './critFx'
+import { getSettings } from '../settings/settingsStore'
 
 // ────────────────────────────────────────────────────────
 // O palco dos dados: uma cena 3D transparente por cima de um elemento da
@@ -41,6 +43,8 @@ interface LiveDie {
   /** Giro em torno do eixo vertical aplicado em todo o lançamento (só no palco). */
   yaw:    THREE.Quaternion
   dim:    boolean
+  /** 20 natural no d20: ao parar, explode em brilho. */
+  crit:   boolean
 }
 
 /** Um lançamento: os dados dele, a gravação da física e o ponto em que está. */
@@ -82,6 +86,9 @@ export class DiceStage {
   private scene = new THREE.Scene()
   private camera: THREE.PerspectiveCamera
   private throws: Throw[] = []
+  /** Explosões de crítico em andamento. */
+  private bursts: CritBurst[] = []
+  private lastFrame = 0
   private raf = 0
   private resizeObs: ResizeObserver
   private disposed = false
@@ -194,8 +201,14 @@ export class DiceStage {
     this.raf = 0
     for (const t of this.throws) this.dropDice(t)
     this.throws = []
+    this.dropBursts()
     if (this.idleMesh) { this.scene.remove(this.idleMesh); disposeDieMesh(this.idleMesh); this.idleMesh = null }
     this.render()
+  }
+
+  private dropBursts(): void {
+    for (const b of this.bursts) b.dispose()
+    this.bursts = []
   }
 
   private dropDice(t: Throw): void {
@@ -295,7 +308,7 @@ export class DiceStage {
       mesh.castShadow = true
       mesh.userData.kind = d.kind
       this.scene.add(mesh)
-      return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim }
+      return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim, crit: d.kind === 'd20' && d.value === 20 && !d.dim }
     })
 
     let resolve: () => void = () => {}
@@ -326,14 +339,21 @@ export class DiceStage {
     this.raf = 0
     if (this.disposed) { for (const t of this.throws) t.resolve(); return }
     const now = performance.now()
+    const dt = Math.min(0.05, Math.max(0, (now - (this.lastFrame || now)) / 1000))
+    this.lastFrame = now
     let running = false
     for (const t of this.throws) {
       if (t.phase === 'run') this.stepRun(t, now)
       if (t.phase === 'settle') this.stepSettle(t, now)
       if (t.phase !== 'rest') running = true
     }
+    if (this.bursts.length) {
+      this.bursts = this.bursts.filter((b) => { const alive = b.update(dt); if (!alive) b.dispose(); return alive })
+      if (this.bursts.length) running = true
+    }
     this.render()
     if (running) this.raf = requestAnimationFrame(this.loop)
+    else this.lastFrame = 0
   }
 
   private stepRun(th: Throw, now: number): void {
@@ -361,6 +381,7 @@ export class DiceStage {
       // fim do lançamento: os descartados (ex.: o d20 que perdeu na vantagem) ficam translúcidos
       th.phase = 'settle'
       th.settleStart = now
+      this.celebrate(th)
       for (const d of th.dice) if (d.dim) {
       const m = d.mesh.material as THREE.MeshPhysicalMaterial; m.transparent = true; m.depthWrite = false; m.needsUpdate = true
       // o brinquedo da resina (materiais divididos entre os dados) não apaga junto: sai de cena
@@ -369,12 +390,27 @@ export class DiceStage {
     }
   }
 
+  /** 20 natural: som, clarão, raios, onda de choque e faíscas em volta de cada d20 que tirou 20. */
+  private celebrate(th: Throw): void {
+    const crits = th.dice.filter((d) => d.crit)
+    if (crits.length === 0) return
+    if (th.sound) playCritSound()
+    if (getSettings().noEffects) return
+    // vários 20 ao mesmo tempo dividem o brilho (e o custo)
+    const strength = Math.max(0.35, 1 / Math.sqrt(crits.length))
+    for (const d of crits.slice(0, 4)) {
+      const burst = new CritBurst(d.mesh.position.clone(), DIE_RADIUS.d20, strength)
+      this.scene.add(burst.group)
+      this.bursts.push(burst)
+    }
+  }
+
   /** Fim do lançamento: os que valem dão um pulinho e os descartados apagam. */
   private stepSettle(th: Throw, now: number): void {
     const k = Math.min(1, (now - th.settleStart) / 360)
     for (const d of th.dice) {
       if (d.dim) (d.mesh.material as THREE.MeshPhysicalMaterial).opacity = 1 - 0.7 * k
-      else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.1)
+      else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * (d.crit ? 0.3 : 0.1))
     }
     if (k >= 1) { th.phase = 'rest'; th.resolve() }
   }
@@ -408,6 +444,8 @@ export class DiceStage {
     this.resizeObs.disconnect()
     for (const t of this.throws) { this.dropDice(t); t.resolve() }
     this.throws = []
+    this.dropBursts()
+    disposeCritTextures()
     this.renderer.dispose()
     this.renderer.domElement.remove()
   }

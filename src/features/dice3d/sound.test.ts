@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hitRecipe } from './sound'
+import { CRIT_ARPEGGIO, CRIT_CHORD, hitRecipe } from './sound'
 
 const fixed = (v: number) => () => v
 
@@ -44,5 +44,14 @@ describe('receita do som de dado na madeira', () => {
       expect(r.volume).toBeLessThanOrEqual(1)
       for (const p of [...r.wood, ...r.resin]) { expect(Number.isFinite(p.freq)).toBe(true); expect(p.decay).toBeGreaterThan(0) }
     }
+  })
+})
+
+describe('som do 20 natural', () => {
+  it('o arpejo sobe sempre e o acorde final cabe dentro dele', () => {
+    const up = [...CRIT_ARPEGGIO]
+    expect(up).toEqual([...up].sort((a, b) => a - b))
+    expect(CRIT_CHORD[0]).toBe(CRIT_ARPEGGIO[0])
+    for (const f of CRIT_CHORD) expect(CRIT_ARPEGGIO).toContain(f)
   })
 })
