@@ -232,3 +232,5 @@
   .dice-fab { width: 48px; height: 48px; font-size: var(--text-xl); }
   .dice-toast__total { min-width: 60px; min-height: 60px; font-size: var(--text-2xl); }
 }
+
+.dice-toast__note { margin: 6px 0 0; text-align: center; font-size: var(--text-xs); font-style: italic; color: var(--accent-bright); }

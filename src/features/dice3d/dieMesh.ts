@@ -14,6 +14,7 @@ import { aimToy, makeToy } from './toys'
 
 /** Tamanho do atlas: os conjuntos detalhados pedem mais pixels nos dados de muitas faces (cada face é pequena). */
 function atlasSize(kind: DieKind, skin: DiceSkin): number {
+  if (kind === 'd2') return 2048   // 26 células (as duas tampas e o friso): a tampa precisa de pixels para o número
   if (!skin.surface) return 1024
   const faces = polyhedron(kind).faces.length
   return faces >= 100 ? 4096 : faces >= 20 ? 2048 : faces >= 10 ? 1536 : 1024
@@ -111,7 +112,7 @@ export function dieGeometry(kind: DieKind, cellOf?: readonly number[]): THREE.Bu
 
 // ── Texturas ────────────────────────────────────────────
 
-const NUMBER_SIZE: Record<DieKind, number> = { d4: 0.2, d6: 0.5, d8: 0.36, d10: 0.32, d100: 0.3, d12: 0.36, d20: 0.3 }
+const NUMBER_SIZE: Record<DieKind, number> = { d2: 0.5, d3: 0.5, d4: 0.2, d6: 0.5, d8: 0.36, d10: 0.32, d100: 0.3, d12: 0.36, d20: 0.3 }
 
 /** `alpha` (só na resina): escuro deixa ver através (o corpo), branco é tinta opaca (números e friso). */
 interface Atlas { map: THREE.CanvasTexture; emissive: THREE.CanvasTexture | null; rm: THREE.CanvasTexture; bump: THREE.CanvasTexture | null; alpha: THREE.CanvasTexture | null }
@@ -238,7 +239,8 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
         const x = center[0] + (vx - center[0]) * 0.56, y = center[1] + (vy - center[1]) * 0.56
         drawNumber(String(p.labels[vIdx]), x, y, Math.atan2(vx - center[0], -(vy - center[1])), fontPx(1), false)
       })
-    } else {
+    } else if (!p.restFaces || p.restFaces.includes(i)) {
+      // (o friso da moeda não leva número)
       const label = p.labels[i]
       const text = labelText(kind, label)
       const big = p.labels.length >= 9 && (text === '6' || text === '9')

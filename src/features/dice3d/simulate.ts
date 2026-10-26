@@ -22,7 +22,7 @@ const ROLL_SLIDE_KEEP = 0.993
 const SETTLE_PULL = 9
 
 /** Tamanho de cada dado (raio do vértice mais distante), em unidades do mundo. */
-export const DIE_RADIUS: Record<DieKind, number> = { d4: 1.2, d6: 1.0, d8: 1.08, d10: 1.05, d100: 1.35, d12: 1.1, d20: 1.15 }
+export const DIE_RADIUS: Record<DieKind, number> = { d2: 1.05, d3: 0.9, d4: 1.2, d6: 1.0, d8: 1.08, d10: 1.05, d100: 1.35, d12: 1.1, d20: 1.15 }
 
 /** 'tray': bandeja de baixo da tela; 'stage': o palco do painel de teste; 'wide': o palco largo da rolagem livre (câmera mais longe, mais chão). */
 export type ThrowStyle = 'tray' | 'stage' | 'wide'
@@ -71,7 +71,11 @@ function dieShape(kind: DieKind): CANNON.ConvexPolyhedron {
 /** Altura do centro de um dado deitado numa face (a distância do centro ao plano da face). */
 export function restHeight(kind: DieKind): number {
   const p = polyhedron(kind)
-  const h = p.faces.map((f, i) => { const v = p.vertices[f[0]], n = p.normals[i]; return v[0] * n[0] + v[1] * n[1] + v[2] * n[2] })
+  const h = p.faces.flatMap((f, i) => {
+    if (p.restFaces && !p.restFaces.includes(i)) return []   // a moeda só deita de tampa, não de friso
+    const v = p.vertices[f[0]], n = p.normals[i]
+    return [v[0] * n[0] + v[1] * n[1] + v[2] * n[2]]
+  })
   return (h.reduce((a, b) => a + b, 0) / h.length) * DIE_RADIUS[kind]
 }
 
@@ -297,8 +301,34 @@ export function simulateOnce(kinds: readonly DieKind[], opts: SimOptions): SimRe
     }
   }
 
+  const coinPoly = kinds.includes('d2') ? polyhedron('d2') : null
+  /**
+   * A moeda de pé no friso rolaria quase para sempre (como uma roda): enquanto ela toca o chão inclinada, giro e
+   * deslize perdem força, e quase parada ela tomba para a tampa mais perto de cima.
+   */
+  const coinResist = () => {
+    bodies.forEach((b, i) => {
+      if (!coinPoly || kinds[i] !== 'd2' || b.sleepState === CANNON.Body.SLEEPING || b.position.y > DIE_RADIUS.d2 * 1.06) return
+      const q: Quat = [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w]
+      const c = rotate(q, coinPoly.normals[upIndex(coinPoly, q)])   // tampa de cima, no mundo
+      if (c[1] > 0.985) return
+      b.angularVelocity.scale(0.985, b.angularVelocity)
+      b.velocity.x *= 0.995
+      b.velocity.z *= 0.995
+      if (b.velocity.length() < 2.5 && b.angularVelocity.length() < 6) {
+        // eixo que leva a tampa para cima: c × (0, 1, 0)
+        const axis: V3 = [-c[2], 0, c[0]]
+        if (Math.hypot(axis[0], axis[1], axis[2]) > 0.015) {
+          b.wakeUp()
+          b.angularVelocity.set(axis[0] * SETTLE_PULL, axis[1] * SETTLE_PULL, axis[2] * SETTLE_PULL)
+        }
+      }
+    })
+  }
+
   const ballPoly = kinds.includes('d100') ? polyhedron('d100') : null
   const rollResist = () => {
+    coinResist()
     bodies.forEach((b, i) => {
       if (!ballPoly || kinds[i] !== 'd100' || b.sleepState === CANNON.Body.SLEEPING || b.position.y > DIE_RADIUS.d100 * 1.04) return
       b.angularVelocity.scale(ROLL_SPIN_KEEP, b.angularVelocity)

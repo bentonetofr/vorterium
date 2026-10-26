@@ -5,6 +5,8 @@ import {
 } from './polyhedra'
 
 const SHAPE: Record<DieKind, { faces: number; vertices: number; symmetries: number }> = {
+  d2:   { faces: 26, vertices: 48, symmetries: 48 },
+  d3:   { faces: 6,  vertices: 8,  symmetries: 24 },
   d4:   { faces: 4,  vertices: 4,  symmetries: 12 },
   d6:   { faces: 6,  vertices: 8,  symmetries: 24 },
   d8:   { faces: 8,  vertices: 6,  symmetries: 24 },
@@ -51,6 +53,8 @@ describe('sólidos dos dados', () => {
     for (const kind of DIE_KINDS) {
       const p = polyhedron(kind)
       const n = p.labels.length
+      // moeda e d3 têm regra própria (testes abaixo)
+      if (kind === 'd2' || kind === 'd3') continue
       expect(new Set(p.labels).size, kind).toBe(n)
       if (kind === 'd4') { expect([...p.labels].sort()).toEqual([1, 2, 3, 4]); continue }
       // o bolão tem os números de 1 a 100 espalhados, sem faces opostas certinhas
@@ -63,6 +67,20 @@ describe('sólidos dos dados', () => {
         expect(p.labels[i] + p.labels[opp], kind).toBe(zero ? n - 1 : n + 1)
       })
     }
+  })
+
+  it('d3: um cubo com 1, 2 e 3 em faces opostas (cada número duas vezes); d2: uma moeda, tampas 1 e 2 e friso sem número', () => {
+    const d3 = polyhedron('d3')
+    expect([...d3.labels].sort()).toEqual([1, 1, 2, 2, 3, 3])
+    d3.normals.forEach((nm, i) => expect(d3.labels[i]).toBe(d3.labels[d3.normals.findIndex((m) => dot(m, nm) < -0.999)]))
+    expect(d3.sides).toBe(3)
+    const d2 = polyhedron('d2')
+    expect(d2.sides).toBe(2)
+    expect(d2.restFaces).toHaveLength(2)
+    expect(d2.restFaces!.map((i) => d2.labels[i]).sort()).toEqual([1, 2])
+    expect(d2.labels.filter((l) => l === 0)).toHaveLength(24)
+    // a leitura só olha as tampas: com o friso virado para cima, a face lida ainda é uma tampa
+    for (let seed = 1; seed <= 20; seed++) expect(d2.restFaces).toContain(upIndex(d2, randomQuat(seed * 31)))
   })
 
   it('valor sorteado vira o número da face', () => {
@@ -99,7 +117,7 @@ describe('sólidos dos dados', () => {
       for (let seed = 1; seed <= 12; seed++) {
         const body = randomQuat(seed * 7919 + kind.length)
         const up = upIndex(p, body)
-        for (const label of p.labels) {
+        for (const label of p.labels.filter((_, i) => !p.restFaces || p.restFaces.includes(i))) {
           const s: M3 = alignment(p, up, label)
           const shown = mulQ(body, quatFromM3(s))
           expect(p.labels[upIndex(p, shown)], `${kind} semente ${seed} número ${label}`).toBe(label)

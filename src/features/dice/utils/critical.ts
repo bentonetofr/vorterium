@@ -36,7 +36,8 @@ function diceGroups(roll: RollLike): { sides: number; results: number[] }[] | nu
 /** Todos os dados no máximo → 'critical'; todos em 1 → 'fumble'; senão null. */
 export function fullRollKind(roll: RollLike): FullRollKind | null {
   const groups = diceGroups(roll)
-  if (!groups || groups.some((g) => g.sides <= 1 || g.results.length === 0)) return null
+  // moeda (d2) e d3 não criticam: o "máximo" sai quase sempre
+  if (!groups || groups.some((g) => g.sides <= 3 || g.results.length === 0)) return null
   if (groups.every((g) => g.results.every((r) => r === g.sides))) return 'critical'
   if (groups.every((g) => g.results.every((r) => r === 1))) return 'fumble'
   return null

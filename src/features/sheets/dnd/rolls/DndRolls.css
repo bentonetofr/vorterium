@@ -220,3 +220,6 @@
 .dcq__answer.is-success em { color: #f6d27c; }
 .dcq__answer.is-failure em { color: #ff6b6b; }
 @media (max-width: 520px) { .dcq { padding: var(--space-3); } .dcq__grid { grid-template-columns: 1fr 90px; } }
+
+/* observação que acompanha certas rolagens (o 1d3) */
+.dcp__rollnote { flex-basis: 100%; text-align: center; font-size: var(--text-sm); font-style: italic; color: var(--dsh-bone-dim); }

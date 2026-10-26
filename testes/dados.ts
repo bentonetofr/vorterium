@@ -38,7 +38,7 @@ async function throwOn(target: DiceStage, dice: StageDie[]) {
   out.textContent += `\nparou em ${Math.round(performance.now() - t0)} ms\nfaces: ${shown.join('  ')}  ${ok ? '✓ batem com o sorteio' : '✗ NÃO BATEM'}`
 }
 
-const KINDS: DieKind[] = ['d4', 'd6', 'd8', 'd10', 'd100', 'd12', 'd20']
+const KINDS: DieKind[] = ['d2', 'd3', 'd4', 'd6', 'd8', 'd10', 'd100', 'd12', 'd20']
 for (const k of KINDS) {
   const b = document.createElement('button')
   b.textContent = k === 'd100' ? 'd%' : k

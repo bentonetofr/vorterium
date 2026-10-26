@@ -13,6 +13,8 @@ export function DieShapeIcon({ sides, size = 16 }: { sides: number; size?: numbe
     strokeLinecap: 'round' as const,
   }
   switch (sides) {
+    case 2:  return <svg {...common}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="5.5" /></svg>
+    case 3:  return <svg {...common}><rect x="5" y="5" width="14" height="14" rx="4" /><path d="M9 10.5 L11 9.5 V15 M13.5 11 Q15 9.5 16 11 Q16 12.5 13.5 14.5 H16.2" strokeWidth="1.2" /></svg>
     case 4:  return <svg {...common}><polygon points="12,3 21,19 3,19" /></svg>
     case 6:  return <svg {...common}><rect x="4" y="4" width="16" height="16" rx="3" /></svg>
     case 8:  return <svg {...common}><polygon points="12,3 21,12 12,21 3,12" /></svg>

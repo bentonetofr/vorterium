@@ -19,7 +19,9 @@ describe('rolagem livre', () => {
     expect(freeLabel('2#d20 + 5')).toBe('2#d20 + 5')
     expect(idleKindOf('2#d20+5')).toBe('d20')
     expect(idleKindOf('3d6+1d8')).toBe('d6')
-    expect(idleKindOf('1d3+4')).toBe('d20')
+    expect(idleKindOf('1d3+4')).toBe('d3')
+    expect(idleKindOf('1d2')).toBe('d2')
+    expect(idleKindOf('1d7')).toBe('d20')
     expect(idleKindOf('1d100')).toBe('d100')
   })
 

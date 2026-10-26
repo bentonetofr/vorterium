@@ -8,7 +8,8 @@ import type { DiceRoll, DiceRollContext, DiceRollWithProfile, DieType, RollBreak
 
 export const DIE_TYPES: DieType[] = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
 
-export const QUICK_FORMULAS = DIE_TYPES.map((d) => `1${d}`)
+/** Rolagem rápida: a moeda (d2) e o d3 também têm botão, mas só valem como fórmula (o banco guarda os outros como tipo do dado). */
+export const QUICK_FORMULAS = ['d2', 'd3', ...DIE_TYPES].map((d) => `1${d}`)
 
 // ────────────────────────────────────────────────────────
 // Parser de fórmula controlado (sem eval)

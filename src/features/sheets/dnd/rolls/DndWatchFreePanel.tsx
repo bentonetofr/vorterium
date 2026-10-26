@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DiceRoll } from '../../../../shared/types'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
+import { groupsNote } from '../../../dice/utils/rollNotes'
 import { stageDiceFor } from './diceKinds'
 import { freeLabel, isFreeRoll, readFree, resultsText } from './freeRoll'
 import { useDiceStage } from './useDiceStage'
@@ -102,6 +103,7 @@ export function DndWatchFreePanel({ roll, player, hurry, onDone, mine = false }:
           {done && (
             <div className="dcp__result">
               <span className="dcp__total">Total <strong>{reading.total}</strong></span>
+              {groupsNote(reading.groups) && <span className="dcp__rollnote">{groupsNote(reading.groups)}</span>}
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DiceRollerPanel } from '../../../dice/components/DiceRollerPanel'
+import { groupsNote } from '../../../dice/utils/rollNotes'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { getMyDiceSkin, onDiceSkinChange, setMyDiceSkin } from '../../../dice3d/diceSkinService'
@@ -118,6 +119,7 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
           {reading && (
             <div className="dcp__result" role="status">
               <span className="dcp__total">Total <strong>{reading.total}</strong></span>
+              {groupsNote(reading.groups) && <span className="dcp__rollnote">{groupsNote(reading.groups)}</span>}
             </div>
           )}
         </div>

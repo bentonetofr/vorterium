@@ -10,8 +10,12 @@ import { formatRelativeTime, useRecentRolls } from '../useRecentRolls'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { isTerraDevastadaFamily } from '../../../shared/constants/systems'
 import type { DiceRoll } from '../../../shared/types'
+import { D3_NOTE, rollNote } from '../utils/rollNotes'
 import './DiceRollerPanel.css'
 import { Loader } from '../../../shared/components/Loader'
+
+/** Dicas dos botões de rolagem rápida que fogem do comum. */
+const QUICK_TITLES: Record<string, string> = { '1d2': 'Uma moeda de 2 lados: 1 ou 2', '1d3': `1d3: ${D3_NOTE}` }
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -181,6 +185,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
               onClick={() => handleQuickRoll(f)}
               disabled={rolling}
               aria-label={`Rolar ${f}`}
+              title={QUICK_TITLES[f]}
             >
               {f}
             </button>
@@ -316,6 +321,8 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
                         {formatRelativeTime(roll.created_at)}
                       </span>
                     </div>
+
+                    {rollNote(roll) && <p className="dice-history__note">{rollNote(roll)}</p>}
 
                     {hasBreakdown && (
                       <div className="dice-history__row-detail">

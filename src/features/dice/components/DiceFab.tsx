@@ -14,6 +14,7 @@ import { useFeature } from '../../control/siteFeatures'
 import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
 import { DndDiceCard } from '../../sheets/dnd/rolls/DndDiceCard'
 import { DieShapeIcon } from './DieShapeIcon'
+import { rollNote } from '../utils/rollNotes'
 import './DiceFab.css'
 
 // Duração do "quique" antes de assentar no resultado final.
@@ -73,7 +74,7 @@ function totalClass(roll: DiceRoll): string {
   }
   if (diceTerms.length === 1) {
     const t = diceTerms[0]
-    if ('sides' in t) {
+    if ('sides' in t && t.sides > 3) {   // moeda e d3 não brilham nem apagam
       const noMod = !breakdown.some((b) => b.type === 'modifier')
       if (t.quantity === 1 && t.results[0] === t.sides && noMod) {
         return 'dice-toast__total dice-toast__total--max'
@@ -280,6 +281,7 @@ export function DiceFab() {
           {displayRoll === null && activeRoll?.roll_breakdown && activeRoll.roll_breakdown.length > 0 && (
             <ToastBreakdown breakdown={activeRoll.roll_breakdown} />
           )}
+          {displayRoll === null && activeRoll && rollNote(activeRoll) && <p className="dice-toast__note">{rollNote(activeRoll)}</p>}
         </div>,
       )}
 

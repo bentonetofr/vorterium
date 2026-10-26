@@ -4,11 +4,11 @@ import type { StageDie } from '../../../dice3d/DiceStage'
 
 // ────────────────────────────────────────────────────────
 // Da rolagem gravada para os dados do palco: cada resultado vira um dado 3D
-// (o d100 é o bolão de 100 faces, um dado só). Dados sem forma 3D (d2, d3...) ficam
-// de fora da animação e aparecem só no resultado.
+// (o d100 é o bolão de 100 faces, um dado só; o d2 é uma moeda; o d3, um cubo com 1 a 3 repetidos). Dados sem
+// forma 3D (d5, d7...) ficam de fora da animação e aparecem só no resultado.
 // ────────────────────────────────────────────────────────
 
-const KIND_OF: Record<number, DieKind> = { 4: 'd4', 6: 'd6', 8: 'd8', 10: 'd10', 12: 'd12', 20: 'd20', 100: 'd100' }
+const KIND_OF: Record<number, DieKind> = { 2: 'd2', 3: 'd3', 4: 'd4', 6: 'd6', 8: 'd8', 10: 'd10', 12: 'd12', 20: 'd20', 100: 'd100' }
 
 export function stageDiceFor(breakdown: readonly RollBreakdownItem[], skin?: string): StageDie[] {
   const out: StageDie[] = []

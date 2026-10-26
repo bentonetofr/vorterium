@@ -1,5 +1,5 @@
 // ────────────────────────────────────────────────────────
-// Geometria dos dados (d4, d6, d8, d10, d12, d20 e o d100 "bolão" de 100 faces), sem desenho e sem
+// Geometria dos dados (d2 moeda, d3, d4, d6, d8, d10, d12, d20 e o d100 "bolão" de 100 faces), sem desenho e sem
 // física: vértices, faces (em sentido anti-horário vistas de fora), número
 // de cada face (no d4, de cada vértice), leitura da face de cima e o grupo
 // de rotações que levam o sólido nele mesmo.
@@ -15,8 +15,8 @@ export type V3 = [number, number, number]
 export type M3 = [number, number, number, number, number, number, number, number, number]
 export type Quat = [number, number, number, number] // x, y, z, w
 
-export type DieKind = 'd4' | 'd6' | 'd8' | 'd10' | 'd100' | 'd12' | 'd20'
-export const DIE_KINDS: readonly DieKind[] = ['d4', 'd6', 'd8', 'd10', 'd100', 'd12', 'd20']
+export type DieKind = 'd2' | 'd3' | 'd4' | 'd6' | 'd8' | 'd10' | 'd100' | 'd12' | 'd20'
+export const DIE_KINDS: readonly DieKind[] = ['d2', 'd3', 'd4', 'd6', 'd8', 'd10', 'd100', 'd12', 'd20']
 
 export interface Polyhedron {
   kind:        DieKind
@@ -31,6 +31,10 @@ export interface Polyhedron {
   readsVertex: boolean
   /** Rotações que levam o sólido nele mesmo (inclui a identidade). */
   symmetries:  M3[]
+  /** Quantos lados o dado sorteia (o d3 tem 6 faces e o d2, uma moeda, tem 26: duas tampas e o friso). */
+  sides:       number
+  /** Só estas faces valem como apoio e leitura (a moeda: as duas tampas; o friso não conta). Sem isto, todas valem. */
+  restFaces?:  number[]
 }
 
 // ── Vetores ─────────────────────────────────────────────
@@ -155,8 +159,19 @@ function ballLabels(): number[] {
   return labels
 }
 
+/** A moeda do d2: um prisma de 24 lados, baixo e largo (o friso é o lado). */
+const COIN_SIDES = 24
+const COIN_HALF_THICKNESS = 0.16
+
+function coinVertices(): V3[] {
+  const ring = (y: number) => Array.from({ length: COIN_SIDES }, (_, i): V3 => [Math.cos((i * 2 * Math.PI) / COIN_SIDES), y, Math.sin((i * 2 * Math.PI) / COIN_SIDES)])
+  return [...ring(COIN_HALF_THICKNESS), ...ring(-COIN_HALF_THICKNESS)]
+}
+
 function rawVertices(kind: DieKind): V3[] {
   switch (kind) {
+    case 'd2':  return coinVertices()
+    case 'd3':  return [-1, 1].flatMap((x) => [-1, 1].flatMap((y) => [-1, 1].map((z): V3 => [x, y, z])))
     case 'd4':  return [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]]
     case 'd6':  return [-1, 1].flatMap((x) => [-1, 1].flatMap((y) => [-1, 1].map((z): V3 => [x, y, z])))
     case 'd8':  return [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
@@ -287,17 +302,25 @@ export function polyhedron(kind: DieKind): Polyhedron {
   const faces = ball ? ballSolid().faces : hullFaces(vertices)
   const normals = faces.map((f) => faceNormal(vertices, f))
   const readsVertex = kind === 'd4'
+  // moeda: só as duas tampas (as faces de 24 lados) têm número, 1 e 2; o friso fica sem (0) e não vale como apoio
+  const caps = kind === 'd2' ? faces.flatMap((f, i) => (f.length === COIN_SIDES ? [i] : [])) : undefined
+  // d3: um cubo com 1, 2 e 3 em faces opostas (cada número aparece duas vezes, como no d3 de verdade)
+  const labels = readsVertex ? [1, 2, 3, 4]
+    : ball ? ballLabels()
+    : caps ? faces.map((_, i) => (caps.includes(i) ? caps.indexOf(i) + 1 : 0))
+    : kind === 'd3' ? assignLabels('d6', normals).map((l) => (l <= 3 ? l : 7 - l))
+    : assignLabels(kind, normals)
   // o bolão não tem simetria que troque os números: quem mostra o resultado é o desenho (dieMesh.ts), face por face
-  const labels = readsVertex ? [1, 2, 3, 4] : ball ? ballLabels() : assignLabels(kind, normals)
   const symmetries: M3[] = ball ? [[1, 0, 0, 0, 1, 0, 0, 0, 1]] : findSymmetries(vertices, faces)
-  const p: Polyhedron = { kind, vertices, faces, normals, labels, readsVertex, symmetries }
+  const sides = kind === 'd2' ? 2 : kind === 'd3' ? 3 : labels.length
+  const p: Polyhedron = { kind, vertices, faces, normals, labels, readsVertex, symmetries, sides, ...(caps ? { restFaces: caps } : {}) }
   cache.set(kind, p)
   return p
 }
 
 /** Quantos lados o dado tem para o sorteio (d% conta como 10 dezenas). */
 export function facesCount(kind: DieKind): number {
-  return polyhedron(kind).labels.length
+  return polyhedron(kind).sides
 }
 
 /** O número que vai na face para um valor sorteado. d10: 10 vira 0. d100: 1 a 100, como saiu. */
@@ -321,7 +344,11 @@ export function upIndex(p: Polyhedron, q: Quat, toward: V3 = [0, 1, 0]): number 
   const items = p.readsVertex ? p.vertices : p.normals
   const t = norm(toward)
   let best = 0, bestY = -Infinity
-  items.forEach((v, i) => { const y = dot(rotate(q, v), t); if (y > bestY) { bestY = y; best = i } })
+  items.forEach((v, i) => {
+    if (p.restFaces && !p.restFaces.includes(i)) return
+    const y = dot(rotate(q, v), t)
+    if (y > bestY) { bestY = y; best = i }
+  })
   return best
 }
 
@@ -343,7 +370,7 @@ export function numberUp(p: Polyhedron, face: number): V3 {
   const f = p.faces[face]
   const pts = f.map((v) => p.vertices[v])
   const c = centroid(pts)
-  const pointy = f.length === 3 || (f.length === 4 && p.kind !== 'd6')
+  const pointy = f.length === 3 || (f.length === 4 && p.kind !== 'd6' && p.kind !== 'd3')
   const ref = pointy
     ? pts.reduce((best, q) => (len(sub(q, c)) > len(sub(best, c)) ? q : best), pts[0])
     : scale([pts[0][0] + pts[1][0], pts[0][1] + pts[1][1], pts[0][2] + pts[1][2]], 0.5)

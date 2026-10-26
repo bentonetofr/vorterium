@@ -60,8 +60,8 @@ export function resultsText(g: FreeGroup): string {
 }
 
 /** O dado de forma 3D que fica parado no painel antes de rolar (o primeiro da fórmula; d20 se não achar). */
-export function idleKindOf(formula: string): 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100' {
+export function idleKindOf(formula: string): 'd2' | 'd3' | 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100' {
   const m = /d(\d+)/i.exec(formula)
   const sides = m ? Number(m[1]) : 20
-  return ([4, 6, 8, 10, 12, 20, 100].includes(sides) ? `d${sides}` : 'd20') as ReturnType<typeof idleKindOf>
+  return ([2, 3, 4, 6, 8, 10, 12, 20, 100].includes(sides) ? `d${sides}` : 'd20') as ReturnType<typeof idleKindOf>
 }
