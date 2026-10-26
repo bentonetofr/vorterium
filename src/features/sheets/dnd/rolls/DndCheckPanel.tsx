@@ -91,8 +91,8 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
       let dc = spec.dc
       if (spec.dcHidden && spec.requestId && revealDc) dc = await revealDc(spec.requestId)
       const { outcome, crit } = judge(spec.kind, reading.natural, reading.total, dc)
-      // com o palco 3D, o 20 natural já tocou o próprio som de crítico quando o dado parou
-      if (crit && !(crit === 'crit' && stage)) playDiceFlourish(crit)
+      // com o palco 3D, o 20 e o 1 naturais já tocaram o som da animação sorteada quando o dado parou
+      if (crit && !stage) playDiceFlourish(crit)
       const result: CheckDone = { roll: saved, reading, dc, outcome, crit }
       setDone(result)
       setPhase('done')

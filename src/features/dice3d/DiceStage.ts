@@ -5,7 +5,9 @@ import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from 
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
 import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { getSkin } from './skins'
-import { playCritSound, playDiceHit } from './sound'
+import { playDiceHit, playFxSound } from './sound'
+import { pickTheme, THEME_COLORS, type FxTheme } from './fxThemes'
+import { playScreenFx } from './screenFx'
 import { CritBurst, disposeCritTextures } from './critFx'
 import { getSettings } from '../settings/settingsStore'
 
@@ -43,8 +45,8 @@ interface LiveDie {
   /** Giro em torno do eixo vertical aplicado em todo o lançamento (só no palco). */
   yaw:    THREE.Quaternion
   dim:    boolean
-  /** 20 natural no d20: ao parar, explode em brilho. */
-  crit:   boolean
+  /** 20 natural ('crit') ou 1 natural ('fumble') num d20 que vale: ao parar, a tela toda reage. */
+  fx:     'crit' | 'fumble' | null
 }
 
 /** Um lançamento: os dados dele, a gravação da física e o ponto em que está. */
@@ -308,7 +310,7 @@ export class DiceStage {
       mesh.castShadow = true
       mesh.userData.kind = d.kind
       this.scene.add(mesh)
-      return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim, crit: d.kind === 'd20' && d.value === 20 && !d.dim }
+      return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim, fx: d.kind === 'd20' && !d.dim ? (d.value === 20 ? 'crit' : d.value === 1 ? 'fumble' : null) : null }
     })
 
     let resolve: () => void = () => {}
@@ -390,19 +392,35 @@ export class DiceStage {
     }
   }
 
-  /** 20 natural: som, clarão, raios, onda de choque e faíscas em volta de cada d20 que tirou 20. */
+  /** A animação sorteada por último (para a seguinte ser outra). */
+  private lastTheme: FxTheme | null = null
+
+  /**
+   * 20 natural (ou 1 natural) num d20 que vale: sorteia uma das animações (fogo, relâmpago, água...), toca o
+   * som dela, faz a explosão em volta do dado e solta a animação de tela cheia a partir de onde ele parou.
+   * Um crítico ganha de uma falha na mesma jogada (vários d20).
+   */
   private celebrate(th: Throw): void {
-    const crits = th.dice.filter((d) => d.crit)
-    if (crits.length === 0) return
-    if (th.sound) playCritSound()
-    if (getSettings().noEffects) return
-    // vários 20 ao mesmo tempo dividem o brilho (e o custo)
-    const strength = Math.max(0.35, 1 / Math.sqrt(crits.length))
-    for (const d of crits.slice(0, 4)) {
-      const burst = new CritBurst(d.mesh.position.clone(), DIE_RADIUS.d20, strength)
+    const crits = th.dice.filter((d) => d.fx === 'crit')
+    const fumbles = th.dice.filter((d) => d.fx === 'fumble')
+    const kind = crits.length ? 'crit' : fumbles.length ? 'fumble' : null
+    if (!kind) return
+    const hit = kind === 'crit' ? crits : fumbles
+    const theme = pickTheme(kind, this.lastTheme)
+    this.lastTheme = theme
+    if (th.sound) playFxSound(theme)
+    const s = getSettings()
+    if (s.noEffects || s.reduceMotion) return
+    // vários d20 no mesmo valor dividem o brilho (e o custo)
+    const strength = Math.max(0.35, 1 / Math.sqrt(hit.length))
+    for (const d of hit.slice(0, 4)) {
+      const burst = new CritBurst(d.mesh.position.clone(), DIE_RADIUS.d20, strength, THEME_COLORS[theme])
       this.scene.add(burst.group)
       this.bursts.push(burst)
     }
+    const at = this.screenPositions().find((_, i) => this.live[i] === hit[0])
+    const box = this.host.getBoundingClientRect()
+    playScreenFx(theme, at ? { x: box.left + at.x, y: box.top + at.y } : { x: box.left + box.width / 2, y: box.top + box.height / 2 })
   }
 
   /** Fim do lançamento: os que valem dão um pulinho e os descartados apagam. */
@@ -410,7 +428,7 @@ export class DiceStage {
     const k = Math.min(1, (now - th.settleStart) / 360)
     for (const d of th.dice) {
       if (d.dim) (d.mesh.material as THREE.MeshPhysicalMaterial).opacity = 1 - 0.7 * k
-      else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * (d.crit ? 0.3 : 0.1))
+      else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * (d.fx ? 0.3 : 0.1))
     }
     if (k >= 1) { th.phase = 'rest'; th.resolve() }
   }

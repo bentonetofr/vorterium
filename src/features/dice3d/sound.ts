@@ -1,4 +1,5 @@
 import { soundVolume } from '../settings/settingsStore'
+import type { FxTheme } from './fxThemes'
 // ────────────────────────────────────────────────────────
 // Som dos dados gerado na hora (Web Audio), sem arquivos. Um dado batendo numa
 // mesa de madeira tem duas partes:
@@ -183,75 +184,206 @@ export function playDiceFlourish(kind: 'crit' | 'fumble'): void {
   })
 }
 
-// ── Crítico (20 natural) ────────────────────────────────
+// ── Crítico (20 natural) e falha crítica (1 natural) ────
 
 /** As notas do crítico: um arpejo dourado que sobe em Dó maior até a oitava, mais o acorde final que fica soando. */
 export const CRIT_ARPEGGIO = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98] as const
 export const CRIT_CHORD = [523.25, 783.99, 1046.5, 1318.51] as const
 
-/** Um sino: fundamental + parcial inarmônico (razão 2,76), que morre antes. */
-function bell(a: AudioContext, out: AudioNode, t: number, freq: number, peak: number, life: number): void {
+/** Ruído de 2 s para chiados e trovões (o de 50 ms dos estalos repetiria num zumbido). */
+let longNoise: AudioBuffer | null = null
+
+interface Kit { a: AudioContext; out: AudioNode; t: number; noise: AudioBuffer }
+
+/** Um sino: fundamental + parciais inarmônicos (razões 2,76 e 5,4), que morrem antes. */
+function bell(k: Kit, t: number, freq: number, peak: number, life: number): void {
   for (const [ratio, level, decay] of [[1, 1, life], [2.76, 0.35, life * 0.45], [5.4, 0.12, life * 0.2]] as const) {
-    const o = a.createOscillator()
+    const o = k.a.createOscillator()
     o.type = 'sine'
     o.frequency.value = freq * ratio
-    const g = a.createGain()
+    const g = k.a.createGain()
     g.gain.setValueAtTime(0.0001, t)
     g.gain.exponentialRampToValueAtTime(peak * level, t + 0.012)
     g.gain.exponentialRampToValueAtTime(0.0001, t + decay)
-    o.connect(g).connect(out)
+    o.connect(g).connect(k.out)
     o.start(t)
     o.stop(t + decay + 0.05)
   }
 }
 
-/**
- * O som do 20 natural: uma pancada grave (o "whoom" da explosão), um chiado
- * que sobe e brilha, um arpejo de sinos subindo e o acorde final que
- * ressoa. Tudo gerado na hora, no volume dos sons dos dados.
- */
-export function playCritSound(): void {
+/** Tom que desliza de `f0` a `f1`: pancadas graves, zaps, bolhas, quedas. */
+function glide(k: Kit, t: number, f0: number, f1: number, dur: number, peak: number, type: OscillatorType = 'sine', cutoff = 0): void {
+  const o = k.a.createOscillator()
+  o.type = type
+  o.frequency.setValueAtTime(f0, t)
+  o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur)
+  const g = k.a.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.exponentialRampToValueAtTime(peak, t + Math.min(0.02, dur / 4))
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+  if (cutoff) {
+    const lp = k.a.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = cutoff
+    o.connect(lp).connect(g)
+  } else o.connect(g)
+  g.connect(k.out)
+  o.start(t)
+  o.stop(t + dur + 0.05)
+}
+
+/** Chiado: ruído filtrado cuja frequência vai de `f0` a `f1`, subindo e descendo de volume. */
+function hiss(k: Kit, t: number, type: BiquadFilterType, f0: number, f1: number, dur: number, peak: number, attack = 0.3, q = 1): void {
+  const src = k.a.createBufferSource()
+  src.buffer = k.noise
+  src.loop = true
+  const f = k.a.createBiquadFilter()
+  f.type = type
+  f.Q.value = q
+  f.frequency.setValueAtTime(f0, t)
+  f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur)
+  const g = k.a.createGain()
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.exponentialRampToValueAtTime(peak, t + Math.max(0.004, dur * attack))
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+  src.connect(f).connect(g).connect(k.out)
+  src.start(t, Math.random())
+  src.stop(t + dur + 0.05)
+}
+
+/** Estalinhos soltos (fogo, rachaduras, cinzas): `n` estalos espalhados em `span` s. */
+function crackle(k: Kit, t: number, n: number, span: number, peak: number, hz = 2600): void {
+  for (let i = 0; i < n; i++) hiss(k, t + Math.random() * span, 'highpass', hz * (0.7 + Math.random() * 0.8), hz * 0.6, 0.012 + Math.random() * 0.02, peak * (0.4 + Math.random() * 0.6), 0.1)
+}
+
+/** Bolhas: seios curtos que sobem de tom. */
+function bubbles(k: Kit, t: number, n: number, span: number, lo: number, hi: number, peak: number): void {
+  for (let i = 0; i < n; i++) {
+    const f = lo + Math.random() * (hi - lo)
+    glide(k, t + Math.random() * span, f, f * (1.6 + Math.random() * 0.8), 0.07 + Math.random() * 0.06, peak * (0.5 + Math.random() * 0.5))
+  }
+}
+
+/** A queda triste da falha: notas que descem, serrilhadas e abafadas. */
+function sad(k: Kit, t: number, notes: readonly number[], step = 0.13, peak = 0.12, cutoff = 900): void {
+  notes.forEach((f, i) => glide(k, t + i * step, f, f * 0.97, 0.7, peak, 'sawtooth', cutoff))
+}
+
+const sparkle = (k: Kit, t: number, notes: readonly number[], peak: number, life = 0.9, gap = 0.065) => notes.forEach((f, i) => bell(k, t + i * gap, f, peak + i * 0.01, life))
+
+/** Como cada animação soa (todas sintetizadas na hora). */
+const RECIPES: Record<FxTheme, (k: Kit) => void> = {
+  fire: (k) => {
+    glide(k, k.t, 140, 45, 0.45, 0.5)
+    hiss(k, k.t, 'lowpass', 300, 3000, 1.1, 0.34, 0.25)
+    crackle(k, k.t + 0.1, 18, 1.7, 0.2)
+    sparkle(k, k.t + 0.1, [523.25, 659.25, 783.99, 1046.5], 0.08)
+  },
+  glow: (k) => {
+    glide(k, k.t, 150, 42, 0.5, 0.5)
+    hiss(k, k.t, 'bandpass', 900, 9000, 0.85, 0.22, 0.3, 1.4)
+    sparkle(k, k.t + 0.08, CRIT_ARPEGGIO, 0.1)
+    CRIT_CHORD.forEach((f, i) => bell(k, k.t + 0.5, f * (i % 2 ? 1.003 : 0.997), 0.09, 1.9))
+  },
+  lightning: (k) => {
+    hiss(k, k.t, 'highpass', 1800, 900, 0.16, 0.6, 0.05)
+    glide(k, k.t, 2200, 60, 0.28, 0.2, 'sawtooth', 5000)
+    hiss(k, k.t + 0.08, 'lowpass', 320, 70, 2, 0.55, 0.12)
+    hiss(k, k.t + 0.5, 'highpass', 1800, 900, 0.14, 0.45, 0.05)
+    sparkle(k, k.t + 0.7, [783.99, 1046.5, 1567.98], 0.07, 1.2, 0.1)
+  },
+  water: (k) => {
+    hiss(k, k.t, 'bandpass', 1800, 700, 0.55, 0.3, 0.12, 0.8)
+    hiss(k, k.t + 0.15, 'lowpass', 400, 1400, 1.4, 0.2, 0.4)
+    bubbles(k, k.t + 0.2, 16, 1.6, 320, 1100, 0.14)
+    sparkle(k, k.t + 0.25, [392, 493.88, 587.33, 783.99, 987.77], 0.07, 1.1, 0.09)
+  },
+  ice: (k) => {
+    glide(k, k.t, 110, 55, 0.4, 0.35)
+    hiss(k, k.t, 'highpass', 7000, 5000, 0.35, 0.35, 0.08)
+    crackle(k, k.t + 0.05, 10, 0.9, 0.22, 5000)
+    sparkle(k, k.t + 0.1, [1046.5, 1318.51, 1567.98, 2093, 2637, 3135.96], 0.07, 1.6, 0.06)
+  },
+  arcane: (k) => {
+    glide(k, k.t, 180, 2400, 0.9, 0.16, 'sawtooth', 3000)
+    glide(k, k.t, 182, 2430, 0.9, 0.12, 'sawtooth', 3000)
+    hiss(k, k.t, 'bandpass', 500, 7000, 0.9, 0.22, 0.6, 2)
+    glide(k, k.t + 0.85, 120, 40, 0.5, 0.45)
+    sparkle(k, k.t + 0.9, [440, 523.25, 659.25, 880, 1046.5], 0.09, 1.7, 0.05)
+  },
+  nature: (k) => {
+    hiss(k, k.t, 'bandpass', 500, 1200, 1.6, 0.2, 0.5, 0.9)
+    ;[392, 440, 523.25, 587.33, 659.25, 783.99].forEach((f, i) => glide(k, k.t + 0.1 + i * 0.11, f, f * 1.01, 0.55, 0.11, 'triangle'))
+    glide(k, k.t, 120, 60, 0.4, 0.3)
+    sparkle(k, k.t + 0.75, [1046.5, 1318.51], 0.06, 1.4, 0.1)
+  },
+  cosmos: (k) => {
+    glide(k, k.t, 90, 30, 1.2, 0.5)
+    for (let i = 0; i < 4; i++) glide(k, k.t + 0.12 + i * 0.2, 3200, 500, 0.45, 0.07)
+    hiss(k, k.t, 'bandpass', 400, 6000, 1, 0.14, 0.5, 1.5)
+    sparkle(k, k.t + 0.4, [392, 587.33, 783.99, 1174.66, 1567.98], 0.08, 2, 0.12)
+  },
+  darkfire: (k) => {
+    glide(k, k.t, 100, 38, 0.6, 0.5)
+    hiss(k, k.t, 'lowpass', 200, 1500, 1.3, 0.3, 0.3)
+    crackle(k, k.t + 0.1, 14, 1.6, 0.18, 1800)
+    sad(k, k.t + 0.2, [220, 207.65, 174.61, 130.81])
+  },
+  redlightning: (k) => {
+    hiss(k, k.t, 'highpass', 1600, 800, 0.2, 0.6, 0.05)
+    hiss(k, k.t + 0.06, 'lowpass', 260, 50, 2.2, 0.55, 0.1)
+    glide(k, k.t, 1800, 50, 0.4, 0.18, 'sawtooth', 3000)
+    sad(k, k.t + 0.4, [233.08, 164.81, 116.54], 0.2, 0.12, 700)
+  },
+  blood: (k) => {
+    hiss(k, k.t, 'lowpass', 900, 200, 0.28, 0.5, 0.05)
+    glide(k, k.t, 120, 40, 0.35, 0.5)
+    for (let i = 0; i < 5; i++) glide(k, k.t + 0.5 + i * 0.28 + Math.random() * 0.1, 900, 320, 0.09, 0.14)
+    sad(k, k.t + 0.3, [196, 185, 164.81], 0.25, 0.1, 600)
+  },
+  shadow: (k) => {
+    glide(k, k.t, 60, 48, 2.2, 0.4)
+    glide(k, k.t, 63, 50, 2.2, 0.3)
+    hiss(k, k.t, 'lowpass', 1800, 150, 1.8, 0.3, 0.6)
+    sad(k, k.t + 0.3, [164.81, 155.56, 130.81, 110], 0.28, 0.1, 500)
+  },
+  cracks: (k) => {
+    glide(k, k.t, 100, 35, 0.5, 0.55)
+    for (let i = 0; i < 6; i++) hiss(k, k.t + i * 0.07 + Math.random() * 0.04, 'bandpass', 2400 + Math.random() * 2000, 900, 0.06, 0.5, 0.05, 2)
+    crackle(k, k.t + 0.5, 14, 1.6, 0.16, 2200)
+    sad(k, k.t + 0.5, [196, 146.83], 0.3, 0.1, 700)
+  },
+  poison: (k) => {
+    hiss(k, k.t, 'highpass', 3500, 6500, 1.3, 0.2, 0.5)
+    bubbles(k, k.t, 22, 1.8, 140, 520, 0.16)
+    glide(k, k.t, 100, 50, 0.5, 0.35)
+    sad(k, k.t + 0.5, [185, 174.61, 138.59], 0.22, 0.1, 650)
+  },
+  void: (k) => {
+    glide(k, k.t, 240, 28, 1.9, 0.5)
+    glide(k, k.t, 480, 55, 1.9, 0.12, 'triangle')
+    hiss(k, k.t, 'bandpass', 4000, 150, 1.9, 0.22, 0.4, 1.2)
+    glide(k, k.t + 1.7, 90, 30, 0.6, 0.5)
+  },
+  ash: (k) => {
+    hiss(k, k.t, 'lowpass', 500, 260, 1.8, 0.2, 0.4)
+    crackle(k, k.t + 0.1, 9, 1.8, 0.1, 2000)
+    glide(k, k.t, 90, 45, 0.5, 0.35)
+    ;[220, 185, 164.81, 146.83].forEach((f, i) => glide(k, k.t + i * 0.3, f, f * 0.98, 0.9, 0.08, 'sine'))
+  },
+}
+
+/** O som do 20 natural (ou do 1) da animação sorteada: cada uma tem o seu, no volume dos sons dos dados. */
+export function playFxSound(theme: FxTheme): void {
   const level = soundVolume('dice')
   if (muted || level === 0) return
   const a = audio()
   if (!a || !bus) return
   bus.gain.value = 0.9 * level
-  const t = a.currentTime + 0.01
-
-  // pancada grave: seno que cai de tom
-  const boom = a.createOscillator()
-  boom.type = 'sine'
-  boom.frequency.setValueAtTime(150, t)
-  boom.frequency.exponentialRampToValueAtTime(42, t + 0.35)
-  const bg = a.createGain()
-  bg.gain.setValueAtTime(0.0001, t)
-  bg.gain.exponentialRampToValueAtTime(0.5, t + 0.012)
-  bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
-  boom.connect(bg).connect(bus)
-  boom.start(t)
-  boom.stop(t + 0.55)
-
-  // chiado que sobe e brilha (ruído filtrado, passando de grave a agudo)
-  if (noise) {
-    const src = a.createBufferSource()
-    src.buffer = noise
-    src.loop = true
-    const bp = a.createBiquadFilter()
-    bp.type = 'bandpass'
-    bp.Q.value = 1.4
-    bp.frequency.setValueAtTime(900, t)
-    bp.frequency.exponentialRampToValueAtTime(9000, t + 0.7)
-    const ng = a.createGain()
-    ng.gain.setValueAtTime(0.0001, t)
-    ng.gain.exponentialRampToValueAtTime(0.22, t + 0.25)
-    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.85)
-    src.connect(bp).connect(ng).connect(bus)
-    src.start(t)
-    src.stop(t + 0.9)
+  if (!longNoise) {
+    longNoise = a.createBuffer(1, a.sampleRate * 2, a.sampleRate)
+    const d = longNoise.getChannelData(0)
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
   }
-
-  // arpejo de sinos
-  CRIT_ARPEGGIO.forEach((f, i) => bell(a, bus!, t + 0.08 + i * 0.065, f, 0.1 + i * 0.012, 0.9))
-  // acorde final, mais longo
-  CRIT_CHORD.forEach((f, i) => bell(a, bus!, t + 0.5, f * (i % 2 ? 1.003 : 0.997), 0.09, 1.9))
+  RECIPES[theme]({ a, out: bus, t: a.currentTime + 0.01, noise: longNoise })
 }

@@ -13,7 +13,6 @@ export const CRIT_LIFE = 2.1
 
 const SPARKS = 90
 const STARS = 12
-const GOLD = [new THREE.Color('#fff2b0'), new THREE.Color('#ffd25a'), new THREE.Color('#ffb02e'), new THREE.Color('#ffffff')]
 
 let glowTex: THREE.CanvasTexture | null = null
 let rayTex: THREE.CanvasTexture | null = null
@@ -33,7 +32,7 @@ function canvasTex(size: number, paint: (g: CanvasRenderingContext2D, s: number)
 function glowTexture(): THREE.CanvasTexture {
   return glowTex ??= canvasTex(128, (g, s) => {
     const r = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
-    r.addColorStop(0, 'rgba(255,248,210,1)'); r.addColorStop(0.25, 'rgba(255,214,102,0.7)'); r.addColorStop(0.6, 'rgba(255,170,40,0.22)'); r.addColorStop(1, 'rgba(255,150,30,0)')
+    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.25, 'rgba(255,255,255,0.7)'); r.addColorStop(0.6, 'rgba(255,255,255,0.22)'); r.addColorStop(1, 'rgba(255,255,255,0)')
     g.fillStyle = r; g.fillRect(0, 0, s, s)
   })
 }
@@ -45,7 +44,7 @@ function rayTexture(): THREE.CanvasTexture {
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2, w = Math.PI / n * 0.42
       const r = g.createRadialGradient(c, c, 4, c, c, c)
-      r.addColorStop(0, 'rgba(255,236,150,0.85)'); r.addColorStop(1, 'rgba(255,200,80,0)')
+      r.addColorStop(0, 'rgba(255,255,255,0.85)'); r.addColorStop(1, 'rgba(255,255,255,0)')
       g.fillStyle = r
       g.beginPath(); g.moveTo(c, c); g.arc(c, c, c, a - w, a + w); g.closePath(); g.fill()
     }
@@ -57,7 +56,7 @@ function starTexture(): THREE.CanvasTexture {
   return starTex ??= canvasTex(96, (g, s) => {
     const c = s / 2
     const r = g.createRadialGradient(c, c, 0, c, c, c)
-    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.18, 'rgba(255,240,170,0.9)'); r.addColorStop(1, 'rgba(255,200,80,0)')
+    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.18, 'rgba(255,255,255,0.9)'); r.addColorStop(1, 'rgba(255,255,255,0)')
     g.fillStyle = r
     g.beginPath()
     g.moveTo(c, 0); g.quadraticCurveTo(c, c, s, c); g.quadraticCurveTo(c, c, c, s); g.quadraticCurveTo(c, c, 0, c); g.quadraticCurveTo(c, c, c, 0)
@@ -97,22 +96,23 @@ export class CritBurst {
   private readonly u: number
 
   /** `center`: onde está o dado; `size`: raio do dado (escala tudo); `strength`: 1 para um 20, menos quando há vários. */
-  constructor(center: THREE.Vector3, size: number, strength = 1) {
+  constructor(center: THREE.Vector3, size: number, strength = 1, palette: readonly [string, string, string] = ['#fff3b8', '#ffd25a', '#ffa21f']) {
+    const tint = palette.map((p) => new THREE.Color(p))
     this.group.position.copy(center)
     const u = this.u = Math.max(0.6, size)
 
-    const add = (tex: THREE.Texture, opacity: number): THREE.Sprite => {
-      const m = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending })
+    const add = (tex: THREE.Texture, opacity: number, color: THREE.Color): THREE.Sprite => {
+      const m = new THREE.SpriteMaterial({ map: tex, color, transparent: true, opacity, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending })
       const s = new THREE.Sprite(m)
       s.renderOrder = 10
       this.group.add(s)
       return s
     }
-    this.glow = add(glowTexture(), 0)
-    this.rays = add(rayTexture(), 0)
+    this.glow = add(glowTexture(), 0, tint[1])
+    this.rays = add(rayTexture(), 0, tint[1])
 
     // onda de choque: um anel deitado no chão
-    this.ringMat = new THREE.MeshBasicMaterial({ color: 0xffd25a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })
+    this.ringMat = new THREE.MeshBasicMaterial({ color: tint[1], transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 64), this.ringMat)
     this.ring.rotation.x = -Math.PI / 2
     this.ring.position.y = 0.06 - center.y
@@ -122,7 +122,7 @@ export class CritBurst {
     const rnd = Math.random
     const nStars = Math.round(STARS * strength)
     for (let i = 0; i < nStars; i++) {
-      const sprite = add(starTexture(), 0)
+      const sprite = add(starTexture(), 0, tint[i % 2 ? 0 : 1])
       const a = rnd() * Math.PI * 2, out = (1.6 + rnd() * 2.6) * u
       this.stars.push({
         sprite, size: (0.16 + rnd() * 0.34) * u, spin: (rnd() - 0.5) * 5, phase: rnd() * 6,
@@ -142,7 +142,7 @@ export class CritBurst {
       this.vel[i * 3 + 1] = Math.sin(el) * sp + 1.5
       this.vel[i * 3 + 2] = Math.sin(a) * Math.cos(el) * sp * 0.8
       this.life[i] = 0.7 + rnd() * 1.3
-      const c = GOLD[Math.floor(rnd() * GOLD.length)]
+      const c = tint[Math.floor(rnd() * 3)]
       this.tint.set([c.r, c.g, c.b], i * 3)
     }
     const geo = new THREE.BufferGeometry()

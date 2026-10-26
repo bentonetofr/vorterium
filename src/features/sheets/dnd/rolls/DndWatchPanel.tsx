@@ -62,7 +62,7 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
     })
     void play.then(() => {
       if (!alive) return
-      if (w.crit && !(w.crit === 'crit' && stage)) playDiceFlourish(w.crit)
+      if (w.crit && !stage) playDiceFlourish(w.crit)
       setPhase('done')
       const requestId = roll.roll_context?.request_id
       if (w.dcHidden && requestId) void revealCheckDc(requestId).then((dc) => { if (alive && dc != null) setRevealed(dc) })
