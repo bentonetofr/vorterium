@@ -1,9 +1,9 @@
 import * as THREE from 'three'
-import { centroid, labelText, numberUp, polyhedron, type DieKind, type V3 } from './polyhedra'
+import { centroid, labelForValue, labelText, numberUp, polyhedron, type DieKind, type V3 } from './polyhedra'
 import { DIE_RADIUS } from './simulate'
 import { SURFACES, hashString, hexToRgb, mulberry32, type FacePaint } from './dieSurfaces'
 import type { DiceSkin } from './skins'
-import { makeToy } from './toys'
+import { aimToy, makeToy } from './toys'
 
 // ────────────────────────────────────────────────────────
 // Desenho de um dado: geometria com faces planas e um "atlas" (uma textura
@@ -329,8 +329,20 @@ export function makeDieMesh(kind: DieKind, skin: DiceSkin, show?: { face: number
     mesh.renderOrder = 2
     mesh.add(inside)
   }
-  if (skin.toy) mesh.add(makeToy(kind, skin.toy))
+  if (skin.toy) {
+    const toy = makeToy(kind, skin.toy)
+    // o brinquedo é fixo no dado e fica de frente para o número mais alto dele (o 20 no d20), esteja o dado
+    // rolando ou parado: o rostinho gira junto, como um brinquedo preso na resina, sem entregar o resultado
+    if (!polyhedron(kind).readsVertex) aimToy(toy, kind, maxFace(kind, ball?.labels))
+    mesh.add(toy)
+  }
   return mesh
+}
+
+/** A face com o número mais alto do dado (d10: o 10, escrito 0; d100: o 100). */
+export function maxFace(kind: DieKind, labels: readonly number[] = polyhedron(kind).labels): number {
+  const sides = kind === 'd100' ? 100 : Number(kind.slice(1))
+  return labels.indexOf(labelForValue(kind, sides))
 }
 
 /** O brinquedo dentro do dado (resina), se houver. */

@@ -180,8 +180,9 @@ function inradius(kind: DieKind): number {
 }
 
 /**
- * Vira o brinquedo para a face do resultado, em pé como o número dela: o dado para com essa face para a
- * câmera, então quem rolou vê o rostinho junto com o número (e não o topo da cabeça).
+ * Vira o brinquedo para uma face do dado, em pé como o número dela (de frente para esse número). O dado usa a
+ * face do número mais alto, sempre a mesma: o brinquedo é preso no dado e gira junto com ele, então não entrega o
+ * resultado antes de parar.
  */
 export function aimToy(toy: THREE.Object3D, kind: DieKind, face: number): void {
   const p = polyhedron(kind)

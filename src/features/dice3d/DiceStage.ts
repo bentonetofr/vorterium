@@ -3,8 +3,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { alignments, labelForValue, labelText, numberUp, polyhedron, quatFromM3, upIndex, type DieKind, type V3 } from './polyhedra'
 import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from './camera'
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
-import { dieToy, disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
-import { aimToy } from './toys'
+import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { getSkin } from './skins'
 import { playDiceHit } from './sound'
 
@@ -293,8 +292,6 @@ export class DiceStage {
         yaw.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dir.x, -dir.z))
       }
       const mesh = makeDieMesh(d.kind, getSkin(d.skin ?? opts.skin), ball ? { face: up, label } : undefined)
-      const toy = dieToy(mesh)
-      if (toy && !p.readsVertex) aimToy(toy, d.kind, ball ? up : p.labels.indexOf(label))
       mesh.castShadow = true
       mesh.userData.kind = d.kind
       this.scene.add(mesh)
