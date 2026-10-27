@@ -31,6 +31,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Crítico e falha crítica com animações de tela cheia! Quando um d20 para no 20, a tela toda explode a partir do dado e sorteia uma entre 8 animações: fogo, brilho, relâmpago, água, gelo, círculo arcano, natureza ou cosmos. No 1, uma entre 8 animações sombrias: chamas sombrias, relâmpago rubro, sangue escorrendo, trevas, rachaduras, veneno, vazio ou cinzas. Cada uma tem o seu som, nunca repete a anterior e vale para todas as rolagens do D&D (testes, ataques, rolagem livre e personalizada, e as dos outros jogadores). O volume segue o dos sons dos dados; “Sem efeitos” e “Reduzir movimento” deixam só o som.',
       'No Dado de Betinha Tester, o brinquedinho dentro do dado agora fica fixo, de frente para o número mais alto do dado (o 20 no d20) e gira junto com ele. Antes ele já se virava para o resultado antes do dado parar.',
       'O botão flutuante do rolador de dados agora é amarelo com o dado preto. Nas campanhas de D&D ele continua vermelho, também com o dado preto.',
+      'Na ficha de Altherium, as barras de PV, PE e do recurso da raiz (FV, PR ou Cartas) ficaram mais juntas no cabeçalho, com bem menos espaço entre elas.',
       'O × dos cartões de rolagem saiu de cima da borda dourada e ficou dentro da moldura, com folga do canto.',
       'O botão Pedir teste do mestre, na lista de fichas, ficou pequeno e alinhado à esquerda, sem ocupar uma linha inteira no meio da tela.',
     ],

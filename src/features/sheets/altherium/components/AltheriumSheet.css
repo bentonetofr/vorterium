@@ -48,7 +48,6 @@
 .alth-hero__identity,
 .alth-hero__identity-main,
 .alth-hero__tags,
-.alth-hero__vitals,
 .alth-hero__stats {
   display: contents;
 }
@@ -154,7 +153,6 @@
 
 /* Célula padrão do grid: rótulo em cima, controle embaixo, alturas fixas. */
 .alth-hero__field,
-.alth-hero__vitals .alth-vital-bar,
 .alth-hero__level,
 .alth-hero__coins {
   display: grid;
@@ -180,15 +178,19 @@
   font-size: var(--text-md);
 }
 
-/* PV e PE — moram dentro do próprio box do herói, entre a identidade e
-   os stats, como duas barras (sem moldura própria, ver .alth-vital-bar).
-   O resto dos vitais (FV/PR/Cartas, dependem da raiz) continua na faixa
-   abaixo. */
-.alth-hero__vitals .alth-vital-bar--vitality { grid-column: 3; grid-row: 2; }
-.alth-hero__vitals .alth-vital-bar--mystic   { grid-column: 3; grid-row: 3; }
-/* Recurso da raiz (PR/FV/Cartas) embaixo do PE; o retrato desce junto. */
-.alth-hero__vitals .alth-vital-bar--resource { grid-column: 3; grid-row: 4; }
-.alth-hero:has(.alth-vital-bar--resource) .alth-hero__portrait-wrap { grid-row: 2 / 5; }
+/* PV, PE e o recurso da raiz (FV/PR/Cartas) — moram dentro do próprio box
+   do herói, entre a identidade e os stats, juntos num bloco só (sem moldura
+   própria, ver .alth-vital-bar) que ocupa as duas linhas de Raiz/Gênesis,
+   com pouco espaço entre as barras. */
+.alth-hero__vitals {
+  grid-column: 3;
+  grid-row: 2 / 4;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
 
 .alth-hero__level  { grid-column: 4; grid-row: 2; }
 .alth-hero__coins  { grid-column: 4; grid-row: 3; }
@@ -1401,13 +1403,11 @@
     display: flex;
     flex-direction: column;
     grid-column: 1 / -1;
+    grid-row: auto;
     gap: var(--space-2);
   }
   .alth-hero__field--raiz,
   .alth-hero__field--genesis,
-  .alth-hero__vitals .alth-vital-bar--vitality,
-  .alth-hero__vitals .alth-vital-bar--mystic,
-  .alth-hero__vitals .alth-vital-bar--resource,
   .alth-hero__level,
   .alth-hero__coins {
     grid-column: auto;
