@@ -550,9 +550,11 @@
 /* Botão de dados aberto: fica "aceso" com um anel. */
 .dice-fab--open {
   background: var(--accent-bright);
-  box-shadow: 0 0 0 4px rgba(217, 54, 62, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 4px rgba(242, 194, 48, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
-.dice-fab.dice-fab--open:not(.sheet-fab):not(:disabled) { background: #e84a52; }
+.dice-fab.dice-fab--open:not(.sheet-fab):not(:disabled) { background: #ffd34d; }
+.dice-fab--open.dice-fab--dnd { box-shadow: 0 0 0 4px rgba(217, 54, 62, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35); }
+.dice-fab.dice-fab--open.dice-fab--dnd:not(.sheet-fab):not(:disabled) { background: #e84a52; }
 .dice-fab:active:not(:disabled) { transform: scale(0.9); transition-duration: 80ms; }
 
 /* Sino: balança de vez em quando enquanto houver notificação não lida. */

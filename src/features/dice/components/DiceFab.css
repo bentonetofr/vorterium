@@ -24,13 +24,20 @@
   background: var(--accent-bright);
   transform: translateY(-2px);
 }
-/* Botão de rolagem: vermelho (o botão da ficha do Vortable troca a cor por conta própria). */
+/* Botão de rolagem: amarelo com o dado preto (o botão da ficha do Vortable troca a cor por conta própria). */
 .dice-fab:not(.sheet-fab):not(:disabled) {
+  background: #f2c230;
+  border-color: rgba(255, 233, 150, 0.7);
+  color: #111;
+}
+.dice-fab:not(.sheet-fab):hover:not(:disabled) { background: #ffd34d; }
+/* Sistema D&D: vermelho, dado continua preto. */
+.dice-fab--dnd:not(.sheet-fab):not(:disabled) {
   background: #d9363e;
   border-color: rgba(255, 150, 156, 0.55);
-  color: #fff;
+  color: #111;
 }
-.dice-fab:not(.sheet-fab):hover:not(:disabled) { background: #e84a52; }
+.dice-fab--dnd:not(.sheet-fab):hover:not(:disabled) { background: #e84a52; }
 .dice-fab:disabled {
   background: var(--bg-overlay);
   border-color: var(--border-base);
