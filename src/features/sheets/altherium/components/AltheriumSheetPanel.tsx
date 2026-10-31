@@ -34,6 +34,7 @@ import type {
   AltheriumRune,
   AltheriumSheetWithProfile,
 } from '../../../../shared/types'
+import { AltheriumSceneBar } from './AltheriumSceneBar'
 import '../../components/SheetPanel.css'
 import './AltheriumSheet.css'
 import { Loader } from '../../../../shared/components/Loader'
@@ -54,6 +55,7 @@ export function AltheriumSheetPanel({ campaignId, userRole }: AltheriumSheetPane
       </header>
 
       <div className="sheet-panel__body">
+        {userRole === 'master' && <AltheriumSceneBar campaignId={campaignId} />}
         {userRole === 'player'
           ? <PlayerAltheriumView campaignId={campaignId} />
           : <MasterAltheriumView campaignId={campaignId} />
@@ -93,7 +95,7 @@ interface SheetEditorProps {
   onSheetUpdated: (sheet: AltheriumSheet) => void
 }
 
-function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: SheetEditorProps) {
+export function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: SheetEditorProps) {
   const [domains, setDomains]         = useState<AltheriumDomainPoints[]>([])
   const [inventory, setInventory]     = useState<AltheriumInventoryItem[]>([])
   const [runes, setRunes]             = useState<AltheriumRune[]>([])

@@ -1,0 +1,282 @@
+/* ═══════════════════════════════════════════════════════
+   Ficha Altherium — jogo (botões de ação, faixa de estado, cena do mestre e
+   as janelas de Atacar, Explorar, Descansar, Furtividade e Equilíbrio).
+   Usa só as variáveis do tema, então vale no claro e no escuro.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Botões de ação (cabeçalho) ── */
+.alth-acts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: var(--space-2);
+}
+.alth-act {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'icon label' 'icon caption';
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: 1px;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  cursor: var(--cursor-hand, pointer);
+  transition: transform 140ms var(--ease-out, ease-out), border-color 140ms, background 140ms, box-shadow 140ms;
+}
+.alth-act .alth-icon { grid-area: icon; color: var(--accent-bright); }
+.alth-act__label {
+  grid-area: label;
+  font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; line-height: 1.1;
+}
+.alth-act__caption {
+  grid-area: caption;
+  font-family: var(--font-label); font-size: 11px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.alth-act:hover:not(:disabled) { border-color: var(--gilded-bright); background: var(--bg-elevated); transform: translateY(-1px); }
+.alth-act:active:not(:disabled) { transform: scale(0.97); }
+.alth-act:disabled { opacity: 0.45; cursor: not-allowed; }
+.alth-act:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 2px; }
+.alth-act--danger { border-color: var(--danger); }
+.alth-act--danger .alth-icon, .alth-act--danger .alth-act__label { color: var(--danger-bright); }
+.alth-act--danger:hover:not(:disabled) { border-color: var(--danger-bright); background: rgba(255, 138, 125, 0.08); }
+.alth-act--primary {
+  color: var(--text-inverse); border-color: var(--accent-bright);
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.alth-act--primary .alth-icon, .alth-act--primary .alth-act__label, .alth-act--primary .alth-act__caption { color: var(--text-inverse); }
+.alth-act--primary:hover:not(:disabled) { background: linear-gradient(180deg, var(--accent-bright), var(--accent-bright)); }
+
+/* ── Faixa de estado ── */
+.alth-strip {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: var(--radius-lg);
+}
+.alth-strip__group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); }
+.alth-strip__title {
+  flex: 0 0 96px;
+  font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+}
+.alth-strip__cell { display: inline-flex; align-items: center; gap: var(--space-2); cursor: help; }
+.alth-strip__name { font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-strip__value { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-primary); }
+.alth-strip__value--bad { color: var(--danger-bright); }
+.alth-strip__mini {
+  font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.04em;
+  padding: 5px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-base); background: var(--bg-elevated); color: var(--text-secondary);
+  cursor: var(--cursor-hand, pointer);
+}
+.alth-strip__mini:hover:not(:disabled) { color: var(--accent-bright); border-color: var(--gilded-bright); }
+.alth-strip__mini:disabled { opacity: 0.4; cursor: default; }
+.alth-strip__note { flex-basis: 100%; margin: 0; }
+.alth-strip__select { min-width: 150px; }
+.alth-combat__cond--dying { border-color: var(--danger-bright); background: rgba(255, 138, 125, 0.14); }
+.alth-strip__scene {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+  border: 1px solid var(--border-dim); border-left-width: 4px; background: var(--bg-elevated);
+  font-size: var(--text-xs); color: var(--text-secondary);
+}
+.alth-strip__scene small { color: var(--text-muted); }
+.alth-strip__scene--desatento { border-left-color: var(--alth-resource); }
+.alth-strip__scene--atento { border-left-color: var(--accent-bright); }
+.alth-strip__scene--alerta { border-left-color: var(--danger-bright); }
+.alth-strip__scene .alth-strip__title { flex-basis: auto; }
+.alth-strip__weather { color: var(--accent-bright); }
+
+/* ── Marcadores ── */
+.alth-pips { display: inline-flex; gap: 4px; align-items: center; }
+.alth-pip {
+  width: 14px; height: 14px; padding: 0; border-radius: 50%;
+  border: 1.5px solid var(--border-bright); background: transparent;
+}
+button.alth-pip { cursor: var(--cursor-hand, pointer); }
+button.alth-pip:hover { border-color: var(--accent-bright); }
+.alth-pip--on { background: var(--accent-bright); border-color: var(--accent-bright); box-shadow: 0 0 8px var(--accent-glow); }
+.alth-pips--danger .alth-pip--on { background: var(--danger-bright); border-color: var(--danger-bright); box-shadow: 0 0 8px rgba(255, 138, 125, 0.4); }
+.alth-pips--mystic .alth-pip--on { background: var(--alth-mystic); border-color: var(--alth-mystic); }
+
+/* ── Janela ── */
+.alth-win { width: min(560px, 100%); }
+.alth-win__heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.alth-win__subtitle { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-label); font-size: var(--text-xs); color: var(--text-muted); }
+.alth-win__body { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); }
+.alth-win__field { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-win__label {
+  font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+}
+.alth-win__hint { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.45; }
+.alth-win__pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-3); align-items: end; }
+.alth-win__go { display: inline-flex; align-items: center; gap: var(--space-2); }
+.alth-win__go .alth-icon { width: 18px; height: 18px; }
+.alth-win__details { font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-win__details summary { cursor: var(--cursor-hand, pointer); color: var(--accent-bright); }
+.alth-win__details[open] { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* ── Escolha entre poucas opções ── */
+.alth-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.alth-chip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 7px 12px; min-width: 64px;
+  font-family: var(--font-label); font-size: var(--text-sm); color: var(--text-secondary);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  cursor: var(--cursor-hand, pointer);
+  transition: border-color 120ms, color 120ms, background 120ms, transform 120ms;
+}
+.alth-chip small { font-size: 10px; color: var(--text-muted); }
+.alth-chip:hover:not(:disabled) { color: var(--text-primary); border-color: var(--border-bright); }
+.alth-chip:active:not(:disabled) { transform: scale(0.96); }
+.alth-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.alth-chip--on { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--accent-glow); }
+.alth-chip--on small { color: var(--accent-dim); }
+
+/* ── Interruptor de modificador ── */
+.alth-toggles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; }
+.alth-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: 8px 12px; text-align: left;
+  font-size: var(--text-xs); color: var(--text-secondary);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  cursor: var(--cursor-hand, pointer);
+  transition: border-color 120ms, background 120ms, color 120ms;
+}
+.alth-toggle::before {
+  content: ''; flex: 0 0 auto; width: 12px; height: 12px; border-radius: 3px;
+  border: 1.5px solid var(--border-bright); background: transparent;
+  transition: background 120ms, border-color 120ms;
+}
+.alth-toggle--on::before { background: var(--accent-bright); border-color: var(--accent-bright); }
+.alth-toggle--good.alth-toggle--on::before { background: var(--alth-resource); border-color: var(--alth-resource); }
+.alth-toggle--bad.alth-toggle--on::before { background: var(--danger-bright); border-color: var(--danger-bright); }
+.alth-toggle__label { flex: 1 1 auto; }
+.alth-toggle__delta { flex: 0 0 auto; font-family: var(--font-mono); color: var(--text-muted); }
+.alth-toggle:hover:not(:disabled) { border-color: var(--border-bright); }
+.alth-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
+.alth-toggle--on { color: var(--text-primary); border-color: var(--gilded-bright); background: var(--accent-glow); }
+.alth-toggle--on .alth-toggle__delta { color: var(--accent-bright); }
+.alth-toggle--good.alth-toggle--on { border-color: var(--alth-resource); background: rgba(84, 255, 159, 0.08); }
+.alth-toggle--good.alth-toggle--on .alth-toggle__delta { color: var(--alth-resource); }
+.alth-toggle--bad.alth-toggle--on { border-color: var(--danger-bright); background: rgba(255, 138, 125, 0.1); }
+.alth-toggle--bad.alth-toggle--on .alth-toggle__delta { color: var(--danger-bright); }
+
+/* ── Conta antes de rolar ── */
+.alth-formula {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: var(--space-3); text-align: center;
+  background: var(--bg-void); border: 1px dashed var(--border-base); border-radius: var(--radius-md);
+}
+.alth-formula__big { font-family: var(--font-display); font-size: var(--text-3xl); color: var(--text-primary); line-height: 1.1; }
+.alth-formula__big span { color: var(--accent-bright); }
+.alth-formula small { font-size: var(--text-xs); color: var(--text-muted); }
+
+/* ── Armas na janela de ataque ── */
+.alth-weapons { display: flex; gap: var(--space-2); overflow-x: auto; margin: 0; padding: 0 0 var(--space-1); list-style: none; scroll-snap-type: x proximity; }
+.alth-weapons > li { flex: 0 0 auto; scroll-snap-align: start; }
+.alth-weapon {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 200px; height: 100%;
+  padding: var(--space-3); text-align: left; color: var(--text-secondary); font-size: var(--text-xs);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md); cursor: var(--cursor-hand, pointer);
+}
+.alth-weapon strong { font-family: var(--font-display); font-size: var(--text-md); color: var(--text-primary); }
+.alth-weapon:hover { border-color: var(--border-bright); }
+.alth-weapon--on { border-color: var(--gilded-bright); box-shadow: 0 0 0 1px var(--gilded-bright), 0 6px 18px var(--accent-glow); }
+.alth-weapon__props { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* ── Achados, resultado, Complicações ── */
+.alth-finds { display: flex; flex-direction: column; gap: var(--space-3); }
+.alth-finds__verdict {
+  margin: 0; padding: var(--space-2) var(--space-3); text-align: center;
+  font-family: var(--font-label); font-weight: 700; letter-spacing: 0.04em;
+  border: 1px solid var(--border-base); border-radius: var(--radius-md); background: var(--bg-void); color: var(--text-primary);
+}
+.alth-finds__verdict--sucesso, .alth-finds__verdict--sucesso5, .alth-finds__verdict--sucesso5, .alth-finds__verdict--sucesso { color: var(--alth-resource); border-color: var(--alth-resource); }
+.alth-finds__verdict--perfeita { color: var(--alth-resource); border-color: var(--alth-resource); }
+.alth-finds__verdict--critico { color: var(--accent-bright); border-color: var(--accent-bright); box-shadow: 0 0 18px var(--accent-glow); }
+.alth-finds__verdict--complicacao, .alth-finds__verdict--descoberto { color: var(--danger-bright); border-color: var(--danger-bright); }
+.alth-finds__verdict--falha { color: var(--accent-bright); border-color: var(--accent-dim); }
+.alth-finds__table { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-finds__table li { padding: 3px 8px; border: 1px solid var(--border-dim); border-radius: var(--radius-sm); }
+.alth-finds__table b { color: var(--accent-bright); font-family: var(--font-mono); margin-right: 4px; }
+.alth-finds__table--wide { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.alth-finds__complication, .alth-finds__card { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+
+.alth-loot { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alth-loot__row {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap;
+  padding: var(--space-3); background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  animation: fadeUp 0.24s ease-out both;
+}
+.alth-loot__row:nth-child(2) { animation-delay: 60ms; }
+.alth-loot__row:nth-child(3) { animation-delay: 120ms; }
+.alth-loot__row:nth-child(4) { animation-delay: 180ms; }
+.alth-loot__row--rare { border-color: var(--accent-bright); background: linear-gradient(90deg, var(--accent-glow), var(--bg-elevated)); box-shadow: 0 0 16px var(--accent-glow); }
+.alth-loot__row--guardado { border-color: var(--alth-resource); }
+.alth-loot__row--deixado { opacity: 0.55; }
+.alth-loot__row--erro { border-color: var(--danger-bright); }
+.alth-loot__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px; }
+.alth-loot__info strong { font-size: var(--text-sm); color: var(--text-primary); }
+.alth-loot__info small { font-size: 11px; color: var(--text-muted); }
+.alth-loot__info .alth-loot__ok { color: var(--alth-resource); }
+.alth-loot__info .alth-loot__warn { color: var(--danger-bright); }
+.alth-loot__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* ── Descanso ── */
+.alth-rest__table { display: flex; flex-direction: column; border: 1px solid var(--border-dim); border-radius: var(--radius-md); overflow: hidden; font-size: var(--text-xs); }
+.alth-rest__row { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: var(--space-2); padding: 6px 10px; color: var(--text-secondary); }
+.alth-rest__row:nth-child(odd) { background: var(--bg-elevated); }
+.alth-rest__on { color: var(--accent-bright); font-weight: 700; }
+.alth-rest__lines { margin: 0; padding-left: var(--space-5); font-size: var(--text-sm); color: var(--text-primary); display: flex; flex-direction: column; gap: 4px; }
+
+/* ── Ritos ── */
+.alth-rites { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alth-rites__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--border-dim); border-radius: var(--radius-md); background: var(--bg-elevated); }
+.alth-rites__row div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.alth-rites__row small { font-size: 11px; color: var(--text-muted); }
+
+/* ── Escolha de domínio (Fazer um teste) ── */
+.alth-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alth-picker__btn {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'name dice' 'attr dice'; align-items: center; width: 100%;
+  gap: 1px var(--space-2); padding: var(--space-2) var(--space-3); text-align: left;
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md); color: var(--text-primary);
+  cursor: var(--cursor-hand, pointer);
+}
+.alth-picker__btn strong { grid-area: name; font-size: var(--text-sm); }
+.alth-picker__btn span { grid-area: attr; font-size: 11px; color: var(--text-muted); }
+.alth-picker__dice { grid-area: dice; font-family: var(--font-mono); color: var(--accent-bright); }
+.alth-picker__dice--bad { color: var(--danger-bright); }
+.alth-picker__btn:hover { border-color: var(--gilded-bright); }
+
+/* ── Cena do mestre ── */
+.alth-scene { border: 1px solid var(--border-dim); border-radius: var(--radius-lg); background: var(--bg-surface); margin-bottom: var(--space-4); }
+.alth-scene__head {
+  display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-3) var(--space-4);
+  text-align: left; background: none; border: 0; color: var(--text-primary); cursor: var(--cursor-hand, pointer);
+}
+.alth-scene__title { font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-bright); }
+.alth-scene__summary { flex: 1; min-width: 0; font-size: var(--text-xs); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alth-scene__chevron { color: var(--text-muted); }
+.alth-scene__body { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-5); padding: 0 var(--space-4) var(--space-4); }
+.alth-scene__group { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-scene__dts { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.alth-scene__dt { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-muted); }
+.alth-scene__dt .input { width: 76px; }
+.alth-scene__weather { display: flex; flex-direction: column; gap: 6px; }
+.alth-scene__weather .alth-toggle { width: 100%; }
+
+@media (max-width: 520px) {
+  .alth-acts { grid-template-columns: repeat(2, 1fr); }
+  .alth-act { padding: var(--space-3); column-gap: var(--space-2); }
+  .alth-strip__title { flex-basis: 100%; }
+  .alth-weapon { width: 170px; }
+  .alth-rest__row { grid-template-columns: 1.2fr 1fr 1fr; padding: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alth-act, .alth-chip, .alth-toggle, .alth-loot__row { transition: none; animation: none; }
+}

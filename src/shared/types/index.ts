@@ -293,6 +293,8 @@ export interface AltheriumSheet {
   combat_state?:      unknown
   /** Recursos de Ofício e Rações, em % por qualidade — migration 20240217; ver altheriumCraft.ts. */
   resources?:         unknown
+  /** Fichas de Exploração, Fome, Descansos e Traumas — migration 20240218; ver altheriumSurvival.ts. */
+  survival?:          unknown
   /** Ficha de NPC do mestre (migration 20240189000000). */
   is_npc?: boolean
   /** O mestre mostrou o NPC pros jogadores (eles só leem). */

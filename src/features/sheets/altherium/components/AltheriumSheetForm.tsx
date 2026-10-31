@@ -60,11 +60,26 @@ import { Select } from '../../../../shared/components/Select'
 import './AltheriumSheet.css'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { AltheriumTestModal, type AltheriumTestSpec } from './AltheriumTestModal'
-import { AltheriumCombatPanel, type DomainCheck } from './AltheriumCombatPanel'
+import { AltheriumCombatActions, type CombatAction, type DomainCheck } from './AltheriumCombatPanel'
 import { AltheriumCraftPanel } from './AltheriumCraftPanel'
-import { readResources, type ResourceStock } from '../utils/altheriumCraft'
+import { AltheriumActionBar, type ActionDef, type PlayAction } from './AltheriumActionBar'
+import { AltheriumStatusStrip } from './AltheriumStatusStrip'
+import { AltheriumExploreWindow } from './AltheriumExploreWindow'
+import { AltheriumRestWindow } from './AltheriumRestWindow'
+import { AltheriumStealthWindow } from './AltheriumStealthWindow'
+import { AltheriumMindWindow } from './AltheriumMindWindow'
+import { Win } from './AltheriumPlayKit'
+import { readResources, removeResource, resourceTotal, readSagas, type ResourceStock, type SagaId } from '../utils/altheriumCraft'
 import { NEW_DYING } from '../utils/altheriumDeath'
-import { conditionDef, readCombatState, type BodyZoneId, type CombatState } from '../utils/altheriumCombat'
+import { addCondition, conditionDef, endScene, readCombatState, startTurn, type BodyZoneId, type CombatState, type ConditionId } from '../utils/altheriumCombat'
+import { hungerPenalty, readSurvival, type Survival } from '../utils/altheriumSurvival'
+import { enemyStateDef } from '../utils/altheriumStealth'
+import { setAltheriumScene, type AltheriumScene } from '../services/altheriumSceneService'
+import { useAltheriumScene } from '../utils/useAltheriumScene'
+import { getAltheriumCampaignSagas, setAltheriumCampaignSagas } from '../services/altheriumSheetService'
+import { sendMessage } from '../../../chat/services/chatService'
+import { findArmor, findWeapon } from '../constants/altheriumItems'
+import type { RestResult } from '../utils/altheriumRest'
 import { isObserver } from '../../../../shared/lib/observer'
 
 const NOTES_MAX = 2000
@@ -156,6 +171,10 @@ type FormData = {
   resources:          ResourceStock
   /** A coluna existe no banco (migration 20240217)? */
   resources_known:    boolean
+  /** Fichas de Exploração, Fome, Descansos e Traumas (ver altheriumSurvival.ts). */
+  survival:           Survival
+  /** A coluna existe no banco (migration 20240218)? */
+  survival_known:     boolean
 }
 
 function sheetToForm(s: AltheriumSheet): FormData {
@@ -206,6 +225,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     combat_known:       'combat_state' in s,
     resources:          readResources(s.resources),
     resources_known:    'resources' in s,
+    survival:           readSurvival(s.survival),
+    survival_known:     'survival' in s,
   }
 }
 
@@ -250,6 +271,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     // Mesma ordem de chaves sempre (o jsonb reordena; o eco do save precisa bater).
     ...(f.combat_known ? { combat_state: readCombatState(f.combat_state) } : {}),
     ...(f.resources_known ? { resources: readResources(f.resources) } : {}),
+    ...(f.survival_known ? { survival: readSurvival(f.survival) } : {}),
     recent_triumphs:     f.recent_triumphs,
     genesis_abilities:   f.genesis_abilities.map((a) => ({ id: a.id, name: a.name, description: a.description })),
     skald_inspirations:  f.skald_inspirations.map((i) => ({
@@ -321,7 +343,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'oficio' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'combate' | 'oficio' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -330,10 +352,9 @@ interface AltheriumFormTab {
 
 const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'visao-geral', label: 'Atributos' },
-  { id: 'luta',        label: 'Combate' },
+  { id: 'dominios',    label: 'Domínios' },
   { id: 'combate',     label: 'Inventário' },
   { id: 'oficio',      label: 'Ofício' },
-  { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
   { id: 'inspiracoes', label: 'Inspirações' },
   { id: 'anotacoes',   label: 'Anotações' },
@@ -573,10 +594,15 @@ export function AltheriumSheetForm({
     const attrLabel = ATTRIBUTES.find((a) => a.id === attr)?.label ?? ''
     const points = domainMap.get(domain) ?? 0
     const disadv = domainDisadvantage(points, chosenMap.get(domain) && !attribute ? null : attrValue(attr))
-    const flat = form.combat_state.conditions.flatMap((c) => {
-      const a = conditionDef(c.id).attribute
-      return a && a.id === attr ? [{ label: conditionDef(c.id).label, value: a.value }] : []
-    })
+    // Cada nível de Fome dá −1 em todos os testes (livro 2.0, "Fome").
+    const hunger = hungerPenalty(form.survival.hunger)
+    const flat = [
+      ...(hunger ? [{ label: 'Fome', value: hunger }] : []),
+      ...form.combat_state.conditions.flatMap((c) => {
+        const a = conditionDef(c.id).attribute
+        return a && a.id === attr ? [{ label: conditionDef(c.id).label, value: a.value }] : []
+      }),
+    ]
     return {
       domainId: domain, domainLabel: def.label, attributeLabel: attrLabel,
       attribute: attrValue(attr) ?? 0,
@@ -600,6 +626,119 @@ export function AltheriumSheetForm({
       return next
     })
   }
+
+  // ── Jogo: janelas de ação, cena, Exploração, Descanso, Furtividade, Equilíbrio ──
+  const [play, setPlay] = useState<PlayAction | null>(null)
+  const [turnNote, setTurnNote] = useState<string | null>(null)
+  const [pickTest, setPickTest] = useState('')
+  const [scene, setScene] = useAltheriumScene(sheet.campaign_id)
+  const [sagas, setSagas] = useState<SagaId[]>([])
+  useEffect(() => {
+    let alive = true
+    void getAltheriumCampaignSagas(sheet.campaign_id).then((list) => { if (alive) setSagas(readSagas(list)) })
+    return () => { alive = false }
+  }, [sheet.campaign_id])
+
+  const who = form.character_name.trim() || ownerName || 'Personagem'
+  const rationPct = resourceTotal(form.resources, 'racao')
+  const survival = form.survival
+
+  function announce(text: string) {
+    void sendMessage(sheet.campaign_id, text).catch(() => { /* só não aparece no chat */ })
+  }
+
+  function patchSurvival(patch: Partial<Survival>) {
+    setForm((prev) => ({ ...prev, survival: { ...prev.survival, ...patch } }))
+  }
+
+  /** Muda o estado dos inimigos na cena da campanha (o estado sobe pro grupo todo). */
+  async function updateScene(patch: Partial<AltheriumScene>) {
+    setScene((prev) => ({ ...prev, ...patch }))
+    try { await setAltheriumScene(sheet.campaign_id, patch) } catch { /* sem a tabela, vale só aqui */ }
+  }
+
+  /** Início do turno: renova a Reação, aplica Queimando e Sangrando e conta os turnos. */
+  function newTurn() {
+    const t = startTurn(form.combat_state)
+    set('combat_state', t.state)
+    const dmg = t.damage.reduce((sum, d) => sum + d.amount, 0)
+    if (dmg > 0) takeDamage(dmg, null)
+    setTurnNote([
+      'Reação renovada',
+      ...t.damage.map((d) => `${d.label}: −${d.amount} PV`),
+      ...(t.ended.length ? [`acabou: ${t.ended.join(', ')}`] : []),
+    ].join(' · '))
+  }
+
+  function finishScene() {
+    set('combat_state', endScene(form.combat_state))
+    setTurnNote('Fim da cena: Amedrontado, Mirar e Defender Total saíram.')
+  }
+
+  function putCondition(id: ConditionId, turns?: number | null) {
+    setForm((prev) => ({ ...prev, combat_state: addCondition(prev.combat_state, id, turns) }))
+  }
+
+  /** Come 1 Ração fora de combate: tira 1 nível de Fome. */
+  function eat() {
+    if (rationPct < 100) return
+    setForm((prev) => ({
+      ...prev,
+      resources: removeResource(prev.resources, 'racao', 'comum', 100),
+      survival: { ...prev.survival, hunger: Math.max(0, prev.survival.hunger - 1) },
+    }))
+    announce(`🍖 ${who} comeu uma Ração e se sente menos faminto.`)
+  }
+
+  /** Guarda o resultado de um Descanso (feito em altheriumRest.ts) na ficha. */
+  function applyRest(r: RestResult) {
+    setForm((prev) => {
+      let combat = prev.combat_state
+      for (const id of r.clearConditions) combat = { ...combat, conditions: combat.conditions.filter((c) => c.id !== id) }
+      // Descansar também acaba o que dura "até o fim da cena".
+      combat = endScene(combat)
+      return {
+        ...prev,
+        vitality_current: r.vitality,
+        equilibrio_current: r.equilibrio,
+        fv_current: r.fv,
+        pr_current: r.pr,
+        cards_current: r.cards ?? prev.cards_current,
+        survival: r.survival,
+        resources: r.consumesRation ? removeResource(prev.resources, 'racao', 'comum', 100) : prev.resources,
+        combat_state: combat,
+        // Saiu do Estado Caído? Não: só um descanso depois de estabilizar chega aqui.
+      }
+    })
+  }
+
+  /** Corpo pesado atrapalha a Furtividade: armadura de 8 DB ou mais, Escudo Pesado ou arma pesada equipada. */
+  const heavyGear = inventory.some((i) => {
+    if (!i.equipped) return false
+    if (i.item_type === 'arma') return findWeapon(i.item_id)?.category === 'pesada'
+    if (i.item_type === 'escudo') return i.item_id === 'escudo_pesado'
+    if (i.item_type === 'armadura') return (i.custom_db ?? findArmor(i.item_id)?.db ?? 0) >= 8
+    return false
+  })
+
+  const firstWeapon = inventory.find((i) => i.item_type === 'arma' && i.equipped) ?? inventory.find((i) => i.item_type === 'arma')
+  const weaponCaption = firstWeapon
+    ? (firstWeapon.custom_name ?? findWeapon(firstWeapon.item_id)?.name ?? 'Arma')
+    : 'sem arma'
+  const downed = !!form.combat_state.dying || form.vitality_current === 0
+
+  const actions: ActionDef[] = [
+    { id: 'attack',  label: 'Atacar',     caption: weaponCaption, icon: 'attack', tone: 'danger' },
+    { id: 'defend',  label: 'Defender',   caption: form.combat_state.defend_total ? 'Defender Total +4' : 'ou Aparar', icon: 'defend' },
+    { id: 'stealth', label: 'Furtividade', caption: `${enemyStateDef(scene.enemy).label} · DT ${scene.dts[scene.enemy]}`, icon: 'stealth' },
+    { id: 'explore', label: 'Explorar',   caption: `${survival.tokens} ${survival.tokens === 1 ? 'ficha' : 'fichas'}`, icon: 'explore', disabled: survival.tokens < 1, title: survival.tokens < 1 ? 'Sem Fichas de Exploração: descanse.' : undefined },
+    { id: 'rest',    label: 'Descansar',  caption: 'curto ou longo', icon: 'rest' },
+    { id: 'mind',    label: 'Equilíbrio', caption: `${form.equilibrio_current}/${form.equilibrio_max}`, icon: 'mind' },
+    { id: 'test',    label: 'Fazer um teste', caption: 'qualquer domínio', icon: 'test', tone: 'primary' },
+    { id: 'damage',  label: 'Receber dano', caption: `PV ${form.vitality_current}`, icon: 'damage' },
+    { id: 'initiative', label: 'Iniciativa', caption: 'entrar na ordem', icon: 'turn' },
+    ...(downed ? [{ id: 'dying' as const, label: 'Teste de Morte', caption: 'Estado Caído', icon: 'death', tone: 'danger' as const }] : []),
+  ]
 
   // Enter num campo (ou "Salvar agora") salva na hora, sem esperar o atraso.
   function handleSubmit(e: FormEvent) {
@@ -856,6 +995,16 @@ export function AltheriumSheetForm({
         </p>
       )}
 
+      {/* ── Ações do jogo e faixa de estado ── */}
+      {canRollTests && <AltheriumActionBar actions={actions} onAction={setPlay} />}
+      <AltheriumStatusStrip
+        survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival}
+        rationPct={rationPct} onEat={eat}
+        combat={form.combat_state} combatKnown={form.combat_known} onCombat={(next) => set('combat_state', next)}
+        onNewTurn={newTurn} onEndScene={finishScene} onCondition={putCondition}
+        scene={scene} readOnly={!canRollTests} turnNote={turnNote}
+      />
+
       {/* ── Abas ── */}
       <nav ref={tabsRef} className="campaign-tabs alth-sheet-tabs" role="tablist" aria-label="Seções da ficha">
         {ALTHERIUM_FORM_TABS.map((tab) => (
@@ -926,33 +1075,6 @@ export function AltheriumSheetForm({
               genesis={form.genesis}
               abilities={form.genesis_abilities}
               onChange={(next) => set('genesis_abilities', next)}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ── Combate: turno, condições, ataque, defesa e dano ── */}
-      <div id="alth-tabpanel-luta" role="tabpanel" hidden={activeTab !== 'luta'}>
-        {activeTab === 'luta' && (
-          <div className="alth-tab-panel anim-tab-panel">
-            {!form.combat_known && (
-              <p className="alth-hint">O banco ainda não guarda o estado de combate (migration 20240216): Reação e condições valem só nesta tela.</p>
-            )}
-            <AltheriumCombatPanel
-              campaignId={sheet.campaign_id}
-              sheetId={sheet.id}
-              character={form.character_name.trim() || ownerName || 'Personagem'}
-              genesis={form.genesis}
-              inventory={inventory}
-              state={form.combat_state}
-              onState={(next) => set('combat_state', next)}
-              domainCheck={domainCheck}
-              zoneDb={{ db_pernas: form.db_pernas, db_bracos: form.db_bracos, db_tronco: form.db_tronco, db_cabeca: form.db_cabeca }}
-              vitality={form.vitality_current}
-              onDamage={takeDamage}
-              espirito={form.attr_espirito}
-              determinationPoints={domainMap.get('determinacao') ?? 0}
-              onPatch={onInventoryPatch}
             />
           </div>
         )}
@@ -1097,6 +1219,104 @@ export function AltheriumSheetForm({
       </div>
 
       {/* ── Domínios ── */}
+      <AltheriumCombatActions
+        campaignId={sheet.campaign_id} sheetId={sheet.id} character={who} genesis={form.genesis}
+        inventory={inventory} state={form.combat_state} onState={(next) => set('combat_state', next)}
+        domainCheck={domainCheck}
+        zoneDb={{ db_pernas: form.db_pernas, db_bracos: form.db_bracos, db_tronco: form.db_tronco, db_cabeca: form.db_cabeca }}
+        vitality={form.vitality_current} onDamage={takeDamage}
+        espirito={form.attr_espirito} determinationPoints={domainMap.get('determinacao') ?? 0}
+        onPatch={onInventoryPatch}
+        action={play === 'attack' || play === 'defend' || play === 'damage' || play === 'initiative' || play === 'dying' ? (play as CombatAction) : null}
+        onClose={() => setPlay(null)}
+      />
+
+      {play === 'explore' && (
+        <AltheriumExploreWindow
+          campaignId={sheet.campaign_id} sheetId={sheet.id} character={who} raiz={raiz}
+          check={domainCheck} scene={scene} survival={survival} onSurvival={patchSurvival}
+          stock={form.resources} hacksilvers={form.hacksilvers}
+          onLoot={(bag) => setForm((prev) => ({ ...prev, resources: bag.stock, hacksilvers: bag.hacksilvers }))}
+          sagas={sagas}
+          onSaga={(id) => {
+            const next = [...new Set([...sagas, id])]
+            setSagas(next)
+            void setAltheriumCampaignSagas(sheet.campaign_id, next).catch(() => {})
+            announce(`📜 ${who} encontrou uma Saga de Ofício: as receitas estão destravadas para o grupo.`)
+          }}
+          fv={form.fv_current}
+          onSpendFv={(cost, what) => { setForm((prev) => ({ ...prev, fv_current: Math.max(0, prev.fv_current - cost) })); announce(`${who} usou ${what} (−${cost} FV).`) }}
+          onDamage={(n) => takeDamage(n, null)}
+          onBleed={() => putCondition('sangrando')}
+          announce={announce} onClose={() => setPlay(null)}
+        />
+      )}
+
+      {play === 'rest' && (
+        <AltheriumRestWindow
+          character={who} survival={survival} rationPct={rationPct}
+          base={{
+            raiz, genesis: form.genesis, espirito: form.attr_espirito, destino: form.attr_destino, runico: form.attr_runico,
+            vitality: { current: form.vitality_current, max: form.vitality_max },
+            equilibrio: { current: form.equilibrio_current, max: form.equilibrio_max },
+            fv: { current: form.fv_current, max: form.fv_max }, pr: { current: form.pr_current, max: form.pr_max },
+            cards: usesCards(raiz) && cartasMax != null ? { current: form.cards_current, max: cartasMax } : null,
+            survival, coma: form.combat_state.conditions.some((c) => c.id === 'coma'),
+          }}
+          onApply={applyRest} announce={announce} onClose={() => setPlay(null)}
+        />
+      )}
+
+      {play === 'stealth' && (
+        <AltheriumStealthWindow
+          campaignId={sheet.campaign_id} sheetId={sheet.id} character={who}
+          check={() => domainCheck('furtividade')} scene={scene} onScene={updateScene}
+          heavyGear={heavyGear} announce={announce} onClose={() => setPlay(null)}
+        />
+      )}
+
+      {play === 'mind' && (
+        <AltheriumMindWindow
+          campaignId={sheet.campaign_id} sheetId={sheet.id} character={who}
+          check={(d) => domainCheck(d)}
+          equilibrio={{ current: form.equilibrio_current, max: form.equilibrio_max }}
+          onEquilibrio={({ current, max }) => setForm((prev) => {
+            const nextMax = max ?? prev.equilibrio_max
+            return { ...prev, equilibrio_max: nextMax, equilibrio_current: Math.min(nextMax, current ?? prev.equilibrio_current) }
+          })}
+          hacksilvers={form.hacksilvers}
+          onSpendCoins={(n) => setForm((prev) => ({ ...prev, hacksilvers: Math.max(0, prev.hacksilvers - n) }))}
+          survival={survival} onSurvival={patchSurvival}
+          announce={announce} onClose={() => setPlay(null)}
+        />
+      )}
+
+      {play === 'test' && (
+        <Win title="Fazer um teste" subtitle="escolha o domínio" onClose={() => setPlay(null)}>
+          <input
+            type="search" className="input alth-domains__search" placeholder="Buscar domínio…"
+            value={pickTest} onChange={(e) => setPickTest(e.target.value)} aria-label="Buscar domínio"
+          />
+          <ul className="alth-picker">
+            {DOMAINS.filter((d) => !pickTest.trim() || normalize(d.label).includes(normalize(pickTest.trim()))).map((d) => {
+              const c = domainCheck(d.id)
+              const dice = c.baseDice + (c.disadvantage ? 1 : 0)
+              return (
+                <li key={d.id}>
+                  <button type="button" className="alth-picker__btn" onClick={() => { setPlay(null); setPickTest(''); setTestSpec(c) }}>
+                    <strong>{d.label}</strong>
+                    <span>{c.attributeLabel} {c.attribute >= 0 ? '+' : '−'}{Math.abs(c.attribute)}</span>
+                    <b className={c.disadvantage ? 'alth-picker__dice alth-picker__dice--bad' : 'alth-picker__dice'}>
+                      {dice}d{c.disadvantage ? ' desv.' : ''}
+                    </b>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </Win>
+      )}
+
       {testSpec && (
         <AltheriumTestModal
           campaignId={sheet.campaign_id}

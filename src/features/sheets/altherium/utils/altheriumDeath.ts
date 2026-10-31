@@ -1,8 +1,8 @@
 // ────────────────────────────────────────────────────────
 // Morte e Recuperação (livro 2.0):
 //   - 0 PV: Estado Caído;
-//   - 2 turnos para sobreviver, +1 a cada 2 pontos de Espírito (máximo 5);
-//   - no início de cada turno: 1d10 + bônus de Determinação contra DT 7;
+//   - 3 turnos para sobreviver, +1 turno com mais de 8 de Espírito (livro 2.0, 6ª edição);
+//   - no início de cada turno: 1d10 + bônus de Determinação contra DT 6;
 //   - bônus: 0 pontos 0, 1 ponto +1, 2 pontos +2; outras fontes (Gênesis
 //     Determinado) somam até no máximo +3; cai 1 a cada novo turno caído;
 //   - 10 natural é sucesso automático (aqui o 1 não anula nada);
@@ -10,8 +10,8 @@
 //   - sucesso estabiliza; a consequência vem das falhas acumuladas.
 // ────────────────────────────────────────────────────────
 
-export const DEATH_DT = 7
-export const DEATH_TURNS_MAX = 5
+export const DEATH_DT = 6
+export const DEATH_TURNS_MAX = 4
 
 export interface DyingState {
   /** Testes já feitos (o próximo é o turno `rolls + 1`). */
@@ -39,9 +39,9 @@ export function readDying(raw: unknown): DyingState | null {
   }
 }
 
-/** Turnos para sobreviver: 2 + 1 a cada 2 pontos de Espírito, no máximo 5. */
+/** Turnos para sobreviver: 3, e +1 com mais de 8 de Espírito (no máximo 4). */
 export function deathTurns(espirito: number): number {
-  return Math.min(DEATH_TURNS_MAX, 2 + Math.floor(Math.max(0, espirito) / 2))
+  return espirito > 8 ? 4 : 3
 }
 
 /** Bônus de Determinação no 1º turno: pontos no domínio (0 a 2) + outras fontes, até +3. */
@@ -63,12 +63,12 @@ export function deathSuccess(natural: number, total: number): boolean {
   return natural === 10 || total >= DEATH_DT
 }
 
-/** Depois de um Teste de Morte: estabiliza, morre (3 falhas ou todos os turnos falhos) ou segue caído. */
+/** Depois de um Teste de Morte: estabiliza, morre (falhou em todos os turnos) ou segue caído. */
 export function afterDeathRoll(state: DyingState, success: boolean, turns: number): DyingState {
   const rolls = state.rolls + 1
   if (success) return { ...state, rolls, medicine: 0, result: 'stable' }
   const failures = state.failures + 1
-  const dead = failures >= 3 || rolls >= turns
+  const dead = rolls >= turns
   return { ...state, rolls, failures, medicine: 0, result: dead ? 'dead' : null }
 }
 
@@ -84,11 +84,9 @@ export interface Consequence {
 export function deathConsequence(failures: number, espirito: number): Consequence {
   if (failures <= 0) return { label: 'Recupera normalmente', detail: 'Inconsciente até acordar, sem penalidade adicional.' }
   if (failures === 1) return { label: 'Incapacitado', detail: 'Ao acordar, fica incapacitado por 1 Descanso Longo após a cena.' }
-  if (failures === 2) {
-    if (espirito <= 0) return { label: 'Morte', detail: 'Com 0 de Espírito, 2 falhas acumuladas matam.', dead: true }
-    return { label: 'Coma', detail: 'Ao acordar, fica em coma por 1d4 − 2 sessões após a cena.', coma: true }
-  }
-  return { label: 'Morte permanente', detail: '3 falhas acumuladas: o personagem morre.', dead: true }
+  // Com 4 turnos (Espírito 9 ou 10) dá para estabilizar com 3 falhas, e o livro trata o 3 como o 2.
+  if (espirito <= 0) return { label: 'Morte', detail: 'Com 0 de Espírito, 2 falhas acumuladas matam.', dead: true }
+  return { label: 'Coma', detail: 'Ao acordar, fica em coma por 1d4 − 2 sessões após a cena.', coma: true }
 }
 
 /** Sessões de coma: 1d4 − 2, sem ficar negativo (0 = acorda logo). */

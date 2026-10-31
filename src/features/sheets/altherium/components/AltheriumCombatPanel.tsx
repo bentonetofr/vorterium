@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
 import { Select } from '../../../../shared/components/Select'
 import {
@@ -9,7 +9,6 @@ import {
 } from '../constants/altheriumItems'
 import type { AltheriumAttribute, AltheriumDomain } from '../constants/altherium'
 import {
-  CONDITIONS,
   FULL_DAMAGE_LABELS,
   PUNISHMENT_TABLE,
   ZONE_LABELS,
@@ -19,7 +18,6 @@ import {
   attackModes,
   combatWeapons,
   conditionDbMod,
-  conditionDef,
   conditionDefenseMod,
   defenseFumble,
   hasReinforcement,
@@ -27,14 +25,11 @@ import {
   weaponDamageType,
   weaponWear,
   zoneArmor,
-  endScene,
   hasProperty,
   parryResult,
   propertyValue,
   rangePenalty,
   reactionAvailable,
-  removeCondition,
-  startTurn,
   surroundBonus,
   zoneForRoll,
   zoneHasEryndorArmor,
@@ -45,6 +40,7 @@ import {
   type ConditionId,
   type FullDamageType,
 } from '../utils/altheriumCombat'
+import { testPool } from '../utils/altheriumTest'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec, type Modifier } from './AltheriumTestModal'
 import {
   addInitiativeParticipant,
@@ -52,7 +48,7 @@ import {
   setInitiativeValue,
 } from '../../../initiative/services/initiativeService'
 import { AltheriumDyingPanel } from './AltheriumDyingPanel'
-import { applyWear, weaponIntegrity } from '../utils/altheriumCraft'
+import { applyWear, integrityBand, weaponIntegrity, BAND_LABELS } from '../utils/altheriumCraft'
 import {
   DEATH_DT,
   NEW_DYING,
@@ -62,14 +58,16 @@ import {
   deathTurns,
   determinationBonus,
 } from '../utils/altheriumDeath'
+import { Chips, Field, Formula, Icon, Toggle, Win } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
-// Aba Combate da ficha de Altherium (livro 2.0, "Crepúsculo Vermelho"):
-// turno (Reação, Defender Total, Mirar, Novo turno), condições com
-// contador, Iniciativa, Atacar (Luta ou Precisão + atributo da arma, com
-// os modificadores de alcance, Cercar e Gênesis), Defender e Aparar (com
-// a Tabela de Punição e o Contra-ataque) e o cálculo do dano recebido na
-// ordem do livro. Tudo rola na janela de teste (dados 3D).
+// Combate da ficha de Altherium (livro 2.0, "Crepúsculo Vermelho"), em
+// janelas abertas pelos botões de ação do cabeçalho: Atacar (Luta ou
+// Precisão + atributo da arma, com alcance, Cercar e Gênesis), Defender e
+// Aparar (com a Tabela de Punição e o Contra-ataque), Iniciativa, Receber
+// dano (na ordem do livro) e o Estado Caído com o Teste de Morte. Tudo rola
+// na janela de teste (dados 3D). A Reação, as condições e o turno ficam na
+// faixa de estado.
 // ────────────────────────────────────────────────────────
 
 /** Dados e atributo de um teste de domínio, como a ficha calcula. */
@@ -83,6 +81,8 @@ export interface DomainCheck {
   /** Condições que mexem no atributo (Amedrontado, Fraqueza...). */
   flat:           Modifier[]
 }
+
+export type CombatAction = 'attack' | 'defend' | 'damage' | 'initiative' | 'dying'
 
 interface Props {
   campaignId:   string
@@ -102,27 +102,30 @@ interface Props {
   determinationPoints: number
   /** Integridade de um item do inventário (desgaste no combate). */
   onPatch:      (id: string, patch: { integrity?: number }) => Promise<void>
+  /** Janela aberta (null = nenhuma). */
+  action:       CombatAction | null
+  onClose:      () => void
 }
 
 type Open = { spec: AltheriumTestSpec; kind: 'attack' | 'defense' | 'parry' | 'initiative' | 'death'; weapon?: CombatWeapon; mode?: AttackMode; counter?: boolean }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 const ZONES: BodyZoneId[] = ['db_pernas', 'db_bracos', 'db_tronco', 'db_cabeca']
-const CONDITION_OPTIONS = [{ value: '', label: 'Pôr condição…' }, ...CONDITIONS.map((c) => ({ value: c.id, label: c.label }))]
 const DAMAGE_OPTIONS = (Object.keys(FULL_DAMAGE_LABELS) as FullDamageType[]).map((t) => ({ value: t, label: FULL_DAMAGE_LABELS[t] }))
 const ZONE_OPTIONS = ZONES.map((z) => ({ value: z, label: ZONE_LABELS[z] }))
 
-export function AltheriumCombatPanel({
+export function AltheriumCombatActions({
   campaignId, sheetId, character, genesis, inventory, state, onState, domainCheck, zoneDb, vitality, onDamage,
-  espirito, determinationPoints, onPatch,
+  espirito, determinationPoints, onPatch, action, onClose,
 }: Props) {
   const weapons = useMemo(() => combatWeapons(inventory), [inventory])
   const [open, setOpen] = useState<Open | null>(null)
-  const [turnNote, setTurnNote] = useState<string | null>(null)
+  // Troca a cada teste novo (Contra-ataque, Rolar de novo): a janela de teste recomeça.
+  const [nonce, setNonce] = useState(0)
 
   // Ataque
   const [weaponId, setWeaponId] = useState<string>('')
-  const weapon = weapons.find((w) => w.inventoryId === weaponId) ?? weapons[0] ?? null
+  const weapon = weapons.find((w) => w.inventoryId === weaponId) ?? weapons.find((w) => !weaponIntegrity(w.integrity).broken) ?? weapons[0] ?? null
   const modes = weapon ? attackModes(weapon) : []
   const [modePick, setModePick] = useState<AttackMode>('corpo')
   const mode: AttackMode = modes.includes(modePick) ? modePick : (modes[0] ?? 'corpo')
@@ -133,6 +136,7 @@ export function AltheriumCombatPanel({
   const [allyNearTarget, setAllyNearTarget] = useState(false)
 
   // Defesa
+  const [defMode, setDefMode] = useState<'defender' | 'aparar'>('defender')
   const [cover, setCover] = useState(false)
   const [parryId, setParryId] = useState('')
   const [incomingRanged, setIncomingRanged] = useState(false)
@@ -146,18 +150,9 @@ export function AltheriumCombatPanel({
     onState({ ...state, ...next })
   }
 
-  // ── Turno ──
-  function newTurn() {
-    const t = startTurn(state)
-    onState(t.state)
-    const dmg = t.damage.reduce((s, d) => s + d.amount, 0)
-    if (dmg > 0) onDamage(dmg, null)
-    const bits = [
-      'Reação renovada',
-      ...t.damage.map((d) => `${d.label}: −${d.amount} PV`),
-      ...(t.ended.length ? [`acabou: ${t.ended.join(', ')}`] : []),
-    ]
-    setTurnNote(bits.join(' · '))
+  function launch(next: Open) {
+    setOpen(next)
+    setNonce((n) => n + 1)
   }
 
   // ── Ataque ──
@@ -194,48 +189,50 @@ export function AltheriumCombatPanel({
 
   function openAttack(counter = false, w = weapon, m = mode) {
     if (!w) return
-    setOpen({ spec: attackSpec(w, m, counter), kind: 'attack', weapon: w, mode: m, counter })
+    launch({ spec: attackSpec(w, m, counter), kind: 'attack', weapon: w, mode: m, counter })
   }
 
   // ── Defesa / Aparar ──
-  function openDefense() {
+  function defenseSpec(): AltheriumTestSpec {
     const check = domainCheck('resiliencia')
     const flat: Modifier[] = [...check.flat]
     if (state.defend_total) flat.push({ label: 'Defender Total', value: 4 })
     const cond = conditionDefenseMod(state)
     if (cond) flat.push({ label: 'Derrubado', value: cond })
-    setOpen({
-      kind: 'defense',
-      spec: {
-        ...check, title: 'Defesa', flat,
-        diceMods: cover ? [{ label: 'Cobertura parcial', value: 1 }] : [],
-        targetLabel: 'Ataque recebido', words: ['defendeu', 'foi atingido'],
-        notes: ['Defender não gasta Reação. Empate favorece a defesa.'],
-      },
-    })
+    return {
+      ...check, title: 'Defesa', flat,
+      diceMods: cover ? [{ label: 'Cobertura parcial', value: 1 }] : [],
+      targetLabel: 'Ataque recebido', words: ['defendeu', 'foi atingido'],
+      notes: ['Defender não gasta Reação. Empate favorece a defesa.'],
+    }
+  }
+
+  function parrySpec(w: CombatWeapon): AltheriumTestSpec {
+    const check = domainCheck('reflexo')
+    const flat: Modifier[] = [...check.flat]
+    if (hasProperty(w, 'defensiva')) flat.push({ label: 'Defensiva', value: 1 })
+    if (hasProperty(w, 'lenta')) flat.push({ label: 'Lenta', value: -2 })
+    if (hasReinforcement(w, 'empunhadura_couro')) flat.push({ label: 'Empunhadura de Couro', value: 1 })
+    if (state.defend_total) flat.push({ label: 'Defender Total', value: 4 })
+    return {
+      ...check, title: `Aparar com ${w.name}`, flat,
+      targetLabel: 'Ataque recebido', words: ['aparou', 'falhou'],
+      notes: [`Gasta a Reação. Contra-ataque se superar o ataque por ${hasProperty(w, 'fluxo') ? 4 : 5} ou mais, ou no crítico.`],
+    }
+  }
+
+  function openDefense() {
+    launch({ kind: 'defense', spec: defenseSpec() })
   }
 
   function openParry() {
     if (!parryWeapon) return
-    const check = domainCheck('reflexo')
-    const flat: Modifier[] = [...check.flat]
-    if (hasProperty(parryWeapon, 'defensiva')) flat.push({ label: 'Defensiva', value: 1 })
-    if (hasProperty(parryWeapon, 'lenta')) flat.push({ label: 'Lenta', value: -2 })
-    if (hasReinforcement(parryWeapon, 'empunhadura_couro')) flat.push({ label: 'Empunhadura de Couro', value: 1 })
-    if (state.defend_total) flat.push({ label: 'Defender Total', value: 4 })
-    setOpen({
-      kind: 'parry', weapon: parryWeapon,
-      spec: {
-        ...check, title: `Aparar com ${parryWeapon.name}`, flat,
-        targetLabel: 'Ataque recebido', words: ['aparou', 'falhou'],
-        notes: [`Gasta a Reação. Contra-ataque se superar o ataque por ${hasProperty(parryWeapon, 'fluxo') ? 4 : 5} ou mais, ou no crítico.`],
-      },
-    })
+    launch({ kind: 'parry', weapon: parryWeapon, spec: parrySpec(parryWeapon) })
   }
 
   function openInitiative() {
     const check = domainCheck('iniciativa')
-    setOpen({ kind: 'initiative', spec: { ...check, title: 'Iniciativa', notes: ['A ordem é do maior para o menor resultado.'] } })
+    launch({ kind: 'initiative', spec: { ...check, title: 'Iniciativa', notes: ['A ordem é do maior para o menor resultado.'] } })
   }
 
   // ── Desgaste ──
@@ -254,7 +251,7 @@ export function AltheriumCombatPanel({
     const flat: Modifier[] = []
     if (dying.medicine) flat.push({ label: 'Medicina', value: dying.medicine })
     if (dying.nornas) flat.push({ label: 'Corda das Nornas', value: 1 })
-    setOpen({
+    launch({
       kind: 'death',
       spec: {
         domainId: 'determinacao', domainLabel: 'Teste de Morte', attributeLabel: 'Determinação',
@@ -262,7 +259,7 @@ export function AltheriumCombatPanel({
         title: `Teste de Morte (turno ${dying.rolls + 1} de ${turns})`, flat,
         targetLabel: 'DT', initialTarget: DEATH_DT, critSucceeds: true, noSituation: true,
         words: ['sobreviveu', 'falhou'],
-        notes: ['1d10 + Determinação contra DT 7. 10 natural é sucesso automático, e aqui o 1 não anula nada.'],
+        notes: [`1d10 + Determinação contra DT ${DEATH_DT}. 10 natural é sucesso automático, e aqui o 1 não anula nada.`],
       },
     })
   }
@@ -272,227 +269,228 @@ export function AltheriumCombatPanel({
     onState(addCondition(state, id, turns))
   }
 
-  return (
-    <div className="alth-combat">
-      {(state.dying || vitality === 0) && (
+  // ── Prévia da conta (o que a janela mostra antes de rolar) ──
+  function previewOf(spec: AltheriumTestSpec) {
+    const dm = (spec.diceMods ?? []).reduce((s, m) => s + m.value, 0)
+    const pool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational: dm })
+    const bonus = spec.attribute + (spec.flat ?? []).reduce((s, m) => s + m.value, 0)
+    return { pool, bonus }
+  }
+
+  const close = () => { setOpen(null); onClose() }
+
+  // A Iniciativa não tem ajuste: já abre o teste.
+  useEffect(() => {
+    if (action === 'initiative' && !open) openInitiative()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action])
+
+  // Janela de teste (a conta com os dados 3D).
+  if (open) {
+    return (
+      <AltheriumTestModal
+        key={nonce}
+        campaignId={campaignId} sheetId={sheetId} character={character} spec={open.spec}
+        onClose={close}
+        onRolled={({ reading, outcome }) => {
+          if (open.kind === 'attack') {
+            const next: Partial<CombatState> = {}
+            if (!open.counter && state.aim) next.aim = false
+            if (open.weapon && hasProperty(open.weapon, 'recarga')) next.unloaded = [...new Set([...state.unloaded, open.weapon.inventoryId])]
+            if (Object.keys(next).length) patch(next)
+          }
+          if (open.kind === 'parry') patch({ reaction_used: true })
+          // Desgaste da arma: errar com algum 1 nos dados (−10%), falha crítica na Defesa (−20%).
+          if (open.kind === 'attack' && open.weapon && outcome && !outcome.success && reading.results.includes(1)) wear(open.weapon, 10)
+          if (open.kind === 'defense' && defenseFumble(reading.kept) && parryWeapon) wear(parryWeapon, 20)
+          if (open.kind === 'death') {
+            patch({ dying: afterDeathRoll(state.dying ?? NEW_DYING, deathSuccess(reading.kept, reading.total), turns) })
+          }
+        }}
+        after={(ctx) => (
+          <AfterRoll ctx={ctx} open={open} character={character} campaignId={campaignId}
+            onCondition={putCondition} onCounter={() => open.weapon && openAttack(true, open.weapon, 'corpo')}
+            onWear={(w, base) => wear(w, base)} defendWeapon={parryWeapon} />
+        )}
+      />
+    )
+  }
+
+  // ── Atacar ──
+  if (action === 'attack') {
+    const spec = weapon ? attackSpec(weapon, mode) : null
+    const pv = spec ? previewOf(spec) : null
+    const cantReach = mode === 'distancia' && rangePenalty(bands) === null
+    const broken = !!weapon && weaponIntegrity(weapon.integrity).broken
+    const unloaded = !!weapon && hasProperty(weapon, 'recarga') && state.unloaded.includes(weapon.inventoryId)
+    return (
+      <Win title="Atacar" subtitle={state.aim ? 'Mirar ativo (+2)' : undefined} onClose={onClose}>
+        {weapons.length === 0 && <p className="alth-hint">Nenhuma arma no inventário.</p>}
+        {weapon && spec && pv && (
+          <>
+            <ul className="alth-weapons" aria-label="Arma">
+              {weapons.map((w) => {
+                const band = integrityBand(w.integrity)
+                return (
+                  <li key={w.inventoryId}>
+                    <button
+                      type="button" aria-pressed={w.inventoryId === weapon.inventoryId}
+                      className={`alth-weapon${w.inventoryId === weapon.inventoryId ? ' alth-weapon--on' : ''}`}
+                      onClick={() => setWeaponId(w.inventoryId)}
+                    >
+                      <strong>{w.name}</strong>
+                      <span>{w.damageDice} {DAMAGE_TYPE_LABELS[w.damageType]} · {WEAPON_RANGE_LABELS[w.range]}</span>
+                      <span className={`alth-integrity alth-integrity--${band}`}>{w.integrity}%{band !== 'normal' ? ` · ${BAND_LABELS[band]}` : ''}</span>
+                      <span className="alth-weapon__props">
+                        {w.properties.map((p) => (
+                          <span key={p.id} className="alth-inventory__prop" title={WEAPON_PROPERTIES[p.id].description}>{weaponPropertyLabel(p)}</span>
+                        ))}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+
+            {modes.length > 1 && (
+              <Chips<AttackMode>
+                label="Como ataca" value={mode} onChange={setModePick}
+                options={modes.map((m) => ({ id: m, label: m === 'corpo' ? 'Corpo a corpo' : 'Arremessar', sub: m === 'corpo' ? 'Luta' : 'Precisão' }))}
+              />
+            )}
+            {weapon.attribute === 'furia_impulso' && (
+              <Chips<'furia' | 'impulso'>
+                label="Atributo" value={attrPick} onChange={setAttrPick}
+                options={[{ id: 'furia', label: 'Fúria', sub: 'brutal' }, { id: 'impulso', label: 'Impulso', sub: 'técnico' }]}
+              />
+            )}
+
+            {mode === 'corpo' ? (
+              <Field label="Atacantes em Toque do alvo" hint={`Cercar: ${signed(surroundBonus(attackers))} no ataque. O bônus só vale se todos estão engajados corpo a corpo.`}>
+                <div className="alth-test__stepper">
+                  <button type="button" onClick={() => setAttackers(Math.max(1, attackers - 1))} disabled={attackers <= 1} aria-label="Menos um atacante">−</button>
+                  <span className="alth-test__stepper-value">{attackers}</span>
+                  <button type="button" onClick={() => setAttackers(Math.min(8, attackers + 1))} disabled={attackers >= 8} aria-label="Mais um atacante">+</button>
+                </div>
+              </Field>
+            ) : (
+              <>
+                <Field label="Faixas além do alcance da arma" hint="Cada faixa a mais tira 1 dado. Mais de 2 faixas: o ataque não alcança.">
+                  <div className="alth-test__stepper">
+                    <button type="button" onClick={() => setBands(Math.max(0, bands - 1))} disabled={bands <= 0} aria-label="Menos uma faixa">−</button>
+                    <span className="alth-test__stepper-value">{bands}</span>
+                    <button type="button" onClick={() => setBands(Math.min(3, bands + 1))} disabled={bands >= 3} aria-label="Mais uma faixa">+</button>
+                  </div>
+                </Field>
+                <div className="alth-toggles">
+                  {weapon.category === 'alcance' && <Toggle on={enemyInTouch} onChange={setEnemyInTouch} tone="bad" label="Inimigo em Toque de mim" delta="−1 dado" />}
+                  <Toggle on={allyNearTarget} onChange={setAllyNearTarget} tone="bad" label="Alvo em Toque de um aliado" delta="−1 dado" hint="Se errar com algum 1, o tiro acerta o aliado mais próximo." />
+                </div>
+              </>
+            )}
+
+            {cantReach && <p className="alth-test__note alth-test__note--warn">Mais de 2 faixas além do alcance: o ataque não alcança.</p>}
+            {broken && <p className="alth-test__note alth-test__note--warn">A arma está quebrada: repare na Forja.</p>}
+            {unloaded && (
+              <div className="alth-test__actions alth-test__actions--start">
+                <p className="alth-hint">Descarregada.</p>
+                <button type="button" className="btn btn-ghost"
+                  onClick={() => patch({ unloaded: state.unloaded.filter((id) => id !== weapon.inventoryId) })}>
+                  Recarregar ({weapon.properties.find((p) => p.id === 'recarga')?.action})
+                </button>
+              </div>
+            )}
+
+            <Formula
+              dice={pv.pool.count} keep={pv.pool.keep} bonus={pv.bonus}
+              note={`${spec.domainLabel} + ${spec.attributeLabel}${spec.extraDie ? ` · +1d${spec.extraDie.sides} ${spec.extraDie.label}` : ''}${(spec.flat ?? []).length ? ` · ${(spec.flat ?? []).map((m) => `${m.label} ${signed(m.value)}`).join(', ')}` : ''}`}
+            />
+
+            <div className="alth-test__actions">
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+              <button type="button" className="btn btn-primary alth-win__go" disabled={cantReach || broken || unloaded} onClick={() => openAttack()}>
+                <Icon name="attack" /> Rolar ataque
+              </button>
+            </div>
+          </>
+        )}
+      </Win>
+    )
+  }
+
+  // ── Defender / Aparar ──
+  if (action === 'defend') {
+    const parrySp = parryWeapon ? parrySpec(parryWeapon) : null
+    const sp = defMode === 'aparar' && parrySp ? parrySp : defenseSpec()
+    const pv = previewOf(sp)
+    const parryWhy = !parryWeapon ? 'Para Aparar é preciso empunhar uma arma corpo a corpo.'
+      : !reactionOk ? 'Sem Reação: já foi usada ou está bloqueada.'
+      : incomingRanged || incomingCrit ? 'Não dá para Aparar ataques à distância nem acertos críticos.' : null
+    return (
+      <Win title="Defender" subtitle={state.defend_total ? 'Defender Total ativo (+4)' : undefined} onClose={onClose}>
+        <Chips<'defender' | 'aparar'>
+          label="Como se defende" value={defMode} onChange={setDefMode}
+          options={[
+            { id: 'defender', label: 'Defender', sub: 'Resiliência + Espírito · sem Reação' },
+            { id: 'aparar',   label: 'Aparar',   sub: 'Reflexo + Impulso · gasta a Reação' },
+          ]}
+        />
+        {defMode === 'defender' ? (
+          <div className="alth-toggles">
+            <Toggle on={cover} onChange={setCover} tone="good" label="Cobertura parcial (muro baixo, árvore, carroça)" delta="+1 dado" />
+          </div>
+        ) : (
+          <>
+            {meleeWeapons.length > 1 && (
+              <Field label="Arma para aparar">
+                <Select value={parryWeapon?.inventoryId ?? ''} options={meleeWeapons.map((w) => ({ value: w.inventoryId, label: w.name }))} onChange={setParryId} aria-label="Arma para aparar" />
+              </Field>
+            )}
+            <div className="alth-toggles">
+              <Toggle on={incomingRanged} onChange={setIncomingRanged} label="O ataque é à distância" />
+              <Toggle on={incomingCrit} onChange={setIncomingCrit} label="O ataque foi crítico" />
+            </div>
+            <p className={parryWhy ? 'alth-test__note alth-test__note--warn' : 'alth-hint'}>
+              {parryWhy ?? 'Aparar gasta a Reação. Se falhar, sofre o dano normal +1d6.'}
+            </p>
+          </>
+        )}
+        <Formula dice={pv.pool.count} keep={pv.pool.keep} bonus={pv.bonus} note={`${sp.domainLabel} + ${sp.attributeLabel}${(sp.flat ?? []).length ? ` · ${(sp.flat ?? []).map((m) => `${m.label} ${signed(m.value)}`).join(', ')}` : ''}`} />
+        <div className="alth-test__actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button type="button" className="btn btn-primary alth-win__go" disabled={defMode === 'aparar' && !!parryWhy}
+            onClick={() => (defMode === 'aparar' ? openParry() : openDefense())}>
+            <Icon name={defMode === 'aparar' ? 'parry' : 'defend'} /> {defMode === 'aparar' ? 'Rolar Aparar' : 'Rolar Defesa'}
+          </button>
+        </div>
+      </Win>
+    )
+  }
+
+  // ── Receber dano ──
+  if (action === 'damage') {
+    return (
+      <Win title="Receber dano" subtitle={`PV ${vitality}`} onClose={onClose}>
+        <DamageCalculator inventory={inventory} zoneDb={zoneDb} dbMod={conditionDbMod(state)} vitality={vitality} onApply={onDamage}
+          onArmorWear={(id) => { const i = inventory.find((x) => x.id === id); if (i) void onPatch(id, { integrity: applyWear(i.integrity ?? 100, 10) }).catch(() => {}) }} />
+      </Win>
+    )
+  }
+
+  // ── Estado Caído ──
+  if (action === 'dying') {
+    return (
+      <Win title="Estado Caído" onClose={onClose}>
         <AltheriumDyingPanel
           state={state} turns={turns} baseBonus={baseBonus} espirito={espirito}
           onState={onState} onRoll={openDeath}
           campaignId={campaignId} sheetId={sheetId} character={character}
         />
-      )}
-      {/* Turno */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Turno</h4>
-        </div>
-        <div className="alth-combat__row">
-          <button type="button" className={`alth-combat__chip${reactionOk ? ' alth-combat__chip--ok' : ' alth-combat__chip--off'}`}
-            onClick={() => patch({ reaction_used: !state.reaction_used })}
-            title="1 Reação por rodada, renovada no início do seu turno: Aparar, Ataque de Oportunidade ou triunfo de Reação. Defender não gasta.">
-            Reação: {state.reaction_used ? 'usada' : reactionOk ? 'disponível' : 'bloqueada'}
-          </button>
-          <button type="button" className={`alth-combat__chip${state.defend_total ? ' alth-combat__chip--on' : ''}`} aria-pressed={state.defend_total}
-            onClick={() => patch({ defend_total: !state.defend_total })} title="Ação Padrão: +4 na Defesa e no Aparar até o próximo turno.">
-            Defender Total {state.defend_total ? '(+4)' : ''}
-          </button>
-          <button type="button" className={`alth-combat__chip${state.aim ? ' alth-combat__chip--on' : ''}`} aria-pressed={state.aim}
-            onClick={() => patch({ aim: !state.aim })} title="Ação Padrão: +2 no próximo ataque.">
-            Mirar {state.aim ? '(+2)' : ''}
-          </button>
-          <span className="alth-combat__spacer" />
-          <button type="button" className="btn btn-ghost alth-combat__btn" onClick={newTurn}
-            title="Início do seu turno: renova a Reação, acaba o Defender Total, aplica Queimando e Sangrando e conta os turnos das condições.">
-            Novo turno
-          </button>
-          <button type="button" className="btn btn-ghost alth-combat__btn" onClick={() => { onState(endScene(state)); setTurnNote('Fim da cena: Amedrontado, Mirar e Defender Total saíram.') }}>
-            Fim da cena
-          </button>
-          <button type="button" className="btn btn-primary alth-combat__btn" onClick={openInitiative}>Iniciativa</button>
-        </div>
-        {turnNote && <p className="alth-hint">{turnNote}</p>}
-      </section>
+      </Win>
+    )
+  }
 
-      {/* Condições */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Condições</h4>
-        </div>
-        <div className="alth-combat__row">
-          {state.conditions.length === 0 && <span className="alth-hint">Nenhuma condição.</span>}
-          {state.conditions.map((c) => {
-            const def = conditionDef(c.id)
-            return (
-              <span key={c.id} className="alth-combat__cond" title={def.effect}>
-                {def.label}{c.turns != null ? ` · ${c.turns} ${c.turns === 1 ? 'turno' : 'turnos'}` : ''}
-                <button type="button" onClick={() => onState(removeCondition(state, c.id))} aria-label={`Tirar ${def.label}`}>×</button>
-              </span>
-            )
-          })}
-          <span className="alth-combat__spacer" />
-          <div className="alth-combat__select">
-            <Select value="" options={CONDITION_OPTIONS} onChange={(v) => { if (v) putCondition(v as ConditionId) }} aria-label="Pôr condição" />
-          </div>
-        </div>
-      </section>
-
-      {/* Atacar */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Atacar</h4>
-        </div>
-        {weapons.length === 0 && <p className="alth-hint">Nenhuma arma no inventário.</p>}
-        {weapon && (
-          <div className="alth-combat__form">
-            <div className="alth-combat__select alth-combat__select--wide">
-              <Select value={weapon.inventoryId} options={weapons.map((w) => ({ value: w.inventoryId, label: w.name }))}
-                onChange={setWeaponId} aria-label="Arma" />
-            </div>
-            <p className="alth-combat__weapon">
-              {weapon.damageDice} {DAMAGE_TYPE_LABELS[weapon.damageType]} · {WEAPON_RANGE_LABELS[weapon.range]}
-              {weapon.properties.map((p) => (
-                <span key={p.id} className="alth-inventory__prop" title={WEAPON_PROPERTIES[p.id].description}>{weaponPropertyLabel(p)}</span>
-              ))}
-            </p>
-
-            <div className="alth-combat__row">
-              {modes.length > 1 && modes.map((m) => (
-                <button key={m} type="button" className={`alth-combat__chip${mode === m ? ' alth-combat__chip--on' : ''}`} aria-pressed={mode === m}
-                  onClick={() => setModePick(m)}>
-                  {m === 'corpo' ? 'Corpo a corpo (Luta)' : 'Arremessar (Precisão)'}
-                </button>
-              ))}
-              {weapon.attribute === 'furia_impulso' && (['furia', 'impulso'] as const).map((a) => (
-                <button key={a} type="button" className={`alth-combat__chip${attrPick === a ? ' alth-combat__chip--on' : ''}`} aria-pressed={attrPick === a}
-                  onClick={() => setAttrPick(a)}>
-                  {a === 'furia' ? 'Fúria' : 'Impulso'}
-                </button>
-              ))}
-            </div>
-
-            {mode === 'corpo' ? (
-              <label className="alth-combat__num">
-                Atacantes em Toque do alvo
-                <input type="number" className="input" min={1} max={8} value={attackers}
-                  onChange={(e) => setAttackers(Math.max(1, Math.min(8, Number(e.target.value) || 1)))} />
-                <span className="alth-hint">Cercar: {signed(surroundBonus(attackers))}</span>
-              </label>
-            ) : (
-              <div className="alth-combat__row">
-                <label className="alth-combat__num">
-                  Faixas além do alcance
-                  <input type="number" className="input" min={0} max={3} value={bands}
-                    onChange={(e) => setBands(Math.max(0, Math.min(3, Number(e.target.value) || 0)))} />
-                </label>
-                {weapon.category === 'alcance' && (
-                  <label className="alth-test__check">
-                    <input type="checkbox" checked={enemyInTouch} onChange={(e) => setEnemyInTouch(e.target.checked)} />
-                    Inimigo em Toque de mim (−1 dado)
-                  </label>
-                )}
-                <label className="alth-test__check">
-                  <input type="checkbox" checked={allyNearTarget} onChange={(e) => setAllyNearTarget(e.target.checked)} />
-                  Alvo em Toque de um aliado (−1 dado)
-                </label>
-              </div>
-            )}
-
-            {mode === 'distancia' && rangePenalty(bands) === null && <p className="alth-test__note alth-test__note--warn">Mais de 2 faixas além do alcance: o ataque não alcança.</p>}
-
-            <div className="alth-combat__row">
-              {hasProperty(weapon, 'recarga') && (
-                state.unloaded.includes(weapon.inventoryId) ? (
-                  <button type="button" className="btn btn-ghost alth-combat__btn"
-                    onClick={() => patch({ unloaded: state.unloaded.filter((id) => id !== weapon.inventoryId) })}>
-                    Recarregar ({weapon.properties.find((p) => p.id === 'recarga')?.action})
-                  </button>
-                ) : <span className="alth-hint">Carregada</span>
-              )}
-              <span className="alth-combat__spacer" />
-              <button type="button" className="btn btn-primary alth-combat__btn" onClick={() => openAttack()}
-                disabled={(mode === 'distancia' && rangePenalty(bands) === null) || weaponIntegrity(weapon.integrity).broken}>
-                Atacar
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Defender */}
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Defender</h4>
-        </div>
-        <div className="alth-combat__row">
-          <label className="alth-test__check">
-            <input type="checkbox" checked={cover} onChange={(e) => setCover(e.target.checked)} />
-            Cobertura parcial (+1 dado na Defesa)
-          </label>
-          <span className="alth-combat__spacer" />
-          <button type="button" className="btn btn-primary alth-combat__btn" onClick={openDefense}>Defender</button>
-        </div>
-        <div className="alth-combat__form">
-          <div className="alth-combat__row">
-            {meleeWeapons.length > 1 && (
-              <div className="alth-combat__select">
-                <Select value={parryWeapon?.inventoryId ?? ''} options={meleeWeapons.map((w) => ({ value: w.inventoryId, label: w.name }))}
-                  onChange={setParryId} aria-label="Arma para aparar" />
-              </div>
-            )}
-            <label className="alth-test__check">
-              <input type="checkbox" checked={incomingRanged} onChange={(e) => setIncomingRanged(e.target.checked)} />
-              O ataque é à distância
-            </label>
-            <label className="alth-test__check">
-              <input type="checkbox" checked={incomingCrit} onChange={(e) => setIncomingCrit(e.target.checked)} />
-              O ataque foi crítico
-            </label>
-            <span className="alth-combat__spacer" />
-            <button type="button" className="btn btn-ghost alth-combat__btn" onClick={openParry}
-              disabled={!parryWeapon || !reactionOk || incomingRanged || incomingCrit}>
-              Aparar
-            </button>
-          </div>
-          <p className="alth-hint">
-            {!parryWeapon ? 'Para Aparar é preciso empunhar uma arma corpo a corpo.'
-              : !reactionOk ? 'Sem Reação: já foi usada ou está bloqueada.'
-              : incomingRanged || incomingCrit ? 'Não dá para Aparar ataques à distância nem acertos críticos.'
-              : 'Aparar gasta a Reação. Se falhar, sofre o dano normal +1d6.'}
-          </p>
-        </div>
-      </section>
-
-      <DamageCalculator inventory={inventory} zoneDb={zoneDb} dbMod={conditionDbMod(state)} vitality={vitality} onApply={onDamage}
-        onArmorWear={(id) => { const i = inventory.find((x) => x.id === id); if (i) void onPatch(id, { integrity: applyWear(i.integrity ?? 100, 10) }).catch(() => {}) }} />
-
-      {open && (
-        <AltheriumTestModal
-          campaignId={campaignId} sheetId={sheetId} character={character} spec={open.spec}
-          onClose={() => setOpen(null)}
-          onRolled={({ reading, outcome }) => {
-            if (open.kind === 'attack') {
-              const next: Partial<CombatState> = {}
-              if (!open.counter && state.aim) next.aim = false
-              if (open.weapon && hasProperty(open.weapon, 'recarga')) next.unloaded = [...new Set([...state.unloaded, open.weapon.inventoryId])]
-              if (Object.keys(next).length) patch(next)
-            }
-            if (open.kind === 'parry') patch({ reaction_used: true })
-            // Desgaste da arma: errar com algum 1 nos dados (−10%), falha crítica na Defesa (−20%).
-            if (open.kind === 'attack' && open.weapon && outcome && !outcome.success && reading.results.includes(1)) wear(open.weapon, 10)
-            if (open.kind === 'defense' && defenseFumble(reading.kept) && parryWeapon) wear(parryWeapon, 20)
-            if (open.kind === 'death') {
-              patch({ dying: afterDeathRoll(state.dying ?? NEW_DYING, deathSuccess(reading.kept, reading.total), turns) })
-            }
-          }}
-          after={(ctx) => (
-            <AfterRoll ctx={ctx} open={open} character={character} campaignId={campaignId}
-              onCondition={putCondition} onCounter={() => open.weapon && openAttack(true, open.weapon, 'corpo')}
-              onWear={(w, base) => wear(w, base)} defendWeapon={parryWeapon} />
-          )}
-        />
-      )}
-    </div>
-  )
+  return null
 }
 
 // ────────────────────────────────────────────────────────
@@ -710,10 +708,7 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
   })
 
   return (
-    <section className="alth-section">
-      <div className="alth-section__header">
-        <h4 className="alth-section__title">Receber dano</h4>
-      </div>
+    <div className="alth-combat__form">
       <div className="alth-combat__form">
         <div className="alth-combat__row">
           <label className="alth-combat__num">
@@ -763,6 +758,6 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
           </>
         )}
       </div>
-    </section>
+    </div>
   )
 }

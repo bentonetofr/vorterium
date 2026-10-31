@@ -73,7 +73,7 @@ export function AltheriumDyingPanel({ state, turns, baseBonus, espirito, onState
             ))}
           </ul>
           <p className="alth-hint">
-            Faltam {left} de {turns} turnos para sobreviver (2 + 1 a cada 2 de Espírito, até 5). Falhas: {dying.failures}.
+            Faltam {left} de {turns} turnos para sobreviver (3, e 4 com mais de 8 de Espírito). Falhas: {dying.failures}.
             O bônus de Determinação cai 1 a cada novo turno caído.
           </p>
           <div className="alth-combat__row">
@@ -137,7 +137,7 @@ export function AltheriumDyingPanel({ state, turns, baseBonus, espirito, onState
 
       {dying.result === 'dead' && (
         <p className="alth-test__note alth-test__note--warn">
-          {dying.failures >= 3 ? '3 falhas acumuladas' : 'Falhou em todos os turnos'}: morte permanente.
+          Falhou em todos os turnos: morte permanente.
         </p>
       )}
 
