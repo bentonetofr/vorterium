@@ -95,7 +95,7 @@ export function AltheriumPilarTriumphs({
         </header>
         <p className="alth-triumph__desc">{t.description}</p>
         <div className="alth-triumph__chips">
-          <span className="alth-triumph__chip">{TRIUMPH_ACTION_LABELS.bonus}</span>
+          <span className="alth-triumph__chip">{TRIUMPH_ACTION_LABELS[t.action ?? 'bonus']}</span>
         </div>
         <div className="alth-triumph__actions">
           <button

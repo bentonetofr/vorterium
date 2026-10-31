@@ -13,7 +13,8 @@ import {
 } from '../utils/altheriumStealth'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
-import { Chips, Col, Cols, Field, Formula, Icon, Toggle, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, FormulaEditor, Icon, NO_MANUAL, Toggle, Win, toManual, type ManualState } from './AltheriumPlayKit'
+import { testPool } from '../utils/altheriumTest'
 
 // ────────────────────────────────────────────────────────
 // Janela de Furtividade (livro 2.0, "Furtividade"): o estado dos inimigos
@@ -43,10 +44,14 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
   const [spec, setSpec] = useState<AltheriumTestSpec | null>(null)
   const [mode, setMode] = useState<'teste' | 'distrair'>('teste')
   const [note, setNote] = useState<string | null>(null)
+  const [man, setMan] = useState<ManualState>(NO_MANUAL)
+  const [dtText, setDtText] = useState('')
 
-  const dt = scene.dts[state]
+  const stateDt = scene.dts[state]
+  const dt = dtText.trim() === '' ? stateDt : Math.max(1, Math.min(40, Math.trunc(Number(dtText)) || stateDt))
   const dice = stealthDice(mods)
   const base = check()
+  const autoPool = testPool({ baseDice: base.baseDice, disadvantage: !!base.disadvantage, situational: dice })
 
   function toggle(id: string, on: boolean) {
     setMods((prev) => {
@@ -66,6 +71,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
       ...base,
       title: 'Furtividade',
       diceMods: dice !== 0 ? [{ label: 'Situação', value: dice }] : [],
+      manual: toManual(man),
       targetLabel: `DT (${enemyStateDef(state).label})`, initialTarget: dt, critSucceeds: true,
       words: ['passou despercebido', 'foi notado'],
       notes: ['O teste só acontece quando a situação muda: ao se aproximar, atravessar uma área aberta ou fazer barulho.'],
@@ -114,9 +120,13 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
           <Col>
           <Field label="Estado dos inimigos" hint={`${enemyStateDef(state).meaning} O mestre sempre anuncia o estado.`}>
             <Chips<EnemyState>
-              label="Estado" value={state} onChange={setState}
+              label="Estado" value={state} onChange={(id) => { setState(id); setDtText('') }}
               options={ENEMY_STATES.map((s) => ({ id: s.id, label: s.label, sub: `DT ${scene.dts[s.id]}` }))}
             />
+            <label className="alth-win__inline">DT deste teste
+              <input type="number" className="input alth-win__dtinput" min={1} max={40} inputMode="numeric" value={dtText}
+                onChange={(e) => setDtText(e.target.value)} placeholder={String(stateDt)} aria-label="DT do teste" />
+            </label>
           </Field>
 
           <details className="alth-win__details">
@@ -142,9 +152,9 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
           </Col>
           </Cols>
 
-          <Formula
-            dice={Math.max(1, base.baseDice + dice)} keep={base.disadvantage ? 'lowest' : 'highest'}
-            bonus={base.attribute + base.flat.reduce((s, m) => s + m.value, 0)}
+          <FormulaEditor
+            dice={autoPool.count} keep={autoPool.keep} bonus={base.attribute + base.flat.reduce((sum, m) => sum + m.value, 0)}
+            value={man} onChange={setMan}
             note={`${base.domainLabel} + ${base.attributeLabel} · contra DT ${dt} (${enemyStateDef(state).label})`}
           />
 

@@ -62,7 +62,18 @@ export interface AltheriumTestSpec {
   notes?:         string[]
   /** Sem dados de situação (o Teste de Morte é sempre 1d10). */
   noSituation?:   boolean
+  /** Ajuste manual da conta (o jogador ou o mestre mudou os dados, o maior/menor ou o bônus). */
+  manual?:        ManualRoll
 }
+
+/** O que foi mudado na mão: vale no lugar do cálculo automático. */
+export interface ManualRoll {
+  dice?:  number
+  keep?:  'highest' | 'lowest'
+  bonus?: number
+}
+
+export const MANUAL_DICE_MAX = 12
 
 export interface TestDone {
   reading:   TestReading
@@ -102,6 +113,9 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   const [situational, setSituational] = useState(0)
   const [target, setTarget] = useState(spec.initialTarget != null ? String(spec.initialTarget) : '')
   const [isPrivate, setIsPrivate] = useState(false)
+  const [manDice, setManDice] = useState(spec.manual?.dice != null ? String(spec.manual.dice) : '')
+  const [manKeep, setManKeep] = useState<'auto' | 'highest' | 'lowest'>(spec.manual?.keep ?? 'auto')
+  const [manBonus, setManBonus] = useState(spec.manual?.bonus != null ? String(spec.manual.bonus) : '')
   const [rolling, setRolling] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
@@ -119,8 +133,16 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
 
   const autoDice = sum(spec.diceMods)
   const totalDice = clampSituation(autoDice + situational)
-  const pool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational: totalDice })
-  const modifier = spec.attribute + sum(spec.flat)
+  const autoPool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational: totalDice })
+  const autoModifier = spec.attribute + sum(spec.flat)
+  // Ajuste manual: vem pronto da janela (rola direto) ou dos campos desta tela.
+  const fieldInt = (v: string, min: number, max: number) => (v.trim() === '' ? undefined : Math.max(min, Math.min(max, Math.trunc(Number(v)) || 0)))
+  const manual: ManualRoll | undefined = autoRoll
+    ? spec.manual
+    : { dice: fieldInt(manDice, 1, MANUAL_DICE_MAX), keep: manKeep === 'auto' ? undefined : manKeep, bonus: fieldInt(manBonus, -99, 99) }
+  const pool = { count: manual?.dice ?? autoPool.count, keep: manual?.keep ?? autoPool.keep }
+  const manualBonus = manual?.bonus
+  const modifier = manualBonus ?? autoModifier
   const targetValue = target.trim() === '' ? null : Math.max(0, Math.min(99, Math.trunc(Number(target)) || 0))
   const reading = roll ? readTest(roll.roll_breakdown ?? []) : null
 
@@ -267,6 +289,30 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
                 </span>
               </div>}
 
+              <details className="alth-win__details" open={manual?.dice != null || manual?.keep != null || manualBonus != null}>
+                <summary>Ajuste manual: dados, maior ou menor e bônus</summary>
+                <div className="alth-test__manual">
+                  <label className="alth-test__field">
+                    <span className="alth-test__label">Dados d10</span>
+                    <input type="number" className="input" min={1} max={MANUAL_DICE_MAX} inputMode="numeric" value={manDice}
+                      onChange={(e) => setManDice(e.target.value)} placeholder={`${autoPool.count} (auto)`} />
+                  </label>
+                  <label className="alth-test__field">
+                    <span className="alth-test__label">Fica o</span>
+                    <select className="input" value={manKeep} onChange={(e) => setManKeep(e.target.value as 'auto' | 'highest' | 'lowest')}>
+                      <option value="auto">{autoPool.keep === 'highest' ? 'Maior (auto)' : 'Menor (auto)'}</option>
+                      <option value="highest">Maior</option>
+                      <option value="lowest">Menor</option>
+                    </select>
+                  </label>
+                  <label className="alth-test__field">
+                    <span className="alth-test__label">Bônus total</span>
+                    <input type="number" className="input" min={-99} max={99} inputMode="numeric" value={manBonus}
+                      onChange={(e) => setManBonus(e.target.value)} placeholder={`${signed(autoModifier)} (auto)`} />
+                  </label>
+                </div>
+              </details>
+
               <label className="alth-test__field">
                 <span className="alth-test__label">{targetLabel} (opcional)</span>
                 <input type="number" className="input alth-test__dt" min={0} max={99} inputMode="numeric"
@@ -304,10 +350,16 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
 
               <p className="alth-test__sum">
                 {reading.keep === 'highest' ? 'Maior' : 'Menor'} dado <strong>{reading.kept}</strong>
-                {' '}{plusMinus(spec.attribute)} {spec.attributeLabel} <strong>{Math.abs(spec.attribute)}</strong>
-                {(spec.flat ?? []).filter((m) => m.value !== 0).map((m) => (
-                  <span key={m.label}> {plusMinus(m.value)} {m.label} <strong>{Math.abs(m.value)}</strong></span>
-                ))}
+                {manualBonus != null ? (
+                  <span> {plusMinus(manualBonus)} bônus manual <strong>{Math.abs(manualBonus)}</strong></span>
+                ) : (
+                  <>
+                    {' '}{plusMinus(spec.attribute)} {spec.attributeLabel} <strong>{Math.abs(spec.attribute)}</strong>
+                    {(spec.flat ?? []).filter((m) => m.value !== 0).map((m) => (
+                      <span key={m.label}> {plusMinus(m.value)} {m.label} <strong>{Math.abs(m.value)}</strong></span>
+                    ))}
+                  </>
+                )}
                 {spec.extraDie && <span> + {spec.extraDie.label} <strong>{reading.extra}</strong></span>}
                 {' '}= <strong className="alth-test__total">{reading.total}</strong>
               </p>

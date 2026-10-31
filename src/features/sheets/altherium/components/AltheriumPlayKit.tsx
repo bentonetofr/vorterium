@@ -120,6 +120,59 @@ export function Formula({ dice, keep, bonus, note }: { dice: number; keep: 'high
   )
 }
 
+/** O que foi mudado na mão numa conta (vazio = automático). */
+export interface ManualState { dice: number | null; keep: 'highest' | 'lowest' | null; bonus: number | null }
+export const NO_MANUAL: ManualState = { dice: null, keep: null, bonus: null }
+
+/** Vira o ajuste que a janela de teste entende (undefined quando nada foi mudado). */
+export function toManual(m: ManualState): { dice?: number; keep?: 'highest' | 'lowest'; bonus?: number } | undefined {
+  if (m.dice == null && m.keep == null && m.bonus == null) return undefined
+  return { ...(m.dice != null ? { dice: m.dice } : {}), ...(m.keep ? { keep: m.keep } : {}), ...(m.bonus != null ? { bonus: m.bonus } : {}) }
+}
+
+interface FormulaEditorProps {
+  /** A conta automática (o que a ficha calculou). */
+  dice:     number
+  keep:     'highest' | 'lowest'
+  bonus:    number
+  note?:    ReactNode
+  value:    ManualState
+  onChange: (next: ManualState) => void
+}
+
+/** A conta antes de rolar, com tudo editável: quantos d10, maior ou menor e o bônus. Vale na hora de rolar. */
+export function FormulaEditor({ dice, keep, bonus, note, value, onChange }: FormulaEditorProps) {
+  const d = value.dice ?? dice
+  const k = value.keep ?? keep
+  const b = value.bonus ?? bonus
+  const changed = value.dice != null || value.keep != null || value.bonus != null
+  const set = (patch: Partial<ManualState>) => onChange({ ...value, ...patch })
+  return (
+    <div className={`alth-formula alth-formula--edit${changed ? ' alth-formula--changed' : ''}`}>
+      <div className="alth-formula__row">
+        <span className="alth-formula__group" aria-label="Quantidade de dados">
+          <button type="button" className="alth-test__step" onClick={() => set({ dice: Math.max(1, d - 1) })} disabled={d <= 1} aria-label="Menos um dado">−</button>
+          <strong className="alth-formula__big">{d}<span>d10</span></strong>
+          <button type="button" className="alth-test__step" onClick={() => set({ dice: Math.min(12, d + 1) })} disabled={d >= 12} aria-label="Mais um dado">+</button>
+        </span>
+        <span className="alth-formula__group">
+          <button type="button" className={`alth-formula__keep${k === 'highest' ? ' alth-formula__keep--on' : ''}`} onClick={() => set({ keep: 'highest' })}>Maior</button>
+          <button type="button" className={`alth-formula__keep${k === 'lowest' ? ' alth-formula__keep--on' : ''}`} onClick={() => set({ keep: 'lowest' })}>Menor</button>
+        </span>
+        <span className="alth-formula__group" aria-label="Bônus">
+          <button type="button" className="alth-test__step" onClick={() => set({ bonus: b - 1 })} aria-label="Menos um de bônus">−</button>
+          <strong className="alth-formula__big">{b >= 0 ? '+' : '−'}{Math.abs(b)}</strong>
+          <button type="button" className="alth-test__step" onClick={() => set({ bonus: b + 1 })} aria-label="Mais um de bônus">+</button>
+        </span>
+      </div>
+      <small>
+        {changed ? 'Ajustado na mão. ' : ''}{note}
+        {changed && <> <button type="button" className="alth-formula__reset" onClick={() => onChange(NO_MANUAL)}>Voltar ao automático</button></>}
+      </small>
+    </div>
+  )
+}
+
 interface PipsProps {
   value:    number
   max:      number

@@ -107,3 +107,4 @@
   .alth-master__list { max-height: 160px; }
   .alth-master__roster { position: static; }
 }
+.alth-master-panel.fab-panel { width: min(1040px, calc(100vw - 56px - var(--space-3) - 2 * var(--space-6))); }

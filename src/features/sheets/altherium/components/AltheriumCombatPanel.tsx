@@ -58,7 +58,7 @@ import {
   deathTurns,
   determinationBonus,
 } from '../utils/altheriumDeath'
-import { Chips, Field, Formula, Icon, Toggle, Win } from './AltheriumPlayKit'
+import { Chips, Field, FormulaEditor, Icon, NO_MANUAL, Toggle, Win, toManual, type ManualState } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
 // Combate da ficha de Altherium (livro 2.0, "Crepúsculo Vermelho"), em
@@ -135,7 +135,12 @@ export function AltheriumCombatActions({
   const [enemyInTouch, setEnemyInTouch] = useState(false)
   const [allyNearTarget, setAllyNearTarget] = useState(false)
 
+  const [atkMan, setAtkMan] = useState<ManualState>(NO_MANUAL)
+  const [atkTarget, setAtkTarget] = useState('')
+
   // Defesa
+  const [defMan, setDefMan] = useState<ManualState>(NO_MANUAL)
+  const [defTarget, setDefTarget] = useState('')
   const [defMode, setDefMode] = useState<'defender' | 'aparar'>('defender')
   const [cover, setCover] = useState(false)
   const [parryId, setParryId] = useState('')
@@ -187,9 +192,14 @@ export function AltheriumCombatActions({
     }
   }
 
+  const targetOf = (v: string) => (v.trim() === '' ? undefined : Math.max(0, Math.min(99, Math.trunc(Number(v)) || 0)))
+
   function openAttack(counter = false, w = weapon, m = mode) {
     if (!w) return
-    launch({ spec: attackSpec(w, m, counter), kind: 'attack', weapon: w, mode: m, counter })
+    const base = attackSpec(w, m, counter)
+    // O contra-ataque é outro teste: não leva o ajuste manual do ataque.
+    const spec = counter ? base : { ...base, manual: toManual(atkMan), initialTarget: targetOf(atkTarget) ?? null }
+    launch({ spec, kind: 'attack', weapon: w, mode: m, counter })
   }
 
   // ── Defesa / Aparar ──
@@ -222,12 +232,12 @@ export function AltheriumCombatActions({
   }
 
   function openDefense() {
-    launch({ kind: 'defense', spec: defenseSpec() })
+    launch({ kind: 'defense', spec: { ...defenseSpec(), manual: toManual(defMan), initialTarget: targetOf(defTarget) ?? null } })
   }
 
   function openParry() {
     if (!parryWeapon) return
-    launch({ kind: 'parry', weapon: parryWeapon, spec: parrySpec(parryWeapon) })
+    launch({ kind: 'parry', weapon: parryWeapon, spec: { ...parrySpec(parryWeapon), manual: toManual(defMan), initialTarget: targetOf(defTarget) ?? null } })
   }
 
   function openInitiative() {
@@ -401,8 +411,12 @@ export function AltheriumCombatActions({
               </div>
             )}
 
-            <Formula
-              dice={pv.pool.count} keep={pv.pool.keep} bonus={pv.bonus}
+            <Field label="Defesa do alvo (opcional)" hint="Com a Defesa, o resultado diz se acertou. Sem ela, você vê só o total.">
+              <input type="number" className="input alth-win__dtinput" min={0} max={99} inputMode="numeric" value={atkTarget}
+                onChange={(e) => setAtkTarget(e.target.value)} placeholder="Ex.: 12" aria-label="Defesa do alvo" />
+            </Field>
+            <FormulaEditor
+              dice={pv.pool.count} keep={pv.pool.keep} bonus={pv.bonus} value={atkMan} onChange={setAtkMan}
               note={`${spec.domainLabel} + ${spec.attributeLabel}${spec.extraDie ? ` · +1d${spec.extraDie.sides} ${spec.extraDie.label}` : ''}${(spec.flat ?? []).length ? ` · ${(spec.flat ?? []).map((m) => `${m.label} ${signed(m.value)}`).join(', ')}` : ''}`}
             />
 
@@ -455,7 +469,14 @@ export function AltheriumCombatActions({
             </p>
           </>
         )}
-        <Formula dice={pv.pool.count} keep={pv.pool.keep} bonus={pv.bonus} note={`${sp.domainLabel} + ${sp.attributeLabel}${(sp.flat ?? []).length ? ` · ${(sp.flat ?? []).map((m) => `${m.label} ${signed(m.value)}`).join(', ')}` : ''}`} />
+        <Field label="Ataque recebido (opcional)" hint="Com o valor do ataque, o resultado diz se defendeu ou foi atingido.">
+          <input type="number" className="input alth-win__dtinput" min={0} max={99} inputMode="numeric" value={defTarget}
+            onChange={(e) => setDefTarget(e.target.value)} placeholder="Ex.: 14" aria-label="Ataque recebido" />
+        </Field>
+        <FormulaEditor
+          dice={pv.pool.count} keep={pv.pool.keep} bonus={pv.bonus} value={defMan} onChange={setDefMan}
+          note={`${sp.domainLabel} + ${sp.attributeLabel}${(sp.flat ?? []).length ? ` · ${(sp.flat ?? []).map((m) => `${m.label} ${signed(m.value)}`).join(', ')}` : ''}`}
+        />
         <div className="alth-test__actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
           <button type="button" className="btn btn-primary alth-win__go" disabled={defMode === 'aparar' && !!parryWhy}

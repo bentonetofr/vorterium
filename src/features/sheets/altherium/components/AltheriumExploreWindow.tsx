@@ -28,7 +28,8 @@ import { TOKENS_MAX, type Survival } from '../utils/altheriumSurvival'
 import type { AltheriumScene } from '../services/altheriumSceneService'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
-import { Chips, Col, Cols, Field, Formula, Icon, Pips, Toggle, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, FormulaEditor, Icon, NO_MANUAL, Pips, Toggle, Win, toManual, type ManualState } from './AltheriumPlayKit'
+import { testPool } from '../utils/altheriumTest'
 
 // ────────────────────────────────────────────────────────
 // Janela de Explorar (livro 2.0, "Exploração"). Passo 1: Local, Escassez e
@@ -74,6 +75,8 @@ export function AltheriumExploreWindow(props: Props) {
   const [faro, setFaro] = useState(false)
   const [cofre, setCofre] = useState(false)
   const [spec, setSpec] = useState<AltheriumTestSpec | null>(null)
+  const [man, setMan] = useState<ManualState>(NO_MANUAL)
+  const [dtText, setDtText] = useState('')
 
   const loc = locationDef(location)
   const fenda = location === 'fenda'
@@ -86,6 +89,8 @@ export function AltheriumExploreWindow(props: Props) {
   const domain: AltheriumDomain = nature ? 'sobrevivencia' : kit === 'percepcao' ? 'percepcao' : 'investigacao'
   const attribute: AltheriumAttribute | undefined = nature && faro ? 'furia' : undefined
   const base = check(domain, attribute)
+  const dtVal = dtText.trim() === '' ? scar.dt : Math.max(1, Math.min(40, Math.trunc(Number(dtText)) || scar.dt))
+  const autoPool = testPool({ baseDice: base.baseDice, disadvantage: !!base.disadvantage, situational: dice })
 
   function toggle(id: string, on: boolean) {
     setConds((prev) => {
@@ -106,7 +111,8 @@ export function AltheriumExploreWindow(props: Props) {
       ...base,
       title: `Explorar: ${loc.label}`,
       diceMods: dice !== 0 ? [{ label: 'Condições da exploração', value: dice }] : [],
-      targetLabel: `DT (${scar.label})`, initialTarget: scar.dt, critSucceeds: true,
+      manual: toManual(man),
+      targetLabel: `DT (${scar.label})`, initialTarget: dtVal, critSucceeds: true,
       words: ['encontrou algo', 'não achou'],
       notes: [
         `${nature ? 'Natureza' : 'Construção'}: ${base.domainLabel} + ${base.attributeLabel}${faro ? ' (Faro do Lobo)' : ''}. Gasta 1 Ficha de Exploração (rolar de novo gasta outra).`,
@@ -123,7 +129,7 @@ export function AltheriumExploreWindow(props: Props) {
         after={(ctx) => (
           <Finds
             ctx={ctx} props={props} location={location} fenda={fenda} faro={faro} cofre={cofre}
-            scarcityLabel={scar.label} dt={scar.dt} onAgain={() => setSpec(null)}
+            scarcityLabel={scar.label} dt={dtVal} onAgain={() => setSpec(null)}
           />
         )}
       />
@@ -142,11 +148,15 @@ export function AltheriumExploreWindow(props: Props) {
         />
       </Field>
 
-      <Field label="Escassez" hint={`${scar.example}. A DT é ${scar.dt}.${fenda ? ' Fendas de Eryndor são sempre Escassas ou Devastadas.' : ''}`}>
+      <Field label="Escassez" hint={`${scar.example}.${fenda ? ' Fendas de Eryndor são sempre Escassas ou Devastadas.' : ''}`}>
         <Chips
-          label="Escassez" value={scar.id} onChange={setScarcity}
+          label="Escassez" value={scar.id} onChange={(id) => { setScarcity(id); setDtText('') }}
           options={SCARCITY.map((s) => ({ id: s.id, label: s.label, sub: `DT ${s.dt}`, disabled: fenda && (s.id === 'abundante' || s.id === 'normal') }))}
         />
+        <label className="alth-win__inline">DT desta busca
+          <input type="number" className="input alth-win__dtinput" min={1} max={40} inputMode="numeric" value={dtText}
+            onChange={(e) => setDtText(e.target.value)} placeholder={String(scar.dt)} aria-label="DT da busca" />
+        </label>
       </Field>
 
       {!nature && (
@@ -193,10 +203,10 @@ export function AltheriumExploreWindow(props: Props) {
       </Col>
       </Cols>
 
-      <Formula
-        dice={Math.max(1, base.baseDice + dice)} keep={base.disadvantage ? 'lowest' : 'highest'}
-        bonus={base.attribute + base.flat.reduce((s, m) => s + m.value, 0)}
-        note={`${base.domainLabel} + ${base.attributeLabel} · contra DT ${scar.dt} (${scar.label})${base.flat.length ? ` · ${base.flat.map((m) => `${m.label} ${m.value}`).join(', ')}` : ''}`}
+      <FormulaEditor
+        dice={autoPool.count} keep={autoPool.keep} bonus={base.attribute + base.flat.reduce((sum, m) => sum + m.value, 0)}
+        value={man} onChange={setMan}
+        note={`${base.domainLabel} + ${base.attributeLabel} · contra DT ${dtVal} (${scar.label})${base.flat.length ? ` · ${base.flat.map((m) => `${m.label} ${m.value}`).join(', ')}` : ''}`}
       />
 
       {noTokens && <p className="alth-test__note alth-test__note--warn">Sem Fichas de Exploração: descanse para explorar de novo.</p>}

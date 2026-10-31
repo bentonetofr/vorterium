@@ -423,3 +423,34 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 .alth-list--cols3 .alth-recipe .btn { padding: 4px 10px; font-size: var(--text-xs); }
 @media (max-width: 900px) { .alth-list--cols3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .alth-list--cols3 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Conta editável antes de rolar ── */
+.alth-formula--edit { gap: var(--space-2); }
+.alth-formula__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2) var(--space-5); }
+.alth-formula__group { display: inline-flex; align-items: center; gap: var(--space-2); }
+.alth-formula--edit .alth-formula__big { min-width: 3.2ch; text-align: center; }
+.alth-formula--changed { border-style: solid; border-color: var(--gilded-bright); }
+.alth-test__step {
+  width: 28px; height: 28px; font-family: var(--font-body); font-size: var(--text-md); color: var(--text-primary);
+  background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-sm); cursor: var(--cursor-hand, pointer);
+}
+.alth-test__step:hover:not(:disabled) { border-color: var(--gilded-bright); color: var(--accent-bright); }
+.alth-test__step:disabled { opacity: 0.35; cursor: default; }
+.alth-formula__keep {
+  padding: 4px 10px; font-family: var(--font-label); font-size: var(--text-xs); color: var(--text-muted);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-sm); cursor: var(--cursor-hand, pointer);
+}
+.alth-formula__keep--on { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--accent-glow); }
+.alth-formula__reset { background: none; border: 0; padding: 0; font: inherit; color: var(--accent-bright); text-decoration: underline; cursor: var(--cursor-hand, pointer); }
+.alth-test__manual { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin-top: var(--space-2); }
+.alth-test__manual .input { width: 100%; }
+.alth-win__inline { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-muted); }
+.alth-win .alth-win__dtinput { width: 76px; padding: 4px 8px; }
+
+/* ── Um pouco mais largas: menos altura, menos rolagem ── */
+.alth-win { width: min(680px, 100%); }
+.alth-win--wide { width: min(1040px, 100%); }
+.alth-test { width: min(540px, 100%); }
+.alth-test__stage { height: 150px; }
+.alth-toggle { padding: 6px 10px; }
+.alth-win .alth-chip { padding: 5px 10px; }

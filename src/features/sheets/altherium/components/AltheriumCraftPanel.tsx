@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
 import { Select } from '../../../../shared/components/Select'
 import './AltheriumPlay.css'
 import { WEAPONS, findArmor, findWeapon, weaponReinforcementSlots, type RepairMaterial } from '../constants/altheriumItems'
 import type { AltheriumCustomItemInput } from '../services/altheriumSheetService'
-import { getAltheriumCampaignSagas, setAltheriumCampaignSagas } from '../services/altheriumSheetService'
 import {
   BAND_LABELS,
   BASES,
@@ -24,7 +23,6 @@ import {
   missing,
   readCost,
   readReinforcements,
-  readSagas,
   reinforcementDef,
   reinforcementUnlocked,
   removeResource,
@@ -109,24 +107,19 @@ const SUBS: { id: Sub; label: string }[] = [
   { id: 'materiais', label: 'Materiais e Rações' },
   { id: 'reparo',    label: 'Reparo e Desmontar' },
   { id: 'fabricar',  label: 'Fabricar' },
-  { id: 'reforcos',  label: 'Reforços e Sagas' },
+  { id: 'reforcos',  label: 'Reforços' },
 ]
 
 const RESOURCE_OPTIONS = RESOURCES.map((r) => ({ value: r.id, label: r.label }))
 
 export function AltheriumCraftPanel({
-  campaignId, inventory, stock, onStock, known, onPatch, hunger, rationPct, onEat, onCraft, onAddCatalog, onUpdateQuantity, onRemove,
+  inventory, stock, onStock, known, onPatch, hunger, rationPct, onEat, onCraft, onAddCatalog, onUpdateQuantity, onRemove,
 }: Props) {
   const gear = useMemo(() => inventory.map(gearInfo).filter((g): g is GearInfo => g !== null), [inventory])
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [sagas, setSagas] = useState<SagaId[]>([])
-
-  useEffect(() => {
-    let alive = true
-    void getAltheriumCampaignSagas(campaignId).then((s) => { if (alive) setSagas(readSagas(s)) })
-    return () => { alive = false }
-  }, [campaignId])
+  // Sagas de Ofício ficaram para o futuro: por enquanto todas as receitas e Reforços estão liberados.
+  const sagas: SagaId[] = SAGAS.map((x) => x.id)
 
   async function run(fn: () => Promise<void>, ok: string) {
     setBusy(true)
@@ -220,12 +213,6 @@ export function AltheriumCraftPanel({
       await onPatch(reinfGear.inv.id, { reinforcements: [...reinfGear.reinforcements, reinf.id] })
       onStock(next)
     }, `${reinf.label} aplicado em ${reinfGear.name}.`)
-  }
-
-  // ── Sagas ──
-  async function toggleSaga(id: SagaId) {
-    const next = sagas.includes(id) ? sagas.filter((s) => s !== id) : [...sagas, id]
-    await run(async () => { await setAltheriumCampaignSagas(campaignId, next); setSagas(next) }, 'Sagas do grupo salvas.')
   }
 
   // ── Desmontar ──
@@ -466,24 +453,6 @@ export function AltheriumCraftPanel({
         <div className="alth-supply alth-supply--one">
         <section className="alth-card">
           <div className="alth-card__header">
-            <h4 className="alth-card__title">Sagas de Ofício <span className="alth-card__subtitle">valem para o grupo</span></h4>
-          </div>
-          <ul className="alth-list alth-list--cols3">
-            {SAGAS.map((s) => (
-              <li key={s.id} className="alth-recipe">
-                <div className="alth-recipe__info">
-                  <strong>{s.label}</strong>
-                  <span className="alth-hint">{s.tier}: destrava {s.unlocks}</span>
-                </div>
-                <button type="button" className={`btn ${sagas.includes(s.id) ? 'btn-primary' : 'btn-ghost'}`} disabled={busy} aria-pressed={sagas.includes(s.id)} onClick={() => void toggleSaga(s.id)}>
-                  {sagas.includes(s.id) ? 'Encontrada' : 'Marcar'}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className="alth-card">
-          <div className="alth-card__header">
             <h4 className="alth-card__title">Reforços <span className="alth-card__subtitle">melhorias permanentes</span></h4>
             {reinfGear && <span className="alth-counter">{reinfGear.reinforcements.length}/{reinfGear.slots} espaços</span>}
           </div>
@@ -509,7 +478,7 @@ export function AltheriumCraftPanel({
                       <div className="alth-recipe__info">
                         <strong>{r.label}</strong>
                         <span className="alth-recipe__cost">{costText(r.cost)} · {r.place}</span>
-                        <span className="alth-hint">{r.effect}{open ? '' : ' · precisa de Saga'}</span>
+                        <span className="alth-hint">{r.effect}</span>
                       </div>
                       <button type="button" className="btn btn-ghost" disabled={busy || !open || slotsLeft <= 0 || reinfGear.reinforcements.includes(r.id)} onClick={() => void doReinforce(r)}>Aplicar</button>
                     </li>

@@ -35,6 +35,8 @@ export interface PilarTriumphDef {
   description: string
   /** Custo em cartas (qualquer naipe — o jogador escolhe na hora). Todos são Ação Bônus. */
   cost:        number
+  /** Quase todos são Ação Bônus; Jogo de Cintura e Banca Quebrada são Reação. */
+  action?:     'reacao'
 }
 
 /** Ordem alfabética em português (acentos contam como a letra base). */
@@ -69,6 +71,26 @@ export const BERSERKER_TRIUMPHS: BerserkerTriumphDef[] = ([
   { id: 'ferro-temperado',     name: 'Ferro Temperado',     description: 'Empunhando uma arma pesada, seus críticos causam +1 dado do dano ou ignoram 5 pontos de armadura.',           action: 'bonus',  cost: 6, range: 'Qualquer',    test: null },
   { id: 'ultimo-grito',        name: 'Último Grito',        description: 'Ganha 5 de resistência a um tipo de dano (à sua escolha) por 1d4 turno.',                                      action: 'bonus',  cost: 4, range: 'Qualquer',    test: 'Resiliência com Espírito' },
   { id: 'cadeia-de-sangue',    name: 'Cadeia de Sangue',    description: 'Ao acertar um inimigo, você pode gastar 1 FV para saltar para outro inimigo a curto alcance e atacá-lo com -2 na rolagem.', action: 'bonus', cost: 1, range: 'Curto', test: null },
+  { id: 'grito-de-desafio', name: 'Grito de Desafio', description: 'Provoca os inimigos próximos. Quem falhar num teste de Vontade + Espírito (DT 11) precisa atacar o Berserker no seu próximo turno.', action: 'bonus', cost: 3, range: 'Curto', test: 'Intimidação com Fúria' },
+  { id: 'mordida-do-lobo', name: 'Mordida do Lobo', description: 'Ao ser atingido por um ataque corpo a corpo, revida na hora com um ataque com -1 dado, sem precisar Aparar.', action: 'reacao', cost: 3, range: 'Toque', test: 'Luta com Fúria' },
+  { id: 'arremesso-brutal', name: 'Arremesso Brutal', description: 'Agarra um inimigo do seu tamanho ou menor e o arremessa a até Fúria x 2 metros. O alvo sofre 1d6 de Impacto e fica Derrubado. Se atingir outra criatura, ela também sofre o dano.', action: 'padrao', cost: 4, range: 'Toque', test: 'Brutalidade com Fúria' },
+  { id: 'muralha-de-carne', name: 'Muralha de Carne', description: 'Quando um aliado em Toque for atingido, o Berserker se joga na frente e recebe o ataque no lugar dele, sofrendo o dano na mesma parte do corpo.', action: 'reacao', cost: 2, range: 'Toque', test: null },
+  { id: 'sede-de-sangue', name: 'Sede de Sangue', description: 'Até o fim da cena, uma vez por turno, ao derrubar um inimigo a 0 PV, recupera 1d8 FV.', action: 'bonus', cost: 2, range: 'Qualquer', test: null },
+  { id: 'quebra-escudo', name: 'Quebra-Escudo', description: 'O próximo ataque que acertar com uma arma pesada destrói a proteção do alvo: o escudo ou a armadura da parte atingida perde 30% de Integridade, além do desgaste normal.', action: 'bonus', cost: 3, range: 'Toque', test: null },
+  { id: 'faro-do-lobo', name: 'Faro do Lobo', description: 'Em uma exploração na natureza, usa Fúria no lugar de Estratégia. Toda Ração encontrada nessa exploração vem com +25%.', action: 'livre', cost: 4, range: 'Qualquer', test: 'Sobrevivência com Fúria' },
+  { id: 'recusar-a-morte', name: 'Recusar a Morte', description: 'Ao chegar a 0 PV, o Berserker se recusa a cair: fica com 1 PV e perde 1d4 de Equilíbrio. Só pode ser usado uma vez por Descanso Longo.', action: 'reacao', cost: 6, range: 'Qualquer', test: null },
+  { id: 'berro-dos-ancestrais', name: 'Berro dos Ancestrais', description: 'Um grito que lembra os mortos do clã. Aliados em Curto deixam de estar Amedrontados e recebem +1 dado no próximo teste de Vontade.', action: 'bonus', cost: 4, range: 'Curto', test: null },
+  { id: 'atropelar', name: 'Atropelar', description: 'Avança em linha reta até o fim do seu movimento. Cada inimigo no caminho faz Reflexo + Impulso contra o seu teste: quem perder é empurrado para o lado e fica Derrubado.', action: 'padrao', cost: 2, range: 'Curto', test: 'Brutalidade com Fúria' },
+  { id: 'lamina-arremessada', name: 'Lâmina Arremessada', description: 'Arremessa a própria arma pesada em alcance Curto, causando o dano normal da arma. A arma cai junto do alvo e precisa ser recuperada.', action: 'padrao', cost: 4, range: 'Curto', test: 'Precisão com Fúria' },
+  { id: 'furia-contida', name: 'Fúria Contida', description: 'Ao sofrer dano, transforma a dor em força: recupera FV igual à metade do dano sofrido, até no máximo 5.', action: 'reacao', cost: 1, range: 'Qualquer', test: null },
+  { id: 'agarrao-de-ferro', name: 'Agarrão de Ferro', description: 'Segura um inimigo, que fica Preso enquanto o Berserker gastar uma Ação Bônus por turno para mantê-lo. O Berserker não pode atacar com arma de Duas Mãos enquanto segura.', action: 'padrao', cost: 3, range: 'Toque', test: 'Brutalidade com Fúria contra Brutalidade do alvo' },
+  { id: 'escudo-humano', name: 'Escudo Humano', description: 'Usa um inimigo Preso pelo Agarrão de Ferro como escudo: recebe cobertura parcial contra ataques à distância. Se um desses ataques errar com algum 1 nos dados, atinge o refém.', action: 'bonus', cost: 2, range: 'Toque', test: null },
+  { id: 'golpe-no-chao', name: 'Golpe no Chão', description: 'Com uma arma de Impacto, golpeia o chão. Todas as criaturas em Toque, inclusive aliados, fazem Reflexo + Impulso (DT 11) ou ficam Derrubadas.', action: 'padrao', cost: 4, range: 'Toque', test: null },
+  { id: 'cicatrizes-de-guerra', name: 'Cicatrizes de Guerra', description: 'Ao sofrer um acerto crítico, o Berserker ganha +1 dado no próximo ataque contra quem o acertou.', action: 'livre', cost: 2, range: 'Qualquer', test: null },
+  { id: 'presenca-aterradora', name: 'Presença Aterradora', description: 'Encara os inimigos com olhos de fera. Inimigos fracos em Curto que falharem em Vontade + Espírito (DT 11) ficam Amedrontados. O mestre define quem é fraco.', action: 'padrao', cost: 4, range: 'Curto', test: 'Intimidação com Fúria' },
+  { id: 'dentes-cerrados', name: 'Dentes Cerrados', description: 'Ignora as penalidades de Fome até o fim da cena.', action: 'livre', cost: 2, range: 'Qualquer', test: null },
+  { id: 'martelo-do-ferreiro', name: 'Martelo do Ferreiro', description: 'Durante um Descanso Curto, repara uma arma pesada em Campo até 100% de Integridade, em vez de 75%.', action: 'livre', cost: 2, range: 'Toque', test: null },
+  { id: 'ritmo-de-batalha', name: 'Ritmo de Batalha', description: 'Até o fim do turno, cada acerto seguido no mesmo alvo causa +1 de dano cumulativo, até no máximo +3. Um erro encerra o efeito.', action: 'bonus', cost: 3, range: 'Qualquer', test: null },
 ] satisfies BerserkerTriumphDef[]).sort(byName)
 
 export const PILAR_TRIUMPHS: PilarTriumphDef[] = ([
@@ -98,6 +120,26 @@ export const PILAR_TRIUMPHS: PilarTriumphDef[] = ([
   { id: 'sombra-antecipada',      name: 'Sombra Antecipada',      cost: 3, description: 'Escolha um inimigo visível. Você recebe uma visão lúgubre do próximo ato dele: ele deve declarar se irá atacar, recuar ou usar habilidade especial.' },
   { id: 'olhos-do-augurio',       name: 'Olhos do Augúrio',       cost: 2, description: 'Marque um alvo por até a cena inteira. Enquanto marcado, você recebe +1d10 na próxima ação direta.' },
   { id: 'trilha-do-pressagio',    name: 'Trilha do Presságio',    cost: 3, description: 'Até o fim do turno, seu deslocamento dobra.' },
+  { id: 'aposta-dobrada', name: 'Aposta Dobrada', cost: 2, description: 'Antes de um teste, aposte. Se passar, recupera 10 cartas do descarte. Se falhar, descarta mais 2 cartas.' },
+  { id: 'carta-na-manga', name: 'Carta na Manga', cost: 1, description: 'Guarde o valor de um dado que você acabou de rolar. Até o fim da cena, você pode usá-lo no lugar de um dado de qualquer teste seu.' },
+  { id: 'jogo-de-cintura', name: 'Jogo de Cintura', cost: 2, action: 'reacao', description: 'Quando for atingido, role de novo a parte do corpo atingida e fique com o resultado que preferir.' },
+  { id: 'blefe-do-mercador', name: 'Blefe do Mercador', cost: 2, description: 'Numa negociação, compre um item com 20% de desconto ou venda com 20% a mais.' },
+  { id: 'mapa-das-estrelas', name: 'Mapa das Estrelas', cost: 2, description: 'Numa exploração, sorteie de novo um dos Achados e fique com o que preferir.' },
+  { id: 'corda-das-nornas', name: 'Corda das Nornas', cost: 4, description: 'Um aliado Caído em Curto recebe +1 em todos os seus Testes de Morte. Esse bônus não conta para o limite da Medicina.' },
+  { id: 'mao-invisivel', name: 'Mão Invisível', cost: 1, description: 'Passe um item para um aliado em Curto, ou saque e use um item rápido, sem gastar outra ação.' },
+  { id: 'ilusao-de-passos', name: 'Ilusão de Passos', cost: 3, description: 'Uma vez por cena, um inimigo Atento volta a ficar Desatento.' },
+  { id: 'truque-de-cartas', name: 'Truque de Cartas', cost: 2, description: 'Cria uma distração com as mãos e a fala. Todos os aliados recebem +1 dado no próximo teste de Furtividade.' },
+  { id: 'brinde-do-rei-bebado', name: 'Brinde do Rei Bêbado', cost: 3, description: 'Desafie um NPC para um jogo, uma aposta ou uma bebida. Se ele falhar em Vontade + Espírito (DT 13), aceita o desafio e cumpre o que for apostado.' },
+  { id: 'roleta-de-hel', name: 'Roleta de Hel', cost: 1, description: 'Role 1d6: 1 — você sofre 1d6 de dano; 2 — nada acontece; 3 ou 4 — um aliado recebe +1 dado no próximo teste; 5 — um inimigo perde 1 dado no próximo teste; 6 — você ganha uma Ação Padrão extra neste turno.' },
+  { id: 'leitura-do-oponente', name: 'Leitura do Oponente', cost: 2, description: 'Observe uma criatura e descubra uma de suas resistências, vulnerabilidades ou imunidades. O mestre revela.' },
+  { id: 'dados-viciados', name: 'Dados Viciados', cost: 3, description: 'Num teste de um aliado em Curto, os resultados 1 são rolados de novo uma vez.' },
+  { id: 'golpe-de-sorte', name: 'Golpe de Sorte', cost: 2, description: 'No seu próximo ataque, um 9 natural também conta como Crítico.' },
+  { id: 'troca-de-lugares', name: 'Troca de Lugares', cost: 3, description: 'Troque de lugar com um aliado em Curto. Nenhum dos dois provoca Ataque de Oportunidade.' },
+  { id: 'contar-cartas', name: 'Contar Cartas', cost: 1, description: 'Descubra o estado de um inimigo: inteiro, ferido (abaixo da metade) ou quase caído.' },
+  { id: 'cofre-cheio', name: 'Cofre Cheio', cost: 1, description: 'Numa exploração, todo Hacksilver encontrado vem dobrado, por 1 cena.' },
+  { id: 'banca-quebrada', name: 'Banca Quebrada', cost: 4, action: 'reacao', description: 'Uma vez por cena, transforme um Crítico inimigo contra um aliado em curto em um acerto normal.' },
+  { id: 'rota-do-viajante', name: 'Rota do Viajante', cost: 2, description: 'Ganhe 1 Ficha de Exploração. Só pode ser usado uma vez por Descanso Longo.' },
+  { id: 'hidromel-e-historias', name: 'Hidromel e Histórias', cost: 2, description: 'Durante um Banquete no Salão ou uma Confissão, todos os aliados presentes recuperam +1d4 de Equilíbrio extra.' },
 ] satisfies PilarTriumphDef[]).sort((a, b) => a.cost - b.cost || byName(a, b))
 
 // ── Runaskin ─────────────────────────────────────────────

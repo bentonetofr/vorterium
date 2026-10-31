@@ -395,13 +395,21 @@
    reaproveita .campaign-tabs/.campaign-tab (mesmo visual das sub-abas
    da Mesa da Sessão), sem CSS de tamanho próprio. ── */
 .alth-sheet-tabs {
-  align-self: flex-start;
+  align-self: stretch;
+  position: relative;
+  /* Oito abas: ocupam a largura toda e, se faltar lugar, quebram em duas linhas (nada fica cortado). */
+  flex-wrap: wrap;
+  overflow: visible;
   border-color: var(--gilded);
   box-shadow: var(--shadow-md);
 }
 .alth-sheet-tabs .campaign-tab {
-  padding: var(--space-2) var(--space-6);
-  font-size: var(--text-sm);
+  flex: 1 1 auto;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 .alth-sheet-tabs .campaign-tab--active {
   box-shadow: 0 0 0 1px var(--gilded-bright), var(--shadow-glow);

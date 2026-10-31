@@ -205,8 +205,9 @@ export function makeFind(kind: FindKind, rng: Rng = cryptoRng, sagasFound: SagaI
 const ALL_SAGAS: SagaId[] = ['ferreiro_torto', 'forjas_torvalenn', 'eryndor']
 
 export function rollRare(rng: Rng = cryptoRng, sagasFound: SagaId[] = []): Find {
+  // As Sagas de Ofício ficaram para o futuro: por enquanto o Achado Raro sorteia só Runa, material lendário ou Relíquia.
   const rare = weighted<RareKind>([
-    { value: 'runa', weight: 1 }, { value: 'saga', weight: 1 }, { value: 'lendario', weight: 1 }, { value: 'reliquia', weight: 1 },
+    { value: 'runa', weight: 1 }, { value: 'lendario', weight: 1 }, { value: 'reliquia', weight: 1 },
   ], rng)
   if (rare === 'lendario') return { kind: 'raro', rare, resource: LEGENDARY_POOL[Math.floor(rng() * LEGENDARY_POOL.length)] }
   if (rare === 'saga') {

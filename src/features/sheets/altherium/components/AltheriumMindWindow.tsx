@@ -4,7 +4,8 @@ import { cryptoRng } from '../utils/altheriumExplore'
 import type { Survival } from '../utils/altheriumSurvival'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
-import { Chips, Col, Cols, Field, Icon, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, FormulaEditor, Icon, NO_MANUAL, Win, toManual, type ManualState } from './AltheriumPlayKit'
+import { testPool } from '../utils/altheriumTest'
 
 // ────────────────────────────────────────────────────────
 // Janela do Equilíbrio (livro 2.0, "Equilíbrio"): a perda diante de algo
@@ -44,6 +45,7 @@ export function AltheriumMindWindow(props: Props) {
   const [calm, setCalm] = useState('')
   const [calmCrit, setCalmCrit] = useState(false)
   const [breakdown, setBreakdown] = useState<BreakdownDef | null>(null)
+  const [man, setMan] = useState<ManualState>(NO_MANUAL)
 
   const say = (line: string) => setLog((l) => [...l, line])
   const clamp = (n: number) => Math.max(0, Math.min(equilibrio.max, n))
@@ -71,7 +73,7 @@ export function AltheriumMindWindow(props: Props) {
     const base = props.check('vontade')
     setSpec({
       spec: {
-        ...base, title: 'Perturbador: Vontade + Espírito', targetLabel: 'DT do evento', initialTarget: target,
+        ...base, title: 'Perturbador: Vontade + Espírito', targetLabel: 'DT do evento', initialTarget: target, manual: toManual(man),
         words: ['resistiu', 'abalou'],
         notes: [`Passou: perde metade (${equilibriumLoss(n, true)}). Falhou: perde tudo (${n}).`],
       },
@@ -148,6 +150,16 @@ export function AltheriumMindWindow(props: Props) {
               <input type="number" className="input" min={1} max={30} inputMode="numeric" value={dt} onChange={(e) => setDt(e.target.value)} placeholder="Ex.: 8" />
             </Field>
           </div>
+          {(() => {
+            const b = props.check('vontade')
+            const pool = testPool({ baseDice: b.baseDice, disadvantage: !!b.disadvantage, situational: 0 })
+            return (
+              <FormulaEditor
+                dice={pool.count} keep={pool.keep} bonus={b.attribute + b.flat.reduce((sum, m) => sum + m.value, 0)} value={man} onChange={setMan}
+                note={`${b.domainLabel} + ${b.attributeLabel}`}
+              />
+            )
+          })()}
           <div className="alth-test__actions">
             <button type="button" className="btn btn-ghost" onClick={() => lose(Math.max(0, Math.trunc(Number(amount)) || 0), 'Perda direta')} disabled={!amount}>
               Aplicar sem teste
