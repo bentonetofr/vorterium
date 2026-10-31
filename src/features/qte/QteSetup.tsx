@@ -145,8 +145,9 @@ export function QteSheetButton({ ownerId, impulso }: { ownerId: string; impulso:
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
   }, [open])
 
-  // só a dona/o dono da ficha (e quem não é observador) abre a cena
-  if (!qte.enabled || !user || user.id !== ownerId) return null
+  // O dono da ficha joga a cena; o mestre (que não joga) organiza de qualquer ficha. Observador não vê.
+  const owner = !!user && user.id === ownerId
+  if (!qte.enabled || !user || (!owner && !qte.isMaster)) return null
 
   return (
     <div className="qte-entry" ref={wrapRef}>
@@ -155,7 +156,7 @@ export function QteSheetButton({ ownerId, impulso }: { ownerId: string; impulso:
       </button>
       {open && (
         <div className="qte-entry__menu" role="dialog" aria-label="Cena a dois">
-          <QteSetup asPlayer impulso={impulso} onStarted={() => setOpen(false)} />
+          <QteSetup asPlayer={owner} impulso={owner ? impulso : undefined} onStarted={() => setOpen(false)} />
         </div>
       )}
     </div>
