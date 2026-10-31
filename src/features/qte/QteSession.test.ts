@@ -112,6 +112,43 @@ describe('Cena a dois: rede', () => {
     }
   })
 
+  it('o mestre joga contra um jogador, com o Impulso que escolheu', async () => {
+    const master = make('mestre', 'Mestre', true)
+    const ana = make('ana', 'Ana')
+    const dan = make('dan', 'Dan')
+    for (const p of [master, ana, dan]) await p.session.connect()
+    await vi.advanceTimersByTimeAsync(5)
+
+    master.session.openLobby()
+    expect(await master.act(() => master.session.begin([{ uid: 'ana', name: 'Ana' }], true, { impulso: 7 }))).toBeNull()
+    expect(master.get().game?.players.find((p) => p.uid === 'mestre')?.accepted).toBe(true)
+    await ana.act(() => ana.session.accept())
+    await vi.advanceTimersByTimeAsync(QTE_COUNTDOWN_MS + 5)
+
+    for (const p of [master, ana, dan]) expect(p.get().game?.phase).toBe('playing')
+    const players = dan.get().game!.players
+    expect(players.map((p) => p.impulso)).toEqual([7, 10])
+    expect(players[0].board.prompt?.ms).toBe(promptMs(0, 7))
+
+    // o mestre acerta e o espectador vê
+    master.session.press(buildSequence(master.get().game!.seed)[0].key)
+    expect(dan.get().game!.players[0].board.hits).toBe(1)
+    expect(ana.get().game!.players[0].board.hits).toBe(1)
+  })
+
+  it('o mestre pode jogar sozinho', async () => {
+    const master = make('mestre', 'Mestre', true)
+    const dan = make('dan', 'Dan')
+    for (const p of [master, dan]) await p.session.connect()
+    await vi.advanceTimersByTimeAsync(5)
+    master.session.openLobby()
+    await master.act(() => master.session.begin([], true, { impulso: 3 }))
+    await vi.advanceTimersByTimeAsync(QTE_COUNTDOWN_MS + 5)
+    expect(master.get().game?.phase).toBe('playing')
+    expect(master.get().game?.players).toHaveLength(1)
+    expect(dan.get().game?.players[0].impulso).toBe(3)
+  })
+
   it('quem recusa cancela a cena para todos', async () => {
     const ana = make('ana', 'Ana')
     const bia = make('bia', 'Bia')

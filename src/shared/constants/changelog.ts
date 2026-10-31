@@ -41,6 +41,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'A dificuldade vem do Impulso do personagem: cada um joga com o tempo do próprio Impulso, mas a sequência de letras é a mesma para os dois. Só com Impulso 10 fica relativamente tranquilo; com Impulso baixo é bem difícil. O mestre também organiza: na coroa do painel do mestre há a aba “Cena a dois”, para pôr 1 ou 2 jogadores na cena (cada um aceita antes).',
       'A Cena a dois também funciona no celular e no tablet: o painel de preparo sobe da base da tela, as duas arenas se empilham (ou ficam lado a lado com o aparelho deitado) e cada uma cabe inteira sem rolar, a letra nunca sai da arena, toda a área é tocável, o celular vibra quando você erra e a tela não apaga durante a cena. O mestre ganhou o botão Sexo também no topo da Ficha Altherium.',
       'Cena a dois com som: cada tecla que você aperta (ou toca) faz uma batida de impacto, grave e com estalo; o erro faz uma pancada surda. Quem assiste ouve as batidas dos jogadores mais baixinho. O volume segue o controle de sons de jogos das configurações.',
+      'O mestre também pode jogar a Cena a dois: no painel do botão Sexo (ou na aba “Cena a dois” da coroa) há “Só organizar” e “Jogar também”. Jogando, o mestre define o Impulso dele na cena (começa com o da ficha, se tiver; senão 5) e leva no máximo 1 jogador, que precisa aceitar. Todos os outros assistem.',
     ],
   },
   {

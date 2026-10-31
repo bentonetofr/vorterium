@@ -238,7 +238,7 @@ export class QteSession {
    * Iniciar: o organizador (se for jogador) entra na cena e convida os
    * parceiros. Sem parceiro, começa na hora. Os convidados precisam aceitar.
    */
-  async begin(partners: { uid: string; name: string }[], asPlayer: boolean): Promise<string | null> {
+  async begin(partners: { uid: string; name: string }[], asPlayer: boolean, self?: { impulso: number }): Promise<string | null> {
     const game = this.snap.game
     if (!game || game.phase !== 'lobby' || game.organizer.uid !== this.me) return 'Abra o painel de novo.'
     const max = asPlayer ? 1 : 2
@@ -248,7 +248,8 @@ export class QteSession {
     const players: QtePlayer[] = []
     if (asPlayer) {
       const mine = await this.myProfile()
-      players.push({ uid: this.me, name: mine.name, accepted: true, impulso: mine.impulso, board: freshBoard() })
+      const impulso = self ? clampImpulso(self.impulso) : mine.impulso
+      players.push({ uid: this.me, name: mine.name, accepted: true, impulso, board: freshBoard() })
       this.joined = true
     }
     for (const p of list) players.push({ uid: p.uid, name: p.name, accepted: null, impulso: 0, board: freshBoard() })

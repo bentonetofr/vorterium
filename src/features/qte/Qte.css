@@ -59,6 +59,17 @@
 .qte-chip:hover { color: var(--text-primary); border-color: var(--border-bright); }
 .qte-chip:active { transform: scale(0.96); }
 .qte-chip--on { color: var(--accent-bright); border-color: var(--gilded-bright); background: var(--bg-void); font-weight: 600; }
+.qte-stepper { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--bg-void); border: 1px solid var(--border-dim); border-radius: var(--radius-md); }
+.qte-stepper__ctl { display: inline-flex; align-items: center; gap: var(--space-2); }
+.qte-stepper__btn {
+  width: 36px; height: 36px; display: inline-grid; place-items: center;
+  font-family: var(--font-label); font-size: 20px; line-height: 1; color: var(--text-secondary);
+  background: var(--bg-surface); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  cursor: var(--cursor-hand, pointer); transition: all 120ms;
+}
+.qte-stepper__btn:hover:not(:disabled) { color: var(--accent-bright); border-color: var(--gilded-bright); }
+.qte-stepper__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.qte-stepper__val { min-width: 2ch; text-align: center; font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 700; color: var(--accent-bright); }
 .qte-go { width: 100%; }
 .qte-go svg { color: inherit; }
 
@@ -270,6 +281,7 @@
 
 /* ── Toque: alvos de 44 px no mínimo, sem efeito de "passar o mouse" preso ── */
 @media (pointer: coarse) {
+  .qte-stepper__btn { width: 44px; height: 44px; }
   .qte-entry__btn, .qte-chip, .qte-go, .qte-stage__close, .qte-notice .btn, .qte-notice .mesa-notice__close { min-height: 44px; }
   .qte-stage__close, .qte-notice .mesa-notice__close { min-width: 44px; }
   .qte-chip { padding-inline: var(--space-4); }

@@ -162,7 +162,7 @@ export function AltheriumMasterPanel({ campaignId }: { campaignId: string }) {
       {tab === 'descanso' && <RestTab targets={targets} busy={busy} applyEach={applyEach} say={say} />}
       {tab === 'ajustes' && <AdjustTab targets={targets} busy={busy} applyEach={applyEach} />}
       {tab === 'cena' && <AltheriumSceneBar campaignId={campaignId} />}
-      {tab === 'cena2' && <QteSetup asPlayer={false} />}
+      {tab === 'cena2' && <QteSetup master />}
 
       {log.length > 0 && (
         <ul className="alth-master__log" role="status">

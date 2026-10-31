@@ -21,7 +21,7 @@ interface QteValue extends QteSnapshot {
   setOpen:    (v: boolean) => void
   openLobby:  () => string | null
   closeLobby: () => void
-  begin:      (partners: { uid: string; name: string }[], asPlayer: boolean) => Promise<string | null>
+  begin:      (partners: { uid: string; name: string }[], asPlayer: boolean, self?: { impulso: number }) => Promise<string | null>
   cancel:     (note?: string) => void
   accept:     () => Promise<void>
   decline:    () => void
@@ -84,8 +84,8 @@ export function QteProvider({ children }: { children: ReactNode }) {
     return session ? session.openLobby() : 'Sem conexão com a campanha.'
   }, [])
   const closeLobby = useCallback(() => sessionRef.current?.closeLobby(), [])
-  const begin      = useCallback(async (partners: { uid: string; name: string }[], asPlayer: boolean) => {
-    const err = (await sessionRef.current?.begin(partners, asPlayer)) ?? null
+  const begin      = useCallback(async (partners: { uid: string; name: string }[], asPlayer: boolean, self?: { impulso: number }) => {
+    const err = (await sessionRef.current?.begin(partners, asPlayer, self)) ?? null
     if (!err) setOpen(true)
     return err
   }, [])
