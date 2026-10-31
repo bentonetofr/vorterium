@@ -9,6 +9,7 @@ import './MesaPanel.css'
 import {
   deleteMesaImage,
   listMesaArts,
+  setMesaArtHidden,
   subscribeMesaArts,
   uploadMesaArt,
   type MesaArt,
@@ -104,6 +105,19 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
     }
   }
 
+  async function handleToggleHidden(art: MesaArt) {
+    setError(null)
+    setBusyId(art.id)
+    try {
+      await setMesaArtHidden(art.id, !art.hidden)
+      setArts((list) => list.map((a) => (a.id === art.id ? { ...a, hidden: !art.hidden } : a)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível mudar a visibilidade da arte.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   async function handleToBoard(art: MesaArt) {
     setError(null)
     setBusyId(art.id)
@@ -141,7 +155,10 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
       <header className="mesa-gallery__head">
         <div>
           <h5 id="mesa-arts-title" className="mesa-gallery__title">Artes recentes</h5>
-          <p className="mesa-gallery__sub">Retratos, mapas e referências que todos da campanha veem.</p>
+          <p className="mesa-gallery__sub">
+            Retratos, mapas e referências que todos da campanha veem.
+            {isMaster && ' Com o olho você oculta uma arte dos jogadores; ao pôr na mesa, todos veem.'}
+          </p>
         </div>
         <button type="button" className="btn btn-ghost mesa-gallery__add" onClick={() => inputRef.current?.click()} disabled={uploading > 0}>
           {uploading > 0 ? `Enviando${uploading > 1 ? ` (${uploading})` : ''}…` : '+ Enviar imagens'}
@@ -173,7 +190,7 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
             const busy = busyId === art.id
             const mine = !!user && art.uploaded_by === user.id
             return (
-              <li key={art.id} className={`mesa-thumb${fresh.has(art.id) ? ' mesa-thumb--fresh' : ''}${onTableId === art.id ? ' mesa-thumb--on-table' : ''}`}>
+              <li key={art.id} className={`mesa-thumb${fresh.has(art.id) ? ' mesa-thumb--fresh' : ''}${onTableId === art.id ? ' mesa-thumb--on-table' : ''}${art.hidden ? ' mesa-thumb--hidden' : ''}`}>
                 <button
                   type="button"
                   className="mesa-thumb__preview"
@@ -186,7 +203,9 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
                     : <span className="mesa-thumb__missing">sem prévia</span>}
                   {onTableId === art.id
                     ? <span className="mesa-thumb__tag mesa-thumb__tag--table">Na mesa</span>
-                    : fresh.has(art.id) && <span className="mesa-thumb__tag mesa-thumb__tag--new">Nova</span>}
+                    : art.hidden
+                      ? <span className="mesa-thumb__tag mesa-thumb__tag--hidden">Oculta</span>
+                      : fresh.has(art.id) && <span className="mesa-thumb__tag mesa-thumb__tag--new">Nova</span>}
                   <span className="mesa-thumb__hover">Ver</span>
                 </button>
                 <div className="mesa-thumb__foot">
@@ -204,6 +223,23 @@ export function MesaArts({ campaignId }: { campaignId: string }) {
                       title={onTableId === art.id ? 'Tirar da mesa' : 'Pôr na mesa (todos veem na Transmissão)'}
                     >
                       {onTableId === art.id ? 'Tirar' : 'Na mesa'}
+                    </button>
+                  )}
+                  {isMaster && (
+                    <button
+                      type="button"
+                      className={`mesa-thumb__link mesa-thumb__link--eye${art.hidden ? ' mesa-thumb__link--active' : ''}`}
+                      onClick={() => void handleToggleHidden(art)}
+                      disabled={busy}
+                      aria-pressed={art.hidden}
+                      aria-label={art.hidden ? `Mostrar ${art.name} aos jogadores` : `Ocultar ${art.name} dos jogadores`}
+                      title={art.hidden ? 'Oculta dos jogadores (clique para mostrar na lista)' : 'Ocultar dos jogadores'}
+                    >
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                        <circle cx="12" cy="12" r="3" />
+                        {art.hidden && <path d="M4 4l16 16" />}
+                      </svg>
                     </button>
                   )}
                   <button type="button" className="mesa-thumb__link" onClick={() => void handleToBoard(art)} disabled={busy} aria-label={`Pôr ${art.name} no Quadro`} title="Pôr no Quadro">▦</button>

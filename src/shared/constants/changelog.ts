@@ -34,6 +34,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'O painel de rolagem de dados do canto, nas campanhas de Altherium, ganhou a aba “Meus dados”, igual à do D&D: mostra todos os conjuntos de dados que a sua conta tem, com o dado girando, e vale para todas as suas rolagens.',
       'Para os pedidos funcionarem, rode a migration 20240219.',
       'Mesa: zoom cinematográfico do mestre. Na transmissão (ou numa arte na mesa) há uma barra nova com o botão Zoom: ligado, é só clicar em qualquer ponto da imagem e a câmera desliza devagar até lá, ao mesmo tempo para todos que estão vendo, com cantos levemente escurecidos. Leve, Médio e Forte escolhem o quanto chega perto (Leve é o padrão). Clicar em outro ponto move a câmera sem cortar, e Tirar zoom volta à imagem inteira. Quem entra depois já vê o zoom no lugar.',
+      'Mesa, Artes recentes: o mestre pode ocultar uma arte dos jogadores. Cada miniatura ganhou um olho (só para o mestre): oculta, a arte some da lista dos jogadores (e do Storage para eles) e fica apagada com a marca “Oculta” para o mestre. Ao pôr a arte na mesa, todos veem na Transmissão normalmente; depois de tirada, ela continua oculta da lista até o mestre clicar no olho de novo. Para funcionar, rode a migration 20240220.',
     ],
   },
   {

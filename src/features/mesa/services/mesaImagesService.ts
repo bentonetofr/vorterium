@@ -258,29 +258,45 @@ export async function signBoardPhotos(paths: string[]): Promise<Map<string, stri
 export interface MesaArt extends MesaGalleryImage {
   uploaded_by:   string | null
   uploader_name: string | null
+  /** Oculta dos jogadores (só o mestre vê); ao pôr na mesa, todos veem. */
+  hidden:        boolean
 }
 
-type ArtRow = Omit<MesaGalleryImage, 'url'> & { uploaded_by: string | null; uploader: { display_name: string | null } | null }
+type ArtRow = Omit<MesaGalleryImage, 'url'> & { uploaded_by: string | null; hidden?: boolean; uploader: { display_name: string | null } | null }
 
 async function withUrls(rows: ArtRow[]): Promise<MesaArt[]> {
   if (rows.length === 0) return []
   const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(rows.map((r) => r.path), THUMB_URL_SECONDS)
   const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
-  return rows.map(({ uploader, ...r }) => ({ ...r, uploader_name: uploader?.display_name ?? null, url: urlByPath.get(r.path) ?? null }))
+  return rows.map(({ uploader, hidden, ...r }) => ({ ...r, hidden: hidden === true, uploader_name: uploader?.display_name ?? null, url: urlByPath.get(r.path) ?? null }))
 }
 
-const ART_COLUMNS = 'id, campaign_id, name, path, created_at, uploaded_by, uploader:profiles(display_name)'
+const ART_BASE_COLUMNS = 'id, campaign_id, name, path, created_at, uploaded_by, uploader:profiles(display_name)'
+/** Sem a coluna `hidden` (migration 20240220 ainda não rodada), a lista continua funcionando. */
+let hiddenColumnMissing = false
+const artColumns = () => (hiddenColumnMissing ? ART_BASE_COLUMNS : `${ART_BASE_COLUMNS}, hidden`)
 
 export async function listMesaArts(campaignId: string): Promise<MesaArt[]> {
-  const { data, error } = await supabase
+  const query = () => supabase
     .from('campaign_mesa_images')
-    .select(ART_COLUMNS)
+    .select(artColumns())
     .eq('campaign_id', campaignId)
     .not('path', 'like', '%/quadro/%')
     .not('path', 'like', '%/quadro-mestre/%')
     .order('created_at', { ascending: false })
+  let { data, error } = await query()
+  if (error && !hiddenColumnMissing && /hidden/.test(error.message)) {
+    hiddenColumnMissing = true
+    ;({ data, error } = await query())
+  }
   if (error) throw new Error('Não foi possível carregar as artes e referências.')
   return withUrls((data ?? []) as unknown as ArtRow[])
+}
+
+/** O mestre oculta a arte dos jogadores (ou volta a mostrar na lista). */
+export async function setMesaArtHidden(artId: string, hidden: boolean): Promise<void> {
+  const { error } = await supabase.from('campaign_mesa_images').update({ hidden }).eq('id', artId)
+  if (error) throw new Error('Não foi possível mudar a visibilidade da arte. A migration 20240220 já foi rodada?')
 }
 
 export async function uploadMesaArt(campaignId: string, file: File): Promise<MesaArt> {
@@ -296,7 +312,7 @@ export async function uploadMesaArt(campaignId: string, file: File): Promise<Mes
   const { data, error } = await supabase
     .from('campaign_mesa_images')
     .insert({ campaign_id: campaignId, name: nameFromFile(file), path })
-    .select(ART_COLUMNS)
+    .select(artColumns())
     .single()
   if (error || !data) {
     await supabase.storage.from(BUCKET).remove([path])
