@@ -251,7 +251,7 @@ export function QteOverlay() {
             </ul>
             {pending && (
               <div className="qte-wait__actions">
-                <button type="button" className="qte-go" onClick={() => void qte.accept()}>Aceitar</button>
+                <button type="button" className="btn btn-primary qte-go" onClick={() => void qte.accept()}>Aceitar</button>
                 <button type="button" className="btn btn-ghost" onClick={qte.decline}>Recusar</button>
               </div>
             )}
@@ -276,7 +276,7 @@ export function QteOverlay() {
           <div className="qte-verdict" role="status">
             <p className="qte-verdict__title">{verdict.title}</p>
             <p className="qte-verdict__sub">{verdict.sub}</p>
-            <button type="button" className="qte-go" onClick={close}>Fechar</button>
+            <button type="button" className="btn btn-primary qte-go" onClick={close}>Fechar</button>
           </div>
         )}
 
@@ -284,7 +284,7 @@ export function QteOverlay() {
           <div className="qte-verdict" role="status">
             <p className="qte-verdict__title">Cena cancelada</p>
             <p className="qte-verdict__sub">{game.note}</p>
-            <button type="button" className="qte-go" onClick={close}>Fechar</button>
+            <button type="button" className="btn btn-primary qte-go" onClick={close}>Fechar</button>
           </div>
         )}
       </div>

@@ -122,7 +122,7 @@ export function QteSetup({ asPlayer, impulso, onStarted }: { asPlayer: boolean; 
       {error && <p className="qte-setup__error" role="alert">{error}</p>}
       {blocked && <p className="qte-setup__hint">{qte.game?.organizer.name} já está com uma cena em andamento.</p>}
 
-      <button type="button" className="qte-go" onClick={() => void start()} disabled={!canStart}>
+      <button type="button" className="btn btn-primary qte-go" onClick={() => void start()} disabled={!canStart}>
         <HeartIcon /> {busy ? 'Chamando…' : waiting ? 'Iniciar e convidar' : 'Iniciar'}
       </button>
     </div>
