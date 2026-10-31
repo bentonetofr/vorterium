@@ -57,6 +57,8 @@ import {
 import { Select } from '../../../../shared/components/Select'
 import './AltheriumSheet.css'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
+import { AltheriumTestModal, type AltheriumTestSpec } from './AltheriumTestModal'
+import { isObserver } from '../../../../shared/lib/observer'
 
 const NOTES_MAX = 2000
 /** Nomes que deixam o manequim sem pernas (comparados em minúsculas). */
@@ -532,6 +534,9 @@ export function AltheriumSheetForm({
     if (!q) return DOMAINS
     return DOMAINS.filter((d) => normalize(d.label).includes(q))
   }, [domainFilter])
+  // Teste de domínio aberto (clicar nos dados do domínio). A conta dev observadora só olha.
+  const [testSpec, setTestSpec] = useState<AltheriumTestSpec | null>(null)
+  const canRollTests = !isObserver()
 
   // Enter num campo (ou "Salvar agora") salva na hora, sem esperar o atraso.
   function handleSubmit(e: FormEvent) {
@@ -982,6 +987,16 @@ export function AltheriumSheetForm({
       </div>
 
       {/* ── Domínios ── */}
+      {testSpec && (
+        <AltheriumTestModal
+          campaignId={sheet.campaign_id}
+          sheetId={sheet.id}
+          character={form.character_name.trim() || ownerName || 'Personagem'}
+          spec={testSpec}
+          onClose={() => setTestSpec(null)}
+        />
+      )}
+
       <div id="alth-tabpanel-dominios" role="tabpanel" hidden={activeTab !== 'dominios'}>
         {activeTab === 'dominios' && (
           <div className="alth-tab-panel anim-tab-panel">
@@ -1028,9 +1043,19 @@ export function AltheriumSheetForm({
               >
                 <span className="alth-domains__name" role="cell">{d.label}</span>
                 <span className="alth-domains__attr" role="cell">{attrLabel}</span>
-                <span
+                <button
+                  type="button"
                   className="alth-domains__dice" role="cell"
+                  disabled={!canRollTests}
+                  onClick={() => setTestSpec({
+                    domainId: d.id, domainLabel: d.label, attributeLabel: attrLabel,
+                    attribute: attrValue(d.attribute) ?? 0,
+                    baseDice: domainTestDice(points, fromGenesis, bonusDie),
+                    disadvantage: disadv === 'manual' ? 'marcada no domínio'
+                      : disadv === 'atributo' ? `${attrLabel} está em 0` : null,
+                  })}
                   title={[
+                    canRollTests ? `Rolar teste de ${d.label}` : '',
                     fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : '',
                     bonusDie ? 'Inclui +1d10 extra (+)' : '',
                     disadv === 'manual' ? 'Desvantagem: joga com 1d de desvantagem' : '',
@@ -1040,7 +1065,7 @@ export function AltheriumSheetForm({
                   {domainTestDice(points, fromGenesis, bonusDie)}d10
                   {fromGenesis && <span className="alth-domains__genesis" aria-label={`com +1d10 do gênesis ${genesisLabel}`}>✦</span>}
                   {disadv && <span className="alth-domains__disadv" aria-label="com 1d de desvantagem">desv.</span>}
-                </span>
+                </button>
                 <span className="alth-domains__points" role="cell">
                   {Array.from({ length: DOMAIN_MAX_POINTS - DOMAIN_MIN_POINTS + 1 }, (_, i) => {
                     const n = DOMAIN_MIN_POINTS + i

@@ -167,7 +167,7 @@ export interface DiceRoll {
 
 /** O que a ficha sabia ao rolar (dice_rolls.roll_context). */
 export interface DiceRollContext {
-  system?:       'dnd5e'
+  system?:       'dnd5e' | 'altherium'
   kind?:         'skill' | 'save' | 'ability' | 'attack' | 'damage' | 'initiative' | 'death' | 'hit_die' | 'custom'
   /** Chave do teste: perícia (stealth), atributo (dexterity), arma... */
   key?:          string

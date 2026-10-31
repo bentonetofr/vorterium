@@ -743,7 +743,19 @@
   font-size: var(--text-xs);
   color: var(--text-muted);
   text-align: right;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+  cursor: var(--cursor-hand, pointer);
+  transition: border-color 0.15s, background 0.15s;
 }
+.alth-domains__dice:hover:not(:disabled),
+.alth-domains__dice:focus-visible {
+  border-color: var(--accent-dim);
+  background: var(--alth-mystic-dim);
+}
+.alth-domains__dice:disabled { cursor: default; }
 .alth-domains__row--active .alth-domains__dice { color: var(--alth-mystic); font-weight: 700; }
 .alth-domains__genesis {
   margin-left: 3px;
@@ -2134,3 +2146,60 @@
   .alth-genesis__item { flex-direction: column; }
 }
 
+
+/* ── Janela de teste de domínio (dados 3D + a conta inteira) ── */
+.alth-test { width: min(460px, 100%); }
+.alth-test__body { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.alth-test__stage {
+  position: relative;
+  height: 190px;
+  border-radius: var(--radius-md);
+  background: radial-gradient(ellipse at center, var(--alth-mystic-dim), transparent 70%), var(--bg-overlay);
+  overflow: hidden;
+}
+.alth-test__canvas { position: absolute; inset: 0; }
+.alth-test__pool {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: var(--space-3);
+  font-family: var(--font-label); font-size: var(--text-sm); letter-spacing: 0.04em; text-align: center;
+  color: var(--alth-mystic);
+}
+.alth-test__field { display: flex; flex-direction: column; gap: var(--space-1); }
+.alth-test__label {
+  font-family: var(--font-label); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+}
+.alth-test__hint { font-size: var(--text-xs); color: var(--text-muted); }
+.alth-test__stepper { display: flex; align-items: center; gap: var(--space-2); }
+.alth-test__stepper button {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-dim); background: var(--bg-elevated); color: var(--text-primary);
+  font-size: var(--text-lg); cursor: var(--cursor-hand, pointer);
+}
+.alth-test__stepper button:disabled { opacity: 0.4; cursor: default; }
+.alth-test__stepper-value { min-width: 32px; text-align: center; font-family: var(--font-mono); font-weight: 700; color: var(--accent-bright); }
+.alth-test .alth-test__dt { width: 120px; }
+.alth-test__check { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-test__note { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); text-align: center; }
+.alth-test__note--warn { color: var(--danger-bright); }
+.alth-test__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.alth-test__dice { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alth-test__die {
+  display: grid; place-items: center; width: 42px; height: 42px;
+  border: 1px solid var(--border-dim); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: var(--text-lg); color: var(--text-muted);
+  opacity: 0.55;
+}
+.alth-test__die--kept {
+  opacity: 1; color: var(--alth-mystic); border-color: var(--alth-mystic);
+  box-shadow: 0 0 12px var(--alth-mystic-glow); font-weight: 700;
+}
+.alth-test__die--ten.alth-test__die--kept { color: var(--accent-bright); border-color: var(--accent-bright); }
+.alth-test__sum { margin: 0; text-align: center; font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-test__total { font-family: var(--font-display); font-size: var(--text-2xl); color: var(--accent-bright); }
+.alth-test__crit {
+  margin: 0; text-align: center; font-family: var(--font-display); font-size: var(--text-lg);
+  color: var(--accent-bright); text-shadow: 0 0 14px var(--accent-dim);
+}
+.alth-test__outcome { margin: 0; text-align: center; font-family: var(--font-label); font-weight: 700; letter-spacing: 0.04em; }
+.alth-test__outcome--ok { color: var(--alth-resource); }
+.alth-test__outcome--fail { color: var(--danger-bright); }

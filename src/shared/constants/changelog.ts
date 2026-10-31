@@ -26,6 +26,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'O dano Cortante agora aparece com esse nome (antes era “Corte”).',
       'O domínio Esconder saiu do sistema, como no livro novo. Pontos que estavam nele foram apagados.',
       'Atributo vai no máximo até 10 (6 na criação, 10 depois de subir de nível).',
+      'Testes pela ficha: clique nos dados de qualquer domínio (ex.: “3d10”) para rolar o teste com os dados 3D. A janela mostra cada dado, qual valeu (o maior, ou o menor na desvantagem), o atributo somado e o total, e avisa o Crítico quando o dado que valeu é um 10 natural.',
+      'Na janela do teste dá para pôr ou tirar dados de situação (no máximo 2 a mais ou a menos) e escrever a DT: o resultado diz se foi sucesso ou falha e por quanto. Se os dados tirados deixam menos de 1 dado, cada um que falta vira desvantagem.',
+      'Desvantagem automática no teste: atributo em 0 ou −1 marcado no domínio rolam 1 dado a mais e ficam com o pior.',
+      'O teste vai para o histórico de dados e, se não for privado, aparece no chat com a conta inteira.',
     ],
   },
   {
