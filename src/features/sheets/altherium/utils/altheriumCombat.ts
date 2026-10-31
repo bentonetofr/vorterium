@@ -10,6 +10,7 @@ import {
   type WeaponRange,
 } from '../constants/altheriumItems'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
+import { readDying, type DyingState } from './altheriumDeath'
 
 // ────────────────────────────────────────────────────────
 // Combate de Altherium ("Crepúsculo Vermelho", livro 2.0). Só contas: a
@@ -249,6 +250,7 @@ export function defenseFumble(kept: number): boolean {
 export type ConditionId =
   | 'sangrando' | 'queimando' | 'atordoado' | 'derrubado' | 'amedrontado' | 'preso' | 'surpreendido'
   | 'abertura_fatal' | 'desequilibrio' | 'arma_exposta' | 'fraqueza' | 'folego_quebrado' | 'brecha' | 'atordoamento_breve'
+  | 'incapacitado' | 'coma'
 
 export interface ConditionDef {
   id:     ConditionId
@@ -290,6 +292,8 @@ export const CONDITIONS: ConditionDef[] = [
   { id: 'folego_quebrado',    label: 'Fôlego Quebrado',    effect: '−1 de Impulso.', attribute: { id: 'impulso', value: -1 } },
   { id: 'brecha',             label: 'Brecha Triunfica',   effect: 'Não pode usar triunfos no próximo turno.' },
   { id: 'atordoamento_breve', label: 'Atordoamento Breve', effect: 'Não pode realizar reações até o próximo turno.', untilNextTurn: true, blocksReaction: true },
+  { id: 'incapacitado', label: 'Incapacitado', effect: 'Sobreviveu ao Teste de Morte: fica incapacitado até completar 1 Descanso Longo após a cena.' },
+  { id: 'coma',         label: 'Coma',         effect: 'Não recupera nada com descansos até acordar, mas também não precisa de Ração. O contador é em sessões.' },
 ]
 
 export function conditionDef(id: ConditionId): ConditionDef {
@@ -310,9 +314,11 @@ export interface CombatState {
   conditions:    ActiveCondition[]
   /** Armas com Recarga já disparadas (ids do inventário). */
   unloaded:      string[]
+  /** Estado Caído (0 PV) e os Testes de Morte; null = de pé. */
+  dying:         DyingState | null
 }
 
-export const EMPTY_COMBAT: CombatState = { reaction_used: false, defend_total: false, aim: false, conditions: [], unloaded: [] }
+export const EMPTY_COMBAT: CombatState = { reaction_used: false, defend_total: false, aim: false, conditions: [], unloaded: [], dying: null }
 
 export function readCombatState(raw: unknown): CombatState {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<CombatState>
@@ -322,6 +328,7 @@ export function readCombatState(raw: unknown): CombatState {
     aim:           !!r.aim,
     conditions:    Array.isArray(r.conditions) ? r.conditions.filter((c) => CONDITIONS.some((d) => d.id === c?.id)) : [],
     unloaded:      Array.isArray(r.unloaded) ? r.unloaded.filter((x) => typeof x === 'string') : [],
+    dying:         readDying(r.dying),
   }
 }
 

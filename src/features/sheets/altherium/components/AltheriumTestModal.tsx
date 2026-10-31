@@ -60,6 +60,8 @@ export interface AltheriumTestSpec {
   critSucceeds?:  boolean
   /** Avisos mostrados antes de rolar. */
   notes?:         string[]
+  /** Sem dados de situação (o Teste de Morte é sempre 1d10). */
+  noSituation?:   boolean
 }
 
 export interface TestDone {
@@ -222,7 +224,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
 
               {(spec.notes ?? []).map((n) => <p key={n} className="alth-test__note">{n}</p>)}
 
-              <div className="alth-test__field">
+              {!spec.noSituation && <div className="alth-test__field">
                 <span className="alth-test__label">Dados de situação</span>
                 <div className="alth-test__stepper">
                   <button type="button" onClick={() => setSituational(situational - 1)}
@@ -235,7 +237,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
                   Itens, condições e o que o mestre conceder. Somando tudo, no máximo 2 dados a mais ou a menos
                   {autoDice !== 0 ? ` (o combate já pôs ${signed(autoDice)})` : ''}.
                 </span>
-              </div>
+              </div>}
 
               <label className="alth-test__field">
                 <span className="alth-test__label">{targetLabel} (opcional)</span>

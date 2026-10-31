@@ -38,6 +38,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Depois do acerto: rolar o dano (duas vezes no crítico), o local atingido (1d10) e o segundo golpe das armas Par. No crítico aparecem os efeitos de Serrilhada, Atordoante e Prender. Armas com Recarga ficam descarregadas depois do disparo até você recarregar.',
       'Defender (Resiliência + Espírito, empate favorece a defesa, com cobertura parcial) e, no 1 natural, a Tabela de Punição rola sozinha e marca a condição na ficha. Aparar (Reflexo + Impulso) gasta a Reação, só vale contra corpo a corpo e sem crítico, soma Defensiva e tira 2 da Lenta; superar por 5 (4 com Fluxo) ou critar abre o Contra-ataque, e falhar rola o +1d6 de dano.',
       'Receber dano na ordem do livro: Vulnerável dobra, tira o DB da parte (com Perfurante, e o Rúnico ignora metade do DB menos na armadura de Eryndor), mínimo de 1 com aviso de desgaste da armadura, Resistência e Imune. “Aplicar na ficha” tira os PV e marca o ferimento na parte do corpo.',
+      'Estado Caído: quando os PV chegam a 0, a aba Combate abre o painel de Teste de Morte. Ele mostra os turnos para sobreviver (2 + 1 a cada 2 de Espírito, até 5) e o bônus de Determinação de cada turno (0, +1 ou +2 pelos pontos, +1 do Gênesis Determinado, até +3), que cai 1 a cada novo turno caído.',
+      'Teste de Morte: 1d10 + bônus contra DT 7 com os dados 3D; o 10 natural passa sempre e o 1 não anula nada. A Medicina de um aliado dá +1 a cada 5 pontos no resultado (até +2, ou +2 direto no crítico) no próximo teste, e a Corda das Nornas do Pilar soma +1 fora desse limite.',
+      'Falhar em todos os turnos ou acumular 3 falhas é morte. Ao estabilizar, a consequência vem das falhas: 0 recupera normalmente, 1 deixa Incapacitado, 2 é coma de 1d4 − 2 sessões (com 0 de Espírito, morte). Incapacitado e Coma viram condições na ficha. O mestre pode tirar o personagem do Estado Caído a qualquer momento.',
     ],
   },
   {

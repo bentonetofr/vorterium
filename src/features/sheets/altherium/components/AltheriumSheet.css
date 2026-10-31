@@ -2245,3 +2245,16 @@
   margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); color: var(--text-muted);
 }
 .alth-test__mods strong { color: var(--accent-bright); }
+
+/* ── Estado Caído / Teste de Morte ── */
+.alth-dying { border: 1px solid var(--danger); border-radius: var(--radius-md); padding: var(--space-3); background: rgba(120, 20, 20, 0.12); }
+.alth-dying--stable { border-color: var(--alth-resource); background: rgba(84, 255, 159, 0.06); }
+.alth-dying--dead { border-color: var(--danger-bright); background: rgba(0, 0, 0, 0.35); }
+.alth-dying .alth-combat__row { margin-top: var(--space-2); }
+.alth-dying__turns { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alth-dying__turns li {
+  padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-dim);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted);
+}
+.alth-dying__turns .alth-dying__turn--now { border-color: var(--accent-bright); color: var(--accent-bright); }
+.alth-dying__turns .alth-dying__turn--fail { border-color: var(--danger); color: var(--danger-bright); text-decoration: line-through; }

@@ -61,6 +61,7 @@ import './AltheriumSheet.css'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { AltheriumTestModal, type AltheriumTestSpec } from './AltheriumTestModal'
 import { AltheriumCombatPanel, type DomainCheck } from './AltheriumCombatPanel'
+import { NEW_DYING } from '../utils/altheriumDeath'
 import { conditionDef, readCombatState, type BodyZoneId, type CombatState } from '../utils/altheriumCombat'
 import { isObserver } from '../../../../shared/lib/observer'
 
@@ -574,6 +575,10 @@ export function AltheriumSheetForm({
   function takeDamage(amount: number, zone: BodyZoneId | null) {
     setForm((prev) => {
       const next = { ...prev, vitality_current: Math.max(0, prev.vitality_current - amount) }
+      // Chegou a 0 PV: Estado Caído (Teste de Morte na aba Combate).
+      if (next.vitality_current === 0 && prev.vitality_current > 0 && !prev.combat_state.dying) {
+        next.combat_state = { ...prev.combat_state, dying: { ...NEW_DYING } }
+      }
       if (zone) {
         const key = `dano_${zone.slice(3)}` as 'dano_pernas' | 'dano_bracos' | 'dano_tronco' | 'dano_cabeca'
         next[key] = Math.min(999, prev[key] + amount)
@@ -931,6 +936,8 @@ export function AltheriumSheetForm({
               zoneDb={{ db_pernas: form.db_pernas, db_bracos: form.db_bracos, db_tronco: form.db_tronco, db_cabeca: form.db_cabeca }}
               vitality={form.vitality_current}
               onDamage={takeDamage}
+              espirito={form.attr_espirito}
+              determinationPoints={domainMap.get('determinacao') ?? 0}
             />
           </div>
         )}

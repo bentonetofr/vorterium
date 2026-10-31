@@ -47,6 +47,16 @@ import {
   getInitiativeParticipants,
   setInitiativeValue,
 } from '../../../initiative/services/initiativeService'
+import { AltheriumDyingPanel } from './AltheriumDyingPanel'
+import {
+  DEATH_DT,
+  NEW_DYING,
+  afterDeathRoll,
+  bonusOnTurn,
+  deathSuccess,
+  deathTurns,
+  determinationBonus,
+} from '../utils/altheriumDeath'
 
 // ────────────────────────────────────────────────────────
 // Aba Combate da ficha de Altherium (livro 2.0, "Crepúsculo Vermelho"):
@@ -82,9 +92,12 @@ interface Props {
   vitality:     number
   /** Tira PV e marca o ferimento na parte do corpo. */
   onDamage:     (amount: number, zone: BodyZoneId | null) => void
+  espirito:     number
+  /** Pontos no domínio Determinação (bônus do Teste de Morte). */
+  determinationPoints: number
 }
 
-type Open = { spec: AltheriumTestSpec; kind: 'attack' | 'defense' | 'parry' | 'initiative'; weapon?: CombatWeapon; mode?: AttackMode; counter?: boolean }
+type Open = { spec: AltheriumTestSpec; kind: 'attack' | 'defense' | 'parry' | 'initiative' | 'death'; weapon?: CombatWeapon; mode?: AttackMode; counter?: boolean }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 const ZONES: BodyZoneId[] = ['db_pernas', 'db_bracos', 'db_tronco', 'db_cabeca']
@@ -94,6 +107,7 @@ const ZONE_OPTIONS = ZONES.map((z) => ({ value: z, label: ZONE_LABELS[z] }))
 
 export function AltheriumCombatPanel({
   campaignId, sheetId, character, genesis, inventory, state, onState, domainCheck, zoneDb, vitality, onDamage,
+  espirito, determinationPoints,
 }: Props) {
   const weapons = useMemo(() => combatWeapons(inventory), [inventory])
   const [open, setOpen] = useState<Open | null>(null)
@@ -214,6 +228,29 @@ export function AltheriumCombatPanel({
     setOpen({ kind: 'initiative', spec: { ...check, title: 'Iniciativa', notes: ['A ordem é do maior para o menor resultado.'] } })
   }
 
+  // ── Teste de Morte ──
+  const turns = deathTurns(espirito)
+  // Gênesis Determinado é a "outra fonte" que o livro cita: +1, com o total até +3.
+  const baseBonus = determinationBonus(determinationPoints, genesis === 'determinado' ? 1 : 0)
+
+  function openDeath() {
+    const dying = state.dying ?? NEW_DYING
+    const flat: Modifier[] = []
+    if (dying.medicine) flat.push({ label: 'Medicina', value: dying.medicine })
+    if (dying.nornas) flat.push({ label: 'Corda das Nornas', value: 1 })
+    setOpen({
+      kind: 'death',
+      spec: {
+        domainId: 'determinacao', domainLabel: 'Teste de Morte', attributeLabel: 'Determinação',
+        attribute: bonusOnTurn(baseBonus, dying.rolls), baseDice: 1, disadvantage: null,
+        title: `Teste de Morte (turno ${dying.rolls + 1} de ${turns})`, flat,
+        targetLabel: 'DT', initialTarget: DEATH_DT, critSucceeds: true, noSituation: true,
+        words: ['sobreviveu', 'falhou'],
+        notes: ['1d10 + Determinação contra DT 7. 10 natural é sucesso automático, e aqui o 1 não anula nada.'],
+      },
+    })
+  }
+
   // ── Condições ──
   function putCondition(id: ConditionId, turns?: number | null) {
     onState(addCondition(state, id, turns))
@@ -221,6 +258,13 @@ export function AltheriumCombatPanel({
 
   return (
     <div className="alth-combat">
+      {(state.dying || vitality === 0) && (
+        <AltheriumDyingPanel
+          state={state} turns={turns} baseBonus={baseBonus} espirito={espirito}
+          onState={onState} onRoll={openDeath}
+          campaignId={campaignId} sheetId={sheetId} character={character}
+        />
+      )}
       {/* Turno */}
       <section className="alth-section">
         <div className="alth-section__header">
@@ -416,7 +460,9 @@ export function AltheriumCombatPanel({
               if (Object.keys(next).length) patch(next)
             }
             if (open.kind === 'parry') patch({ reaction_used: true })
-            void reading
+            if (open.kind === 'death') {
+              patch({ dying: afterDeathRoll(state.dying ?? NEW_DYING, deathSuccess(reading.kept, reading.total), turns) })
+            }
           }}
           after={(ctx) => (
             <AfterRoll ctx={ctx} open={open} character={character} campaignId={campaignId}
