@@ -31,6 +31,10 @@
 }
 @keyframes qte-menu-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
+/* Cabeçalho da ficha com o botão do mestre ao lado do título */
+.qte-header-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.qte-header-row .qte-entry { margin-top: 0; }
+
 /* ── Preparo ── */
 .qte-setup { display: flex; flex-direction: column; gap: var(--space-3); color: var(--text-primary); }
 .qte-setup__intro { margin: 0; font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); }

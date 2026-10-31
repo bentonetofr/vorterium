@@ -35,6 +35,7 @@ import type {
   AltheriumSheetWithProfile,
 } from '../../../../shared/types'
 import { AltheriumSceneBar } from './AltheriumSceneBar'
+import { QteSheetButton } from '../../../qte/QteSetup'
 import '../../components/SheetPanel.css'
 import './AltheriumSheet.css'
 import { Loader } from '../../../../shared/components/Loader'
@@ -47,11 +48,13 @@ interface AltheriumSheetPanelProps {
 export function AltheriumSheetPanel({ campaignId, userRole }: AltheriumSheetPanelProps) {
   return (
     <section className="sheet-panel">
-      <header className="sheet-panel__header">
+      <header className="sheet-panel__header qte-header-row">
         <div className="sheet-panel__title-row">
           <span className="sheet-panel__icon" aria-hidden="true">✦</span>
           <h3 className="sheet-panel__title">Ficha Altherium</h3>
         </div>
+        {/* Cena a dois: o mestre organiza daqui, sem precisar abrir uma ficha. */}
+        {userRole === 'master' && <QteSheetButton ownerId="" impulso={0} />}
       </header>
 
       <div className="sheet-panel__body">
