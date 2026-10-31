@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { BREAKDOWNS, CONFESSION_DT, RITES, breakdownFor, calmAmount, equilibriumLoss, riteDef, scarredMax, type BreakdownDef, type RiteId } from '../utils/altheriumMind'
 import { cryptoRng } from '../utils/altheriumExplore'
 import type { Survival } from '../utils/altheriumSurvival'
@@ -28,6 +28,7 @@ interface Props {
   onSurvival: (patch: Partial<Survival>) => void
   announce:   (text: string) => void
   onClose:    () => void
+  nav?:       ReactNode
 }
 
 type Tab = 'perda' | 'recuperar' | 'zerado'
@@ -38,7 +39,7 @@ export function AltheriumMindWindow(props: Props) {
   const [tab, setTab] = useState<Tab>('perda')
   const [amount, setAmount] = useState('')
   const [dt, setDt] = useState('')
-  const [spec, setSpec] = useState<{ spec: AltheriumTestSpec; after: (ctx: AfterCtx) => React.ReactNode } | null>(null)
+  const [spec, setSpec] = useState<{ spec: AltheriumTestSpec; after: (ctx: AfterCtx) => ReactNode } | null>(null)
   const [log, setLog] = useState<string[]>([])
   const [calm, setCalm] = useState('')
   const [calmCrit, setCalmCrit] = useState(false)
@@ -126,7 +127,7 @@ export function AltheriumMindWindow(props: Props) {
   }
 
   return (
-    <Win title="Equilíbrio" subtitle={`${equilibrio.current} de ${equilibrio.max}`} onClose={props.onClose}>
+    <Win title="Equilíbrio" nav={props.nav} subtitle={`${equilibrio.current} de ${equilibrio.max}`} onClose={props.onClose}>
       <Chips<Tab>
         label="O que fazer" value={tab} onChange={setTab}
         options={[

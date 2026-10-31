@@ -11,13 +11,15 @@ import './AltheriumPlay.css'
 interface WinProps {
   title:    string
   subtitle?: ReactNode
+  /** Faixa de abas logo abaixo do título (o painel de Explorar troca de janela por aqui). */
+  nav?:     ReactNode
   onClose:  () => void
   busy?:    boolean
   children: ReactNode
 }
 
 /** Janela do jogo: título, fechar e rolagem. O fundo embaçado é o ModalOverlay. */
-export function Win({ title, subtitle, onClose, busy = false, children }: WinProps) {
+export function Win({ title, subtitle, nav, onClose, busy = false, children }: WinProps) {
   return (
     <ModalOverlay onClose={onClose} closeDisabled={busy}>
       <div className="alth-modal__window alth-win" role="dialog" aria-modal="true" aria-label={title}>
@@ -28,6 +30,7 @@ export function Win({ title, subtitle, onClose, busy = false, children }: WinPro
           </div>
           <button type="button" className="modal-close" onClick={onClose} disabled={busy} aria-label="Fechar">×</button>
         </header>
+        {nav && <div className="alth-win__nav">{nav}</div>}
         <div className="alth-win__body">{children}</div>
       </div>
     </ModalOverlay>

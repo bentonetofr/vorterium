@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react'
 import type { AltheriumRaiz } from '../constants/altherium'
 import type { AltheriumDomain, AltheriumAttribute } from '../constants/altherium'
 import {
@@ -60,6 +60,7 @@ interface Props {
   onBleed:    () => void
   announce:   (text: string) => void
   onClose:    () => void
+  nav?:       ReactNode
 }
 
 type Kit = 'sobrevivencia' | 'investigacao' | 'percepcao'
@@ -130,7 +131,7 @@ export function AltheriumExploreWindow(props: Props) {
   }
 
   return (
-    <Win title="Explorar" subtitle={<>Fichas <Pips value={survival.tokens} max={TOKENS_MAX} label="Fichas de Exploração" /></>} onClose={props.onClose}>
+    <Win title="Explorar" nav={props.nav} subtitle={<>Fichas <Pips value={survival.tokens} max={TOKENS_MAX} label="Fichas de Exploração" /></>} onClose={props.onClose}>
       <Field label="Onde está?" hint={loc.hint}>
         <Chips
           label="Local" value={location}

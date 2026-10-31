@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { AltheriumScene } from '../services/altheriumSceneService'
 import {
   DISTRACTION_TEXT,
@@ -34,9 +34,10 @@ interface Props {
   heavyGear:  boolean
   announce:   (text: string) => void
   onClose:    () => void
+  nav?:       ReactNode
 }
 
-export function AltheriumStealthWindow({ campaignId, sheetId, character, check, scene, onScene, heavyGear, announce, onClose }: Props) {
+export function AltheriumStealthWindow({ campaignId, sheetId, character, check, scene, onScene, heavyGear, announce, onClose, nav }: Props) {
   const [state, setState] = useState<EnemyState>(scene.enemy)
   const [mods, setMods] = useState<Set<string>>(() => new Set(heavyGear ? ['peso'] : []))
   const [spec, setSpec] = useState<AltheriumTestSpec | null>(null)
@@ -90,7 +91,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
   }
 
   return (
-    <Win title="Furtividade" subtitle={<>Inimigos: <strong>{enemyStateDef(scene.enemy).label}</strong></>} onClose={onClose}>
+    <Win title="Furtividade" nav={nav} subtitle={<>Inimigos: <strong>{enemyStateDef(scene.enemy).label}</strong></>} onClose={onClose}>
       <Chips<'teste' | 'distrair'>
         label="O que vai fazer" value={mode} onChange={setMode}
         options={[{ id: 'teste', label: 'Mover-se sem ser visto' }, { id: 'distrair', label: 'Distração' }]}

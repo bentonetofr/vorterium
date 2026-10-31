@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { rest, REST_TABLE, type RestInput, type RestKind, type RestResult } from '../utils/altheriumRest'
 import { SHORT_RESTS_MAX, type Survival } from '../utils/altheriumSurvival'
 import { cryptoRng } from '../utils/altheriumExplore'
@@ -20,11 +20,12 @@ interface Props {
   onApply:    (result: RestResult) => void
   announce:   (text: string) => void
   onClose:    () => void
+  nav?:       ReactNode
 }
 
 const d = (sides: number) => 1 + Math.floor(cryptoRng() * sides)
 
-export function AltheriumRestWindow({ character, base, rationPct, survival, onApply, announce, onClose }: Props) {
+export function AltheriumRestWindow({ character, base, rationPct, survival, onApply, announce, onClose, nav }: Props) {
   const [kind, setKind] = useState<RestKind>('longo')
   const [goodMeal, setGoodMeal] = useState(false)
   const [bad, setBad] = useState(false)
@@ -60,7 +61,7 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
   }
 
   return (
-    <Win title="Descansar" subtitle={`Curtos feitos: ${survival.short_rests} de ${SHORT_RESTS_MAX}`} onClose={onClose}>
+    <Win title="Descansar" nav={nav} subtitle={`Curtos feitos: ${survival.short_rests} de ${SHORT_RESTS_MAX}`} onClose={onClose}>
       <Chips<RestKind>
         label="Tipo de descanso" value={kind} onChange={setKind}
         options={[

@@ -37,6 +37,7 @@ interface Props {
   onNewTurn:  () => void
   onEndScene: () => void
   onCondition: (id: ConditionId) => void
+  onOpenDying: () => void
   scene:      AltheriumScene
   /** A conta dev observadora só olha. */
   readOnly?:  boolean
@@ -45,7 +46,7 @@ interface Props {
 
 export function AltheriumStatusStrip({
   survival, survivalKnown, onSurvival, rationPct, onEat, combat, combatKnown, onCombat, onNewTurn, onEndScene,
-  onCondition, scene, readOnly = false, turnNote,
+  onCondition, onOpenDying, scene, readOnly = false, turnNote,
 }: Props) {
   const reactionOk = reactionAvailable(combat)
   const enemy = enemyStateDef(scene.enemy)
@@ -114,7 +115,11 @@ export function AltheriumStatusStrip({
       <div className="alth-strip__group">
         <span className="alth-strip__title">Condições</span>
         {combat.conditions.length === 0 && !dying && <span className="alth-hint">Nenhuma condição.</span>}
-        {dying && <span className="alth-combat__cond alth-combat__cond--dying">Caído</span>}
+        {dying && (
+          <button type="button" className="alth-combat__cond alth-combat__cond--dying" onClick={onOpenDying} disabled={readOnly}>
+            Caído · Teste de Morte
+          </button>
+        )}
         {combat.conditions.map((c) => {
           const def = conditionDef(c.id)
           return (
