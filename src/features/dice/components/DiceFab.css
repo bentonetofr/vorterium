@@ -241,3 +241,11 @@
 }
 
 .dice-toast__note { margin: 6px 0 0; text-align: center; font-size: var(--text-xs); font-style: italic; color: var(--accent-bright); }
+
+/* ── Altherium: abas Rolagem e Meus dados no painel do canto ── */
+.dice-fab__tabs { padding-top: 0; }
+.dice-fab__tabs .ddw__tab { --ddw-bone: var(--text-primary); --ddw-accent: var(--accent-bright); }
+.dice-fab__skins { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-3); }
+.dice-fab__skins .ddw-skins { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+.dice-fab__skins .ddw-skin__pedestal { height: 88px; }
+.dice-fab__skins .ddw-vitrine__intro { font-size: var(--text-xs); }

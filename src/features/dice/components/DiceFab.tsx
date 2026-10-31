@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { useDiceRoller } from '../DiceRollerProvider'
 import { DiceRollerPanel } from './DiceRollerPanel'
+import { MyDiceTab } from './MyDiceTab'
 import { Presence } from '../../../shared/components/Presence'
 import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
 import { useFabToastSlot } from '../../../shared/components/FabToasts'
@@ -161,6 +162,9 @@ export function DiceFab() {
   // com o rolador embaixo e a vitrine dos conjuntos de dados), sem escurecer o fundo.
   const dndFeature = useFeature(DND_FEATURE)
   const dnd = campaign?.id === campaignId && campaign?.system === 'dnd5e' && dndFeature.visible
+  // Altherium: o painel do canto ganha a aba "Meus dados" (os conjuntos de dados da conta).
+  const altherium = campaign?.id === campaignId && campaign?.system === 'altherium'
+  const [diceTab, setDiceTab] = useState<'roll' | 'skins'>('roll')
   useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
 
   // ── Notificação de resultado ──
@@ -307,7 +311,16 @@ export function DiceFab() {
               ✕
             </button>
           </div>
-          <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />
+          {altherium && (
+            <div className="ddw__tabs dice-fab__tabs" role="tablist" aria-label="Seções dos dados">
+              {([['roll', 'Rolagem'], ['skins', 'Meus dados']] as const).map(([id, label]) => (
+                <button key={id} type="button" role="tab" aria-selected={diceTab === id} className={`ddw__tab${diceTab === id ? ' is-on' : ''}`} onClick={() => setDiceTab(id)}>{label}</button>
+              ))}
+            </div>
+          )}
+          {altherium && diceTab === 'skins'
+            ? <MyDiceTab />
+            : <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />}
         </div>
         )}
       </Presence>

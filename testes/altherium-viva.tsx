@@ -16,6 +16,9 @@ import '../src/shared/theme/touch.css'
 import '../src/features/sheets/altherium/components/AltheriumSheet.css'
 import { AltheriumSceneBar } from '../src/features/sheets/altherium/components/AltheriumSceneBar'
 import { AltheriumMasterPanel } from '../src/features/sheets/altherium/components/AltheriumMasterPanel'
+import { MyDiceTab } from '../src/features/dice/components/MyDiceTab'
+import '../src/features/dice/components/DiceFab.css'
+import '../src/app/layouts/PrivateLayout.css'
 import { SheetEditor } from '../src/features/sheets/altherium/components/AltheriumSheetPanel'
 import { AuthProvider } from '../src/features/auth/AuthProvider'
 import { supabase } from '../src/shared/lib/supabase'
@@ -72,6 +75,7 @@ supabase.auth.getSession = (async () => ({ data: { session: { user: fakeUser, ac
 supabase.auth.onAuthStateChange = (() => ({ data: { subscription: { unsubscribe() {} } } })) as unknown as typeof supabase.auth.onAuthStateChange
 
 function Preview() {
+  if (params.get('dados') === '1') return <div className="fab-panel" style={{ position: 'static', width: 380, height: 500 }}><div className="ddw__tabs dice-fab__tabs"><button className="ddw__tab">Rolagem</button><button className="ddw__tab is-on">Meus dados</button></div><MyDiceTab /></div>
   if (params.get('painel') === '1') return <div style={{ maxWidth: 900, border: '1px solid #534434', padding: 16, borderRadius: 10, background: '#131b2e' }}><AltheriumMasterPanel campaignId="camp-1" /></div>
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [s, setS] = useState<AltheriumSheet>(sheet)

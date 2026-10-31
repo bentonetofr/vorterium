@@ -31,6 +31,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Triunfos novos do livro: 20 para o Berserker (Grito de Desafio, Mordida do Lobo, Arremesso Brutal, Muralha de Carne, Sede de Sangue, Quebra-Escudo, Faro do Lobo, Recusar a Morte, Berro dos Ancestrais, Atropelar, Lâmina Arremessada, Fúria Contida, Agarrão de Ferro, Escudo Humano, Golpe no Chão, Cicatrizes de Guerra, Presença Aterradora, Dentes Cerrados, Martelo do Ferreiro e Ritmo de Batalha) e 20 para o Pilar (Aposta Dobrada, Carta na Manga, Jogo de Cintura, Blefe do Mercador, Mapa das Estrelas, Corda das Nornas, Mão Invisível, Ilusão de Passos, Truque de Cartas, Brinde do Rei Bêbado, Roleta de Hel, Leitura do Oponente, Dados Viciados, Golpe de Sorte, Troca de Lugares, Contar Cartas, Cofre Cheio, Banca Quebrada, Rota do Viajante e Hidromel e Histórias).',
       'As Sagas de Ofício saíram por enquanto (ficam para o futuro): o cartão sumiu do Ofício, o Achado Raro não sorteia mais Saga e todos os Reforços e o Catalisador Rúnico ficam liberados.',
       'As abas da ficha agora ocupam a largura toda e, se a tela for estreita, quebram em duas linhas em vez de ficar cortadas. As janelas ficaram um pouco mais largas para caber sem rolar.',
+      'O painel de rolagem de dados do canto, nas campanhas de Altherium, ganhou a aba “Meus dados”, igual à do D&D: mostra todos os conjuntos de dados que a sua conta tem, com o dado girando, e vale para todas as suas rolagens.',
       'Para os pedidos funcionarem, rode a migration 20240219.',
     ],
   },
