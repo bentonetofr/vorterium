@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5',
+    date:    '2026-10-31',
+    title:   'Altherium: livro de regras 2.0',
+    items: [
+      'O livro de regras de Altherium na Mesa da Sessão e na Biblioteca agora é a versão 2.0.',
+      'Catálogo de armas do livro 2.0: preços e tipos de dano novos (Adaga de Gancho ¤200, Porrete de pedra ¤100, Machado de Arremesso Cortante, Besta Leve e Besta Pesada sem o +2 no dano) e a Túnica de Couro Rúnico a ¤300.',
+      'Toda arma mostra as suas propriedades (Duas Mãos, Serrilhada, Perfurante 2, Recarga, Fluxo...), o material de reparo e quantos espaços de Reforço tem. Passar o mouse numa propriedade mostra a regra do livro.',
+      'O dano Cortante agora aparece com esse nome (antes era “Corte”).',
+      'O domínio Esconder saiu do sistema, como no livro novo. Pontos que estavam nele foram apagados.',
+      'Atributo vai no máximo até 10 (6 na criação, 10 depois de subir de nível).',
+    ],
+  },
+  {
     version: '2.4',
     date:    '2026-10-24',
     title:   'Configurações do site',

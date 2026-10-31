@@ -17,21 +17,21 @@ import './RulebookPanel.css'
 interface Rulebook {
   title:     string
   subtitle:  string
-  /** Versão pra ler na tela (~7,7 MB): cada página é um fundo JPEG opaco com o
+  /** Versão pra ler na tela (~11 MB): cada página é um fundo JPEG opaco com o
    *  texto de verdade por cima — o leitor não mistura camadas transparentes a
    *  cada rolagem. Gerada com scripts/flatten-rulebook.py. O ?v= força baixar
    *  de novo quando o arquivo muda. */
   viewerUrl: string
-  /** Arquivo original, qualidade total (~37 MB) — pro "Baixar PDF". */
+  /** Arquivo original, qualidade total (~36 MB) — pro "Baixar PDF". */
   url:       string
 }
 
 const RULEBOOKS: Partial<Record<CampaignSystem, Rulebook>> = {
   altherium: {
     title:    'Livro de regras básicas',
-    subtitle:  'Altherium · versão 1.0',
-    viewerUrl: '/livros/altherium-livro-de-regras-1.0-leitor.pdf?v=2',
-    url:       '/livros/altherium-livro-de-regras-1.0.pdf',
+    subtitle:  'Altherium · versão 2.0',
+    viewerUrl: '/livros/altherium-livro-de-regras-2.0-leitor.pdf?v=1',
+    url:       '/livros/altherium-livro-de-regras-2.0.pdf',
   },
 }
 

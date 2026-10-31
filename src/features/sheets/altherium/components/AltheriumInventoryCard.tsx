@@ -8,6 +8,10 @@ import {
   WEAPON_ATTRIBUTE_LABELS,
   WEAPON_RANGE_LABELS,
   WEAPON_CATEGORY_LABELS,
+  WEAPON_PROPERTIES,
+  REPAIR_MATERIAL_LABELS,
+  weaponPropertyLabel,
+  weaponReinforcementSlots,
   findArmor,
   findWeapon,
   findItem,
@@ -15,6 +19,7 @@ import {
   type DamageType,
   type WeaponAttribute,
   type WeaponCategory,
+  type WeaponDef,
   type WeaponRange,
 } from '../constants/altheriumItems'
 import { BODY_PARTS } from '../constants/altherium'
@@ -75,7 +80,24 @@ export function inventoryArmor(inv: AltheriumInventoryItem): { db: number; cover
   return a ? { db: a.db, coverage: a.coverage } : undefined
 }
 
-interface ItemInfo { name: string; detail: string }
+interface ItemInfo { name: string; detail: string; weapon?: WeaponDef }
+
+/** Propriedades da arma (passar o mouse mostra a regra), material de reparo e espaços de Reforço. */
+function WeaponTraits({ weapon }: { weapon: WeaponDef }) {
+  const slots = weaponReinforcementSlots(weapon)
+  return (
+    <span className="alth-inventory__traits">
+      {weapon.properties.map((p) => (
+        <span key={p.id} className="alth-inventory__prop" title={WEAPON_PROPERTIES[p.id].description}>
+          {weaponPropertyLabel(p)}
+        </span>
+      ))}
+      <span className="alth-inventory__repair">
+        Reparo: {REPAIR_MATERIAL_LABELS[weapon.repair]} · {slots} {slots === 1 ? 'espaço' : 'espaços'} de Reforço
+      </span>
+    </span>
+  )
+}
 
 function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
   if (isCustom(inv)) {
@@ -94,7 +116,7 @@ function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
   if (inv.item_type === 'arma') {
     const w = findWeapon(inv.item_id)
     if (!w) return null
-    return { name: w.name, detail: `${w.damageDice} ${DAMAGE_TYPE_LABELS[w.damageType]} · ${WEAPON_RANGE_LABELS[w.range]}` }
+    return { name: w.name, detail: `${w.damageDice} ${DAMAGE_TYPE_LABELS[w.damageType]} · ${WEAPON_RANGE_LABELS[w.range]}`, weapon: w }
   }
   if (inv.item_type === 'armadura' || inv.item_type === 'escudo') {
     const a = findArmor(inv.item_id)
@@ -154,6 +176,7 @@ export function AltheriumInventoryCard({
                       <span className="alth-inventory__detail">
                         {w.damageDice} {DAMAGE_TYPE_LABELS[w.damageType]} · {WEAPON_ATTRIBUTE_LABELS[w.attribute]} · {WEAPON_RANGE_LABELS[w.range]}
                       </span>
+                      <WeaponTraits weapon={w} />
                     </div>
                     <span className="alth-inventory__price">¤{w.price}</span>
                     <button type="button" className="alth-inventory__add" disabled={disabled}
@@ -257,6 +280,7 @@ export function AltheriumInventoryCard({
                     {custom && <span className="alth-inventory__tag alth-inventory__tag--custom">Personalizado</span>}
                     {info.detail}
                   </span>
+                  {info.weapon && <WeaponTraits weapon={info.weapon} />}
                 </div>
 
                 <div className="alth-inventory__qty">

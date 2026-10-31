@@ -1,6 +1,6 @@
 // ────────────────────────────────────────────────────────
 // Catálogos do sistema Altherium
-// Fonte: Livro de regras básicas de ALTHERIUM 1.0
+// Fonte: Livro de regras básicas de ALTHERIUM 2.0
 // ────────────────────────────────────────────────────────
 
 export type AltheriumRaiz = 'berserker' | 'runaskin' | 'pilar'
@@ -9,7 +9,7 @@ export type AltheriumAttribute =
   | 'furia' | 'destino' | 'espirito' | 'impulso' | 'estrategia' | 'runico'
 
 export type AltheriumDomain =
-  | 'brutalidade' | 'crime' | 'determinacao' | 'direcao' | 'esconder'
+  | 'brutalidade' | 'crime' | 'determinacao' | 'direcao'
   | 'furtividade' | 'iniciativa' | 'intimidacao' | 'investigacao'
   | 'leveza' | 'luta' | 'medicina' | 'percepcao' | 'persuasao'
   | 'precisao' | 'pressentimento' | 'reflexo' | 'religiao'
@@ -36,8 +36,8 @@ export const ATTRIBUTES: { id: AltheriumAttribute; label: string; description: s
 export const ATTRIBUTE_POINTS_AT_CREATION = 16
 /** Teto por atributo na criação — subir de nível (+2 pontos) passa disso. */
 export const ATTRIBUTE_MAX_AT_CREATION = 6
-/** Âncora de sanidade do campo, bem acima do que o sistema alcança. */
-export const ATTRIBUTE_HARD_MAX = 20
+/** Teto por atributo depois de subir de nível (livro 2.0: "esse limite passa a ser 10"). */
+export const ATTRIBUTE_HARD_MAX = 10
 /** Runaskin começa com +2 em Rúnico, fora dos 16 pontos. */
 export const RUNASKIN_FREE_RUNICO = 2
 
@@ -145,7 +145,6 @@ export const DOMAINS: { id: AltheriumDomain; label: string; attribute: Altherium
   { id: 'crime',          label: 'Crime',          attribute: 'estrategia' },
   { id: 'determinacao',   label: 'Determinação',   attribute: 'espirito' },
   { id: 'direcao',        label: 'Direção',        attribute: 'impulso' },
-  { id: 'esconder',       label: 'Esconder',       attribute: 'estrategia' },
   { id: 'furtividade',    label: 'Furtividade',    attribute: 'impulso' },
   { id: 'iniciativa',     label: 'Iniciativa',     attribute: 'impulso' },
   { id: 'intimidacao',    label: 'Intimidação',    attribute: 'furia' },
