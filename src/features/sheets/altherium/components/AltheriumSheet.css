@@ -2203,3 +2203,45 @@
 .alth-test__outcome { margin: 0; text-align: center; font-family: var(--font-label); font-weight: 700; letter-spacing: 0.04em; }
 .alth-test__outcome--ok { color: var(--alth-resource); }
 .alth-test__outcome--fail { color: var(--danger-bright); }
+
+/* ── Aba Combate ── */
+.alth-combat { display: flex; flex-direction: column; gap: var(--space-4); }
+.alth-combat__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.alth-combat__form { display: flex; flex-direction: column; gap: var(--space-3); }
+.alth-combat__spacer { flex: 1; }
+.alth-combat__btn { padding-inline: var(--space-3); }
+.alth-combat__chip {
+  font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.04em;
+  padding: 6px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-dim); background: var(--bg-elevated); color: var(--text-secondary);
+  cursor: var(--cursor-hand, pointer);
+}
+.alth-combat__chip--on { border-color: var(--accent-bright); color: var(--accent-bright); background: var(--bg-overlay); }
+.alth-combat__chip--ok { border-color: var(--alth-resource); color: var(--alth-resource); }
+.alth-combat__chip--off { border-color: var(--danger); color: var(--danger-bright); }
+.alth-combat__cond {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 4px 4px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--danger); color: var(--danger-bright);
+  font-size: var(--text-xs); cursor: help;
+}
+.alth-combat__cond button {
+  width: 20px; height: 20px; border: 0; border-radius: var(--radius-sm);
+  background: none; color: inherit; cursor: var(--cursor-hand, pointer);
+}
+.alth-combat__select { min-width: 170px; }
+.alth-combat__select--wide { max-width: 320px; }
+.alth-combat__weapon { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; font-size: var(--text-xs); color: var(--text-muted); }
+.alth-combat__num { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-combat__num .input { width: 72px; }
+.alth-combat__steps { margin: 0; padding-left: var(--space-5); font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-combat__final { font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-combat__final strong { color: var(--danger-bright); font-size: var(--text-lg); }
+.alth-combat__lines { margin: 0; padding-left: var(--space-5); font-size: var(--text-sm); color: var(--text-primary); }
+.alth-combat__punish { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.alth-test__actions--start { justify-content: center; flex-wrap: wrap; }
+.alth-test__mods {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 4px var(--space-3);
+  margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); color: var(--text-muted);
+}
+.alth-test__mods strong { color: var(--accent-bright); }

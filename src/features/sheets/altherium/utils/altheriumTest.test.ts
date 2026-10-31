@@ -29,7 +29,21 @@ describe('teste de domínio de Altherium', () => {
       { type: 'keep_highest', notation: '3#d10', quantity: 3, sides: 10, results: [4, 10, 1], kept: 10, subtotal: 10 },
       { type: 'modifier', value: 3 },
     ])
-    expect(reading).toEqual({ results: [4, 10, 1], kept: 10, keep: 'highest', attribute: 3, total: 13, crit: true })
+    expect(reading).toEqual({ results: [4, 10, 1], kept: 10, keep: 'highest', extra: 0, modifier: 3, total: 13, crit: true })
+  })
+
+  it('soma o dado extra do Gênesis e os bônus fixos', () => {
+    expect(testFormula({ count: 2, keep: 'highest' }, 5, 4)).toBe('2#d10+1d4+5')
+    const r = readTest([
+      { type: 'keep_highest', notation: '2#d10', quantity: 2, sides: 10, results: [3, 7], kept: 7, subtotal: 7 },
+      { type: 'sum', notation: '1d4', quantity: 1, sides: 4, results: [2], subtotal: 2 },
+      { type: 'modifier', value: 5 },
+    ])
+    expect(r?.total).toBe(14)
+  })
+
+  it('ataque contra Defesa: empate não acerta', () => {
+    expect(testOutcome(10, 10, false).success).toBe(false)
   })
 
   it('compara com a DT: empate passa', () => {

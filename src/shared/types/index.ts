@@ -289,6 +289,8 @@ export interface AltheriumSheet {
   /** Inspirações Skald ganhas na história (não há no livro; o jogador cria). */
   skald_inspirations: AltheriumSkaldInspiration[]
   notes:              string | null
+  /** Estado de combate (Reação, condições, Recarga...) — migration 20240216; ver altheriumCombat.ts. */
+  combat_state?:      unknown
   /** Ficha de NPC do mestre (migration 20240189000000). */
   is_npc?: boolean
   /** O mestre mostrou o NPC pros jogadores (eles só leem). */

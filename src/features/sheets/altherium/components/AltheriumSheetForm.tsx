@@ -13,6 +13,8 @@ import {
   GENESIS_DOMAIN_BONUS,
   RAIZES,
   type AltheriumRaiz,
+  type AltheriumAttribute,
+  type AltheriumDomain,
 } from '../constants/altherium'
 import {
   berserkerTriumphLimit,
@@ -58,6 +60,8 @@ import { Select } from '../../../../shared/components/Select'
 import './AltheriumSheet.css'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { AltheriumTestModal, type AltheriumTestSpec } from './AltheriumTestModal'
+import { AltheriumCombatPanel, type DomainCheck } from './AltheriumCombatPanel'
+import { conditionDef, readCombatState, type BodyZoneId, type CombatState } from '../utils/altheriumCombat'
 import { isObserver } from '../../../../shared/lib/observer'
 
 const NOTES_MAX = 2000
@@ -137,6 +141,10 @@ type FormData = {
   genesis_abilities:  AltheriumGenesisAbility[]
   skald_inspirations: AltheriumSkaldInspiration[]
   notes:              string
+  /** Reação, condições, Recarga... (ver altheriumCombat.ts). */
+  combat_state:       CombatState
+  /** A coluna existe no banco (migration 20240216)? Sem ela, o combate fica só na tela. */
+  combat_known:       boolean
 }
 
 function sheetToForm(s: AltheriumSheet): FormData {
@@ -183,6 +191,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     genesis_abilities:  s.genesis_abilities ?? [],
     skald_inspirations: s.skald_inspirations ?? [],
     notes:              s.notes ?? '',
+    combat_state:       readCombatState(s.combat_state),
+    combat_known:       'combat_state' in s,
   }
 }
 
@@ -224,6 +234,8 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     runaskin_trail:      f.runaskin_trail === '' ? null : f.runaskin_trail,
     runaskin_scene_uses: f.runaskin_scene_uses,
     notes:               f.notes.trim() || null,
+    // Mesma ordem de chaves sempre (o jsonb reordena; o eco do save precisa bater).
+    ...(f.combat_known ? { combat_state: readCombatState(f.combat_state) } : {}),
     recent_triumphs:     f.recent_triumphs,
     genesis_abilities:   f.genesis_abilities.map((a) => ({ id: a.id, name: a.name, description: a.description })),
     skald_inspirations:  f.skald_inspirations.map((i) => ({
@@ -295,7 +307,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'combate' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -304,6 +316,7 @@ interface AltheriumFormTab {
 
 const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'visao-geral', label: 'Atributos' },
+  { id: 'luta',        label: 'Combate' },
   { id: 'combate',     label: 'Inventário' },
   { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
@@ -537,6 +550,37 @@ export function AltheriumSheetForm({
   // Teste de domínio aberto (clicar nos dados do domínio). A conta dev observadora só olha.
   const [testSpec, setTestSpec] = useState<AltheriumTestSpec | null>(null)
   const canRollTests = !isObserver()
+
+  /** Dados e atributo de um teste — o mesmo cálculo da linha do domínio; `attribute` troca o atributo (ataque com arma). */
+  function domainCheck(domain: AltheriumDomain, attribute?: AltheriumAttribute): DomainCheck {
+    const def = DOMAINS.find((x) => x.id === domain)!
+    const attr = attribute ?? def.attribute
+    const attrLabel = ATTRIBUTES.find((a) => a.id === attr)?.label ?? ''
+    const points = domainMap.get(domain) ?? 0
+    const disadv = domainDisadvantage(points, chosenMap.get(domain) && !attribute ? null : attrValue(attr))
+    const flat = form.combat_state.conditions.flatMap((c) => {
+      const a = conditionDef(c.id).attribute
+      return a && a.id === attr ? [{ label: conditionDef(c.id).label, value: a.value }] : []
+    })
+    return {
+      domainId: domain, domainLabel: def.label, attributeLabel: attrLabel,
+      attribute: attrValue(attr) ?? 0,
+      baseDice: domainTestDice(points, genesisBonusFor(form.genesis, domain), bonusMap.get(domain) ?? false),
+      disadvantage: disadv === 'manual' ? 'marcada no domínio' : disadv === 'atributo' ? `${attrLabel} está em 0` : null,
+      flat,
+    }
+  }
+
+  function takeDamage(amount: number, zone: BodyZoneId | null) {
+    setForm((prev) => {
+      const next = { ...prev, vitality_current: Math.max(0, prev.vitality_current - amount) }
+      if (zone) {
+        const key = `dano_${zone.slice(3)}` as 'dano_pernas' | 'dano_bracos' | 'dano_tronco' | 'dano_cabeca'
+        next[key] = Math.min(999, prev[key] + amount)
+      }
+      return next
+    })
+  }
 
   // Enter num campo (ou "Salvar agora") salva na hora, sem esperar o atraso.
   function handleSubmit(e: FormEvent) {
@@ -868,6 +912,30 @@ export function AltheriumSheetForm({
         )}
       </div>
 
+      {/* ── Combate: turno, condições, ataque, defesa e dano ── */}
+      <div id="alth-tabpanel-luta" role="tabpanel" hidden={activeTab !== 'luta'}>
+        {activeTab === 'luta' && (
+          <div className="alth-tab-panel anim-tab-panel">
+            {!form.combat_known && (
+              <p className="alth-hint">O banco ainda não guarda o estado de combate (migration 20240216): Reação e condições valem só nesta tela.</p>
+            )}
+            <AltheriumCombatPanel
+              campaignId={sheet.campaign_id}
+              sheetId={sheet.id}
+              character={form.character_name.trim() || ownerName || 'Personagem'}
+              genesis={form.genesis}
+              inventory={inventory}
+              state={form.combat_state}
+              onState={(next) => set('combat_state', next)}
+              domainCheck={domainCheck}
+              zoneDb={{ db_pernas: form.db_pernas, db_bracos: form.db_bracos, db_tronco: form.db_tronco, db_cabeca: form.db_cabeca }}
+              vitality={form.vitality_current}
+              onDamage={takeDamage}
+            />
+          </div>
+        )}
+      </div>
+
       {/* ── Inventário: anatomia/armadura e itens ── */}
       <div id="alth-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>
         {activeTab === 'combate' && (
@@ -1047,13 +1115,7 @@ export function AltheriumSheetForm({
                   type="button"
                   className="alth-domains__dice" role="cell"
                   disabled={!canRollTests}
-                  onClick={() => setTestSpec({
-                    domainId: d.id, domainLabel: d.label, attributeLabel: attrLabel,
-                    attribute: attrValue(d.attribute) ?? 0,
-                    baseDice: domainTestDice(points, fromGenesis, bonusDie),
-                    disadvantage: disadv === 'manual' ? 'marcada no domínio'
-                      : disadv === 'atributo' ? `${attrLabel} está em 0` : null,
-                  })}
+                  onClick={() => setTestSpec(domainCheck(d.id))}
                   title={[
                     canRollTests ? `Rolar teste de ${d.label}` : '',
                     fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : '',

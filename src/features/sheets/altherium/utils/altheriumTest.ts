@@ -38,37 +38,50 @@ export function testPool({ baseDice, disadvantage, situational }: TestPoolInput)
   return { count: 2 - n + (disadvantage ? 1 : 0), keep: 'lowest' }
 }
 
-/** Fórmula do rolador: "3#d10+4" (maior de 3) ou "2@d10" (menor de 2). */
-export function testFormula(pool: TestPool, attribute: number): string {
-  const dice = `${pool.count}${pool.keep === 'highest' ? '#' : '@'}d10`
-  if (attribute > 0) return `${dice}+${attribute}`
-  if (attribute < 0) return `${dice}${attribute}`
-  return dice
+/**
+ * Fórmula do rolador: "3#d10+4" (maior de 3) ou "2@d10" (menor de 2). O
+ * dado extra (o +1d4 do Gênesis Caçador/Guerreiro) entra somado depois.
+ */
+export function testFormula(pool: TestPool, modifier: number, extraDie?: number): string {
+  let f = `${pool.count}${pool.keep === 'highest' ? '#' : '@'}d10`
+  if (extraDie) f += `+1d${extraDie}`
+  if (modifier > 0) f += `+${modifier}`
+  if (modifier < 0) f += `${modifier}`
+  return f
 }
 
 export interface TestReading {
   results:   number[]
   kept:      number
   keep:      'highest' | 'lowest'
-  attribute: number
+  /** Soma dos dados extras (o +1d4 do Gênesis). */
+  extra:     number
+  /** Atributo e bônus fixos somados. */
+  modifier:  number
   total:     number
   crit:      boolean
 }
 
-/** Lê a rolagem gravada: cada dado, o que valeu, o atributo e o total. */
+/** Lê a rolagem gravada: cada dado, o que valeu, os extras, os bônus e o total. */
 export function readTest(breakdown: readonly RollBreakdownItem[]): TestReading | null {
   const term = breakdown.find((b) => b.type === 'keep_highest' || b.type === 'keep_lowest') as
     | { type: 'keep_highest' | 'keep_lowest'; results: number[]; kept: number }
     | undefined
   if (!term) return null
-  const attribute = breakdown.reduce((sum, b) => (b.type === 'modifier' ? sum + b.value : sum), 0)
+  let extra = 0
+  let modifier = 0
+  for (const b of breakdown) {
+    if (b.type === 'modifier') modifier += b.value
+    else if (b.type === 'sum') extra += b.subtotal
+  }
   return {
-    results:   term.results,
-    kept:      term.kept,
-    keep:      term.type === 'keep_highest' ? 'highest' : 'lowest',
-    attribute,
-    total:     term.kept + attribute,
-    crit:      term.kept === 10,
+    results:  term.results,
+    kept:     term.kept,
+    keep:     term.type === 'keep_highest' ? 'highest' : 'lowest',
+    extra,
+    modifier,
+    total:    term.kept + extra + modifier,
+    crit:     term.kept === 10,
   }
 }
 
@@ -78,7 +91,11 @@ export interface TestOutcome {
   margin:  number
 }
 
-/** Contra uma DT: passa com o total igual ou maior. */
-export function testOutcome(total: number, dt: number): TestOutcome {
-  return total >= dt ? { success: true, margin: total - dt } : { success: false, margin: dt - total }
+/**
+ * Contra um alvo: com `tieWins` (DT, Defesa, Aparar) passa com o total igual
+ * ou maior; sem (Ataque contra a Defesa), só com o total maior.
+ */
+export function testOutcome(total: number, target: number, tieWins = true): TestOutcome {
+  const success = tieWins ? total >= target : total > target
+  return { success, margin: Math.abs(total - target) }
 }

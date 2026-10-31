@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import type { DiceRoll } from '../../../../shared/types'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
@@ -15,15 +15,22 @@ import {
   testFormula,
   testOutcome,
   testPool,
+  type TestOutcome,
   type TestReading,
 } from '../utils/altheriumTest'
 
 // ────────────────────────────────────────────────────────
-// Janela de teste de domínio: escolhe os dados de situação (±2) e a DT
-// (opcional), rola com os dados 3D e mostra a conta inteira — cada dado,
-// qual valeu, o atributo somado, o total, o crítico e o resultado contra a
-// DT. A rolagem vai pro histórico de dados e, se não for privada, pro chat.
+// Janela de teste de Altherium: escolhe os dados de situação (±2) e o alvo
+// (DT, Defesa ou o Ataque recebido, opcional), rola com os dados 3D e
+// mostra a conta inteira — cada dado, qual valeu, o atributo e os bônus
+// somados, o total, o crítico e o resultado contra o alvo. Serve pros
+// testes de domínio e pro combate (ataque, defesa, aparar): o combate
+// manda os bônus prontos (Mirar, Cercar, Derrubado...) e põe as próprias
+// ações depois do resultado (rolar dano, local atingido...) em `after`.
+// A rolagem vai pro histórico de dados e, se não for privada, pro chat.
 // ────────────────────────────────────────────────────────
+
+export interface Modifier { label: string; value: number }
 
 export interface AltheriumTestSpec {
   domainId:       string
@@ -34,6 +41,38 @@ export interface AltheriumTestSpec {
   baseDice:       number
   /** Por que está em desvantagem (null = sem desvantagem). */
   disadvantage:   string | null
+  /** Título da janela e do histórico (padrão: "Teste de <domínio>"). */
+  title?:         string
+  /** Bônus fixos somados ao total (Mirar +2, Cercar, Defender Total...). */
+  flat?:          Modifier[]
+  /** Dados a mais ou a menos que já vêm do combate (faixas de alcance...). Somam com os de situação, no máximo ±2. */
+  diceMods?:      Modifier[]
+  /** Dado somado ao total (o +1d4 do Gênesis Caçador/Guerreiro). */
+  extraDie?:      { label: string; sides: number }
+  /** Nome do alvo (padrão "DT"). */
+  targetLabel?:   string
+  /** Empate passa? (padrão sim; no Ataque contra a Defesa, não). */
+  tieWins?:       boolean
+  initialTarget?: number | null
+  /** Palavras do resultado (padrão "sucesso"/"falha"). */
+  words?:         [string, string]
+  /** Crítico passa direto (o acerto crítico é instantâneo). */
+  critSucceeds?:  boolean
+  /** Avisos mostrados antes de rolar. */
+  notes?:         string[]
+}
+
+export interface TestDone {
+  reading:   TestReading
+  outcome:   TestOutcome | null
+  target:    number | null
+  isPrivate: boolean
+}
+
+export interface AfterCtx extends TestDone {
+  /** Rola mais uma fórmula no mesmo palco (dano, local...) e grava no histórico. */
+  rollExtra: (formula: string, label: string) => Promise<DiceRoll | null>
+  busy:      boolean
 }
 
 interface Props {
@@ -42,13 +81,18 @@ interface Props {
   character:  string
   spec:       AltheriumTestSpec
   onClose:    () => void
+  /** Chamado uma vez quando o resultado sai (gastar Mirar, Reação...). */
+  onRolled?:  (done: TestDone) => void
+  /** Ações depois do resultado. */
+  after?:     (ctx: AfterCtx) => ReactNode
 }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
+const sum = (list?: Modifier[]) => (list ?? []).reduce((s, m) => s + m.value, 0)
 
-export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose }: Props) {
+export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose, onRolled, after }: Props) {
   const [situational, setSituational] = useState(0)
-  const [dt, setDt] = useState('')
+  const [target, setTarget] = useState(spec.initialTarget != null ? String(spec.initialTarget) : '')
   const [isPrivate, setIsPrivate] = useState(false)
   const [rolling, setRolling] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,31 +101,48 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   const [skin, setSkin] = useState(DEFAULT_SKIN)
   const stageRef = useRef<HTMLDivElement>(null)
   const { stage, simple } = useDiceStage(stageRef, 'wide')
+  const title = spec.title ?? `Teste de ${spec.domainLabel}`
+  const targetLabel = spec.targetLabel ?? 'DT'
+  const words = spec.words ?? ['sucesso', 'falha']
 
   useEffect(() => {
     void getMyDiceSkin().then(setSkin).catch(() => { /* fica o padrão */ })
   }, [])
 
-  const pool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational })
-  const dtValue = dt.trim() === '' ? null : Math.max(1, Math.min(99, Math.trunc(Number(dt)) || 0)) || null
+  const autoDice = sum(spec.diceMods)
+  const totalDice = clampSituation(autoDice + situational)
+  const pool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational: totalDice })
+  const modifier = spec.attribute + sum(spec.flat)
+  const targetValue = target.trim() === '' ? null : Math.max(0, Math.min(99, Math.trunc(Number(target)) || 0))
   const reading = roll ? readTest(roll.roll_breakdown ?? []) : null
-  const outcome = reading && dtValue != null ? testOutcome(reading.total, dtValue) : null
+
+  function judge(r: TestReading, t: number | null): TestOutcome | null {
+    if (t == null) return null
+    const o = testOutcome(r.total, t, spec.tieWins ?? true)
+    return spec.critSucceeds && r.crit ? { ...o, success: true } : o
+  }
+  const outcome = reading ? judge(reading, targetValue) : null
+
+  async function animate(saved: DiceRoll) {
+    if (stage) await stage.roll(stageDiceFor(saved.roll_breakdown ?? [], skin), { skin })
+  }
 
   async function doRoll() {
     setError(null)
     setRolling(true)
     setDone(false)
     try {
-      const rolled = rollParsedFormula(parseDiceFormula(testFormula(pool, spec.attribute)))
+      const rolled = rollParsedFormula(parseDiceFormula(testFormula(pool, modifier, spec.extraDie?.sides)), { floor: false })
       const read = readTest(rolled.breakdown)
       if (!read) throw new Error('Não foi possível ler a rolagem.')
-      const result = dtValue != null ? testOutcome(read.total, dtValue) : null
+      const result = judge(read, targetValue)
       const saved = await recordRoll(campaignId, rolled, isPrivate, {
-        label: `Teste de ${spec.domainLabel}`,
+        label: title,
         skin,
+        noFloor: true,
         context: {
           system: 'altherium', kind: 'skill', key: spec.domainId, sheet_id: sheetId, character,
-          dc: dtValue, situational, natural: read.kept,
+          dc: targetValue, situational: totalDice, natural: read.kept,
           advantage: pool.keep === 'lowest' ? 'disadvantage' : 'normal',
           outcome: result ? (result.success ? 'success' : 'failure') : null,
           crit: read.crit ? 'crit' : null,
@@ -89,13 +150,32 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
       })
       setRoll(saved)
       playRollSound()
-      if (stage) await stage.roll(stageDiceFor(saved.roll_breakdown ?? [], skin), { skin })
+      await animate(saved)
       setDone(true)
+      onRolled?.({ reading: read, outcome: result, target: targetValue, isPrivate })
       if (!isPrivate) {
-        void sendMessage(campaignId, testMessage(character, spec, read, dtValue)).catch(() => { /* só não aparece no chat */ })
+        void sendMessage(campaignId, testMessage(character, title, spec, read, targetValue, targetLabel, result, words)).catch(() => { /* só não aparece no chat */ })
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível rolar.')
+    } finally {
+      setRolling(false)
+    }
+  }
+
+  async function rollExtra(formula: string, label: string): Promise<DiceRoll | null> {
+    setError(null)
+    setRolling(true)
+    try {
+      const saved = await recordRoll(campaignId, rollParsedFormula(parseDiceFormula(formula)), isPrivate, {
+        label, skin, context: { system: 'altherium', kind: 'custom', sheet_id: sheetId, character },
+      })
+      playRollSound()
+      await animate(saved)
+      return saved
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível rolar.')
+      return null
     } finally {
       setRolling(false)
     }
@@ -108,12 +188,13 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   }
 
   const showResult = roll && reading && (done || simple)
+  const keptIndex = reading ? reading.results.indexOf(reading.kept) : -1
 
   return (
     <ModalOverlay onClose={onClose} closeDisabled={rolling}>
       <div className="alth-modal__window alth-test" role="dialog" aria-modal="true" aria-labelledby="alth-test-title">
         <header className="alth-modal__header">
-          <h4 id="alth-test-title" className="alth-modal__title">Teste de {spec.domainLabel}</h4>
+          <h4 id="alth-test-title" className="alth-modal__title">{title}</h4>
           <button type="button" className="modal-close" onClick={onClose} disabled={rolling} aria-label="Fechar">×</button>
         </header>
 
@@ -122,7 +203,8 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
             <div ref={stageRef} className="alth-test__canvas" aria-hidden="true" />
             {!roll && (
               <span className="alth-test__pool">
-                {pool.count}d10 · fica o {pool.keep === 'highest' ? 'maior' : 'menor'} · {signed(spec.attribute)} {spec.attributeLabel}
+                {spec.domainLabel}: {pool.count}d10 · fica o {pool.keep === 'highest' ? 'maior' : 'menor'}
+                {spec.extraDie ? ` · +1d${spec.extraDie.sides}` : ''} · {signed(modifier)}
               </span>
             )}
           </div>
@@ -131,22 +213,34 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
             <>
               {spec.disadvantage && <p className="alth-test__note alth-test__note--warn">Desvantagem: {spec.disadvantage}.</p>}
 
+              <ul className="alth-test__mods" aria-label="O que entra no teste">
+                <li>{spec.attributeLabel} <strong>{signed(spec.attribute)}</strong></li>
+                {(spec.flat ?? []).filter((m) => m.value !== 0).map((m) => <li key={m.label}>{m.label} <strong>{signed(m.value)}</strong></li>)}
+                {spec.extraDie && <li>{spec.extraDie.label} <strong>+1d{spec.extraDie.sides}</strong></li>}
+                {(spec.diceMods ?? []).filter((m) => m.value !== 0).map((m) => <li key={m.label}>{m.label} <strong>{signed(m.value)} {Math.abs(m.value) === 1 ? 'dado' : 'dados'}</strong></li>)}
+              </ul>
+
+              {(spec.notes ?? []).map((n) => <p key={n} className="alth-test__note">{n}</p>)}
+
               <div className="alth-test__field">
                 <span className="alth-test__label">Dados de situação</span>
                 <div className="alth-test__stepper">
-                  <button type="button" onClick={() => setSituational(clampSituation(situational - 1))}
-                    disabled={situational <= -SITUATION_LIMIT} aria-label="Tirar um dado">−</button>
+                  <button type="button" onClick={() => setSituational(situational - 1)}
+                    disabled={autoDice + situational <= -SITUATION_LIMIT} aria-label="Tirar um dado">−</button>
                   <span className="alth-test__stepper-value">{situational === 0 ? '0' : signed(situational)}</span>
-                  <button type="button" onClick={() => setSituational(clampSituation(situational + 1))}
-                    disabled={situational >= SITUATION_LIMIT} aria-label="Pôr um dado">+</button>
+                  <button type="button" onClick={() => setSituational(situational + 1)}
+                    disabled={autoDice + situational >= SITUATION_LIMIT} aria-label="Pôr um dado">+</button>
                 </div>
-                <span className="alth-test__hint">Itens, condições e o que o mestre conceder. No máximo 2 dados a mais ou a menos.</span>
+                <span className="alth-test__hint">
+                  Itens, condições e o que o mestre conceder. Somando tudo, no máximo 2 dados a mais ou a menos
+                  {autoDice !== 0 ? ` (o combate já pôs ${signed(autoDice)})` : ''}.
+                </span>
               </div>
 
               <label className="alth-test__field">
-                <span className="alth-test__label">DT (opcional)</span>
-                <input type="number" className="input alth-test__dt" min={1} max={99} inputMode="numeric"
-                  value={dt} onChange={(e) => setDt(e.target.value)} placeholder="Sem DT" />
+                <span className="alth-test__label">{targetLabel} (opcional)</span>
+                <input type="number" className="input alth-test__dt" min={0} max={99} inputMode="numeric"
+                  value={target} onChange={(e) => setTarget(e.target.value)} placeholder={`Sem ${targetLabel}`} />
               </label>
 
               <label className="alth-test__check">
@@ -170,34 +264,40 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
           {showResult && reading && (
             <>
               <ul className="alth-test__dice" aria-label="Dados rolados">
-                {reading.results.map((value, i) => {
-                  const kept = i === reading.results.indexOf(reading.kept)
-                  return (
-                    <li key={i} className={`alth-test__die${kept ? ' alth-test__die--kept' : ''}${value === 10 ? ' alth-test__die--ten' : ''}`}
-                      title={kept ? 'Este dado valeu' : undefined}>
-                      {value}
-                    </li>
-                  )
-                })}
+                {reading.results.map((value, i) => (
+                  <li key={i} className={`alth-test__die${i === keptIndex ? ' alth-test__die--kept' : ''}${value === 10 ? ' alth-test__die--ten' : ''}`}
+                    title={i === keptIndex ? 'Este dado valeu' : undefined}>
+                    {value}
+                  </li>
+                ))}
               </ul>
 
               <p className="alth-test__sum">
                 {reading.keep === 'highest' ? 'Maior' : 'Menor'} dado <strong>{reading.kept}</strong>
-                {' '}{reading.attribute >= 0 ? '+' : '−'} {spec.attributeLabel} <strong>{Math.abs(reading.attribute)}</strong>
+                {' '}{plusMinus(spec.attribute)} {spec.attributeLabel} <strong>{Math.abs(spec.attribute)}</strong>
+                {(spec.flat ?? []).filter((m) => m.value !== 0).map((m) => (
+                  <span key={m.label}> {plusMinus(m.value)} {m.label} <strong>{Math.abs(m.value)}</strong></span>
+                ))}
+                {spec.extraDie && <span> + {spec.extraDie.label} <strong>{reading.extra}</strong></span>}
                 {' '}= <strong className="alth-test__total">{reading.total}</strong>
               </p>
 
               {reading.crit && <p className="alth-test__crit">Crítico! 10 natural.</p>}
 
-              {outcome && dtValue != null && (
+              {outcome && targetValue != null && (
                 <p className={`alth-test__outcome alth-test__outcome--${outcome.success ? 'ok' : 'fail'}`} role="status">
-                  DT {dtValue}: {outcome.success ? 'sucesso' : 'falha'}{outcome.margin > 0 ? ` por ${outcome.margin}` : ''}
+                  {targetLabel} {targetValue}: {outcome.success ? words[0] : words[1]}
+                  {outcome.margin > 0 && !(spec.critSucceeds && reading.crit && reading.total <= targetValue) ? ` por ${outcome.margin}` : ''}
                 </p>
               )}
 
+              {after?.({ reading, outcome, target: targetValue, isPrivate, rollExtra, busy: rolling })}
+
+              {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
+
               <div className="alth-test__actions">
-                <button type="button" className="btn btn-ghost" onClick={again}>Novo teste</button>
-                <button type="button" className="btn btn-primary" onClick={onClose}>Fechar</button>
+                <button type="button" className="btn btn-ghost" onClick={again} disabled={rolling}>Rolar de novo</button>
+                <button type="button" className="btn btn-primary" onClick={onClose} disabled={rolling}>Fechar</button>
               </div>
             </>
           )}
@@ -207,12 +307,16 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   )
 }
 
-function testMessage(character: string, spec: AltheriumTestSpec, r: TestReading, dt: number | null): string {
+function plusMinus(n: number): string {
+  return n >= 0 ? '+' : '−'
+}
+
+function testMessage(
+  character: string, title: string, spec: AltheriumTestSpec, r: TestReading,
+  target: number | null, targetLabel: string, o: TestOutcome | null, words: [string, string],
+): string {
   const dice = `[${r.results.join(', ')}] → ${r.kept}`
-  const attr = `${r.attribute >= 0 ? '+' : '−'} ${spec.attributeLabel} ${Math.abs(r.attribute)}`
-  const vs = dt != null ? (() => {
-    const o = testOutcome(r.total, dt)
-    return ` contra DT ${dt}: ${o.success ? 'sucesso' : 'falha'}${o.margin > 0 ? ` por ${o.margin}` : ''}`
-  })() : ''
-  return `🎲 ${character} testou ${spec.domainLabel}: ${dice} ${attr} = ${r.total}${vs}${r.crit ? ' · crítico!' : ''}`
+  const bonus = r.modifier + r.extra
+  const vs = target != null && o ? ` contra ${targetLabel} ${target}: ${o.success ? words[0] : words[1]}` : ''
+  return `🎲 ${character} — ${title} (${spec.domainLabel}): ${dice} ${plusMinus(bonus)} ${Math.abs(bonus)} = ${r.total}${vs}${r.crit ? ' · crítico!' : ''}`
 }
