@@ -3,7 +3,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { captureErrorMessage } from '../mesaRtc'
 import { getMesaImageShowUrl } from '../services/mesaImagesService'
-import { EMPTY_SNAPSHOT, ScreenSession, type ScreenSnapshot } from './ScreenSession'
+import { EMPTY_SNAPSHOT, ScreenSession, type ScreenSnapshot, type ScreenZoom } from './ScreenSession'
 
 // ────────────────────────────────────────────────────────
 // Transmissão de tela no nível do layout: a conexão vive enquanto a pessoa
@@ -28,6 +28,8 @@ interface ScreenShareValue extends ScreenSnapshot {
   setPaused:    (paused: boolean) => void
   /** Ponteiro: x/y de 0 a 1 dentro da imagem. */
   ping:         (x: number, y: number) => void
+  /** Zoom cinematográfico pra todos: leva a câmera a um ponto da imagem (null = imagem inteira). */
+  setZoom:      (zoom: ScreenZoom | null) => void
   /** Põe uma arte das "Artes recentes" na mesa (todos veem na hora). Erros sobem pra quem chamou. */
   showArt:      (art: { id: string; path: string; name: string }) => Promise<void>
   hideArt:      () => void
@@ -125,6 +127,7 @@ export function ScreenShareProvider({ children }: { children: ReactNode }) {
   const stopShare = useCallback(() => sessionRef.current?.stopShare(), [])
   const setPaused = useCallback((paused: boolean) => { void sessionRef.current?.setPaused(paused) }, [])
   const ping      = useCallback((x: number, y: number) => sessionRef.current?.ping(x, y), [])
+  const setZoom   = useCallback((zoom: ScreenZoom | null) => sessionRef.current?.setZoom(zoom), [])
   const retry     = useCallback(() => sessionRef.current?.retry(), [])
   const hideArt   = useCallback(() => sessionRef.current?.hideArt(), [])
 
@@ -182,6 +185,7 @@ export function ScreenShareProvider({ children }: { children: ReactNode }) {
     stopShare,
     setPaused,
     ping,
+    setZoom,
     showArt,
     hideArt,
     volume,

@@ -33,6 +33,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'As abas da ficha agora ocupam a largura toda e, se a tela for estreita, quebram em duas linhas em vez de ficar cortadas. As janelas ficaram um pouco mais largas para caber sem rolar.',
       'O painel de rolagem de dados do canto, nas campanhas de Altherium, ganhou a aba “Meus dados”, igual à do D&D: mostra todos os conjuntos de dados que a sua conta tem, com o dado girando, e vale para todas as suas rolagens.',
       'Para os pedidos funcionarem, rode a migration 20240219.',
+      'Mesa: zoom cinematográfico do mestre. Na transmissão (ou numa arte na mesa) há uma barra nova com o botão Zoom: ligado, é só clicar em qualquer ponto da imagem e a câmera desliza devagar até lá, ao mesmo tempo para todos que estão vendo, com cantos levemente escurecidos. Leve, Médio e Forte escolhem o quanto chega perto (Leve é o padrão). Clicar em outro ponto move a câmera sem cortar, e Tirar zoom volta à imagem inteira. Quem entra depois já vê o zoom no lugar.',
     ],
   },
   {

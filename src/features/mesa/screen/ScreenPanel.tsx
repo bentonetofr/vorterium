@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { useScreenShare } from './ScreenShareProvider'
 import { canShareScreen } from '../mesaRtc'
-import type { ScreenArt, ScreenDiag, ScreenPing, ScreenViewer, ViewerStatus } from './ScreenSession'
+import type { ScreenArt, ScreenDiag, ScreenPing, ScreenViewer, ScreenZoom, ViewerStatus } from './ScreenSession'
 import '../components/MesaPanel.css'
 
 // ────────────────────────────────────────────────────────
@@ -59,18 +59,40 @@ interface StageProps {
   /** Arte na mesa: aparece no lugar do vídeo (que continua tocando por baixo, escondido). */
   art?:      ScreenArt | null
   pings:     ScreenPing[]
+  /** Zoom que o mestre deu (a câmera desliza até lá, igual pra todos). */
+  zoom?:     ScreenZoom | null
   onPoint?:  (x: number, y: number) => void
   frameRef:  RefObject<HTMLDivElement | null>
   children?: ReactNode
 }
 
-function StageMedia({ stream, art, pings, onPoint, frameRef, children }: StageProps) {
+/**
+ * Deslocamento (em % do palco) que leva o ponto do zoom ao centro, sem deixar
+ * aparecer fora do palco. Sai da área da imagem (box), então vale igual pra
+ * qualquer tamanho de tela.
+ */
+function zoomShift(zoom: ScreenZoom | null | undefined, box: Box | null): { tx: number; ty: number; s: number } {
+  if (!zoom || !box) return { tx: 0, ty: 0, s: 1 }
+  const W = box.width + box.left * 2, H = box.height + box.top * 2
+  const s = zoom.level
+  const fx = (box.left + zoom.x * box.width) / W
+  const fy = (box.top + zoom.y * box.height) / H
+  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
+  return {
+    tx: clamp((0.5 - s * fx) * 100, (1 - s) * 100, 0),
+    ty: clamp((0.5 - s * fy) * 100, (1 - s) * 100, 0),
+    s,
+  }
+}
+
+function StageMedia({ stream, art, pings, zoom, onPoint, frameRef, children }: StageProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoSize, setSize] = useState<{ w: number; h: number } | null>(null)
   const [artSize, setArtSize] = useState<{ url: string; w: number; h: number } | null>(null)
   // o ponteiro mede pela arte quando ela está na mesa (todos apontam no mesmo lugar dela)
   const size = art ? (artSize?.url === art.url ? artSize : null) : videoSize
   const box = useContentBox(frameRef, size)
+  const { tx, ty, s } = zoomShift(zoom, box)
 
   useEffect(() => {
     const video = videoRef.current
@@ -90,29 +112,38 @@ function StageMedia({ stream, art, pings, onPoint, frameRef, children }: StagePr
   function handleClick(e: MouseEvent<HTMLDivElement>) {
     if (!onPoint || !box || !frameRef.current) return
     const rect = frameRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - box.left) / box.width
-    const y = (e.clientY - rect.top - box.top) / box.height
+    // o clique cai no palco já com zoom: desfaz o deslocamento e a escala pra achar o ponto da imagem
+    const px = (e.clientX - rect.left - (tx / 100) * rect.width) / s
+    const py = (e.clientY - rect.top - (ty / 100) * rect.height) / s
+    const x = (px - box.left) / box.width
+    const y = (py - box.top) / box.height
     if (x < 0 || x > 1 || y < 0 || y > 1) return
     onPoint(x, y)
   }
 
   return (
     <div className={`mesa-stage__media${onPoint ? ' mesa-stage__media--pointer' : ''}`} onClick={handleClick}>
-      {stream ? (
-        // Sempre mudo: o som vem do <audio> do provider (continua fora da aba).
-        <video ref={videoRef} className="mesa-stage__video" autoPlay playsInline muted style={art ? { display: 'none' } : undefined} />
-      ) : null}
-      {art && (
-        <img
-          key={art.showId}
-          className="mesa-stage__image"
-          src={art.url}
-          alt={art.name}
-          draggable={false}
-          onLoad={(e) => setArtSize({ url: art.url, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-        />
-      )}
-      <PingLayer pings={pings} box={box} />
+      <div
+        className="mesa-stage__zoom"
+        style={{ transform: s === 1 ? 'none' : `translate(${tx}%, ${ty}%) scale(${s})` }}
+      >
+        {stream ? (
+          // Sempre mudo: o som vem do <audio> do provider (continua fora da aba).
+          <video ref={videoRef} className="mesa-stage__video" autoPlay playsInline muted style={art ? { display: 'none' } : undefined} />
+        ) : null}
+        {art && (
+          <img
+            key={art.showId}
+            className="mesa-stage__image"
+            src={art.url}
+            alt={art.name}
+            draggable={false}
+            onLoad={(e) => setArtSize({ url: art.url, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+          />
+        )}
+        <PingLayer pings={pings} box={box} />
+      </div>
+      <div className={`mesa-stage__vignette${zoom ? ' mesa-stage__vignette--on' : ''}`} aria-hidden="true" />
       {children}
     </div>
   )
@@ -198,7 +229,14 @@ const SCENE_BY_STATUS: Record<ViewerStatus, { title: string; text?: string; busy
 
 // ── Mestre ───────────────────────────────────────────────
 
-const QUALITY_LABEL = { good: 'boa', fair: 'instável', poor: 'ruim' } as const
+/** Intensidades do zoom: o "leve" é o padrão — a câmera só se aproxima. */
+const ZOOM_PRESETS = [
+  { label: 'Leve',  level: 1.5 },
+  { label: 'Médio', level: 2.2 },
+  { label: 'Forte', level: 3.2 },
+] as const
+
+const QUALITY_LABEL ={ good: 'boa', fair: 'instável', poor: 'ruim' } as const
 
 function ViewerChip({ viewer }: { viewer: ScreenViewer }) {
   const connecting = viewer.state === 'new' || viewer.state === 'connecting'
@@ -235,6 +273,17 @@ function MasterView() {
   const canShare = canShareScreen()
   const watching = new Set(mesa.viewers.filter((v) => v.state === 'connected').map((v) => v.id.split(':')[0])).size
 
+  // Zoom cinematográfico: com o modo ligado, o clique leva a câmera ao ponto (em vez de apontar).
+  const [zoomMode, setZoomMode] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState<number>(ZOOM_PRESETS[0].level)
+  const zoom = stage.zoom
+  const level = zoom?.level ?? zoomLevel
+  const onPoint = zoomMode ? (x: number, y: number) => mesa.setZoom({ x, y, level }) : mesa.ping
+  function pickLevel(next: number) {
+    setZoomLevel(next)
+    if (zoom) mesa.setZoom({ x: zoom.x, y: zoom.y, level: next })
+  }
+
   const shareButton = canShare ? (
     <button type="button" className="btn btn-primary mesa-scene__cta" onClick={() => void mesa.startShare()} disabled={mesa.starting}>
       {mesa.starting ? 'Escolhendo a tela…' : 'Transmitir tela'}
@@ -245,7 +294,7 @@ function MasterView() {
     <>
       <div ref={frameRef} className={`mesa-stage${showing ? ' mesa-stage--live' : ''}`}>
         {showing ? (
-          <StageMedia stream={stream} art={art} pings={mesa.pings} onPoint={mesa.ping} frameRef={frameRef}>
+          <StageMedia stream={stream} art={art} pings={mesa.pings} zoom={zoom} onPoint={onPoint} frameRef={frameRef}>
             <span className="mesa-live-badge">{art ? 'Na mesa' : 'Ao vivo'}</span>
             {stage.paused && !art && <span className="mesa-paused-badge">Pausada para os jogadores</span>}
             {fullscreen.supported && (
@@ -267,7 +316,45 @@ function MasterView() {
         )}
       </div>
 
-      {showing && <p className="mesa-hint mesa-hint--center">Clique na imagem para apontar um lugar para todos.</p>}
+      {showing && (
+        <p className="mesa-hint mesa-hint--center">
+          {zoomMode
+            ? 'Clique no ponto para onde a câmera deve ir: o zoom desliza para todos ao mesmo tempo.'
+            : 'Clique na imagem para apontar um lugar para todos.'}
+        </p>
+      )}
+
+      {showing && (
+        <div className="mesa-bar mesa-zoombar">
+          <div className="mesa-bar__info">
+            <button
+              type="button"
+              className={`btn btn-ghost${zoomMode ? ' mesa-btn--resume' : ''}`}
+              onClick={() => setZoomMode((on) => !on)}
+              aria-pressed={zoomMode}
+            >
+              Zoom
+            </button>
+            <div className="mesa-zoombar__levels" role="group" aria-label="Intensidade do zoom">
+              {ZOOM_PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  className={`mesa-zoombar__level${Math.abs(level - p.level) < 0.01 ? ' mesa-zoombar__level--on' : ''}`}
+                  onClick={() => pickLevel(p.level)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mesa-bar__actions">
+            <button type="button" className="btn btn-ghost" onClick={() => mesa.setZoom(null)} disabled={!zoom}>
+              Tirar zoom
+            </button>
+          </div>
+        </div>
+      )}
 
       {art && (
         <div className="mesa-bar">
@@ -348,7 +435,7 @@ function PlayerView() {
     <>
       <div ref={frameRef} className={`mesa-stage${showing ? ' mesa-stage--live' : ''}`}>
         {showing ? (
-          <StageMedia stream={showVideo ? stream : null} art={art} pings={mesa.pings} frameRef={frameRef}>
+          <StageMedia stream={showVideo ? stream : null} art={art} pings={mesa.pings} zoom={stage.zoom} frameRef={frameRef}>
             {art && <span className="mesa-live-badge">Na mesa</span>}
             {!art && showVideo && mesa.status === 'live' && !stage.paused && <span className="mesa-live-badge">Ao vivo</span>}
 

@@ -26,6 +26,44 @@
 
 .mesa-stage__media { position: absolute; inset: 0; }
 .mesa-stage__media--pointer { cursor: crosshair; }
+
+/* Zoom cinematográfico: a câmera desliza devagar até o ponto que o mestre escolheu, igual pra todos. */
+.mesa-stage__zoom {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 1900ms cubic-bezier(0.45, 0.05, 0.18, 1);
+  will-change: transform;
+}
+/* Cantos escurecidos que aparecem junto com o zoom (clima de cena) */
+.mesa-stage__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(10, 4, 6, 0.55) 100%);
+  transition: opacity 1900ms ease-in-out;
+}
+.mesa-stage__vignette--on { opacity: 1; }
+
+.mesa-zoombar__levels {
+  display: inline-flex;
+  border: 1px solid var(--border-dim);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mesa-zoombar__level {
+  padding: 5px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.mesa-zoombar__level + .mesa-zoombar__level { border-left: 1px solid var(--border-dim); }
+.mesa-zoombar__level:hover { color: var(--text-primary); }
+.mesa-zoombar__level--on { background: rgba(212, 175, 55, 0.14); color: var(--accent-bright); }
 .mesa-stage__video,
 .mesa-stage__image {
   display: block;
@@ -496,6 +534,8 @@
   .mesa-scene__knight,
   .mesa-scene__rune,
   .mesa-paused__sigil { animation: none; }
+  .mesa-stage__zoom { transition-duration: 400ms; }
+  .mesa-stage__vignette { transition-duration: 400ms; }
 }
 
 /* Selo "ao vivo" na aba Mesa */

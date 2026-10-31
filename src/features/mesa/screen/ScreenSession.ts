@@ -57,6 +57,16 @@ export interface ScreenArt {
   url:    string
 }
 
+/** Zoom do mestre: pra onde a câmera foi (x/y de 0 a 1 na imagem) e o quanto chegou perto. */
+export interface ScreenZoom {
+  x:     number
+  y:     number
+  level: number
+}
+
+export const ZOOM_MIN = 1.2
+export const ZOOM_MAX = 4
+
 /** O que está na mesa agora — o mestre define e manda pra todos. */
 export interface ScreenStage {
   /** Id da "sessão ao vivo" (a transmissão); null = nada no ar. */
@@ -67,6 +77,8 @@ export interface ScreenStage {
   audio:    boolean
   /** Arte na mesa (null = nenhuma). */
   art:      ScreenArt | null
+  /** Zoom na imagem (null = imagem inteira). */
+  zoom:     ScreenZoom | null
 }
 
 export interface ScreenPing {
@@ -108,7 +120,7 @@ export interface ScreenSnapshot {
   diag:         ScreenDiag
 }
 
-export const EMPTY_STAGE: ScreenStage = { liveId: null, screenId: null, paused: false, audio: false, art: null }
+export const EMPTY_STAGE: ScreenStage = { liveId: null, screenId: null, paused: false, audio: false, art: null, zoom: null }
 
 const EMPTY_COUNTS: IceCounts = { host: 0, srflx: 0, relay: 0, prflx: 0 }
 
@@ -215,6 +227,19 @@ function parseArt(value: unknown): ScreenArt | null {
   if (typeof a.url !== 'string' || !/^https?:\/\//.test(a.url) || a.url.length > 4000) return null
   const text = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '')
   return { showId: text(a.showId, 40) || newId(), id: text(a.id, 80), name: text(a.name, 200) || 'Arte', url: a.url }
+}
+
+/** O zoom que veio do mestre, conferido (versão antiga sem zoom = null). */
+function parseZoom(value: unknown): ScreenZoom | null {
+  if (typeof value !== 'object' || value === null) return null
+  const z = value as Record<string, unknown>
+  const x = Number(z.x), y = Number(z.y), level = Number(z.level)
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(level)) return null
+  return {
+    x:     Math.min(1, Math.max(0, x)),
+    y:     Math.min(1, Math.max(0, y)),
+    level: Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, level)),
+  }
 }
 
 export class ScreenSession {
@@ -380,6 +405,7 @@ export class ScreenSession {
     const isLive  = Boolean(next.screenId)
     if (!wasLive && isLive) next.liveId = newId()
     if (!isLive) next.liveId = null
+    if (!isLive && !next.art) next.zoom = null
     this.update({ stage: next })
     this.sendState()
     if (!wasLive && isLive) this.sendAviso('live', { liveId: next.liveId, masterName: this.opts.name })
@@ -409,13 +435,21 @@ export class ScreenSession {
     void this.aviso.send({ type: 'broadcast', event, payload: { ...payload, campaignId: this.opts.campaignId } })
   }
 
+  // ── Mestre: zoom ───────────────────────────────────────
+
+  /** Leva a câmera até um ponto da imagem, em tempo real pra todos (null = volta à imagem inteira). */
+  setZoom(zoom: ScreenZoom | null): void {
+    if (!this.opts.isMaster || this.disposed || !this.snap.live) return
+    this.setStage({ zoom: zoom ? parseZoom(zoom) : null })
+  }
+
   // ── Mestre: arte na mesa ───────────────────────────────
 
   /** Põe uma arte na mesa: aparece na hora pra todos, por cima da tela (se houver). */
   showArt(art: { id: string; name: string; url: string }): void {
     if (!this.opts.isMaster || this.disposed) return
     const next: ScreenArt = { showId: newId(), id: art.id, name: art.name, url: art.url }
-    this.setStage({ art: next })
+    this.setStage({ art: next, zoom: null })
     this.sendAviso('live', { liveId: next.showId, masterName: this.opts.name, art: true })
   }
 
@@ -423,7 +457,7 @@ export class ScreenSession {
   hideArt(): void {
     const art = this.snap.stage.art
     if (!this.opts.isMaster || !art) return
-    this.setStage({ art: null })
+    this.setStage({ art: null, zoom: null })
     if (!this.snap.stage.screenId) this.sendAviso('ended', { liveId: art.showId })
   }
 
@@ -714,7 +748,7 @@ export class ScreenSession {
   }
 
   private handleState(incoming: ScreenStage) {
-    const stage: ScreenStage = { ...incoming, art: parseArt(incoming.art) }
+    const stage: ScreenStage = { ...incoming, art: parseArt(incoming.art), zoom: parseZoom(incoming.zoom) }
     const prev = this.snap.stage
     this.update({ stage })
     if (stage.screenId && stage.screenId !== prev.screenId) {
