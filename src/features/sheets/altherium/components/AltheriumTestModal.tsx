@@ -210,7 +210,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
 
   return (
     <ModalOverlay onClose={onClose} closeDisabled={rolling}>
-      <div className="alth-modal__window alth-test" role="dialog" aria-modal="true" aria-labelledby="alth-test-title">
+      <div className={`alth-modal__window alth-test${showResult ? ' alth-test--shown' : ''}`} role="dialog" aria-modal="true" aria-labelledby="alth-test-title">
         <header className="alth-modal__header">
           <h4 id="alth-test-title" className="alth-modal__title">{title}</h4>
           <button type="button" className="modal-close" onClick={onClose} disabled={rolling} aria-label="Fechar">×</button>
@@ -348,5 +348,5 @@ function testMessage(
   const dice = `[${r.results.join(', ')}] → ${r.kept}`
   const bonus = r.modifier + r.extra
   const vs = target != null && o ? ` contra ${targetLabel} ${target}: ${o.success ? words[0] : words[1]}` : ''
-  return `🎲 ${character} — ${title} (${spec.domainLabel}): ${dice} ${plusMinus(bonus)} ${Math.abs(bonus)} = ${r.total}${vs}${r.crit ? ' · crítico!' : ''}`
+  return `${character} — ${title} (${spec.domainLabel}): ${dice} ${plusMinus(bonus)} ${Math.abs(bonus)} = ${r.total}${vs}${r.crit ? ' · crítico!' : ''}`
 }

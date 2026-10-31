@@ -64,6 +64,7 @@ import { AltheriumCombatActions, type CombatAction, type DomainCheck } from './A
 import { AltheriumCraftPanel } from './AltheriumCraftPanel'
 import { AltheriumActionBar, type ActionDef, type PlayAction } from './AltheriumActionBar'
 import { AltheriumStatusStrip } from './AltheriumStatusStrip'
+import { AltheriumTurnPanel } from './AltheriumTurnPanel'
 import { AltheriumRequestCard } from './AltheriumRequestCard'
 import { AltheriumExploreWindow } from './AltheriumExploreWindow'
 import { AltheriumRestWindow } from './AltheriumRestWindow'
@@ -686,7 +687,7 @@ export function AltheriumSheetForm({
       resources: removeResource(prev.resources, 'racao', 'comum', 100),
       survival: { ...prev.survival, hunger: Math.max(0, prev.survival.hunger - 1) },
     }))
-    announce(`🍖 ${who} comeu uma Ração e se sente menos faminto.`)
+    announce(`${who} comeu uma Ração e se sente menos faminto.`)
   }
 
   /** Guarda o resultado de um Descanso (feito em altheriumRest.ts) na ficha. */
@@ -1009,13 +1010,7 @@ export function AltheriumSheetForm({
 
       {/* ── Ações do jogo e faixa de estado ── */}
       {canRollTests && <AltheriumActionBar actions={heroActions} onAction={setPlay} />}
-      <AltheriumStatusStrip
-        survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival}
-        rationPct={rationPct} onEat={eat}
-        combat={form.combat_state} combatKnown={form.combat_known} onCombat={(next) => set('combat_state', next)}
-        onNewTurn={newTurn} onEndScene={finishScene} onCondition={putCondition} onOpenDying={() => setPlay('dying')}
-        scene={scene} readOnly={!canRollTests} turnNote={turnNote}
-      />
+      <AltheriumStatusStrip survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival} readOnly={!canRollTests} />
       {canRollTests && (
         <AltheriumRequestCard
           campaignId={sheet.campaign_id} sheetId={sheet.id} character={who}
@@ -1105,7 +1100,11 @@ export function AltheriumSheetForm({
         {activeTab === 'luta' && (
           <div className="alth-tab-panel anim-tab-panel">
             {canRollTests ? <AltheriumActionBar actions={combatActions} onAction={setPlay} /> : <p className="alth-hint">Só leitura.</p>}
-            <p className="alth-hint">A Reação, o Novo turno e as condições ficam na faixa de estado, logo abaixo do cabeçalho.</p>
+            <AltheriumTurnPanel
+              combat={form.combat_state} combatKnown={form.combat_known} onCombat={(next) => set('combat_state', next)}
+              onNewTurn={newTurn} onEndScene={finishScene} onCondition={putCondition} onOpenDying={() => setPlay('dying')}
+              readOnly={!canRollTests} turnNote={turnNote}
+            />
           </div>
         )}
       </div>
@@ -1121,6 +1120,7 @@ export function AltheriumSheetForm({
               onStock={(next) => set('resources', next)}
               known={form.resources_known}
               onPatch={onInventoryPatch}
+              hunger={survival.hunger} rationPct={rationPct} onEat={eat}
               onCraft={onInventoryCraft}
               onAddCatalog={onInventoryAdd}
               onUpdateQuantity={onInventoryUpdateQuantity}
@@ -1272,7 +1272,7 @@ export function AltheriumSheetForm({
             const next = [...new Set([...sagas, id])]
             setSagas(next)
             void setAltheriumCampaignSagas(sheet.campaign_id, next).catch(() => {})
-            announce(`📜 ${who} encontrou uma Saga de Ofício: as receitas estão destravadas para o grupo.`)
+            announce(`${who} encontrou uma Saga de Ofício: as receitas estão destravadas para o grupo.`)
           }}
           fv={form.fv_current}
           onSpendFv={(cost, what) => { setForm((prev) => ({ ...prev, fv_current: Math.max(0, prev.fv_current - cost) })); announce(`${who} usou ${what} (−${cost} FV).`) }}

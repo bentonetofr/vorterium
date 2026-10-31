@@ -72,7 +72,7 @@ supabase.auth.getSession = (async () => ({ data: { session: { user: fakeUser, ac
 supabase.auth.onAuthStateChange = (() => ({ data: { subscription: { unsubscribe() {} } } })) as unknown as typeof supabase.auth.onAuthStateChange
 
 function Preview() {
-  if (params.get('painel') === '1') return <div style={{ maxWidth: 560, border: '1px solid #534434', padding: 16, borderRadius: 10, background: '#131b2e' }}><AltheriumMasterPanel campaignId="camp-1" /></div>
+  if (params.get('painel') === '1') return <div style={{ maxWidth: 900, border: '1px solid #534434', padding: 16, borderRadius: 10, background: '#131b2e' }}><AltheriumMasterPanel campaignId="camp-1" /></div>
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [s, setS] = useState<AltheriumSheet>(sheet)
   return (

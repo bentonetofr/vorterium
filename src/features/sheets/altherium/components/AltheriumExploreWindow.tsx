@@ -28,7 +28,7 @@ import { TOKENS_MAX, type Survival } from '../utils/altheriumSurvival'
 import type { AltheriumScene } from '../services/altheriumSceneService'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
-import { Chips, Field, Formula, Icon, Pips, Toggle, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, Formula, Icon, Pips, Toggle, Win } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
 // Janela de Explorar (livro 2.0, "Exploração"). Passo 1: Local, Escassez e
@@ -131,7 +131,9 @@ export function AltheriumExploreWindow(props: Props) {
   }
 
   return (
-    <Win title="Explorar" nav={props.nav} subtitle={<>Fichas <Pips value={survival.tokens} max={TOKENS_MAX} label="Fichas de Exploração" /></>} onClose={props.onClose}>
+    <Win title="Explorar" wide nav={props.nav} subtitle={<>Fichas <Pips value={survival.tokens} max={TOKENS_MAX} label="Fichas de Exploração" /></>} onClose={props.onClose}>
+      <Cols>
+      <Col>
       <Field label="Onde está?" hint={loc.hint}>
         <Chips
           label="Local" value={location}
@@ -159,7 +161,9 @@ export function AltheriumExploreWindow(props: Props) {
         </Field>
       )}
 
-      <Field label="Condições" hint="Somando tudo, no máximo 2 dados a mais ou a menos. A Fome entra como −1 por nível no total.">
+      </Col>
+      <Col>
+      <Field label="Condições" hint="No máximo 2 dados a mais ou a menos no total. A Fome entra como −1 por nível.">
         <div className="alth-toggles">
           {EXPLORE_CONDITIONS.map((c) => (
             <Toggle
@@ -185,6 +189,9 @@ export function AltheriumExploreWindow(props: Props) {
           <Toggle on={cofre} onChange={setCofre} label="Cofre Cheio: todo Hacksilver encontrado vem dobrado" />
         </Field>
       )}
+
+      </Col>
+      </Cols>
 
       <Formula
         dice={Math.max(1, base.baseDice + dice)} keep={base.disadvantage ? 'lowest' : 'highest'}
@@ -236,7 +243,7 @@ function Finds({ ctx, props, location, fenda, faro, cofre, scarcityLabel, dt, on
     if (!announced.current) {
       announced.current = true
       const names = list.map((f) => findLabel(f).toLowerCase())
-      props.announce(`🧭 ${props.character} explorou ${locationDef(location).label.toLowerCase()} (${scarcityLabel}, DT ${dt}) e ${names.length ? `achou: ${names.join('; ')}` : 'não achou nada'}.`)
+      props.announce(`${props.character} explorou ${locationDef(location).label.toLowerCase()} (${scarcityLabel}, DT ${dt}) e ${names.length ? `achou: ${names.join('; ')}` : 'não achou nada'}.`)
     }
   }
 
@@ -252,7 +259,7 @@ function Finds({ ctx, props, location, fenda, faro, cofre, scarcityLabel, dt, on
     props.onLoot(res.bag)
     if (row.find.kind === 'raro') {
       if (row.find.rare === 'saga' && row.find.saga) { sagas.current = [...sagas.current, row.find.saga]; props.onSaga(row.find.saga) }
-      else if (row.find.rare !== 'lendario') props.announce(`✦ ${props.character} encontrou ${findLabel(row.find)}.`)
+      else if (row.find.rare !== 'lendario') props.announce(`${props.character} encontrou ${findLabel(row.find)}.`)
     }
     setRows(rows.map((r, idx) => (idx === i ? { ...r, state: 'guardado', note: res.text } : r)))
   }
@@ -267,7 +274,7 @@ function Finds({ ctx, props, location, fenda, faro, cofre, scarcityLabel, dt, on
       bag.current = res.bag
       if (row.find.kind === 'raro') {
         if (row.find.rare === 'saga' && row.find.saga) { sagas.current = [...sagas.current, row.find.saga]; props.onSaga(row.find.saga) }
-        else if (row.find.rare !== 'lendario') props.announce(`✦ ${props.character} encontrou ${findLabel(row.find)}.`)
+        else if (row.find.rare !== 'lendario') props.announce(`${props.character} encontrou ${findLabel(row.find)}.`)
       }
       next = next.map((r, idx) => (idx === i ? { ...r, state: 'guardado', note: res.text } : r))
     })

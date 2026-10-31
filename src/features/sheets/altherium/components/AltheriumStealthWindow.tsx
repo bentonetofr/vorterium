@@ -13,7 +13,7 @@ import {
 } from '../utils/altheriumStealth'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
-import { Chips, Field, Formula, Icon, Toggle, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, Formula, Icon, Toggle, Win } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
 // Janela de Furtividade (livro 2.0, "Furtividade"): o estado dos inimigos
@@ -78,7 +78,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
     await onScene({ enemy: next })
     setState(next)
     setNote(`Esfriou: os inimigos agora estão ${enemyStateDef(next).label}.`)
-    announce(`🌑 ${character} e o grupo passaram cerca de 3 turnos sem ser notados: os inimigos esfriaram para ${enemyStateDef(next).label}.`)
+    announce(`${character} e o grupo passaram cerca de 3 turnos sem ser notados: os inimigos esfriaram para ${enemyStateDef(next).label}.`)
   }
 
   if (spec) {
@@ -91,7 +91,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
   }
 
   return (
-    <Win title="Furtividade" nav={nav} subtitle={<>Inimigos: <strong>{enemyStateDef(scene.enemy).label}</strong></>} onClose={onClose}>
+    <Win title="Furtividade" wide nav={nav} subtitle={<>Inimigos: <strong>{enemyStateDef(scene.enemy).label}</strong></>} onClose={onClose}>
       <Chips<'teste' | 'distrair'>
         label="O que vai fazer" value={mode} onChange={setMode}
         options={[{ id: 'teste', label: 'Mover-se sem ser visto' }, { id: 'distrair', label: 'Distração' }]}
@@ -102,7 +102,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
           <p className="alth-test__note">{DISTRACTION_TEXT}</p>
           <p className="alth-hint">Alcance do arremesso: Fúria × 2 metros.</p>
           <div className="alth-test__actions">
-            <button type="button" className="btn btn-primary" onClick={() => { announce(`🪨 ${character} arremessou um objeto para fazer barulho: o próximo teste de Furtividade de quem está longe do barulho recebe +1 dado.`); setNote('Distração anunciada no chat.') }}>
+            <button type="button" className="btn btn-primary" onClick={() => { announce(`${character} arremessou um objeto para fazer barulho: o próximo teste de Furtividade de quem está longe do barulho recebe +1 dado.`); setNote('Distração anunciada no chat.') }}>
               Anunciar a Distração
             </button>
           </div>
@@ -110,6 +110,8 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
         </>
       ) : (
         <>
+          <Cols>
+          <Col>
           <Field label="Estado dos inimigos" hint={`${enemyStateDef(state).meaning} O mestre sempre anuncia o estado.`}>
             <Chips<EnemyState>
               label="Estado" value={state} onChange={setState}
@@ -117,7 +119,16 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
             />
           </Field>
 
-          <Field label="Situação" hint="Somando tudo, no máximo 2 dados a mais ou a menos.">
+          <details className="alth-win__details">
+            <summary>Ataque Surpresa e Esfriar</summary>
+            <p className="alth-hint">{SURPRISE_TEXT}</p>
+            <p className="alth-hint">Esfriar: se o grupo passar cerca de 3 turnos sem ser notado, o inimigo desce um estado. Um Alerta volta a Atento, mas nunca a Desatento na mesma cena.</p>
+            <button type="button" className="btn btn-ghost" onClick={() => void cool()}>Esfriar a cena</button>
+            {note && <p className="alth-hint">{note}</p>}
+          </details>
+          </Col>
+          <Col>
+          <Field label="Situação" hint="No máximo 2 dados a mais ou a menos no total.">
             <div className="alth-toggles">
               {STEALTH_MODS.map((m) => (
                 <Toggle
@@ -128,19 +139,15 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
             </div>
           </Field>
 
+          </Col>
+          </Cols>
+
           <Formula
             dice={Math.max(1, base.baseDice + dice)} keep={base.disadvantage ? 'lowest' : 'highest'}
             bonus={base.attribute + base.flat.reduce((s, m) => s + m.value, 0)}
             note={`${base.domainLabel} + ${base.attributeLabel} · contra DT ${dt} (${enemyStateDef(state).label})`}
           />
 
-          <details className="alth-win__details">
-            <summary>Ataque Surpresa e Esfriar</summary>
-            <p className="alth-hint">{SURPRISE_TEXT}</p>
-            <p className="alth-hint">Esfriar: se o grupo passar cerca de 3 turnos sem ser notado, o inimigo desce um estado. Um Alerta volta a Atento, mas nunca a Desatento na mesma cena.</p>
-            <button type="button" className="btn btn-ghost" onClick={() => void cool()}>Esfriar a cena</button>
-            {note && <p className="alth-hint">{note}</p>}
-          </details>
 
           <div className="alth-test__actions">
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
@@ -165,7 +172,7 @@ export function StealthResult({ ctx, state, scene, onScene, announce, character 
   async function apply() {
     await onScene({ enemy: out.next, wasAlert: scene.wasAlert || out.next === 'alerta' })
     setApplied(`A cena agora está em ${enemyStateDef(out.next).label}.`)
-    announce(`👁️ ${character}: ${out.label}. Os inimigos agora estão ${enemyStateDef(out.next).label}.`)
+    announce(`${character}: ${out.label}. Os inimigos agora estão ${enemyStateDef(out.next).label}.`)
   }
 
   return (

@@ -4,7 +4,7 @@ import { cryptoRng } from '../utils/altheriumExplore'
 import type { Survival } from '../utils/altheriumSurvival'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
-import { Chips, Field, Icon, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, Icon, Win } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
 // Janela do Equilíbrio (livro 2.0, "Equilíbrio"): a perda diante de algo
@@ -54,7 +54,7 @@ export function AltheriumMindWindow(props: Props) {
     const next = clamp(equilibrio.current - n)
     props.onEquilibrio({ current: next })
     say(`${why}: −${n} de Equilíbrio (${equilibrio.current} → ${next}).`)
-    props.announce(`🧠 ${props.character} perdeu ${n} de Equilíbrio (${next}/${equilibrio.max}).`)
+    props.announce(`${props.character} perdeu ${n} de Equilíbrio (${next}/${equilibrio.max}).`)
     if (next === 0) { say('O Equilíbrio zerou: role a tabela.'); setTab('zerado') }
   }
 
@@ -102,7 +102,7 @@ export function AltheriumMindWindow(props: Props) {
     if (id === 'banquete') props.onSpendCoins(100)
     if (def.counts) props.onSurvival({ rite_used: true })
     gain(n, `${def.label} (${id === 'juramento' ? '1d8' : '1d6'} = ${n})`)
-    props.announce(`🍻 ${props.character} participou de um rito: ${def.label}.`)
+    props.announce(`${props.character} participou de um rito: ${def.label}.`)
     if (id === 'confissao') say(`O aliado faz Vontade + Espírito (DT ${CONFESSION_DT}): se falhar, perde 1 ponto de Equilíbrio.`)
   }
 
@@ -113,7 +113,7 @@ export function AltheriumMindWindow(props: Props) {
     setBreakdown(b)
     props.onEquilibrio({ current: 0, max: scarredMax(equilibrio.max) })
     say(`Cicatriz do Crepúsculo: o Equilíbrio máximo caiu de ${equilibrio.max} para ${scarredMax(equilibrio.max)}.`)
-    props.announce(`💀 O Equilíbrio de ${props.character} zerou: ${b.roll}. ${b.name}.`)
+    props.announce(`O Equilíbrio de ${props.character} zerou: ${b.roll}. ${b.name}.`)
     if (b.permanent) props.onSurvival({ traumas: [...survival.traumas, 'Marca da Ruptura'].slice(0, 6) })
   }
 
@@ -127,7 +127,7 @@ export function AltheriumMindWindow(props: Props) {
   }
 
   return (
-    <Win title="Equilíbrio" nav={props.nav} subtitle={`${equilibrio.current} de ${equilibrio.max}`} onClose={props.onClose}>
+    <Win title="Equilíbrio" wide nav={props.nav} subtitle={`${equilibrio.current} de ${equilibrio.max}`} onClose={props.onClose}>
       <Chips<Tab>
         label="O que fazer" value={tab} onChange={setTab}
         options={[
@@ -161,7 +161,9 @@ export function AltheriumMindWindow(props: Props) {
 
       {tab === 'recuperar' && (
         <>
-          <p className="alth-hint">O Descanso Curto não recupera Equilíbrio. O Longo recupera 1d4 + Destino.</p>
+          <p className="alth-hint">O Descanso Curto não recupera Equilíbrio. O Longo recupera 1d4 + Destino. O Soro de Idunn recupera 1d8 como Ação Bônus (item do inventário).</p>
+          <Cols>
+          <Col>
           <Field label="Acalmar (um aliado em Toque, Ação Padrão)" hint="O aliado faz Persuasão + Destino em você: 1 ponto a cada 5 no resultado; no Crítico, o dobro. Uma vez por cena.">
             <div className="alth-win__pair">
               <input type="number" className="input" min={0} max={99} inputMode="numeric" value={calm} onChange={(e) => setCalm(e.target.value)} placeholder="Resultado do aliado" />
@@ -172,6 +174,8 @@ export function AltheriumMindWindow(props: Props) {
             </div>
           </Field>
 
+          </Col>
+          <Col>
           <Field label="Ritos de Altherium" hint={survival.rite_used ? 'O Rito deste descanso já foi usado (o Juramento Cumprido não conta no limite).' : 'Um por Descanso Longo. O mestre decide se o rito está disponível no local.'}>
             <ul className="alth-rites">
               {RITES.map((r) => (
@@ -185,7 +189,8 @@ export function AltheriumMindWindow(props: Props) {
               ))}
             </ul>
           </Field>
-          <p className="alth-hint">O Soro de Idunn recupera 1d8 de Equilíbrio como Ação Bônus (item do inventário).</p>
+          </Col>
+          </Cols>
         </>
       )}
 

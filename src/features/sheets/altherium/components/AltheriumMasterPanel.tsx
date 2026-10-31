@@ -133,7 +133,7 @@ export function AltheriumMasterPanel({ campaignId }: { campaignId: string }) {
                     <span title="Equilíbrio">PE {s.equilibrio_current}/{s.equilibrio_max}</span>
                     <span title="Fichas de Exploração"><Pips value={surv.tokens} max={TOKENS_MAX} label="Fichas" /></span>
                     {surv.hunger > 0 && <span className="alth-master__bad" title="Nível de Fome">Fome {Math.min(surv.hunger, HUNGER_MAX)}</span>}
-                    <span title="Rações">🍖 {rations ? formatAmount(rations) : '0'}</span>
+                    <span title="Rações">Ração {rations ? formatAmount(rations) : '0'}</span>
                     {s.vitality_current === 0 && <span className="alth-master__bad">Caído</span>}
                   </span>
                 </button>
@@ -143,6 +143,7 @@ export function AltheriumMasterPanel({ campaignId }: { campaignId: string }) {
         </ul>
       </section>
 
+      <div className="alth-master__main">
       <Chips<Tab>
         label="O que o mestre faz" value={tab} onChange={(t) => { setTab(t); setLog([]) }}
         options={[
@@ -165,6 +166,7 @@ export function AltheriumMasterPanel({ campaignId }: { campaignId: string }) {
           {log.map((l, i) => <li key={i}>{l}</li>)}
         </ul>
       )}
+      </div>
     </div>
   )
 }
@@ -214,7 +216,7 @@ function RequestTab({ campaignId, sheets, targets, scene, say }: {
         campaignId, targets: targets.map((t) => t.user_id), kind, domain: kind === 'domain' ? domain : null,
         label: title, dt: dtValue, amount: kind === 'equilibrium' ? num(amount, 0, 99, 0) : null,
       })
-      say(`🎲 O mestre pediu: ${title}${dtValue ? ` (DT ${dtValue})` : ''} — ${targets.map(nameOf).join(', ')}. Abra a sua ficha e role.`)
+      say(`O mestre pediu: ${title}${dtValue ? ` (DT ${dtValue})` : ''} — ${targets.map(nameOf).join(', ')}. Abra a sua ficha e role.`)
       await refresh()
     } catch (err) { setError(err instanceof Error ? err.message : 'Não foi possível pedir o teste.') } finally { setSending(false) }
   }
@@ -266,7 +268,7 @@ function RequestTab({ campaignId, sheets, targets, scene, say }: {
                 return (
                   <li key={uid} className={roll ? (ctx?.outcome === 'success' ? 'alth-master__ok' : ctx?.outcome === 'failure' ? 'alth-master__fail' : '') : 'alth-master__wait'}>
                     <span>{byUser.get(uid) ?? 'Jogador'}</span>
-                    <b>{roll ? `${roll.total_result}${ctx?.crit ? ' ✦' : ''}${ctx?.outcome === 'success' ? ' · passou' : ctx?.outcome === 'failure' ? ' · falhou' : ''}` : 'esperando…'}</b>
+                    <b>{roll ? `${roll.total_result}${ctx?.crit ? ' · crítico' : ''}${ctx?.outcome === 'success' ? ' · passou' : ctx?.outcome === 'failure' ? ' · falhou' : ''}` : 'esperando…'}</b>
                   </li>
                 )
               })}
@@ -304,14 +306,14 @@ function LootTab({ campaignId, targets, sceneLocation, busy, applyEach, say }: {
       const r = addResource(stock, resId, q, pct)
       return { patch: { resources: r.stock }, line: `+${pct - r.overflow}% de ${resourceLabel(resId).toLowerCase()}${r.overflow ? ` (${r.overflow}% não coube)` : ''}` }
     })
-    if (sign > 0) say(`🎁 O mestre deu ${pct}% de ${resourceLabel(resId).toLowerCase()}${def.noQuality ? '' : ` (${quality})`}: ${targets.map(nameOf).join(', ')}.`)
+    if (sign > 0) say(`O mestre deu ${pct}% de ${resourceLabel(resId).toLowerCase()}${def.noQuality ? '' : ` (${quality})`}: ${targets.map(nameOf).join(', ')}.`)
   }
 
   function giveCoins() {
     const n = num(coins, -99999, 99999, 0)
     if (!n) return
     void applyEach((s) => ({ patch: { hacksilvers: Math.max(0, s.hacksilvers + n) }, line: `${n > 0 ? '+' : '−'}¤${Math.abs(n)} (agora ¤${Math.max(0, s.hacksilvers + n)})` }))
-    say(`🎁 O mestre ${n > 0 ? 'deu' : 'tirou'} ¤${Math.abs(n)}: ${targets.map(nameOf).join(', ')}.`)
+    say(`O mestre ${n > 0 ? 'deu' : 'tirou'} ¤${Math.abs(n)}: ${targets.map(nameOf).join(', ')}.`)
   }
 
   async function roll() {
@@ -332,7 +334,7 @@ function LootTab({ campaignId, targets, sceneLocation, busy, applyEach, say }: {
       return { patch: { resources: bag.stock, hacksilvers: bag.hacksilvers }, line: parts.join(' · ') || 'nada' }
     })
     void setAltheriumCampaignSagas(campaignId, sagas).catch(() => {})
-    say(`🧭 Achados em ${locationDef(location).label.toLowerCase()}: ${gains.join(' | ')}`.slice(0, 1900))
+    say(`Achados em ${locationDef(location).label.toLowerCase()}: ${gains.join(' | ')}`.slice(0, 1900))
   }
 
   return (
@@ -432,7 +434,7 @@ function RestTab({ targets, busy, applyEach, say }: { targets: AltheriumSheetWit
       ]
       return { patch, line: bits.join(' · ') }
     })
-    say(`🏕️ O grupo fez um Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}${interrupted ? ' (interrompido)' : ''}: ${targets.map(nameOf).join(', ')}.`)
+    say(`O grupo fez um Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}${interrupted ? ' (interrompido)' : ''}: ${targets.map(nameOf).join(', ')}.`)
   }
 
   return (

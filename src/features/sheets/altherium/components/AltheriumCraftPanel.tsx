@@ -93,6 +93,10 @@ interface Props {
   /** O banco já guarda recursos e Integridade (migration 20240217)? */
   known:          boolean
   onPatch:        (id: string, patch: { integrity?: number; reinforcements?: string[] }) => Promise<void>
+  /** Nível de Fome e o que fazer ao comer 1 Ração inteira (tira 1 nível). */
+  hunger:         number
+  rationPct:      number
+  onEat:          () => void
   onCraft:        (input: AltheriumCustomItemInput, materials: Record<string, number>) => Promise<void>
   onAddCatalog:   (itemType: AltheriumInventoryItem['item_type'], itemId: string) => Promise<void>
   onUpdateQuantity: (id: string, quantity: number) => Promise<void>
@@ -100,11 +104,18 @@ interface Props {
 }
 
 type Resource = (typeof RESOURCES)[number]
+type Sub = 'materiais' | 'reparo' | 'fabricar' | 'reforcos'
+const SUBS: { id: Sub; label: string }[] = [
+  { id: 'materiais', label: 'Materiais e Rações' },
+  { id: 'reparo',    label: 'Reparo e Desmontar' },
+  { id: 'fabricar',  label: 'Fabricar' },
+  { id: 'reforcos',  label: 'Reforços e Sagas' },
+]
 
 const RESOURCE_OPTIONS = RESOURCES.map((r) => ({ value: r.id, label: r.label }))
 
 export function AltheriumCraftPanel({
-  campaignId, inventory, stock, onStock, known, onPatch, onCraft, onAddCatalog, onUpdateQuantity, onRemove,
+  campaignId, inventory, stock, onStock, known, onPatch, hunger, rationPct, onEat, onCraft, onAddCatalog, onUpdateQuantity, onRemove,
 }: Props) {
   const gear = useMemo(() => inventory.map(gearInfo).filter((g): g is GearInfo => g !== null), [inventory])
   const [message, setMessage] = useState<string | null>(null)
@@ -131,6 +142,7 @@ export function AltheriumCraftPanel({
   }
 
   // ── Recursos ──
+  const [sub, setSub] = useState<Sub>('materiais')
   const [found, setFound] = useState<Quality>('comum')
 
   /** "Achei" soma na qualidade escolhida; o "−" tira uma fração dela. */
@@ -259,7 +271,7 @@ export function AltheriumCraftPanel({
     const total = resourceTotal(stock, r.id)
     const row = stock[r.id] ?? {}
     return (
-      <li key={r.id} className="alth-material">
+      <li key={r.id} className="alth-material" title={r.what}>
         <div className="alth-material__head">
           <span className="alth-supply__name">
             {r.label}
@@ -296,36 +308,52 @@ export function AltheriumCraftPanel({
   }
 
   return (
-    <div className="alth-supply">
-      {!known && <p className="alth-hint alth-supply__wide">O banco ainda não guarda Ofício (migration 20240217): recursos e Integridade não ficam salvos.</p>}
-      {message && <p className="alth-craft__message alth-supply__wide" role="status">{message}</p>}
+    <div className="alth-supply-wrap">
+      <div className="alth-segmented alth-supply__tabs" role="tablist" aria-label="Ofício">
+        {SUBS.map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={sub === t.id}
+            className={`alth-segmented__btn${sub === t.id ? ' alth-segmented__btn--on' : ''}`} onClick={() => setSub(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-      <div className="alth-stack">
+      {!known && <p className="alth-hint">O banco ainda não guarda Ofício (migration 20240217): recursos e Integridade não ficam salvos.</p>}
+      {message && <p className="alth-craft__message" role="status">{message}</p>}
+
+      {sub === 'materiais' && (
+        <div className="alth-supply alth-supply--stack">
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Materiais <span className="alth-card__subtitle">em frações</span></h4>
             <span className="alth-counter">até {RESOURCE_LIMIT_UNITS} de cada</span>
           </div>
-          <p className="alth-hint">
-            Os recursos se acham em frações de 10, 20, 25, 50 ou 100%. Só servem para fabricar e reparar quando somam
-            <strong> 100%</strong>, então as frações vão se juntando pelo caminho. Item feito com material raro ganha +1 no efeito; com lendário, +2 e dano Rúnico.
-          </p>
+          <p className="alth-hint">Frações de 10 a 100%. Só valem para fabricar e reparar quando somam <strong>100%</strong>. Raro dá +1 no efeito; lendário, +2 e dano Rúnico.</p>
           <div className="alth-field-block">
             <span className="alth-supply__label">O que achei é</span>
             {pick('Qualidade do que achou', found, QUALITIES, setFound)}
           </div>
-          <ul className="alth-list">{materials.map(material)}</ul>
+          <ul className="alth-list alth-list--cols">{materials.map(material)}</ul>
         </section>
-
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Rações <span className="alth-card__subtitle">1 por Descanso Longo</span></h4>
             <span className="alth-counter">até {RESOURCE_LIMIT_UNITS}</span>
           </div>
           <ul className="alth-list">{material(rations)}</ul>
-          <p className="alth-hint">Comer 1 Ração fora de combate tira 1 nível de Fome (botão na faixa de estado). Tavernas e salões vendem por cerca de ¤50.</p>
+          <div className="alth-recipe">
+            <div className="alth-recipe__info">
+              <strong>Comer 1 Ração</strong>
+              <span className="alth-hint">Fora de combate, tira 1 nível de Fome. Tavernas e salões vendem por cerca de ¤50.</span>
+            </div>
+            <button type="button" className="btn btn-ghost" disabled={hunger < 1 || rationPct < 100} onClick={onEat}>Comer</button>
+          </div>
         </section>
+        </div>
+      )}
 
+      {sub === 'reparo' && (
+        <div className="alth-supply">
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Integridade <span className="alth-card__subtitle">e reparo</span></h4>
@@ -358,105 +386,6 @@ export function AltheriumCraftPanel({
           </ul>
           <p className="alth-hint">O desgaste do combate entra sozinho. Campo serve num Descanso Curto; a Forja, num Longo.</p>
         </section>
-      </div>
-
-      <div className="alth-stack">
-        <section className="alth-card">
-          <div className="alth-card__header">
-            <h4 className="alth-card__title">Fabricar <span className="alth-card__subtitle">Base + Núcleo + Catalisador</span></h4>
-          </div>
-          <div className="alth-field-block">
-            <span className="alth-supply__label">Base</span>
-            {pick('Base', base, BASES.map((b) => ({ id: b.id, label: b.label })), setBase)}
-            <span className="alth-supply__label">Núcleo</span>
-            {pick('Núcleo', core, CORES.map((c) => ({ id: c.id, label: c.label })), setCore)}
-            <span className="alth-supply__label">Catalisador <small>(opcional)</small></span>
-            {pick<CatalystId | ''>('Catalisador', catalyst, [{ id: '', label: 'Nenhum' }, ...CATALYSTS.map((c) => ({ id: c.id, label: c.label }))], setCatalyst)}
-            <span className="alth-supply__label">Material do Núcleo</span>
-            {pick('Qualidade do material do Núcleo', quality, QUALITIES, setQuality)}
-          </div>
-          <div className="alth-recipe">
-            <div className="alth-recipe__info">
-              <strong>{recipe.name}</strong>
-              <span className="alth-recipe__cost">{costText(recipe.cost)}{quality !== 'comum' ? ` (${quality === 'raro' ? 'raro' : 'lendário'})` : ''}</span>
-              <span className="alth-hint">{recipe.effect}</span>
-              {recipe.error && <span className="alth-test__note alth-test__note--warn">{recipe.error}</span>}
-              {!recipe.error && recipeMissing.length > 0 && <span className="alth-hint">Falta: {recipeMissing.join(', ')}.</span>}
-            </div>
-            <button type="button" className="btn btn-primary" disabled={busy || !!recipe.error || recipeMissing.length > 0} onClick={() => void doCraft()}>Fabricar</button>
-          </div>
-          <span className="alth-supply__label">Armas Improvisadas <small>feitas em Campo</small></span>
-          <ul className="alth-list">
-            {improvised.map((w) => (
-              <li key={w.id} className="alth-recipe">
-                <div className="alth-recipe__info">
-                  <strong>{w.name}</strong>
-                  <span className="alth-recipe__cost">100% {resourceLabel(w.repair)}</span>
-                  <span className="alth-hint">{w.damageDice} · simples de fazer, em qualquer acampamento.</span>
-                </div>
-                <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void craftImprovised(w.id)}>Fabricar</button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="alth-card">
-          <div className="alth-card__header">
-            <h4 className="alth-card__title">Reforços <span className="alth-card__subtitle">melhorias permanentes</span></h4>
-            {reinfGear && <span className="alth-counter">{reinfGear.reinforcements.length}/{reinfGear.slots} espaços</span>}
-          </div>
-          {reinfGear ? (
-            <>
-              <Select value={reinfGear.inv.id} options={gear.map((g) => ({ value: g.inv.id, label: g.name }))} onChange={setReinfItem} aria-label="Item" />
-              {reinfGear.reinforcements.length > 0 && (
-                <div className="alth-combat__row">
-                  {reinfGear.reinforcements.map((id) => (
-                    <span key={id} className="alth-combat__cond alth-craft__reinf" title={reinforcementDef(id)?.effect}>
-                      {reinforcementDef(id)?.label}
-                      <button type="button" aria-label="Tirar reforço" disabled={busy}
-                        onClick={() => void run(() => onPatch(reinfGear.inv.id, { reinforcements: reinfGear.reinforcements.filter((x) => x !== id) }), 'Reforço tirado.')}>×</button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <ul className="alth-list">
-                {reinfOptions.map((r) => {
-                  const open = reinforcementUnlocked(r, sagas)
-                  return (
-                    <li key={r.id} className={`alth-recipe${open ? '' : ' alth-recipe--locked'}`}>
-                      <div className="alth-recipe__info">
-                        <strong>{r.label}</strong>
-                        <span className="alth-recipe__cost">{costText(r.cost)} · {r.place}</span>
-                        <span className="alth-hint">{r.effect}{open ? '' : ' · precisa de Saga'}</span>
-                      </div>
-                      <button type="button" className="btn btn-ghost" disabled={busy || !open || slotsLeft <= 0 || reinfGear.reinforcements.includes(r.id)} onClick={() => void doReinforce(r)}>Aplicar</button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </>
-          ) : <p className="alth-hint">Nenhuma arma, armadura ou escudo no inventário.</p>}
-        </section>
-
-        <section className="alth-card">
-          <div className="alth-card__header">
-            <h4 className="alth-card__title">Sagas de Ofício <span className="alth-card__subtitle">valem para o grupo</span></h4>
-          </div>
-          <ul className="alth-list">
-            {SAGAS.map((s) => (
-              <li key={s.id} className="alth-recipe">
-                <div className="alth-recipe__info">
-                  <strong>{s.label}</strong>
-                  <span className="alth-hint">{s.tier}: destrava {s.unlocks}</span>
-                </div>
-                <button type="button" className={`btn ${sagas.includes(s.id) ? 'btn-primary' : 'btn-ghost'}`} disabled={busy} aria-pressed={sagas.includes(s.id)} onClick={() => void toggleSaga(s.id)}>
-                  {sagas.includes(s.id) ? 'Encontrada' : 'Marcar'}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Desmontar <span className="alth-card__subtitle">devolve metade</span></h4>
@@ -483,7 +412,115 @@ export function AltheriumCraftPanel({
           ) : <p className="alth-hint">Nada para desmontar.</p>}
           <p className="alth-hint">Desmontar se faz durante um Descanso Curto.</p>
         </section>
-      </div>
+        </div>
+      )}
+
+      {sub === 'fabricar' && (
+        <div className="alth-supply">
+        <section className="alth-card">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Fabricar <span className="alth-card__subtitle">Base + Núcleo + Catalisador</span></h4>
+          </div>
+          <div className="alth-field-block">
+            <span className="alth-supply__label">Base</span>
+            {pick('Base', base, BASES.map((b) => ({ id: b.id, label: b.label })), setBase)}
+            <span className="alth-supply__label">Núcleo</span>
+            {pick('Núcleo', core, CORES.map((c) => ({ id: c.id, label: c.label })), setCore)}
+            <span className="alth-supply__label">Catalisador <small>(opcional)</small></span>
+            {pick<CatalystId | ''>('Catalisador', catalyst, [{ id: '', label: 'Nenhum' }, ...CATALYSTS.map((c) => ({ id: c.id, label: c.label }))], setCatalyst)}
+            <span className="alth-supply__label">Material do Núcleo</span>
+            {pick('Qualidade do material do Núcleo', quality, QUALITIES, setQuality)}
+          </div>
+          <div className="alth-recipe">
+            <div className="alth-recipe__info">
+              <strong>{recipe.name}</strong>
+              <span className="alth-recipe__cost">{costText(recipe.cost)}{quality !== 'comum' ? ` (${quality === 'raro' ? 'raro' : 'lendário'})` : ''}</span>
+              <span className="alth-hint">{recipe.effect}</span>
+              {recipe.error && <span className="alth-test__note alth-test__note--warn">{recipe.error}</span>}
+              {!recipe.error && recipeMissing.length > 0 && <span className="alth-hint">Falta: {recipeMissing.join(', ')}.</span>}
+            </div>
+            <button type="button" className="btn btn-primary" disabled={busy || !!recipe.error || recipeMissing.length > 0} onClick={() => void doCraft()}>Fabricar</button>
+          </div>
+        </section>
+        <section className="alth-card">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Armas Improvisadas <span className="alth-card__subtitle">feitas em Campo</span></h4>
+          </div>
+          <ul className="alth-list">
+            {improvised.map((w) => (
+              <li key={w.id} className="alth-recipe">
+                <div className="alth-recipe__info">
+                  <strong>{w.name}</strong>
+                  <span className="alth-recipe__cost">100% {resourceLabel(w.repair)}</span>
+                  <span className="alth-hint">{w.damageDice} · simples de fazer, em qualquer acampamento.</span>
+                </div>
+                <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void craftImprovised(w.id)}>Fabricar</button>
+              </li>
+            ))}
+          </ul>
+        </section>
+        </div>
+      )}
+
+      {sub === 'reforcos' && (
+        <div className="alth-supply alth-supply--one">
+        <section className="alth-card">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Sagas de Ofício <span className="alth-card__subtitle">valem para o grupo</span></h4>
+          </div>
+          <ul className="alth-list alth-list--cols3">
+            {SAGAS.map((s) => (
+              <li key={s.id} className="alth-recipe">
+                <div className="alth-recipe__info">
+                  <strong>{s.label}</strong>
+                  <span className="alth-hint">{s.tier}: destrava {s.unlocks}</span>
+                </div>
+                <button type="button" className={`btn ${sagas.includes(s.id) ? 'btn-primary' : 'btn-ghost'}`} disabled={busy} aria-pressed={sagas.includes(s.id)} onClick={() => void toggleSaga(s.id)}>
+                  {sagas.includes(s.id) ? 'Encontrada' : 'Marcar'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="alth-card">
+          <div className="alth-card__header">
+            <h4 className="alth-card__title">Reforços <span className="alth-card__subtitle">melhorias permanentes</span></h4>
+            {reinfGear && <span className="alth-counter">{reinfGear.reinforcements.length}/{reinfGear.slots} espaços</span>}
+          </div>
+          {reinfGear ? (
+            <>
+              <Select value={reinfGear.inv.id} options={gear.map((g) => ({ value: g.inv.id, label: g.name }))} onChange={setReinfItem} aria-label="Item" />
+              {reinfGear.reinforcements.length > 0 && (
+                <div className="alth-combat__row">
+                  {reinfGear.reinforcements.map((id) => (
+                    <span key={id} className="alth-combat__cond alth-craft__reinf" title={reinforcementDef(id)?.effect}>
+                      {reinforcementDef(id)?.label}
+                      <button type="button" aria-label="Tirar reforço" disabled={busy}
+                        onClick={() => void run(() => onPatch(reinfGear.inv.id, { reinforcements: reinfGear.reinforcements.filter((x) => x !== id) }), 'Reforço tirado.')}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <ul className="alth-list alth-list--cols3">
+                {reinfOptions.map((r) => {
+                  const open = reinforcementUnlocked(r, sagas)
+                  return (
+                    <li key={r.id} className={`alth-recipe${open ? '' : ' alth-recipe--locked'}`}>
+                      <div className="alth-recipe__info">
+                        <strong>{r.label}</strong>
+                        <span className="alth-recipe__cost">{costText(r.cost)} · {r.place}</span>
+                        <span className="alth-hint">{r.effect}{open ? '' : ' · precisa de Saga'}</span>
+                      </div>
+                      <button type="button" className="btn btn-ghost" disabled={busy || !open || slotsLeft <= 0 || reinfGear.reinforcements.includes(r.id)} onClick={() => void doReinforce(r)}>Aplicar</button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          ) : <p className="alth-hint">Nenhuma arma, armadura ou escudo no inventário.</p>}
+        </section>
+        </div>
+      )}
     </div>
   )
 }

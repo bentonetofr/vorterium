@@ -13,16 +13,18 @@ interface WinProps {
   subtitle?: ReactNode
   /** Faixa de abas logo abaixo do título (o painel de Explorar troca de janela por aqui). */
   nav?:     ReactNode
+  /** Janela larga, para organizar em duas colunas e caber sem rolar. */
+  wide?:    boolean
   onClose:  () => void
   busy?:    boolean
   children: ReactNode
 }
 
 /** Janela do jogo: título, fechar e rolagem. O fundo embaçado é o ModalOverlay. */
-export function Win({ title, subtitle, nav, onClose, busy = false, children }: WinProps) {
+export function Win({ title, subtitle, nav, wide = false, onClose, busy = false, children }: WinProps) {
   return (
     <ModalOverlay onClose={onClose} closeDisabled={busy}>
-      <div className="alth-modal__window alth-win" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`alth-modal__window alth-win${wide ? ' alth-win--wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <header className="alth-modal__header">
           <div className="alth-win__heading">
             <h4 className="alth-modal__title">{title}</h4>
@@ -35,6 +37,15 @@ export function Win({ title, subtitle, nav, onClose, busy = false, children }: W
       </div>
     </ModalOverlay>
   )
+}
+
+/** Duas colunas lado a lado (uma só no celular): a janela cabe inteira na tela, sem rolar. */
+export function Cols({ children }: { children: ReactNode }) {
+  return <div className="alth-cols">{children}</div>
+}
+
+export function Col({ children }: { children: ReactNode }) {
+  return <div className="alth-col">{children}</div>
 }
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {

@@ -360,3 +360,66 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
   .alth-recipe { flex-direction: column; align-items: stretch; }
   .alth-win__nav { padding-inline: var(--space-3); }
 }
+
+/* ── Fonte do sistema em tudo que é botão ou campo (o navegador usa Arial se ninguém disser) ── */
+.alth-win, .alth-acts, .alth-strip, .alth-requests, .alth-supply, .alth-scene, .alth-master-panel { font-family: var(--font-body); }
+.alth-win button, .alth-win input, .alth-win select, .alth-win textarea,
+.alth-acts button, .alth-strip button, .alth-strip input,
+.alth-requests button, .alth-supply button, .alth-supply input,
+.alth-scene button, .alth-scene input,
+.alth-master-panel button, .alth-master-panel input, .alth-master-panel select { font-family: inherit; }
+.alth-win .modal-close, .alth-master-panel__close { font-family: var(--font-body); }
+
+/* ── Sem rolar: janelas largas em duas colunas, faixa fina, aba Combate ── */
+.alth-win--wide { width: min(900px, 100%); }
+.alth-win__body { gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-4); }
+.alth-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-5); align-items: start; }
+.alth-col { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.alth-cols .alth-toggles { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.alth-cols .alth-rest__table { font-size: 11px; }
+.alth-win .alth-formula { padding: var(--space-2) var(--space-3); }
+.alth-win .alth-formula__big { font-size: var(--text-2xl); }
+.alth-win .alth-test__actions { margin-top: 0; }
+
+.alth-strip--slim { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-8); padding: var(--space-3) var(--space-4); }
+.alth-strip--slim .alth-strip__cell { cursor: help; }
+.alth-turn { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); align-items: start; }
+.alth-turn__chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+/* Resultado de um teste com Achados: os dados 3D já pousaram e viram números, então o palco encolhe. */
+.alth-test--shown { width: min(640px, 100%); }
+.alth-test--shown .alth-test__stage { height: 0; margin: 0; padding: 0; border: 0; overflow: hidden; }
+.alth-test--shown .alth-test__body { gap: var(--space-2); }
+.alth-test--shown .alth-loot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.alth-test--shown .alth-loot__row { padding: var(--space-2) var(--space-3); }
+
+@media (max-width: 760px) {
+  .alth-cols, .alth-turn { grid-template-columns: minmax(0, 1fr); }
+  .alth-test--shown .alth-loot { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Ofício em quatro telas (cada uma cabe sem rolar) ── */
+.alth-supply-wrap { display: flex; flex-direction: column; gap: var(--space-3); }
+.alth-supply__tabs { align-self: flex-start; }
+.alth-supply--stack { grid-template-columns: minmax(0, 1fr); }
+.alth-list--cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+@media (max-width: 900px) { .alth-list--cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .alth-list--cols { grid-template-columns: minmax(0, 1fr); } }
+.alth-supply .alth-material { padding: var(--space-2) var(--space-3); gap: 6px; }
+.alth-supply .alth-material__amount { font-size: var(--text-lg); }
+.alth-supply .alth-supply__hint { display: none; }
+.alth-supply--stack { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.alth-supply--stack .alth-list--cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.alth-list--cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.alth-list--cols2 .alth-recipe { flex-direction: column; align-items: stretch; padding: var(--space-2) var(--space-3); gap: var(--space-2); }
+.alth-supply .alth-material__head { gap: var(--space-2); }
+.alth-supply .alth-material__foot { gap: 4px; }
+.alth-supply .alth-material__foot > .alth-hint { display: none; }
+.alth-supply .alth-minibtn { padding: 2px 6px; }
+@media (max-width: 860px) { .alth-supply--stack { grid-template-columns: minmax(0, 1fr); } .alth-list--cols2 { grid-template-columns: minmax(0, 1fr); } }
+.alth-supply--one { grid-template-columns: minmax(0, 1fr); }
+.alth-list--cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.alth-list--cols3 .alth-recipe { flex-direction: row; align-items: center; padding: var(--space-2) var(--space-3); gap: var(--space-2); }
+.alth-list--cols3 .alth-recipe .btn { padding: 4px 10px; font-size: var(--text-xs); }
+@media (max-width: 900px) { .alth-list--cols3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .alth-list--cols3 { grid-template-columns: minmax(0, 1fr); } }

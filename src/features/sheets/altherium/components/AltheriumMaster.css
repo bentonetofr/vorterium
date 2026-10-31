@@ -93,3 +93,17 @@
   .alth-master-panel.fab-panel { width: auto; height: max(200px, min(560px, calc(100dvh - var(--bottom-nav-h, 60px) - 48px - 140px - var(--fab-toasts-space, 0px)))); }
 }
 @media (prefers-reduced-motion: reduce) { .alth-requests__row { animation: none; } }
+
+.alth-master, .alth-master button, .alth-master input, .alth-master select, .alth-master-panel button, .alth-master-panel input { font-family: var(--font-body); }
+
+/* Painel do mestre largo, em duas colunas: quem recebe de um lado, o que fazer do outro (sem rolar). */
+.alth-master-panel.fab-panel { width: min(900px, calc(100vw - 56px - var(--space-3) - 2 * var(--space-6))); }
+.alth-master { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: var(--space-4) var(--space-5); align-items: start; }
+.alth-master__main { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.alth-master__list { max-height: none; }
+.alth-master__roster { position: sticky; top: 0; }
+@media (max-width: 760px) {
+  .alth-master { grid-template-columns: minmax(0, 1fr); }
+  .alth-master__list { max-height: 160px; }
+  .alth-master__roster { position: static; }
+}

@@ -53,7 +53,7 @@ export function AltheriumMasterFab() {
                   <span className="alth-master-panel__title">Painel do mestre</span>
                   <span className="alth-master-panel__sub">Altherium · escolha quem recebe e aplique</span>
                 </div>
-                <button type="button" className="alth-master-panel__close" onClick={close} aria-label="Fechar o painel do mestre">✕</button>
+                <button type="button" className="alth-master-panel__close" onClick={close} aria-label="Fechar o painel do mestre">×</button>
               </header>
               <div className="alth-master-panel__body">
                 <AltheriumMasterPanel campaignId={campaign.id} />

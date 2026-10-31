@@ -3,7 +3,7 @@ import { rest, REST_TABLE, type RestInput, type RestKind, type RestResult } from
 import { SHORT_RESTS_MAX, type Survival } from '../utils/altheriumSurvival'
 import { cryptoRng } from '../utils/altheriumExplore'
 import { formatAmount } from '../utils/altheriumCraft'
-import { Chips, Field, Icon, Toggle, Win } from './AltheriumPlayKit'
+import { Chips, Col, Cols, Field, Icon, Toggle, Win } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
 // Janela de Descanso (livro 2.0, "Descanso"): Curto (~1 hora, até 2 entre
@@ -43,7 +43,7 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
     if (!result.allowed) return
     onApply(result)
     setDone(result)
-    announce(`🏕️ ${character} fez um Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}${interrupted ? ' (interrompido)' : result.benefit === 'curto' && kind === 'longo' ? ' (só com os benefícios de um Curto)' : ''}.`)
+    announce(`${character} fez um Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}${interrupted ? ' (interrompido)' : result.benefit === 'curto' && kind === 'longo' ? ' (só com os benefícios de um Curto)' : ''}.`)
   }
 
   if (done) {
@@ -61,7 +61,7 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
   }
 
   return (
-    <Win title="Descansar" nav={nav} subtitle={`Curtos feitos: ${survival.short_rests} de ${SHORT_RESTS_MAX}`} onClose={onClose}>
+    <Win title="Descansar" wide nav={nav} subtitle={`Curtos feitos: ${survival.short_rests} de ${SHORT_RESTS_MAX}`} onClose={onClose}>
       <Chips<RestKind>
         label="Tipo de descanso" value={kind} onChange={setKind}
         options={[
@@ -70,6 +70,8 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
         ]}
       />
 
+      <Cols>
+      <Col>
       <div className="alth-rest__table" role="table" aria-label="O que cada descanso recupera">
         {REST_TABLE.map((row) => (
           <div key={row.label} className="alth-rest__row" role="row">
@@ -80,6 +82,8 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
         ))}
       </div>
 
+      </Col>
+      <Col>
       {kind === 'longo' && (
         <>
           <Field
@@ -96,6 +100,9 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
       <Field label="Durante o descanso">
         <Toggle on={interrupted} onChange={setInterrupted} tone="bad" label="Foi interrompido por combate ou esforço intenso (nenhum benefício; a Ração não se perde)" />
       </Field>
+
+      </Col>
+      </Cols>
 
       {base.survival.hunger > 3 && <p className="alth-test__note alth-test__note--warn">Mais de 3 níveis de Fome: o personagem morre.</p>}
       {blocked && <p className="alth-test__note alth-test__note--warn" role="alert">{blocked}</p>}

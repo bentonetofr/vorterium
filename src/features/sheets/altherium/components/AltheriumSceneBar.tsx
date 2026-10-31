@@ -54,7 +54,7 @@ export function AltheriumSceneBar({ campaignId }: { campaignId: string }) {
         <span className="alth-scene__summary">
           {enemyStateDef(scene.enemy).label} · DT {scene.dts[scene.enemy]} — {locationDef(scene.location).label}, {scarcityDef(scene.scarcity).label}
         </span>
-        <span className="alth-scene__chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
+        <span className="alth-scene__chevron" aria-hidden="true">{open ? '−' : '+'}</span>
       </button>
 
       {open && (
