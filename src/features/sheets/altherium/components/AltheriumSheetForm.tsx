@@ -727,11 +727,11 @@ export function AltheriumSheetForm({
     : 'sem arma'
   const downed = !!form.combat_state.dying || form.vitality_current === 0
 
-  // O cabeçalho tem um botão só: Explorar abre o painel com Descansar, Furtividade e Equilíbrio.
+  // O cabeçalho tem um botão só: Ações abre o painel com Descansar, Furtividade e Equilíbrio.
   const heroActions: ActionDef[] = [
     {
-      id: 'explore', label: 'Explorar', icon: 'explore', tone: 'primary',
-      caption: `${survival.tokens} ${survival.tokens === 1 ? 'ficha' : 'fichas'} · descanso, furtividade e equilíbrio`,
+      id: 'explore', label: 'Ações', icon: 'explore', tone: 'primary',
+      caption: `Explorar, descansar, furtividade e equilíbrio · ${survival.tokens} ${survival.tokens === 1 ? 'ficha' : 'fichas'}`,
     },
   ]
   // Combate fica na aba Combate: quatro ações e o Teste de Morte quando cai.
