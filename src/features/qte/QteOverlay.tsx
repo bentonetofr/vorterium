@@ -4,6 +4,7 @@ import { soundVolume } from '../settings/settingsStore'
 import '../mesa/components/MesaLiveNotice.css'
 import { QTE_LIVES, QTE_TOTAL } from './qteEngine'
 import { useQte } from './QteProvider'
+import { playQteImpact, warmUpQteSound } from './qteSound'
 import { isActive, type QteBoard, type QteGame, type QtePlayer } from './QteSession'
 import './Qte.css'
 
@@ -106,6 +107,12 @@ export function QteNotice() {
 function Board({ player, mine, live, onTap }: { player: QtePlayer; mine: boolean; live: boolean; onTap: (key: string) => void }) {
   const b: QteBoard = player.board
   const flash = b.flash
+  const lastSound = useRef<number | null>(flash?.n ?? null)
+  useEffect(() => {
+    if (!flash || flash.n === lastSound.current) return
+    lastSound.current = flash.n
+    playQteImpact(flash.kind, mine ? 1 : 0.3)
+  }, [flash, mine])
   const quip = flash
     ? flash.kind === 'hit' ? pick(HIT_QUIPS, flash.n * 7 + hash(player.uid)) : pick(flash.why === 'tempo' ? SLOW_QUIPS : WRONG_QUIPS, flash.n * 5 + hash(player.uid))
     : null
@@ -190,6 +197,9 @@ export function QteOverlay() {
   const mine = game?.players.find((p) => p.uid === me && p.accepted === true) ?? null
   const playing = !!game && game.phase === 'playing' && !!mine && !mine.board.result
   const lastKeyAt = useRef(0)
+
+  // Abrir a tela vem de um toque: já prepara o áudio para o primeiro impacto não atrasar.
+  useEffect(() => { if (open) warmUpQteSound() }, [open])
 
   // Tela aberta: a página de trás não rola; durante a cena a tela do aparelho não apaga.
   const phase = game?.phase
