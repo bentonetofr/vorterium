@@ -15,6 +15,8 @@ import {
   reactionAvailable,
   startTurn,
   surroundBonus,
+  weaponDamageFormula,
+  zoneArmor,
   zoneForRoll,
 } from './altheriumCombat'
 
@@ -84,5 +86,14 @@ describe('combate de Altherium', () => {
     const s = addCondition(EMPTY_COMBAT, 'amedrontado')
     expect(conditionAttributeMod(s, 'furia')).toBe(-1)
     expect(endScene(s).conditions).toEqual([])
+  })
+
+  it('Integridade e Reforços no dano e no DB', () => {
+    const [sabre] = combatWeapons([{ ...item('a', 'sabre'), integrity: 40, reinforcements: ['fio_temperado'] }])
+    expect(weaponDamageFormula(sabre, false).formula).toBe('2d10+3')
+    expect(weaponDamageFormula(sabre, true).formula).toBe('4d10+3')
+    const cota = { ...item('c', 'cota_malha_norte'), item_type: 'armadura' as const, equipped: true, equipped_zone: 'db_tronco' as const, integrity: 20, reinforcements: ['placas_costuradas'] }
+    expect(zoneArmor([cota], 'db_tronco')).toMatchObject({ delta: -2, armorId: 'c' })   // metade de 8 (−4) e Placas +2
+    expect(zoneArmor([cota], 'db_pernas').delta).toBe(0)
   })
 })

@@ -205,6 +205,18 @@ function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: She
     }
   }
 
+  /** Integridade e Reforços (Ofício e combate). Deixa o erro subir pra quem chamou mostrar. */
+  async function handleInventoryPatch(id: string, patch: { integrity?: number; reinforcements?: string[] }) {
+    await updateAltheriumInventoryItem(id, patch)
+    loadInventory()
+  }
+
+  /** Item feito com receita: entra como personalizado, com os materiais guardados pra desmontar. */
+  async function handleInventoryCraft(input: AltheriumCustomItemInput, materials: Record<string, number>) {
+    await addAltheriumCustomInventoryItem(sheet.id, input, materials)
+    loadInventory()
+  }
+
   async function handleInventoryEquip(id: string, equipped: boolean, zone: BodyZone | null) {
     setSaveError(null)
     try {
@@ -255,6 +267,8 @@ function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated }: She
       onInventoryEquip={handleInventoryEquip}
       onInventoryAddCustom={handleInventoryAddCustom}
       onInventoryUpdateCustom={handleInventoryUpdateCustom}
+      onInventoryPatch={handleInventoryPatch}
+      onInventoryCraft={handleInventoryCraft}
       runes={runes}
       onRuneCreate={handleRuneCreate}
       onRuneUpdate={handleRuneUpdate}

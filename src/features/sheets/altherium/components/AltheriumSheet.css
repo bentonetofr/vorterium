@@ -2258,3 +2258,35 @@
 }
 .alth-dying__turns .alth-dying__turn--now { border-color: var(--accent-bright); color: var(--accent-bright); }
 .alth-dying__turns .alth-dying__turn--fail { border-color: var(--danger); color: var(--danger-bright); text-decoration: line-through; }
+
+/* ── Integridade e aba Ofício ── */
+.alth-integrity {
+  font-family: var(--font-mono); font-size: 10px; padding: 0 5px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-dim); color: var(--alth-resource);
+}
+.alth-integrity--gasta { color: var(--accent-bright); border-color: var(--accent-dim); }
+.alth-integrity--danificada { color: var(--danger-bright); border-color: var(--danger); }
+.alth-integrity--quebrada { color: var(--text-muted); border-color: var(--danger); text-decoration: line-through; }
+.alth-craft__message {
+  margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  background: var(--bg-overlay); border: 1px solid var(--accent-dim); font-size: var(--text-sm); color: var(--text-primary);
+}
+.alth-craft__stock {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-2);
+  margin: 0 0 var(--space-3); padding: 0; list-style: none;
+}
+.alth-craft__stock li {
+  display: flex; flex-direction: column; gap: 2px; padding: var(--space-2);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-sm); background: var(--bg-elevated); cursor: help;
+}
+.alth-craft__stock .alth-craft__stock--has { border-color: var(--accent-dim); }
+.alth-craft__res { font-size: var(--text-xs); color: var(--text-muted); }
+.alth-craft__amount { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); }
+.alth-craft__gear { display: flex; flex-direction: column; gap: 4px; margin: 0 0 var(--space-3); padding: 0; list-style: none; font-size: var(--text-sm); }
+.alth-craft__gear li { display: flex; justify-content: space-between; gap: var(--space-2); }
+.alth-craft__recipe {
+  display: flex; flex-direction: column; gap: 4px; margin: var(--space-3) 0; padding: var(--space-3);
+  border: 1px solid var(--border-dim); border-radius: var(--radius-sm); background: var(--bg-elevated); font-size: var(--text-sm);
+}
+.alth-craft__recipe p { margin: 0; font-size: inherit; line-height: 1.5; color: var(--text-secondary); }
+.alth-craft__reinf { border-color: var(--accent-dim); color: var(--accent-bright); }

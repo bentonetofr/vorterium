@@ -291,6 +291,8 @@ export interface AltheriumSheet {
   notes:              string | null
   /** Estado de combate (Reação, condições, Recarga...) — migration 20240216; ver altheriumCombat.ts. */
   combat_state?:      unknown
+  /** Recursos de Ofício e Rações, em % por qualidade — migration 20240217; ver altheriumCraft.ts. */
+  resources?:         unknown
   /** Ficha de NPC do mestre (migration 20240189000000). */
   is_npc?: boolean
   /** O mestre mostrou o NPC pros jogadores (eles só leem). */
@@ -366,6 +368,12 @@ export interface AltheriumInventoryItem {
   custom_damage_type: 'corte' | 'impacto' | 'perfurante' | null
   custom_attribute:   'furia' | 'impulso' | 'furia_impulso' | null
   custom_range:       'toque' | 'toque_curto' | 'curto' | 'curto_medio' | 'medio' | 'longo' | null
+  /** Integridade 0 a 100% (migration 20240217; sem ela, fica de fora). */
+  integrity?:      number
+  /** Ids dos Reforços aplicados (altheriumCraft.ts). */
+  reinforcements?: unknown
+  /** Materiais usados na receita (para desmontar); null nos outros itens. */
+  crafted?:        unknown
   created_at:    string
 }
 

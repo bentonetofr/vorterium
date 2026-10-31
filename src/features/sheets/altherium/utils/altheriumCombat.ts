@@ -11,6 +11,7 @@ import {
 } from '../constants/altheriumItems'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
 import { readDying, type DyingState } from './altheriumDeath'
+import { armorDbWithIntegrity, readReinforcements, wearAmount, weaponIntegrity, type ReinforcementId } from './altheriumCraft'
 
 // ────────────────────────────────────────────────────────
 // Combate de Altherium ("Crepúsculo Vermelho", livro 2.0). Só contas: a
@@ -47,6 +48,9 @@ export interface CombatWeapon {
   range:       WeaponRange
   category:    WeaponCategory | null
   properties:  WeaponProperty[]
+  /** Integridade 0 a 100%. */
+  integrity:   number
+  reinforcements: ReinforcementId[]
 }
 
 /** As armas do inventário (catálogo ou personalizadas) com o que o combate precisa. */
@@ -60,6 +64,7 @@ export function combatWeapons(inventory: AltheriumInventoryItem[]): CombatWeapon
         inventoryId: inv.id, name: inv.custom_name, damageDice: inv.custom_damage_dice,
         damageType: inv.custom_damage_type ?? 'corte', attribute: inv.custom_attribute ?? 'furia',
         range: inv.custom_range ?? 'toque', category: null, properties: [],
+        integrity: inv.integrity ?? 100, reinforcements: readReinforcements(inv.reinforcements),
       })
       continue
     }
@@ -68,13 +73,52 @@ export function combatWeapons(inventory: AltheriumInventoryItem[]): CombatWeapon
     out.push({
       inventoryId: inv.id, name: w.name, damageDice: w.damageDice, damageType: w.damageType,
       attribute: w.attribute, range: w.range, category: w.category, properties: w.properties,
+      integrity: inv.integrity ?? 100, reinforcements: readReinforcements(inv.reinforcements),
     })
   }
   return out
 }
 
 export function hasProperty(w: CombatWeapon | null | undefined, id: WeaponPropertyId): boolean {
+  if (id === 'retorno' && w?.reinforcements.includes('corrente_retorno')) return true
   return !!w?.properties.some((p) => p.id === id)
+}
+
+export function hasReinforcement(w: CombatWeapon | null | undefined, id: ReinforcementId): boolean {
+  return !!w?.reinforcements.includes(id)
+}
+
+/** "2d8" + n → "2d8+n" (bônus fixo no dano). */
+export function addToFormula(formula: string, n: number): string {
+  if (!n) return formula
+  const m = /^(\d*d\d+)([+-]\d+)?$/i.exec(formula.trim())
+  if (!m) return formula
+  const total = (m[2] ? Number(m[2]) : 0) + n
+  return `${m[1]}${total > 0 ? `+${total}` : total < 0 ? total : ''}`
+}
+
+/**
+ * Fórmula do dano da arma: o dado (rolado duas vezes no crítico) mais os
+ * fixos que não dobram — Fio Temperado (+4 em armas C ou P) e a Integridade
+ * gasta (−1).
+ */
+export function weaponDamageFormula(w: CombatWeapon, crit: boolean): { formula: string; notes: string[] } {
+  const notes: string[] = []
+  let flat = 0
+  if (hasReinforcement(w, 'fio_temperado') && (w.damageType === 'corte' || w.damageType === 'perfurante')) { flat += 4; notes.push('Fio Temperado +4') }
+  const integ = weaponIntegrity(w.integrity).damage
+  if (integ) { flat += integ; notes.push(`Integridade ${integ}`) }
+  return { formula: addToFormula(crit ? doubleDamage(w.damageDice) : w.damageDice, flat), notes }
+}
+
+/** Tipo do dano que a arma causa (a Gravação Rúnica vira Rúnico). */
+export function weaponDamageType(w: CombatWeapon): FullDamageType {
+  return hasReinforcement(w, 'gravacao_runica') ? 'runico' : w.damageType
+}
+
+/** Quanto a arma perde quando se desgasta (Robusta metade, Frágil o dobro). */
+export function weaponWear(w: CombatWeapon, base: number): number {
+  return wearAmount(base, { robusta: hasProperty(w, 'robusta'), fragil: hasProperty(w, 'fragil') })
 }
 
 export function propertyValue(w: CombatWeapon | null | undefined, id: WeaponPropertyId): number {
@@ -218,6 +262,41 @@ export function applyDamage(input: DamageInput): DamageResult {
     steps.push({ label: 'Imune', value: 0 })
   }
   return { final: dmg, steps, armorWear }
+}
+
+/** DB que cada peça equipada dá (catálogo ou personalizada). */
+function pieceDb(i: AltheriumInventoryItem): number {
+  return i.custom_name !== null ? (i.custom_db ?? 0) : (findArmor(i.item_id)?.db ?? 0)
+}
+
+export interface ZoneArmor {
+  /** Ajuste no DB da parte: Placas Costuradas (+2) e a Integridade gasta das peças. */
+  delta:   number
+  notes:   string[]
+  /** A armadura daquela parte (a que se desgasta quando o dano não passa do DB). */
+  armorId: string | null
+}
+
+/**
+ * Os campos de DB da ficha somam as peças inteiras. Aqui entra o que muda
+ * com o Ofício: Placas Costuradas dão +2 naquela parte, e a peça gasta
+ * protege menos (−2, metade ou nada). O escudo cobre todas as partes.
+ */
+export function zoneArmor(inventory: AltheriumInventoryItem[], zone: BodyZoneId): ZoneArmor {
+  let delta = 0
+  const notes: string[] = []
+  let armorId: string | null = null
+  for (const i of inventory) {
+    if (!i.equipped) continue
+    const inZone = i.item_type === 'escudo' || (i.item_type === 'armadura' && i.equipped_zone === zone)
+    if (!inZone) continue
+    if (i.item_type === 'armadura' && !armorId) armorId = i.id
+    const db = pieceDb(i)
+    const loss = db - armorDbWithIntegrity(db, i.integrity ?? 100)
+    if (loss) { delta -= loss; notes.push(`Integridade −${loss}`) }
+    if (readReinforcements(i.reinforcements).includes('placas_costuradas') && i.item_type === 'armadura') { delta += 2; notes.push('Placas Costuradas +2') }
+  }
+  return { delta, notes, armorId }
 }
 
 /** O DB da parte vem de uma Armadura do guardião de Eryndor equipada ali? */

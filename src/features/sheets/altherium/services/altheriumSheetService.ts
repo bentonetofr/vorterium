@@ -333,10 +333,12 @@ function customItemColumns(input: AltheriumCustomItemInput) {
 export async function addAltheriumCustomInventoryItem(
   sheetId: string,
   input: AltheriumCustomItemInput,
+  /** Materiais da receita (Ofício), pra desmontar depois. */
+  crafted?: Record<string, number>,
 ): Promise<AltheriumInventoryItem> {
   const { data, error } = await supabase
     .from('altherium_character_inventory')
-    .insert({ sheet_id: sheetId, item_id: `custom:${crypto.randomUUID()}`, ...customItemColumns(input) })
+    .insert({ sheet_id: sheetId, item_id: `custom:${crypto.randomUUID()}`, ...customItemColumns(input), ...(crafted ? { crafted } : {}) })
     .select('*')
     .single()
 
@@ -364,7 +366,7 @@ export async function updateAltheriumInventoryItem(
   id: string,
   data: Partial<Pick<AltheriumInventoryItem,
     'quantity' | 'equipped' | 'equipped_zone' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'
-    | 'custom_damage_dice' | 'custom_damage_type' | 'custom_attribute' | 'custom_range'>>,
+    | 'custom_damage_dice' | 'custom_damage_type' | 'custom_attribute' | 'custom_range' | 'integrity' | 'reinforcements'>>,
 ): Promise<AltheriumInventoryItem> {
   const { data: updated, error } = await supabase
     .from('altherium_character_inventory')
@@ -509,4 +511,28 @@ export async function deleteAltheriumRune(rune: AltheriumRune): Promise<void> {
     .eq('id', rune.id)
 
   if (error) throw new Error('Não foi possível excluir a runa.')
+}
+
+// ────────────────────────────────────────────────────────
+// Sagas de Ofício (da campanha — destravam receitas para o grupo todo)
+// ────────────────────────────────────────────────────────
+
+/** Sagas que o grupo já encontrou. Sem a tabela (migration 20240217), nenhuma. */
+export async function getAltheriumCampaignSagas(campaignId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('altherium_campaign_sagas')
+    .select('sagas')
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+
+  if (error || !data) return []
+  return (data as { sagas: string[] }).sagas ?? []
+}
+
+export async function setAltheriumCampaignSagas(campaignId: string, sagas: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('altherium_campaign_sagas')
+    .upsert({ campaign_id: campaignId, sagas, updated_at: new Date().toISOString() }, { onConflict: 'campaign_id' })
+
+  if (error) throw new Error('Não foi possível salvar as Sagas.')
 }

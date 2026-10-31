@@ -29,6 +29,8 @@ import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
 import { Select } from '../../../../shared/components/Select'
 import type { BodyZone } from './AltheriumBodyDiagram'
+import { gearInfo } from './AltheriumCraftPanel'
+import { BAND_LABELS, integrityBand, reinforcementDef } from '../utils/altheriumCraft'
 
 interface AltheriumInventoryCardProps {
   inventory:        AltheriumInventoryItem[]
@@ -281,6 +283,21 @@ export function AltheriumInventoryCard({
                     {info.detail}
                   </span>
                   {info.weapon && <WeaponTraits weapon={info.weapon} />}
+                  {(() => {
+                    const g = gearInfo(inv)
+                    if (!g) return null
+                    const band = integrityBand(g.integrity)
+                    return (
+                      <span className="alth-inventory__traits">
+                        <span className={`alth-integrity alth-integrity--${band}`} title="Integridade (repare na aba Ofício)">
+                          {g.integrity}%{band !== 'normal' ? ` · ${BAND_LABELS[band]}` : ''}
+                        </span>
+                        {g.reinforcements.map((id) => (
+                          <span key={id} className="alth-inventory__prop" title={reinforcementDef(id)?.effect}>{reinforcementDef(id)?.label}</span>
+                        ))}
+                      </span>
+                    )
+                  })()}
                 </div>
 
                 <div className="alth-inventory__qty">

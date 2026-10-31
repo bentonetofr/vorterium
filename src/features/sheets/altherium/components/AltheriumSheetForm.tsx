@@ -61,6 +61,8 @@ import './AltheriumSheet.css'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
 import { AltheriumTestModal, type AltheriumTestSpec } from './AltheriumTestModal'
 import { AltheriumCombatPanel, type DomainCheck } from './AltheriumCombatPanel'
+import { AltheriumCraftPanel } from './AltheriumCraftPanel'
+import { readResources, type ResourceStock } from '../utils/altheriumCraft'
 import { NEW_DYING } from '../utils/altheriumDeath'
 import { conditionDef, readCombatState, type BodyZoneId, type CombatState } from '../utils/altheriumCombat'
 import { isObserver } from '../../../../shared/lib/observer'
@@ -88,6 +90,10 @@ interface AltheriumSheetFormProps {
   onInventoryEquip:         (id: string, equipped: boolean, zone: BodyZone | null) => Promise<void>
   onInventoryAddCustom:     (input: AltheriumCustomItemInput) => Promise<void>
   onInventoryUpdateCustom:  (item: AltheriumInventoryItem, input: AltheriumCustomItemInput) => Promise<void>
+  /** Integridade e Reforços de um item — lança erro se falhar. */
+  onInventoryPatch:         (id: string, patch: { integrity?: number; reinforcements?: string[] }) => Promise<void>
+  /** Item feito com receita (Ofício) — lança erro se falhar. */
+  onInventoryCraft:         (input: AltheriumCustomItemInput, materials: Record<string, number>) => Promise<void>
   runes:                    AltheriumRune[]
   onRuneCreate:             (input: AltheriumRuneInput, image: File | null) => Promise<void>
   onRuneUpdate:             (rune: AltheriumRune, input: AltheriumRuneInput, image: File | null | undefined) => Promise<void>
@@ -146,6 +152,10 @@ type FormData = {
   combat_state:       CombatState
   /** A coluna existe no banco (migration 20240216)? Sem ela, o combate fica só na tela. */
   combat_known:       boolean
+  /** Recursos de Ofício e Rações (ver altheriumCraft.ts). */
+  resources:          ResourceStock
+  /** A coluna existe no banco (migration 20240217)? */
+  resources_known:    boolean
 }
 
 function sheetToForm(s: AltheriumSheet): FormData {
@@ -194,6 +204,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     notes:              s.notes ?? '',
     combat_state:       readCombatState(s.combat_state),
     combat_known:       'combat_state' in s,
+    resources:          readResources(s.resources),
+    resources_known:    'resources' in s,
   }
 }
 
@@ -237,6 +249,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     notes:               f.notes.trim() || null,
     // Mesma ordem de chaves sempre (o jsonb reordena; o eco do save precisa bater).
     ...(f.combat_known ? { combat_state: readCombatState(f.combat_state) } : {}),
+    ...(f.resources_known ? { resources: readResources(f.resources) } : {}),
     recent_triumphs:     f.recent_triumphs,
     genesis_abilities:   f.genesis_abilities.map((a) => ({ id: a.id, name: a.name, description: a.description })),
     skald_inspirations:  f.skald_inspirations.map((i) => ({
@@ -308,7 +321,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'oficio' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -319,6 +332,7 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'visao-geral', label: 'Atributos' },
   { id: 'luta',        label: 'Combate' },
   { id: 'combate',     label: 'Inventário' },
+  { id: 'oficio',      label: 'Ofício' },
   { id: 'dominios',    label: 'Domínios' },
   { id: 'triunfos',    label: 'Triunfos' },
   { id: 'inspiracoes', label: 'Inspirações' },
@@ -333,7 +347,7 @@ export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,
   onPortraitChange, onPortraitRemove, portraitBusy,
   onInventoryAdd, onInventoryUpdateQuantity, onInventoryRemove, onInventoryEquip,
-  onInventoryAddCustom, onInventoryUpdateCustom,
+  onInventoryAddCustom, onInventoryUpdateCustom, onInventoryPatch, onInventoryCraft,
   runes, onRuneCreate, onRuneUpdate, onRuneDelete,
   saveError,
 }: AltheriumSheetFormProps) {
@@ -938,6 +952,27 @@ export function AltheriumSheetForm({
               onDamage={takeDamage}
               espirito={form.attr_espirito}
               determinationPoints={domainMap.get('determinacao') ?? 0}
+              onPatch={onInventoryPatch}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Ofício: recursos, reparo, receitas, reforços ── */}
+      <div id="alth-tabpanel-oficio" role="tabpanel" hidden={activeTab !== 'oficio'}>
+        {activeTab === 'oficio' && (
+          <div className="alth-tab-panel anim-tab-panel">
+            <AltheriumCraftPanel
+              campaignId={sheet.campaign_id}
+              inventory={inventory}
+              stock={form.resources}
+              onStock={(next) => set('resources', next)}
+              known={form.resources_known}
+              onPatch={onInventoryPatch}
+              onCraft={onInventoryCraft}
+              onAddCatalog={onInventoryAdd}
+              onUpdateQuantity={onInventoryUpdateQuantity}
+              onRemove={onInventoryRemove}
             />
           </div>
         )}

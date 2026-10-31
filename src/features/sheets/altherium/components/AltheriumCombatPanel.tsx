@@ -22,7 +22,11 @@ import {
   conditionDef,
   conditionDefenseMod,
   defenseFumble,
-  doubleDamage,
+  hasReinforcement,
+  weaponDamageFormula,
+  weaponDamageType,
+  weaponWear,
+  zoneArmor,
   endScene,
   hasProperty,
   parryResult,
@@ -48,6 +52,7 @@ import {
   setInitiativeValue,
 } from '../../../initiative/services/initiativeService'
 import { AltheriumDyingPanel } from './AltheriumDyingPanel'
+import { applyWear, weaponIntegrity } from '../utils/altheriumCraft'
 import {
   DEATH_DT,
   NEW_DYING,
@@ -95,6 +100,8 @@ interface Props {
   espirito:     number
   /** Pontos no domínio Determinação (bônus do Teste de Morte). */
   determinationPoints: number
+  /** Integridade de um item do inventário (desgaste no combate). */
+  onPatch:      (id: string, patch: { integrity?: number }) => Promise<void>
 }
 
 type Open = { spec: AltheriumTestSpec; kind: 'attack' | 'defense' | 'parry' | 'initiative' | 'death'; weapon?: CombatWeapon; mode?: AttackMode; counter?: boolean }
@@ -107,7 +114,7 @@ const ZONE_OPTIONS = ZONES.map((z) => ({ value: z, label: ZONE_LABELS[z] }))
 
 export function AltheriumCombatPanel({
   campaignId, sheetId, character, genesis, inventory, state, onState, domainCheck, zoneDb, vitality, onDamage,
-  espirito, determinationPoints,
+  espirito, determinationPoints, onPatch,
 }: Props) {
   const weapons = useMemo(() => combatWeapons(inventory), [inventory])
   const [open, setOpen] = useState<Open | null>(null)
@@ -173,6 +180,8 @@ export function AltheriumCombatPanel({
     }
     if (counter) notes.push('Contra-ataque: o atacante só pode Defender, nunca Aparar.')
     if (hasProperty(w, 'recarga') && state.unloaded.includes(w.inventoryId)) notes.push('A arma está descarregada: recarregue antes de disparar.')
+    const integ = weaponIntegrity(w.integrity)
+    if (integ.attack) flat.push({ label: 'Integridade', value: integ.attack })
     const extraDie = m === 'corpo' && genesis === 'guerreiro' ? { label: 'Gênesis Guerreiro', sides: 4 }
       : m === 'distancia' && genesis === 'cacador' ? { label: 'Gênesis Caçador', sides: 4 } : undefined
     return {
@@ -212,6 +221,7 @@ export function AltheriumCombatPanel({
     const flat: Modifier[] = [...check.flat]
     if (hasProperty(parryWeapon, 'defensiva')) flat.push({ label: 'Defensiva', value: 1 })
     if (hasProperty(parryWeapon, 'lenta')) flat.push({ label: 'Lenta', value: -2 })
+    if (hasReinforcement(parryWeapon, 'empunhadura_couro')) flat.push({ label: 'Empunhadura de Couro', value: 1 })
     if (state.defend_total) flat.push({ label: 'Defender Total', value: 4 })
     setOpen({
       kind: 'parry', weapon: parryWeapon,
@@ -226,6 +236,12 @@ export function AltheriumCombatPanel({
   function openInitiative() {
     const check = domainCheck('iniciativa')
     setOpen({ kind: 'initiative', spec: { ...check, title: 'Iniciativa', notes: ['A ordem é do maior para o menor resultado.'] } })
+  }
+
+  // ── Desgaste ──
+  function wear(w: CombatWeapon, base: number) {
+    const amount = weaponWear(w, base)
+    if (amount > 0) void onPatch(w.inventoryId, { integrity: applyWear(w.integrity, amount) }).catch(() => {})
   }
 
   // ── Teste de Morte ──
@@ -394,7 +410,7 @@ export function AltheriumCombatPanel({
               )}
               <span className="alth-combat__spacer" />
               <button type="button" className="btn btn-primary alth-combat__btn" onClick={() => openAttack()}
-                disabled={mode === 'distancia' && rangePenalty(bands) === null}>
+                disabled={(mode === 'distancia' && rangePenalty(bands) === null) || weaponIntegrity(weapon.integrity).broken}>
                 Atacar
               </button>
             </div>
@@ -446,13 +462,14 @@ export function AltheriumCombatPanel({
         </div>
       </section>
 
-      <DamageCalculator inventory={inventory} zoneDb={zoneDb} dbMod={conditionDbMod(state)} vitality={vitality} onApply={onDamage} />
+      <DamageCalculator inventory={inventory} zoneDb={zoneDb} dbMod={conditionDbMod(state)} vitality={vitality} onApply={onDamage}
+        onArmorWear={(id) => { const i = inventory.find((x) => x.id === id); if (i) void onPatch(id, { integrity: applyWear(i.integrity ?? 100, 10) }).catch(() => {}) }} />
 
       {open && (
         <AltheriumTestModal
           campaignId={campaignId} sheetId={sheetId} character={character} spec={open.spec}
           onClose={() => setOpen(null)}
-          onRolled={({ reading }) => {
+          onRolled={({ reading, outcome }) => {
             if (open.kind === 'attack') {
               const next: Partial<CombatState> = {}
               if (!open.counter && state.aim) next.aim = false
@@ -460,13 +477,17 @@ export function AltheriumCombatPanel({
               if (Object.keys(next).length) patch(next)
             }
             if (open.kind === 'parry') patch({ reaction_used: true })
+            // Desgaste da arma: errar com algum 1 nos dados (−10%), falha crítica na Defesa (−20%).
+            if (open.kind === 'attack' && open.weapon && outcome && !outcome.success && reading.results.includes(1)) wear(open.weapon, 10)
+            if (open.kind === 'defense' && defenseFumble(reading.kept) && parryWeapon) wear(parryWeapon, 20)
             if (open.kind === 'death') {
               patch({ dying: afterDeathRoll(state.dying ?? NEW_DYING, deathSuccess(reading.kept, reading.total), turns) })
             }
           }}
           after={(ctx) => (
             <AfterRoll ctx={ctx} open={open} character={character} campaignId={campaignId}
-              onCondition={putCondition} onCounter={() => open.weapon && openAttack(true, open.weapon, 'corpo')} />
+              onCondition={putCondition} onCounter={() => open.weapon && openAttack(true, open.weapon, 'corpo')}
+              onWear={(w, base) => wear(w, base)} defendWeapon={parryWeapon} />
           )}
         />
       )}
@@ -479,11 +500,14 @@ export function AltheriumCombatPanel({
 // Contra-ataque ou +1d6 (aparar), entrar na ordem de iniciativa.
 // ────────────────────────────────────────────────────────
 
-function AfterRoll({ ctx, open, character, campaignId, onCondition, onCounter }: {
+function AfterRoll({ ctx, open, character, campaignId, onCondition, onCounter, onWear, defendWeapon }: {
   ctx: AfterCtx; open: Open; character: string; campaignId: string
   onCondition: (id: ConditionId, turns?: number | null) => void
   onCounter: () => void
+  onWear: (w: CombatWeapon, base: number) => void
+  defendWeapon: CombatWeapon | null
 }) {
+  const [worn, setWorn] = useState(false)
   const [lines, setLines] = useState<string[]>([])
   const [punish, setPunish] = useState<(typeof PUNISHMENT_TABLE)[number] | null>(null)
   const { reading, outcome, rollExtra, busy } = ctx
@@ -501,11 +525,18 @@ function AfterRoll({ ctx, open, character, campaignId, onCondition, onCounter }:
     const hit = outcome ? outcome.success : true
     const anyOne = reading.results.includes(1)
     if (hit) {
-      const dmg = reading.crit ? doubleDamage(w.damageDice) : w.damageDice
+      const { formula: dmg, notes: dmgNotes } = weaponDamageFormula(w, reading.crit)
+      const dmgType = FULL_DAMAGE_LABELS[weaponDamageType(w)]
+      const ignore = propertyValue(w, 'perfurante')
+      const dmgExtra = [
+        ...dmgNotes,
+        ...(ignore ? [`ignora ${ignore} de DB`] : []),
+        ...(hasReinforcement(w, 'cravos_ferro') && w.damageType === 'impacto' ? ['Cravos de Ferro: ignora 1 de DB'] : []),
+      ]
       extras.push(
         <div key="hit" className="alth-test__actions alth-test__actions--start">
           <button type="button" className="btn btn-primary" disabled={busy}
-            onClick={() => void rollAndSay(dmg, `Dano: ${w.name}`, (t) => `Dano ${dmg}: ${t} ${DAMAGE_TYPE_LABELS[w.damageType]}${propertyValue(w, 'perfurante') ? ` (ignora ${propertyValue(w, 'perfurante')} de DB)` : ''}`)}>
+            onClick={() => void rollAndSay(dmg, `Dano: ${w.name}`, (t) => `Dano ${dmg}: ${t} ${dmgType}${dmgExtra.length ? ` (${dmgExtra.join('; ')})` : ''}`)}>
             Rolar dano ({dmg})
           </button>
           <button type="button" className="btn btn-ghost" disabled={busy}
@@ -525,10 +556,21 @@ function AfterRoll({ ctx, open, character, campaignId, onCondition, onCounter }:
         if (hasProperty(w, 'serrilhada')) crit.push('Serrilhada: o alvo fica Sangrando.')
         if (hasProperty(w, 'atordoante')) crit.push('Atordoante: o alvo fica Atordoado.')
         if (hasProperty(w, 'prender')) crit.push('Prender: o alvo fica Preso.')
+        if (hasReinforcement(w, 'farpas_osso')) crit.push('Farpas de Osso: o alvo fica Sangrando.')
         extras.push(<p key="crit" className="alth-test__note">{crit.join(' ')}</p>)
       }
+      if (anyOne && !outcome) {
+        extras.push(
+          <div key="wear" className="alth-test__actions alth-test__actions--start">
+            <span className="alth-hint">Sem a Defesa do alvo o site não sabe se errou. Errou com um 1 nos dados?</span>
+            <button type="button" className="btn btn-ghost" disabled={worn} onClick={() => { onWear(w, 10); setWorn(true) }}>
+              {worn ? 'Arma desgastada' : `Errei: desgastar (−${weaponWear(w, 10)}%)`}
+            </button>
+          </div>,
+        )
+      }
     } else if (anyOne) {
-      const bits = ['Errou com um 1 nos dados: a arma se desgasta (perde 10% de Integridade).']
+      const bits = [`Errou com um 1 nos dados: ${w.name} perdeu ${weaponWear(w, 10)}% de Integridade.`]
       if (open.mode === 'distancia') bits.push('Se o alvo estava em Toque de um aliado, o tiro acerta o aliado mais próximo.')
       extras.push(<p key="one" className="alth-test__note alth-test__note--warn">{bits.join(' ')}</p>)
     }
@@ -537,7 +579,10 @@ function AfterRoll({ ctx, open, character, campaignId, onCondition, onCounter }:
   if (open.kind === 'defense' && defenseFumble(reading.kept)) {
     extras.push(
       <div key="fumble" className="alth-combat__punish">
-        <p className="alth-test__note alth-test__note--warn">Falha crítica na Defesa (1 natural): role na Tabela de Punição.</p>
+        <p className="alth-test__note alth-test__note--warn">
+          Falha crítica na Defesa (1 natural): role na Tabela de Punição.
+          {defendWeapon ? ` ${defendWeapon.name} perdeu ${weaponWear(defendWeapon, 20)}% de Integridade.` : ''}
+        </p>
         {!punish ? (
           <button type="button" className="btn btn-primary" disabled={busy}
             onClick={async () => {
@@ -638,12 +683,13 @@ function AfterRoll({ ctx, open, character, campaignId, onCondition, onCounter }:
 // Dano recebido, na ordem do livro.
 // ────────────────────────────────────────────────────────
 
-function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply }: {
+function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmorWear }: {
   inventory: AltheriumInventoryItem[]
   zoneDb: Record<BodyZoneId, number>
   dbMod: number
   vitality: number
   onApply: (amount: number, zone: BodyZoneId | null) => void
+  onArmorWear: (inventoryId: string) => void
 }) {
   const [damage, setDamage] = useState('')
   const [type, setType] = useState<FullDamageType>('corte')
@@ -654,7 +700,9 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply }: {
   const [immune, setImmune] = useState(false)
   const [applied, setApplied] = useState<string | null>(null)
 
-  const db = Math.max(0, zoneDb[zone] + dbMod)
+  const piece = zoneArmor(inventory, zone)
+  const dbNotes = [...(dbMod ? [`Arma Exposta ${dbMod}`] : []), ...piece.notes]
+  const db = Math.max(0, zoneDb[zone] + dbMod + piece.delta)
   const value = Math.max(0, Math.trunc(Number(damage) || 0))
   const result = damage.trim() === '' ? null : applyDamage({
     damage: value, type, db, ignoreDb: ignore, vulnerable, resistance, immune,
@@ -678,7 +726,7 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply }: {
           <div className="alth-combat__select">
             <Select value={zone} options={ZONE_OPTIONS} onChange={(v) => setZone(v as BodyZoneId)} aria-label="Parte atingida" />
           </div>
-          <span className="alth-hint">DB {db}{dbMod ? ` (Arma Exposta ${dbMod})` : ''}</span>
+          <span className="alth-hint">DB {db}{dbNotes.length ? ` (${dbNotes.join(', ')})` : ''}</span>
         </div>
         <div className="alth-combat__row">
           <label className="alth-combat__num">
@@ -705,6 +753,7 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply }: {
               <button type="button" className="btn btn-primary alth-combat__btn" disabled={applied !== null}
                 onClick={() => {
                   onApply(result.final, zone)
+                  if (result.armorWear && piece.armorId) onArmorWear(piece.armorId)
                   setApplied(vitality - result.final <= 0 ? 'PV chegou a 0: Estado Caído.' : 'Dano aplicado.')
                 }}>
                 Aplicar na ficha
