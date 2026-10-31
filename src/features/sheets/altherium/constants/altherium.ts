@@ -11,7 +11,7 @@ export type AltheriumAttribute =
 export type AltheriumDomain =
   | 'brutalidade' | 'crime' | 'determinacao' | 'direcao'
   | 'furtividade' | 'iniciativa' | 'intimidacao' | 'investigacao'
-  | 'leveza' | 'luta' | 'medicina' | 'percepcao' | 'persuasao'
+  | 'leveza' | 'luta' | 'medicina' | 'oficio' | 'percepcao' | 'persuasao'
   | 'precisao' | 'pressentimento' | 'reflexo' | 'religiao'
   | 'resiliencia' | 'runologia' | 'saberes' | 'sobrevivencia'
   | 'tatica' | 'vontade'
@@ -140,7 +140,7 @@ export const GENESIS_DOMAIN_BONUS: Partial<Record<AltheriumGenesis, AltheriumDom
   robusto:           ['resiliencia'],
 }
 
-export const DOMAINS: { id: AltheriumDomain; label: string; attribute: AltheriumAttribute }[] = [
+export const DOMAINS: { id: AltheriumDomain; label: string; attribute: AltheriumAttribute; /** Domínio exclusivo de uma raiz. */ raiz?: AltheriumRaiz }[] = [
   { id: 'brutalidade',    label: 'Brutalidade',    attribute: 'furia' },
   { id: 'crime',          label: 'Crime',          attribute: 'estrategia' },
   { id: 'determinacao',   label: 'Determinação',   attribute: 'espirito' },
@@ -152,6 +152,7 @@ export const DOMAINS: { id: AltheriumDomain; label: string; attribute: Altherium
   { id: 'leveza',         label: 'Leveza',         attribute: 'impulso' },
   { id: 'luta',           label: 'Luta',           attribute: 'furia' },
   { id: 'medicina',       label: 'Medicina',       attribute: 'estrategia' },
+  { id: 'oficio',         label: 'Ofício',         attribute: 'estrategia', raiz: 'pilar' },
   { id: 'percepcao',      label: 'Percepção',      attribute: 'destino' },
   { id: 'persuasao',      label: 'Persuasão',      attribute: 'destino' },
   { id: 'precisao',       label: 'Precisão',       attribute: 'impulso' },
@@ -165,6 +166,11 @@ export const DOMAINS: { id: AltheriumDomain; label: string; attribute: Altherium
   { id: 'tatica',         label: 'Tática',         attribute: 'estrategia' },
   { id: 'vontade',        label: 'Vontade',        attribute: 'espirito' },
 ]
+
+/** Domínios que a raiz pode ter: os de todos, mais os exclusivos dela (Ofício é só do Pilar). */
+export function domainsForRaiz(raiz: AltheriumRaiz | null | undefined): typeof DOMAINS {
+  return DOMAINS.filter((d) => !d.raiz || d.raiz === raiz)
+}
 
 /** Teto de pontos por domínio. */
 export const DOMAIN_MAX_POINTS = 2

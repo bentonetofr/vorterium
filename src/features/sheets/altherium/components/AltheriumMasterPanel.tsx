@@ -3,7 +3,7 @@ import { Select } from '../../../../shared/components/Select'
 import type { AltheriumSheetWithProfile, DiceRoll } from '../../../../shared/types'
 import { sendMessage } from '../../../chat/services/chatService'
 import { subscribeToRolls } from '../../../dice/services/diceService'
-import { DOMAINS } from '../constants/altherium'
+import { DOMAINS, raizLabel } from '../constants/altherium'
 import {
   getAltheriumCampaignSagas,
   getCampaignAltheriumSheets,
@@ -236,7 +236,7 @@ function RequestTab({ campaignId, sheets, targets, scene, say }: {
       {kind === 'domain' && (
         <Field label="Domínio">
           <Select value={domain} onChange={setDomain} aria-label="Domínio"
-            options={DOMAINS.map((x) => ({ value: x.id, label: x.label }))} />
+            options={DOMAINS.map((x) => ({ value: x.id, label: x.raiz ? `${x.label} (${raizLabel(x.raiz)})` : x.label }))} />
         </Field>
       )}
       {kind === 'equilibrium' && (

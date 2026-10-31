@@ -9,6 +9,7 @@ import {
   DOMAINS,
   DOMAIN_MAX_POINTS,
   DOMAIN_MIN_POINTS,
+  domainsForRaiz,
   GENESIS,
   GENESIS_DOMAIN_BONUS,
   RAIZES,
@@ -570,7 +571,9 @@ export function AltheriumSheetForm({
   const bonusMap     = new Map(domains.map((d) => [d.domain, !!d.bonus_die]))
   const chosenMap    = new Map(domains.map((d) => [d.domain, !!d.no_auto_disadvantage]))
   // -1 (desvantagem) e o "+" não gastam ponto de domínio.
-  const domainsUsed  = domains.reduce((sum, d) => sum + Math.max(0, d.points), 0)
+  // (domínio exclusivo de outra raiz, como o Ofício do Pilar, não conta.)
+  const ownDomains   = new Set(domainsForRaiz(raiz).map((d) => d.id as string))
+  const domainsUsed  = domains.reduce((sum, d) => sum + (ownDomains.has(d.domain) ? Math.max(0, d.points) : 0), 0)
   // Atributo zerado dá desvantagem nos domínios dele — numa ficha em branco
   // (nenhum ponto de atributo ainda) não marca tudo de vermelho; Rúnico só
   // conta pra Runaskin.
@@ -581,9 +584,10 @@ export function AltheriumSheetForm({
   }
   const filteredDomains = useMemo(() => {
     const q = normalize(domainFilter.trim())
-    if (!q) return DOMAINS
-    return DOMAINS.filter((d) => normalize(d.label).includes(q))
-  }, [domainFilter])
+    const list = domainsForRaiz(raiz)
+    if (!q) return list
+    return list.filter((d) => normalize(d.label).includes(q))
+  }, [domainFilter, raiz])
   // Teste de domínio aberto (clicar nos dados do domínio). A conta dev observadora só olha.
   const [testSpec, setTestSpec] = useState<AltheriumTestSpec | null>(null)
   const canRollTests = !isObserver()
