@@ -308,6 +308,17 @@ function PlayerAltheriumView({ campaignId }: { campaignId: string }) {
     return () => { cancelled = true }
   }, [campaignId])
 
+  // O mestre pode mexer na ficha pelo painel dele (Achados, Descanso, Fome...): a mudança chega ao vivo.
+  const sheetId = sheet?.id
+  useEffect(() => {
+    if (!sheetId) return
+    return subscribeToCampaignAltheriumSheets(
+      campaignId,
+      (updated) => { if (updated.id === sheetId) setSheet((prev) => (prev ? { ...prev, ...updated } : prev)) },
+      () => { /* lista de fichas: não interessa aqui */ },
+    )
+  }, [campaignId, sheetId])
+
   if (loading) {
     return (
       <div className="sheet-loading">

@@ -85,7 +85,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
     return (
       <AltheriumTestModal
         campaignId={campaignId} sheetId={sheetId} character={character} spec={spec} onClose={onClose} autoRoll noAgain
-        after={(ctx) => <Result ctx={ctx} state={state} scene={scene} onScene={onScene} announce={announce} character={character} />}
+        after={(ctx) => <StealthResult ctx={ctx} state={state} scene={scene} onScene={onScene} announce={announce} character={character} />}
       />
     )
   }
@@ -152,7 +152,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
   )
 }
 
-function Result({ ctx, state, scene, onScene, announce, character }: {
+export function StealthResult({ ctx, state, scene, onScene, announce, character }: {
   ctx: AfterCtx; state: EnemyState; scene: AltheriumScene
   onScene: (patch: Partial<AltheriumScene>) => Promise<void>
   announce: (text: string) => void; character: string

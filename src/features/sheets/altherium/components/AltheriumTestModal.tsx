@@ -89,6 +89,8 @@ interface Props {
   after?:     (ctx: AfterCtx) => ReactNode
   /** Rola assim que a janela abre (a escolha já foi feita numa janela antes): sem a tela de dados de situação. */
   autoRoll?:  boolean
+  /** Campos a mais no contexto da rolagem (o id do pedido do mestre, por exemplo). */
+  contextExtra?: Record<string, unknown>
   /** Sem o botão "Rolar de novo" (Explorar, por exemplo, gasta uma Ficha por tentativa). */
   noAgain?:   boolean
 }
@@ -96,7 +98,7 @@ interface Props {
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 const sum = (list?: Modifier[]) => (list ?? []).reduce((s, m) => s + m.value, 0)
 
-export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose, onRolled, after, autoRoll = false, noAgain = false }: Props) {
+export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose, onRolled, after, autoRoll = false, noAgain = false, contextExtra }: Props) {
   const [situational, setSituational] = useState(0)
   const [target, setTarget] = useState(spec.initialTarget != null ? String(spec.initialTarget) : '')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -151,6 +153,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
           advantage: pool.keep === 'lowest' ? 'disadvantage' : 'normal',
           outcome: result ? (result.success ? 'success' : 'failure') : null,
           crit: read.crit ? 'crit' : null,
+          ...(contextExtra ?? {}),
         },
       })
       setRoll(saved)

@@ -64,6 +64,7 @@ import { AltheriumCombatActions, type CombatAction, type DomainCheck } from './A
 import { AltheriumCraftPanel } from './AltheriumCraftPanel'
 import { AltheriumActionBar, type ActionDef, type PlayAction } from './AltheriumActionBar'
 import { AltheriumStatusStrip } from './AltheriumStatusStrip'
+import { AltheriumRequestCard } from './AltheriumRequestCard'
 import { AltheriumExploreWindow } from './AltheriumExploreWindow'
 import { AltheriumRestWindow } from './AltheriumRestWindow'
 import { AltheriumStealthWindow } from './AltheriumStealthWindow'
@@ -1015,6 +1016,14 @@ export function AltheriumSheetForm({
         onNewTurn={newTurn} onEndScene={finishScene} onCondition={putCondition} onOpenDying={() => setPlay('dying')}
         scene={scene} readOnly={!canRollTests} turnNote={turnNote}
       />
+      {canRollTests && (
+        <AltheriumRequestCard
+          campaignId={sheet.campaign_id} sheetId={sheet.id} character={who}
+          check={domainCheck} scene={scene} onScene={updateScene} heavyGear={heavyGear}
+          onLoseEquilibrium={(n) => setForm((prev) => ({ ...prev, equilibrio_current: Math.max(0, prev.equilibrio_current - n) }))}
+          announce={announce}
+        />
+      )}
 
       {/* ── Abas ── */}
       <nav ref={tabsRef} className="campaign-tabs alth-sheet-tabs" role="tablist" aria-label="Seções da ficha">

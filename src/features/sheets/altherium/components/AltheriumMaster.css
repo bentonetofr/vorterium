@@ -1,0 +1,95 @@
+/* ═══════════════════════════════════════════════════════
+   Altherium — painel do mestre (botão fixo do canto) e os pedidos de teste
+   que aparecem na ficha do jogador.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Botão do canto: uma casa à esquerda do botão dos documentos ── */
+.alth-master-fab {
+  position: absolute;
+  right: calc(56px + var(--space-3) + 44px + var(--space-3) + 44px + var(--space-3) + 44px + var(--space-3));
+  bottom: 6px;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  color: var(--accent-bright);
+  background: var(--bg-elevated);
+  border: 1px solid var(--gilded);
+  cursor: var(--cursor-hand);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-base);
+}
+.alth-master-fab:hover { color: var(--text-primary); border-color: var(--gilded-bright); transform: translateY(-2px); }
+.alth-master-fab:active { transform: scale(0.9); transition-duration: 80ms; }
+.alth-master-fab--open { border-color: var(--gilded-bright); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(212, 175, 55, 0.45); }
+
+.alth-master-panel.fab-panel {
+  width: min(560px, calc(100vw - 56px - var(--space-3) - 2 * var(--space-6)));
+  height: max(320px, min(740px, calc(100dvh - 130px - var(--fab-toasts-space, 0px))));
+}
+.alth-master-panel__head {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-dim); color: var(--accent-bright);
+}
+.alth-master-panel__titles { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.alth-master-panel__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; color: var(--accent-bright); }
+.alth-master-panel__sub { font-family: var(--font-label); font-size: 11px; color: var(--text-muted); }
+.alth-master-panel__close {
+  width: 28px; height: 28px; line-height: 1; color: var(--text-muted);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: 50%; cursor: var(--cursor-hand);
+}
+.alth-master-panel__close:hover { color: var(--text-primary); }
+.alth-master-panel__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-3) var(--space-4) var(--space-4); }
+
+/* ── Conteúdo do painel ── */
+.alth-master { display: flex; flex-direction: column; gap: var(--space-4); }
+.alth-master__roster { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-master__roster-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.alth-master__roster-btns { display: inline-flex; gap: 4px; }
+.alth-master__list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; max-height: 200px; overflow-y: auto; }
+.alth-master__who {
+  display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 7px 10px; text-align: left;
+  color: var(--text-secondary); background: var(--bg-void); border: 1px solid var(--border-dim); border-left: 3px solid var(--border-base);
+  border-radius: var(--radius-sm); cursor: var(--cursor-hand);
+  transition: border-color 120ms, background 120ms;
+}
+.alth-master__who:hover { border-color: var(--border-bright); }
+.alth-master__who--on { border-left-color: var(--accent-bright); background: var(--accent-glow); color: var(--text-primary); }
+.alth-master__name { font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; }
+.alth-master__stats { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--space-3); font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.alth-master__bad { color: var(--danger-bright); }
+.alth-master__tab { display: flex; flex-direction: column; gap: var(--space-3); }
+.alth-master__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.alth-master .alth-master__dt { width: 84px; }
+.alth-master__log {
+  margin: 0; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6); font-size: var(--text-xs); color: var(--text-primary);
+  background: var(--bg-void); border: 1px solid var(--accent-dim); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 3px;
+}
+.alth-master__requests { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alth-master__request { padding: var(--space-3); background: var(--bg-void); border: 1px solid var(--border-dim); border-left: 2px solid var(--accent-dim); border-radius: var(--radius-sm); }
+.alth-master__request-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.alth-master__answers { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); }
+.alth-master__answers li { display: flex; justify-content: space-between; gap: var(--space-3); color: var(--text-secondary); }
+.alth-master__answers .alth-master__ok b { color: var(--alth-resource); }
+.alth-master__answers .alth-master__fail b { color: var(--danger-bright); }
+.alth-master__answers .alth-master__wait b { color: var(--text-muted); font-weight: 400; }
+/* A cena do mestre dentro do painel não precisa da moldura de fora. */
+.alth-master .alth-scene { margin-bottom: 0; }
+.alth-master .alth-scene__body { grid-template-columns: minmax(0, 1fr); }
+
+/* ── Pedidos do mestre, na ficha do jogador ── */
+.alth-requests { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-requests__row {
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4);
+  background: linear-gradient(90deg, var(--accent-glow), var(--bg-surface));
+  border: 1px solid var(--gilded-bright); border-radius: var(--radius-lg); color: var(--accent-bright);
+  animation: fadeUp 0.24s ease-out both;
+}
+.alth-requests__info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.alth-requests__info strong { font-family: var(--font-display); font-size: var(--text-md); color: var(--text-primary); }
+.alth-requests__info small { font-size: var(--text-xs); color: var(--text-muted); }
+
+@media (max-width: 480px) {
+  .alth-master-fab { right: calc(48px + var(--space-3) + 38px + var(--space-3) + 38px + var(--space-3) + 38px + var(--space-3)); bottom: 5px; width: 38px; height: 38px; }
+  .alth-master-panel.fab-panel { width: auto; height: max(200px, min(560px, calc(100dvh - var(--bottom-nav-h, 60px) - 48px - 140px - var(--fab-toasts-space, 0px)))); }
+}
+@media (prefers-reduced-motion: reduce) { .alth-requests__row { animation: none; } }

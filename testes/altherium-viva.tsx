@@ -15,6 +15,7 @@ import '../src/features/campaigns/pages/CampaignPages.css'
 import '../src/shared/theme/touch.css'
 import '../src/features/sheets/altherium/components/AltheriumSheet.css'
 import { AltheriumSceneBar } from '../src/features/sheets/altherium/components/AltheriumSceneBar'
+import { AltheriumMasterPanel } from '../src/features/sheets/altherium/components/AltheriumMasterPanel'
 import { SheetEditor } from '../src/features/sheets/altherium/components/AltheriumSheetPanel'
 import { AuthProvider } from '../src/features/auth/AuthProvider'
 import { supabase } from '../src/shared/lib/supabase'
@@ -39,7 +40,10 @@ const sheet: AltheriumSheet = {
 } as AltheriumSheet
 
 seedFakeDb({
-  altherium_character_sheets: [sheet],
+  altherium_character_sheets: [
+    { ...sheet, is_npc: false },
+    { ...sheet, id: 'sheet-2', user_id: 'user-2', character_name: 'Lyra, a Pilar', raiz: 'pilar', vitality_current: 18, vitality_max: 30, equilibrio_current: 8, cards_current: 13, is_npc: false, survival: { tokens: 3, hunger: 1 }, resources: { racao: { comum: 50 } } },
+  ],
   altherium_character_domains: [
     { id: 'd1', sheet_id: 'sheet-1', domain: 'luta', points: 2, bonus_die: false, no_auto_disadvantage: false },
     { id: 'd2', sheet_id: 'sheet-1', domain: 'intimidacao', points: 1, bonus_die: false, no_auto_disadvantage: false },
@@ -54,13 +58,22 @@ seedFakeDb({
     { id: 'i3', sheet_id: 'sheet-1', item_type: 'armadura', item_id: 'cota_malha_norte', quantity: 1, equipped: true, equipped_zone: 'db_tronco', custom_name: null, custom_detail: null, custom_db: null, custom_damage_dice: null, custom_damage_type: null, custom_attribute: null, custom_range: null, integrity: 70, reinforcements: [], crafted: null, created_at: now },
   ],
   altherium_runes: [],
+  altherium_check_requests: [
+    { id: 'r1', campaign_id: 'camp-1', master_id: 'm', targets: ['user-1'], kind: 'stealth', domain: null, label: 'Furtividade', dt: 8, amount: null, status: 'open', created_at: now, closed_at: null },
+    { id: 'r2', campaign_id: 'camp-1', master_id: 'm', targets: ['user-1'], kind: 'equilibrium', domain: null, label: 'Corpos no salão', dt: 9, amount: 6, status: 'open', created_at: now, closed_at: null },
+  ],
 })
 
 // Sem login: a prévia finge um usuário pra as rolagens gravarem no banco falso.
 const fakeUser = { id: 'user-1', email: 'previa@vorterium.test' }
 supabase.auth.getUser = (async () => ({ data: { user: fakeUser }, error: null })) as unknown as typeof supabase.auth.getUser
 
+supabase.auth.getSession = (async () => ({ data: { session: { user: fakeUser, access_token: 'x', refresh_token: 'x', expires_in: 3600, token_type: 'bearer' } }, error: null })) as unknown as typeof supabase.auth.getSession
+supabase.auth.onAuthStateChange = (() => ({ data: { subscription: { unsubscribe() {} } } })) as unknown as typeof supabase.auth.onAuthStateChange
+
 function Preview() {
+  if (params.get('painel') === '1') return <div style={{ maxWidth: 560, border: '1px solid #534434', padding: 16, borderRadius: 10, background: '#131b2e' }}><AltheriumMasterPanel campaignId="camp-1" /></div>
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [s, setS] = useState<AltheriumSheet>(sheet)
   return (
     <>

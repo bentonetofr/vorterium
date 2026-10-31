@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.7',
+    date:    '2026-10-31',
+    title:   'Altherium: painel do mestre',
+    items: [
+      'Novo botão fixo do mestre (a coroa, ao lado do livro dos documentos) nas campanhas de Altherium. Ele abre o Painel do mestre por cima da página, sem sair do que você está fazendo.',
+      'No topo do painel você marca quem recebe: todos ou personagem por personagem. Cada um mostra PV, Equilíbrio, Fichas de Exploração, Fome e Rações, e as mudanças chegam ao vivo na ficha do jogador.',
+      'Pedir teste: Furtividade (já com a DT do estado atual dos inimigos), Equilíbrio (algo perturbador, com a perda e a DT) ou qualquer teste de domínio. O pedido aparece na ficha de cada jogador com a DT preenchida e o botão Rolar. O resultado já faz o que o livro manda: a Furtividade mostra se o estado sobe, e o Equilíbrio calcula a perda (metade se passou, tudo se falhou). O painel mostra a resposta de cada um ao vivo (total, crítico, passou ou falhou) e o botão Encerrar.',
+      'Achados: dar ou tirar um recurso (com qualidade e fração), Ração ou Hacksilvers, ou sortear na tabela do Local (cada personagem recebe o seu sorteio, com a opção de mais 1 Achado Raro). Respeita o limite de 4 unidades por recurso e avisa o que não coube.',
+      'Descanso do grupo: Curto ou Longo com as regras do livro para cada personagem (Vitalidade 1d8 + Espírito, Rúnico, Destino, Peregrino, Ração e Fome), com boa refeição, frio extremo e interrupção.',
+      'Ajustes: Fichas de Exploração, nível de Fome, dano e cura de PV, e Equilíbrio dos marcados. A aba Cena traz o estado dos inimigos, as DTs, o Local, a Escassez e o clima.',
+      'Para os pedidos funcionarem, rode a migration 20240219.',
+    ],
+  },
+  {
     version: '2.6',
     date:    '2026-10-31',
     title:   'Altherium: a ficha de jogar (exploração, descanso e furtividade)',

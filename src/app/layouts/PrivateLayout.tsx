@@ -30,6 +30,7 @@ import { MesaLiveNotice } from '../../features/mesa/components/MesaLiveNotice'
 import { VortableFab } from '../../features/vortable/components/VortableFab'
 import { DocumentOverlay } from '../../features/mesa/documents/DocumentOverlay'
 import { DocumentsFab } from '../../features/mesa/documents/DocumentsFab'
+import { AltheriumMasterFab } from '../../features/sheets/altherium/components/AltheriumMasterFab'
 import { VortablePip } from '../../features/vortable/components/VortablePip'
 import { ScreenShareProvider } from '../../features/mesa/screen/ScreenShareProvider'
 import { usePip } from '../../features/vortable/pip/pipStore'
@@ -338,6 +339,7 @@ function PrivateLayoutContent() {
       <ChatFab />
       {!observer && <NotebookFab />}
       <DocumentsFab />
+      <AltheriumMasterFab />
       {!observer && <ChatMessagePopup />}
     </div>
     </>

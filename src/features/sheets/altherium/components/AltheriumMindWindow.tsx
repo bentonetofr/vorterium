@@ -219,7 +219,7 @@ export function AltheriumMindWindow(props: Props) {
   )
 }
 
-function LossResult({ ctx, amount, onApply }: { ctx: AfterCtx; amount: number; onApply: (n: number) => void }) {
+export function LossResult({ ctx, amount, onApply }: { ctx: AfterCtx; amount: number; onApply: (n: number) => void }) {
   const [done, setDone] = useState(false)
   const passed = ctx.outcome ? ctx.outcome.success : true
   const n = equilibriumLoss(amount, passed)
