@@ -87,12 +87,16 @@ interface Props {
   onRolled?:  (done: TestDone) => void
   /** Ações depois do resultado. */
   after?:     (ctx: AfterCtx) => ReactNode
+  /** Rola assim que a janela abre (a escolha já foi feita numa janela antes): sem a tela de dados de situação. */
+  autoRoll?:  boolean
+  /** Sem o botão "Rolar de novo" (Explorar, por exemplo, gasta uma Ficha por tentativa). */
+  noAgain?:   boolean
 }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 const sum = (list?: Modifier[]) => (list ?? []).reduce((s, m) => s + m.value, 0)
 
-export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose, onRolled, after }: Props) {
+export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose, onRolled, after, autoRoll = false, noAgain = false }: Props) {
   const [situational, setSituational] = useState(0)
   const [target, setTarget] = useState(spec.initialTarget != null ? String(spec.initialTarget) : '')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -134,14 +138,13 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
     setRolling(true)
     setDone(false)
     try {
-      const rolled = rollParsedFormula(parseDiceFormula(testFormula(pool, modifier, spec.extraDie?.sides)), { floor: false })
+      const rolled = rollParsedFormula(parseDiceFormula(testFormula(pool, modifier, spec.extraDie?.sides)))
       const read = readTest(rolled.breakdown)
       if (!read) throw new Error('Não foi possível ler a rolagem.')
       const result = judge(read, targetValue)
       const saved = await recordRoll(campaignId, rolled, isPrivate, {
         label: title,
         skin,
-        noFloor: true,
         context: {
           system: 'altherium', kind: 'skill', key: spec.domainId, sheet_id: sheetId, character,
           dc: targetValue, situational: totalDice, natural: read.kept,
@@ -187,7 +190,17 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
     setRoll(null)
     setDone(false)
     setError(null)
+    if (autoRoll) void doRoll()
   }
+
+  // Rola sozinho quando o palco 3D está pronto (ou quando não há palco).
+  const autoStarted = useRef(false)
+  useEffect(() => {
+    if (!autoRoll || autoStarted.current || !(stage || simple)) return
+    autoStarted.current = true
+    void doRoll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRoll, stage, simple])
 
   const showResult = roll && reading && (done || simple)
   const keptIndex = reading ? reading.results.indexOf(reading.kept) : -1
@@ -211,7 +224,19 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
             )}
           </div>
 
-          {!roll && (
+          {!roll && autoRoll && (
+            <>
+              {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
+              {error && (
+                <div className="alth-test__actions">
+                  <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
+                  <button type="button" className="btn btn-primary" onClick={() => void doRoll()}>Tentar de novo</button>
+                </div>
+              )}
+            </>
+          )}
+
+          {!roll && !autoRoll && (
             <>
               {spec.disadvantage && <p className="alth-test__note alth-test__note--warn">Desvantagem: {spec.disadvantage}.</p>}
 
@@ -298,7 +323,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
               {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
 
               <div className="alth-test__actions">
-                <button type="button" className="btn btn-ghost" onClick={again} disabled={rolling}>Rolar de novo</button>
+                {!noAgain && <button type="button" className="btn btn-ghost" onClick={again} disabled={rolling}>Rolar de novo</button>}
                 <button type="button" className="btn btn-primary" onClick={onClose} disabled={rolling}>Fechar</button>
               </div>
             </>

@@ -289,7 +289,7 @@ export function AltheriumCombatActions({
   if (open) {
     return (
       <AltheriumTestModal
-        key={nonce}
+        key={nonce} autoRoll
         campaignId={campaignId} sheetId={sheetId} character={character} spec={open.spec}
         onClose={close}
         onRolled={({ reading, outcome }) => {

@@ -118,12 +118,12 @@ export function AltheriumExploreWindow(props: Props) {
     return (
       <AltheriumTestModal
         campaignId={props.campaignId} sheetId={props.sheetId} character={props.character} spec={spec}
-        onClose={props.onClose}
+        onClose={props.onClose} autoRoll noAgain
         onRolled={() => props.onSurvival({ tokens: Math.max(0, survival.tokens - 1) })}
         after={(ctx) => (
           <Finds
             ctx={ctx} props={props} location={location} fenda={fenda} faro={faro} cofre={cofre}
-            scarcityLabel={scar.label} dt={scar.dt}
+            scarcityLabel={scar.label} dt={scar.dt} onAgain={() => setSpec(null)}
           />
         )}
       />
@@ -216,8 +216,8 @@ interface Row {
   rerolled: boolean
 }
 
-function Finds({ ctx, props, location, fenda, faro, cofre, scarcityLabel, dt }: {
-  ctx: AfterCtx; props: Props; location: LocationId; fenda: boolean; faro: boolean; cofre: boolean; scarcityLabel: string; dt: number
+function Finds({ ctx, props, location, fenda, faro, cofre, scarcityLabel, dt, onAgain }: {
+  ctx: AfterCtx; props: Props; location: LocationId; fenda: boolean; faro: boolean; cofre: boolean; scarcityLabel: string; dt: number; onAgain: () => void
 }) {
   const { reading, rollExtra, busy } = ctx
   const outcome = useMemo(() => exploreOutcome(reading.total, dt, reading.crit, fenda), [reading.total, reading.crit, dt, fenda])
@@ -333,6 +333,13 @@ function Finds({ ctx, props, location, fenda, faro, cofre, scarcityLabel, dt }: 
       )}
 
       {rows && rows.length === 0 && <p className="alth-hint">Nada encontrado.</p>}
+
+      <div className="alth-test__actions alth-test__actions--start">
+        <button type="button" className="btn btn-ghost" onClick={onAgain} disabled={busy || props.survival.tokens < 1}
+          title={props.survival.tokens < 1 ? 'Sem Fichas de Exploração: descanse.' : undefined}>
+          Explorar de novo ({props.survival.tokens} {props.survival.tokens === 1 ? 'ficha' : 'fichas'})
+        </button>
+      </div>
 
       {outcome.complication && (
         <div className="alth-finds__complication">

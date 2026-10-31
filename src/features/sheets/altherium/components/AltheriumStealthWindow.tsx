@@ -84,7 +84,7 @@ export function AltheriumStealthWindow({ campaignId, sheetId, character, check, 
   if (spec) {
     return (
       <AltheriumTestModal
-        campaignId={campaignId} sheetId={sheetId} character={character} spec={spec} onClose={onClose}
+        campaignId={campaignId} sheetId={sheetId} character={character} spec={spec} onClose={onClose} autoRoll noAgain
         after={(ctx) => <Result ctx={ctx} state={state} scene={scene} onScene={onScene} announce={announce} character={character} />}
       />
     )

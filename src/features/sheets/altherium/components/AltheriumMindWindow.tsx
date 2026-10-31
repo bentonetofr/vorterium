@@ -121,7 +121,7 @@ export function AltheriumMindWindow(props: Props) {
     return (
       <AltheriumTestModal
         campaignId={props.campaignId} sheetId={props.sheetId} character={props.character} spec={spec.spec}
-        onClose={() => setSpec(null)} after={spec.after}
+        onClose={() => setSpec(null)} after={spec.after} autoRoll noAgain
       />
     )
   }
