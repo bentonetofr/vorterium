@@ -34,6 +34,17 @@ function Hearts({ lives }: { lives: number }) {
   )
 }
 
+/**
+ * Posição da letra: a sequência manda x/y de 0 a 1 dentro de uma faixa
+ * (`from` + `span`); aqui a faixa vira 0–100% da arena MENOS uma margem do
+ * tamanho da tecla (--qte-pad), para a letra e o aro nunca saírem da arena,
+ * nem numa tela pequena.
+ */
+function padded(v: number, from: number, span: number): string {
+  const n = Math.min(1, Math.max(0, (v - from) / span))
+  return `calc(var(--qte-pad) + (100% - 2 * var(--qte-pad)) * ${n.toFixed(4)})`
+}
+
 function playNotifySound() {
   try {
     const gain = soundVolume('notify')
@@ -114,8 +125,9 @@ function Board({ player, mine, live, onTap }: { player: QtePlayer; mine: boolean
             tabIndex={mine ? 0 : -1}
             disabled={!mine}
             className="qte-key"
-            style={{ left: `${b.prompt.x * 100}%`, top: `${b.prompt.y * 100}%`, ['--qte-ms' as string]: `${b.prompt.ms}ms` }}
-            onClick={() => onTap(b.prompt!.key)}
+            style={{ left: padded(b.prompt.x, 0.1, 0.8), top: padded(b.prompt.y, 0.14, 0.72), ['--qte-ms' as string]: `${b.prompt.ms}ms` }}
+            onPointerDown={(e) => { if (mine) { e.preventDefault(); onTap(b.prompt!.key) } }}
+            onClick={(e) => { if (e.detail === 0 && mine) onTap(b.prompt!.key) }}
             aria-label={`Tecla ${b.prompt.key}`}
           >
             <span className="qte-key__ring" />
@@ -168,6 +180,9 @@ function verdictText(game: QteGame, me: string | null): { title: string; sub: st
   }
 }
 
+/** Aparelho de toque (sem teclado físico na mão): a dica fala em tocar. */
+const TOUCH = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
+
 export function QteOverlay() {
   const qte = useQte()
   const { game, open } = qte
@@ -175,6 +190,33 @@ export function QteOverlay() {
   const mine = game?.players.find((p) => p.uid === me && p.accepted === true) ?? null
   const playing = !!game && game.phase === 'playing' && !!mine && !mine.board.result
   const lastKeyAt = useRef(0)
+
+  // Tela aberta: a página de trás não rola; durante a cena a tela do aparelho não apaga.
+  const phase = game?.phase
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [open])
+  useEffect(() => {
+    if (!open || (phase !== 'countdown' && phase !== 'playing')) return
+    let lock: { release: () => Promise<void> } | null = null
+    let gone = false
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }
+    const ask = () => { nav.wakeLock?.request('screen').then((l) => { if (gone) void l.release(); else lock = l }).catch(() => {}) }
+    ask()
+    const onVisible = () => { if (document.visibilityState === 'visible' && !lock) ask() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { gone = true; document.removeEventListener('visibilitychange', onVisible); void lock?.release().catch(() => {}) }
+  }, [open, phase])
+
+  // Celular: uma vibração curta quando a SUA letra falha.
+  const myFlash = mine?.board.flash
+  useEffect(() => {
+    if (!open || !myFlash || myFlash.kind !== 'miss') return
+    try { navigator.vibrate?.(70) } catch { /* sem vibração */ }
+  }, [open, myFlash])
 
   // teclado: só a letra, sem atalhos do navegador atrapalhando
   const { press } = qte
@@ -268,7 +310,7 @@ export function QteOverlay() {
         )}
 
         {game.phase === 'playing' && mine && !mine.board.result && (
-          <p className="qte-stage__hint">Aperte a letra que aparece na sua arena (ou toque nela) antes que suma. {QTE_LIVES} falhas e acabou.</p>
+          <p className="qte-stage__hint">{TOUCH ? 'Toque na letra que aparece na sua arena antes que suma' : 'Aperte a letra que aparece na sua arena (ou toque nela) antes que suma'}. {QTE_LIVES} falhas e acabou.</p>
         )}
         {game.phase === 'playing' && !mine && <p className="qte-stage__hint">Você está assistindo: as duas arenas aparecem ao vivo.</p>}
 

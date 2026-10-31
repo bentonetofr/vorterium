@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { COMPACT_QUERY, useMediaQuery } from '../../shared/lib/useMediaQuery'
 import { getCampaignMembers } from '../members/services/memberService'
 import { useAuth } from '../auth/AuthProvider'
 import { QTE_LIVES, QTE_TOTAL, difficultyLabel } from './qteEngine'
@@ -129,35 +131,62 @@ export function QteSetup({ asPlayer, impulso, onStarted }: { asPlayer: boolean; 
   )
 }
 
-/** O botão "Sexo" da ficha: abre o painel suspenso com o preparo e o Iniciar. */
+/** O botão "Sexo" da ficha: abre o painel suspenso com o preparo e o Iniciar (no celular e no tablet, uma folha que sobe da base da tela). */
 export function QteSheetButton({ ownerId, impulso }: { ownerId: string; impulso: number }) {
   const { user } = useAuth()
   const qte = useQte()
+  const compact = useMediaQuery(COMPACT_QUERY)
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
-    const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false) }
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node
+      if (wrapRef.current?.contains(t) || menuRef.current?.contains(t)) return
+      setOpen(false)
+    }
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    document.addEventListener('mousedown', onDown)
+    document.addEventListener('pointerdown', onDown)
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
   }, [open])
+
+  // A folha cobre a tela: a página de trás não rola enquanto ela está aberta.
+  useEffect(() => {
+    if (!open || !compact) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [open, compact])
 
   // O dono da ficha joga a cena; o mestre (que não joga) organiza de qualquer ficha. Observador não vê.
   const owner = !!user && user.id === ownerId
   if (!qte.enabled || !user || (!owner && !qte.isMaster)) return null
+
+  const setup = <QteSetup asPlayer={owner} impulso={owner ? impulso : undefined} onStarted={() => setOpen(false)} />
 
   return (
     <div className="qte-entry" ref={wrapRef}>
       <button type="button" className={`qte-entry__btn${open ? ' qte-entry__btn--open' : ''}`} onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="dialog">
         <HeartIcon /> Sexo
       </button>
-      {open && (
-        <div className="qte-entry__menu" role="dialog" aria-label="Cena a dois">
-          <QteSetup asPlayer={owner} impulso={owner ? impulso : undefined} onStarted={() => setOpen(false)} />
+      {open && !compact && (
+        <div className="qte-entry__menu" role="dialog" aria-label="Cena a dois" ref={menuRef}>
+          {setup}
         </div>
+      )}
+      {open && compact && createPortal(
+        <div className="qte-sheet" role="presentation">
+          <div className="qte-sheet__scrim" onClick={() => setOpen(false)} />
+          <div className="qte-sheet__panel" role="dialog" aria-modal="true" aria-label="Cena a dois" ref={menuRef}>
+            <div className="qte-sheet__grip" aria-hidden="true" />
+            <button type="button" className="qte-sheet__close" onClick={() => setOpen(false)} aria-label="Fechar">×</button>
+            {setup}
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

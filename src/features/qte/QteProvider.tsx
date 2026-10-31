@@ -78,7 +78,11 @@ export function QteProvider({ children }: { children: ReactNode }) {
     if (game && iPlay && (game.phase === 'countdown' || game.phase === 'playing')) setOpen(true)
   }, [game?.id, game?.phase, iPlay]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const openLobby  = useCallback(() => sessionRef.current?.openLobby() ?? 'Sem conexão com a campanha.', [])
+  const openLobby  = useCallback((): string | null => {
+    const session = sessionRef.current
+    // null = deu certo; só texto é erro (um `??` aqui trocava o "deu certo" pelo aviso de falta de conexão)
+    return session ? session.openLobby() : 'Sem conexão com a campanha.'
+  }, [])
   const closeLobby = useCallback(() => sessionRef.current?.closeLobby(), [])
   const begin      = useCallback(async (partners: { uid: string; name: string }[], asPlayer: boolean) => {
     const err = (await sessionRef.current?.begin(partners, asPlayer)) ?? null

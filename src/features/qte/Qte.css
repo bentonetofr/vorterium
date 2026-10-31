@@ -68,7 +68,9 @@
 /* ── Tela da cena ── */
 .qte-overlay {
   position: fixed; inset: 0; z-index: 1300;
-  display: grid; place-items: center; padding: var(--space-4);
+  display: flex;
+  padding: max(var(--space-4), env(safe-area-inset-top)) max(var(--space-4), env(safe-area-inset-right)) max(var(--space-4), env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left));
+  touch-action: manipulation; overscroll-behavior: contain; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
   background: radial-gradient(ellipse at 50% 20%, rgba(23, 31, 51, 0.94), rgba(6, 14, 32, 0.98));
   backdrop-filter: blur(6px);
   animation: qte-fade 250ms ease-out;
@@ -76,7 +78,7 @@
 }
 @keyframes qte-fade { from { opacity: 0; } to { opacity: 1; } }
 .qte-stage {
-  width: min(1180px, 100%); display: flex; flex-direction: column; gap: var(--space-4);
+  width: min(1180px, 100%); margin: auto; display: flex; flex-direction: column; gap: var(--space-4);
   padding: var(--space-6);
   background: var(--bg-surface);
   border: 1px solid var(--gilded);
@@ -127,6 +129,7 @@
 .qte-heart--lost { color: var(--border-base); opacity: 0.6; filter: none; transform: scale(0.8); }
 
 .qte-arena {
+  --qte-pad: 52px; /* metade da tecla + o aro: a letra nunca sai da arena */
   position: relative; overflow: hidden;
   aspect-ratio: 16 / 10; min-height: 220px;
   background:
@@ -193,7 +196,7 @@
 
 .qte-countdown {
   position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
-  font-family: var(--font-display); font-size: 140px; font-weight: 700; line-height: 1; color: var(--accent-bright);
+  font-family: var(--font-display); font-size: clamp(72px, 24vmin, 150px); font-weight: 700; line-height: 1; color: var(--accent-bright);
   text-shadow: 0 0 40px rgba(255, 193, 116, 0.55), 0 4px 18px rgba(0, 0, 0, 0.8);
   animation: qte-count 1s ease-out both;
 }
@@ -204,13 +207,75 @@
 .qte-verdict__sub { margin: 0 0 var(--space-3); font-size: var(--text-lg); color: var(--text-secondary); }
 .qte-verdict .qte-go { width: auto; min-width: 160px; }
 
-@media (max-width: 760px) {
-  .qte-stage { padding: var(--space-4); }
-  .qte-boards--2 { grid-template-columns: 1fr; }
-  .qte-arena { min-height: 200px; }
-  .qte-key { width: 62px; height: 62px; margin: -31px 0 0 -31px; }
-  .qte-key__cap { font-size: 28px; }
-  .qte-countdown { font-size: 96px; }
+/* ── Folha de preparo (celular e tablet): sobe da base da tela ── */
+.qte-sheet { position: fixed; inset: 0; z-index: 1250; display: flex; align-items: flex-end; justify-content: center; }
+.qte-sheet__scrim { position: absolute; inset: 0; background: rgba(6, 14, 32, 0.72); backdrop-filter: blur(3px); animation: qte-fade 180ms ease-out; }
+.qte-sheet__panel {
+  position: relative; width: min(520px, 100%); max-height: 88vh; max-height: 88dvh; overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--space-3) var(--space-4) max(var(--space-5), env(safe-area-inset-bottom));
+  background: var(--bg-elevated);
+  border: 1px solid var(--gilded); border-bottom: 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  animation: qte-sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes qte-sheet-in { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.qte-sheet__grip { width: 44px; height: 4px; margin: 0 auto var(--space-3); border-radius: 2px; background: var(--border-base); }
+.qte-sheet__close {
+  position: absolute; top: var(--space-2); right: var(--space-3); width: 40px; height: 40px;
+  font-size: 24px; line-height: 1; color: var(--text-secondary); background: transparent; border: 0; cursor: pointer;
+}
+.qte-sheet .qte-setup { padding-top: var(--space-2); }
+
+/* ── Tablet em pé e celular: as duas arenas empilhadas, cada uma cabendo na tela ── */
+@media (max-width: 900px) {
+  .qte-stage { padding: var(--space-4); gap: var(--space-3); }
+  .qte-stage__title { font-size: var(--text-2xl); }
+  .qte-boards--2 { grid-template-columns: 1fr; gap: var(--space-3); }
+  /* uma arena em tela cheia; duas dividem a altura que sobra (cabeçalho, dica e margens já descontados) */
+  .qte-arena { aspect-ratio: auto; height: clamp(190px, 46dvh, 520px); min-height: 0; }
+  .qte-boards--2 .qte-arena { height: clamp(150px, 29dvh, 420px); }
+}
+
+/* ── Celular: letra um pouco menor para sobrar espaço de procurar ── */
+@media (max-width: 560px) {
+  .qte-overlay { padding: max(var(--space-2), env(safe-area-inset-top)) max(var(--space-2), env(safe-area-inset-right)) max(var(--space-2), env(safe-area-inset-bottom)) max(var(--space-2), env(safe-area-inset-left)); }
+  .qte-stage { padding: var(--space-3); border-radius: var(--radius-lg); }
+  .qte-stage__sub { display: none; }
+  .qte-arena { --qte-pad: 44px; }
+  .qte-key { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+  .qte-key__ring { inset: -14px; }
+  .qte-key__cap { font-size: 26px; }
+  .qte-board__name { font-size: var(--text-lg); }
+  .qte-pop { font-size: var(--text-xl); }
+  .qte-arena__result { font-size: var(--text-2xl); }
+  .qte-verdict__title { font-size: var(--text-3xl); }
+  .qte-wait { padding: var(--space-8) var(--space-2); }
+}
+
+/* ── Celular deitado (pouca altura): arenas lado a lado, sem rolar ── */
+@media (max-height: 520px) and (orientation: landscape) {
+  .qte-stage { padding: var(--space-3); gap: var(--space-2); }
+  .qte-stage__head { flex-wrap: nowrap; }
+  .qte-stage__title { font-size: var(--text-xl); }
+  .qte-stage__sub, .qte-stage__hint { display: none; }
+  .qte-boards--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .qte-arena, .qte-boards--2 .qte-arena { height: clamp(130px, 56dvh, 300px); }
+  .qte-board__head { gap: var(--space-2); }
+  .qte-verdict { padding: 0; }
+  .qte-verdict__title { font-size: var(--text-2xl); }
+  .qte-verdict__sub { margin-bottom: var(--space-1); font-size: var(--text-md); }
+  .qte-sheet__panel { max-height: 96dvh; }
+}
+
+/* ── Toque: alvos de 44 px no mínimo, sem efeito de "passar o mouse" preso ── */
+@media (pointer: coarse) {
+  .qte-entry__btn, .qte-chip, .qte-go, .qte-stage__close, .qte-notice .btn, .qte-notice .mesa-notice__close { min-height: 44px; }
+  .qte-stage__close, .qte-notice .mesa-notice__close { min-width: 44px; }
+  .qte-chip { padding-inline: var(--space-4); }
+  .qte-setup__members { gap: var(--space-2); }
+  .qte-entry__btn:hover, .qte-chip:hover { transform: none; }
+  .qte-key__cap { box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55); }
 }
 
 @media (prefers-reduced-motion: reduce) {
