@@ -30,6 +30,7 @@ import { rest, type RestKind } from '../utils/altheriumRest'
 import { HUNGER_MAX, TOKENS_MAX, readSurvival } from '../utils/altheriumSurvival'
 import { enemyStateDef } from '../utils/altheriumStealth'
 import { AltheriumSceneBar } from './AltheriumSceneBar'
+import { QteSetup } from '../../../qte/QteSetup'
 import { Chips, Field, Pips, Toggle } from './AltheriumPlayKit'
 import './AltheriumMaster.css'
 
@@ -42,7 +43,7 @@ import './AltheriumMaster.css'
 // Tudo que o livro já automatiza vem pronto: o mestre só escolhe e aplica.
 // ────────────────────────────────────────────────────────
 
-type Tab = 'testes' | 'achados' | 'descanso' | 'ajustes' | 'cena'
+type Tab = 'testes' | 'achados' | 'descanso' | 'ajustes' | 'cena' | 'cena2'
 
 const d = (sides: number) => 1 + Math.floor(cryptoRng() * sides)
 const nameOf = (s: AltheriumSheetWithProfile) => s.character_name?.trim() || s.profile?.display_name || 'Sem nome'
@@ -152,6 +153,7 @@ export function AltheriumMasterPanel({ campaignId }: { campaignId: string }) {
           { id: 'descanso', label: 'Descanso' },
           { id: 'ajustes', label: 'Ajustes' },
           { id: 'cena', label: 'Cena' },
+          { id: 'cena2', label: 'Cena a dois' },
         ]}
       />
 
@@ -160,6 +162,7 @@ export function AltheriumMasterPanel({ campaignId }: { campaignId: string }) {
       {tab === 'descanso' && <RestTab targets={targets} busy={busy} applyEach={applyEach} say={say} />}
       {tab === 'ajustes' && <AdjustTab targets={targets} busy={busy} applyEach={applyEach} />}
       {tab === 'cena' && <AltheriumSceneBar campaignId={campaignId} />}
+      {tab === 'cena2' && <QteSetup asPlayer={false} />}
 
       {log.length > 0 && (
         <ul className="alth-master__log" role="status">

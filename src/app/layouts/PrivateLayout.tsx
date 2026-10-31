@@ -33,6 +33,8 @@ import { DocumentsFab } from '../../features/mesa/documents/DocumentsFab'
 import { AltheriumMasterFab } from '../../features/sheets/altherium/components/AltheriumMasterFab'
 import { VortablePip } from '../../features/vortable/components/VortablePip'
 import { ScreenShareProvider } from '../../features/mesa/screen/ScreenShareProvider'
+import { QteProvider } from '../../features/qte/QteProvider'
+import { QteNotice, QteOverlay } from '../../features/qte/QteOverlay'
 import { usePip } from '../../features/vortable/pip/pipStore'
 import { Presence } from '../../shared/components/Presence'
 import { FabToasts } from '../../shared/components/FabToasts'
@@ -52,9 +54,11 @@ export function PrivateLayout() {
     <CurrentCampaignProvider>
     <MesaStreamProvider announce={pip?.role === 'master'}>
     <ScreenShareProvider>
+    <QteProvider>
     <RulebookHostProvider>
       <PrivateLayoutContent />
     </RulebookHostProvider>
+    </QteProvider>
     </ScreenShareProvider>
     </MesaStreamProvider>
     </CurrentCampaignProvider>
@@ -308,10 +312,12 @@ function PrivateLayoutContent() {
     <DocumentOverlay />
     {!observer && <LivroHost />}
     {!observer && <TorreHost />}
+    {!observer && <QteOverlay />}
     <div className={`dice-fab-wrapper${compact ? ` site-tools${toolsFolded ? ' site-tools--folded' : ''}` : ''}`}>
       {!observer && (
         <FabToasts>
           <MesaLiveNotice />
+          <QteNotice />
           <NotificationPopup />
         </FabToasts>
       )}

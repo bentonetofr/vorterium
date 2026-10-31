@@ -64,6 +64,7 @@ import { AltheriumTestModal, type AltheriumTestSpec } from './AltheriumTestModal
 import { AltheriumCombatActions, type CombatAction, type DomainCheck } from './AltheriumCombatPanel'
 import { AltheriumCraftPanel } from './AltheriumCraftPanel'
 import { AltheriumActionBar, type ActionDef, type PlayAction } from './AltheriumActionBar'
+import { QteSheetButton } from '../../../qte/QteSetup'
 import { AltheriumStatusStrip } from './AltheriumStatusStrip'
 import { AltheriumTurnPanel } from './AltheriumTurnPanel'
 import { AltheriumRequestCard } from './AltheriumRequestCard'
@@ -1014,6 +1015,7 @@ export function AltheriumSheetForm({
 
       {/* ── Ações do jogo e faixa de estado ── */}
       {canRollTests && <AltheriumActionBar actions={heroActions} onAction={setPlay} />}
+      {canRollTests && <QteSheetButton ownerId={sheet.user_id} impulso={form.attr_impulso ?? 0} />}
       <AltheriumStatusStrip survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival} readOnly={!canRollTests} />
       {canRollTests && (
         <AltheriumRequestCard
