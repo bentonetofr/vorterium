@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useRef, type CSSProperties } from 'react'
+import { memo, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { BoardItem } from '../services/boardService'
 import { connectorCurve, inkColor, OUTLINE, type Point } from '../boardGeometry'
 import { alignOf, fontStack, useBoardFont } from '../boardFonts'
@@ -256,11 +256,14 @@ function FrameView({ item, editing, onText, onDone }: ItemViewProps) {
 // ── Imagem e arquivo (da Biblioteca) ────────────────────
 
 function ImageView({ item, imageUrl }: ItemViewProps) {
+  // Link que não abre (arquivo sem permissão ou link vencido) também vira o aviso, em vez de um espaço vazio.
+  const [broken, setBroken] = useState<string | null>(null)
+  const failed = !imageUrl || broken === imageUrl
   return (
     <div className={`board-item board-image${item.locked ? ' is-locked' : ''}`} data-board-id={item.id} style={box(item)}>
-      {imageUrl
-        ? <img src={imageUrl} alt={item.data.name ?? ''} draggable={false} />
-        : <span className="board-image__missing">{imageUrl === null ? 'Imagem indisponível' : <Loader small />}</span>}
+      {!failed
+        ? <img src={imageUrl} alt={item.data.name ?? ''} draggable={false} onError={() => { console.warn('Imagem do quadro não carregou:', item.data.path); setBroken(imageUrl ?? null) }} />
+        : <span className="board-image__missing">{imageUrl === undefined ? <Loader small /> : 'Imagem indisponível'}</span>}
     </div>
   )
 }
