@@ -49,6 +49,32 @@ const EMPTY_MESSAGES: Record<StatusFilter, string> = {
   canceled:  'Nenhuma sessão cancelada.',
 }
 
+type SortOrder = 'recent' | 'oldest' | 'az' | 'za'
+
+const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
+  { value: 'recent', label: 'Mais recentes' },
+  { value: 'oldest', label: 'Mais antigos' },
+  { value: 'az',     label: 'Ordem alfabética (A–Z)' },
+  { value: 'za',     label: 'Ordem alfabética (Z–A)' },
+]
+
+/** Data que vale pra ordenar: a marcada na sessão; sem data, o dia em que ela foi criada. */
+function sortDay(s: CampaignSession): string {
+  return s.session_date ?? s.created_at.slice(0, 10)
+}
+
+function sortSessions(list: CampaignSession[], order: SortOrder): CampaignSession[] {
+  const byTitle = (a: CampaignSession, b: CampaignSession) =>
+    a.title.localeCompare(b.title, 'pt-BR', { numeric: true, sensitivity: 'base' })
+  const byTime = (a: CampaignSession, b: CampaignSession) =>
+    sortDay(a).localeCompare(sortDay(b)) || a.created_at.localeCompare(b.created_at)
+  return [...list].sort((a, b) => {
+    if (order === 'az') return byTitle(a, b)
+    if (order === 'za') return byTitle(b, a)
+    return order === 'recent' ? byTime(b, a) : byTime(a, b)
+  })
+}
+
 function validateForm(title: string, summary: string, status: string): string | null {
   if (!title.trim())               return 'Informe um título para a sessão.'
   if (title.length > TITLE_MAX)    return `O título deve ter no máximo ${TITLE_MAX} caracteres.`
@@ -355,6 +381,7 @@ export function CampaignSessionsPanel({
   const [deletingId,     setDeletingId]     = useState<string | null>(null)
   const [deleteError,    setDeleteError]    = useState<string | null>(null)
   const [statusFilter,   setStatusFilter]   = useState<StatusFilter>('all')
+  const [sortOrder,      setSortOrder]      = useState<SortOrder>('recent')
 
   const loadSessions = useCallback(async () => {
     setLoading(true)
@@ -419,9 +446,10 @@ export function CampaignSessionsPanel({
     }
   }
 
-  const filteredSessions = statusFilter === 'all'
-    ? sessions
-    : sessions.filter((s) => s.status === statusFilter)
+  const filteredSessions = sortSessions(
+    statusFilter === 'all' ? sessions : sessions.filter((s) => s.status === statusFilter),
+    sortOrder,
+  )
 
   return (
     <div className="sessions-panel">
@@ -479,6 +507,7 @@ export function CampaignSessionsPanel({
         <>
           {/* Filtros por status — aparecem apenas quando há sessões */}
           {sessions.length > 0 && (
+            <div className="sessions-toolbar">
             <div className="sessions-filters" role="tablist" aria-label="Filtrar sessões por status">
               {(['all', 'planned', 'completed', 'canceled'] as StatusFilter[]).map((f) => {
                 const count = f !== 'all' ? sessions.filter((s) => s.status === f).length : null
@@ -497,6 +526,14 @@ export function CampaignSessionsPanel({
                   </button>
                 )
               })}
+            </div>
+            <Select
+              id="sessions-sort"
+              className="sessions-sort"
+              value={sortOrder}
+              onChange={(v) => setSortOrder(v as SortOrder)}
+              options={SORT_OPTIONS}
+            />
             </div>
           )}
 
