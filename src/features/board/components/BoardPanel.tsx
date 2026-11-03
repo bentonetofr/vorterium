@@ -223,6 +223,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   const [peers, setPeers]       = useState<BoardPeer[]>([])
   const [urls, setUrls]         = useState<Map<string, string | null>>(new Map())
   const signRetries = useRef(new Map<string, number>())
+  const signing = useRef(new Set<string>())
 
   const items = itemsRef.current
   const view = viewRef.current
@@ -546,16 +547,19 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
     [items],
   )
   useEffect(() => {
-    const missingRefs = imageRefs.filter((r) => !urls.has(r.path))
+    // Pedidos em andamento não se repetem nem são largados quando o quadro muda (senão, com gente mexendo, o link nunca chega).
+    const missingRefs = imageRefs.filter((r) => !urls.has(r.path) && !signing.current.has(r.path))
     if (missingRefs.length === 0) return
     const missing = missingRefs.map((r) => r.path)
-    let alive = true
-    void Promise.all([
+    for (const p of missing) signing.current.add(p)
+    const answer = Promise.all([
       signBoardPhotos(missingRefs.filter((r) => r.gallery).map((r) => r.path)),
       signBoardPaths(missingRefs.filter((r) => !r.gallery).map((r) => r.path)),
-    ]).then(([photos, docs]) => {
-      const signed = new Map([...photos, ...docs])
-      if (!alive) return
+    ]).then(([photos, docs]) => new Map([...photos, ...docs]))
+    // Pedido que trava ou falha vira "indisponível" (e tenta de novo), nunca carregando pra sempre.
+    const giveUp = new Promise<Map<string, string>>((ok) => window.setTimeout(() => ok(new Map()), 20000))
+    void Promise.race([answer, giveUp]).catch(() => new Map<string, string>()).then((signed) => {
+      for (const p of missing) signing.current.delete(p)
       setUrls((prev) => {
         const next = new Map(prev)
         for (const p of missing) next.set(p, signed.get(p) ?? null)
@@ -572,7 +576,6 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         }), 3000)
       }
     })
-    return () => { alive = false }
   }, [imageRefs, urls])
 
   // ── Ferramentas ───────────────────────────────────────
