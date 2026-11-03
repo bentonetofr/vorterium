@@ -6,7 +6,7 @@ import {
   getCampaignNotebookAuthors,
   listNotes,
   mergeNotes,
-  notesToText,
+  downloadAllNotes,
   sessionLabel,
   subscribeNotes,
   timeLabel,
@@ -95,16 +95,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const selectedLabel = groups.find((g) => g.key === selected)?.label ?? ''
 
   function downloadAll() {
-    const title = author?.title ?? 'Anotações'
-    const text = notesToText(`${title} — ${campaign.name}`, notes, sessions)
-    const url = URL.createObjectURL(new Blob([`﻿${text}`], { type: 'text/plain;charset=utf-8' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${`${title} - ${campaign.name}`.replace(/[\\/:*?"<>|]+/g, '').trim() || 'anotacoes'}.txt`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    downloadAllNotes(author?.title ?? 'Anotações', campaign.name, notes, sessions)
   }
 
   if (!loading && !authors.length) {

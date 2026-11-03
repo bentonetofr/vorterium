@@ -3,6 +3,7 @@ import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import type { CampaignSession } from '../../../shared/types'
 import { notePlainText } from '../noteHtml'
 import { sortSessions } from '../../sessions/services/sessionService'
+import { downloadTextFile } from '../../sheets/export/sheetText'
 
 // ────────────────────────────────────────────────────────
 // Caderno do jogador ("Anotações da Bruna"). Ligado por conta
@@ -304,6 +305,12 @@ export function notesToText(heading: string, notes: NotebookNote[], sessions: Ca
     })
   }
   return `${parts.join('\n')}\n`
+}
+
+/** Baixa as anotações de todos os episódios em um único .txt ("<caderno> - <campanha>.txt"). */
+export function downloadAllNotes(title: string, campaignName: string, notes: NotebookNote[], sessions: CampaignSession[]): void {
+  const name = `${title} - ${campaignName}`
+  downloadTextFile(`${name.replace(/[\\/:*?"<>|]+/g, '').trim() || 'anotacoes'}.txt`, notesToText(name, notes, sessions))
 }
 
 export function timeLabel(iso: string): string {

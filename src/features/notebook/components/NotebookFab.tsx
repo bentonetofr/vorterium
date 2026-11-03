@@ -10,6 +10,7 @@ import {
   createNote,
   currentSessionId,
   deleteNote,
+  downloadAllNotes,
   listNotes,
   mergeNotes,
   noteHeadline,
@@ -379,6 +380,17 @@ function NotebookPanel({ campaign, title, userId, onClose }: { campaign: Campaig
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="note-tool"
+              onClick={() => downloadAllNotes(title, campaign.name, notes, sessions)}
+              aria-label="Baixar tudo em .txt"
+              title="Baixar tudo em .txt (as anotações de todos os episódios)"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 4v11" /><path d="M7 11l5 5 5-5" /><path d="M5 20h14" />
               </svg>
             </button>
             <input
