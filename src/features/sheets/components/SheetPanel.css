@@ -531,3 +531,6 @@
 .npc-readonly label,
 .npc-readonly [role="slider"] { cursor: default !important; }
 .npc-readonly input[readonly], .npc-readonly textarea[readonly] { caret-color: transparent; }
+
+/* Botão "Exportar TXT" no topo de cada ficha */
+.sheet-export-row { display: flex; justify-content: flex-end; margin-bottom: var(--space-2); }

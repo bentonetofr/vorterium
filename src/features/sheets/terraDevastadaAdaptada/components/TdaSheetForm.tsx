@@ -64,6 +64,8 @@ import { CreateCharacterButton } from '../../../vortable/components/CreateCharac
 import { useTdaScene } from '../utils/useTdaScene'
 import './TerraDevastadaAdaptadaSheet.css'
 import './TdaMotion.css'
+import { ExportSheetButton } from '../../export/ExportSheetButton'
+import { tdSheetText } from '../../terraDevastada/utils/tdSheetText'
 
 // ────────────────────────────────────────────────────────
 // Ficha Terra Devastada Adaptada. Salvamento automático igual ao da ficha
@@ -450,6 +452,9 @@ export function TdaSheetForm({
       style={{ '--tab-dir': tabDir } as CSSProperties}
     >
       {ownerName && <p className="tda-sheet__owner">Ficha de <strong>{ownerName}</strong></p>}
+      <div className="sheet-export-row">
+        <ExportSheetButton character={form.character_name} system="Terra Devastada Adaptada" build={() => tdSheetText({ ...sheet, ...form } as unknown as TdaSheet, true)} />
+      </div>
 
       {showScene && (
         <div className={`tda-alert-strip tda-alert-strip--${scene.alert}`} role="status">

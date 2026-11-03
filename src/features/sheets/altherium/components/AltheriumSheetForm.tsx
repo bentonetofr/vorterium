@@ -83,6 +83,8 @@ import { sendMessage } from '../../../chat/services/chatService'
 import { findArmor, findWeapon } from '../constants/altheriumItems'
 import type { RestResult } from '../utils/altheriumRest'
 import { isObserver } from '../../../../shared/lib/observer'
+import { ExportSheetButton } from '../../export/ExportSheetButton'
+import { altheriumSheetText, type AltheriumTextSheet } from '../utils/altheriumSheetText'
 
 const NOTES_MAX = 2000
 /** Nomes que deixam o manequim sem pernas (comparados em minúsculas). */
@@ -1016,6 +1018,9 @@ export function AltheriumSheetForm({
       {/* ── Ações do jogo e faixa de estado ── */}
       {canRollTests && <AltheriumActionBar actions={heroActions} onAction={setPlay} />}
       {canRollTests && <QteSheetButton ownerId={sheet.user_id} impulso={form.attr_impulso ?? 0} />}
+      <div className="sheet-export-row">
+        <ExportSheetButton character={form.character_name} system="Altherium" build={() => altheriumSheetText({ ...sheet, ...form } as unknown as AltheriumTextSheet, domains, inventory, runes)} />
+      </div>
       <AltheriumStatusStrip survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival} readOnly={!canRollTests} />
       {canRollTests && (
         <AltheriumRequestCard

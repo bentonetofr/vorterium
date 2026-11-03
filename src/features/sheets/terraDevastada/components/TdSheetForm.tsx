@@ -29,6 +29,8 @@ import { announceTd, type TdSheetUpdate } from '../services/tdSheetService'
 import { TdTestModal, type TdTestPurpose } from './TdTestModal'
 import { TdHorrorModal } from './TdHorrorModal'
 import './TerraDevastadaSheet.css'
+import { ExportSheetButton } from '../../export/ExportSheetButton'
+import { tdSheetText } from '../utils/tdSheetText'
 
 // ────────────────────────────────────────────────────────
 // Ficha Terra Devastada. Salvamento automático igual ao da ficha
@@ -257,6 +259,9 @@ export function TdSheetForm({ sheet, ownerName, onSave, saveError }: TdSheetForm
       style={{ '--tab-dir': tabDir } as CSSProperties}
     >
       {ownerName && <p className="td-sheet__owner">Ficha de <strong>{ownerName}</strong></p>}
+      <div className="sheet-export-row">
+        <ExportSheetButton character={form.character_name} system="Terra Devastada" build={() => tdSheetText({ ...sheet, ...form } as unknown as TdSheet, false)} />
+      </div>
 
       {/* ── Cabeçalho: identidade + Horror/Convicção ── */}
       <header className="td-hero">

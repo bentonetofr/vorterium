@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react'
 import type { CharacterSheet } from '../../../shared/types'
 import type { SheetUpdateData } from '../services/sheetService'
+import { ExportSheetButton } from '../export/ExportSheetButton'
+import { simpleSheetText } from '../utils/simpleSheetText'
 
 // ────────────────────────────────────────────────────────
 // Constantes
@@ -173,6 +175,10 @@ export function SimpleSheetForm({
           <span className="sheet-form__owner-name">{ownerName}</span>
         </div>
       )}
+
+      <div className="sheet-export-row">
+        <ExportSheetButton character={formData.character_name} system="Ficha Simples" build={() => simpleSheetText({ ...sheet, ...formData } as CharacterSheet)} />
+      </div>
 
       {/* ── Identificação ── */}
       <section className="sheet-section">

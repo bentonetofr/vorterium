@@ -11,6 +11,8 @@ const DndAutomationPanel = lazy(() => import('./DndAutomationPanel').then((m) =>
 import { Presence } from '../../../../shared/components/Presence'
 import { DerivedField, NumberField } from './DndControls'
 import { DndDragBar } from './DndDragBar'
+import { ExportSheetButton } from '../../export/ExportSheetButton'
+import { dndSheetText } from '../model/sheetText'
 import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
@@ -123,6 +125,8 @@ export function DndHero({ ctx, portraitBusy, onPortraitChange, onPortraitRemove,
               <button type="button" className="dsh-chip" onClick={onImport}
                 title="Preenche a ficha a partir do PDF da sua ficha (a ficha preenchível JohnBard DnD 5e CS).">Importar PDF</button>
             )}
+            <ExportSheetButton className="dsh-chip" character={form.character_name} system="D&D 5e" build={() => dndSheetText(ctx)} />
+
           </div>
         </div>
       </div>

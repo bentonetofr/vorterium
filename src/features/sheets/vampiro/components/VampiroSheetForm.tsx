@@ -24,6 +24,8 @@ import { VtmPredatorCard } from './VtmPredatorCard'
 import type { VtmForm } from './vtmForm'
 import './VampiroSheet.css'
 import { CreateCharacterButton } from '../../../vortable/components/CreateCharacterButton'
+import { ExportSheetButton } from '../../export/ExportSheetButton'
+import { vampiroSheetText } from '../utils/vampiroSheetText'
 
 // ────────────────────────────────────────────────────────
 // Ficha de Vampiro: A Máscara (5ª edição). Cabeçalho com retrato,
@@ -333,6 +335,9 @@ export function VampiroSheetForm({
       style={{ '--tab-dir': tabDir } as CSSProperties}
     >
       {ownerName && <p className="vtm-sheet__owner">Ficha de <strong>{ownerName}</strong></p>}
+      <div className="sheet-export-row">
+        <ExportSheetButton character={form.character_name} system="Vampiro" build={() => vampiroSheetText({ ...sheet, ...form } as unknown as VtmSheet)} />
+      </div>
 
       {/* ── Cabeçalho: retrato, identidade e trilhas ── */}
       <header className="vtm-hero">
