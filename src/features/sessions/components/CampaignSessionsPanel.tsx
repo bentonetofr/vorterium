@@ -7,6 +7,9 @@ import {
   getSessionStatusLabel,
   type SessionFormData,
   type SessionStatus,
+  type SessionSortOrder,
+  SESSION_SORT_OPTIONS,
+  sortSessions,
 } from '../services/sessionService'
 import type { CampaignSession } from '../../../shared/types'
 import { ModalOverlay } from '../../../shared/components/ModalOverlay'
@@ -47,32 +50,6 @@ const EMPTY_MESSAGES: Record<StatusFilter, string> = {
   planned:   'Nenhuma sessão planejada.',
   completed: 'Nenhuma sessão concluída.',
   canceled:  'Nenhuma sessão cancelada.',
-}
-
-type SortOrder = 'recent' | 'oldest' | 'az' | 'za'
-
-const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
-  { value: 'recent', label: 'Mais recentes' },
-  { value: 'oldest', label: 'Mais antigos' },
-  { value: 'az',     label: 'Ordem alfabética (A–Z)' },
-  { value: 'za',     label: 'Ordem alfabética (Z–A)' },
-]
-
-/** Data que vale pra ordenar: a marcada na sessão; sem data, o dia em que ela foi criada. */
-function sortDay(s: CampaignSession): string {
-  return s.session_date ?? s.created_at.slice(0, 10)
-}
-
-function sortSessions(list: CampaignSession[], order: SortOrder): CampaignSession[] {
-  const byTitle = (a: CampaignSession, b: CampaignSession) =>
-    a.title.localeCompare(b.title, 'pt-BR', { numeric: true, sensitivity: 'base' })
-  const byTime = (a: CampaignSession, b: CampaignSession) =>
-    sortDay(a).localeCompare(sortDay(b)) || a.created_at.localeCompare(b.created_at)
-  return [...list].sort((a, b) => {
-    if (order === 'az') return byTitle(a, b)
-    if (order === 'za') return byTitle(b, a)
-    return order === 'recent' ? byTime(b, a) : byTime(a, b)
-  })
 }
 
 function validateForm(title: string, summary: string, status: string): string | null {
@@ -381,7 +358,7 @@ export function CampaignSessionsPanel({
   const [deletingId,     setDeletingId]     = useState<string | null>(null)
   const [deleteError,    setDeleteError]    = useState<string | null>(null)
   const [statusFilter,   setStatusFilter]   = useState<StatusFilter>('all')
-  const [sortOrder,      setSortOrder]      = useState<SortOrder>('recent')
+  const [sortOrder,      setSortOrder]      = useState<SessionSortOrder>('recent')
 
   const loadSessions = useCallback(async () => {
     setLoading(true)
@@ -531,8 +508,8 @@ export function CampaignSessionsPanel({
               id="sessions-sort"
               className="sessions-sort"
               value={sortOrder}
-              onChange={(v) => setSortOrder(v as SortOrder)}
-              options={SORT_OPTIONS}
+              onChange={(v) => setSortOrder(v as SessionSortOrder)}
+              options={SESSION_SORT_OPTIONS}
             />
             </div>
           )}

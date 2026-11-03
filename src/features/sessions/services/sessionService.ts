@@ -18,6 +18,36 @@ export function getSessionStatusLabel(status: SessionStatus): string {
   return SESSION_STATUS_LABELS[status] ?? status
 }
 
+// ────────────────────────────────────────────────────────
+// Ordem da lista de episódios (a mesma na lista e nas Anotações da Bruna)
+// ────────────────────────────────────────────────────────
+
+export type SessionSortOrder = 'recent' | 'oldest' | 'az' | 'za'
+
+export const SESSION_SORT_OPTIONS: { value: SessionSortOrder; label: string }[] = [
+  { value: 'recent', label: 'Mais recentes' },
+  { value: 'oldest', label: 'Mais antigos' },
+  { value: 'az',     label: 'Ordem alfabética (A–Z)' },
+  { value: 'za',     label: 'Ordem alfabética (Z–A)' },
+]
+
+/** Data que vale pra ordenar: a marcada na sessão; sem data, o dia em que ela foi criada. */
+function sortDay(s: CampaignSession): string {
+  return s.session_date ?? s.created_at.slice(0, 10)
+}
+
+export function sortSessions(list: CampaignSession[], order: SessionSortOrder): CampaignSession[] {
+  const byTitle = (a: CampaignSession, b: CampaignSession) =>
+    a.title.localeCompare(b.title, 'pt-BR', { numeric: true, sensitivity: 'base' })
+  const byTime = (a: CampaignSession, b: CampaignSession) =>
+    sortDay(a).localeCompare(sortDay(b)) || a.created_at.localeCompare(b.created_at)
+  return [...list].sort((a, b) => {
+    if (order === 'az') return byTitle(a, b)
+    if (order === 'za') return byTitle(b, a)
+    return order === 'recent' ? byTime(b, a) : byTime(a, b)
+  })
+}
+
 export interface SessionFormData {
   title:        string
   session_date: string | null  // 'YYYY-MM-DD' ou null

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import type { CampaignSession } from '../../../shared/types'
 import { notePlainText } from '../noteHtml'
+import { sortSessions } from '../../sessions/services/sessionService'
 
 // ────────────────────────────────────────────────────────
 // Caderno do jogador ("Anotações da Bruna"). Ligado por conta
@@ -292,7 +293,7 @@ export function notesToText(heading: string, notes: NotebookNote[], sessions: Ca
     bySession.set(key, [...(bySession.get(key) ?? []), n])
   }
   const parts = [heading, `Baixado em ${new Date().toLocaleString('pt-BR')}`]
-  const ordered = [...sessions].reverse().filter((s) => bySession.has(s.id)).map((s) => ({ label: sessionLabel(s), list: bySession.get(s.id)! }))
+  const ordered = sortSessions(sessions, 'oldest').filter((s) => bySession.has(s.id)).map((s) => ({ label: sessionLabel(s), list: bySession.get(s.id)! }))
   if (bySession.has(null)) ordered.push({ label: sessionLabel(null), list: bySession.get(null)! })
   for (const { label, list } of ordered) {
     parts.push(`\n${'='.repeat(60)}\n${label.toUpperCase()}\n${'='.repeat(60)}`)

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { getCampaignSessions } from '../../sessions/services/sessionService'
+import { getCampaignSessions, SESSION_SORT_OPTIONS, sortSessions, type SessionSortOrder } from '../../sessions/services/sessionService'
+import { Select } from '../../../shared/components/Select'
 import type { CampaignSession, CampaignWithRole } from '../../../shared/types'
 import {
   getCampaignNotebookAuthors,
@@ -35,6 +36,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const [sessions, setSessions] = useState<CampaignSession[]>([])
   const [notes, setNotes]       = useState<NotebookNote[]>([])
   const [picked, setPicked]     = useState<string | null>(null)
+  const [sortOrder, setSortOrder] = useState<SessionSortOrder>('recent')
   const [editing, setEditing]   = useState<string | null>(null)
   const [status, setStatus]     = useState<SaveStatus>('idle')
   const [loading, setLoading]   = useState(true)
@@ -73,7 +75,7 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
 
   useEffect(() => subscribeNotes(campaign.id, () => { void reload().catch(() => {}) }), [campaign.id, reload])
 
-  // Sessões com anotação (e quantas), da mais nova pra mais antiga; "sem sessão" no fim.
+  // Sessões com anotação (e quantas), na ordem escolhida (padrão: mais recentes); "sem sessão" no fim.
   const groups = useMemo(() => {
     const count = new Map<string, number>()
     for (const n of notes) {
@@ -81,11 +83,11 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
       const k = n.session_id ?? NO_SESSION
       count.set(k, (count.get(k) ?? 0) + 1)
     }
-    const list = sessions.filter((s) => count.has(s.id)).map((s) => ({ key: s.id, label: sessionLabel(s), count: count.get(s.id)! }))
+    const list = sortSessions(sessions.filter((s) => count.has(s.id)), sortOrder).map((s) => ({ key: s.id, label: sessionLabel(s), count: count.get(s.id)! }))
     // Sessão apagada depois: as notas ficam "sem sessão" (a coluna vira null).
     if (count.has(NO_SESSION)) list.push({ key: NO_SESSION, label: 'Sem episódio definido', count: count.get(NO_SESSION)! })
     return list
-  }, [notes, sessions])
+  }, [notes, sessions, sortOrder])
 
   const selected = picked && groups.some((g) => g.key === picked) ? picked : groups[0]?.key ?? null
   const visible = notes.filter((n) => (notePlainText(n.content).trim() || n.images.length > 0) && (n.session_id ?? NO_SESSION) === selected)
@@ -153,6 +155,13 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
       ) : (
         <div className="player-notes__body">
           <nav className="player-notes__sessions" aria-label="Episódios">
+            <Select
+              id="player-notes-sort"
+              className="player-notes__sort"
+              value={sortOrder}
+              onChange={(v) => setSortOrder(v as SessionSortOrder)}
+              options={SESSION_SORT_OPTIONS}
+            />
             {groups.map((g) => (
               <button key={g.key} type="button"
                 className={`player-notes__session${g.key === selected ? ' player-notes__session--on' : ''}`}

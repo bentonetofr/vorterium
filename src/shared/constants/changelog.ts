@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-11-03',
     title:   'Episódios em ordem e anotações em um arquivo',
     items: [
-      'Episódios da campanha: novo seletor de ordem ao lado dos filtros, com Mais recentes (o padrão), Mais antigos e ordem alfabética (A–Z e Z–A; “Episódio 2” vem antes do “Episódio 10”). Um episódio sem data marcada agora entra pela data em que foi criado, então um episódio novo aparece no topo em vez de ir para o fim da lista.',
+      'Episódios da campanha: novo seletor de ordem ao lado dos filtros, com Mais recentes (o padrão), Mais antigos e ordem alfabética (A–Z e Z–A; “Episódio 2” vem antes do “Episódio 10”). O mesmo seletor está nas Anotações da Bruna, acima da lista de episódios. Um episódio sem data marcada agora entra pela data em que foi criado, então um episódio novo aparece no topo em vez de ir para o fim da lista.',
       'Nas Anotações da Bruna (visão do mestre) há o botão “Baixar tudo (.txt)”: junta tudo o que foi anotado em todos os episódios em um único arquivo de texto, do episódio mais antigo ao mais novo, cada anotação com o horário em que foi escrita. Imagens não entram no texto; o arquivo só avisa quantas havia em cada anotação.',
     ],
   },

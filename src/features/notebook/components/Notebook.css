@@ -331,6 +331,7 @@
 .player-notes__empty p { margin: 0; }
 
 .player-notes__body { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.player-notes__sort { margin-bottom: var(--space-2); }
 .player-notes__sessions { position: sticky; top: var(--space-4); display: flex; flex-direction: column; gap: 2px; }
 .player-notes__session {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
@@ -358,6 +359,7 @@
   .player-notes__body { grid-template-columns: 1fr; }
   .player-notes__sessions { position: static; flex-direction: row; overflow-x: auto; }
   .player-notes__session { flex-shrink: 0; }
+  .player-notes__sort { flex-shrink: 0; margin: 0 var(--space-2) 0 0; min-width: 190px; }
 }
 
 @media (max-width: 480px) {
