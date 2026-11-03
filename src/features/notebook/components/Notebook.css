@@ -319,6 +319,8 @@
 .player-notes__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--accent-bright); }
 .player-notes__sub { margin: 2px 0 0; font-size: var(--text-sm); color: var(--text-muted); }
 .player-notes__authors { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.player-notes__download { padding: 4px 14px; font-size: var(--text-sm); color: var(--accent-bright); background: var(--accent-glow); border: 1px solid var(--gilded); border-radius: 999px; cursor: pointer; }
+.player-notes__download:hover { border-color: var(--gilded-bright); color: var(--text-primary); }
 .player-notes__error { margin: 0; color: var(--danger); font-size: var(--text-sm); }
 .player-notes__empty {
   display: flex; flex-direction: column; align-items: center; gap: var(--space-2);

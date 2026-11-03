@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.8',
+    date:    '2026-11-03',
+    title:   'Anotações: baixar tudo em um arquivo',
+    items: [
+      'Nas Anotações da Bruna (visão do mestre) há o botão “Baixar tudo (.txt)”: junta tudo o que foi anotado em todos os episódios em um único arquivo de texto, do episódio mais antigo ao mais novo, cada anotação com o horário em que foi escrita. Imagens não entram no texto; o arquivo só avisa quantas havia em cada anotação.',
+    ],
+  },
+  {
     version: '2.7',
     date:    '2026-10-31',
     title:   'Altherium: painel do mestre',

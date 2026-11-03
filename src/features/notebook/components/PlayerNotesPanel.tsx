@@ -5,6 +5,7 @@ import {
   getCampaignNotebookAuthors,
   listNotes,
   mergeNotes,
+  notesToText,
   sessionLabel,
   subscribeNotes,
   timeLabel,
@@ -91,6 +92,19 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
   const author = authors.find((a) => a.userId === authorId) ?? null
   const selectedLabel = groups.find((g) => g.key === selected)?.label ?? ''
 
+  function downloadAll() {
+    const title = author?.title ?? 'Anotações'
+    const text = notesToText(`${title} — ${campaign.name}`, notes, sessions)
+    const url = URL.createObjectURL(new Blob([`﻿${text}`], { type: 'text/plain;charset=utf-8' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${`${title} - ${campaign.name}`.replace(/[\\/:*?"<>|]+/g, '').trim() || 'anotacoes'}.txt`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
   if (!loading && !authors.length) {
     return (
       <div className="player-notes__empty">
@@ -108,6 +122,12 @@ export function PlayerNotesPanel({ campaign }: { campaign: CampaignWithRole }) {
           <p className="player-notes__sub">Chegam na hora em que são escritas. Você pode ler e editar tudo.</p>
         </div>
         {status !== 'idle' && <span className={`notebook-panel__status notebook-panel__status--${status}`}>{status === 'saving' ? 'salvando…' : status === 'saved' ? 'salvo ✓' : 'não salvou'}</span>}
+        {groups.length > 0 && (
+          <button type="button" className="player-notes__download" onClick={downloadAll}
+            title="Baixa as anotações de todos os episódios em um único arquivo .txt">
+            Baixar tudo (.txt)
+          </button>
+        )}
         {authors.length > 1 && (
           <div className="player-notes__authors" role="tablist" aria-label="De quem">
             {authors.map((a) => (

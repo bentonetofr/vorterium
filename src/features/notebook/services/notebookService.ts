@@ -279,6 +279,32 @@ export function noteHeadline(content: string): string {
   return line.length > 48 ? `${line.slice(0, 48)}…` : line
 }
 
+/**
+ * Todas as anotações em um texto só, para baixar em .txt: episódios do mais
+ * antigo ao mais novo ("sem episódio" por último), anotações em ordem de escrita.
+ * Imagens não cabem no texto: só registra quantas havia.
+ */
+export function notesToText(heading: string, notes: NotebookNote[], sessions: CampaignSession[]): string {
+  const filled = notes.filter((n) => notePlainText(n.content).trim() || n.images.length > 0)
+  const bySession = new Map<string | null, NotebookNote[]>()
+  for (const n of filled) {
+    const key = n.session_id && sessions.some((s) => s.id === n.session_id) ? n.session_id : null
+    bySession.set(key, [...(bySession.get(key) ?? []), n])
+  }
+  const parts = [heading, `Baixado em ${new Date().toLocaleString('pt-BR')}`]
+  const ordered = [...sessions].reverse().filter((s) => bySession.has(s.id)).map((s) => ({ label: sessionLabel(s), list: bySession.get(s.id)! }))
+  if (bySession.has(null)) ordered.push({ label: sessionLabel(null), list: bySession.get(null)! })
+  for (const { label, list } of ordered) {
+    parts.push(`\n${'='.repeat(60)}\n${label.toUpperCase()}\n${'='.repeat(60)}`)
+    list.forEach((n, i) => {
+      const text = notePlainText(n.content).trim()
+      const pics = n.images.length ? `[${n.images.length} ${n.images.length === 1 ? 'imagem' : 'imagens'} nesta anotação]` : ''
+      parts.push(`\n--- ${i + 1} · ${timeLabel(n.created_at)} ---\n${[text, pics].filter(Boolean).join('\n')}`)
+    })
+  }
+  return `${parts.join('\n')}\n`
+}
+
 export function timeLabel(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '')
 }
