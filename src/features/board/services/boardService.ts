@@ -92,15 +92,26 @@ export interface BoardItem {
 
 const COLUMNS = 'id, campaign_id, board, kind, x, y, w, h, z, data, locked, created_by, updated_by, updated_at'
 
+/** O servidor devolve no máximo 1000 linhas por pedido: busca em páginas, senão os itens mais novos (z maior, ex.: fotos postas por último) ficam de fora. */
+const PAGE = 1000
+
 export async function listBoardItems(campaignId: string, board: BoardId): Promise<BoardItem[]> {
-  const { data, error } = await supabase
-    .from('campaign_board_items')
-    .select(COLUMNS)
-    .eq('campaign_id', campaignId)
-    .eq('board', board)
-    .order('z', { ascending: true })
-  if (error) throw new Error('Não foi possível carregar o quadro.')
-  return ((data ?? []) as BoardItem[]).map(normalize)
+  const all: BoardItem[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('campaign_board_items')
+      .select(COLUMNS)
+      .eq('campaign_id', campaignId)
+      .eq('board', board)
+      .order('z', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1)
+    if (error) throw new Error('Não foi possível carregar o quadro.')
+    const rows = (data ?? []) as BoardItem[]
+    all.push(...rows)
+    if (rows.length < PAGE) break
+  }
+  return all.map(normalize)
 }
 
 /** Grava (cria ou atualiza) de uma vez. Último a salvar vence, por item. */
@@ -163,6 +174,8 @@ interface BoardHandlers {
   onCursor: (msg: CursorMessage) => void
   onLive:   (msg: LiveMoveMessage) => void
   onPeers:  (peers: BoardPeer[]) => void
+  /** O tempo real (re)conectou: pode ter perdido mudanças enquanto estava fora, então vale recarregar o quadro. */
+  onResync: () => void
 }
 
 export interface BoardConnection {
@@ -215,7 +228,9 @@ export function connectBoard(campaignId: string, board: BoardId, me: BoardPeer, 
     handlers.onPeers([me])
   }
   channel.subscribe((status) => {
-    if (status === 'SUBSCRIBED' && shared) void channel.track(me)
+    if (status !== 'SUBSCRIBED') return
+    if (shared) void channel.track(me)
+    handlers.onResync()
   })
 
   return {

@@ -222,6 +222,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
   const [uploading, setUploading] = useState(0)
   const [peers, setPeers]       = useState<BoardPeer[]>([])
   const [urls, setUrls]         = useState<Map<string, string | null>>(new Map())
+  const signRetries = useRef(new Map<string, number>())
 
   const items = itemsRef.current
   const view = viewRef.current
@@ -384,6 +385,42 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
 
   // ── Carregar e tempo real ─────────────────────────────
 
+  /** Lista vinda do banco por cima do que está na tela, sem desfazer o que está sendo mexido agora. */
+  const mergeFresh = useCallback((list: BoardItem[]) => {
+    const next = Object.fromEntries(list.map((i) => [i.id, i]))
+    const d = dragRef.current
+    const busy = new Set<string>([...pendingSave.current, ...(d && 'orig' in d && d.type === 'move' ? Object.keys(d.orig) : []), ...(d && 'id' in d ? [d.id] : [])])
+    for (const id of busy) if (itemsRef.current[id]) next[id] = itemsRef.current[id]
+    // Coisa que acabei de criar pode ainda não estar na lista (a lista saiu antes de salvar).
+    for (const [id, it] of Object.entries(itemsRef.current)) {
+      if (!next[id] && it.created_by === myId && Date.now() - Date.parse(it.updated_at) < 15000) next[id] = it
+    }
+    for (const id of pendingDelete.current) delete next[id]
+    itemsRef.current = next
+    redraw()
+  }, [myId])
+
+  /** Recarrega do banco (tempo real voltou, aba voltou à tela): pega o que foi perdido enquanto estava fora. */
+  const resync = useCallback(() => {
+    if (!loaded.current) return
+    const key = cacheKey(campaign.id, board)
+    void listBoardItems(campaign.id, board)
+      .then((list) => {
+        boardCache.set(key, list)
+        mergeFresh(list)
+        // Imagem que não deu pra carregar antes tenta de novo.
+        setUrls((prev) => (([...prev.values()].some((v) => v === null)) ? new Map([...prev].filter(([, v]) => v !== null)) : prev))
+      })
+      .catch(() => { /* fica como está; tenta de novo na próxima */ })
+  }, [campaign.id, board, mergeFresh])
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') resync() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', resync)
+    return () => { document.removeEventListener('visibilitychange', onVisible); window.removeEventListener('online', resync) }
+  }, [resync])
+
   useEffect(() => {
     let alive = true
     const key = cacheKey(campaign.id, board)
@@ -394,13 +431,7 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         boardCache.set(key, list)
         const next = Object.fromEntries(list.map((i) => [i.id, i]))
         if (loaded.current) {
-          // Já estava na tela: atualiza sem desfazer o que está sendo mexido agora.
-          const d = dragRef.current
-          const busy = new Set<string>([...pendingSave.current, ...(d && 'orig' in d && d.type === 'move' ? Object.keys(d.orig) : []), ...(d && 'id' in d ? [d.id] : [])])
-          for (const id of busy) if (itemsRef.current[id]) next[id] = itemsRef.current[id]
-          for (const id of pendingDelete.current) delete next[id]
-          itemsRef.current = next
-          redraw()
+          mergeFresh(list)
           return
         }
         loaded.current = true
@@ -458,11 +489,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
           if (Object.keys(changes).length) applyLocal(changes)
         },
         onPeers: setPeers,
+        onResync: resync,
       })
       conn.current = c
     })
     return () => { alive = false; c?.close(); conn.current = null }
-  }, [campaign.id, board, myId, applyLocal, setSelection])
+  }, [campaign.id, board, myId, applyLocal, setSelection, resync])
 
   // Cursores parados somem.
   useEffect(() => {
@@ -524,6 +556,16 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
         for (const p of missing) next.set(p, signed.get(p) ?? null)
         return next
       })
+      // Foto recém-enviada por outra pessoa pode demorar um instante pra ficar legível: tenta de novo (até 3 vezes).
+      const failed = missing.filter((p) => !signed.has(p) && (signRetries.current.get(p) ?? 0) < 3)
+      if (failed.length) {
+        for (const p of failed) signRetries.current.set(p, (signRetries.current.get(p) ?? 0) + 1)
+        window.setTimeout(() => setUrls((prev) => {
+          const next = new Map(prev)
+          for (const p of failed) if (next.get(p) === null) next.delete(p)
+          return next
+        }), 3000)
+      }
     })
     return () => { alive = false }
   }, [imageRefs, urls])
