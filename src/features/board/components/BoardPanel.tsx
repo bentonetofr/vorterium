@@ -328,7 +328,12 @@ function BoardCanvas({ campaign, board, tabs, full, setFull, enter }: CanvasProp
       await saveBoardItems(rows)
       await deleteBoardItems(delIds)
     } catch (err) {
-      flash(err instanceof Error ? err.message : 'Não foi possível salvar o quadro.')
+      // Não perde o que não salvou: volta pra fila e tenta de novo em alguns segundos.
+      for (const id of saveIds) if (itemsRef.current[id] && !pendingDelete.current.has(id)) pendingSave.current.add(id)
+      for (const id of delIds) if (!itemsRef.current[id] && !pendingSave.current.has(id)) pendingDelete.current.add(id)
+      window.clearTimeout(saveTimer.current)
+      saveTimer.current = window.setTimeout(() => { void flush() }, 8000)
+      flash(err instanceof Error ? `${err.message} Tentando de novo…` : 'Não foi possível salvar o quadro. Tentando de novo…')
     }
   }, [flash])
 

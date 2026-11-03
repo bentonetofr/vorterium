@@ -123,7 +123,7 @@ export async function saveBoardItems(items: BoardItem[]): Promise<void> {
     const { error } = await supabase.from('campaign_board_items').upsert(rows.slice(i, i + 400), { onConflict: 'id' })
     if (error) {
       console.error('Erro ao salvar o quadro:', error)
-      throw new Error(error.code === '54000' ? error.message : 'Não foi possível salvar o quadro.')
+      throw new Error(error.code === '54000' ? error.message : `Não foi possível salvar o quadro (${error.message}).`)
     }
   }
 }
