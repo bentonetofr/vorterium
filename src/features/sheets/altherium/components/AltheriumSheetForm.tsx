@@ -74,7 +74,7 @@ import { AltheriumStealthWindow } from './AltheriumStealthWindow'
 import { AltheriumMindWindow } from './AltheriumMindWindow'
 import { readResources, removeResource, resourceTotal, readSagas, type ResourceStock, type SagaId } from '../utils/altheriumCraft'
 import { NEW_DYING } from '../utils/altheriumDeath'
-import { addCondition, conditionDef, endScene, readCombatState, startTurn, type BodyZoneId, type CombatState, type ConditionId } from '../utils/altheriumCombat'
+import { addCondition, conditionDef, endScene, reactionAvailable, readCombatState, startTurn, type BodyZoneId, type CombatState, type ConditionId } from '../utils/altheriumCombat'
 import { hungerPenalty, readSurvival, type Survival } from '../utils/altheriumSurvival'
 import { setAltheriumScene, type AltheriumScene } from '../services/altheriumSceneService'
 import { useAltheriumScene } from '../utils/useAltheriumScene'
@@ -347,7 +347,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'oficio' | 'dominios' | 'triunfos' | 'inspiracoes' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'triunfos' | 'inspiracoes' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -355,11 +355,9 @@ interface AltheriumFormTab {
 }
 
 const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
-  { id: 'visao-geral', label: 'Atributos' },
-  { id: 'dominios',    label: 'Domínios' },
+  { id: 'visao-geral', label: 'Ficha' },
   { id: 'luta',        label: 'Combate' },
-  { id: 'combate',     label: 'Inventário' },
-  { id: 'oficio',      label: 'Ofício' },
+  { id: 'combate',     label: 'Equipamento' },
   { id: 'triunfos',    label: 'Triunfos' },
   { id: 'inspiracoes', label: 'Inspirações' },
   { id: 'anotacoes',   label: 'Anotações' },
@@ -380,6 +378,9 @@ export function AltheriumSheetForm({
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
   const [domainFilter, setDomainFilter] = useState('')
+  /** Aba Equipamento: os itens e a anatomia, ou o Ofício (recursos, reparo, receitas). */
+  const [equipView, setEquipView] = useState<'itens' | 'oficio'>('itens')
+  const menuRef = useRef<HTMLDetailsElement>(null)
   const [activeTab, setActiveTab] = useState<AltheriumFormTabId>('visao-geral')
   const tabDir = useTabDirection(ALTHERIUM_FORM_TAB_IDS, activeTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveTab)
@@ -734,17 +735,17 @@ export function AltheriumSheetForm({
     : 'sem arma'
   const downed = !!form.combat_state.dying || form.vitality_current === 0
 
-  // O cabeçalho tem um botão só: Ações abre o painel com Descansar, Furtividade e Equilíbrio.
+  // Barra de ações do cabeçalho: cada botão abre a sua janela (a legenda mostra o que ele vai usar).
   const heroActions: ActionDef[] = [
-    {
-      id: 'explore', label: 'Ações', icon: 'explore', tone: 'primary',
-      caption: `Explorar, descansar, furtividade e equilíbrio · ${survival.tokens} ${survival.tokens === 1 ? 'ficha' : 'fichas'}`,
-    },
+    { id: 'attack',  label: 'Atacar',      caption: weaponCaption, icon: 'attack', tone: 'primary' },
+    { id: 'defend',  label: 'Defender',    caption: form.combat_state.defend_total ? 'Defender Total +4' : 'ou Aparar', icon: 'defend' },
+    { id: 'explore', label: 'Explorar',    caption: `${survival.tokens} ${survival.tokens === 1 ? 'ficha' : 'fichas'}`, icon: 'explore' },
+    { id: 'rest',    label: 'Descansar',   caption: 'Curto / Longo', icon: 'rest' },
+    { id: 'stealth', label: 'Furtividade', caption: 'Impulso', icon: 'stealth' },
+    { id: 'mind',    label: 'Equilíbrio',  caption: 'Vontade', icon: 'mind' },
   ]
-  // Combate fica na aba Combate: quatro ações e o Teste de Morte quando cai.
+  // Na aba Combate ficam as ações menos usadas: dano, iniciativa e, quando cai, o Teste de Morte.
   const combatActions: ActionDef[] = [
-    { id: 'attack',  label: 'Atacar',       caption: weaponCaption, icon: 'attack', tone: 'danger' },
-    { id: 'defend',  label: 'Defender',     caption: form.combat_state.defend_total ? 'Defender Total +4' : 'ou Aparar', icon: 'defend' },
     { id: 'damage',  label: 'Receber dano', caption: `PV ${form.vitality_current}`, icon: 'damage' },
     { id: 'initiative', label: 'Iniciativa', caption: 'entrar na ordem', icon: 'turn' },
     ...(downed ? [{ id: 'dying' as const, label: 'Teste de Morte', caption: 'Estado Caído', icon: 'death', tone: 'danger' as const }] : []),
@@ -871,7 +872,7 @@ export function AltheriumSheetForm({
         <p className="alth-sheet__owner">Ficha de <strong>{ownerName}</strong></p>
       )}
 
-      {/* ── Cabeçalho ── */}
+      {/* ── Cabeçalho (HUD): identidade, barras com −/+ e faixa de estado ── */}
       <header className="alth-hero">
         <div className="alth-hero__identity">
           <div className="alth-hero__portrait-wrap">
@@ -904,7 +905,6 @@ export function AltheriumSheetForm({
             {portraitPickError && (
               <p className="alth-hero__portrait-error" role="alert">{portraitPickError}</p>
             )}
-            {!(sheet as { is_npc?: boolean }).is_npc && <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />}
           </div>
 
           <div className="alth-hero__identity-main">
@@ -936,7 +936,36 @@ export function AltheriumSheetForm({
                   options={GENESIS_OPTIONS}
                 />
               </label>
+              <label className="alth-hero__field alth-hero__level">
+                <span className="alth-hero__field-label">Nível</span>
+                <input
+                  type="number" className="alth-hero__num" min={1} max={5}
+                  value={form.level}
+                  onChange={(e) => set('level', clamp(e.target.value, 1, 5))}
+                  aria-label="Nível"
+                />
+              </label>
+              {!(sheet as { is_npc?: boolean }).is_npc && <CreateCharacterButton campaignId={sheet.campaign_id} ownerId={sheet.user_id} />}
             </div>
+          </div>
+
+          <div className="alth-hero__tools">
+            <label className="alth-hero__coins" title="Hacksilvers">
+              <span className="alth-hero__coin-mark" aria-hidden="true">¤</span>
+              <input
+                type="number" className="alth-hero__num alth-hero__num--coins" min={0}
+                value={form.hacksilvers}
+                onChange={(e) => set('hacksilvers', clamp(e.target.value, 0, 9_999_999))}
+                aria-label="Hacksilvers"
+              />
+            </label>
+            {canRollTests && <QteSheetButton ownerId={sheet.user_id} impulso={form.attr_impulso ?? 0} />}
+            <details ref={menuRef} className="alth-menu">
+              <summary className="alth-menu__btn" aria-label="Mais opções" title="Mais opções">⋯</summary>
+              <div className="alth-menu__pop" onClick={() => { if (menuRef.current) menuRef.current.open = false }}>
+                <ExportSheetButton className="alth-menu__item" character={form.character_name} system="Altherium" build={() => altheriumSheetText({ ...sheet, ...form } as unknown as AltheriumTextSheet, domains, inventory, runes)} />
+              </div>
+            </details>
           </div>
         </div>
 
@@ -975,24 +1004,11 @@ export function AltheriumSheetForm({
           )}
         </div>
 
-        <div className="alth-hero__stats">
-          <label className="alth-hero__level">
-            <span className="label">Nível</span>
-            <input
-              type="number" className="input" min={1} max={5}
-              value={form.level}
-              onChange={(e) => set('level', clamp(e.target.value, 1, 5))}
-            />
-          </label>
-          <label className="alth-hero__coins">
-            <span className="label">Hacksilvers (¤)</span>
-            <input
-              type="number" className="input" min={0}
-              value={form.hacksilvers}
-              onChange={(e) => set('hacksilvers', clamp(e.target.value, 0, 9_999_999))}
-            />
-          </label>
-        </div>
+        <AltheriumStatusStrip
+          survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival} readOnly={!canRollTests}
+          reaction={{ ok: reactionAvailable(form.combat_state), used: form.combat_state.reaction_used, onToggle: () => set('combat_state', { ...form.combat_state, reaction_used: !form.combat_state.reaction_used }) }}
+          genesisEffect={GENESIS.find((g) => g.id === form.genesis)?.effect}
+        />
       </header>
 
       <Presence show={!!portraitDraft} exitMs={220}>
@@ -1009,19 +1025,7 @@ export function AltheriumSheetForm({
         )}
       </Presence>
 
-      {form.genesis && (
-        <p className="alth-hint alth-hint--center">
-          {GENESIS.find((g) => g.id === form.genesis)?.effect}
-        </p>
-      )}
-
-      {/* ── Ações do jogo e faixa de estado ── */}
-      {canRollTests && <AltheriumActionBar actions={heroActions} onAction={setPlay} />}
-      {canRollTests && <QteSheetButton ownerId={sheet.user_id} impulso={form.attr_impulso ?? 0} />}
-      <div className="sheet-export-row">
-        <ExportSheetButton character={form.character_name} system="Altherium" build={() => altheriumSheetText({ ...sheet, ...form } as unknown as AltheriumTextSheet, domains, inventory, runes)} />
-      </div>
-      <AltheriumStatusStrip survival={survival} survivalKnown={form.survival_known} onSurvival={patchSurvival} readOnly={!canRollTests} />
+      {/* ── Pedido do mestre e ações do jogo ── */}
       {canRollTests && (
         <AltheriumRequestCard
           campaignId={sheet.campaign_id} sheetId={sheet.id} character={who}
@@ -1030,6 +1034,7 @@ export function AltheriumSheetForm({
           announce={announce}
         />
       )}
+      {canRollTests && <AltheriumActionBar actions={heroActions} onAction={setPlay} variant="main" />}
 
       {/* ── Abas ── */}
       <nav ref={tabsRef} className="campaign-tabs alth-sheet-tabs" role="tablist" aria-label="Seções da ficha">
@@ -1053,7 +1058,8 @@ export function AltheriumSheetForm({
       {/* ── Atributos ── */}
       <div id="alth-tabpanel-visao-geral" role="tabpanel" hidden={activeTab !== 'visao-geral'}>
         {activeTab === 'visao-geral' && (
-          <div className="alth-tab-panel anim-tab-panel">
+          <div className="alth-tab-panel alth-ficha anim-tab-panel">
+            <div className="alth-ficha__main">
             <section className="alth-card">
               <div className="alth-card__header">
                 <h4 className="alth-card__title">Atributos</h4>
@@ -1081,6 +1087,105 @@ export function AltheriumSheetForm({
               </div>
             </section>
 
+            <section className="alth-card alth-doms">
+              <div className="alth-card__header">
+                <h4 className="alth-card__title">Domínios</h4>
+                <span className={`alth-counter${slotsTotal != null && domainsUsed > slotsTotal ? ' alth-counter--over' : ''}`}>
+                  {domainsUsed} / {slotsTotal ?? '-'} pontos
+                </span>
+              </div>
+
+              <input
+                type="text"
+                className="input alth-doms__search"
+                placeholder="Buscar domínio..."
+                value={domainFilter}
+                onChange={(e) => setDomainFilter(e.target.value)}
+                aria-label="Buscar domínio"
+              />
+
+              <div className="alth-doms__list" role="list" aria-label="Domínios">
+                {filteredDomains.length === 0 && (
+                  <p className="alth-doms__empty">Nenhum domínio encontrado.</p>
+                )}
+
+                {filteredDomains.map((d) => {
+                  const points    = domainMap.get(d.id) ?? 0
+                  const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
+                  const fromGenesis = genesisBonusFor(form.genesis, d.id)
+                  const bonusDie  = bonusMap.get(d.id) ?? false
+                  // Atributo em 0 = desvantagem por padrão; subir o valor (ou escolher um número) tira.
+                  const disadv    = domainDisadvantage(points, chosenMap.get(d.id) ? null : attrValue(d.attribute))
+                  const autoAtZero = disadv === 'atributo' && points <= 0 && !bonusDie
+                  // Nível mostrado: −1 (desvantagem), 0, 1, 2 e "2+" (o dado extra depois do 2).
+                  const level     = bonusDie ? DOMAIN_MAX_POINTS + 1 : autoAtZero ? DOMAIN_MIN_POINTS : points
+                  const levelText = level > DOMAIN_MAX_POINTS ? `${DOMAIN_MAX_POINTS}+` : level < 0 ? '−1' : String(level)
+                  const step = (dir: 1 | -1) => {
+                    const next = level + dir
+                    if (next < DOMAIN_MIN_POINTS || next > DOMAIN_MAX_POINTS + 1) return
+                    if (next > DOMAIN_MAX_POINTS) onDomainChange(d.id, DOMAIN_MAX_POINTS, true, true)
+                    else onDomainChange(d.id, next, false, next >= 0)
+                  }
+                  return (
+                    <div
+                      key={d.id}
+                      role="listitem"
+                      className={`alth-dom${points > 0 || fromGenesis || bonusDie ? ' alth-dom--active' : ''}${disadv ? ' alth-dom--disadv' : ''}`}
+                    >
+                      <span className="alth-dom__name">
+                        {d.label}
+                        <small>{attrLabel}</small>
+                      </span>
+                      <button
+                        type="button"
+                        className="alth-dom__dice"
+                        disabled={!canRollTests}
+                        onClick={() => setTestSpec(domainCheck(d.id))}
+                        title={[
+                          canRollTests ? `Rolar teste de ${d.label}` : '',
+                          fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : '',
+                          bonusDie ? 'Inclui +1d10 extra (+)' : '',
+                          disadv === 'manual' ? 'Desvantagem: joga com 1d de desvantagem' : '',
+                          disadv === 'atributo' ? `Desvantagem: ${attrLabel} está em 0, joga com 1d de desvantagem` : '',
+                        ].filter(Boolean).join(' · ') || undefined}
+                      >
+                        {domainTestDice(points, fromGenesis, bonusDie)}d10
+                        {fromGenesis && <span className="alth-dom__genesis" aria-label={`com +1d10 do gênesis ${genesisLabel}`}>+1d10</span>}
+                        {disadv && <span className="alth-dom__disadv" aria-label="com 1d de desvantagem">desv.</span>}
+                      </button>
+                      <span className="alth-dom__step">
+                        <button
+                          type="button" className="alth-dom__btn" onClick={() => step(-1)}
+                          disabled={level <= DOMAIN_MIN_POINTS}
+                          aria-label={`Diminuir ${d.label}`}
+                        >−</button>
+                        <output
+                          className={`alth-dom__val${level < 0 ? ' alth-dom__val--bad' : ''}${autoAtZero ? ' alth-dom__val--auto' : ''}`}
+                          aria-label={`${d.label}: ${levelText}`}
+                          title={autoAtZero ? `Desvantagem automática: ${attrLabel} está em 0 (suba o valor pra tirar)` : undefined}
+                        >{levelText}</output>
+                        <button
+                          type="button" className="alth-dom__btn" onClick={() => step(1)}
+                          disabled={level > DOMAIN_MAX_POINTS}
+                          aria-label={`Aumentar ${d.label}`}
+                          title={level === DOMAIN_MAX_POINTS ? '+1d10 extra: soma mais um dado (4d10) sem gastar ponto' : undefined}
+                        >+</button>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="alth-hint">
+                Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "2+" soma mais 1d10 (4d10) sem gastar ponto.
+                O −1 marca desvantagem (1d de desvantagem). Um atributo em 0 deixa os domínios dele com desvantagem por padrão; subir o valor tira.
+                Alterações aqui salvam na hora.
+                {genesisDomains.length > 0 && (
+                  <> Gênesis {genesisLabel}: +1d10 em {genesisDomains.join(' e ')} (já somado nos dados).</>
+                )}
+              </p>
+            </section>
+            </div>
+            <div className="alth-ficha__side">
             <section className="alth-card alth-radar-card">
               <div className="alth-card__header">
                 <h4 className="alth-card__title">Perfil</h4>
@@ -1102,6 +1207,7 @@ export function AltheriumSheetForm({
               abilities={form.genesis_abilities}
               onChange={(next) => set('genesis_abilities', next)}
             />
+            </div>
           </div>
         )}
       </div>
@@ -1120,31 +1226,33 @@ export function AltheriumSheetForm({
         )}
       </div>
 
-      {/* ── Ofício: recursos, reparo, receitas, reforços ── */}
-      <div id="alth-tabpanel-oficio" role="tabpanel" hidden={activeTab !== 'oficio'}>
-        {activeTab === 'oficio' && (
-          <div className="alth-tab-panel anim-tab-panel">
-            <AltheriumCraftPanel
-              campaignId={sheet.campaign_id}
-              inventory={inventory}
-              stock={form.resources}
-              onStock={(next) => set('resources', next)}
-              known={form.resources_known}
-              onPatch={onInventoryPatch}
-              hunger={survival.hunger} rationPct={rationPct} onEat={eat}
-              onCraft={onInventoryCraft}
-              onAddCatalog={onInventoryAdd}
-              onUpdateQuantity={onInventoryUpdateQuantity}
-              onRemove={onInventoryRemove}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ── Inventário: anatomia/armadura e itens ── */}
+      {/* ── Equipamento: anatomia/armadura e itens, ou o Ofício ── */}
       <div id="alth-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>
         {activeTab === 'combate' && (
           <div className="alth-tab-panel anim-tab-panel">
+            <div className="alth-seg" role="tablist" aria-label="Equipamento">
+              {([['itens', 'Itens e armadura'], ['oficio', 'Ofício']] as const).map(([id, label]) => (
+                <button key={id} type="button" role="tab" aria-selected={equipView === id}
+                  className={`alth-seg__btn${equipView === id ? ' alth-seg__btn--on' : ''}`} onClick={() => setEquipView(id)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {equipView === 'oficio' ? (
+            <AltheriumCraftPanel
+                campaignId={sheet.campaign_id}
+                inventory={inventory}
+                stock={form.resources}
+                onStock={(next) => set('resources', next)}
+                known={form.resources_known}
+                onPatch={onInventoryPatch}
+                hunger={survival.hunger} rationPct={rationPct} onEat={eat}
+                onCraft={onInventoryCraft}
+                onAddCatalog={onInventoryAdd}
+                onUpdateQuantity={onInventoryUpdateQuantity}
+                onRemove={onInventoryRemove}
+              />
+            ) : (<>
         <section className="alth-card">
           <div className="alth-card__header">
             <h4 className="alth-card__title">Anatomia &amp; Armadura</h4>
@@ -1255,6 +1363,7 @@ export function AltheriumSheetForm({
               onAddCustom={onInventoryAddCustom}
               onUpdateCustom={onInventoryUpdateCustom}
             />
+            </>)}
           </div>
         )}
       </div>
@@ -1341,120 +1450,6 @@ export function AltheriumSheetForm({
           onClose={() => setTestSpec(null)}
         />
       )}
-
-      <div id="alth-tabpanel-dominios" role="tabpanel" hidden={activeTab !== 'dominios'}>
-        {activeTab === 'dominios' && (
-          <div className="alth-tab-panel anim-tab-panel">
-      <section className="alth-section">
-        <div className="alth-section__header">
-          <h4 className="alth-section__title">Domínios</h4>
-          <span className={`alth-counter${slotsTotal != null && domainsUsed > slotsTotal ? ' alth-counter--over' : ''}`}>
-            {domainsUsed} / {slotsTotal ?? '-'} pontos
-          </span>
-        </div>
-
-        <input
-          type="text"
-          className="input alth-domains__search"
-          placeholder="Buscar domínio..."
-          value={domainFilter}
-          onChange={(e) => setDomainFilter(e.target.value)}
-        />
-
-        <div className="alth-domains" role="table" aria-label="Domínios">
-          <div className="alth-domains__head" role="row">
-            <span role="columnheader">Domínio</span>
-            <span role="columnheader">Atributo</span>
-            <span role="columnheader">Dados</span>
-            <span role="columnheader">Pontos</span>
-          </div>
-
-          {filteredDomains.length === 0 && (
-            <p className="alth-domains__empty">Nenhum domínio encontrado.</p>
-          )}
-
-          {filteredDomains.map((d) => {
-            const points    = domainMap.get(d.id) ?? 0
-            const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
-            const fromGenesis = genesisBonusFor(form.genesis, d.id)
-            const bonusDie  = bonusMap.get(d.id) ?? false
-            // Atributo em 0 = desvantagem por padrão; clicar num número/"+" tira.
-            const disadv    = domainDisadvantage(points, chosenMap.get(d.id) ? null : attrValue(d.attribute))
-            return (
-              <div
-                key={d.id}
-                className={`alth-domains__row${points > 0 || fromGenesis || bonusDie ? ' alth-domains__row--active' : ''}${disadv ? ' alth-domains__row--disadv' : ''}`}
-                role="row"
-              >
-                <span className="alth-domains__name" role="cell">{d.label}</span>
-                <span className="alth-domains__attr" role="cell">{attrLabel}</span>
-                <button
-                  type="button"
-                  className="alth-domains__dice" role="cell"
-                  disabled={!canRollTests}
-                  onClick={() => setTestSpec(domainCheck(d.id))}
-                  title={[
-                    canRollTests ? `Rolar teste de ${d.label}` : '',
-                    fromGenesis ? `Inclui +1d10 do gênesis ${genesisLabel}` : '',
-                    bonusDie ? 'Inclui +1d10 extra (+)' : '',
-                    disadv === 'manual' ? 'Desvantagem: joga com 1d de desvantagem' : '',
-                    disadv === 'atributo' ? `Desvantagem: ${attrLabel} está em 0, joga com 1d de desvantagem` : '',
-                  ].filter(Boolean).join(' · ') || undefined}
-                >
-                  {domainTestDice(points, fromGenesis, bonusDie)}d10
-                  {fromGenesis && <span className="alth-domains__genesis" aria-label={`com +1d10 do gênesis ${genesisLabel}`}>✦</span>}
-                  {disadv && <span className="alth-domains__disadv" aria-label="com 1d de desvantagem">desv.</span>}
-                </button>
-                <span className="alth-domains__points" role="cell">
-                  {Array.from({ length: DOMAIN_MAX_POINTS - DOMAIN_MIN_POINTS + 1 }, (_, i) => {
-                    const n = DOMAIN_MIN_POINTS + i
-                    // Com o "+" ligado, 0, 1 e 2 acendem junto (é o nível acima do 2).
-                    // Desvantagem automática (atributo em 0) sem pontos: quem fica
-                    // marcado é o −1, não o 0.
-                    const autoAtZero = disadv === 'atributo' && points <= 0 && !bonusDie
-                    const on = bonusDie ? n >= 0 : autoAtZero ? n === -1 : points === n
-                    const auto = n === -1 && disadv === 'atributo'
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        className={`alth-domains__pt${n < 0 ? ' alth-domains__pt--disadv' : ''}${on ? ' alth-domains__pt--active' : ''}${auto ? ' alth-domains__pt--auto' : ''}`}
-                        onClick={() => onDomainChange(d.id, n, false, n >= 0)}
-                        aria-label={n < 0 ? `Desvantagem em ${d.label}` : `${n} ponto(s) em ${d.label}`}
-                        aria-pressed={on}
-                        title={n < 0 ? (auto ? `Desvantagem automática: ${attrLabel} está em 0 (clique num número pra tirar)` : 'Desvantagem (1d de desvantagem)') : undefined}
-                      >
-                        {n < 0 ? '−1' : n}
-                      </button>
-                    )
-                  })}
-                  <button
-                    type="button"
-                    className={`alth-domains__pt alth-domains__pt--bonus${bonusDie ? ' alth-domains__pt--active' : ''}`}
-                    onClick={() => onDomainChange(d.id, 2, !bonusDie, true)}
-                    aria-label={`+1d10 extra em ${d.label} (2 pontos + 1d10 = 4d10)`}
-                    aria-pressed={bonusDie}
-                    title="+1d10 extra: acende o 0, o 1 e o 2 e soma mais um dado (4d10)"
-                  >
-                    +
-                  </button>
-                </span>
-              </div>
-            )
-          })}
-        </div>
-        <p className="alth-hint">
-          Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "+", depois do 2, soma mais 1d10 (4d10) sem gastar ponto.
-          O −1 marca desvantagem (1d de desvantagem). Um atributo em 0 deixa os domínios dele com desvantagem por padrão; clicar num número tira.
-          Alterações aqui salvam na hora.
-          {genesisDomains.length > 0 && (
-            <> ✦ Gênesis {genesisLabel}: +1d10 em {genesisDomains.join(' e ')} (já somado nos dados).</>
-          )}
-        </p>
-      </section>
-          </div>
-        )}
-      </div>
 
       {/* ── Triunfos: Berserker escolhe (paga FV), Pilar tem todos (paga cartas) ── */}
       <div id="alth-tabpanel-triunfos" role="tabpanel" hidden={activeTab !== 'triunfos'}>
@@ -1547,38 +1542,45 @@ interface VitalBarProps {
 }
 
 function VitalBar({ sigla, label, tone, current, max, onCurrent, onMax, disabled = false }: VitalBarProps) {
+  // −/+ mexem de 1 em 1; o + não passa do máximo (pra passar dele, é só digitar).
+  const down = () => onCurrent(Math.max(0, current - 1))
+  const up   = () => onCurrent(current >= max ? current : Math.min(max, current + 1))
   return (
-    <div className={`alth-vital-bar alth-vital-bar--${tone}`}>
-      <div className="alth-vital-bar__top">
-        <span className="alth-vital-bar__sigla" title={label}>{sigla}</span>
-        <span className="alth-vital-bar__values">
-          <input
-            type="number" className="alth-vital-bar__value-input" min={0}
-            value={current}
-            onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
-            disabled={disabled}
-            aria-label={`${label} atual`}
-          />
-          <span className="alth-vital-bar__sep">/</span>
-          {onMax ? (
+    <div className={`alth-vital alth-vital--${tone}`}>
+      <button type="button" className="alth-vital__step" onClick={down} disabled={disabled || current <= 0} aria-label={`Diminuir ${label}`}>−</button>
+      <div className="alth-vital__main">
+        <AltheriumDragBar
+          value={current} max={max}
+          onChange={onCurrent}
+          disabled={disabled} label={label}
+          trackClassName="alth-vital__bar" fillClassName="alth-vital__fill"
+        />
+        <div className="alth-vital__text">
+          <span className="alth-vital__sigla" title={label}>{sigla}</span>
+          <span className="alth-vital__values">
             <input
-              type="number" className="alth-vital-bar__value-input alth-vital-bar__max-input" min={1}
-              value={max}
-              onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
+              type="number" className="alth-vital__input" min={0}
+              value={current}
+              onChange={(e) => onCurrent(clamp(e.target.value, 0, 9999))}
               disabled={disabled}
-              aria-label={`${label} máximo`}
+              aria-label={`${label} atual`}
             />
-          ) : (
-            <span className="alth-vital-bar__max-fixed" title="Calculado pelo nível">{max}</span>
-          )}
-        </span>
+            <span className="alth-vital__sep">/</span>
+            {onMax ? (
+              <input
+                type="number" className="alth-vital__input alth-vital__input--max" min={1}
+                value={max}
+                onChange={(e) => onMax(clamp(e.target.value, 1, 9999))}
+                disabled={disabled}
+                aria-label={`${label} máximo`}
+              />
+            ) : (
+              <span className="alth-vital__max-fixed" title="Calculado pelo nível">{max}</span>
+            )}
+          </span>
+        </div>
       </div>
-      <AltheriumDragBar
-        value={current} max={max}
-        onChange={onCurrent}
-        disabled={disabled} label={label}
-        trackClassName="alth-vital-bar__bar" fillClassName="alth-vital-bar__bar-fill"
-      />
+      <button type="button" className="alth-vital__step" onClick={up} disabled={disabled || current >= max} aria-label={`Aumentar ${label}`}>+</button>
     </div>
   )
 }

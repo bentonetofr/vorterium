@@ -79,12 +79,13 @@
 /* ── Pedidos do mestre, na ficha do jogador ── */
 .alth-requests { display: flex; flex-direction: column; gap: var(--space-2); }
 .alth-requests__row {
-  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4);
-  background: linear-gradient(90deg, var(--accent-glow), var(--bg-surface));
+  display: flex; align-items: center; gap: var(--space-3); padding: 6px 8px 6px var(--space-4);
+  background: var(--accent-glow);
   border: 1px solid var(--gilded-bright); border-radius: var(--radius-lg); color: var(--accent-bright);
   animation: fadeUp 0.24s ease-out both;
 }
-.alth-requests__info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.alth-requests__row .btn { padding: 6px var(--space-5); min-height: 0; }
+.alth-requests__info { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: var(--space-3); flex: 1; min-width: 0; }
 .alth-requests__info strong { font-family: var(--font-display); font-size: var(--text-md); color: var(--text-primary); }
 .alth-requests__info small { font-size: var(--text-xs); color: var(--text-muted); }
 

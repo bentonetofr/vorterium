@@ -21,6 +21,8 @@ import '../src/features/dice/components/DiceFab.css'
 import '../src/app/layouts/PrivateLayout.css'
 import { SheetEditor } from '../src/features/sheets/altherium/components/AltheriumSheetPanel'
 import { AuthProvider } from '../src/features/auth/AuthProvider'
+import { QteProvider } from '../src/features/qte/QteProvider'
+import { CurrentCampaignProvider } from '../src/features/campaigns/CurrentCampaignContext'
 import { supabase } from '../src/shared/lib/supabase'
 import type { AltheriumSheet } from '../src/shared/types'
 
@@ -88,5 +90,5 @@ function Preview() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <AuthProvider><div style={{ padding: 16, width: '100%', maxWidth: width ?? 1100, margin: '0 auto' }}><Preview /></div></AuthProvider>,
+  <AuthProvider><CurrentCampaignProvider><QteProvider><div style={{ padding: 16, width: '100%', maxWidth: width ?? 1100, margin: '0 auto' }}><Preview /></div></QteProvider></CurrentCampaignProvider></AuthProvider>,
 )

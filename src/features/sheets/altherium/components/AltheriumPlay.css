@@ -10,6 +10,26 @@
   grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
   gap: var(--space-2);
 }
+/* Fileira principal da ficha: ícone em cima, legenda embaixo; o primeiro botão (o principal) é mais largo. */
+.alth-acts--main { display: flex; gap: var(--space-2); }
+.alth-acts--main .alth-act {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: var(--space-3) var(--space-1) var(--space-2);
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-elevated), var(--bg-surface));
+  border-color: var(--border-base);
+}
+.alth-acts--main .alth-act--primary { flex-grow: 1.35; background: linear-gradient(180deg, var(--accent-bright), var(--accent)); border-color: var(--accent-bright); }
+.alth-acts--main .alth-act .alth-icon { width: 26px; height: 26px; }
+.alth-acts--main .alth-act__label {
+  font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.05em; text-transform: uppercase;
+}
+.alth-acts--main .alth-act__caption { max-width: 100%; }
+@media (max-width: 640px) {
+  .alth-acts--main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .alth-badge--note { white-space: normal; border-radius: var(--radius-md); }
+}
 .alth-act {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -50,6 +70,24 @@
 }
 .alth-act--primary .alth-icon, .alth-act--primary .alth-act__label, .alth-act--primary .alth-act__caption { color: var(--text-inverse); }
 .alth-act--primary:hover:not(:disabled) { background: linear-gradient(180deg, var(--accent-bright), var(--accent-bright)); }
+
+/* ── Selos de estado (Fichas, Fome, Reação, Gênese), no fim do cabeçalho ── */
+.alth-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.alth-badge {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 4px var(--space-3); max-width: 100%;
+  font-family: var(--font-label); font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: 999px;
+}
+.alth-badge__name { font-weight: 600; }
+.alth-badge__bad { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--danger-bright); }
+.alth-badge--btn { cursor: var(--cursor-hand, pointer); }
+.alth-badge--btn:hover:not(:disabled) { border-color: var(--gilded-bright); }
+.alth-badge--btn:disabled { cursor: default; }
+.alth-badge--ok { color: var(--alth-resource); border-color: rgba(84, 255, 159, 0.45); }
+.alth-badge--off { color: var(--text-muted); }
+.alth-badge--note { font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-block; }
+.alth-badges__note { flex-basis: 100%; margin: 0; }
 
 /* ── Faixa de estado ── */
 .alth-strip {

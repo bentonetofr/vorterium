@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.9',
+    date:    '2026-11-05',
+    title:   'Altherium: ficha com visual novo',
+    items: [
+      'Cabeçalho da ficha refeito: o retrato ficou menor, ao lado do nome, e Raiz, Gênesis, Nível e Hacksilvers ficam todos na mesma faixa. As barras de PV, PE e do recurso da raiz (FV, PR ou Cartas) ficaram grossas, com o número dentro e botões − e + nas pontas para dano e cura de 1 em 1; arrastar a barra e digitar o número continuam funcionando. O “Exportar TXT” saiu do meio da tela e foi para o menu ⋯ do cabeçalho.',
+      'Selos de estado no fim do cabeçalho: Fichas de Exploração, Fome, Reação (um clique marca como usada) e o efeito da Gênesis, tudo junto. Antes a Fome e as Fichas ficavam numa faixa solta, longe do botão que gasta as Fichas, e o efeito da Gênesis flutuava sozinho abaixo do cabeçalho.',
+      'Uma barra de ações só, com ícone e legenda em cada botão: Atacar (o botão principal, em destaque), Defender, Explorar, Descansar, Furtividade e Equilíbrio. Cada um abre direto a sua janela; o botão “Ações”, que só abria um painel, saiu. Na aba Combate ficaram Receber dano, Iniciativa e, quando o personagem cai, o Teste de Morte.',
+      'O pedido do mestre agora é uma faixa fina logo acima das ações, com o botão Rolar, em vez de um cartão grande.',
+      'Abas: de 8 para 6. A aba Ficha junta Atributos, Domínios, Perfil e Gênesis; a aba Equipamento junta o Inventário (itens e anatomia) e o Ofício, com uma chave no topo para alternar. Nos domínios, os cinco botões (−1, 0, 1, 2 e +) viraram um − e um + com o valor no meio (−1, 0, 1, 2 e “2+”, o dado extra), maiores e mais fáceis de tocar.',
+      'No celular o cabeçalho ficou bem mais curto (retrato e nome na primeira linha, Raiz e Gênesis lado a lado) e as ações aparecem em duas colunas, com botões grandes.',
+    ],
+  },
+  {
     version: '2.8',
     date:    '2026-11-03',
     title:   'Episódios em ordem e anotações em um arquivo',

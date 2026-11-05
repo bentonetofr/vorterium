@@ -20,9 +20,16 @@ export interface ActionDef {
   title?:   string
 }
 
-export function AltheriumActionBar({ actions, onAction }: { actions: ActionDef[]; onAction: (id: PlayAction) => void }) {
+interface Props {
+  actions:  ActionDef[]
+  onAction: (id: PlayAction) => void
+  /** `main`: a fileira grande do topo da ficha (ícone em cima, destaque no botão principal). */
+  variant?: 'main'
+}
+
+export function AltheriumActionBar({ actions, onAction, variant }: Props) {
   return (
-    <nav className="alth-acts" aria-label="Ações">
+    <nav className={`alth-acts${variant ? ` alth-acts--${variant}` : ''}`} aria-label="Ações">
       {actions.map((a) => (
         <button
           key={a.id} type="button" disabled={a.disabled} title={a.title}
