@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
+import { AltheriumDiceModal, formulaOutcome } from './AltheriumDiceModal'
 import { addCondition, type CombatState } from '../utils/altheriumCombat'
 import { NEW_DYING, bonusOnTurn, comaSessions, deathConsequence, medicineBonus, type DyingState } from '../utils/altheriumDeath'
 
@@ -26,25 +26,11 @@ export function AltheriumDyingPanel({ state, turns, baseBonus, espirito, onState
   const [medResult, setMedResult] = useState('')
   const [medCrit, setMedCrit] = useState(false)
   const [coma, setComa] = useState<number | null>(null)
-  const [rollingComa, setRollingComa] = useState(false)
+  const [comaOpen, setComaOpen] = useState(false)
   const setDying = (next: Partial<DyingState>) => onState({ ...state, dying: { ...dying, ...next } })
   const consequence = dying.result === 'stable' ? deathConsequence(dying.failures, espirito) : null
   const left = turns - dying.rolls
   const title = dying.result === 'dead' || consequence?.dead ? 'Morte' : dying.result === 'stable' ? 'Estabilizado' : 'Estado Caído'
-
-  async function rollComa() {
-    setRollingComa(true)
-    try {
-      const r = await recordRoll(campaignId, rollParsedFormula(parseDiceFormula('1d4')), false, {
-        label: 'Coma: 1d4 − 2 sessões', context: { system: 'altherium', kind: 'custom', sheet_id: sheetId, character },
-      })
-      setComa(comaSessions(r.result))
-    } catch {
-      setComa(null)
-    } finally {
-      setRollingComa(false)
-    }
-  }
 
   return (
     <section className={`alth-section alth-dying${dying.result ? ` alth-dying--${consequence?.dead ? 'dead' : dying.result}` : ''}`}>
@@ -112,7 +98,7 @@ export function AltheriumDyingPanel({ state, turns, baseBonus, espirito, onState
               </button>
             )}
             {consequence.coma && coma === null && (
-              <button type="button" className="btn btn-ghost alth-combat__btn" disabled={rollingComa} onClick={() => void rollComa()}>
+              <button type="button" className="btn btn-ghost alth-combat__btn" disabled={comaOpen} onClick={() => setComaOpen(true)}>
                 Rolar sessões de coma (1d4 − 2)
               </button>
             )}
@@ -149,6 +135,15 @@ export function AltheriumDyingPanel({ state, turns, baseBonus, espirito, onState
             Tirar do Estado Caído
           </button>
         </div>
+      )}
+      {comaOpen && (
+        <AltheriumDiceModal
+          title="Coma: 1d4 − 2 sessões"
+          perform={(skin) => formulaOutcome(campaignId, '1d4', 'Coma: 1d4 − 2 sessões', { sheetId, character }, skin)}
+          onDone={(r) => setComa(comaSessions(r.result))}
+          onClose={() => setComaOpen(false)}
+          result={(r) => <p className="alth-test__note">1d4 = {r.result}: {comaSessions(r.result) > 0 ? `${comaSessions(r.result)} ${comaSessions(r.result) === 1 ? 'sessão' : 'sessões'} em coma.` : 'não entra em coma.'}</p>}
+        />
       )}
     </section>
   )

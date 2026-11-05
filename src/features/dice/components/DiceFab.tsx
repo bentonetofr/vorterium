@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { useDiceRoller } from '../DiceRollerProvider'
 import { DiceRollerPanel } from './DiceRollerPanel'
-import { MyDiceTab } from './MyDiceTab'
 import { Presence } from '../../../shared/components/Presence'
 import { useFloatingPanel } from '../../../shared/lib/floatingPanels'
 import { useFabToastSlot } from '../../../shared/components/FabToasts'
@@ -164,7 +163,8 @@ export function DiceFab() {
   const dnd = campaign?.id === campaignId && campaign?.system === 'dnd5e' && dndFeature.visible
   // Altherium: o painel do canto ganha a aba "Meus dados" (os conjuntos de dados da conta).
   const altherium = campaign?.id === campaignId && campaign?.system === 'altherium'
-  const [diceTab, setDiceTab] = useState<'roll' | 'skins'>('roll')
+  // O cartão 3D (palco, rolador e "Meus dados") vale pro D&D e pro Altherium.
+  const card3d = dnd || altherium
   useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
 
   // ── Notificação de resultado ──
@@ -289,13 +289,13 @@ export function DiceFab() {
         </div>,
       )}
 
-      {dnd && (
+      {card3d && (
         <Presence show={isOpen} exitMs={180}>
-          {() => <DndDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} />}
+          {() => <DndDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} system={altherium ? 'altherium' : 'dnd5e'} />}
         </Presence>
       )}
 
-      {!dnd && (isOpen || !instant) && (
+      {!card3d && (isOpen || !instant) && (
       <Presence show={isOpen} exitMs={180}>
         {(state) => (
         <div className="dice-fab__popover fab-panel anim-pop" data-state={state} data-fab-panel="dice" role="dialog" aria-label="Rolagem de dados">
@@ -311,16 +311,7 @@ export function DiceFab() {
               ✕
             </button>
           </div>
-          {altherium && (
-            <div className="ddw__tabs dice-fab__tabs" role="tablist" aria-label="Seções dos dados">
-              {([['roll', 'Rolagem'], ['skins', 'Meus dados']] as const).map(([id, label]) => (
-                <button key={id} type="button" role="tab" aria-selected={diceTab === id} className={`ddw__tab${diceTab === id ? ' is-on' : ''}`} onClick={() => setDiceTab(id)}>{label}</button>
-              ))}
-            </div>
-          )}
-          {altherium && diceTab === 'skins'
-            ? <MyDiceTab />
-            : <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />}
+          <DiceRollerPanel campaignId={campaignId} currentUserId={user.id} onRoll={handleRoll} />
         </div>
         )}
       </Presence>
@@ -328,7 +319,7 @@ export function DiceFab() {
 
       <button
         type="button"
-        className={`dice-fab${isOpen ? ' dice-fab--open' : ''}${dnd ? ' dice-fab--dnd' : ''}`}
+        className={`dice-fab${isOpen ? ' dice-fab--open' : ''}${card3d ? ' dice-fab--dnd' : ''}`}
         onClick={handleToggle}
         aria-label={isOpen ? 'Fechar rolagem de dados' : 'Abrir rolagem de dados'}
         aria-expanded={isOpen}

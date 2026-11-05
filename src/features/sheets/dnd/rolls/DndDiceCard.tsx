@@ -4,6 +4,7 @@ import { groupsNote } from '../../../dice/utils/rollNotes'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { getMyDiceSkin, onDiceSkinChange, setMyDiceSkin } from '../../../dice3d/diceSkinService'
+import { useRollSkin } from '../../../dice3d/useRollSkin'
 import { stageDiceFor } from './diceKinds'
 import { DndDiceVitrine } from './DndDiceVitrine'
 import { freeContext, freeLabel, readFree, resultsText, type FreeGroup, type FreeReading } from './freeRoll'
@@ -30,18 +31,21 @@ interface Props {
   campaignId:    string
   currentUserId: string
   onClose:       () => void
+  /** O sistema da campanha (vai no registro da rolagem). Padrão: D&D. */
+  system?:       'dnd5e' | 'altherium'
 }
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 const tileLabel = (g: FreeGroup) => (g.keep ? `${g.notation}: ${resultsText(g)} → ${g.subtotal}` : `${g.notation}: ${resultsText(g)}`)
 
-export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
+export function DndDiceCard({ campaignId, currentUserId, onClose, system = 'dnd5e' }: Props) {
   const [tab, setTab] = useState<Tab>('free')
   const [skin, setSkin] = useState(DEFAULT_SKIN)
   const [skinError, setSkinError] = useState<string | null>(null)
   const [phase, setPhase] = useState<'idle' | 'rolling' | 'done'>('idle')
   const [done, setDone] = useState<{ reading: FreeReading; formula: string } | null>(null)
   const [spin, setSpin] = useState<number | null>(null)
+  const rollSkin = useRollSkin()
   const stageRef = useRef<HTMLDivElement>(null)
   const { stage, simple } = useDiceStage(stageRef, 'wide')
   const stageNow = useRef(stage)
@@ -80,8 +84,12 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
     setDone(null)
     const release = markRollBusy()   // os testes dos outros esperam esta rolagem terminar
     try {
-      const rolled = rollParsedFormula(parseDiceFormula(formula), { floor: false })
-      const saved = await recordRoll(campaignId, rolled, isPrivate, { label: 'Rolagem livre', skin, noFloor: true, context: freeContext('') })
+      // o conjunto escolhido agora, lido na hora de rolar
+      const skin = await rollSkin()
+      // só o D&D deixa o total ficar abaixo de 1
+      const noFloor = system === 'dnd5e'
+      const rolled = rollParsedFormula(parseDiceFormula(formula), { floor: !noFloor })
+      const saved = await recordRoll(campaignId, rolled, isPrivate, { label: 'Rolagem livre', skin, noFloor, context: freeContext('', system) })
       const reading = readFree(saved.roll_breakdown ?? [], saved.result)
       const dice = stageDiceFor(saved.roll_breakdown ?? [], skin)
       // o 3D baixa na primeira vez: se a pessoa rolou antes de ele ficar pronto, espera um pouco
@@ -101,7 +109,7 @@ export function DndDiceCard({ campaignId, currentUserId, onClose }: Props) {
     } finally {
       release()
     }
-  }, [campaignId, skin, done])
+  }, [campaignId, rollSkin, system, done])
 
   const reading = done?.reading
   return (

@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { rest, REST_TABLE, type RestInput, type RestKind, type RestResult } from '../utils/altheriumRest'
 import { SHORT_RESTS_MAX, type Survival } from '../utils/altheriumSurvival'
-import { cryptoRng } from '../utils/altheriumExplore'
 import { formatAmount } from '../utils/altheriumCraft'
+import { AltheriumDiceModal, recordingRoller, stageDiceOf } from './AltheriumDiceModal'
 import { Chips, Col, Cols, Field, Icon, Toggle, Win } from './AltheriumPlayKit'
 
 // ────────────────────────────────────────────────────────
@@ -23,14 +23,14 @@ interface Props {
   nav?:       ReactNode
 }
 
-const d = (sides: number) => 1 + Math.floor(cryptoRng() * sides)
-
 export function AltheriumRestWindow({ character, base, rationPct, survival, onApply, announce, onClose, nav }: Props) {
   const [kind, setKind] = useState<RestKind>('longo')
   const [goodMeal, setGoodMeal] = useState(false)
   const [bad, setBad] = useState(false)
   const [interrupted, setInterrupted] = useState(false)
   const [done, setDone] = useState<RestResult | null>(null)
+  /** O descanso já foi sorteado; os dados 3D rolam e, quando param, o resultado vai pra ficha. */
+  const [pending, setPending] = useState<{ result: RestResult; rolled: { sides: number; value: number }[] } | null>(null)
 
   const hasRation = rationPct >= 100
   const input: RestInput = { ...base, kind, hasRation, goodMeal, badConditions: bad, interrupted }
@@ -38,16 +38,33 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
   const shortLeft = SHORT_RESTS_MAX - survival.short_rests
   const blocked = preview.blocked ?? null
 
-  function run() {
-    const result = rest(input, d)
-    if (!result.allowed) return
+  function finish(result: RestResult) {
     onApply(result)
     setDone(result)
     announce(`${character} fez um Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}${interrupted ? ' (interrompido)' : result.benefit === 'curto' && kind === 'longo' ? ' (só com os benefícios de um Curto)' : ''}.`)
   }
 
+  function run() {
+    // cada dado que a conta pede é anotado e depois jogado em 3D: o que aparece é exatamente o que valeu
+    const { roller, rolled } = recordingRoller()
+    const result = rest(input, roller)
+    if (!result.allowed) return
+    if (rolled.length === 0) { finish(result); return }
+    setPending({ result, rolled })
+  }
+
+  const diceModal = pending && (
+    <AltheriumDiceModal<RestResult>
+      title={`Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}: dados`}
+      perform={async (skin) => ({ dice: stageDiceOf(pending.rolled, skin), value: pending.result })}
+      onDone={finish}
+      onClose={() => setPending(null)}
+    />
+  )
+
   if (done) {
     return (
+      <>
       <Win title={`Descanso ${kind === 'curto' ? 'Curto' : 'Longo'}`} subtitle="feito" onClose={onClose}>
         <ul className="alth-rest__lines">
           {done.lines.map((l, i) => <li key={i}>{l}</li>)}
@@ -57,10 +74,13 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
           <button type="button" className="btn btn-primary" onClick={onClose}>Fechar</button>
         </div>
       </Win>
+      {diceModal}
+      </>
     )
   }
 
   return (
+    <>
     <Win title="Descansar" wide nav={nav} subtitle={`Curtos feitos: ${survival.short_rests} de ${SHORT_RESTS_MAX}`} onClose={onClose}>
       <Chips<RestKind>
         label="Tipo de descanso" value={kind} onChange={setKind}
@@ -115,5 +135,7 @@ export function AltheriumRestWindow({ character, base, rationPct, survival, onAp
         </button>
       </div>
     </Win>
+    {diceModal}
+    </>
   )
 }

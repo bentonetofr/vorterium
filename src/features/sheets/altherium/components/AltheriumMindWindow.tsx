@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { BREAKDOWNS, CONFESSION_DT, RITES, breakdownFor, calmAmount, equilibriumLoss, riteDef, scarredMax, type BreakdownDef, type RiteId } from '../utils/altheriumMind'
-import { cryptoRng } from '../utils/altheriumExplore'
+import type { DiceRoll } from '../../../../shared/types'
 import type { Survival } from '../utils/altheriumSurvival'
+import { AltheriumDiceModal, formulaOutcome } from './AltheriumDiceModal'
 import { AltheriumTestModal, type AfterCtx, type AltheriumTestSpec } from './AltheriumTestModal'
 import type { DomainCheck } from './AltheriumCombatPanel'
 import { Chips, Col, Cols, Field, FormulaEditor, Icon, NO_MANUAL, Win, toManual, type ManualState } from './AltheriumPlayKit'
@@ -33,7 +34,6 @@ interface Props {
 }
 
 type Tab = 'perda' | 'recuperar' | 'zerado'
-const d = (sides: number) => 1 + Math.floor(cryptoRng() * sides)
 
 export function AltheriumMindWindow(props: Props) {
   const { equilibrio, survival } = props
@@ -46,6 +46,8 @@ export function AltheriumMindWindow(props: Props) {
   const [calmCrit, setCalmCrit] = useState(false)
   const [breakdown, setBreakdown] = useState<BreakdownDef | null>(null)
   const [man, setMan] = useState<ManualState>(NO_MANUAL)
+  /** Rolagem em 3D pendente (rito, tabela do Equilíbrio zerado): aplica o resultado quando os dados param. */
+  const [quick, setQuick] = useState<{ title: string; formula: string; apply: (roll: DiceRoll) => void } | null>(null)
 
   const say = (line: string) => setLog((l) => [...l, line])
   const clamp = (n: number) => Math.max(0, Math.min(equilibrio.max, n))
@@ -92,25 +94,39 @@ export function AltheriumMindWindow(props: Props) {
       setSpec({
         spec: { ...base, title: 'Oferenda aos Deuses', targetLabel: 'DT (opcional)', words: ['agradou', 'não agradou'], notes: ['Religião + Destino. Passou: +2d4. Falhou: +1.'] },
         after: (ctx) => <OfferingResult ctx={ctx} onApply={(pass) => {
-          const n = pass ? d(4) + d(4) : 1
-          props.onSurvival({ rite_used: true })
-          gain(n, `Oferenda aos Deuses (${pass ? '2d4' : 'falhou'})`)
+          if (!pass) {
+            props.onSurvival({ rite_used: true })
+            gain(1, 'Oferenda aos Deuses (falhou)')
+            return
+          }
+          setQuick({
+            title: 'Oferenda aos Deuses: 2d4', formula: '2d4',
+            apply: (r) => { props.onSurvival({ rite_used: true }); gain(r.result, 'Oferenda aos Deuses (2d4)') },
+          })
         }} />,
       })
       return
     }
     if (id === 'banquete' && props.hacksilvers < 100) { say('Faltam Hacksilvers: o Banquete custa ¤100.'); return }
-    const n = id === 'juramento' ? d(8) : d(6)
-    if (id === 'banquete') props.onSpendCoins(100)
-    if (def.counts) props.onSurvival({ rite_used: true })
-    gain(n, `${def.label} (${id === 'juramento' ? '1d8' : '1d6'} = ${n})`)
-    props.announce(`${props.character} participou de um rito: ${def.label}.`)
-    if (id === 'confissao') say(`O aliado faz Vontade + Espírito (DT ${CONFESSION_DT}): se falhar, perde 1 ponto de Equilíbrio.`)
+    const formula = id === 'juramento' ? '1d8' : '1d6'
+    setQuick({
+      title: `${def.label}: ${formula}`, formula,
+      apply: (r) => {
+        if (id === 'banquete') props.onSpendCoins(100)
+        if (def.counts) props.onSurvival({ rite_used: true })
+        gain(r.result, `${def.label} (${formula} = ${r.result})`)
+        props.announce(`${props.character} participou de um rito: ${def.label}.`)
+        if (id === 'confissao') say(`O aliado faz Vontade + Espírito (DT ${CONFESSION_DT}): se falhar, perde 1 ponto de Equilíbrio.`)
+      },
+    })
   }
 
   // ── Zerado ──
   function rollBreakdown() {
-    const roll = d(10)
+    setQuick({ title: 'Equilíbrio zerado: 1d10', formula: '1d10', apply: (r) => applyBreakdown(r.result) })
+  }
+
+  function applyBreakdown(roll: number) {
     const b = breakdownFor(roll)
     setBreakdown(b)
     props.onEquilibrio({ current: 0, max: scarredMax(equilibrio.max) })
@@ -119,16 +135,30 @@ export function AltheriumMindWindow(props: Props) {
     if (b.permanent) props.onSurvival({ traumas: [...survival.traumas, 'Marca da Ruptura'].slice(0, 6) })
   }
 
+  const quickModal = quick && (
+    <AltheriumDiceModal<DiceRoll>
+      key={quick.title}
+      title={quick.title}
+      perform={(skin) => formulaOutcome(props.campaignId, quick.formula, quick.title, { sheetId: props.sheetId, character: props.character }, skin)}
+      onDone={quick.apply}
+      onClose={() => setQuick(null)}
+    />
+  )
+
   if (spec) {
     return (
-      <AltheriumTestModal
-        campaignId={props.campaignId} sheetId={props.sheetId} character={props.character} spec={spec.spec}
-        onClose={() => setSpec(null)} after={spec.after} autoRoll noAgain
-      />
+      <>
+        <AltheriumTestModal
+          campaignId={props.campaignId} sheetId={props.sheetId} character={props.character} spec={spec.spec}
+          onClose={() => setSpec(null)} after={spec.after} autoRoll noAgain
+        />
+        {quickModal}
+      </>
     )
   }
 
   return (
+    <>
     <Win title="Equilíbrio" wide nav={props.nav} subtitle={`${equilibrio.current} de ${equilibrio.max}`} onClose={props.onClose}>
       <Chips<Tab>
         label="O que fazer" value={tab} onChange={setTab}
@@ -233,6 +263,8 @@ export function AltheriumMindWindow(props: Props) {
       )}
       {log.length > 0 && <ul className="alth-combat__lines">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
     </Win>
+    {quickModal}
+    </>
   )
 }
 

@@ -3,8 +3,7 @@ import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import type { DiceRoll } from '../../../../shared/types'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import { sendMessage } from '../../../chat/services/chatService'
-import { getMyDiceSkin } from '../../../dice3d/diceSkinService'
-import { DEFAULT_SKIN } from '../../../dice3d/skins'
+import { useRollSkin } from '../../../dice3d/useRollSkin'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import { playRollSound } from '../../terraDevastadaAdaptada/components/TdaTestModal'
@@ -120,16 +119,12 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   const [error, setError] = useState<string | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
   const [done, setDone] = useState(false)
-  const [skin, setSkin] = useState(DEFAULT_SKIN)
+  const rollSkin = useRollSkin()
   const stageRef = useRef<HTMLDivElement>(null)
   const { stage, simple } = useDiceStage(stageRef, 'wide')
   const title = spec.title ?? `Teste de ${spec.domainLabel}`
   const targetLabel = spec.targetLabel ?? 'DT'
   const words = spec.words ?? ['sucesso', 'falha']
-
-  useEffect(() => {
-    void getMyDiceSkin().then(setSkin).catch(() => { /* fica o padrão */ })
-  }, [])
 
   const autoDice = sum(spec.diceMods)
   const totalDice = clampSituation(autoDice + situational)
@@ -153,7 +148,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   }
   const outcome = reading ? judge(reading, targetValue) : null
 
-  async function animate(saved: DiceRoll) {
+  async function animate(saved: DiceRoll, skin: string) {
     if (stage) await stage.roll(stageDiceFor(saved.roll_breakdown ?? [], skin), { skin })
   }
 
@@ -162,6 +157,8 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
     setRolling(true)
     setDone(false)
     try {
+      // o conjunto escolhido agora (lido na hora: rolar sozinho ao abrir não pode sair com o padrão)
+      const skin = await rollSkin()
       const rolled = rollParsedFormula(parseDiceFormula(testFormula(pool, modifier, spec.extraDie?.sides)))
       const read = readTest(rolled.breakdown)
       if (!read) throw new Error('Não foi possível ler a rolagem.')
@@ -180,7 +177,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
       })
       setRoll(saved)
       playRollSound()
-      await animate(saved)
+      await animate(saved, skin)
       setDone(true)
       onRolled?.({ reading: read, outcome: result, target: targetValue, isPrivate })
       if (!isPrivate) {
@@ -197,11 +194,12 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
     setError(null)
     setRolling(true)
     try {
+      const skin = await rollSkin()
       const saved = await recordRoll(campaignId, rollParsedFormula(parseDiceFormula(formula)), isPrivate, {
         label, skin, context: { system: 'altherium', kind: 'custom', sheet_id: sheetId, character },
       })
       playRollSound()
-      await animate(saved)
+      await animate(saved, skin)
       return saved
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível rolar.')

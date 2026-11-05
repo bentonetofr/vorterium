@@ -2,7 +2,7 @@ import { useRef, useState, type CSSProperties } from 'react'
 import { AltheriumRecentTriumphs } from './AltheriumRecentTriumphs'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { Presence } from '../../../../shared/components/Presence'
-import { rollDice } from '../../../dice/services/diceService'
+import { AltheriumDiceModal, formulaOutcome } from './AltheriumDiceModal'
 import { PILAR_TRIUMPHS, TRIUMPH_ACTION_LABELS, type PilarTriumphDef } from '../constants/altheriumTriumphs'
 import {
   DECK_SIZE,
@@ -295,18 +295,10 @@ function PilarUseModal({
   // No meio da jogada, só "Desistir" encerra — clique fora ou Esc não.
   const lockClose = recovering || playing
 
-  async function recover() {
-    setRecovering(true)
+  // Os dados 3D rolam numa janela por cima; as cartas voltam quando eles param.
+  function recover() {
     setRecoverError(null)
-    try {
-      const roll = await rollDice(campaignId, '1d20+3')
-      setRecovered(roll.result)
-      onRecover(roll.result)
-    } catch (err) {
-      setRecoverError(err instanceof Error ? err.message : 'Não foi possível rolar.')
-    } finally {
-      setRecovering(false)
-    }
+    setRecovering(true)
   }
 
   const resultTitle =
@@ -439,6 +431,16 @@ function PilarUseModal({
                 Fechar
               </button>
             </div>
+          )}
+
+          {recovering && (
+            <AltheriumDiceModal
+              title="Retorno do Baralho: 1d20+3"
+              perform={(skin) => formulaOutcome(campaignId, '1d20+3', 'Retorno do Baralho: 1d20+3', {}, skin)}
+              onDone={(roll) => { setRecovered(roll.result); onRecover(roll.result) }}
+              onClose={() => setRecovering(false)}
+              result={(roll) => <p className="alth-test__note">Recupera {roll.result} {roll.result === 1 ? 'carta' : 'cartas'} (até o máximo do nível).</p>}
+            />
           )}
         </div>
       </div>

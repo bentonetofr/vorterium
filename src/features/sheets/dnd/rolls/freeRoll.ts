@@ -13,8 +13,8 @@ export function freeLabel(formula: string): string {
   return formula.replace(/\s+/g, '').replace(/([+-])/g, ' $1 ').trim()
 }
 
-export function freeContext(character: string): DiceRollContext {
-  return { system: 'dnd5e', kind: 'custom', key: 'free', character: character || undefined }
+export function freeContext(character: string, system: 'dnd5e' | 'altherium' = 'dnd5e'): DiceRollContext {
+  return { system, kind: 'custom', key: 'free', character: character || undefined }
 }
 
 /** Rolagem livre (a que o painel da janela de dados grava). */

@@ -18,7 +18,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '2.9',
     date:    '2026-11-05',
-    title:   'Altherium: ficha com visual novo',
+    title:   'Altherium: ficha com visual novo e dados 3D em tudo',
     items: [
       'Cabeçalho da ficha refeito: o retrato ficou menor, ao lado do nome, e Raiz, Gênesis, Nível e Hacksilvers ficam todos na mesma faixa. As barras de PV, PE e do recurso da raiz (FV, PR ou Cartas) ficaram grossas, com o número dentro e botões − e + nas pontas para dano e cura de 1 em 1; arrastar a barra e digitar o número continuam funcionando. O “Exportar TXT” saiu do meio da tela e foi para o menu ⋯ do cabeçalho.',
       'Selos de estado no fim do cabeçalho: Fichas de Exploração, Fome, Reação (um clique marca como usada) e o efeito da Gênesis, tudo junto. Antes a Fome e as Fichas ficavam numa faixa solta, longe do botão que gasta as Fichas, e o efeito da Gênesis flutuava sozinho abaixo do cabeçalho.',
@@ -26,6 +26,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       'O pedido do mestre agora é uma faixa fina logo acima das ações, com o botão Rolar, em vez de um cartão grande.',
       'Abas: de 8 para 6. A aba Ficha junta Atributos, Domínios, Perfil e Gênesis; a aba Equipamento junta o Inventário (itens e anatomia) e o Ofício, com uma chave no topo para alternar. Nos domínios, os cinco botões (−1, 0, 1, 2 e +) viraram um − e um + com o valor no meio (−1, 0, 1, 2 e “2+”, o dado extra), maiores e mais fáceis de tocar.',
       'Janelas de Explorar, Descansar, Furtividade e Equilíbrio: agora todas têm o mesmo tamanho e ficam no mesmo lugar, então a janela não pula mais ao trocar de aba. O título e as abas ficam parados e só o conteúdo rola por dentro quando precisa. No celular estreito as quatro abas cabem na largura e os botões grandes (como “Resistir”) quebram linha em vez de cortar o texto.',
+      'Dados do Altherium corrigidos: o dado que você escolhe em “Meus dados” agora é o que aparece ao rolar. Antes, os testes que rolam sozinhos ao abrir (Equilíbrio, Explorar, pedidos do mestre) rolavam antes de a escolha ser lida e saíam com o dado de madeira; a escolha agora é lida na hora de cada rolagem, e um erro de rede não deixa mais o dado de madeira “preso” até recarregar a página. Se salvar a escolha não alterar o seu perfil, o site avisa em vez de fingir que trocou.',
+      'Todas as rolagens do Altherium usam os dados 3D: o coma (1d4), os Ritos de Altherium (Banquete, Oferenda, Juramento...), a tabela de quando o Equilíbrio zera (1d10), os dados do Descanso (Vitalidade 1d8, Destino, Rúnico...) e a recuperação de cartas do Pilar (1d20+3). O resultado só entra na ficha depois que os dados param, e o que aparece no dado é exatamente o que valeu. O rolador de dados da bolinha também virou o cartão 3D (palco, fórmulas e “Meus dados”), igual ao do D&D.',
       'No celular o cabeçalho ficou bem mais curto (retrato e nome na primeira linha, Raiz e Gênesis lado a lado) e as ações aparecem em duas colunas, com botões grandes.',
     ],
   },
