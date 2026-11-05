@@ -492,3 +492,26 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 .alth-test__stage { height: 150px; }
 .alth-toggle { padding: 6px 10px; }
 .alth-win .alth-chip { padding: 5px 10px; }
+
+/* ── Janelas com abas (Explorar, Descansar, Furtividade, Equilíbrio): todas do mesmo tamanho,
+   pra a janela não pular ao trocar de aba. O título e as abas ficam parados; só o conteúdo rola.
+   Sem animação de entrada, já que trocar de aba abre outra janela por cima. ── */
+.alth-win.alth-win--hub {
+  height: min(700px, calc(100dvh - 2 * var(--space-4)));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: none;
+}
+.alth-win--hub .alth-modal__header,
+.alth-win--hub .alth-win__nav { flex-shrink: 0; }
+.alth-win--hub .alth-win__body { flex: 1; min-height: 0; overflow-y: auto; }
+.modal-overlay:has(> .alth-win--hub) { animation: none; }
+
+/* Celular estreito: as quatro abas cabem na largura (sem cortar "Equilíbrio") e os botões de ação quebram linha em vez de cortar o texto. */
+@media (max-width: 480px) {
+  .alth-hub { gap: 1px; padding: 2px; }
+  .alth-hub__tab { flex: 1 1 0; min-width: 0; padding-inline: 4px; font-size: 11px; letter-spacing: 0; }
+  .alth-win .alth-test__actions { flex-wrap: wrap; }
+  .alth-win .alth-test__actions .btn { flex: 1 1 140px; white-space: normal; line-height: 1.2; }
+}

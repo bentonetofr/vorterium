@@ -25,6 +25,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Uma barra de ações só, com ícone e legenda em cada botão: Atacar (o botão principal, em destaque), Defender, Explorar, Descansar, Furtividade e Equilíbrio. Cada um abre direto a sua janela; o botão “Ações”, que só abria um painel, saiu. Na aba Combate ficaram Receber dano, Iniciativa e, quando o personagem cai, o Teste de Morte.',
       'O pedido do mestre agora é uma faixa fina logo acima das ações, com o botão Rolar, em vez de um cartão grande.',
       'Abas: de 8 para 6. A aba Ficha junta Atributos, Domínios, Perfil e Gênesis; a aba Equipamento junta o Inventário (itens e anatomia) e o Ofício, com uma chave no topo para alternar. Nos domínios, os cinco botões (−1, 0, 1, 2 e +) viraram um − e um + com o valor no meio (−1, 0, 1, 2 e “2+”, o dado extra), maiores e mais fáceis de tocar.',
+      'Janelas de Explorar, Descansar, Furtividade e Equilíbrio: agora todas têm o mesmo tamanho e ficam no mesmo lugar, então a janela não pula mais ao trocar de aba. O título e as abas ficam parados e só o conteúdo rola por dentro quando precisa. No celular estreito as quatro abas cabem na largura e os botões grandes (como “Resistir”) quebram linha em vez de cortar o texto.',
       'No celular o cabeçalho ficou bem mais curto (retrato e nome na primeira linha, Raiz e Gênesis lado a lado) e as ações aparecem em duas colunas, com botões grandes.',
     ],
   },

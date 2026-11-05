@@ -24,7 +24,7 @@ interface WinProps {
 export function Win({ title, subtitle, nav, wide = false, onClose, busy = false, children }: WinProps) {
   return (
     <ModalOverlay onClose={onClose} closeDisabled={busy}>
-      <div className={`alth-modal__window alth-win${wide ? ' alth-win--wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`alth-modal__window alth-win${wide ? ' alth-win--wide' : ''}${nav ? ' alth-win--hub' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <header className="alth-modal__header">
           <div className="alth-win__heading">
             <h4 className="alth-modal__title">{title}</h4>
