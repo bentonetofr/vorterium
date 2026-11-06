@@ -30,7 +30,7 @@ const SCARCITY_TONE: Record<string, string> = { abundante: 'var(--alth-resource,
 export function AltheriumSceneBar({ campaignId }: { campaignId: string }) {
   const [scene, setScene] = useAltheriumScene(campaignId)
   const [error, setError] = useState<string | null>(null)
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   async function change(patch: Partial<AltheriumScene>) {
     const previous = scene
