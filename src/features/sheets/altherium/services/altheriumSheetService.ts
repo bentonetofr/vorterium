@@ -1,6 +1,7 @@
 import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
 import { pcOnly } from '../../services/npcService'
 import { countDomainUse } from '../utils/altheriumDomainUse'
+import type { RepairMaterial, WeaponCategory, WeaponProperty } from '../constants/altheriumItems'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
 import type {
@@ -310,6 +311,13 @@ export interface AltheriumCustomItemInput {
   damageType: NonNullable<AltheriumInventoryItem['custom_damage_type']>
   attribute:  NonNullable<AltheriumInventoryItem['custom_attribute']>
   range:      NonNullable<AltheriumInventoryItem['custom_range']>
+  /** Preço, categoria, reparo e propriedades. Sem isto (Fabricar), esses campos não mudam. */
+  details?: {
+    price:      number | null
+    category:   WeaponCategory | null
+    repair:     RepairMaterial | null
+    properties: WeaponProperty[]
+  }
 }
 
 /** Dado de dano no formato das armas do catálogo: 1d8, d6, 2d6+1, 1d12-2. */
@@ -327,6 +335,12 @@ function customItemColumns(input: AltheriumCustomItemInput) {
     custom_damage_type: isWeapon ? input.damageType : null,
     custom_attribute:   isWeapon ? input.attribute : null,
     custom_range:       isWeapon ? input.range : null,
+    ...(input.details ? {
+      custom_price:      input.details.price == null ? null : Math.max(0, Math.min(99999999, Math.round(input.details.price))),
+      custom_category:   isWeapon ? input.details.category : null,
+      custom_repair:     isWeapon || isArmor ? input.details.repair : null,
+      custom_properties: isWeapon ? input.details.properties : null,
+    } : {}),
   }
 }
 
@@ -367,7 +381,8 @@ export async function updateAltheriumInventoryItem(
   id: string,
   data: Partial<Pick<AltheriumInventoryItem,
     'quantity' | 'equipped' | 'equipped_zone' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'
-    | 'custom_damage_dice' | 'custom_damage_type' | 'custom_attribute' | 'custom_range' | 'integrity' | 'reinforcements'>>,
+    | 'custom_damage_dice' | 'custom_damage_type' | 'custom_attribute' | 'custom_range' | 'integrity' | 'reinforcements'
+    | 'custom_price' | 'custom_category' | 'custom_repair' | 'custom_properties'>>,
 ): Promise<AltheriumInventoryItem> {
   const { data: updated, error } = await supabase
     .from('altherium_character_inventory')

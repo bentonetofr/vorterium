@@ -12,14 +12,22 @@ import {
   REPAIR_MATERIAL_LABELS,
   weaponPropertyLabel,
   weaponReinforcementSlots,
+  categoryReinforcementSlots,
+  readWeaponProperties,
+  REPAIR_MATERIAL_IDS,
+  WEAPON_PROPERTY_IDS,
+  RECARGA_ACTIONS,
   findArmor,
   findWeapon,
   findItem,
   type ArmorCoverage,
   type DamageType,
   type WeaponAttribute,
+  type RepairMaterial,
   type WeaponCategory,
   type WeaponDef,
+  type WeaponProperty,
+  type WeaponPropertyId,
   type WeaponRange,
 } from '../constants/altheriumItems'
 import { BODY_PARTS } from '../constants/altherium'
@@ -53,8 +61,6 @@ const ITEM_TYPE_LABELS: Record<AltheriumInventoryItem['item_type'], string> = {
   consumivel: 'Consumível',
   utilitario: 'Utilitário',
 }
-const ITEM_TYPE_OPTIONS = (Object.keys(ITEM_TYPE_LABELS) as AltheriumInventoryItem['item_type'][])
-  .map((t) => ({ value: t, label: ITEM_TYPE_LABELS[t] }))
 
 const optionsOf = <K extends string>(labels: Record<K, string>) =>
   (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }))
@@ -82,20 +88,25 @@ export function inventoryArmor(inv: AltheriumInventoryItem): { db: number; cover
   return a ? { db: a.db, coverage: a.coverage } : undefined
 }
 
-interface ItemInfo { name: string; detail: string; note?: string; weapon?: WeaponDef }
+interface ItemTraits { properties: WeaponProperty[]; repair: RepairMaterial; slots: number }
+interface ItemInfo { name: string; detail: string; note?: string; traits?: ItemTraits; price?: number }
+
+/** Propriedades da arma do catálogo — ver ItemTraitsView. */
+function WeaponTraits({ weapon }: { weapon: WeaponDef }) {
+  return <ItemTraitsView properties={weapon.properties} repair={weapon.repair} slots={weaponReinforcementSlots(weapon)} />
+}
 
 /** Propriedades da arma (passar o mouse mostra a regra), material de reparo e espaços de Reforço. */
-function WeaponTraits({ weapon }: { weapon: WeaponDef }) {
-  const slots = weaponReinforcementSlots(weapon)
+function ItemTraitsView({ properties, repair, slots }: ItemTraits) {
   return (
     <span className="alth-inventory__traits">
-      {weapon.properties.map((p) => (
+      {properties.map((p) => (
         <span key={p.id} className="alth-inventory__prop" title={WEAPON_PROPERTIES[p.id].description}>
           {weaponPropertyLabel(p)}
         </span>
       ))}
       <span className="alth-inventory__repair">
-        Reparo: {REPAIR_MATERIAL_LABELS[weapon.repair]} · {slots} {slots === 1 ? 'espaço' : 'espaços'} de Reforço
+        Reparo: {REPAIR_MATERIAL_LABELS[repair]} · {slots} {slots === 1 ? 'espaço' : 'espaços'} de Reforço
       </span>
     </span>
   )
@@ -113,12 +124,21 @@ function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
         ]
       : [ITEM_TYPE_LABELS[inv.item_type]]
     const parts = [...weapon, armor ? `${armor.db} DB` : null]
-    return { name: inv.custom_name!, detail: parts.filter(Boolean).join(' · '), note: inv.custom_detail ?? undefined }
+    const traits = inv.item_type === 'arma'
+      ? { properties: readWeaponProperties(inv.custom_properties), repair: inv.custom_repair ?? 'ferro_velho', slots: categoryReinforcementSlots(inv.custom_category) }
+      : undefined
+    return {
+      name: inv.custom_name!, detail: parts.filter(Boolean).join(' · '), note: inv.custom_detail ?? undefined,
+      traits, price: inv.custom_price ?? undefined,
+    }
   }
   if (inv.item_type === 'arma') {
     const w = findWeapon(inv.item_id)
     if (!w) return null
-    return { name: w.name, detail: `${w.damageDice} ${DAMAGE_TYPE_LABELS[w.damageType]} · ${WEAPON_RANGE_LABELS[w.range]}`, weapon: w }
+    return {
+      name: w.name, detail: `${w.damageDice} ${DAMAGE_TYPE_LABELS[w.damageType]} · ${WEAPON_RANGE_LABELS[w.range]}`,
+      traits: { properties: w.properties, repair: w.repair, slots: weaponReinforcementSlots(w) },
+    }
   }
   if (inv.item_type === 'armadura' || inv.item_type === 'escudo') {
     const a = findArmor(inv.item_id)
@@ -153,9 +173,11 @@ interface OwnedCardProps {
   onRemove:         (id: string) => Promise<void>
   onToggleEquip:    AltheriumInventoryCardProps['onToggleEquip']
   onEdit:           () => void
+  /** Só mostra o cartão (janela do item personalizado): sem remover, quantidade nem equipar. */
+  preview?:         boolean
 }
 
-function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEquip, onEdit }: OwnedCardProps) {
+function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEquip, onEdit, preview = false }: OwnedCardProps) {
   const [choosingZone, setChoosingZone] = useState(false)
   const [open, setOpen] = useState(false)
   const armor = inventoryArmor(inv)
@@ -170,14 +192,17 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
     <article className={`alth-icard${inv.equipped ? ' is-equipped' : ''}`}>
       <header className="alth-icard__head">
         <h5 className="alth-icard__name">{info.name}</h5>
-        <button type="button" className="alth-inventory__remove" disabled={disabled}
-          onClick={() => void onRemove(inv.id)} aria-label={`Remover ${info.name}`} title="Remover">×</button>
+        {!preview && (
+          <button type="button" className="alth-inventory__remove" disabled={disabled}
+            onClick={() => void onRemove(inv.id)} aria-label={`Remover ${info.name}`} title="Remover">×</button>
+        )}
       </header>
 
       <div className="alth-icard__badges">
         <span className="alth-icard__kind">{ITEM_TYPE_LABELS[inv.item_type]}</span>
         {inv.equipped && <span className="alth-icard__badge alth-icard__badge--on">Equipada{zoneLabel ? ` · ${zoneLabel}` : ''}</span>}
         {custom && <span className="alth-icard__badge">Personalizado</span>}
+        {info.price != null && <span className="alth-icard__kind">¤{info.price}</span>}
       </div>
 
       <p className="alth-icard__detail">{info.detail}</p>
@@ -190,7 +215,7 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
         </button>
       )}
 
-      {info.weapon && <WeaponTraits weapon={info.weapon} />}
+      {info.traits && <ItemTraitsView {...info.traits} />}
 
       {gear && band && (
         <div className="alth-icard__integrity" title="Integridade (repare na aba Ofício)">
@@ -208,7 +233,7 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
         </span>
       )}
 
-      {choosingZone && armor ? (
+      {preview ? null : choosingZone && armor ? (
         <div className="alth-inventory__zone-picker">
           <span className="alth-inventory__zone-hint">Onde?</span>
           {BODY_PARTS.map((part) => (
@@ -475,8 +500,9 @@ function CatalogModal({ inventory, disabled, onAdd, onClose, onCustom }: Catalog
 }
 
 // ────────────────────────────────────────────────────────
-// Janela de item personalizado — mesmo visual do editor de runa
-// (ModalOverlay: fundo embaçado, Esc/clique fora fecham, menos salvando).
+// Janela de item personalizado — formulário à esquerda e, à direita, o
+// cartão como vai ficar em "Meus itens" (atualiza enquanto você preenche).
+// ModalOverlay: fundo embaçado, Esc/clique fora fecham, menos salvando.
 // ────────────────────────────────────────────────────────
 
 interface CustomItemModalProps {
@@ -486,15 +512,28 @@ interface CustomItemModalProps {
   onCancel:       () => void
 }
 
+const CATEGORY_OPTIONS = WEAPON_CATEGORIES.map((c) => ({ value: c, label: WEAPON_CATEGORY_LABELS[c] }))
+const REPAIR_OPTIONS = REPAIR_MATERIAL_IDS.map((r) => ({ value: r, label: REPAIR_MATERIAL_LABELS[r] }))
+const RECARGA_OPTIONS = RECARGA_ACTIONS.map((a) => ({ value: a, label: a }))
+/** Propriedades que não combinam entre si: ligar uma desliga a outra. */
+const EXCLUSIVE: Partial<Record<WeaponPropertyId, WeaponPropertyId>> = {
+  duas_maos: 'uma_mao', uma_mao: 'duas_maos', robusta: 'fragil', fragil: 'robusta',
+}
+const TYPE_TILES: AltheriumInventoryItem['item_type'][] = ['arma', 'armadura', 'escudo', 'consumivel', 'utilitario']
+
 function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomItemModalProps) {
   const [name, setName]         = useState(initial?.custom_name ?? suggestedName ?? '')
-  const [itemType, setItemType] = useState<AltheriumInventoryItem['item_type']>(initial?.item_type ?? 'utilitario')
+  const [itemType, setItemType] = useState<AltheriumInventoryItem['item_type']>(initial?.item_type ?? 'arma')
   const [detail, setDetail]     = useState(initial?.custom_detail ?? '')
   const [db, setDb]             = useState(initial?.custom_db ?? 1)
   const [damageDice, setDamageDice] = useState(initial?.custom_damage_dice ?? '')
   const [damageType, setDamageType] = useState<DamageType>(initial?.custom_damage_type ?? 'corte')
   const [attribute, setAttribute]   = useState<WeaponAttribute>(initial?.custom_attribute ?? 'furia')
   const [range, setRange]           = useState<WeaponRange>(initial?.custom_range ?? 'toque')
+  const [category, setCategory]     = useState<WeaponCategory>(initial?.custom_category ?? 'leve')
+  const [repair, setRepair]         = useState<RepairMaterial>(initial?.custom_repair ?? 'ferro_velho')
+  const [properties, setProperties] = useState<WeaponProperty[]>(() => readWeaponProperties(initial?.custom_properties))
+  const [price, setPrice]           = useState(initial?.custom_price != null ? String(initial.custom_price) : '')
   const [busy, setBusy]         = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const nameRef = useRef<HTMLInputElement>(null)
@@ -502,6 +541,18 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
   const isWeapon = itemType === 'arma'
 
   useEffect(() => { nameRef.current?.focus() }, [])
+
+  const prop = (id: WeaponPropertyId) => properties.find((p) => p.id === id)
+  function toggleProp(id: WeaponPropertyId) {
+    setProperties((list) => {
+      if (list.some((p) => p.id === id)) return list.filter((p) => p.id !== id)
+      const without = list.filter((p) => p.id !== EXCLUSIVE[id])
+      const added: WeaponProperty = id === 'perfurante' ? { id, value: 1 } : id === 'recarga' ? { id, action: RECARGA_ACTIONS[0] } : { id }
+      return [...without, added]
+    })
+  }
+  const patchProp = (id: WeaponPropertyId, patch: Partial<WeaponProperty>) =>
+    setProperties((list) => list.map((p) => (p.id === id ? { ...p, ...patch } : p)))
 
   async function handleSave() {
     if (!name.trim()) { setError('Dê um nome ao item.'); return }
@@ -513,7 +564,15 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
     setBusy(true)
     setError(null)
     try {
-      await onSubmit({ item_type: itemType, name, detail, db, damageDice: dice, damageType, attribute, range })
+      await onSubmit({
+        item_type: itemType, name, detail, db, damageDice: dice, damageType, attribute, range,
+        details: {
+          price: price.trim() === '' ? null : Number(price),
+          category: isWeapon ? category : null,
+          repair: isWeapon || isArmor ? repair : null,
+          properties: isWeapon ? properties : [],
+        },
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível salvar o item.')
       setBusy(false)
@@ -528,107 +587,201 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
     }
   }
 
+  // O cartão de prévia é o mesmo de "Meus itens", montado com o que está no formulário.
+  const draft: AltheriumInventoryItem = {
+    id: 'preview', sheet_id: '', item_type: itemType, item_id: 'custom:preview', quantity: 1,
+    equipped: false, equipped_zone: null,
+    custom_name: name.trim() || 'Sem nome', custom_detail: detail.trim() || null,
+    custom_db: isArmor ? db : null,
+    custom_damage_dice: isWeapon ? (damageDice.trim() || null) : null,
+    custom_damage_type: isWeapon ? damageType : null,
+    custom_attribute: isWeapon ? attribute : null,
+    custom_range: isWeapon ? range : null,
+    custom_category: isWeapon ? category : null,
+    custom_repair: isWeapon || isArmor ? repair : null,
+    custom_properties: isWeapon ? properties : null,
+    custom_price: price.trim() === '' ? null : Number(price),
+    integrity: 100, reinforcements: [], crafted: null, created_at: '',
+  }
+  const draftInfo = describeInventoryItem(draft)
+  const slots = categoryReinforcementSlots(category)
+
   return (
     <ModalOverlay onClose={onCancel} closeDisabled={busy}>
       <div
-        className="alth-modal__window alth-custom-item"
+        className="alth-modal__window alth-custom-item alth-custom-item--wide"
         role="dialog" aria-modal="true" aria-labelledby="alth-custom-item-title"
         onKeyDown={handleKeyDown}
       >
         <header className="alth-modal__header">
           <h4 id="alth-custom-item-title" className="alth-modal__title">
-            {initial ? 'Editar item' : 'Novo item personalizado'}
+            {initial ? 'Editar item' : `Novo item personalizado`}
           </h4>
           <button type="button" className="modal-close" onClick={onCancel} disabled={busy} aria-label="Fechar">
             ×
           </button>
         </header>
 
-        <div className="alth-custom-item__body">
-          <label className="alth-custom-item__field">
-            <span className="label">Nome</span>
-            <input
-              ref={nameRef} type="text" className="input" maxLength={80}
-              value={name} onChange={(e) => setName(e.target.value)} disabled={busy}
-            />
-          </label>
+        <div className="alth-custom-item__cols">
+          <div className="alth-custom-item__body">
+            <div className="alth-type-tiles" role="radiogroup" aria-label="Tipo do item">
+              {TYPE_TILES.map((t) => (
+                <button key={t} type="button" role="radio" aria-checked={itemType === t} disabled={busy}
+                  className={`alth-type-tile${itemType === t ? ' is-on' : ''}`} onClick={() => setItemType(t)}>
+                  {ITEM_TYPE_LABELS[t]}
+                </button>
+              ))}
+            </div>
 
-          <div className="alth-rune__editor-row">
-            <label className="alth-custom-item__field alth-rune__editor-half">
-              <span className="label">Tipo</span>
-              <Select
-                value={itemType} onChange={(v) => setItemType(v as AltheriumInventoryItem['item_type'])}
-                disabled={busy} aria-label="Tipo do item" options={ITEM_TYPE_OPTIONS}
+            <label className="alth-custom-item__field">
+              <span className="label">Nome</span>
+              <input
+                ref={nameRef} type="text" className="input" maxLength={80}
+                value={name} onChange={(e) => setName(e.target.value)} disabled={busy}
               />
             </label>
+
+            {isWeapon && (
+              <>
+                <div className="alth-rune__editor-row">
+                  <label className="alth-custom-item__field alth-custom-item__dice">
+                    <span className="label">Dado de dano</span>
+                    <input
+                      type="text" className="input" maxLength={12} placeholder="1d10"
+                      value={damageDice} onChange={(e) => setDamageDice(e.target.value)} disabled={busy}
+                    />
+                  </label>
+                  <label className="alth-custom-item__field alth-rune__editor-half">
+                    <span className="label">Categoria</span>
+                    <Select value={category} onChange={(v) => setCategory(v as WeaponCategory)}
+                      disabled={busy} aria-label="Categoria da arma" options={CATEGORY_OPTIONS} />
+                  </label>
+                </div>
+                <div className="alth-rune__editor-row">
+                  <label className="alth-custom-item__field alth-rune__editor-half">
+                    <span className="label">Tipo de dano</span>
+                    <Select value={damageType} onChange={(v) => setDamageType(v as DamageType)}
+                      disabled={busy} aria-label="Tipo de dano" options={DAMAGE_TYPE_OPTIONS} />
+                  </label>
+                  <label className="alth-custom-item__field alth-rune__editor-half">
+                    <span className="label">Atributo de acerto</span>
+                    <Select value={attribute} onChange={(v) => setAttribute(v as WeaponAttribute)}
+                      disabled={busy} aria-label="Atributo do teste de acerto" options={WEAPON_ATTRIBUTE_OPTIONS} />
+                  </label>
+                </div>
+                <div className="alth-rune__editor-row">
+                  <label className="alth-custom-item__field alth-rune__editor-half">
+                    <span className="label">Alcance</span>
+                    <Select value={range} onChange={(v) => setRange(v as WeaponRange)}
+                      disabled={busy} aria-label="Alcance" options={WEAPON_RANGE_OPTIONS} />
+                  </label>
+                  <label className="alth-custom-item__field alth-rune__editor-half">
+                    <span className="label">Material de reparo</span>
+                    <Select value={repair} onChange={(v) => setRepair(v as RepairMaterial)}
+                      disabled={busy} aria-label="Material de reparo" options={REPAIR_OPTIONS} />
+                  </label>
+                </div>
+
+                <div className="alth-custom-item__field">
+                  <span className="label">Propriedades</span>
+                  <div className="alth-props" role="group" aria-label="Propriedades da arma">
+                    {WEAPON_PROPERTY_IDS.map((id) => {
+                      const on = !!prop(id)
+                      return (
+                        <button key={id} type="button" aria-pressed={on} disabled={busy}
+                          className={`alth-prop-chip${on ? ' is-on' : ''}`} title={WEAPON_PROPERTIES[id].description}
+                          onClick={() => toggleProp(id)}>
+                          {WEAPON_PROPERTIES[id].label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {prop('perfurante') && (
+                    <div className="alth-prop-param">
+                      <span>Perfurante ignora</span>
+                      <span className="alth-stepper" role="group" aria-label="Perfurante X">
+                        <button type="button" disabled={busy || (prop('perfurante')?.value ?? 1) <= 1}
+                          onClick={() => patchProp('perfurante', { value: (prop('perfurante')?.value ?? 1) - 1 })} aria-label="Diminuir">−</button>
+                        <output>{prop('perfurante')?.value ?? 1}</output>
+                        <button type="button" disabled={busy || (prop('perfurante')?.value ?? 1) >= 9}
+                          onClick={() => patchProp('perfurante', { value: (prop('perfurante')?.value ?? 1) + 1 })} aria-label="Aumentar">+</button>
+                      </span>
+                      <span>pontos de DB</span>
+                    </div>
+                  )}
+                  {prop('recarga') && (
+                    <div className="alth-prop-param">
+                      <span>Recarga com</span>
+                      <Select value={prop('recarga')?.action ?? RECARGA_ACTIONS[0]} onChange={(v) => patchProp('recarga', { action: v })}
+                        disabled={busy} aria-label="Ação da recarga" options={RECARGA_OPTIONS} />
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             {isArmor && (
-              <label className="alth-custom-item__field alth-rune__editor-cost">
-                <span className="label">DB</span>
-                <input
-                  type="number" className="input" min={0} max={99}
-                  value={db}
-                  onChange={(e) => setDb(Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0)))}
-                  disabled={busy}
-                />
-              </label>
+              <div className="alth-rune__editor-row">
+                <label className="alth-custom-item__field alth-rune__editor-cost">
+                  <span className="label">DB</span>
+                  <input
+                    type="number" className="input" min={0} max={99}
+                    value={db}
+                    onChange={(e) => setDb(Math.max(0, Math.min(99, parseInt(e.target.value, 10) || 0)))}
+                    disabled={busy}
+                  />
+                </label>
+                <label className="alth-custom-item__field alth-rune__editor-half">
+                  <span className="label">Material de reparo</span>
+                  <Select value={repair} onChange={(v) => setRepair(v as RepairMaterial)}
+                    disabled={busy} aria-label="Material de reparo" options={REPAIR_OPTIONS} />
+                </label>
+              </div>
+            )}
+
+            <label className="alth-custom-item__field alth-custom-item__price">
+              <span className="label">Preço (¤)</span>
+              <input
+                type="number" className="input" min={0} max={99999999} placeholder="Opcional"
+                value={price} onChange={(e) => setPrice(e.target.value)} disabled={busy}
+              />
+            </label>
+
+            <label className="alth-custom-item__field">
+              <span className="label">Descrição / efeito</span>
+              <textarea
+                className="input" rows={3} maxLength={300}
+                value={detail} onChange={(e) => setDetail(e.target.value)} disabled={busy}
+              />
+            </label>
+
+            {isArmor && (
+              <p className="alth-hint">
+                {itemType === 'escudo'
+                  ? 'Ao equipar, o DB é somado às 4 zonas do corpo.'
+                  : 'Ao equipar, você escolhe a zona do corpo que recebe o DB.'}
+              </p>
             )}
           </div>
 
-          {isWeapon && (
-            <>
-              <div className="alth-rune__editor-row">
-                <label className="alth-custom-item__field alth-custom-item__dice">
-                  <span className="label">Dado de dano</span>
-                  <input
-                    type="text" className="input" maxLength={12}
-                    value={damageDice} onChange={(e) => setDamageDice(e.target.value)} disabled={busy}
-                  />
-                </label>
-                <label className="alth-custom-item__field alth-rune__editor-half">
-                  <span className="label">Tipo de dano</span>
-                  <Select
-                    value={damageType} onChange={(v) => setDamageType(v as DamageType)}
-                    disabled={busy} aria-label="Tipo de dano" options={DAMAGE_TYPE_OPTIONS}
-                  />
-                </label>
-              </div>
-              <div className="alth-rune__editor-row">
-                <label className="alth-custom-item__field alth-rune__editor-half">
-                  <span className="label">Atributo de acerto</span>
-                  <Select
-                    value={attribute} onChange={(v) => setAttribute(v as WeaponAttribute)}
-                    disabled={busy} aria-label="Atributo do teste de acerto" options={WEAPON_ATTRIBUTE_OPTIONS}
-                  />
-                </label>
-                <label className="alth-custom-item__field alth-rune__editor-half">
-                  <span className="label">Alcance</span>
-                  <Select
-                    value={range} onChange={(v) => setRange(v as WeaponRange)}
-                    disabled={busy} aria-label="Alcance" options={WEAPON_RANGE_OPTIONS}
-                  />
-                </label>
-              </div>
-            </>
-          )}
+          <aside className="alth-custom-item__side" aria-label="Prévia do item">
+            <span className="label">Prévia</span>
+            {draftInfo && (
+              <OwnedCard
+                inv={draft} info={draftInfo} disabled preview
+                onUpdateQuantity={async () => {}} onRemove={async () => {}} onToggleEquip={() => {}} onEdit={() => {}}
+              />
+            )}
+            {isWeapon && (
+              <p className="alth-hint">
+                {WEAPON_CATEGORY_LABELS[category]}: {slots} {slots === 1 ? 'espaço' : 'espaços'} de Reforço.
+              </p>
+            )}
+          </aside>
+        </div>
 
-          <label className="alth-custom-item__field">
-            <span className="label">Descrição / efeito</span>
-            <textarea
-              className="input" rows={3} maxLength={300}
-              value={detail} onChange={(e) => setDetail(e.target.value)} disabled={busy}
-            />
-          </label>
-
-          {isArmor && (
-            <p className="alth-hint">
-              {itemType === 'escudo'
-                ? 'Ao equipar, o DB é somado às 4 zonas do corpo.'
-                : 'Ao equipar, você escolhe a zona do corpo que recebe o DB.'}
-            </p>
-          )}
-
-          {error && <p className="alth-triumphs__warn" role="alert">{error}</p>}
-
+        <footer className="alth-custom-item__foot">
+          {error ? <p className="alth-triumphs__warn" role="alert">{error}</p> : <span />}
           <div className="alth-triumph__actions">
             <button type="button" className="alth-triumph__btn" onClick={onCancel} disabled={busy}>
               Cancelar
@@ -637,7 +790,7 @@ function CustomItemModal({ initial, suggestedName, onSubmit, onCancel }: CustomI
               {busy ? 'Salvando...' : initial ? 'Salvar item' : 'Adicionar item'}
             </button>
           </div>
-        </div>
+        </footer>
       </div>
     </ModalOverlay>
   )

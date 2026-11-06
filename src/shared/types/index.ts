@@ -370,6 +370,12 @@ export interface AltheriumInventoryItem {
   custom_damage_type: 'corte' | 'impacto' | 'perfurante' | null
   custom_attribute:   'furia' | 'impulso' | 'furia_impulso' | null
   custom_range:       'toque' | 'toque_curto' | 'curto' | 'curto_medio' | 'medio' | 'longo' | null
+  /** Preço (¤), categoria da arma, material de reparo e propriedades da arma
+   *  personalizada (migration 20240224; sem ela, ficam de fora). */
+  custom_price?:      number | null
+  custom_category?:   'pesada' | 'leve' | 'arremesso' | 'alcance' | null
+  custom_repair?:     'ferro_velho' | 'couro' | 'madeira' | 'osso' | null
+  custom_properties?: unknown
   /** Integridade 0 a 100% (migration 20240217; sem ela, fica de fora). */
   integrity?:      number
   /** Ids dos Reforços aplicados (altheriumCraft.ts). */

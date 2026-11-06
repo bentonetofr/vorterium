@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
 import { Select } from '../../../../shared/components/Select'
 import './AltheriumPlay.css'
-import { WEAPONS, findArmor, findWeapon, weaponReinforcementSlots, type RepairMaterial } from '../constants/altheriumItems'
+import { WEAPONS, categoryReinforcementSlots, findArmor, findWeapon, readWeaponProperties, weaponReinforcementSlots, type RepairMaterial } from '../constants/altheriumItems'
 import type { AltheriumCustomItemInput } from '../services/altheriumSheetService'
 import {
   BAND_LABELS,
@@ -70,7 +70,13 @@ export function gearInfo(inv: AltheriumInventoryItem): GearInfo | null {
     reinforcements: readReinforcements(inv.reinforcements),
   } as const
   if (inv.custom_name !== null) {
-    return { ...base, name: inv.custom_name, repair: 'ferro_velho', slots: 1, heavy: false, robusta: false, fragil: false }
+    const props = readWeaponProperties(inv.custom_properties)
+    const has = (id: string) => props.some((p) => p.id === id)
+    return {
+      ...base, name: inv.custom_name, repair: inv.custom_repair ?? 'ferro_velho',
+      slots: inv.item_type === 'arma' ? categoryReinforcementSlots(inv.custom_category) : 1,
+      heavy: inv.custom_category === 'pesada', robusta: has('robusta'), fragil: has('fragil'),
+    }
   }
   if (inv.item_type === 'arma') {
     const w = findWeapon(inv.item_id)

@@ -1,5 +1,6 @@
 import {
   WEAPON_PROPERTIES,
+  readWeaponProperties,
   findArmor,
   findWeapon,
   type DamageType,
@@ -63,7 +64,7 @@ export function combatWeapons(inventory: AltheriumInventoryItem[]): CombatWeapon
       out.push({
         inventoryId: inv.id, name: inv.custom_name, damageDice: inv.custom_damage_dice,
         damageType: inv.custom_damage_type ?? 'corte', attribute: inv.custom_attribute ?? 'furia',
-        range: inv.custom_range ?? 'toque', category: null, properties: [],
+        range: inv.custom_range ?? 'toque', category: inv.custom_category ?? null, properties: readWeaponProperties(inv.custom_properties),
         integrity: inv.integrity ?? 100, reinforcements: readReinforcements(inv.reinforcements),
       })
       continue

@@ -128,8 +128,33 @@ export function weaponPropertyLabel(p: WeaponProperty): string {
 }
 
 /** Espaços de Reforço: armas pesadas têm 2, as outras 1. */
+export function categoryReinforcementSlots(category: WeaponCategory | null | undefined): number {
+  return category === 'pesada' ? 2 : 1
+}
 export function weaponReinforcementSlots(w: WeaponDef): number {
-  return w.category === 'pesada' ? 2 : 1
+  return categoryReinforcementSlots(w.category)
+}
+
+export const WEAPON_CATEGORY_IDS: WeaponCategory[] = ['pesada', 'leve', 'arremesso', 'alcance']
+export const REPAIR_MATERIAL_IDS: RepairMaterial[] = ['ferro_velho', 'couro', 'madeira', 'osso']
+export const WEAPON_PROPERTY_IDS = Object.keys(WEAPON_PROPERTIES) as WeaponPropertyId[]
+/** Ações que a propriedade Recarga pode pedir. */
+export const RECARGA_ACTIONS = ['Ação Bônus', 'Ação de Movimento', 'Ação Padrão']
+
+/** Lê as propriedades guardadas no banco (jsonb), ignorando o que não for válido. */
+export function readWeaponProperties(raw: unknown): WeaponProperty[] {
+  if (!Array.isArray(raw)) return []
+  const out: WeaponProperty[] = []
+  for (const x of raw) {
+    if (!x || typeof x !== 'object') continue
+    const { id, value, action } = x as { id?: unknown; value?: unknown; action?: unknown }
+    if (typeof id !== 'string' || !(id in WEAPON_PROPERTIES) || out.some((p) => p.id === id)) continue
+    const p: WeaponProperty = { id: id as WeaponPropertyId }
+    if (id === 'perfurante') p.value = typeof value === 'number' && value >= 1 && value <= 9 ? Math.round(value) : 1
+    if (id === 'recarga' && typeof action === 'string' && action) p.action = action.slice(0, 40)
+    out.push(p)
+  }
+  return out
 }
 
 const P = (id: WeaponPropertyId, extra?: Omit<WeaponProperty, 'id'>): WeaponProperty => ({ id, ...extra })
