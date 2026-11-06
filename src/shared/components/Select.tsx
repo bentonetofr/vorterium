@@ -1,6 +1,6 @@
 import {
   useCallback, useEffect, useId, useLayoutEffect, useRef, useState,
-  type CSSProperties, type KeyboardEvent,
+  type CSSProperties, type KeyboardEvent, type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { Presence } from './Presence'
@@ -21,6 +21,8 @@ import './Select.css'
 export interface SelectOption {
   value: string
   label: string
+  /** Ícone opcional, mostrado antes do nome (no botão e na lista). */
+  icon?: ReactNode
 }
 
 interface SelectProps {
@@ -182,6 +184,7 @@ export function Select({
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={handleKeyDown}
       >
+        {selected?.icon && <span className="select-trigger__icon" aria-hidden="true">{selected.icon}</span>}
         <span className={`select-trigger__value${selected?.value === '' ? ' select-trigger__value--empty' : ''}`}>
           {selected?.label ?? '-'}
         </span>
@@ -219,6 +222,7 @@ export function Select({
                   onMouseEnter={() => setActive(index)}
                   onClick={() => choose(index)}
                 >
+                  {option.icon && <span className="select-list__icon" aria-hidden="true">{option.icon}</span>}
                   <span className="select-list__label">{option.label}</span>
                   {option.value === current && <span className="select-list__check" aria-hidden="true">✓</span>}
                 </li>

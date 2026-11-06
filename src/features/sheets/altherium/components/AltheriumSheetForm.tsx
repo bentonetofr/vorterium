@@ -34,6 +34,7 @@ import {
   usesPr,
   usesRunico,
 } from '../utils/altheriumCalculations'
+import { AlthGlyph } from './AltheriumGlyph'
 import { AltheriumBodyDiagram, type BodyBuild, type BodyZone } from './AltheriumBodyDiagram'
 import { carriedWeapons, quiverAmmo } from './AltheriumWeaponArt'
 import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
@@ -367,8 +368,8 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
 ]
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
 
-const RAIZ_OPTIONS    = [{ value: '', label: '-' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label }))]
-const GENESIS_OPTIONS = [{ value: '', label: '-' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label }))]
+const RAIZ_OPTIONS    = [{ value: '', label: '-' }, ...RAIZES.map((r) => ({ value: r.id, label: r.label, icon: <AlthGlyph name={r.id} /> }))]
+const GENESIS_OPTIONS = [{ value: '', label: '-' }, ...GENESIS.map((g) => ({ value: g.id, label: g.label, icon: <AlthGlyph name={g.id} /> }))]
 
 export function AltheriumSheetForm({
   sheet, domains, inventory, ownerName, onSave, onDomainChange,

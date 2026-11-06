@@ -28,6 +28,15 @@
 }
 .select-trigger__value--empty { color: var(--text-muted); }
 
+/* Ícone opcional antes do nome. */
+.select-trigger__icon,
+.select-list__icon { display: inline-flex; align-items: center; flex-shrink: 0; width: 17px; height: 17px; color: var(--accent-bright); }
+.select-trigger__icon svg,
+.select-list__icon svg { width: 100%; height: 100%; }
+.select-list__icon { color: var(--text-muted); }
+.select-list__option--active .select-list__icon,
+.select-list__option--selected .select-list__icon { color: var(--accent-bright); }
+
 /* Seta branca que gira ao abrir. */
 .select-trigger__chevron {
   flex-shrink: 0;

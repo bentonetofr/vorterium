@@ -173,6 +173,13 @@
   padding: 0 var(--space-3);
   font-size: var(--text-sm);
 }
+/* Pílula com o ícone da raiz / da gênesis antes do nome. */
+.alth-hero__select.select-trigger {
+  border-radius: 999px;
+  background: var(--bg-overlay);
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
 /* Os selos da Raiz e da Gênesis seguem a cor de destaque. */
 .alth-hero__field--raiz .alth-hero__select,
 .alth-hero__field--genesis .alth-hero__select { color: var(--accent-bright); }
