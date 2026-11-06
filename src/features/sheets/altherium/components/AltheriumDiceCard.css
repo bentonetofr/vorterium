@@ -149,3 +149,14 @@
   .alth-dice__ctl, .alth-dice__header, .alth-dice__recent { padding-inline: var(--space-4); }
 }
 @media (prefers-reduced-motion: reduce) { .alth-dice { animation: none; } }
+
+/* Painel da rolagem de outra pessoa (modo Normal): só o telão, moldura azul e some sozinho. */
+.alth-dice--watch { width: min(520px, 100%); overflow: hidden; border-color: rgba(91, 155, 255, 0.6); transition: opacity 320ms ease, transform 320ms ease; }
+.alth-dice--watch.is-leaving { opacity: 0; transform: translateY(10px); }
+.alth-dice--watch .alth-dice__title small { color: #8fb8ff; }
+.alth-dice__telao--watch { height: 320px; border-bottom: none; }
+.alth-dice__result { gap: var(--space-2); }
+.alth-dice__tag { padding: 1px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: var(--bg-overlay); color: var(--text-secondary); }
+.alth-dice__tag--ok { color: #54ff9f; }
+.alth-dice__tag--bad { color: var(--danger-bright); }
+@media (max-width: 640px) { .alth-dice__telao--watch { height: 260px; } }

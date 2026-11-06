@@ -36,6 +36,19 @@ export function miniRoll(roll: DiceRoll, player: string): MiniRoll {
     }
   }
   const reading = readFree(roll.roll_breakdown ?? [], roll.result)
+  // Teste de Altherium: o dado que valeu (natural) decide crítico e falha crítica; o alvo se chama DT.
+  const alth = roll.roll_context
+  if (alth?.system === 'altherium' && alth.kind === 'skill') {
+    const dice = reading.groups.map((g) => `${g.notation} [${resultsText(g)}]${g.keep ? ` fica ${g.subtotal}` : ''}`).join(' + ')
+    const dt = alth.dc != null ? ` · DT ${alth.dc}` : ''
+    return {
+      who, title: roll.roll_label || 'Teste', total: roll.result,
+      detail: `${dice}${reading.modifier !== 0 ? ` ${signed(reading.modifier)}` : ''}${dt}`.trim(),
+      outcome: alth.outcome ?? null,
+      crit: alth.natural === 10 ? 'crit' : alth.natural === 1 ? 'fumble' : null,
+      isPrivate: !!roll.is_private,
+    }
+  }
   const groups = reading.groups.map((g) => `${g.notation} [${resultsText(g)}]${g.keep ? ` fica ${g.subtotal}` : ''}`).join(' + ')
   const formula = groups || (roll.formula ? freeLabel(roll.formula) : '')
   return {

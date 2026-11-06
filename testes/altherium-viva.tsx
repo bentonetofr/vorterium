@@ -4,7 +4,7 @@
 // banco falso na memória (_ficha-viva-db.ts), sem login.
 // `?raiz=runaskin|pilar` troca a raiz; `?largura=820` põe numa caixa dessa largura;
 // `?rolador=1` mostra o rolador de dados da bolinha (bandeja + telão 3D).
-// `?config=1` abre as configurações; `?mini=1` mostra a janelinha dos dados dos outros.
+// `?observar=1` mostra o painel da rolagem de outra pessoa (modo Normal); `?config=1` abre as configurações; `?mini=1` mostra a janelinha dos dados dos outros.
 // `?mestre=1` mostra a ficha com a barra da cena do mestre.
 // ────────────────────────────────────────────────────────
 import { seedFakeDb } from './_ficha-viva-db'
@@ -19,6 +19,7 @@ import '../src/features/sheets/altherium/components/AltheriumSheet.css'
 import { AltheriumSceneBar } from '../src/features/sheets/altherium/components/AltheriumSceneBar'
 import { AltheriumMasterPanel } from '../src/features/sheets/altherium/components/AltheriumMasterPanel'
 import { AltheriumDiceCard } from '../src/features/sheets/altherium/components/AltheriumDiceCard'
+import { AltheriumWatchPanel } from '../src/features/sheets/altherium/components/AltheriumWatchPanel'
 import { SettingsPanel } from '../src/features/settings/SettingsPanel'
 import { DndWatchMini } from '../src/features/sheets/dnd/rolls/DndWatchMini'
 import type { DiceRoll } from '../src/shared/types'
@@ -33,6 +34,7 @@ import { supabase } from '../src/shared/lib/supabase'
 import type { AltheriumSheet } from '../src/shared/types'
 
 const params = new URLSearchParams(location.search)
+const ALTH_ROLL = { id: 'a1', user_id: 'u2', result: 16, formula: '3#d10+4', is_private: false, dice_skin: 'granito', roll_label: 'Teste de Luta', roll_context: { system: 'altherium', kind: 'skill', natural: 10, dc: 12, outcome: 'success', character: 'Gutris' }, roll_breakdown: [{ type: 'keep_highest', notation: '3#d10', sides: 10, results: [10, 3, 7], kept: 10, subtotal: 10 }, { type: 'modifier', value: 6 }] } as unknown as DiceRoll
 const MINI_ROLLS = [
   { id: 'm1', user_id: 'u2', result: 19, formula: null, is_private: false, roll_label: 'Furtividade', roll_context: { kind: 'skill', natural: 14, dc: 15, outcome: 'success', character: 'Gutris' }, roll_breakdown: [{ type: 'sum', notation: '1d20', sides: 20, results: [14], subtotal: 14 }, { type: 'modifier', value: 5 }] },
   { id: 'm2', user_id: 'u3', result: 11, formula: '2d6+3', is_private: false, roll_label: null, roll_context: { kind: 'custom', key: 'free' }, roll_breakdown: [{ type: 'sum', notation: '2d6', sides: 6, results: [3, 5], subtotal: 8 }, { type: 'modifier', value: 3 }] },
@@ -88,6 +90,7 @@ supabase.auth.getSession = (async () => ({ data: { session: { user: fakeUser, ac
 supabase.auth.onAuthStateChange = (() => ({ data: { subscription: { unsubscribe() {} } } })) as unknown as typeof supabase.auth.onAuthStateChange
 
 function Preview() {
+  if (params.get('observar') === '1') return <AltheriumWatchPanel roll={ALTH_ROLL} player="Ana" hurry={false} onDone={() => {}} />
   if (params.get('config') === '1') return <SettingsPanel onClose={() => {}} />
   if (params.get('mini') === '1') return <DndWatchMini playerOf={() => 'Ana'} onDone={() => {}} rolls={MINI_ROLLS} />
   if (params.get('rolador') === '1') return <AltheriumDiceCard campaignId="camp-1" currentUserId="user-1" onClose={() => {}} />

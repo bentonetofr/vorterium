@@ -8,6 +8,7 @@ import { AppLogo }     from '../../shared/components/AppLogo'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { DndWatchRolls }      from '../../features/sheets/dnd/rolls/DndWatchRolls'
+import { AltheriumWatchRolls } from '../../features/sheets/altherium/components/AltheriumWatchRolls'
 import { DndCheckNotice }     from '../../features/sheets/dnd/rolls/DndCheckNotice'
 import { PatchNotice }        from '../../features/patch/PatchNotice'
 import { BetaGiftNotice }     from '../../features/patch/BetaGiftNotice'
@@ -305,6 +306,7 @@ function PrivateLayoutContent() {
     </div>
     {!observer && <CritWolf />}
     <DndWatchRolls />
+    <AltheriumWatchRolls />
     {!observer && <DndCheckNotice />}
     {!observer && <PatchNotice />}
     {!observer && <BetaGiftNotice />}

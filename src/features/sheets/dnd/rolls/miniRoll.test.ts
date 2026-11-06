@@ -57,6 +57,30 @@ describe('rolagem dos outros resumida', () => {
     expect(m.detail).toBe('2#d20 [14, 9] fica 14')
   })
 
+  it('teste de Altherium: dado que valeu, DT, resultado e crítico pelo 10 natural', () => {
+    const m = miniRoll(roll({
+      result: 16, roll_label: 'Teste de Luta',
+      roll_context: { system: 'altherium', kind: 'skill', natural: 10, dc: 12, outcome: 'success', character: 'Gutris' },
+      roll_breakdown: [{ type: 'keep_highest', notation: '3#d10', sides: 10, results: [10, 3, 7], kept: 10, subtotal: 10 }, { type: 'modifier', value: 6 }],
+    }), 'Ana')
+    expect(m.who).toBe('Gutris')
+    expect(m.title).toBe('Teste de Luta')
+    expect(m.detail).toBe('3#d10 [10, 3, 7] fica 10 +6 · DT 12')
+    expect(m.outcome).toBe('success')
+    expect(m.crit).toBe('crit')
+  })
+
+  it('teste de Altherium com 1 natural no dado que valeu é falha crítica', () => {
+    const m = miniRoll(roll({
+      result: 5, roll_label: 'Teste de Furtividade',
+      roll_context: { system: 'altherium', kind: 'skill', natural: 1, outcome: 'failure' },
+      roll_breakdown: [{ type: 'keep_lowest', notation: '2@d10', sides: 10, results: [1, 6], kept: 1, subtotal: 1 }, { type: 'modifier', value: 4 }],
+    }), 'Ana')
+    expect(m.crit).toBe('fumble')
+    expect(m.outcome).toBe('failure')
+    expect(m.detail).not.toContain('DT')
+  })
+
   it('dano e outras rolagens levam o rótulo da ficha', () => {
     const m = miniRoll(roll({
       result: 7, roll_label: 'Dano: espada longa', formula: '1d8+3', roll_context: { kind: 'damage' },
