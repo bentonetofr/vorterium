@@ -203,7 +203,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
                 </div>
                 <p className="cfg-row__hint">
                   {s.diceOnScreen === 'simples'
-                    ? 'As rolagens dos outros jogadores e do mestre aparecem numa janelinha no canto inferior direito, sem cobrir a sua ficha. As suas continuam com os dados 3D.'
+                    ? 'As rolagens dos outros jogadores e do mestre aparecem numa janelinha no canto superior direito, sem cobrir a sua ficha. As suas continuam com os dados 3D.'
                     : 'As rolagens dos outros jogadores e do mestre abrem o painel grande, no meio da tela, com os dados 3D rolando.'}
                 </p>
               </div>

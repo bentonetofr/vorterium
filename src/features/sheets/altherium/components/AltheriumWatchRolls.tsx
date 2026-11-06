@@ -14,7 +14,7 @@ import { AltheriumWatchPanel } from './AltheriumWatchPanel'
 // campanhas de Altherium. Em Configurações > Aparência > Dados na tela:
 //  - Normal: um painel com os dados 3D rolando (um de cada vez, com o nome de
 //    quem rolou), que espera a própria pessoa terminar a rolagem dela;
-//  - Dados dos outros simplificados: só uma janelinha no canto inferior direito.
+//  - Dados dos outros simplificados: só uma janelinha no canto superior direito.
 // Rolagem privada só chega a quem pode ver (RLS).
 // ────────────────────────────────────────────────────────
 

@@ -6,7 +6,7 @@ import './DndWatchMini.css'
 // ────────────────────────────────────────────────────────
 // "Dados dos outros simplificados" (Configurações > Aparência > Dados na
 // tela): no lugar do painel grande no meio da tela, a rolagem de outro
-// jogador ou do mestre aparece numa janelinha no canto inferior direito, com
+// jogador ou do mestre aparece numa janelinha no canto superior direito, com
 // quem rolou, o quê, o total e a conta numa linha. Não cobre a ficha de quem
 // está jogando; some sozinha (parada com o mouse em cima).
 // ────────────────────────────────────────────────────────
