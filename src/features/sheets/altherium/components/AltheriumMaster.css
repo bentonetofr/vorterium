@@ -74,7 +74,7 @@
 .alth-master__answers .alth-master__wait b { color: var(--text-muted); font-weight: 400; }
 /* A cena do mestre dentro do painel não precisa da moldura de fora. */
 .alth-master .alth-scene { margin-bottom: 0; }
-.alth-master .alth-scene__body { grid-template-columns: minmax(0, 1fr); }
+.alth-master .alth-scene__scales { grid-template-columns: minmax(0, 1fr); }
 
 /* ── Pedidos do mestre, na ficha do jogador ── */
 .alth-requests { display: flex; flex-direction: column; gap: var(--space-2); }
