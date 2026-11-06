@@ -87,6 +87,8 @@ import { ExportSheetButton } from '../../export/ExportSheetButton'
 import { altheriumSheetText, type AltheriumTextSheet } from '../utils/altheriumSheetText'
 
 const NOTES_MAX = 2000
+/** Comprimento da circunferência do anel dos atributos (raio 27). */
+const RING_LENGTH = 2 * Math.PI * 27
 /** Nomes que deixam o manequim sem pernas (comparados em minúsculas). */
 const LEGLESS_NAMES = new Set(['gutris', 'gustris', 'gutris, o nascido da morte'])
 
@@ -1074,13 +1076,23 @@ export function AltheriumSheetForm({
                   return (
                     <div key={attr.id} className="alth-table__col" title={attr.description}>
                       <span className="alth-table__head">{attr.label}</span>
-                      <input
-                        type="number" className="input alth-table__value"
-                        min={0} max={ATTRIBUTE_HARD_MAX}
-                        value={value}
-                        onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
-                        aria-label={attr.label}
-                      />
+                      {/* Anel que enche com o valor (0 a 10); o número no meio continua editável. */}
+                      <div className="alth-ring">
+                        <svg className="alth-ring__svg" viewBox="0 0 64 64" aria-hidden="true">
+                          <circle className="alth-ring__track" cx="32" cy="32" r="27" />
+                          <circle
+                            className="alth-ring__fill" cx="32" cy="32" r="27" transform="rotate(-90 32 32)"
+                            strokeDasharray={`${(Math.max(0, Math.min(ATTRIBUTE_HARD_MAX, value)) / ATTRIBUTE_HARD_MAX) * RING_LENGTH} ${RING_LENGTH}`}
+                          />
+                        </svg>
+                        <input
+                          type="number" className="alth-ring__input"
+                          min={0} max={ATTRIBUTE_HARD_MAX}
+                          value={value}
+                          onChange={(e) => set(key, clamp(e.target.value, 0, ATTRIBUTE_HARD_MAX) as never)}
+                          aria-label={attr.label}
+                        />
+                      </div>
                     </div>
                   )
                 })}
