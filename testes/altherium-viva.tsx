@@ -3,6 +3,7 @@
 // /testes/altherium-viva.html. Ficha, abas, janelas e salvar de verdade, num
 // banco falso na memória (_ficha-viva-db.ts), sem login.
 // `?raiz=runaskin|pilar` troca a raiz; `?largura=820` põe numa caixa dessa largura;
+// `?rolador=1` mostra o rolador de dados da bolinha (bandeja + telão 3D).
 // `?mestre=1` mostra a ficha com a barra da cena do mestre.
 // ────────────────────────────────────────────────────────
 import { seedFakeDb } from './_ficha-viva-db'
@@ -16,6 +17,7 @@ import '../src/shared/theme/touch.css'
 import '../src/features/sheets/altherium/components/AltheriumSheet.css'
 import { AltheriumSceneBar } from '../src/features/sheets/altherium/components/AltheriumSceneBar'
 import { AltheriumMasterPanel } from '../src/features/sheets/altherium/components/AltheriumMasterPanel'
+import { AltheriumDiceCard } from '../src/features/sheets/altherium/components/AltheriumDiceCard'
 import { MyDiceTab } from '../src/features/dice/components/MyDiceTab'
 import '../src/features/dice/components/DiceFab.css'
 import '../src/app/layouts/PrivateLayout.css'
@@ -77,6 +79,7 @@ supabase.auth.getSession = (async () => ({ data: { session: { user: fakeUser, ac
 supabase.auth.onAuthStateChange = (() => ({ data: { subscription: { unsubscribe() {} } } })) as unknown as typeof supabase.auth.onAuthStateChange
 
 function Preview() {
+  if (params.get('rolador') === '1') return <AltheriumDiceCard campaignId="camp-1" currentUserId="user-1" onClose={() => {}} />
   if (params.get('dados') === '1') return <div className="fab-panel" style={{ position: 'static', width: 380, height: 500 }}><div className="ddw__tabs dice-fab__tabs"><button className="ddw__tab">Rolagem</button><button className="ddw__tab is-on">Meus dados</button></div><MyDiceTab /></div>
   if (params.get('painel') === '1') return <div style={{ maxWidth: 900, border: '1px solid #534434', padding: 16, borderRadius: 10, background: '#131b2e' }}><AltheriumMasterPanel campaignId="camp-1" /></div>
   // eslint-disable-next-line react-hooks/rules-of-hooks

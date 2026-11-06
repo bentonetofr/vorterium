@@ -13,6 +13,7 @@ import type { DiceRoll, RollBreakdownItem } from '../../../shared/types'
 import { useFeature } from '../../control/siteFeatures'
 import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
 import { DndDiceCard } from '../../sheets/dnd/rolls/DndDiceCard'
+import { AltheriumDiceCard } from '../../sheets/altherium/components/AltheriumDiceCard'
 import { DieShapeIcon } from './DieShapeIcon'
 import { rollNote } from '../utils/rollNotes'
 import './DiceFab.css'
@@ -289,9 +290,14 @@ export function DiceFab() {
         </div>,
       )}
 
-      {card3d && (
+      {dnd && (
         <Presence show={isOpen} exitMs={180}>
-          {() => <DndDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} system={altherium ? 'altherium' : 'dnd5e'} />}
+          {() => <DndDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} />}
+        </Presence>
+      )}
+      {altherium && (
+        <Presence show={isOpen} exitMs={180}>
+          {() => <AltheriumDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} />}
         </Presence>
       )}
 

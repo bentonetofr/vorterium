@@ -1,0 +1,131 @@
+/* ═══════════════════════════════════════════════════════
+   Rolador de dados do Altherium (a bolinha de dados): painel largo com o telão 3D.
+   Usa só as variáveis do tema; não depende de .alth-sheet (aparece em qualquer página da campanha).
+   ═══════════════════════════════════════════════════════ */
+
+/* No centro da tela, sem escurecer o fundo. */
+.alth-dicehub {
+  position: fixed; inset: 0; z-index: 1110;
+  display: grid; place-items: center; padding: var(--space-4);
+  pointer-events: none;
+}
+.alth-dicehub > .alth-dice { pointer-events: auto; }
+
+.alth-dice {
+  width: min(720px, 100%);
+  max-height: calc(100dvh - 2 * var(--space-4));
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.2s ease-out;
+}
+
+.alth-dice__header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-dim);
+}
+.alth-dice__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; color: var(--accent-bright); }
+.alth-dice__title small { margin-left: var(--space-2); font-family: var(--font-body); font-size: var(--text-xs); font-weight: 400; color: var(--text-muted); }
+.alth-dice__close {
+  width: 28px; height: 28px; display: grid; place-items: center; flex-shrink: 0; padding: 0;
+  background: none; border: 1px solid var(--border-base); border-radius: 50%;
+  color: var(--text-secondary); font-size: 18px; line-height: 1; cursor: var(--cursor-hand);
+}
+.alth-dice__close:hover:not(:disabled) { color: var(--text-primary); border-color: var(--gilded-bright); }
+.alth-dice__close:disabled { opacity: 0.4; cursor: default; }
+
+.alth-dice__main { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+
+/* O telão: o dado 3D na skin da pessoa, girando; os dados rolam aqui mesmo. */
+.alth-dice__telao {
+  position: relative; min-height: 340px; overflow: hidden;
+  background: radial-gradient(ellipse at center, rgba(94, 234, 212, 0.1), transparent 70%), var(--bg-void);
+  border-right: 1px solid var(--border-dim);
+}
+.alth-dice__canvas { position: absolute; inset: 0; }
+.alth-dice__simple {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 72px; color: var(--accent-bright);
+}
+.alth-dice__skin,
+.alth-dice__hint {
+  position: absolute; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted); pointer-events: none;
+}
+.alth-dice__skin { left: 14px; top: 12px; }
+.alth-dice__hint { left: 0; right: 0; bottom: 14px; text-align: center; }
+
+.alth-dice__result {
+  position: absolute; left: 14px; right: 14px; bottom: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 12px; background: rgba(6, 14, 32, 0.78); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  pointer-events: none;
+}
+.alth-dice__total { font-family: var(--font-display); font-size: 46px; line-height: 1; font-weight: 700; color: var(--accent-bright); }
+.alth-dice__sum { font-size: var(--text-xs); color: var(--text-secondary); text-align: center; line-height: 1.4; }
+
+.alth-dice__ctl { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) var(--space-5); min-width: 0; }
+.alth-dice__group { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-dice__label { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-muted); }
+.alth-dice__note { font-size: var(--text-xs); color: var(--text-muted); }
+
+.alth-dice__tabs, .alth-dice__seg { display: flex; gap: 2px; padding: 3px; background: var(--bg-void); border: 1px solid var(--border-dim); border-radius: var(--radius-md); }
+.alth-dice__tab, .alth-dice__seg button {
+  flex: 1; padding: 7px 4px; background: none; border: none; border-radius: var(--radius-sm);
+  font-size: var(--text-xs); color: var(--text-muted); cursor: var(--cursor-hand);
+}
+.alth-dice__tab { font-family: var(--font-label); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.alth-dice__tab:hover, .alth-dice__seg button:hover:not(:disabled) { color: var(--text-primary); }
+.alth-dice__tab.is-on, .alth-dice__seg button.is-on { color: var(--accent-bright); background: var(--bg-overlay); font-weight: 700; }
+.alth-dice__tab.is-on { box-shadow: inset 0 -2px 0 var(--accent-bright); }
+.alth-dice__seg button:disabled { opacity: 0.45; cursor: default; }
+
+.alth-dice__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.alth-dice__chip {
+  padding: 7px 12px; background: var(--bg-overlay); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  font-family: var(--font-label); font-size: var(--text-sm); color: var(--text-secondary); cursor: var(--cursor-hand);
+  transition: border-color var(--transition-fast), color var(--transition-fast), transform 120ms var(--ease-out);
+}
+.alth-dice__chip:hover:not(:disabled) { border-color: var(--gilded-bright); color: var(--text-primary); }
+.alth-dice__chip:active:not(:disabled) { transform: scale(0.94); }
+.alth-dice__chip.is-on { border-color: var(--accent-bright); color: var(--accent-bright); }
+.alth-dice__chip:disabled { opacity: 0.5; cursor: default; }
+
+.alth-dice__formula { display: flex; gap: var(--space-2); }
+.alth-dice__formula .input { flex: 1; min-width: 0; }
+.alth-dice__go { flex-shrink: 0; padding-inline: var(--space-5); }
+.alth-dice__examples { display: flex; flex-wrap: wrap; gap: 6px; }
+.alth-dice__examples button {
+  padding: 2px 8px; background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-sm);
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--accent-bright); cursor: var(--cursor-hand);
+}
+.alth-dice__examples button:hover { border-color: var(--gilded-bright); }
+
+.alth-dice__skins { min-height: 230px; }
+
+/* Recentes: uma faixa de cartões embaixo. */
+.alth-dice__recent {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  padding: var(--space-3) var(--space-5); border-top: 1px solid var(--border-dim);
+}
+.alth-dice__rcards { display: flex; flex-wrap: wrap; gap: var(--space-2); flex: 1; min-width: 0; }
+.alth-dice__rcard {
+  display: inline-flex; align-items: center; gap: var(--space-2); padding: 5px 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+}
+.alth-dice__rcard.is-own { border-color: var(--gilded); }
+.alth-dice__rcard strong { font-family: var(--font-display); font-size: var(--text-xl); line-height: 1; color: var(--accent-bright); }
+.alth-dice__rcard small { font-size: var(--text-xs); color: var(--text-muted); }
+
+@media (pointer: coarse) { .alth-dice__chip { min-height: 38px; } }
+
+/* Celular: o telão em cima e os controles embaixo. */
+@media (max-width: 640px) {
+  .alth-dice__main { grid-template-columns: minmax(0, 1fr); }
+  .alth-dice__telao { min-height: 230px; border-right: none; border-bottom: 1px solid var(--border-dim); }
+  .alth-dice__ctl, .alth-dice__header, .alth-dice__recent { padding-inline: var(--space-4); }
+}
+@media (prefers-reduced-motion: reduce) { .alth-dice { animation: none; } }
