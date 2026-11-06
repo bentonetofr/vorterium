@@ -60,7 +60,7 @@
 .alth-dice__hint { left: 0; right: 0; bottom: 14px; text-align: center; }
 
 .alth-dice__result {
-  position: absolute; left: 50%; top: 8px; transform: translateX(-50%); max-width: calc(100% - 28px);
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 28px);
   display: flex; align-items: baseline; gap: var(--space-3);
   padding: 4px 14px; background: rgba(6, 14, 32, 0.72); border: 1px solid var(--border-dim); border-radius: 999px;
   pointer-events: none; white-space: nowrap;
