@@ -1,6 +1,7 @@
 import type { Appearance, Dir, WorldData, ZoneData, ZoneLight, ZoneObject } from '../types';
 import { type RoomStyle } from '../world/rooms';
 import type { ZoneSummary } from '../storage';
+import type { RulerMode } from '../world/measure';
 export type Tool = 'brush' | 'fill' | 'erase' | 'object' | 'select' | 'room' | 'light' | 'portal' | 'spawn' | 'npc' | 'ruler';
 /** NPC esperando lugar no mapa (gerador de NPCs): o clique seguinte o põe na zona. */
 export interface NpcDraft {
@@ -41,6 +42,10 @@ export declare class EditorState {
     roomStyle: RoomStyle;
     /** Ferramenta Cômodo: criar cômodo, riscar parede interna ou abrir porta. */
     roomMode: 'room' | 'wall' | 'door';
+    /** Ferramenta Régua: linha, área (retângulo), círculo ou cone. */
+    rulerMode: RulerMode;
+    /** Abertura do cone da régua, em graus. */
+    coneAngle: number;
     snap: boolean;
     showGrid: boolean;
     showCollision: boolean;
@@ -85,7 +90,7 @@ export declare class EditorState {
     constructor(zone: ZoneData);
     on(fn: (c: Change) => void): () => boolean;
     emit(c: Change): void;
-    set(patch: Partial<Pick<EditorState, 'tool' | 'terrain' | 'brush' | 'objectKind' | 'flip' | 'roomStyle' | 'roomMode' | 'snap' | 'showGrid' | 'showCollision' | 'selected' | 'selectedPortal' | 'selectedLight' | 'lightLook' | 'lightPreview' | 'previewHour' | 'zoom' | 'npcDraft'>>): void;
+    set(patch: Partial<Pick<EditorState, 'tool' | 'terrain' | 'brush' | 'objectKind' | 'flip' | 'roomStyle' | 'roomMode' | 'rulerMode' | 'coneAngle' | 'snap' | 'showGrid' | 'showCollision' | 'selected' | 'selectedPortal' | 'selectedLight' | 'lightLook' | 'lightPreview' | 'previewHour' | 'zoom' | 'npcDraft'>>): void;
     /** Guarda o estado atual ANTES de uma edição (uma pincelada inteira = 1 passo). */
     checkpoint(): void;
     /** Avisa que uma edição foi aplicada (a cena já desenhou). */

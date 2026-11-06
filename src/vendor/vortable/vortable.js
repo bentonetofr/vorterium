@@ -40644,15 +40644,17 @@ function he(e) {
 }
 //#endregion
 //#region src/engine/world/tufts.ts
-var ge = -9e5, _e = 400, ve = 3e3, ye = /* @__PURE__ */ new Map();
+var ge = -9e5, _e = 400, ve = 3e3, ye = /* @__PURE__ */ new WeakMap();
 function be(e, t, n) {
-	let r = `${t.id}:${n}`, i = ye.get(r);
-	if (i !== void 0) return i;
-	let a = null;
+	let r = `${t.id}:${n}`, i = ye.get(e.textures);
+	i || ye.set(e.textures, i = /* @__PURE__ */ new Map());
+	let a = i.get(r);
+	if (a !== void 0 && (a === null || e.textures.exists(a.key))) return a;
+	let o = null;
 	if (!t.gen && !t.wang && !t.fence && ce(t) > 0) {
-		let i = e.textures.get(w(t)).getSourceImage(), o = document.createElement("canvas");
-		o.width = 64, o.height = 32;
-		let s = o.getContext("2d", { willReadFrequently: !0 }), c = D(t, n), l = D(t, 10);
+		let i = e.textures.get(w(t)).getSourceImage(), a = document.createElement("canvas");
+		a.width = 64, a.height = 32;
+		let s = a.getContext("2d", { willReadFrequently: !0 }), c = D(t, n), l = D(t, 10);
 		s.drawImage(i, c.x, c.y, 32, 32, 0, 0, 32, 32), s.drawImage(i, l.x, l.y, 32, 32, 32, 0, 32, 32);
 		let u = s.getImageData(0, 0, 64, 32), d = s.createImageData(32, 32), f = 0, p = 32, m = 32, h = -1, g = -1;
 		for (let e = 0; e < 32; e++) for (let t = 0; t < 32; t++) {
@@ -40665,14 +40667,14 @@ function be(e, t, n) {
 			let t = document.createElement("canvas");
 			t.width = h - p + 1, t.height = g - m + 1, t.getContext("2d", { willReadFrequently: !0 }).putImageData(d, -p, -m, p, m, t.width, t.height);
 			let n = `tuft:${r}`;
-			e.textures.exists(n) || e.textures.addCanvas(n, t), a = {
+			e.textures.exists(n) || e.textures.addCanvas(n, t), o = {
 				key: n,
 				x: p,
 				bottom: g + 1
 			};
 		}
 	}
-	return ye.set(r, a), a;
+	return i.set(r, o), o;
 }
 var xe = class {
 	scene;
@@ -46344,8 +46346,48 @@ function wo(e) {
 		cardinal: Co[Math.round(t / 45) % 8]
 	};
 }
-var To = (e) => Math.hypot(e.x1 - e.x0, e.y1 - e.y0);
-function Eo(e, t = 9) {
+var To = (e) => Math.hypot(e.x1 - e.x0, e.y1 - e.y0), Eo = [
+	30,
+	60,
+	90,
+	120
+], Do = (e) => e * bo(1) ** 2, Oo = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+function ko(e) {
+	let t = Do(e);
+	return t < 100 ? `${xo.format(t)} m²` : `${Oo.format(t)} m²`;
+}
+function Ao(e) {
+	let t = Math.min(e.x0, e.x1), n = Math.min(e.y0, e.y1), r = Math.abs(e.x1 - e.x0), i = Math.abs(e.y1 - e.y0);
+	return {
+		x: t,
+		y: n,
+		w: r,
+		h: i,
+		area: r * i,
+		perimeter: 2 * (r + i)
+	};
+}
+function jo(e) {
+	let t = To(e);
+	return {
+		cx: e.x0,
+		cy: e.y0,
+		radius: t,
+		area: Math.PI * t * t,
+		circumference: 2 * Math.PI * t
+	};
+}
+function Mo(e, t) {
+	let n = To(e), r = Math.atan2(e.y1 - e.y0, e.x1 - e.x0), i = t * Math.PI / 360;
+	return {
+		range: n,
+		axis: r,
+		half: i,
+		area: t / 360 * Math.PI * n * n,
+		chord: 2 * n * Math.sin(i)
+	};
+}
+function No(e, t = 9) {
 	let n = 32 * e;
 	for (let e of [
 		1,
@@ -46362,7 +46404,7 @@ function Eo(e, t = 9) {
 }
 //#endregion
 //#region src/engine/editor/EditorScene.ts
-var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class extends c.default.Scene {
+var Po = .1, Fo = .0015, Io = 700, Lo = 10474495, Ro = 8, zo = 180, Bo = class extends c.default.Scene {
 	state;
 	ground;
 	fences;
@@ -46440,7 +46482,7 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 		if (this.keyboardFree()) {
 			let e = this.keys, t = !(this.state.tool === "select" && this.state.selected.length), i = 0, a = 0;
 			if ((e.a.isDown || t && e.left.isDown) && --i, (e.d.isDown || t && e.right.isDown) && (i += 1), (e.w.isDown || t && e.up.isDown) && --a, (e.s.isDown || t && e.down.isDown) && (a += 1), i || a) {
-				let t = ko * (e.shift.isDown ? 2.5 : 1) * r / n.zoom;
+				let t = Io * (e.shift.isDown ? 2.5 : 1) * r / n.zoom;
 				this.panBy(i * t, a * t);
 			}
 		}
@@ -46460,7 +46502,7 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 		}
 	}
 	scheduleLights() {
-		this.lightTimer?.remove(), this.lightTimer = this.time.delayedCall(Mo, () => {
+		this.lightTimer?.remove(), this.lightTimer = this.time.delayedCall(zo, () => {
 			this.lighting.rebuild(), this.audio?.setZone(this.state.zone);
 		});
 	}
@@ -46491,7 +46533,7 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 		this.zoomTo(this.zoomTarget * e, t);
 	}
 	zoomTo(e, t) {
-		this.zoomTarget = c.default.Math.Clamp(e, Do, 8);
+		this.zoomTarget = c.default.Math.Clamp(e, Po, 8);
 		let n = this.cameras.main, r = t ?? {
 			x: n.width / 2,
 			y: n.height / 2
@@ -46500,7 +46542,7 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 	}
 	fitZone() {
 		let e = this.state.zone, t = this.cameras.main, n = Math.min(t.width / (e.width * 32 + 96), t.height / (e.height * 32 + 96));
-		this.zoomTarget = c.default.Math.Clamp(n, Do, 8), this.zoomAnchor = null, this.applyZoom(this.zoomTarget, this.anchorAt(t.width / 2, t.height / 2)), this.centerOnZone();
+		this.zoomTarget = c.default.Math.Clamp(n, Po, 8), this.zoomAnchor = null, this.applyZoom(this.zoomTarget, this.anchorAt(t.width / 2, t.height / 2)), this.centerOnZone();
 	}
 	updateCursorStyle() {
 		let e = this.spaceKey.isDown && this.keyboardFree();
@@ -46626,7 +46668,7 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 	}
 	applySelection() {
 		let e = new Set(this.state.selected);
-		this.sprites.forEach((t, n) => e.has(n) ? t?.setTint(Ao) : t?.clearTint()), this.drawSelection();
+		this.sprites.forEach((t, n) => e.has(n) ? t?.setTint(Lo) : t?.clearTint()), this.drawSelection();
 	}
 	drawSelection() {
 		let e = this.selectGfx;
@@ -46908,10 +46950,10 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 	onWheel(e, t, n, r) {
 		let i = e.event, a = i.deltaMode === 1 ? r * 16 : i.deltaMode === 2 ? r * 400 : r;
 		if (i.altKey) {
-			i.preventDefault(), a && this.state.set({ brush: c.default.Math.Clamp(this.state.brush + (a > 0 ? -1 : 1), 1, jo) });
+			i.preventDefault(), a && this.state.set({ brush: c.default.Math.Clamp(this.state.brush + (a > 0 ? -1 : 1), 1, Ro) });
 			return;
 		}
-		let o = Math.exp(c.default.Math.Clamp(-a * Oo, -.7, .7)), s = this.game.canvas.getBoundingClientRect(), l = this.cameras.main, u = s.width ? {
+		let o = Math.exp(c.default.Math.Clamp(-a * Fo, -.7, .7)), s = this.game.canvas.getBoundingClientRect(), l = this.cameras.main, u = s.width ? {
 			x: (i.clientX - s.left) * l.width / s.width,
 			y: (i.clientY - s.top) * l.height / s.height
 		} : {
@@ -47249,7 +47291,7 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 		this.state.edited(), this.state.emit("objects");
 	}
 	brushBy(e) {
-		this.state.set({ brush: c.default.Math.Clamp(this.state.brush + e, 1, jo) });
+		this.state.set({ brush: c.default.Math.Clamp(this.state.brush + e, 1, Ro) });
 	}
 	rulerGfx;
 	rulerTexts = [];
@@ -47257,8 +47299,17 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 	rulerMove(e, t, n) {
 		let r = this.rulerLive;
 		if (!r) return;
-		let i = r.x0, a = r.y0, o = e, s = t;
-		if (n) {
+		let i = r.x0, a = r.y0, o = e, s = t, c = this.state.rulerMode;
+		if (n && c === "rect") {
+			let n = Math.max(Math.abs(e - i), Math.abs(t - a)), r = this.state.snap ? Math.round(n / 16) * 16 : n;
+			o = i + (e >= i ? r : -r), s = a + (t >= a ? r : -r);
+		} else if (n && c === "circle") {
+			let n = this.state.snap ? this.snapped(e, t) : {
+				x: e,
+				y: t
+			};
+			o = n.x, s = n.y;
+		} else if (n) {
 			let n = Math.hypot(e - i, t - a), r = Math.round(Math.atan2(t - a, e - i) / (Math.PI / 4)) * (Math.PI / 4), c = this.state.snap ? Math.round(n / 16) * 16 : n;
 			o = i + Math.cos(r) * c, s = a + Math.sin(r) * c;
 		} else if (this.state.snap) {
@@ -47291,21 +47342,76 @@ var Do = .1, Oo = .0015, ko = 700, Ao = 10474495, jo = 8, Mo = 180, No = class e
 				let i = Math.min(o, n + s);
 				e.lineBetween(t + l * n, r + u * n, t + l * i, r + u * i);
 			}
-		}, s = yo(Eo(t));
+		}, s = yo(No(t)), c = this.state.rulerMode, l = 16761204, u = (t) => {
+			e.lineStyle(n * 5, 0, .55), t(), e.lineStyle(n * 2.5, l, 1), t();
+		}, d = (t, r) => {
+			e.fillStyle(0, .7).fillCircle(t, r, n * 5.5), e.fillStyle(l, 1).fillCircle(t, r, n * 3.5);
+		}, f = (t, r, i, a) => {
+			let o = Math.hypot(i - t, a - r);
+			if (o < 1) return;
+			let c = (i - t) / o, u = (a - r) / o;
+			for (let i = 1; i <= Math.floor(o / s); i++) {
+				let a = (i % 5 == 0 ? 8 : 5) * n, o = t + c * i * s, d = r + u * i * s;
+				e.lineStyle(n * 2, l, 1).lineBetween(o + u * a, d - c * a, o - u * a, d + c * a);
+			}
+		};
 		for (let t of r) {
+			if (c === "rect") {
+				let r = Ao(t);
+				if (r.w < 1 && r.h < 1) continue;
+				e.fillStyle(l, .16).fillRect(r.x, r.y, r.w, r.h), u(() => e.strokeRect(r.x, r.y, r.w, r.h)), f(r.x, r.y, r.x + r.w, r.y), f(r.x, r.y, r.x, r.y + r.h);
+				for (let [e, t] of [
+					[r.x, r.y],
+					[r.x + r.w, r.y],
+					[r.x, r.y + r.h],
+					[r.x + r.w, r.y + r.h]
+				]) d(e, t);
+				r.w >= 1 && a(So(r.w), r.x + r.w / 2, r.y - 14 * n, .9), r.h >= 1 && a(So(r.h), r.x + r.w + 26 * n, r.y + r.h / 2, .9), a(`${ko(r.area)}
+perímetro ${So(r.perimeter)}`, r.x + r.w / 2, r.y + r.h / 2);
+				continue;
+			}
+			if (c === "circle") {
+				let r = jo(t);
+				if (r.radius < 1) continue;
+				e.fillStyle(l, .16).fillCircle(r.cx, r.cy, r.radius), u(() => e.strokeCircle(r.cx, r.cy, r.radius)), u(() => e.lineBetween(t.x0, t.y0, t.x1, t.y1)), f(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x0 * 2 - t.x1, t.y0 * 2 - t.y1), d(t.x0, t.y0), d(t.x1, t.y1), a(`raio ${So(r.radius)}
+Ø ${So(r.radius * 2)}
+${ko(r.area)}`, r.cx, r.cy - 30 * n);
+				continue;
+			}
+			if (c === "cone") {
+				let r = Mo(t, this.state.coneAngle);
+				if (r.range < 1) continue;
+				let i = [{
+					x: t.x0,
+					y: t.y0
+				}];
+				for (let e = 0; e <= 28; e++) {
+					let n = r.axis - r.half + 2 * r.half * e / 28;
+					i.push({
+						x: t.x0 + Math.cos(n) * r.range,
+						y: t.y0 + Math.sin(n) * r.range
+					});
+				}
+				e.fillStyle(l, .16).fillPoints(i, !0, !0), u(() => e.strokePoints(i, !0, !0)), e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x1, t.y1), f(t.x0, t.y0, t.x1, t.y1), d(t.x0, t.y0), d(t.x1, t.y1);
+				let s = t.x0 + Math.cos(r.axis) * r.range * .58, c = t.y0 + Math.sin(r.axis) * r.range * .58;
+				a(`${So(r.range)} · ${this.state.coneAngle}°
+${ko(r.area)}
+fundo ${So(r.chord)}`, s, c);
+				continue;
+			}
 			let r = To(t);
 			if (r < 1) continue;
-			let i = (t.x1 - t.x0) / r, c = (t.y1 - t.y0) / r, l = -c, u = i, d = Math.abs(t.x1 - t.x0), f = Math.abs(t.y1 - t.y0);
-			d >= 16 && f >= 16 && (e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x1, t.y0), o(t.x1, t.y0, t.x1, t.y1), a(So(d), (t.x0 + t.x1) / 2, t.y0 + (t.y1 > t.y0 ? -12 : 12) * n, .8, .8), a(So(f), t.x1 + (t.x1 > t.x0 ? 22 : -22) * n, (t.y0 + t.y1) / 2, .8, .8)), e.lineStyle(n * 5, 0, .55).lineBetween(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 2.5, 16761204, 1).lineBetween(t.x0, t.y0, t.x1, t.y1);
-			let p = Math.floor(r / s);
-			for (let r = 1; r <= p; r++) {
-				let a = (r % 5 == 0 ? 8 : 5) * n, o = t.x0 + i * r * s, d = t.y0 + c * r * s;
-				e.lineStyle(n * 2, 16761204, 1).lineBetween(o - l * a, d - u * a, o + l * a, d + u * a);
+			let i = (t.x1 - t.x0) / r, p = (t.y1 - t.y0) / r, m = -p, h = i, g = Math.abs(t.x1 - t.x0), _ = Math.abs(t.y1 - t.y0);
+			g >= 16 && _ >= 16 && (e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x1, t.y0), o(t.x1, t.y0, t.x1, t.y1), a(So(g), (t.x0 + t.x1) / 2, t.y0 + (t.y1 > t.y0 ? -12 : 12) * n, .8, .8), a(So(_), t.x1 + (t.x1 > t.x0 ? 22 : -22) * n, (t.y0 + t.y1) / 2, .8, .8)), e.lineStyle(n * 5, 0, .55).lineBetween(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 2.5, 16761204, 1).lineBetween(t.x0, t.y0, t.x1, t.y1);
+			let v = Math.floor(r / s);
+			for (let r = 1; r <= v; r++) {
+				let a = (r % 5 == 0 ? 8 : 5) * n, o = t.x0 + i * r * s, c = t.y0 + p * r * s;
+				e.lineStyle(n * 2, 16761204, 1).lineBetween(o - m * a, c - h * a, o + m * a, c + h * a);
 			}
 			for (let [r, i] of [[t.x0, t.y0], [t.x1, t.y1]]) e.fillStyle(0, .7).fillCircle(r, i, n * 5.5), e.fillStyle(16761204, 1).fillCircle(r, i, n * 3.5);
-			let { deg: m, cardinal: h } = wo(t), g = u < 0 || u === 0 && l > 0 ? 1 : -1, _ = 18 * n * g;
+			let { deg: y, cardinal: b } = wo(t), x = h < 0 || h === 0 && m > 0 ? 1 : -1, S = 18 * n * x;
 			a(`${So(r)}
-${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
+${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 		}
 		for (let e = i; e < this.rulerTexts.length; e++) this.rulerTexts[e].setVisible(!1);
 	}
@@ -47360,7 +47466,7 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 		let e = this.state.zone;
 		this.cameras.main.centerOn(e.width * 32 / 2, e.height * 32 / 2), this.afterView();
 	}
-}, Po = 100, Fo = class {
+}, Vo = 100, Ho = class {
 	zone;
 	tool = "brush";
 	terrain = "dirt";
@@ -47369,6 +47475,8 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 	flip = !1;
 	roomStyle = { ...W[0].style };
 	roomMode = "room";
+	rulerMode = "line";
+	coneAngle = 60;
 	snap = !1;
 	showGrid = !1;
 	showCollision = !1;
@@ -47409,7 +47517,7 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 		Object.assign(this, e), e.tool && e.tool !== "select" && (this.selected = []), e.tool && e.tool !== "portal" && (this.selectedPortal = null), e.tool && e.tool !== "light" && (this.selectedLight = null), this.emit("ui");
 	}
 	checkpoint() {
-		this.undoStack.push(JSON.stringify(this.zone)), this.undoStack.length > Po && this.undoStack.shift(), this.redoStack = [], this.dirty = !0;
+		this.undoStack.push(JSON.stringify(this.zone)), this.undoStack.length > Vo && this.undoStack.shift(), this.redoStack = [], this.dirty = !0;
 	}
 	edited() {
 		this.dirty = !0, this.emit("edit");
@@ -47449,7 +47557,7 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 	zoneName(e) {
 		return e === this.zone.id ? this.zone.name : this.zones.find((t) => t.id === e)?.name ?? "(zona apagada)";
 	}
-}, Io = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}@media (width<=720px){.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}.vt-npc{z-index:30;background:var(--vt-surface);border:1px solid var(--vt-border);-webkit-user-select:none;user-select:none;border-radius:10px;flex-direction:column;width:420px;max-width:calc(100% - 24px);max-height:calc(100% - 64px);display:flex;position:absolute;top:52px;left:12px;box-shadow:0 16px 40px #00000080}.vt-npc[hidden]{display:none}.vt-npc-head{border-bottom:1px solid var(--vt-border-dim);justify-content:space-between;align-items:center;padding:8px 10px;display:flex}.vt-npc-title{color:var(--vt-accent-bright);align-items:center;gap:8px;display:flex}.vt-npc-title svg{width:18px;height:18px}.vt-npc-body{flex-direction:column;gap:10px;padding:10px;display:flex;overflow-y:auto}.vt-npc-body h4{letter-spacing:.1em;text-transform:uppercase;color:var(--vt-muted);margin:4px 0 0;font-size:11px}.vt-npc-analysis{flex-direction:column;gap:4px;display:flex}.vt-npc-analysis b{color:var(--vt-text)}.vt-npc-analysis small{color:var(--vt-muted)}.vt-npc-analysis .vt-select{margin-top:4px}.vt-npc-actions{gap:6px;display:flex}.vt-npc-note{color:var(--vt-muted);margin:0}.vt-npc-note.vt-error{color:var(--vt-danger)}.vt-npc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;display:grid}.vt-npc-card>*{max-width:100%}.vt-npc-card{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);text-align:center;border-radius:8px;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;display:flex;position:relative}.vt-npc-thumb{width:96px;height:96px;image-rendering:pixelated}.vt-npc-reroll{width:26px;height:26px;padding:0;position:absolute;top:4px;right:4px}.vt-npc-reroll svg{width:14px;height:14px}.vt-npc-name{text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px;overflow:hidden}.vt-npc-card small{text-overflow:ellipsis;white-space:nowrap;max-width:100%;color:var(--vt-muted);overflow:hidden}.vt-npc-row{justify-content:center;gap:4px;width:100%;margin-top:4px;padding:0 2px;display:flex}.vt-npc-row .vt-btn{padding:4px 8px}.vt-npc-row .vt-primary{flex:auto;min-width:0}.vt-npc-list{flex-direction:column;gap:4px;display:flex}.vt-npc-item{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:6px;padding:3px 6px;display:flex}.vt-npc-item.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-npc-mini{width:36px;height:36px;image-rendering:pixelated;flex:none}.vt-npc-info{flex-direction:column;flex:auto;min-width:0;display:flex}.vt-npc-info b{text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.vt-npc-info small{color:var(--vt-muted)}.vt-npc-look{z-index:2000;position:fixed;inset:0}.vt-npc-look>.vt-root{position:absolute;inset:0}.vt-npc-specials h4{justify-content:space-between;align-items:center;display:flex}.vt-npc-specials-list{flex-direction:column;gap:6px;display:flex}", Lo = [
+}, Uo = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}.vt-rulerbar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 90%, transparent);border:1px solid var(--vt-border-dim);border-radius:10px;align-items:center;gap:8px;max-width:calc(100% - 20px);padding:4px;animation:.22s cubic-bezier(.22,1,.36,1) backwards vt-rulerbar-in;display:flex;position:absolute;top:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-rulerbar[hidden],.vt-rulerbar-angles[hidden]{display:none}.vt-rulerbar .vt-segmented{flex-wrap:nowrap;padding:2px}.vt-rulerbar-btn{white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:5px 10px;display:inline-flex}.vt-rulerbar-ico{display:inline-flex}.vt-rulerbar-ico svg{width:15px;height:15px}.vt-rulerbar-angle-btn{font-variant-numeric:tabular-nums;padding:5px 8px}.vt-rulerbar-angles{align-items:center;animation:.2s cubic-bezier(.22,1,.36,1) backwards vt-rulerbar-in}.vt-rulerbar-lbl{color:var(--vt-text-2);padding:0 6px;font-size:11px}.vt-root.vt-testing .vt-rulerbar{display:none}@keyframes vt-rulerbar-in{0%{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%)}}@media (width<=720px){.vt-rulerbar{flex-direction:column;align-items:stretch;gap:4px}.vt-rulerbar-btn span:last-child{display:none}.vt-rulerbar-btn{padding:6px 12px}.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}.vt-npc{z-index:30;background:var(--vt-surface);border:1px solid var(--vt-border);-webkit-user-select:none;user-select:none;border-radius:10px;flex-direction:column;width:420px;max-width:calc(100% - 24px);max-height:calc(100% - 64px);display:flex;position:absolute;top:52px;left:12px;box-shadow:0 16px 40px #00000080}.vt-npc[hidden]{display:none}.vt-npc-head{border-bottom:1px solid var(--vt-border-dim);justify-content:space-between;align-items:center;padding:8px 10px;display:flex}.vt-npc-title{color:var(--vt-accent-bright);align-items:center;gap:8px;display:flex}.vt-npc-title svg{width:18px;height:18px}.vt-npc-body{flex-direction:column;gap:10px;padding:10px;display:flex;overflow-y:auto}.vt-npc-body h4{letter-spacing:.1em;text-transform:uppercase;color:var(--vt-muted);margin:4px 0 0;font-size:11px}.vt-npc-analysis{flex-direction:column;gap:4px;display:flex}.vt-npc-analysis b{color:var(--vt-text)}.vt-npc-analysis small{color:var(--vt-muted)}.vt-npc-analysis .vt-select{margin-top:4px}.vt-npc-actions{gap:6px;display:flex}.vt-npc-note{color:var(--vt-muted);margin:0}.vt-npc-note.vt-error{color:var(--vt-danger)}.vt-npc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;display:grid}.vt-npc-card>*{max-width:100%}.vt-npc-card{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);text-align:center;border-radius:8px;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;display:flex;position:relative}.vt-npc-thumb{width:96px;height:96px;image-rendering:pixelated}.vt-npc-reroll{width:26px;height:26px;padding:0;position:absolute;top:4px;right:4px}.vt-npc-reroll svg{width:14px;height:14px}.vt-npc-name{text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px;overflow:hidden}.vt-npc-card small{text-overflow:ellipsis;white-space:nowrap;max-width:100%;color:var(--vt-muted);overflow:hidden}.vt-npc-row{justify-content:center;gap:4px;width:100%;margin-top:4px;padding:0 2px;display:flex}.vt-npc-row .vt-btn{padding:4px 8px}.vt-npc-row .vt-primary{flex:auto;min-width:0}.vt-npc-list{flex-direction:column;gap:4px;display:flex}.vt-npc-item{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:6px;padding:3px 6px;display:flex}.vt-npc-item.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-npc-mini{width:36px;height:36px;image-rendering:pixelated;flex:none}.vt-npc-info{flex-direction:column;flex:auto;min-width:0;display:flex}.vt-npc-info b{text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.vt-npc-info small{color:var(--vt-muted)}.vt-npc-look{z-index:2000;position:fixed;inset:0}.vt-npc-look>.vt-root{position:absolute;inset:0}.vt-npc-specials h4{justify-content:space-between;align-items:center;display:flex}.vt-npc-specials-list{flex-direction:column;gap:6px;display:flex}", Wo = [
 	{
 		title: "Personagens",
 		file: "credits/CREDITS-character.md"
@@ -47463,7 +47571,7 @@ ${h} ${Math.round(m)}°`, (t.x0 + t.x1) / 2 + l * _, (t.y0 + t.y1) / 2 + u * _);
 		file: "credits/CREDITS-audio.txt"
 	}
 ];
-function Ro(e) {
+function Go(e) {
 	let t = K("p", { class: "vt-credits-intro" }, "A arte do Vortable vem do projeto Liberated Pixel Cup (LPC) e de artistas que a publicaram com licenças livres ", "(CC-BY-SA 3.0, GPL 3.0, OGA-BY e outras indicadas abaixo). Obrigado a todos."), n = ({ title: t, file: n }) => {
 		let r = K("pre", { class: "vt-credits-text" }, pt(e, !0));
 		return fetch(e + n).then((e) => e.ok ? e.text() : Promise.reject(Error(String(e.status)))).then((e) => {
@@ -47477,7 +47585,7 @@ function Ro(e) {
 	})));
 	return Ke().packs.length ? i(Ke().packs) : fetch(e + Re).then((e) => e.ok ? e.json() : Promise.reject(Error(String(e.status)))).then((e) => i(e.packs ?? [])).catch(() => r.append(K("p", { class: "vt-credits-intro" }, "Não deu pra carregar a lista de pacotes de objetos."))), [
 		t,
-		...Lo.map(n),
+		...Wo.map(n),
 		r
 	];
 }
@@ -47492,6 +47600,9 @@ var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	portal: J("<path d=\"M13 4h3a2 2 0 0 1 2 2v14\"/><path d=\"M2 20h3\"/><path d=\"M13 20h9\"/><path d=\"M10 12v.01\"/><path d=\"M13 4.56v16.88a.5.5 0 0 1-.68.47L5 19V5.24a1 1 0 0 1 .74-.97l6-1.5A1 1 0 0 1 13 3.74Z\"/>"),
 	world: J("<path d=\"M14.1 6.3 9.9 4.2a2 2 0 0 0-1.8 0L3.6 6.4A1 1 0 0 0 3 7.3v12.1a1 1 0 0 0 1.4.9l3.7-1.8a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.2a1 1 0 0 0 .6-.9V5.4a1 1 0 0 0-1.4-.9l-3.7 1.8a2 2 0 0 1-1.8 0Z\"/><path d=\"M15 6.8v14\"/><path d=\"M9 3.2v14\"/>"),
 	ruler: J("<path d=\"M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z\"/><path d=\"m14.5 12.5 2-2\"/><path d=\"m11.5 9.5 2-2\"/><path d=\"m8.5 6.5 2-2\"/><path d=\"m17.5 15.5 2-2\"/>"),
+	rulerRect: J("<rect x=\"3.5\" y=\"6\" width=\"17\" height=\"12\" rx=\"1.5\"/><path d=\"M7 6v3M11 6v2M15 6v3M19 6v2\"/>"),
+	rulerCircle: J("<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 12h8.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\" fill=\"currentColor\"/>"),
+	rulerCone: J("<path d=\"M12 20 4.5 7.2a9.5 9.5 0 0 1 15 0Z\"/><path d=\"M12 20V6.5\" stroke-dasharray=\"2 2.5\"/>"),
 	npc: J("<circle cx=\"12\" cy=\"5\" r=\"2.6\"/><path d=\"M12 8.2v6.3\"/><path d=\"M6.5 11.2 12 9l5.5 2.2\"/><path d=\"M8.5 21.5l3.5-7 3.5 7\"/>"),
 	nametag: J("<path d=\"M3 7h18v8H12l-3 3v-3H3Z\"/><path d=\"M7 10.5h6\"/>"),
 	flip: J("<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>"),
@@ -47543,7 +47654,7 @@ var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	download: J("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M12 15V3\"/>"),
 	upload: J("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M12 3v12\"/>"),
 	trash: J("<path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/>")
-}, zo = {
+}, Ko = {
 	biblioteca: "Biblioteca / palácio",
 	taverna: "Taverna",
 	vila: "Vila",
@@ -47554,7 +47665,7 @@ var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	masmorra: "Masmorra / caverna",
 	neve: "Terras geladas",
 	geral: "Lugar comum"
-}, Bo = (e) => e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), Vo = [
+}, qo = (e) => e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), Jo = [
 	["biblioteca", /bibliotec|palaci|castelo|torre|arquivo|salao|trono|nobre|templo|igreja|catedral|academia|universidade|estudo/],
 	["taverna", /taverna|estalagem|bar\b|pousada|hospedaria|cantina|salao de festas/],
 	["mercado", /mercado|feira|bazar|loja|praca|comercio|porto/],
@@ -47564,7 +47675,7 @@ var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	["masmorra", /masmorra|calabouco|caverna|gruta|prisao|cela|esgoto|mina|subterraneo/],
 	["neve", /neve|gelo|geleira|tundra|montanha|nevasca|glacial/],
 	["vila", /vila|aldeia|povoado|cidade|vilarejo|rua|casa|ferraria|padaria/]
-], Ho = [
+], Yo = [
 	[
 		"biblioteca",
 		/estante|livro|pergaminho|biblioteca|globo|candelabro|estatua|vitral|lareira|tapete|trono|relogio de pendulo|organ/,
@@ -47611,7 +47722,7 @@ var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 		.5
 	]
 ];
-function Uo(e) {
+function Xo(e) {
 	let t = {
 		biblioteca: 0,
 		taverna: 0,
@@ -47625,15 +47736,15 @@ function Uo(e) {
 		geral: .4
 	}, n = /* @__PURE__ */ new Map(), r = (e, r, i) => {
 		t[e] += r, i && (n.get(e) ?? n.set(e, /* @__PURE__ */ new Set()).get(e)).add(i);
-	}, i = Bo(e.name);
-	for (let [e, t] of Vo) t.test(i) && r(e, 6, "o nome da zona");
+	}, i = qo(e.name);
+	for (let [e, t] of Jo) t.test(i) && r(e, 6, "o nome da zona");
 	let a = e.lighting?.place ?? "outdoor", o = a === "indoor" || (e.rooms?.some((e) => e) ?? !1);
 	a === "underground" && r("masmorra", 4, "ambiente subterrâneo");
 	let s = /* @__PURE__ */ new Map();
 	for (let t of e.corners) s.set(t || e.base, (s.get(t || e.base) ?? 0) + 1);
 	let c = e.corners.length || 1, l = 0, u = 0, d = 0, f = 0, p = 0;
 	for (let [e, t] of s) {
-		let n = v.get(e), r = Bo(`${n?.category ?? ""} ${n?.label ?? ""} ${e}`);
+		let n = v.get(e), r = qo(`${n?.category ?? ""} ${n?.label ?? ""} ${e}`);
 		/grama|grass/.test(r) && (l += t), /neve|snow/.test(r) && (u += t), /agua|water|pantano|swamp/.test(r) && (d += t), /pedra|cascalho|gravel|cobble|calcamento/.test(r) && (f += t), /fazenda|arada|trigo/.test(r) && (p += t);
 	}
 	u / c > .25 && r("neve", 5, "neve no chão"), l / c > .4 && !o && (r("floresta", 1.5, "muita grama"), r("vila", .5), r("fazenda", .5)), d / c > .2 && r("floresta", 1), f / c > .3 && !o && (r("vila", 1.2, "ruas de pedra"), r("mercado", .6)), p / c > .03 && r("fazenda", 4, "terra arada e plantações"), o && (r("biblioteca", .8), r("taverna", .8), r("vila", .3));
@@ -47652,8 +47763,8 @@ function Uo(e) {
 	for (let t of e.objects) {
 		let e = qe(t.kind);
 		if (!e) continue;
-		let n = Bo(`${e.label} ${e.category} ${e.tags.join(" ")}`);
-		for (let [e, t, r] of Ho) t.test(n) && (m[e] += r);
+		let n = qo(`${e.label} ${e.category} ${e.tags.join(" ")}`);
+		for (let [e, t, r] of Yo) t.test(n) && (m[e] += r);
 	}
 	let h = {
 		biblioteca: "estantes, livros e mobília fina",
@@ -47675,14 +47786,14 @@ function Uo(e) {
 	for (let e of Object.keys(t)) t[e] > t[g] && (g = e);
 	return {
 		profile: g,
-		label: zo[g],
+		label: Ko[g],
 		reasons: [...n.get(g) ?? []].slice(0, 3),
 		scores: t
 	};
 }
 //#endregion
 //#region src/engine/npc/profiles.ts
-var Wo = [
+var Zo = [
 	"gray",
 	"slate",
 	"bluegray",
@@ -47694,7 +47805,7 @@ var Wo = [
 	"charcoal",
 	"leather",
 	"steel_blue"
-], Go = [
+], Qo = [
 	"maroon",
 	"purple",
 	"navy",
@@ -47705,7 +47816,7 @@ var Wo = [
 	"oxblood",
 	"steel_blue",
 	"rose"
-], Ko = [
+], $o = [
 	"brown",
 	"tan",
 	"walnut",
@@ -47716,7 +47827,7 @@ var Wo = [
 	"yellow",
 	"espresso",
 	"orange"
-], qo = [
+], es = [
 	"white",
 	"pale_gray",
 	"sky",
@@ -47731,7 +47842,7 @@ var Wo = [
 	"navy",
 	"oxblood",
 	"gray"
-], Jo = [
+], ts = [
 	"red",
 	"orange",
 	"yellow",
@@ -47740,12 +47851,12 @@ var Wo = [
 	"brown",
 	"forest",
 	"teal"
-], Yo = [
+], ns = [
 	"gray",
 	"charcoal",
 	"slate",
 	"white"
-], Xo = [
+], rs = [
 	"maroon",
 	"navy",
 	"forest",
@@ -47757,13 +47868,13 @@ var Wo = [
 	re: e,
 	colors: t,
 	chance: n
-}), Zo = /shirts\/longsleeve\//, Qo = /torso_clothes_blouse/, $o = /shirts\/shortsleeve\//, es = /shirts\/sleeveless\//, ts = /torso_clothes_(robe|tunic)\b/, ns = /torso_clothes_(vest|corset)/, rs = /jacket_(frock|collared)/, is = /jacket_tabard/, as = /legs\/pants\/legs_(pants|pants2|formal|cuffed|pantaloons)/, Q = /legs\/pants\/legs_(pants|pants2|cuffed)/, os = /skirts\/legs_(skirts_plain|skirt_straight|skirt_belle)/, ss = /feet\/shoes\/feet_shoes_(basic|revised|ghillies)/, $ = /feet\/boots\/feet_boots_(basic|revised|rim|fold)/, cs = /hat_formal_(tophat|bowler)/, ls = /hat_cap_(leather|bonnie)/, us = /hat_hood_cloth/, ds = /hat_helmet_(legion|kettle|nasal|norman|morion|spangenhelm|flattop)/, fs = /neck_(cravat|jabot|bowtie|bowtie2|necktie)/, ps = /neck_scarf/, ms = /belt_(leather|double|loose|leather2)/, hs = /torso_aprons_apron(_full|_half)?$/, gs = /cape_solid/, _s = /facial_glasses(_halfmoon|_round|_secretary|_nerd)?$/, vs = /arms_gloves/, ys = /torso_aprons_(overalls|suspenders)/, bs = /armour\/torso_armour_(leather|legion|plate)|torso_chainmail/, xs = /torso_armour_leather/, Ss = {
+}), is = /shirts\/longsleeve\//, as = /torso_clothes_blouse/, os = /shirts\/shortsleeve\//, ss = /shirts\/sleeveless\//, cs = /torso_clothes_(robe|tunic)\b/, ls = /torso_clothes_(vest|corset)/, us = /jacket_(frock|collared)/, ds = /jacket_tabard/, fs = /legs\/pants\/legs_(pants|pants2|formal|cuffed|pantaloons)/, Q = /legs\/pants\/legs_(pants|pants2|cuffed)/, ps = /skirts\/legs_(skirts_plain|skirt_straight|skirt_belle)/, ms = /feet\/shoes\/feet_shoes_(basic|revised|ghillies)/, $ = /feet\/boots\/feet_boots_(basic|revised|rim|fold)/, hs = /hat_formal_(tophat|bowler)/, gs = /hat_cap_(leather|bonnie)/, _s = /hat_hood_cloth/, vs = /hat_helmet_(legion|kettle|nasal|norman|morion|spangenhelm|flattop)/, ys = /neck_(cravat|jabot|bowtie|bowtie2|necktie)/, bs = /neck_scarf/, xs = /belt_(leather|double|loose|leather2)/, Ss = /torso_aprons_apron(_full|_half)?$/, Cs = /cape_solid/, ws = /facial_glasses(_halfmoon|_round|_secretary|_nerd)?$/, Ts = /arms_gloves/, Es = /torso_aprons_(overalls|suspenders)/, Ds = /armour\/torso_armour_(leather|legion|plate)|torso_chainmail/, Os = /torso_armour_leather/, ks = {
 	biblioteca: [
 		{
 			label: ["Bibliotecário", "Bibliotecária"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"navy",
 					"slate",
 					"bluegray",
@@ -47771,29 +47882,29 @@ var Wo = [
 					"forest",
 					"maroon",
 					"white"
-				]), Z(Qo, [
+				]), Z(as, [
 					"navy",
 					"slate",
 					"white",
 					"forest",
 					"maroon"
 				])],
-				vest: [Z(ns, [
+				vest: [Z(ls, [
 					"black",
 					"navy",
 					"maroon",
 					"forest",
 					"gray"
 				], .45)],
-				legs: [Z(as, X), Z(os, X, .5)],
-				shoes: [Z(ss, X)],
-				neck: [Z(fs, [
+				legs: [Z(fs, X), Z(ps, X, .5)],
+				shoes: [Z(ms, X)],
+				neck: [Z(ys, [
 					"midnight",
 					"steel_blue",
 					"white",
 					"maroon"
 				], .6)],
-				facial: [Z(_s, void 0, .55)],
+				facial: [Z(ws, void 0, .55)],
 				hair: "neat",
 				beard: .2
 			}
@@ -47803,18 +47914,18 @@ var Wo = [
 			weight: 3,
 			outfit: {
 				clothes: [
-					Z(ts, Ko.slice(0, 6)),
-					Z(Zo, Wo),
-					Z(Qo, Wo)
+					Z(cs, $o.slice(0, 6)),
+					Z(is, Zo),
+					Z(as, Zo)
 				],
-				belt: [Z(ms, [
+				belt: [Z(xs, [
 					"brown",
 					"leather",
 					"walnut"
 				], .5)],
-				legs: [Z(Q, X), Z(os, X, .4)],
-				shoes: [Z(ss, X), Z($, ["brown", "espresso"])],
-				facial: [Z(_s, void 0, .35)],
+				legs: [Z(Q, X), Z(ps, X, .4)],
+				shoes: [Z(ms, X), Z($, ["brown", "espresso"])],
+				facial: [Z(ws, void 0, .35)],
 				hair: "rustic",
 				beard: .25
 			}
@@ -47823,22 +47934,22 @@ var Wo = [
 			label: ["Nobre", "Nobre"],
 			weight: 2,
 			outfit: {
-				jacket: [Z(rs, Go, .9)],
-				dress: [Z(/dress_(sash|slit)/, Go, .7)],
-				clothes: [Z(Zo, qo), Z(Qo, qo)],
-				neck: [Z(fs, [
+				jacket: [Z(us, Qo, .9)],
+				dress: [Z(/dress_(sash|slit)/, Qo, .7)],
+				clothes: [Z(is, es), Z(as, es)],
+				neck: [Z(ys, [
 					"white",
 					"maroon",
 					"steel_blue"
 				], .7)],
-				legs: [Z(as, X)],
+				legs: [Z(fs, X)],
 				shoes: [Z($, [
 					"black",
 					"espresso",
 					"brown"
-				]), Z(ss, X)],
-				hat: [Z(cs, X, .22)],
-				gloves: [Z(vs, ["white", "black"], .2)],
+				]), Z(ms, X)],
+				hat: [Z(hs, X, .22)],
+				gloves: [Z(Ts, ["white", "black"], .2)],
 				hair: "neat",
 				beard: .3
 			}
@@ -47847,9 +47958,9 @@ var Wo = [
 			label: ["Guarda do palácio", "Guarda do palácio"],
 			weight: 2,
 			outfit: {
-				armour: [Z(bs, Yo)],
-				hat: [Z(ds, Yo)],
-				cape: [Z(gs, [
+				armour: [Z(Ds, ns)],
+				hat: [Z(vs, ns)],
+				cape: [Z(Cs, [
 					"maroon",
 					"navy",
 					"black"
@@ -47861,7 +47972,7 @@ var Wo = [
 					"navy"
 				])],
 				shoes: [Z($, ["black", "espresso"])],
-				gloves: [Z(vs, ["black", "gray"], .5)],
+				gloves: [Z(Ts, ["black", "gray"], .5)],
 				hair: "short",
 				beard: .3
 			}
@@ -47870,8 +47981,8 @@ var Wo = [
 			label: ["Criado", "Criada"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Qo, qo), Z(Zo, qo)],
-				apron: [Z(hs, [
+				clothes: [Z(as, es), Z(is, es)],
+				apron: [Z(Ss, [
 					"white",
 					"pale_gray",
 					"tan"
@@ -47880,12 +47991,12 @@ var Wo = [
 					"charcoal",
 					"brown",
 					"black"
-				]), Z(os, [
+				]), Z(ps, [
 					"charcoal",
 					"brown",
 					"black"
 				], .6)],
-				shoes: [Z(ss, X)],
+				shoes: [Z(ms, X)],
 				hair: "neat"
 			}
 		}
@@ -47895,22 +48006,22 @@ var Wo = [
 			label: ["Taverneiro", "Taverneira"],
 			weight: 3,
 			outfit: {
-				clothes: [Z($o, [
+				clothes: [Z(os, [
 					"tan",
 					"white",
 					"brown"
-				]), Z(Zo, [
+				]), Z(is, [
 					"tan",
 					"white",
 					"brown"
 				])],
-				apron: [Z(hs, [
+				apron: [Z(Ss, [
 					"white",
 					"tan",
 					"brown"
 				])],
 				legs: [Z(Q, X)],
-				shoes: [Z(ss, X)],
+				shoes: [Z(ms, X)],
 				hair: "rustic",
 				beard: .5
 			}
@@ -47920,14 +48031,14 @@ var Wo = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Zo, Jo),
-					Z($o, Jo),
-					Z(Qo, Jo)
+					Z(is, ts),
+					Z(os, ts),
+					Z(as, ts)
 				],
-				vest: [Z(ns, Ko, .3)],
-				legs: [Z(Q, X), Z(os, X, .3)],
-				shoes: [Z(ss, X), Z($, ["brown", "espresso"])],
-				hat: [Z(ls, Ko, .2)],
+				vest: [Z(ls, $o, .3)],
+				legs: [Z(Q, X), Z(ps, X, .3)],
+				shoes: [Z(ms, X), Z($, ["brown", "espresso"])],
+				hat: [Z(gs, $o, .2)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -47936,26 +48047,26 @@ var Wo = [
 			label: ["Bardo", "Bardo"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Qo, [
+				clothes: [Z(as, [
 					"red",
 					"teal",
 					"purple",
 					"yellow",
 					"white"
-				]), Z(Zo, [
+				]), Z(is, [
 					"red",
 					"teal",
 					"purple",
 					"orange"
 				])],
-				vest: [Z(ns, Go, .7)],
-				legs: [Z(as, X)],
+				vest: [Z(ls, Qo, .7)],
+				legs: [Z(fs, X)],
 				shoes: [Z($, [
 					"brown",
 					"espresso",
 					"black"
 				])],
-				hat: [Z(ls, [
+				hat: [Z(gs, [
 					"red",
 					"green",
 					"teal",
@@ -47969,14 +48080,14 @@ var Wo = [
 			label: ["Garçom", "Garçonete"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Qo, ["white", "pale_gray"]), Z(Zo, ["white", "pale_gray"])],
-				apron: [Z(hs, [
+				clothes: [Z(as, ["white", "pale_gray"]), Z(is, ["white", "pale_gray"])],
+				apron: [Z(Ss, [
 					"white",
 					"black",
 					"charcoal"
 				])],
-				legs: [Z(Q, ["black", "charcoal"]), Z(os, ["black", "charcoal"], .6)],
-				shoes: [Z(ss, X)],
+				legs: [Z(Q, ["black", "charcoal"]), Z(ps, ["black", "charcoal"], .6)],
+				shoes: [Z(ms, X)],
 				hair: "neat"
 			}
 		},
@@ -47984,9 +48095,9 @@ var Wo = [
 			label: ["Viajante", "Viajante"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Zo, Ko), Z($o, Ko)],
-				cape: [Z(gs, Xo, .7)],
-				hat: [Z(us, Xo, .3)],
+				clothes: [Z(is, $o), Z(os, $o)],
+				cape: [Z(Cs, rs, .7)],
+				hat: [Z(_s, rs, .3)],
 				legs: [Z(Q, X)],
 				shoes: [Z($, ["brown", "espresso"])],
 				backpack: [Z(/backpack\/backpack$/, void 0, .6)],
@@ -48001,18 +48112,18 @@ var Wo = [
 			weight: 3,
 			outfit: {
 				clothes: [
-					Z(Zo, Ko),
-					Z($o, Ko),
-					Z(Qo, Ko)
+					Z(is, $o),
+					Z(os, $o),
+					Z(as, $o)
 				],
-				apron: [Z(ys, [
+				apron: [Z(Es, [
 					"brown",
 					"tan",
 					"forest"
 				], .3)],
-				legs: [Z(Q, X), Z(os, Ko, .45)],
-				shoes: [Z(ss, ["brown", "espresso"]), Z($, ["brown"])],
-				hat: [Z(ls, Ko, .3)],
+				legs: [Z(Q, X), Z(ps, $o, .45)],
+				shoes: [Z(ms, ["brown", "espresso"]), Z($, ["brown"])],
+				hat: [Z(gs, $o, .3)],
 				hair: "rustic",
 				beard: .35
 			}
@@ -48021,13 +48132,13 @@ var Wo = [
 			label: ["Ferreiro", "Ferreira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(es, X), Z($o, X)],
-				apron: [Z(hs, [
+				clothes: [Z(ss, X), Z(os, X)],
+				apron: [Z(Ss, [
 					"leather",
 					"brown",
 					"charcoal"
 				])],
-				gloves: [Z(vs, ["black", "brown"], .7)],
+				gloves: [Z(Ts, ["black", "brown"], .7)],
 				legs: [Z(Q, [
 					"charcoal",
 					"brown",
@@ -48042,14 +48153,14 @@ var Wo = [
 			label: ["Padeiro", "Padeira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z($o, qo), Z(Qo, qo)],
-				apron: [Z(hs, ["white", "pale_gray"])],
+				clothes: [Z(os, es), Z(as, es)],
+				apron: [Z(Ss, ["white", "pale_gray"])],
 				legs: [Z(Q, [
 					"tan",
 					"gray",
 					"brown"
-				]), Z(os, ["tan", "gray"], .5)],
-				shoes: [Z(ss, ["brown", "espresso"])],
+				]), Z(ps, ["tan", "gray"], .5)],
+				shoes: [Z(ms, ["brown", "espresso"])],
 				hair: "neat",
 				beard: .2
 			}
@@ -48058,12 +48169,12 @@ var Wo = [
 			label: ["Guarda da vila", "Guarda da vila"],
 			weight: 2,
 			outfit: {
-				armour: [Z(xs, [
+				armour: [Z(Os, [
 					"brown",
 					"leather",
 					"walnut"
 				])],
-				hat: [Z(ds, Yo, .8)],
+				hat: [Z(vs, ns, .8)],
 				legs: [Z(Q, [
 					"brown",
 					"charcoal",
@@ -48074,7 +48185,7 @@ var Wo = [
 					"espresso",
 					"black"
 				])],
-				cape: [Z(gs, [
+				cape: [Z(Cs, [
 					"green",
 					"forest",
 					"navy",
@@ -48089,13 +48200,13 @@ var Wo = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Zo, Jo),
-					Z($o, Jo),
-					Z(Qo, Jo)
+					Z(is, ts),
+					Z(os, ts),
+					Z(as, ts)
 				],
-				vest: [Z(ns, Ko, .25)],
-				legs: [Z(Q, X), Z(os, X, .5)],
-				shoes: [Z(ss, X), Z($, ["brown"])],
+				vest: [Z(ls, $o, .25)],
+				legs: [Z(Q, X), Z(ps, X, .5)],
+				shoes: [Z(ms, X), Z($, ["brown"])],
 				hair: "rustic",
 				beard: .3
 			}
@@ -48104,17 +48215,17 @@ var Wo = [
 			label: ["Mercador", "Mercadora"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Zo, Go), Z(Qo, Go)],
-				vest: [Z(ns, [
+				clothes: [Z(is, Qo), Z(as, Qo)],
+				vest: [Z(ls, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .6)],
-				belt: [Z(ms, ["brown", "leather"], .6)],
-				legs: [Z(as, X)],
+				belt: [Z(xs, ["brown", "leather"], .6)],
+				legs: [Z(fs, X)],
 				shoes: [Z($, ["brown", "espresso"])],
-				hat: [Z(ls, Go, .35)],
+				hat: [Z(gs, Qo, .35)],
 				hair: "neat",
 				beard: .35
 			}
@@ -48125,18 +48236,18 @@ var Wo = [
 			label: ["Mercador", "Mercadora"],
 			weight: 4,
 			outfit: {
-				clothes: [Z(Zo, Go), Z(Qo, Jo)],
-				vest: [Z(ns, [
+				clothes: [Z(is, Qo), Z(as, ts)],
+				vest: [Z(ls, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .6)],
-				apron: [Z(hs, qo, .3)],
-				belt: [Z(ms, ["brown", "leather"], .6)],
-				legs: [Z(as, X), Z(os, X, .4)],
-				shoes: [Z(ss, X), Z($, ["brown"])],
-				hat: [Z(ls, Go, .35)],
+				apron: [Z(Ss, es, .3)],
+				belt: [Z(xs, ["brown", "leather"], .6)],
+				legs: [Z(fs, X), Z(ps, X, .4)],
+				shoes: [Z(ms, X), Z($, ["brown"])],
+				hat: [Z(gs, Qo, .35)],
 				hair: "rustic",
 				beard: .35
 			}
@@ -48146,13 +48257,13 @@ var Wo = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Zo, Jo),
-					Z($o, Jo),
-					Z(Qo, Jo)
+					Z(is, ts),
+					Z(os, ts),
+					Z(as, ts)
 				],
-				legs: [Z(Q, X), Z(os, X, .5)],
-				shoes: [Z(ss, X)],
-				hat: [Z(ls, Ko, .15)],
+				legs: [Z(Q, X), Z(ps, X, .5)],
+				shoes: [Z(ms, X)],
+				hat: [Z(gs, $o, .15)],
 				backpack: [Z(/backpack_basket/, void 0, .3)],
 				hair: "rustic",
 				beard: .3
@@ -48162,13 +48273,13 @@ var Wo = [
 			label: ["Artesão", "Artesã"],
 			weight: 2,
 			outfit: {
-				clothes: [Z($o, Ko), Z(es, Ko)],
-				apron: [Z(hs, [
+				clothes: [Z(os, $o), Z(ss, $o)],
+				apron: [Z(Ss, [
 					"leather",
 					"brown",
 					"tan"
 				])],
-				gloves: [Z(vs, ["brown"], .3)],
+				gloves: [Z(Ts, ["brown"], .3)],
 				legs: [Z(Q, ["brown", "charcoal"])],
 				shoes: [Z($, ["brown"])],
 				hair: "short",
@@ -48179,8 +48290,8 @@ var Wo = [
 			label: ["Guarda", "Guarda"],
 			weight: 2,
 			outfit: {
-				armour: [Z(xs, ["brown", "leather"])],
-				hat: [Z(ds, Yo, .8)],
+				armour: [Z(Os, ["brown", "leather"])],
+				hat: [Z(vs, ns, .8)],
 				legs: [Z(Q, [
 					"charcoal",
 					"brown",
@@ -48197,18 +48308,18 @@ var Wo = [
 			label: ["Fazendeiro", "Fazendeira"],
 			weight: 4,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"tan",
 					"white",
 					"brown",
 					"yellow",
 					"gray"
-				]), Z($o, [
+				]), Z(os, [
 					"tan",
 					"white",
 					"yellow"
 				])],
-				apron: [Z(ys, [
+				apron: [Z(Es, [
 					"brown",
 					"navy",
 					"forest",
@@ -48220,7 +48331,7 @@ var Wo = [
 					"navy"
 				])],
 				shoes: [Z($, ["brown", "espresso"])],
-				hat: [Z(ls, [
+				hat: [Z(gs, [
 					"tan",
 					"brown",
 					"yellow"
@@ -48233,14 +48344,14 @@ var Wo = [
 			label: ["Peão", "Peã"],
 			weight: 3,
 			outfit: {
-				clothes: [Z($o, Ko), Z(es, Ko)],
+				clothes: [Z(os, $o), Z(ss, $o)],
 				legs: [Z(Q, [
 					"brown",
 					"tan",
 					"charcoal"
 				])],
-				shoes: [Z($, ["brown"]), Z(ss, ["brown"])],
-				hat: [Z(ls, ["tan", "brown"], .5)],
+				shoes: [Z($, ["brown"]), Z(ms, ["brown"])],
+				hat: [Z(gs, ["tan", "brown"], .5)],
 				hair: "short",
 				beard: .4
 			}
@@ -48249,18 +48360,18 @@ var Wo = [
 			label: ["Pastor", "Pastora"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"brown",
 					"tan",
 					"gray",
 					"forest"
 				])],
-				cape: [Z(gs, [
+				cape: [Z(Cs, [
 					"brown",
 					"forest",
 					"gray"
 				], .6)],
-				hat: [Z(us, ["brown", "forest"], .3)],
+				hat: [Z(_s, ["brown", "forest"], .3)],
 				legs: [Z(Q, ["brown", "charcoal"])],
 				shoes: [Z($, ["brown", "espresso"])],
 				hair: "rustic",
@@ -48271,10 +48382,10 @@ var Wo = [
 			label: ["Cozinheiro", "Cozinheira"],
 			weight: 1,
 			outfit: {
-				clothes: [Z(Qo, qo), Z($o, qo)],
-				apron: [Z(hs, ["white", "pale_gray"])],
-				legs: [Z(Q, ["brown", "gray"]), Z(os, ["brown", "gray"], .5)],
-				shoes: [Z(ss, X)],
+				clothes: [Z(as, es), Z(os, es)],
+				apron: [Z(Ss, ["white", "pale_gray"])],
+				legs: [Z(Q, ["brown", "gray"]), Z(ps, ["brown", "gray"], .5)],
+				shoes: [Z(ms, X)],
 				hair: "neat"
 			}
 		}
@@ -48284,29 +48395,29 @@ var Wo = [
 			label: ["Caçador", "Caçadora"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"brown",
 					"forest",
 					"green",
 					"tan",
 					"walnut"
-				]), Z($o, [
+				]), Z(os, [
 					"brown",
 					"forest",
 					"tan"
 				])],
-				vest: [Z(ns, [
+				vest: [Z(ls, [
 					"leather",
 					"brown",
 					"forest"
 				], .5)],
-				cape: [Z(gs, [
+				cape: [Z(Cs, [
 					"forest",
 					"brown",
 					"green"
 				], .5)],
-				hat: [Z(us, ["forest", "brown"], .4), Z(ls, ["brown", "forest"], .2)],
-				belt: [Z(ms, ["brown", "leather"], .7)],
+				hat: [Z(_s, ["forest", "brown"], .4), Z(gs, ["brown", "forest"], .2)],
+				belt: [Z(xs, ["brown", "leather"], .7)],
 				legs: [Z(Q, [
 					"brown",
 					"forest",
@@ -48322,9 +48433,9 @@ var Wo = [
 			label: ["Andarilho", "Andarilha"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Zo, Ko)],
-				cape: [Z(gs, Xo)],
-				hat: [Z(us, Xo, .5)],
+				clothes: [Z(is, $o)],
+				cape: [Z(Cs, rs)],
+				hat: [Z(_s, rs, .5)],
 				legs: [Z(Q, X)],
 				shoes: [Z($, ["brown", "espresso"])],
 				backpack: [Z(/backpack\/backpack/, void 0, .5)],
@@ -48336,19 +48447,19 @@ var Wo = [
 			label: ["Ervanário", "Ervanária"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(ts, [
+				clothes: [Z(cs, [
 					"forest",
 					"green",
 					"tan",
 					"brown"
-				]), Z(Qo, [
+				]), Z(as, [
 					"green",
 					"forest",
 					"white"
 				])],
-				belt: [Z(ms, ["brown", "leather"], .6)],
-				legs: [Z(Q, ["brown", "forest"]), Z(os, ["brown", "forest"], .5)],
-				shoes: [Z(ss, ["brown"]), Z($, ["brown"])],
+				belt: [Z(xs, ["brown", "leather"], .6)],
+				legs: [Z(Q, ["brown", "forest"]), Z(ps, ["brown", "forest"], .5)],
+				shoes: [Z(ms, ["brown"]), Z($, ["brown"])],
 				backpack: [Z(/backpack_basket/, void 0, .6)],
 				hair: "rustic",
 				age: "any",
@@ -48359,20 +48470,20 @@ var Wo = [
 			label: ["Batedor", "Batedora"],
 			weight: 2,
 			outfit: {
-				armour: [Z(xs, [
+				armour: [Z(Os, [
 					"brown",
 					"leather",
 					"forest"
 				])],
-				hat: [Z(ls, ["brown", "forest"], .6)],
-				cape: [Z(gs, ["forest", "green"], .5)],
+				hat: [Z(gs, ["brown", "forest"], .6)],
+				cape: [Z(Cs, ["forest", "green"], .5)],
 				legs: [Z(Q, [
 					"brown",
 					"forest",
 					"charcoal"
 				])],
 				shoes: [Z($, ["brown", "espresso"])],
-				gloves: [Z(vs, ["brown"], .5)],
+				gloves: [Z(Ts, ["brown"], .5)],
 				hair: "short",
 				beard: .35
 			}
@@ -48383,14 +48494,14 @@ var Wo = [
 			label: ["Coveiro", "Coveira"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"charcoal",
 					"gray",
 					"brown",
 					"black"
-				]), Z($o, ["charcoal", "gray"])],
-				vest: [Z(ns, ["black", "charcoal"], .4)],
-				hat: [Z(ls, [
+				]), Z(os, ["charcoal", "gray"])],
+				vest: [Z(ls, ["black", "charcoal"], .4)],
+				hat: [Z(gs, [
 					"black",
 					"charcoal",
 					"brown"
@@ -48405,21 +48516,21 @@ var Wo = [
 			label: ["Sacerdote", "Sacerdotisa"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(ts, [
+				clothes: [Z(cs, [
 					"black",
 					"white",
 					"pale_gray",
 					"midnight",
 					"oxblood"
 				])],
-				hat: [Z(us, [
+				hat: [Z(_s, [
 					"black",
 					"midnight",
 					"white"
 				], .4)],
-				belt: [Z(ms, ["brown", "leather"], .4)],
+				belt: [Z(xs, ["brown", "leather"], .4)],
 				legs: [Z(Q, ["black", "charcoal"])],
-				shoes: [Z(ss, X)],
+				shoes: [Z(ms, X)],
 				hair: "neat",
 				age: "any",
 				beard: .35
@@ -48429,16 +48540,16 @@ var Wo = [
 			label: ["Enlutado", "Enlutada"],
 			weight: 3,
 			outfit: {
-				jacket: [Z(rs, [
+				jacket: [Z(us, [
 					"black",
 					"charcoal",
 					"midnight"
 				], .4)],
 				dress: [Z(/dress_(sash|slit)/, ["black", "charcoal"], .6)],
-				clothes: [Z(Zo, ["black", "charcoal"]), Z(Qo, ["black", "charcoal"])],
-				legs: [Z(as, ["black", "charcoal"]), Z(os, ["black"], .5)],
-				shoes: [Z(ss, ["black"]), Z($, ["black"])],
-				hat: [Z(cs, ["black"], .2)],
+				clothes: [Z(is, ["black", "charcoal"]), Z(as, ["black", "charcoal"])],
+				legs: [Z(fs, ["black", "charcoal"]), Z(ps, ["black"], .5)],
+				shoes: [Z(ms, ["black"]), Z($, ["black"])],
+				hat: [Z(hs, ["black"], .2)],
 				hair: "neat",
 				age: "any",
 				beard: .2
@@ -48448,13 +48559,13 @@ var Wo = [
 			label: ["Vigia", "Vigia"],
 			weight: 1,
 			outfit: {
-				clothes: [Z(Zo, ["charcoal", "gray"])],
-				cape: [Z(gs, [
+				clothes: [Z(is, ["charcoal", "gray"])],
+				cape: [Z(Cs, [
 					"black",
 					"charcoal",
 					"midnight"
 				])],
-				hat: [Z(us, ["black", "charcoal"], .5)],
+				hat: [Z(_s, ["black", "charcoal"], .5)],
 				legs: [Z(Q, ["black", "charcoal"])],
 				shoes: [Z($, ["black", "espresso"])],
 				hair: "short",
@@ -48467,16 +48578,16 @@ var Wo = [
 			label: ["Guarda", "Guarda"],
 			weight: 4,
 			outfit: {
-				armour: [Z(bs, Yo)],
-				hat: [Z(ds, Yo)],
+				armour: [Z(Ds, ns)],
+				hat: [Z(vs, ns)],
 				legs: [Z(Q, [
 					"charcoal",
 					"black",
 					"gray"
 				])],
 				shoes: [Z($, ["black", "espresso"])],
-				gloves: [Z(vs, ["black", "gray"], .6)],
-				cape: [Z(gs, ["black", "charcoal"], .3)],
+				gloves: [Z(Ts, ["black", "gray"], .6)],
+				cape: [Z(Cs, ["black", "charcoal"], .3)],
 				hair: "short",
 				beard: .4
 			}
@@ -48485,18 +48596,18 @@ var Wo = [
 			label: ["Carcereiro", "Carcereira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(es, X), Z($o, X)],
-				vest: [Z(ns, [
+				clothes: [Z(ss, X), Z(os, X)],
+				vest: [Z(ls, [
 					"leather",
 					"brown",
 					"black"
 				], .8)],
-				belt: [Z(ms, [
+				belt: [Z(xs, [
 					"brown",
 					"leather",
 					"charcoal"
 				])],
-				gloves: [Z(vs, ["black", "brown"], .6)],
+				gloves: [Z(Ts, ["black", "brown"], .6)],
 				legs: [Z(Q, ["charcoal", "brown"])],
 				shoes: [Z($, ["black", "espresso"])],
 				hair: "short",
@@ -48507,12 +48618,12 @@ var Wo = [
 			label: ["Prisioneiro", "Prisioneira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(es, [
+				clothes: [Z(ss, [
 					"gray",
 					"tan",
 					"brown",
 					"pale_gray"
-				]), Z($o, [
+				]), Z(os, [
 					"gray",
 					"tan",
 					"brown"
@@ -48531,16 +48642,16 @@ var Wo = [
 			label: ["Aventureiro", "Aventureira"],
 			weight: 2,
 			outfit: {
-				armour: [Z(xs, [
+				armour: [Z(Os, [
 					"brown",
 					"leather",
 					"charcoal"
 				])],
-				cape: [Z(gs, Xo, .6)],
+				cape: [Z(Cs, rs, .6)],
 				backpack: [Z(/backpack\/backpack/, void 0, .6)],
 				legs: [Z(Q, ["brown", "charcoal"])],
 				shoes: [Z($, ["brown", "espresso"])],
-				belt: [Z(ms, ["brown", "leather"], .5)],
+				belt: [Z(xs, ["brown", "leather"], .5)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -48551,25 +48662,25 @@ var Wo = [
 			label: ["Montanhês", "Montanhesa"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"brown",
 					"gray",
 					"tan",
 					"forest",
 					"navy"
 				])],
-				cape: [Z(gs, [
+				cape: [Z(Cs, [
 					"brown",
 					"gray",
 					"forest",
 					"navy"
 				], .8)],
-				hat: [Z(us, [
+				hat: [Z(_s, [
 					"brown",
 					"gray",
 					"forest"
 				], .7)],
-				neck: [Z(ps, [
+				neck: [Z(bs, [
 					"red",
 					"maroon",
 					"gray",
@@ -48581,7 +48692,7 @@ var Wo = [
 					"navy"
 				])],
 				shoes: [Z($, ["brown", "espresso"])],
-				gloves: [Z(vs, ["brown", "gray"], .7)],
+				gloves: [Z(Ts, ["brown", "gray"], .7)],
 				hair: "rustic",
 				beard: .6
 			}
@@ -48590,17 +48701,17 @@ var Wo = [
 			label: ["Caçador", "Caçadora"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"brown",
 					"tan",
 					"gray"
 				])],
-				vest: [Z(ns, ["leather", "brown"], .6)],
-				cape: [Z(gs, ["brown", "gray"], .6)],
-				hat: [Z(us, ["brown", "gray"], .6)],
+				vest: [Z(ls, ["leather", "brown"], .6)],
+				cape: [Z(Cs, ["brown", "gray"], .6)],
+				hat: [Z(_s, ["brown", "gray"], .6)],
 				legs: [Z(Q, ["brown", "charcoal"])],
 				shoes: [Z($, ["brown", "espresso"])],
-				gloves: [Z(vs, ["brown"], .6)],
+				gloves: [Z(Ts, ["brown"], .6)],
 				backpack: [Z(/backpack\/backpack$/, void 0, .4)],
 				hair: "rustic",
 				beard: .5
@@ -48610,25 +48721,25 @@ var Wo = [
 			label: ["Viajante agasalhado", "Viajante agasalhada"],
 			weight: 3,
 			outfit: {
-				jacket: [Z(is, [
+				jacket: [Z(ds, [
 					"navy",
 					"maroon",
 					"forest",
 					"gray",
 					"brown"
 				], .8)],
-				clothes: [Z(Zo, [
+				clothes: [Z(is, [
 					"white",
 					"tan",
 					"gray"
 				])],
-				neck: [Z(ps, [
+				neck: [Z(bs, [
 					"red",
 					"teal",
 					"yellow",
 					"maroon"
 				], .8)],
-				hat: [Z(us, [
+				hat: [Z(_s, [
 					"gray",
 					"brown",
 					"navy"
@@ -48639,7 +48750,7 @@ var Wo = [
 					"navy"
 				])],
 				shoes: [Z($, ["brown", "black"])],
-				gloves: [Z(vs, ["brown", "gray"], .6)],
+				gloves: [Z(Ts, ["brown", "gray"], .6)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -48651,13 +48762,13 @@ var Wo = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Zo, Jo),
-					Z($o, Jo),
-					Z(Qo, Jo)
+					Z(is, ts),
+					Z(os, ts),
+					Z(as, ts)
 				],
-				vest: [Z(ns, Ko, .25)],
-				legs: [Z(Q, X), Z(os, X, .5)],
-				shoes: [Z(ss, X), Z($, ["brown"])],
+				vest: [Z(ls, $o, .25)],
+				legs: [Z(Q, X), Z(ps, X, .5)],
+				shoes: [Z(ms, X), Z($, ["brown"])],
 				hair: "rustic",
 				beard: .3
 			}
@@ -48666,9 +48777,9 @@ var Wo = [
 			label: ["Viajante", "Viajante"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Zo, Ko)],
-				cape: [Z(gs, Xo, .6)],
-				hat: [Z(us, Xo, .3)],
+				clothes: [Z(is, $o)],
+				cape: [Z(Cs, rs, .6)],
+				hat: [Z(_s, rs, .3)],
 				legs: [Z(Q, X)],
 				shoes: [Z($, ["brown", "espresso"])],
 				backpack: [Z(/backpack\/backpack$/, void 0, .5)],
@@ -48680,17 +48791,17 @@ var Wo = [
 			label: ["Comerciante", "Comerciante"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Zo, Go), Z(Qo, Go)],
-				vest: [Z(ns, [
+				clothes: [Z(is, Qo), Z(as, Qo)],
+				vest: [Z(ls, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .5)],
-				belt: [Z(ms, ["brown", "leather"], .6)],
-				legs: [Z(as, X)],
-				shoes: [Z($, ["brown", "espresso"]), Z(ss, X)],
-				hat: [Z(ls, Go, .3)],
+				belt: [Z(xs, ["brown", "leather"], .6)],
+				legs: [Z(fs, X)],
+				shoes: [Z($, ["brown", "espresso"]), Z(ms, X)],
+				hat: [Z(gs, Qo, .3)],
 				hair: "neat",
 				beard: .35
 			}
@@ -48699,8 +48810,8 @@ var Wo = [
 			label: ["Guarda", "Guarda"],
 			weight: 1,
 			outfit: {
-				armour: [Z(xs, ["brown", "leather"])],
-				hat: [Z(ds, Yo, .7)],
+				armour: [Z(Os, ["brown", "leather"])],
+				hat: [Z(vs, ns, .7)],
 				legs: [Z(Q, ["charcoal", "brown"])],
 				shoes: [Z($, ["black", "espresso"])],
 				hair: "short",
@@ -48708,7 +48819,7 @@ var Wo = [
 			}
 		}
 	]
-}, Cs = {
+}, As = {
 	neat: {
 		male: /hair_(parted|parted2|parted3|page|page2|swoop|swoop_side|curtains|plain|bangsshort|parted_side_bangs|parted_side_bangs2|relm_short)$/,
 		female: /hair_(page|page2|bob|bob_side_part|lob|parted|parted2|parted3|bangs|bangslong|bangslong2|long_center_part|long_straight|half_up|bangs_bun|ponytail|ponytail2|high_ponytail|princess|shoulderl|shoulderr|topknot_long|topknot_short)$/
@@ -48725,7 +48836,7 @@ var Wo = [
 		male: /hair_(balding|plain|parted|buzzcut|high_and_tight|page|messy3|curtains)$/,
 		female: /hair_(bob|lob|bangs_bun|half_up|page|plain|long_straight|ponytail|topknot_short|bangs)$/
 	}
-}, ws = {
+}, js = {
 	branca: ["light"],
 	parda: [
 		"amber",
@@ -48734,7 +48845,7 @@ var Wo = [
 		"bronze"
 	],
 	negra: ["brown", "black"]
-}, Ts = {
+}, Ms = {
 	branca: [
 		"black",
 		"cocoa",
@@ -48763,7 +48874,7 @@ var Wo = [
 		"umber",
 		"dark_gray"
 	]
-}, Es = {
+}, Ns = {
 	branca: [
 		"rose",
 		"pink",
@@ -48788,12 +48899,12 @@ var Wo = [
 		"black",
 		"orange"
 	]
-}, Ds = [
+}, Ps = [
 	"gray",
 	"white",
 	"dark_gray",
 	"gray"
-], Os = [
+], Fs = [
 	"brown",
 	"brown",
 	"brown",
@@ -48801,13 +48912,13 @@ var Wo = [
 	"green",
 	"gray",
 	"blue"
-], ks = /* @__PURE__ */ "Aurélio.Benício.Cássio.Davi.Eládio.Fausto.Gaspar.Heitor.Isidoro.Joaquim.Leandro.Matias.Nestor.Otávio.Rúben.Silvestre.Tadeu.Ulisses.Valério.Xavier.Abel.Bento.Caetano.Dimas.Elias.Félix.Gil.Hugo".split("."), As = /* @__PURE__ */ "Adélia.Beatriz.Cecília.Dalila.Eulália.Fabíola.Gabriela.Helena.Ísis.Joana.Lívia.Marta.Nair.Olívia.Pietra.Quitéria.Rosana.Sílvia.Tereza.Valéria.Zélia.Alice.Bianca.Clara.Dora.Elisa.Flora.Graça".split("."), js = /* @__PURE__ */ "Albuquerque.Barbosa.Cardoso.Duarte.Esteves.Furtado.Guedes.Horta.Ivo.Junqueira.Lacerda.Moura.Nogueira.Oliveira.Paiva.Queiroz.Rangel.Siqueira.Teixeira.Valadares.Xavier.Pimentel.Sampaio.Tavares.Brandão.Coelho.Ferraz.Lobo".split("."), Ms = (e, t) => e[Math.floor(t() * e.length)];
-function Ns(e, t) {
+], Is = /* @__PURE__ */ "Aurélio.Benício.Cássio.Davi.Eládio.Fausto.Gaspar.Heitor.Isidoro.Joaquim.Leandro.Matias.Nestor.Otávio.Rúben.Silvestre.Tadeu.Ulisses.Valério.Xavier.Abel.Bento.Caetano.Dimas.Elias.Félix.Gil.Hugo".split("."), Ls = /* @__PURE__ */ "Adélia.Beatriz.Cecília.Dalila.Eulália.Fabíola.Gabriela.Helena.Ísis.Joana.Lívia.Marta.Nair.Olívia.Pietra.Quitéria.Rosana.Sílvia.Tereza.Valéria.Zélia.Alice.Bianca.Clara.Dora.Elisa.Flora.Graça".split("."), Rs = /* @__PURE__ */ "Albuquerque.Barbosa.Cardoso.Duarte.Esteves.Furtado.Guedes.Horta.Ivo.Junqueira.Lacerda.Moura.Nogueira.Oliveira.Paiva.Queiroz.Rangel.Siqueira.Teixeira.Valadares.Xavier.Pimentel.Sampaio.Tavares.Brandão.Coelho.Ferraz.Lobo".split("."), zs = (e, t) => e[Math.floor(t() * e.length)];
+function Bs(e, t) {
 	let n = e.reduce((e, t) => e + t.weight, 0), r = t() * n;
 	for (let t of e) if (r -= t.weight, r <= 0) return t;
 	return e[e.length - 1];
 }
-function Ps(e, t) {
+function Vs(e, t) {
 	let n = [...e];
 	for (let e = n.length - 1; e > 0; e--) {
 		let r = Math.floor(t() * (e + 1));
@@ -48815,10 +48926,10 @@ function Ps(e, t) {
 	}
 	return n;
 }
-var Fs = /shirts\/longsleeve\//;
-function Is(e, t) {
+var Hs = /shirts\/longsleeve\//;
+function Us(e, t) {
 	if (!e.colors) return e;
-	let n = e.colors.filter((e) => !Es[t].includes(e));
+	let n = e.colors.filter((e) => !Ns[t].includes(e));
 	return {
 		...e,
 		colors: n.length ? n : [
@@ -48829,55 +48940,55 @@ function Is(e, t) {
 		]
 	};
 }
-function Ls(e, t, n, r, i, a = !1) {
+function Ws(e, t, n, r, i, a = !1) {
 	if (!r?.length) return null;
-	let o = Ps(r, i);
+	let o = Vs(r, i);
 	for (let r of o) {
 		if (!a && i() > (r.chance ?? 1)) continue;
 		let o = Kt(e, t, n).filter((e) => r.re.test(e.id));
-		if (o.length) return Rs(e, Ms(o, i), r.colors, i);
+		if (o.length) return Gs(e, zs(o, i), r.colors, i);
 	}
 	return null;
 }
-function Rs(e, t, n, r) {
+function Gs(e, t, n, r) {
 	let i = { id: t.id };
 	if (t.variants?.length) {
 		let e = n?.filter((e) => t.variants.includes(e)) ?? [];
-		i.variant = e.length ? Ms(e, r) : Ms(t.variants, r);
+		i.variant = e.length ? zs(e, r) : zs(t.variants, r);
 	}
 	for (let a of t.colors ?? []) {
 		if (a.material === "body" && t.matchBody) continue;
 		let o = Object.keys(e.palettes[a.material] ?? {});
 		if (!o.length) continue;
 		let s = n?.filter((e) => o.includes(e)) ?? [];
-		(i.colors ??= {})[a.key] = s.length ? Ms(s, r) : Ms(o, r);
+		(i.colors ??= {})[a.key] = s.length ? zs(s, r) : zs(o, r);
 	}
 	return i;
 }
-function zs(e, t, n, r, i, a, o, s) {
-	let c = Kt(e, "hair", t), l = i ? "elder" : r, u = Cs[l][n], d = c.filter((e) => u.test(e.id) && !s.has(e.id));
+function Ks(e, t, n, r, i, a, o, s) {
+	let c = Kt(e, "hair", t), l = i ? "elder" : r, u = As[l][n], d = c.filter((e) => u.test(e.id) && !s.has(e.id));
 	if (d.length || (d = c.filter((e) => u.test(e.id))), o() < .2) {
-		let e = Cs[l][n === "male" ? "female" : "male"], t = c.filter((t) => e.test(t.id) && !s.has(t.id));
+		let e = As[l][n === "male" ? "female" : "male"], t = c.filter((t) => e.test(t.id) && !s.has(t.id));
 		t.length && (d = t);
 	}
-	return d.length ? Rs(e, Ms(d, o), [Ms(i ? Ds : Ts[a], o)], o) : null;
+	return d.length ? Gs(e, zs(d, o), [zs(i ? Ps : Ms[a], o)], o) : null;
 }
-function Bs(e, t, n, r, i) {
+function qs(e, t, n, r, i) {
 	let a = Kt(e, "head", t).filter((e) => e.id.includes("/human/") && !/_small$/.test(e.id)), o = a.filter((e) => r ? /elderly/.test(e.id) : !/elderly/.test(e.id)), s = o.length ? o : a;
 	if (n === "male" && !r && i() < .25) {
 		let e = s.filter((e) => /gaunt|plump/.test(e.id));
 		e.length && (s = e);
 	} else n === "male" && !r && (s = s.filter((e) => !/gaunt|plump/.test(e.id)).length ? s.filter((e) => !/gaunt|plump/.test(e.id)) : s);
 	return {
-		id: Ms(s, i).id,
-		colors: { color_2: Ms(Os, i) }
+		id: zs(s, i).id,
+		colors: { color_2: zs(Fs, i) }
 	};
 }
-function Vs(e, t) {
-	let n = t.rnd ?? Math.random, r = Ss[t.profile] ?? Ss.geral, i = t.avoid, a = r.map((e) => ({
+function Js(e, t) {
+	let n = t.rnd ?? Math.random, r = ks[t.profile] ?? ks.geral, i = t.avoid, a = r.map((e) => ({
 		...e,
 		weight: e.weight / (1 + (i?.roles.get(e.label[0]) ?? 0) * 1.5)
-	})), o = t.role && a.find((e) => e.label[0] === t.role) || Ns(a, n), s = n() < .5 ? "male" : "female", c = t.skin ?? Ms(Object.keys(ws), n), l = Ms(ws[c], n), u = o.outfit, d = u.age ?? "adult", f = d === "elder" || (d === "adult" ? n() < .08 : n() < .35), p = s, m = o.label[0];
+	})), o = t.role && a.find((e) => e.label[0] === t.role) || Bs(a, n), s = n() < .5 ? "male" : "female", c = t.skin ?? zs(Object.keys(js), n), l = zs(js[c], n), u = o.outfit, d = u.age ?? "adult", f = d === "elder" || (d === "adult" ? n() < .08 : n() < .35), p = s, m = o.label[0];
 	s === "male" && !f && (m === "Ferreiro" && n() < .55 || m === "Prisioneiro" && n() < .25) ? p = "muscular" : !f && [
 		"Criado",
 		"Peão",
@@ -48889,43 +49000,43 @@ function Vs(e, t) {
 	].includes(m) && n() < .18 && (p = "teen");
 	let h = {
 		body: { id: "body/body" },
-		head: Bs(e, p, s, f, n)
-	}, g = zs(e, p, s, u.hair, f, c, n, i?.hair ?? /* @__PURE__ */ new Set());
+		head: qs(e, p, s, f, n)
+	}, g = Ks(e, p, s, u.hair, f, c, n, i?.hair ?? /* @__PURE__ */ new Set());
 	if (g) {
 		h.hair = g;
-		let t = g.colors?.color, r = Ls(e, "eyebrows", p, [{
+		let t = g.colors?.color, r = Ws(e, "eyebrows", p, [{
 			re: /eyebrows_(thick|thin)/,
 			chance: 1
 		}], n, !0);
 		if (r && (r.colors = { color: t && n() < .8 ? t : "black" }, h.eyebrows = r), s === "male" && u.beard && n() < (f ? Math.max(u.beard, .45) : u.beard)) {
-			let r = Ls(e, n() < .7 ? "beard" : "mustache", p, [{ re: /beards_/ }], n, !0);
-			r && (t && (r.colors = { color: t }), h[Ks(e, r)] = r);
+			let r = Ws(e, n() < .7 ? "beard" : "mustache", p, [{ re: /beards_/ }], n, !0);
+			r && (t && (r.colors = { color: t }), h[$s(e, r)] = r);
 		}
 	}
 	let _ = !1;
 	if (s === "female" && u.dress) {
-		let t = Ls(e, "dress", p, u.dress, n);
+		let t = Ws(e, "dress", p, u.dress, n);
 		t && (h.dress = t, _ = !0);
 	}
 	if (!_) {
 		let t = (t, r, i = !1) => {
-			let a = Ls(e, t, p, r, n, i);
+			let a = Ws(e, t, p, r, n, i);
 			a && (h[t] = a);
 		};
-		u.armour ? t("armour", u.armour, !0) : t("clothes", u.clothes?.map((e) => Is(e, c)), !0), t("vest", u.vest), t("jacket", u.jacket), t("legs", u.legs, !0);
+		u.armour ? t("armour", u.armour, !0) : t("clothes", u.clothes?.map((e) => Us(e, c)), !0), t("vest", u.vest), t("jacket", u.jacket), t("legs", u.legs, !0);
 	}
 	if (!_ && !h.clothes && !h.armour) {
-		let t = Ls(e, "clothes", p, [{
-			re: Fs,
-			colors: Is(u.clothes?.[0] ?? { re: Fs }, c).colors
+		let t = Ws(e, "clothes", p, [{
+			re: Hs,
+			colors: Us(u.clothes?.[0] ?? { re: Hs }, c).colors
 		}], n, !0);
 		t && (h.clothes = t);
 	}
 	let v = (t, r, i = !1) => {
-		let a = Ls(e, t, p, r, n, i);
+		let a = Ws(e, t, p, r, n, i);
 		a && (h[t] = a);
 	};
-	v("shoes", u.shoes, !0), v("hat", u.hat), v("neck", u.neck), v("cape", u.cape), v("apron", u.apron), v("belt", u.belt), v("gloves", u.gloves), v("arms", u.arms), v("backpack", u.backpack), v("facial", u.facial), Gs(e, p, s, o, f, h, n);
+	v("shoes", u.shoes, !0), v("hat", u.hat), v("neck", u.neck), v("cape", u.cape), v("apron", u.apron), v("belt", u.belt), v("gloves", u.gloves), v("arms", u.arms), v("backpack", u.backpack), v("facial", u.facial), Qs(e, p, s, o, f, h, n);
 	let y = n(), b = f ? y < .5 ? .92 : 1 : y < .6 ? 1 : y < .8 ? .92 : y < .95 ? 1.08 : .84, x = n(), S = p === "muscular" ? 0 : x < .1 ? -1 : +(x < .22), C = () => {
 		let e = n();
 		return e < .2 ? -1 : e < .8 ? 0 : 1;
@@ -48942,14 +49053,14 @@ function Vs(e, t) {
 		slots: h,
 		height: b,
 		shape: w
-	}), E = `${Ms(s === "male" ? ks : As, n)} ${Ms(js, n)}`, D = o.label[s === "male" ? 0 : 1];
+	}), E = `${zs(s === "male" ? Is : Ls, n)} ${zs(Rs, n)}`, D = o.label[s === "male" ? 0 : 1];
 	return i && (T.slots.hair && i.hair.add(T.slots.hair.id), i.roles.set(o.label[0], (i.roles.get(o.label[0]) ?? 0) + 1), i.looks.add(`${T.slots.clothes?.id ?? T.slots.dress?.id}:${JSON.stringify(T.slots.clothes?.colors ?? T.slots.clothes?.variant ?? "")}`)), {
 		name: E,
 		role: D,
 		appearance: T
 	};
 }
-var Hs = [
+var Ys = [
 	"Guarda do palácio",
 	"Guarda da vila",
 	"Guarda",
@@ -48962,7 +49073,7 @@ var Hs = [
 	"Montanhês",
 	"Ferreiro",
 	"Taverneiro"
-], Us = [
+], Xs = [
 	"Nobre",
 	"Bardo",
 	"Garçom",
@@ -48971,7 +49082,7 @@ var Hs = [
 	"Freguês",
 	"Mercador",
 	"Comerciante"
-], Ws = {
+], Zs = {
 	freckle: [
 		"castanho",
 		"ruivo",
@@ -49018,46 +49129,46 @@ var Hs = [
 		"azul"
 	]
 };
-function Gs(e, t, n, r, i, a, o) {
+function Qs(e, t, n, r, i, a, o) {
 	let s = r.label[0], c = (n, r, i) => {
 		if (o() > r) return;
 		let s = Kt(e, n, t).filter((e) => e.proc && (!i || i.test(e.id)));
 		if (!s.length) return;
-		let c = Ms(s, o), l = c.colors?.[0]?.material;
-		a[n] = Rs(e, c, l ? Ws[l] : void 0, o);
-	}, l = Hs.includes(s);
-	if (c("skin_spots", i ? .5 : .22, i ? /manchas_idade|olheiras|sardas_leves/ : /sardas|pinta|acne|fuligem|queimado|olheiras/), c("scar_face", l ? .3 : .04), (n === "female" || Us.includes(s)) && (c("makeup_lips", n === "female" ? Us.includes(s) ? .5 : .14 : .03, /batom_(fino|cheio)|gloss/), c("makeup_cheeks", n === "female" && Us.includes(s) ? .35 : .06, /blush_suave|rubor/), c("makeup_eyes", n === "female" && Us.includes(s) ? .2 : .03, /delineado|sombra/)), s === "Bardo" && c("face_paint", .18), (l || s === "Andarilho") && c("tattoo_face", .1), o() < .18 && !i) {
+		let c = zs(s, o), l = c.colors?.[0]?.material;
+		a[n] = Gs(e, c, l ? Zs[l] : void 0, o);
+	}, l = Ys.includes(s);
+	if (c("skin_spots", i ? .5 : .22, i ? /manchas_idade|olheiras|sardas_leves/ : /sardas|pinta|acne|fuligem|queimado|olheiras/), c("scar_face", l ? .3 : .04), (n === "female" || Xs.includes(s)) && (c("makeup_lips", n === "female" ? Xs.includes(s) ? .5 : .14 : .03, /batom_(fino|cheio)|gloss/), c("makeup_cheeks", n === "female" && Xs.includes(s) ? .35 : .06, /blush_suave|rubor/), c("makeup_eyes", n === "female" && Xs.includes(s) ? .2 : .03, /delineado|sombra/)), s === "Bardo" && c("face_paint", .18), (l || s === "Andarilho") && c("tattoo_face", .1), o() < .18 && !i) {
 		let n = Kt(e, "expression", t).filter((e) => !e.proc && /happy|sad|angry|shame|neutral|blush/i.test(e.name));
-		n.length && (a.expression = Rs(e, Ms(n, o), Os, o));
+		n.length && (a.expression = Gs(e, zs(n, o), Fs, o));
 	}
 }
-function Ks(e, t) {
+function $s(e, t) {
 	return e.byId.get(t.id)?.slot ?? "beard";
 }
-function qs(e, t, n, r = Math.random) {
+function ec(e, t, n, r = Math.random) {
 	let i = {
 		hair: /* @__PURE__ */ new Set(),
 		looks: /* @__PURE__ */ new Set(),
 		roles: /* @__PURE__ */ new Map()
-	}, a = Ps(Object.keys(ws), r), o = [];
-	for (let s = 0; s < n; s++) o.push(Vs(e, {
+	}, a = Vs(Object.keys(js), r), o = [];
+	for (let s = 0; s < n; s++) o.push(Js(e, {
 		rnd: r,
 		profile: t,
 		skin: a[s % a.length],
 		avoid: i
 	}));
-	return Ps(o, r);
+	return Vs(o, r);
 }
 //#endregion
 //#region src/engine/character/storage.ts
-var Js = [
+var tc = [
 	"male",
 	"female",
 	"muscular",
 	"teen",
 	"child"
 ];
-function Ys(e, t) {
+function nc(e, t) {
 	return {
 		version: 1,
 		id: F("pers"),
@@ -49066,9 +49177,9 @@ function Ys(e, t) {
 		updatedAt: Date.now()
 	};
 }
-function Xs(e) {
+function rc(e) {
 	let t = e, n = t?.appearance;
-	return !t || typeof t.id != "string" || !n || n.version !== 2 || !Js.includes(n.body) || typeof n.slots != "object" || !n.slots ? null : {
+	return !t || typeof t.id != "string" || !n || n.version !== 2 || !tc.includes(n.body) || typeof n.slots != "object" || !n.slots ? null : {
 		version: 1,
 		id: t.id,
 		name: typeof t.name == "string" ? t.name : "Sem nome",
@@ -49084,7 +49195,7 @@ function Xs(e) {
 		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
 	};
 }
-var Zs = class {
+var ic = class {
 	key;
 	activeKey;
 	constructor(e = "") {
@@ -49093,7 +49204,7 @@ var Zs = class {
 	}
 	read() {
 		try {
-			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Xs).filter((e) => !!e);
+			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(rc).filter((e) => !!e);
 		} catch {
 			return [];
 		}
@@ -49121,10 +49232,10 @@ var Zs = class {
 	async setActive(e) {
 		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
 	}
-}, Qs = "vortable-character";
-function $s(e) {
+}, ac = "vortable-character";
+function oc(e) {
 	return JSON.stringify({
-		format: Qs,
+		format: ac,
 		version: 1,
 		characters: e.map((e) => ({
 			name: e.name,
@@ -49132,13 +49243,13 @@ function $s(e) {
 		}))
 	}, null, 2);
 }
-function ec(e) {
+function sc(e) {
 	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
 }
 function vtConfirm(message, options) {
 	return typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));
 }
-function tc(e, t) {
+function cc(e, t) {
 	let n = e;
 	if (typeof e == "string") try {
 		n = JSON.parse(e);
@@ -49149,23 +49260,23 @@ function tc(e, t) {
 	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
 	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
 	for (let e of i) {
-		let n = e, r = Xs({
+		let n = e, r = rc({
 			id: "x",
 			name: n?.name,
 			appearance: n?.appearance
 		});
 		if (!r) continue;
 		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
-		a.push(Ys(i, t ? en(t, r.appearance) : r.appearance));
+		a.push(nc(i, t ? en(t, r.appearance) : r.appearance));
 	}
 	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
 	return a;
 }
-function nc(e, t, n = "application/json") {
+function lc(e, t, n = "application/json") {
 	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
 	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function rc(e = ".json,application/json") {
+function uc(e = ".json,application/json") {
 	return new Promise((t) => {
 		let n = document.createElement("input");
 		n.type = "file", n.accept = e, n.onchange = async () => {
@@ -49176,10 +49287,10 @@ function rc(e = ".json,application/json") {
 }
 //#endregion
 //#region src/engine/character/creator.css?inline
-var ic = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);flex-wrap:wrap;display:flex}.cp-tab{color:var(--cp-dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:auto;padding:11px 10px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}";
+var dc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);flex-wrap:wrap;display:flex}.cp-tab{color:var(--cp-dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:auto;padding:11px 10px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}";
 //#endregion
 //#region src/engine/ui/scale2x.ts
-function ac(e, t, n) {
+function fc(e, t, n) {
 	let r = new Uint32Array(t * 2 * n * 2), i = t * 2;
 	for (let a = 0; a < n; a++) {
 		let o = (a > 0 ? a - 1 : a) * t, s = (a < n - 1 ? a + 1 : a) * t, c = a * t;
@@ -49192,14 +49303,14 @@ function ac(e, t, n) {
 	}
 	return r;
 }
-function oc(e, t) {
+function pc(e, t) {
 	let n = e.width, r = e.height, i = document.createElement("canvas");
 	i.width = n, i.height = r;
 	let a = i.getContext("2d", { willReadFrequently: !0 });
 	a.drawImage(e, 0, 0);
 	let o = a.getImageData(0, 0, n, r), s = new Uint32Array(o.data.buffer.slice(0));
 	for (let e = 0; e < s.length; e++) s[e] >>> 24 || (s[e] = 0);
-	for (let e = 0; e < t; e++) s = ac(s, n, r), n *= 2, r *= 2;
+	for (let e = 0; e < t; e++) s = fc(s, n, r), n *= 2, r *= 2;
 	let c = document.createElement("canvas");
 	c.width = n, c.height = r;
 	let l = new ImageData(new Uint8ClampedArray(s.buffer), n, r);
@@ -49207,7 +49318,7 @@ function oc(e, t) {
 }
 //#endregion
 //#region src/engine/character/setting.ts
-var sc = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cachorro|head\/nenhuma|grime\/|clothes\/surrada|legs\/surrada|hat\/(gorro|boina|chapeu))/, cc = new RegExp([
+var mc = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cachorro|head\/nenhuma|grime\/|clothes\/surrada|legs\/surrada|hat\/(gorro|boina|chapeu))/, hc = new RegExp([
 	"backpack_jetpack",
 	"facial_glasses(_shades|_sunglasses|_nerd|_secretary)?$",
 	"neck_necktie",
@@ -49218,7 +49329,7 @@ var sc = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cac
 	"hat_holiday_christmas",
 	"hat_formal_(bowler|tophat)",
 	"heads_alien"
-].join("|")), lc = new RegExp([
+].join("|")), gc = new RegExp([
 	"headwear/helmets/helmets/",
 	"hat_magic_",
 	"hat_formal_(crown|tiara)",
@@ -49244,18 +49355,18 @@ var sc = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cac
 	"eyes_cyclops",
 	"backpack_jetpack"
 ].join("|"));
-function uc(e, t) {
+function _c(e, t) {
 	if (!t) return !0;
 	let n = e.id;
-	return t === "medieval" ? n.startsWith("tlou/") ? sc.test(n) : !cc.test(n) : ![
+	return t === "medieval" ? n.startsWith("tlou/") ? mc.test(n) : !hc.test(n) : ![
 		"wings",
 		"horns",
 		"tail"
-	].includes(e.slot) && !lc.test(n);
+	].includes(e.slot) && !gc.test(n);
 }
-function dc(e, t) {
+function vc(e, t) {
 	if (!t) return e;
-	let n = e.catalog.items.filter((e) => uc(e, t));
+	let n = e.catalog.items.filter((e) => _c(e, t));
 	return {
 		...e,
 		catalog: {
@@ -49267,16 +49378,16 @@ function dc(e, t) {
 }
 //#endregion
 //#region src/engine/character/CreatorUI.ts
-var fc = {
+var yc = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, pc = [
+}, bc = [
 	"male",
 	"female",
 	"teen",
 	"child"
-], mc = [
+], xc = [
 	"Corpo",
 	"Rosto",
 	"Cabelo",
@@ -49284,7 +49395,7 @@ var fc = {
 	"Marcas",
 	"Roupa",
 	"Acessórios"
-], hc = {
+], Sc = {
 	body: "Corpo",
 	tail: "Corpo",
 	wings: "Corpo",
@@ -49300,11 +49411,11 @@ var fc = {
 	ponytail: "Cabelo",
 	beard: "Cabelo",
 	mustache: "Cabelo"
-}, gc = /* @__PURE__ */ new Set(/* @__PURE__ */ "head.ears.nose.eyebrows.eyes.wrinkles.expression.hair.ponytail.beard.mustache.horns.hat.bandana.facial.mask.earrings.scar_eye_l.scar_eye_r.scar_mouth.wound_head.skin_spots.scar_face.makeup_lips.makeup_eyes.makeup_cheeks.face_paint.tattoo_face".split(".")), _c = /* @__PURE__ */ new Set([
+}, Cc = /* @__PURE__ */ new Set(/* @__PURE__ */ "head.ears.nose.eyebrows.eyes.wrinkles.expression.hair.ponytail.beard.mustache.horns.hat.bandana.facial.mask.earrings.scar_eye_l.scar_eye_r.scar_mouth.wound_head.skin_spots.scar_face.makeup_lips.makeup_eyes.makeup_cheeks.face_paint.tattoo_face".split(".")), wc = /* @__PURE__ */ new Set([
 	"Rosto",
 	"Cabelo",
 	"Maquiagem"
-]), vc = {
+]), Tc = {
 	"Eye color": "Cor dos olhos",
 	"Eye Color": "Cor dos olhos",
 	"eye color": "Cor dos olhos",
@@ -49317,14 +49428,14 @@ var fc = {
 	Fabric: "Tecido",
 	Cloth: "Tecido",
 	Leather: "Couro"
-}, yc = {
+}, Ec = {
 	body: "pele",
 	hair: "cabelo",
 	cloth: "tecido",
 	eye: "olho",
 	metal: "metal",
 	wood: "madeira"
-}, bc = {
+}, Dc = {
 	face: {
 		cx: 32,
 		cy: 27,
@@ -49337,7 +49448,7 @@ var fc = {
 		h: 70,
 		minW: 46
 	}
-}, xc = 3, Sc = 2 ** xc, Cc = class {
+}, Oc = 3, kc = 2 ** Oc, Ac = class {
 	opts;
 	root;
 	data;
@@ -49380,7 +49491,7 @@ var fc = {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
-		this.opts = t, dt("editor", Io), dt("creator", ic), this.character = Ys(t.initialName ?? "Novo personagem", $t()), this.nameInput = K("input", {
+		this.opts = t, dt("editor", Uo), dt("creator", dc), this.character = nc(t.initialName ?? "Novo personagem", $t()), this.nameInput = K("input", {
 			class: "cp-name",
 			value: this.character.name,
 			title: "Nome do personagem",
@@ -49414,7 +49525,7 @@ var fc = {
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, fc[e]);
+			}, yc[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
 		this.stageEl = K("section", { class: "cp-stage" }, this.canvas, K("div", {
@@ -49449,7 +49560,7 @@ var fc = {
 	}
 	async init() {
 		try {
-			this.data = dc(await Bt(this.opts.assetBase), this.opts.setting);
+			this.data = vc(await Bt(this.opts.assetBase), this.opts.setting);
 		} catch (e) {
 			this.loading?.remove(), this.statusEl.textContent = `Não deu pra carregar o catálogo de personagem: ${e.message}`;
 			return;
@@ -49476,11 +49587,11 @@ var fc = {
 		return Kt(this.data, e, this.appearance.body, this.appearance);
 	}
 	groupOf(e) {
-		return hc[e.id] ?? e.group;
+		return Sc[e.id] ?? e.group;
 	}
 	groups() {
-		let e = new Set(this.data.catalog.slots.filter((e) => this.itemsFor(e.id).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !mc.includes(e));
-		return [...mc, ...t].filter((t) => e.has(t));
+		let e = new Set(this.data.catalog.slots.filter((e) => this.itemsFor(e.id).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !xc.includes(e));
+		return [...xc, ...t].filter((t) => e.has(t));
 	}
 	slotsOfGroup(e = this.group) {
 		return this.data.catalog.slots.filter((t) => this.groupOf(t) === e && this.itemsFor(t.id).length);
@@ -49526,7 +49637,7 @@ var fc = {
 	}
 	bodyRow() {
 		let e = this.appearance, t = e.body === "muscular" ? "male" : e.body;
-		return this.choiceRow("Tipo de corpo", pc.map((e) => Ht[e]), pc.indexOf(t), (e) => this.setBody(pc[e]));
+		return this.choiceRow("Tipo de corpo", bc.map((e) => Ht[e]), bc.indexOf(t), (e) => this.setBody(bc[e]));
 	}
 	shapeRows() {
 		let e = this.appearance, t = e.shape ?? {}, n = (e) => e === -1 ? 0 : e === 1 ? 2 : 1, r = (e) => e === -2 ? 0 : e === -1 ? 1 : e === 1 ? 3 : 2, i = (e, t) => this.update((n) => {
@@ -49624,7 +49735,7 @@ var fc = {
 		let r = [];
 		for (let i of n.colors ?? []) {
 			if (i.material === "body" && n.matchBody) continue;
-			let a = i.label ? vc[i.label] ?? i.label : n.colors.length > 1 ? `Cor (${yc[i.material] ?? i.material})` : "Cor";
+			let a = i.label ? Tc[i.label] ?? i.label : n.colors.length > 1 ? `Cor (${Ec[i.material] ?? i.material})` : "Cor";
 			r.push(K("div", { class: "cp-sub" }, a), this.swatches(i.material, t.colors?.[i.key] ?? null, (t) => this.update((n) => {
 				(n.slots[e.id].colors ??= {})[i.key] = t;
 			})));
@@ -49698,7 +49809,7 @@ var fc = {
 				}, r = await Bn(this.opts.assetBase, {
 					...a,
 					slots: {
-						...wc(a, ["body", "head"]),
+						...jc(a, ["body", "head"]),
 						hair: n,
 						[t]: o
 					}
@@ -49710,7 +49821,7 @@ var fc = {
 				let n = await Bn(this.opts.assetBase, {
 					...a,
 					slots: {
-						...wc(a, ["body", "head"]),
+						...jc(a, ["body", "head"]),
 						[t]: o
 					}
 				});
@@ -49719,7 +49830,7 @@ var fc = {
 			}
 			let [s, c] = await Promise.all([this.baseThumb ??= Bn(this.opts.assetBase, {
 				...a,
-				slots: wc(a, ["body", "head"])
+				slots: jc(a, ["body", "head"])
 			}), Bn(this.opts.assetBase, {
 				...a,
 				slots: { [t]: o }
@@ -49809,7 +49920,7 @@ var fc = {
 		}, "Créditos da arte"));
 	}
 	cameraMode() {
-		return this.camOverride ? this.camOverride : gc.has(this.slot) || _c.has(this.group) ? "face" : "body";
+		return this.camOverride ? this.camOverride : Cc.has(this.slot) || wc.has(this.group) ? "face" : "body";
 	}
 	toggleCamera() {
 		this.camOverride = this.cameraMode() === "face" ? "body" : "face";
@@ -49840,7 +49951,7 @@ var fc = {
 		let i = `${this.rev}:${e}:${t}:${n}`, a = this.upCache.get(i);
 		if (!a) {
 			let e = document.createElement("canvas");
-			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = oc(e, xc), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
+			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = pc(e, Oc), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
 		}
 		return a;
 	}
@@ -49853,7 +49964,7 @@ var fc = {
 			n = i, this.fitCanvas();
 			let o = this.canvas.width, s = this.canvas.height;
 			e.clearRect(0, 0, o, s);
-			let c = this.cameraMode(), l = bc[c], u = 1 - Math.exp(-a * 7);
+			let c = this.cameraMode(), l = Dc[c], u = 1 - Math.exp(-a * 7);
 			this.hs += ((this.appearance.height ?? 1) - this.hs) * u;
 			let d = this.hs, f = 62 - (62 - l.cy) * d, p = Math.max(l.h * (c === "body" ? Math.max(1, d) : 1), l.minW * d / (o / s));
 			this.cam.cx += (l.cx - this.cam.cx) * u, this.cam.cy += (f - this.cam.cy) * u, this.cam.h += (p - this.cam.h) * u, this.camBtn.textContent = this.cameraMode() === "face" ? "Ver o corpo" : "Ver o rosto";
@@ -49862,7 +49973,7 @@ var fc = {
 			let { frames: h, rate: g } = On[this.anim], _ = +(this.anim === "walk"), v = h - _, y = _ + Math.floor((i - t) / 1e3 * g) % v, b = this.upscaled(this.anim, this.dir, y, m), x = this.cam.h, S = o / s * x, C = this.cam.cx - S / 2, w = this.cam.cy - x / 2, T = o / S, E = (32 - C) * T, D = (61.5 - w) * T;
 			e.save(), e.translate(E, D), e.scale(1, .22);
 			let O = 17 * T, k = e.createRadialGradient(0, 0, 0, 0, 0, O);
-			k.addColorStop(0, "rgba(0,0,0,0.55)"), k.addColorStop(.7, "rgba(0,0,0,0.25)"), k.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = k, e.beginPath(), e.arc(0, 0, O, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, T * .35), e.beginPath(), e.arc(0, 0, O * .82, 0, Math.PI * 2), e.stroke(), e.restore(), e.save(), e.translate(E, (62 - w) * T), e.scale(this.hs, this.hs), e.translate(-E, -(62 - w) * T), Tc(e, b, C * Sc, w * Sc, S * Sc, x * Sc, 0, 0, o, s), e.restore();
+			k.addColorStop(0, "rgba(0,0,0,0.55)"), k.addColorStop(.7, "rgba(0,0,0,0.25)"), k.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = k, e.beginPath(), e.arc(0, 0, O, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, T * .35), e.beginPath(), e.arc(0, 0, O * .82, 0, Math.PI * 2), e.stroke(), e.restore(), e.save(), e.translate(E, (62 - w) * T), e.scale(this.hs, this.hs), e.translate(-E, -(62 - w) * T), Mc(e, b, C * kc, w * kc, S * kc, x * kc, 0, 0, o, s), e.restore();
 		};
 		this.raf = requestAnimationFrame(r);
 	}
@@ -49917,15 +50028,15 @@ var fc = {
 	}
 	exportFile() {
 		let e = this.nameInput.value.trim() || "Sem nome";
-		nc(ec(e), $s([{
+		lc(sc(e), oc([{
 			name: e,
 			appearance: this.appearance
 		}])), this.toast(`"${e}" exportado.`);
 	}
 	async importFile() {
-		let e = await rc();
+		let e = await uc();
 		if (e !== null) try {
-			let [t] = tc(e, this.data);
+			let [t] = cc(e, this.data);
 			if (this.dirty && !await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) return;
 			this.character = this.opts.single ? {
 				...t,
@@ -49939,13 +50050,13 @@ var fc = {
 		this.dirty && await vtConfirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?`, { title: "Salvar antes de sair?", confirmLabel: "Salvar e sair", cancelLabel: "Sair sem salvar" }) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", Ro(this.opts.assetBase), [K("button", {
+		let e = this.modal("Créditos da arte", Go(this.opts.assetBase), [K("button", {
 			class: "cp-btn cp-ghost",
 			onclick: () => e()
 		}, "Fechar")]);
 	}
 	async newCharacter() {
-		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Ys("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = nc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = en(this.data, this.character.appearance), this.baseThumb = null, this.renderTabs(), this.renderRows(), this.recompose();
@@ -50011,21 +50122,21 @@ var fc = {
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function wc(e, t) {
+function jc(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
 }
-function Tc(e, t, n, r, i, a, o, s, c, l) {
+function Mc(e, t, n, r, i, a, o, s, c, l) {
 	let u = c / i, d = l / a, f = Math.max(0, n), p = Math.max(0, r), m = Math.min(t.width, n + i), h = Math.min(t.height, r + a);
 	m <= f || h <= p || e.drawImage(t, f, p, m - f, h - p, o + (f - n) * u, s + (p - r) * d, (m - f) * u, (h - p) * d);
 }
 //#endregion
 //#region src/engine/editor/NpcPanel.ts
-var Ec = 6, Dc = [
+var Nc = 6, Pc = [
 	"down",
 	"left",
 	"up",
 	"right"
-], Oc = class {
+], Fc = class {
 	state;
 	hooks;
 	el;
@@ -50089,7 +50200,7 @@ var Ec = 6, Dc = [
 	refreshAnalysis(e) {
 		if (!this.data) return;
 		let t = this.state.zone;
-		this.analysis = Uo(t);
+		this.analysis = Xo(t);
 		let n = this.zoneId !== t.id;
 		this.zoneId = t.id, e && (n || this.drafts.length === 0) ? this.newBatch() : this.render();
 	}
@@ -50097,7 +50208,7 @@ var Ec = 6, Dc = [
 		return this.style === "auto" ? this.analysis?.profile ?? "geral" : this.style;
 	}
 	newBatch() {
-		this.data && (this.drafts = qs(this.data, this.profile, Ec), this.render());
+		this.data && (this.drafts = ec(this.data, this.profile, Nc), this.render());
 	}
 	render() {
 		if (!this.analysis) return;
@@ -50107,7 +50218,7 @@ var Ec = 6, Dc = [
 			onchange: (e) => {
 				this.style = e.target.value, this.newBatch();
 			}
-		}, K("option", { value: "auto" }, `Automático (${e.label})`), ...Object.keys(zo).map((e) => K("option", { value: e }, zo[e])));
+		}, K("option", { value: "auto" }, `Automático (${e.label})`), ...Object.keys(Ko).map((e) => K("option", { value: e }, Ko[e])));
 		t.value = this.style;
 		let n = K("div", { class: "vt-npc-grid" });
 		this.drafts.forEach((e, t) => n.append(this.card(e, t))), this.listEl = K("div", { class: "vt-npc-list" }), this.specialsEl = this.hooks.specials ? K("div", { class: "vt-npc-specials" }) : null, this.body.replaceChildren(K("div", { class: "vt-npc-analysis" }, K("b", {}, `Zona: ${e.label}`), e.reasons.length ? K("small", {}, `Por causa de: ${e.reasons.join(", ")}`) : null, t), K("div", { class: "vt-npc-actions" }, K("button", {
@@ -50211,13 +50322,13 @@ var Ec = 6, Dc = [
 		} catch {}
 	}
 	reroll(e) {
-		this.data && (this.drafts[e] = Vs(this.data, { profile: this.profile }), this.render());
+		this.data && (this.drafts[e] = Js(this.data, { profile: this.profile }), this.render());
 	}
 	async importCharacter() {
 		if (this.data) try {
-			let e = await rc();
+			let e = await uc();
 			if (e == null) return;
-			let [t] = tc(e, this.data);
+			let [t] = cc(e, this.data);
 			this.pick({
 				name: t.name,
 				role: "",
@@ -50309,7 +50420,7 @@ var Ec = 6, Dc = [
 		document.body.append(r);
 		let i = () => {
 			a.destroy(), r.remove(), this.look = null;
-		}, a = new Cc(r, {
+		}, a = new Ac(r, {
 			assetBase: this.hooks.assetBase,
 			storage: n,
 			single: !0,
@@ -50332,7 +50443,7 @@ var Ec = 6, Dc = [
 		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
 	}
 	turn(e) {
-		this.state.checkpoint(), e.dir = Dc[(Dc.indexOf(e.dir) + 1) % Dc.length], this.state.emit("npcs"), this.state.edited();
+		this.state.checkpoint(), e.dir = Pc[(Pc.indexOf(e.dir) + 1) % Pc.length], this.state.emit("npcs"), this.state.edited();
 	}
 	move(e) {
 		this.state.set({
@@ -50354,7 +50465,7 @@ var Ec = 6, Dc = [
 			npcDraft: null
 		}), this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${e.name}" removido.`);
 	}
-}, kc = {
+}, Ic = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -50362,7 +50473,7 @@ var Ec = 6, Dc = [
 	intensity: 1,
 	flicker: .2
 };
-function Ac(e, t, n) {
+function Lc(e, t, n) {
 	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = K("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
@@ -50395,7 +50506,7 @@ function Ac(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? kc,
+			...o ?? Ic,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -50454,7 +50565,7 @@ function Ac(e, t, n) {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? kc } : null, F(), m();
+			o = k.checked ? { ...o ?? Ic } : null, F(), m();
 		}
 	}), A = K("input", {
 		class: "vt-input vt-num",
@@ -50554,7 +50665,7 @@ function Ac(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function jc(e) {
+function Rc(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -50562,14 +50673,14 @@ function jc(e) {
 		return [];
 	}
 }
-function Mc(e, t) {
+function zc(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
 //#region src/engine/storage.ts
-function Nc(e, t = Date.now()) {
+function Bc(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -50583,7 +50694,7 @@ function Nc(e, t = Date.now()) {
 		}))
 	};
 }
-function Pc(e = "Meu mundo") {
+function Vc(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: F("mundo"),
@@ -50592,7 +50703,7 @@ function Pc(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var Fc = class {
+var Hc = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -50617,9 +50728,9 @@ var Fc = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Kc(JSON.parse(e));
+			if (e) return $c(JSON.parse(e));
 		} catch {}
-		return Pc();
+		return Vc();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -50630,19 +50741,19 @@ var Fc = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? Rc(JSON.parse(t)) : null;
+			return t ? Gc(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Nc(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Bc(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function Ic() {
+function Uc() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -50650,14 +50761,14 @@ function Ic() {
 		return !1;
 	}
 }
-var Lc = (e) => typeof e == "number" && Number.isFinite(e);
-function Rc(e) {
+var Wc = (e) => typeof e == "number" && Number.isFinite(e);
+function Gc(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
 	if (!i(n) || !i(r)) throw Error("Tamanho de zona inválido (precisa ser de 8 a 128 tiles).");
 	if (!Array.isArray(t.corners) || t.corners.length !== (n + 1) * (r + 1)) throw Error("Zona corrompida: a grade de terrenos não bate com o tamanho.");
-	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && Lc(e.x) && Lc(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && Lc(e.x) && Lc(e.y) && Lc(e.w) && Lc(e.h) && e.w > 0 && e.h > 0), l = t.spawn && Lc(t.spawn.x) && Lc(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
+	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && Wc(e.x) && Wc(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && Wc(e.x) && Wc(e.y) && Wc(e.w) && Wc(e.h) && e.w > 0 && e.h > 0), l = t.spawn && Wc(t.spawn.x) && Wc(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
 		x: a / 2,
 		y: o / 2
 	};
@@ -50677,12 +50788,12 @@ function Rc(e) {
 			x: Math.round(e.x),
 			y: Math.round(e.y),
 			...e.flip === !0 ? { flip: !0 } : {},
-			...Lc(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
+			...Wc(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...Hc(t.lighting),
-		...Wc(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: Gc(t.lights, a, o) } : {},
-		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: zc(t.npcs, a, o) } : {},
+		...Yc(t.lighting),
+		...Zc(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: Qc(t.lights, a, o) } : {},
+		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: Kc(t.npcs, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -50701,12 +50812,12 @@ function Rc(e) {
 		}
 	};
 }
-function zc(e, t, n) {
+function Kc(e, t, n) {
 	let r = [];
 	for (let i of e) {
 		let e = i;
-		if (!e || typeof e != "object" || !Lc(e.x) || !Lc(e.y)) continue;
-		let a = Xs({
+		if (!e || typeof e != "object" || !Wc(e.x) || !Wc(e.y)) continue;
+		let a = rc({
 			id: "x",
 			name: e.name,
 			appearance: e.appearance
@@ -50716,8 +50827,8 @@ function zc(e, t, n) {
 			name: typeof e.name == "string" && e.name.trim() ? e.name.trim().slice(0, 60) : "NPC",
 			role: typeof e.role == "string" ? e.role.slice(0, 60) : "",
 			appearance: a.appearance,
-			x: Vc(Math.round(e.x), 0, t),
-			y: Vc(Math.round(e.y), 0, n),
+			x: Jc(Math.round(e.x), 0, t),
+			y: Jc(Math.round(e.y), 0, n),
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {},
 			...typeof e.sheet == "string" && e.sheet ? { sheet: e.sheet.slice(0, 120) } : {}
@@ -50725,29 +50836,29 @@ function zc(e, t, n) {
 	}
 	return r;
 }
-var Bc = /^#[0-9a-f]{6}$/i, Vc = (e, t, n) => Math.max(t, Math.min(n, e));
-function Hc(e) {
+var qc = /^#[0-9a-f]{6}$/i, Jc = (e, t, n) => Math.max(t, Math.min(n, e));
+function Yc(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		...typeof t.tint == "string" && Bc.test(t.tint) ? { tint: t.tint } : {},
+		...typeof t.tint == "string" && qc.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...Lc(t.wind) ? { wind: Vc(t.wind, 0, 1) } : {},
+		...Wc(t.wind) ? { wind: Jc(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {}
 	} };
 }
-function Uc(e) {
+function Xc(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {
-		hour: Lc(t.hour) ? Vc(t.hour, 0, 24) % 24 : null,
-		...Lc(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Vc(t.dayMinutes, 1, 1440) } : {},
+		hour: Wc(t.hour) ? Jc(t.hour, 0, 24) % 24 : null,
+		...Wc(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Jc(t.dayMinutes, 1, 1440) } : {},
 		...typeof t.weather == "string" && t.weather in ji && t.weather !== "clear" ? { weather: t.weather } : {}
 	};
 	return n.hour === null && n.dayMinutes === void 0 && n.weather === void 0 ? {} : { sky: n };
 }
-function Wc(e) {
+function Zc(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -50769,7 +50880,7 @@ function Wc(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && Lc(i) && i > 0 && (n[t] = Vc(i, 0, 1));
+		r.includes(t) && Wc(i) && i > 0 && (n[t] = Jc(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -50777,22 +50888,22 @@ function Wc(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function Gc(e, t, n) {
-	return e.filter((e) => !!e && typeof e == "object" && Lc(e.x) && Lc(e.y)).map((e) => ({
+function Qc(e, t, n) {
+	return e.filter((e) => !!e && typeof e == "object" && Wc(e.x) && Wc(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : F("luz"),
-		x: Vc(Math.round(e.x), 0, t),
-		y: Vc(Math.round(e.y), 0, n),
-		radius: Lc(e.radius) ? Vc(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && Bc.test(e.color) ? e.color : "#ffb060",
-		intensity: Lc(e.intensity) ? Vc(e.intensity, 0, 1) : 1,
-		flicker: Lc(e.flicker) ? Vc(e.flicker, 0, 1) : 0
+		x: Jc(Math.round(e.x), 0, t),
+		y: Jc(Math.round(e.y), 0, n),
+		radius: Wc(e.radius) ? Jc(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && qc.test(e.color) ? e.color : "#ffb060",
+		intensity: Wc(e.intensity) ? Jc(e.intensity, 0, 1) : 1,
+		flicker: Wc(e.flicker) ? Jc(e.flicker, 0, 1) : 0
 	}));
 }
-function Kc(e) {
+function $c(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
-	for (let [e, r] of Object.entries(t.layout ?? {})) r && Lc(r.x) && Lc(r.y) && (n[e] = {
+	for (let [e, r] of Object.entries(t.layout ?? {})) r && Wc(r.x) && Wc(r.y) && (n[e] = {
 		x: r.x,
 		y: r.y
 	});
@@ -50802,12 +50913,12 @@ function Kc(e) {
 		name: typeof t.name == "string" ? t.name : "Meu mundo",
 		start: typeof t.start == "string" ? t.start : null,
 		layout: n,
-		...Uc(t.sky)
+		...Xc(t.sky)
 	};
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var qc = [
+var el = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -50858,16 +50969,16 @@ var qc = [
 		label: "Régua: segure e arraste pra medir em metros (1 tile = 1 m)",
 		key: "R"
 	}
-], Jc = 8, Yc = "vortable:objects:favorites", Xc = "vortable:editor:drawer";
-function Zc(e) {
+], tl = 8, nl = "vortable:objects:favorites", rl = "vortable:editor:drawer";
+function il(e) {
 	try {
-		let t = localStorage.getItem(Xc);
+		let t = localStorage.getItem(rl);
 		return e ? t !== "0" : t === "1";
 	} catch {
 		return e;
 	}
 }
-var Qc = "vortable:objects:recent", $c = 24, el = [
+var al = "vortable:objects:recent", ol = 24, sl = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -50908,7 +51019,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		"#8ae8ff",
 		0
 	]
-], tl = "★", nl = "⟲", rl = class {
+], cl = "★", ll = "⟲", ul = class {
 	state;
 	storage;
 	hooks;
@@ -50943,13 +51054,17 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = jc(Yc);
-	recents = jc(Qc);
+	favorites = Rc(nl);
+	recents = Rc(al);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
 	modals = [];
 	zoomLabel;
+	rulerBar;
+	rulerModeButtons = /* @__PURE__ */ new Map();
+	coneAngleButtons = /* @__PURE__ */ new Map();
+	coneAngleEl;
 	npcPanel;
 	npcButton;
 	zoomSlider;
@@ -50959,12 +51074,12 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, dt("editor", Io), this.npcPanel = new Oc(t, {
+		this.state = t, this.storage = n, this.hooks = r, dt("editor", Uo), this.npcPanel = new Fc(t, {
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t),
 			specials: r.npcLibrary
-		}), this.stage = K("div", { class: "vt-stage" }, this.buildZoomBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = K("div", { class: `vt-root${Zc(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), K("div", { class: "vt-testbar" }, this.testZoneEl = K("b", { class: "vt-testzone" }), this.testClockEl = K("span", { class: "vt-testclock" }), this.muteBtn = K("button", {
+		}), this.stage = K("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildRulerBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = K("div", { class: `vt-root${il(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), K("div", { class: "vt-testbar" }, this.testZoneEl = K("b", { class: "vt-testzone" }), this.testClockEl = K("span", { class: "vt-testclock" }), this.muteBtn = K("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -51098,13 +51213,13 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e), this.notifyBar();
 		try {
-			localStorage.setItem(Xc, e ? "1" : "0");
+			localStorage.setItem(rl, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
 		let e = K("aside", { class: "vt-tools" });
-		for (let t of qc) {
+		for (let t of el) {
 			let n = K("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
@@ -51149,8 +51264,68 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 			}
 		}), e.append(this.npcButton), e;
 	}
+	buildRulerBar() {
+		let e = [
+			{
+				id: "line",
+				label: "Linha",
+				icon: Y.ruler,
+				tip: "Linha: distância e direção (Shift: ângulos de 45°)"
+			},
+			{
+				id: "rect",
+				label: "Área",
+				icon: Y.rulerRect,
+				tip: "Área: retângulo com largura, altura, perímetro e m² (Shift: quadrado)"
+			},
+			{
+				id: "circle",
+				label: "Círculo",
+				icon: Y.rulerCircle,
+				tip: "Círculo: arraste do centro até a borda e veja raio, diâmetro e m²"
+			},
+			{
+				id: "cone",
+				label: "Cone",
+				icon: Y.rulerCone,
+				tip: "Cone: arraste da ponta até o alcance e veja o tamanho, a abertura e os m² (Shift: ângulos de 45°)"
+			}
+		], t = [];
+		for (let n of e) {
+			let e = K("button", {
+				class: "vt-seg vt-rulerbar-btn",
+				title: n.tip,
+				"aria-label": n.tip,
+				onclick: () => this.state.set({
+					rulerMode: n.id,
+					tool: "ruler"
+				})
+			}, K("span", {
+				class: "vt-rulerbar-ico",
+				html: n.icon
+			}), K("span", {}, n.label));
+			this.rulerModeButtons.set(n.id, e), t.push(e);
+		}
+		let n = Eo.map((e) => {
+			let t = K("button", {
+				class: "vt-seg vt-rulerbar-angle-btn",
+				title: `Abertura do cone: ${e}°`,
+				onclick: () => this.state.set({ coneAngle: e })
+			}, `${e}°`);
+			return this.coneAngleButtons.set(e, t), t;
+		});
+		return this.coneAngleEl = K("div", {
+			class: "vt-segmented vt-rulerbar-angles",
+			hidden: !0
+		}, K("span", { class: "vt-rulerbar-lbl" }, "Abertura"), ...n), this.rulerBar = K("div", {
+			class: "vt-rulerbar",
+			hidden: !0,
+			role: "toolbar",
+			"aria-label": "Tipo de régua"
+		}, K("div", { class: "vt-segmented" }, ...t), this.coneAngleEl), this.rulerBar;
+	}
 	buildZoomBar() {
-		let e = 1e3, t = (t) => String(Math.round(Math.log(t / Do) / Math.log(8 / Do) * e)), n = (t) => Do * (8 / Do) ** (t / e);
+		let e = 1e3, t = (t) => String(Math.round(Math.log(t / Po) / Math.log(8 / Po) * e)), n = (t) => Po * (8 / Po) ** (t / e);
 		return this.zoomSlider = K("input", {
 			class: "vt-zoom-range",
 			type: "range",
@@ -51304,7 +51479,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		});
 	}
 	renderTerrains() {
-		let e = il(this.terrainFilter.trim()), t = _.filter((t) => !e || il(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = dl(this.terrainFilter.trim()), t = _.filter((t) => !e || dl(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -51323,7 +51498,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = Ye(), t = il(this.objectFilter.trim()), n = (e) => !t || il(al(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = Ye(), t = dl(this.objectFilter.trim()), n = (e) => !t || dl(fl(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -51363,14 +51538,14 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: tl,
+				id: cl,
 				title: "Favoritos",
 				icon: Y.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: nl,
+				id: ll,
 				title: "Recentes",
 				icon: Y.clock,
 				count: u.length,
@@ -51612,7 +51787,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = K("div", { class: "vt-lightcolors" }, ...el.map(([e, t, r]) => K("button", {
+		let l = K("div", { class: "vt-lightcolors" }, ...sl.map(([e, t, r]) => K("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -51786,14 +51961,14 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		let t = qe(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, $c), Mc(Qc, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, ol), zc(al, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], Mc(Yc, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], zc(nl, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -51884,7 +52059,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(Ke().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = Ac(t, this.hooks.textureImage(ze(t.sheet)), n), i = K("button", {
+		let t = this.primary(e), n = [...new Set(Ke().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = Lc(t, this.hooks.textureImage(ze(t.sheet)), n), i = K("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -52019,7 +52194,12 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		let e = this.state;
 		for (let [t, n] of this.toolButtons) n.classList.toggle("vt-on", e.tool === t);
 		for (let e of this.toggles) e.el.classList.toggle("vt-on", e.on());
-		this.npcButton?.classList.toggle("vt-on", this.npcPanel.isOpen || this.state.tool === "npc");
+		if (this.npcButton?.classList.toggle("vt-on", this.npcPanel.isOpen || this.state.tool === "npc"), this.rulerBar) {
+			this.rulerBar.hidden = e.tool !== "ruler";
+			for (let [t, n] of this.rulerModeButtons) n.classList.toggle("vt-on", e.rulerMode === t);
+			this.coneAngleEl.hidden = e.rulerMode !== "cone";
+			for (let [t, n] of this.coneAngleButtons) n.classList.toggle("vt-on", e.coneAngle === t);
+		}
 		for (let [e, t] of this.tabButtons) t.classList.toggle("vt-on", this.tab === e);
 		for (let [t, n] of this.terrainCells) n.classList.toggle("vt-on", e.terrain === t && (e.tool === "brush" || e.tool === "fill"));
 		let t = e.tool === "object" && e.objectKind ? qe(e.objectKind) : void 0, n = t && this.primary(t).id;
@@ -52035,7 +52215,12 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 			select: e.selected.length ? "Arraste pra mover · setas empurram · F espelha · Ctrl D duplica · Del apaga" : "Clique num objeto (Shift soma) ou arraste um retângulo pra selecionar",
 			portal: e.selectedPortal ? "Escolha o destino no painel · arraste pra mover · Del apaga" : "Arraste pra desenhar uma saída · clique numa saída pra editar",
 			spawn: "Clique onde o jogador deve aparecer",
-			ruler: "Régua (1 tile = 1 m): segure o botão e arraste pra medir em qualquer direção · Shift: ângulos de 45° · ao soltar, a régua some",
+			ruler: {
+				line: "Régua (1 tile = 1 m): segure o botão e arraste pra medir em qualquer direção · Shift: ângulos de 45° · ao soltar, a régua some",
+				rect: "Régua de área: arraste de um canto ao oposto e veja largura, altura, perímetro e m² · Shift: quadrado · ao soltar, some",
+				circle: "Régua de círculo: arraste do centro até a borda e veja raio, diâmetro e m² · ao soltar, some",
+				cone: "Régua de cone: arraste da ponta até o alcance (escolha a abertura na barra) · Shift: ângulos de 45° · ao soltar, some"
+			}[e.rulerMode],
 			npc: e.npcDraft?.id ? "Clique no novo lugar do NPC · Esc cancela" : "Clique no mapa pra pôr o NPC · Esc cancela",
 			light: e.selectedLight ? "Arraste a luz pra mover · ajuste no painel · Del apaga" : "Clique pra pôr uma luz · clique numa luz pra editar · I liga/desliga a prévia",
 			room: {
@@ -52057,7 +52242,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Jc, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(tl, e)) });
 	}
 	async save() {
 		try {
@@ -52071,7 +52256,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 	exportZone() {
 		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = K("a", {
 			href: URL.createObjectURL(t),
-			download: `${ol(e.name) || "zona"}.vortable.json`
+			download: `${pl(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
@@ -52081,7 +52266,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 	}
 	async importZone(e) {
 		try {
-			let t = Rc(JSON.parse(await e.text()));
+			let t = Gc(JSON.parse(await e.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(t), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${t.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -52205,7 +52390,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		}, "Fechar")], void 0, !0);
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", Ro(this.hooks.assetBase), [K("button", {
+		let e = this.modal("Créditos da arte", Go(this.hooks.assetBase), [K("button", {
 			class: "vt-btn",
 			onclick: () => e()
 		}, "Fechar")]);
@@ -52334,8 +52519,8 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? Nc(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(Nc(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? Bc(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(Bc(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -52515,7 +52700,7 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 			}
 			return;
 		}
-		let s = qc.find((e) => e.key.toLowerCase() === i);
+		let s = el.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -52526,10 +52711,10 @@ var Qc = "vortable:objects:recent", $c = 24, el = [
 		}) : e.key === " " && e.preventDefault();
 	}
 };
-function il(e) {
+function dl(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function al(e) {
+function fl(e) {
 	return [
 		e.label,
 		e.category,
@@ -52538,16 +52723,16 @@ function al(e) {
 		...Je(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function ol(e) {
+function pl(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
 //#region src/engine/index.ts
-var sl = "/__vortable/curate";
-function cl(e, t) {
+var ml = "/__vortable/curate";
+function hl(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	Ga(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Fc(), a = t.appearance, o = !1, s = !0, l = t.net ? new Fa(t.net) : void 0, u = null, d = null, f = e, p = (e, i, c, d = 0, f) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Hc(), a = t.appearance, o = !1, s = !0, l = t.net ? new Fa(t.net) : void 0, u = null, d = null, f = e, p = (e, i, c, d = 0, f) => ({
 		zone: e,
 		...f ? {
 			at: {
@@ -52593,7 +52778,7 @@ function cl(e, t) {
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null, a = r && !r.dirty && t.zone?.id === r.zone.id;
-		d = new Fo(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), d.assetBase = n, r && (d.dirty = r.dirty, d.view = r.view, d.zoom = r.zoom), u = new rl(e, d, i, {
+		d = new Ho(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), d.assetBase = n, r && (d.dirty = r.dirty, d.view = r.view, d.zoom = r.zoom), u = new ul(e, d, i, {
 			assetBase: n,
 			textureImage: (e) => g.textures.get(e).getSourceImage(),
 			startTest: () => {
@@ -52615,7 +52800,7 @@ function cl(e, t) {
 			npcLibrary: t.npcLibrary,
 			externalBar: t.externalToolbar,
 			curate: t.curate ? async (e, t, n) => {
-				let r = await fetch(sl, {
+				let r = await fetch(ml, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -52689,7 +52874,7 @@ function cl(e, t) {
 		},
 		input: { mouse: { preventDefaultWheel: !0 } }
 	});
-	g.scene.add("world", vo), g.scene.add("editor", No), g.scene.add("boot", new ht(n, async () => {
+	g.scene.add("world", vo), g.scene.add("editor", Bo), g.scene.add("boot", new ht(n, async () => {
 		if (g.scene.stop("boot"), r === "edit") g.scene.start("editor", { state: d }), u.assetsReady();
 		else {
 			let { zone: e, sky: t, start: n } = await h();
@@ -52824,10 +53009,10 @@ function cl(e, t) {
 		}
 	};
 }
-function ll(e, t = {}) {
-	let n = new Cc(e, {
+function gl(e, t = {}) {
+	let n = new Ac(e, {
 		assetBase: t.assetBase ?? "./assets/",
-		storage: t.storage ?? new Zs(),
+		storage: t.storage ?? new ic(),
 		back: t.back,
 		single: t.single,
 		title: t.title,
@@ -52840,4 +53025,4 @@ function ll(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { Qs as CHARACTER_FORMAT, ei as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, Y as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Zs as LocalCharacterStorage, Fc as LocalWorldStorage, j as METERS_PER_TILE, Oa as REACTIONS, ni as SKY_PRESETS, Ja as SOUND_LAYERS, no as SURFACE_LABELS, _ as TERRAINS, A as TILE, ji as WEATHERS, Mi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, ec as characterFileName, Bn as characterFrame, z as clampZoneSize, Nr as daylight, $t as defaultAppearance, nc as downloadText, $s as exportCharacters, Qr as formatHour, Bt as loadCharacterData, Ic as localStorageAvailable, ll as mountCharacterCreator, cl as mountVortable, Ys as newCharacter, F as newId, Pc as newWorld, B as newZone, en as normalizeAppearance, Xs as parseCharacter, tc as parseCharacterFile, Ma as parseNet, Kc as parseWorld, Rc as parseZone, rc as pickTextFile, an as randomAppearance, Xr as shiftForHour, ti as skySwatch, Nc as summarize, Yr as worldHour };
+export { ac as CHARACTER_FORMAT, ei as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, Y as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, ic as LocalCharacterStorage, Hc as LocalWorldStorage, j as METERS_PER_TILE, Oa as REACTIONS, ni as SKY_PRESETS, Ja as SOUND_LAYERS, no as SURFACE_LABELS, _ as TERRAINS, A as TILE, ji as WEATHERS, Mi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, sc as characterFileName, Bn as characterFrame, z as clampZoneSize, Nr as daylight, $t as defaultAppearance, lc as downloadText, oc as exportCharacters, Qr as formatHour, Bt as loadCharacterData, Uc as localStorageAvailable, gl as mountCharacterCreator, hl as mountVortable, nc as newCharacter, F as newId, Vc as newWorld, B as newZone, en as normalizeAppearance, rc as parseCharacter, cc as parseCharacterFile, Ma as parseNet, $c as parseWorld, Gc as parseZone, uc as pickTextFile, an as randomAppearance, Xr as shiftForHour, ti as skySwatch, Bc as summarize, Yr as worldHour };

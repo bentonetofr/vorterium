@@ -18,8 +18,10 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '2.11',
     date:    '2026-11-06',
-    title:   'Vortable: tela Mundos mais limpa',
+    title:   'Vortable: tela Mundos mais limpa, réguas novas e grama corrigida',
     items: [
+      'Régua do editor com vários tipos: ao escolher a ferramenta Régua aparece uma barra no topo do mapa com Linha (distância e direção, como antes), Área (retângulo com largura, altura, perímetro e m², e Shift deixa quadrado), Círculo (arraste do centro até a borda e veja raio, diâmetro e m²) e Cone (arraste da ponta até o alcance, com abertura de 30°, 60°, 90° ou 120°, mostrando o alcance, os m² e a largura do fundo). Tudo em metros (1 tile = 1 m) e some ao soltar o botão.',
+      'Grama corrigida: em alguns momentos (ao reabrir o Vortable ou voltar do teste) as moitas de grama apareciam como quadrados pretos com borda e diagonal verdes. O recorte dos tufos agora é refeito sempre que o jogo recria as texturas.',
       'A tela Mundos foi refeita: cada mundo é um cartão com capa, o mundo aberto vem primeiro (borda dourada, selo “Aberto” e “Jogadores aqui” com a luzinha verde) e os outros têm um botão Abrir bem à vista. Editar, Renomear e Apagar foram para o menu de três pontos de cada cartão (o Apagar avisa por que está desligado: mundo aberto ou único da campanha).',
       'A lista “Mundos prontos” saiu da página. O cartão “Novo mundo” agora abre uma janela com Em branco, Importar arquivo e os mundos prontos (Torvallen, Cidade em Ruínas, Saltmore e Nova York), cada um com o botão Criar.',
     ],

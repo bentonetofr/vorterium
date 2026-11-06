@@ -7,6 +7,9 @@ export declare const ICONS: {
     portal: string;
     world: string;
     ruler: string;
+    rulerRect: string;
+    rulerCircle: string;
+    rulerCone: string;
     npc: string;
     nametag: string;
     flip: string;

@@ -182,7 +182,7 @@ export declare class EditorScene extends Phaser.Scene {
     private rulerTexts;
     /** A régua do clique que está apertado (some ao soltar). */
     private rulerLive;
-    /** Move a ponta solta da régua; Shift trava o ângulo em múltiplos de 45°. */
+    /** Move a ponta solta da régua; Shift trava o ângulo em múltiplos de 45° (na área, vira quadrado; no círculo, nada). */
     private rulerMove;
     private rulerText;
     /** Desenha as réguas: linha, marcas a cada metro (ou 2, 5, 10... conforme o zoom), guias em L e o rótulo com medida e direção. */

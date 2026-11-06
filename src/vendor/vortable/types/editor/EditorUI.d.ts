@@ -99,6 +99,10 @@ export declare class EditorUI {
     private testing;
     private modals;
     private zoomLabel;
+    private rulerBar;
+    private rulerModeButtons;
+    private coneAngleButtons;
+    private coneAngleEl;
     private npcPanel;
     private npcButton;
     private zoomSlider;
@@ -127,6 +131,8 @@ export declare class EditorUI {
     controls(): EditorControls;
     private setDrawer;
     private buildTools;
+    /** Tipos de régua (só aparece com a ferramenta Régua): linha, área, círculo e cone. */
+    private buildRulerBar;
     /** Controle de zoom no canto do palco: −, régua, porcentagem (volta a 100%), +, enquadrar. */
     private buildZoomBar;
     private toSlider;
