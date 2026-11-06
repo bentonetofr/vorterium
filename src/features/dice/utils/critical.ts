@@ -13,6 +13,7 @@ interface RollLike {
   result?:             number | null
   individual_results?: number[] | null
   roll_breakdown?:     RollBreakdownItem[] | null
+  roll_context?:       { system?: string; kind?: string; natural?: number } | null
 }
 
 export type FullRollKind = 'critical' | 'fumble'
@@ -41,6 +42,19 @@ export function fullRollKind(roll: RollLike): FullRollKind | null {
   if (groups.every((g) => g.results.every((r) => r === g.sides))) return 'critical'
   if (groups.every((g) => g.results.every((r) => r === 1))) return 'fumble'
   return null
+}
+
+/**
+ * Quando os lobos do Altherium aparecem. No teste de Altherium vale o dado que valeu: 10 natural é o crítico
+ * (lobo branco) e 1 natural é a falha crítica (lobo preto), mesmo com outros dados na rolagem. Nas demais
+ * rolagens vale a regra de sempre: todos os dados no máximo, ou todos em 1.
+ */
+export function wolfKind(roll: RollLike): FullRollKind | null {
+  const c = roll.roll_context
+  if (c?.system === 'altherium' && c.kind === 'skill' && typeof c.natural === 'number') {
+    return c.natural === 10 ? 'critical' : c.natural === 1 ? 'fumble' : null
+  }
+  return fullRollKind(roll)
 }
 
 export function isFullCritical(roll: RollLike): boolean {

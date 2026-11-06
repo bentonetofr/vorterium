@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import type { RollBreakdownItem } from '../../../shared/types'
-import { fullRollKind, type FullRollKind } from '../utils/critical'
+import { wolfKind, type FullRollKind } from '../utils/critical'
+import { isRollBusy, whenRollIdle } from '../../sheets/dnd/rolls/rollActivity'
 import { playCriticalSound, playFumbleSound } from '../utils/wolfSounds'
 import './CritWolf.css'
 
@@ -19,6 +20,8 @@ import './CritWolf.css'
 const SHOW_MS  = 2500
 /** Mesmo tempo do "quique" dos dados no aviso de resultado (DiceFab). */
 const DELAY_MS = 600
+/** Quando a rolagem é da própria pessoa: depois que os dados 3D param, um respiro antes do lobo. */
+const AFTER_DICE_MS = 350
 
 type RollRow = {
   id: string
@@ -27,12 +30,14 @@ type RollRow = {
   result: number | null
   individual_results: number[] | null
   roll_breakdown: RollBreakdownItem[] | null
+  roll_context: { system?: string; kind?: string; natural?: number } | null
 }
 
 export function CritWolf() {
   const { campaign } = useCurrentCampaign()
   const [shown, setShown] = useState<{ key: number; kind: FullRollKind } | null>(null)
   const timers = useRef<number[]>([])
+  const idleCancels = useRef<(() => void)[]>([])
   const campaignId = campaign?.system === 'altherium' ? campaign.id : null
 
   useEffect(() => {
@@ -43,17 +48,23 @@ export function CritWolf() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'dice_rolls', filter: `campaign_id=eq.${campaignId}` },
         (payload) => {
-          const kind = fullRollKind(payload.new as RollRow)
+          const kind = wolfKind(payload.new as RollRow)
           if (!kind) return
-          const show = window.setTimeout(() => {
+          const play = () => {
             const key = Date.now()
             setShown({ key, kind })
             if (kind === 'critical') playCriticalSound()
             else playFumbleSound()
             const hide = window.setTimeout(() => setShown((cur) => (cur?.key === key ? null : cur)), SHOW_MS)
             timers.current.push(hide)
-          }, DELAY_MS)
-          timers.current.push(show)
+          }
+          // A rolagem é gravada antes de os dados 3D pararem: se é da própria pessoa, o lobo espera eles pararem.
+          const waited = isRollBusy()
+          const cancel = whenRollIdle(() => {
+            const show = window.setTimeout(play, waited ? AFTER_DICE_MS : DELAY_MS)
+            timers.current.push(show)
+          })
+          idleCancels.current.push(cancel)
         },
       )
       .subscribe()
@@ -61,6 +72,8 @@ export function CritWolf() {
       supabase.removeChannel(channel)
       timers.current.forEach((t) => window.clearTimeout(t))
       timers.current = []
+      idleCancels.current.forEach((c) => c())
+      idleCancels.current = []
       setShown(null)
     }
   }, [campaignId])

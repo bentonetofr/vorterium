@@ -18,6 +18,16 @@ export function markRollBusy(): () => void {
   return () => { if (!released) { released = true; busy--; emit() } }
 }
 
+export function isRollBusy(): boolean { return busy > 0 }
+
+/** Chama `fn` assim que a própria pessoa não estiver mais rolando (na hora, se já não está). Devolve como cancelar. */
+export function whenRollIdle(fn: () => void): () => void {
+  if (busy === 0) { fn(); return () => {} }
+  const check = () => { if (busy === 0) { listeners.delete(check); fn() } }
+  listeners.add(check)
+  return () => { listeners.delete(check) }
+}
+
 export function useRollBusy(): boolean {
   return useSyncExternalStore(
     (l) => { listeners.add(l); return () => { listeners.delete(l) } },

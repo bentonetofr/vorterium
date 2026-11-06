@@ -4,6 +4,7 @@ import type { DiceRoll } from '../../../../shared/types'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import { sendMessage } from '../../../chat/services/chatService'
 import { useRollSkin } from '../../../dice3d/useRollSkin'
+import { markRollBusy } from '../../dnd/rolls/rollActivity'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import { playRollSound } from '../../terraDevastadaAdaptada/components/TdaTestModal'
@@ -301,6 +302,7 @@ function TestRoll({ campaignId, sheetId, character, spec, onClose, onRolled, aft
     setError(null)
     setRolling(true)
     setDone(false)
+    const release = markRollBusy()   // o lobo do crítico espera os dados pararem
     try {
       // o conjunto escolhido agora (lido na hora: rolar logo ao abrir não pode sair com o padrão)
       const skin = await rollSkin()
@@ -331,6 +333,7 @@ function TestRoll({ campaignId, sheetId, character, spec, onClose, onRolled, aft
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível rolar.')
     } finally {
+      release()
       setRolling(false)
     }
   }
@@ -338,6 +341,7 @@ function TestRoll({ campaignId, sheetId, character, spec, onClose, onRolled, aft
   async function rollExtra(formula: string, label: string): Promise<DiceRoll | null> {
     setError(null)
     setRolling(true)
+    const release = markRollBusy()
     try {
       const skin = await rollSkin()
       const saved = await recordRoll(campaignId, rollParsedFormula(parseDiceFormula(formula)), isPrivate, {
@@ -350,6 +354,7 @@ function TestRoll({ campaignId, sheetId, character, spec, onClose, onRolled, aft
       setError(err instanceof Error ? err.message : 'Não foi possível rolar.')
       return null
     } finally {
+      release()
       setRolling(false)
     }
   }

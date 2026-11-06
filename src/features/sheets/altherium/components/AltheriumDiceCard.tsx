@@ -8,6 +8,7 @@ import { useFeatureAccess } from '../../../control/siteFeatures'
 import { useRollSkin } from '../../../dice3d/useRollSkin'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 import { freeContext, freeLabel, idleKindOf, readFree, resultsText, type FreeReading } from '../../dnd/rolls/freeRoll'
+import { markRollBusy } from '../../dnd/rolls/rollActivity'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import './AltheriumPlay.css'
 import './AltheriumDiceCard.css'
@@ -96,6 +97,7 @@ export function AltheriumDiceCard({ campaignId, currentUserId, onClose }: Props)
     setError(null)
     setPhase('rolling')
     setDone(null)
+    const release = markRollBusy()   // o lobo do crítico espera os dados pararem
     try {
       // o conjunto escolhido agora, lido na hora de rolar
       const useSkin = await rollSkin()
@@ -119,6 +121,8 @@ export function AltheriumDiceCard({ campaignId, currentUserId, onClose }: Props)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível rolar.')
       setPhase(done ? 'done' : 'idle')
+    } finally {
+      release()
     }
   }, [formula, campaignId, isPrivate, rollSkin, reload, done])
 

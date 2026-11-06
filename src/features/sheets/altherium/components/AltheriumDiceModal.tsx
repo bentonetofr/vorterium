@@ -4,6 +4,7 @@ import type { DiceRoll } from '../../../../shared/types'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import type { StageDie } from '../../../dice3d/DiceStage'
 import { useRollSkin } from '../../../dice3d/useRollSkin'
+import { markRollBusy } from '../../dnd/rolls/rollActivity'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import { playRollSound } from '../../terraDevastadaAdaptada/components/TdaTestModal'
@@ -52,6 +53,7 @@ export function AltheriumDiceModal<T>({ title, perform, onDone, onClose, result 
   async function run() {
     setPhase('rolling')
     setError(null)
+    const release = markRollBusy()   // o lobo do crítico espera os dados pararem
     try {
       const skin = await rollSkin()
       const outcome = await live.current.perform(skin)
@@ -64,6 +66,8 @@ export function AltheriumDiceModal<T>({ title, perform, onDone, onClose, result 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível rolar.')
       setPhase('error')
+    } finally {
+      release()
     }
   }
 
