@@ -20,6 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-11-06',
     title:   'Lore dos personagens, para o mestre ler tudo num lugar só',
     items: [
+      'O botão Atacar da ficha de Altherium perdeu o gradiente: agora é um amarelo liso (e um tom mais claro ao passar o mouse).',
       'O painel Cena da Campanha (Altherium, mestre) agora começa minimizado: o título já mostra o resumo (estado dos inimigos, DT, local e escassez) e um clique abre os ajustes.',
       'Nova aba Lore na ficha de Altherium e na de D&D. O jogador escreve a história do personagem num campo grande (salva sozinho, com contagem de palavras) e/ou guarda arquivos: PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON e CSV, até 20 MB cada e 25 por ficha. Dá para mandar vários arquivos de uma vez (soltando ou marcando com Ctrl/Shift) e voltar depois para acrescentar outros com “+ Adicionar mais arquivos”, ideal para documentos separados; o envio mostra o andamento (“Enviando 2 de 3”) e o contador (“5 / 25”). Cada arquivo vira um cartão com Ler, Baixar e Remover. No Altherium o texto usa a fonte caligráfica; no D&D, a serifada do site.',
       'Os arquivos abrem numa janela de leitura dentro do site: PDF na tela, DOCX como texto com títulos, e TXT, MD, JSON e CSV direto. DOC, ODT e RTF só baixam.',

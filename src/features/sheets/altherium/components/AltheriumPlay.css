@@ -20,7 +20,7 @@
   background: linear-gradient(180deg, var(--bg-elevated), var(--bg-surface));
   border-color: var(--border-base);
 }
-.alth-acts--main .alth-act--primary { flex-grow: 1.35; background: linear-gradient(180deg, var(--accent-bright), var(--accent)); border-color: var(--accent-bright); }
+.alth-acts--main .alth-act--primary { flex-grow: 1.35; background: var(--accent-bright); border-color: var(--accent-bright); }
 .alth-acts--main .alth-act .alth-icon { width: 26px; height: 26px; }
 .alth-acts--main .alth-act__label {
   font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.05em; text-transform: uppercase;
@@ -65,11 +65,11 @@
 .alth-act--danger:hover:not(:disabled) { border-color: var(--danger-bright); background: rgba(255, 138, 125, 0.08); }
 .alth-act--primary {
   color: var(--text-inverse); border-color: var(--accent-bright);
-  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  background: var(--accent-bright);
   box-shadow: 0 4px 16px var(--accent-glow);
 }
 .alth-act--primary .alth-icon, .alth-act--primary .alth-act__label, .alth-act--primary .alth-act__caption { color: var(--text-inverse); }
-.alth-act--primary:hover:not(:disabled) { background: linear-gradient(180deg, var(--accent-bright), var(--accent-bright)); }
+.alth-act--primary:hover:not(:disabled) { background: #ffd49e; border-color: #ffd49e; }
 
 /* ── Selos de estado (Fichas, Fome, Reação, Gênese), no fim do cabeçalho ── */
 .alth-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
