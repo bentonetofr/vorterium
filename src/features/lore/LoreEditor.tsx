@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { confirmDialog } from '../../shared/components/dialogs'
 import { Presence } from '../../shared/components/Presence'
-import { LORE_ACCEPT, LORE_BODY_MAX, checkLoreFile, countWords } from './lorePure'
+import { LORE_ACCEPT, LORE_BODY_MAX, LORE_FILES_MAX, checkLoreFile, countWords } from './lorePure'
 import {
   getLore, listLoreFiles, removeLoreFile, saveLoreBody, uploadLoreFile,
   type CharacterLoreFile, type LoreSystem,
@@ -39,7 +39,8 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
   const [body, setBody] = useState('')
   const [files, setFiles] = useState<CharacterLoreFile[]>([])
   const [saveState, setSaveState] = useState<SaveState>('idle')
-  const [uploading, setUploading] = useState<string | null>(null)
+  const [uploading, setUploading] = useState<{ index: number; total: number; name: string } | null>(null)
+  const [sentNote, setSentNote] = useState<string | null>(null)
   const [uploadErrors, setUploadErrors] = useState<string[]>([])
   const [dragging, setDragging] = useState(false)
   const [opened, setOpened] = useState<CharacterLoreFile | null>(null)
@@ -101,20 +102,27 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
     const picked = Array.from(list)
     const errors: string[] = []
     let have = files.length
-    for (const file of picked) {
+    let sent = 0
+    setSentNote(null)
+    for (const [i, file] of picked.entries()) {
       const problem = checkLoreFile(file, have)
       if (problem) { errors.push(problem); continue }
-      setUploading(file.name)
+      setUploading({ index: i + 1, total: picked.length, name: file.name })
       try {
         const saved = await uploadLoreFile({ campaignId, sheetId, userId: ownerId, file, alreadyHave: have })
         setFiles((prev) => [...prev, saved])
         have += 1
+        sent += 1
       } catch (e) {
         errors.push(e instanceof Error ? e.message : `Erro ao enviar “${file.name}”.`)
       }
     }
     setUploading(null)
     setUploadErrors(errors)
+    if (sent > 0) {
+      setSentNote(sent === 1 ? '1 arquivo enviado.' : `${sent} arquivos enviados.`)
+      window.setTimeout(() => setSentNote(null), 4500)
+    }
   }
 
   function onDrop(e: DragEvent) {
@@ -176,7 +184,7 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
         <section className="lore-card lore-card--files">
           <header className="lore-card__head">
             <h4 className="lore-card__title">Arquivos</h4>
-            <span className="lore-card__count">{files.length}</span>
+            <span className="lore-card__count" title={`Até ${LORE_FILES_MAX} arquivos`}>{files.length} / {LORE_FILES_MAX}</span>
           </header>
 
           {canEdit && (
@@ -187,16 +195,19 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
               onDrop={onDrop}
             >
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" /><path d="M14 3v5h5M12 17v-6m0 0-2.5 2.5M12 11l2.5 2.5" /></svg>
-              <p>{uploading ? `Enviando ${uploading}…` : 'Solte os arquivos aqui'}</p>
+              <p>{uploading
+                ? `Enviando${uploading.total > 1 ? ` ${uploading.index} de ${uploading.total}` : ''}: ${uploading.name}…`
+                : 'Solte um ou vários arquivos aqui'}</p>
               <button type="button" className="lore-btn lore-btn--primary" disabled={uploading !== null} onClick={() => inputRef.current?.click()}>
                 Escolher arquivos
               </button>
-              <small>PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON ou CSV · até 20 MB cada</small>
+              <small>Pode mandar vários de uma vez (segure Ctrl ou Shift para marcar mais de um) e quantos documentos separados quiser, até {LORE_FILES_MAX}. PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON ou CSV, até 20 MB cada.</small>
               <input ref={inputRef} type="file" multiple accept={LORE_ACCEPT} hidden
                 onChange={(e) => { if (e.target.files) void upload(e.target.files); e.target.value = '' }} />
             </div>
           )}
 
+          {sentNote && <p className="lore__sent" role="status">✓ {sentNote}</p>}
           {uploadErrors.length > 0 && (
             <ul className="lore__errors" role="alert">{uploadErrors.map((m, i) => <li key={i}>{m}</li>)}</ul>
           )}
@@ -208,6 +219,12 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
                 {files.map((f) => <LoreFileCard key={f.id} file={f} onOpen={setOpened} onRemove={canEdit ? remove : undefined} busy={removing} />)}
               </ul>
             )}
+
+          {canEdit && files.length > 0 && files.length < LORE_FILES_MAX && (
+            <button type="button" className="lore-btn lore-add-more" disabled={uploading !== null} onClick={() => inputRef.current?.click()}>
+              + Adicionar mais arquivos
+            </button>
+          )}
         </section>
       </div>
 

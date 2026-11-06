@@ -203,3 +203,7 @@
   .lores-doc__back { display: inline-block; }
   .lores-doc__head { flex-wrap: wrap; }
 }
+
+.lore__sent { margin: 0; padding: 6px 12px; border-radius: var(--radius-md); background: rgba(111, 207, 142, 0.1); border: 1px solid rgba(111, 207, 142, 0.4); color: #6fcf8e; font-size: var(--text-xs); animation: m-pop-in 320ms var(--ease-spring) backwards; }
+.lore-add-more { align-self: flex-start; border-style: dashed; color: var(--accent-bright); border-color: var(--gilded); }
+.lore-drop small { max-width: 38ch; line-height: 1.5; }
