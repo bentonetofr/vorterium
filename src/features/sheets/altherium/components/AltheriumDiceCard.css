@@ -106,16 +106,18 @@
 .alth-dice__examples button:hover { border-color: var(--gilded-bright); }
 
 /* Meus dados: uma lista no mesmo visual do painel. */
-.alth-dice__skins { display: flex; flex-direction: column; gap: var(--space-3); }
+.alth-dice__skins { position: relative; display: flex; flex-direction: column; gap: var(--space-3); }
 .alth-dice__skinlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .alth-dice__skin-row {
-  width: 100%; display: flex; align-items: center; gap: var(--space-3); padding: 7px 12px 7px 10px; text-align: left;
+  width: 100%; display: flex; align-items: center; gap: var(--space-3); padding: 4px 12px 4px 6px; text-align: left;
   background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-md);
   color: var(--text-secondary); cursor: var(--cursor-hand);
   transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 .alth-dice__skin-row:hover { border-color: var(--gilded-bright); }
 .alth-dice__skin-row.is-on { border-color: var(--accent-bright); background: var(--bg-overlay); }
+/* O marcador onde o dado 3D gira (o canvas fica por cima da lista). */
+.alth-dice__skin-die { flex-shrink: 0; width: 58px; height: 58px; display: grid; place-items: center; }
 .alth-dice__skin-name { flex: 1; min-width: 0; font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
 .alth-dice__skin-row.is-on .alth-dice__skin-name { color: var(--accent-bright); }
 .alth-dice__skin-state { font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }

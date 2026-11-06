@@ -3,6 +3,7 @@ import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/s
 import { formatRelativeTime, useRecentRolls } from '../../../dice/useRecentRolls'
 import { getMyDiceSkin, onDiceSkinChange, peekMyDiceSkin, setMyDiceSkin } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN, getSkin, skinsFor } from '../../../dice3d/skins'
+import type { DiceShowcase } from '../../../dice3d/DiceShowcase'
 import { useFeatureAccess } from '../../../control/siteFeatures'
 import { useRollSkin } from '../../../dice3d/useRollSkin'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
@@ -246,20 +247,49 @@ export function AltheriumDiceCard({ campaignId, currentUserId, onClose }: Props)
 // ── Meus dados: a lista dos conjuntos (o telão mostra o escolhido, girando) ──
 
 function SkinList({ skin, error, onPick }: { skin: string; error: string | null; onPick: (id: string) => void }) {
+  const hostRef = useRef<HTMLDivElement>(null)
+  const pedestals = useRef(new Map<string, HTMLElement>())
+  const showcase = useRef<DiceShowcase | null>(null)
+  const [simple, setSimple] = useState(false)
   // os de todos e os exclusivos liberados para esta conta
   const skins = skinsFor(useFeatureAccess())
+  const skinKey = skins.map((k) => k.id).join(',')
+
+  // Os dados de verdade: um canvas só sobre a lista, com um d20 de cada conjunto girando no lugar do marcador.
+  useEffect(() => {
+    let alive = true
+    let made: DiceShowcase | null = null
+    void Promise.all([import('../../../dice3d/DiceStage'), import('../../../dice3d/DiceShowcase')]).then(([stageMod, showMod]) => {
+      if (!alive || !hostRef.current) return
+      if (!stageMod.diceStageSupported()) { setSimple(true); return }
+      try {
+        made = new showMod.DiceShowcase(hostRef.current)
+        showcase.current = made
+        const items = skinKey.split(',').flatMap((id) => { const el = pedestals.current.get(id); return el ? [{ id, el }] : [] })
+        void made.show(items)
+      } catch { setSimple(true) }
+    }).catch(() => { if (alive) setSimple(true) })
+    return () => { alive = false; showcase.current = null; made?.dispose() }
+  }, [skinKey])
+
+  const hover = (id: string | null) => showcase.current?.setHover(id)
+
   return (
-    <div className="alth-dice__skins">
+    <div className="alth-dice__skins" ref={hostRef}>
       <p className="alth-dice__note">É com o conjunto escolhido que os seus dados rolam, e é assim que os outros jogadores os veem. O dado do telão já mostra a sua escolha.</p>
       <ul className="alth-dice__skinlist" role="radiogroup" aria-label="Conjuntos de dados">
         {skins.map((k) => (
           <li key={k.id}>
-            <button type="button" role="radio" aria-checked={skin === k.id} className={`alth-dice__skin-row${skin === k.id ? ' is-on' : ''}`} onClick={() => onPick(k.id)}>
-              <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true" style={{ opacity: k.glass || k.resin ? 0.88 : 1 }}>
-                <polygon points="20,3 35,11 35,29 20,37 5,29 5,11" fill={k.body} stroke={k.bodyEdge} strokeWidth="2" />
-                <polyline points="20,3 20,16 5,29 M20,16 35,29 M5,11 20,16 35,11" fill="none" stroke={k.bodyEdge} strokeWidth="1" />
-                <text x="20" y="28" textAnchor="middle" fontSize="9" fontWeight="700" fill={k.ink} fontFamily="Georgia, serif">20</text>
-              </svg>
+            <button type="button" role="radio" aria-checked={skin === k.id} className={`alth-dice__skin-row${skin === k.id ? ' is-on' : ''}`} onClick={() => onPick(k.id)}
+              onMouseEnter={() => hover(k.id)} onMouseLeave={() => hover(null)} onFocus={() => hover(k.id)} onBlur={() => hover(null)}>
+              <span className="alth-dice__skin-die" ref={(el) => { if (el) pedestals.current.set(k.id, el); else pedestals.current.delete(k.id) }}>
+                {simple && (
+                  <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true">
+                    <polygon points="20,3 35,11 35,29 20,37 5,29 5,11" fill={k.body} stroke={k.bodyEdge} strokeWidth="2" />
+                    <text x="20" y="25" textAnchor="middle" fontSize="10" fontWeight="700" fill={k.ink} fontFamily="Georgia, serif">20</text>
+                  </svg>
+                )}
+              </span>
               <span className="alth-dice__skin-name">{k.name}</span>
               {k.exclusive && <span className="alth-dice__tag">Exclusivo</span>}
               <span className="alth-dice__skin-state">{skin === k.id ? 'Em uso' : 'Usar'}</span>
