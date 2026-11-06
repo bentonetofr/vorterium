@@ -24,6 +24,8 @@ export interface WorldSceneData {
     sky?: WorldSky;
     /** O teclado do boneco está travado agora? (lido ao abrir a cena e a cada zona nova) */
     inputLocked?: () => boolean;
+    /** Câmera de conversa: os ids de quem está em cena agora (null = ninguém). Lido ao abrir a cena e a cada zona nova. */
+    cinemaId?: () => string[] | null;
     /** Rede: os outros jogadores (sem isto, o jogo é solo). */
     hub?: NetHub;
     /** Aparece neste ponto (teletransporte do mestre), no lugar da saída ou do início. */
@@ -91,6 +93,20 @@ export declare class WorldScene extends Phaser.Scene {
     /** Um passo a cada vez que o quadro da animação é o de um pé tocando o chão. */
     private syncFootsteps;
     private inputLocked;
+    /** Quem deve estar em cena (null = ninguém). Guardado à parte pra sobreviver a reiniciar a cena. */
+    private wantCinema;
+    private cin;
+    /** O mestre mudou quem está em cena. null devolve a câmera normal. */
+    cinema(ids: string[] | null): void;
+    private cinemaTarget;
+    /** A câmera de conversa está de olho em alguém agora (a câmera normal fica quieta). */
+    private cinemaHolds;
+    /**
+     * O retrato de um personagem em cena: o desenho dele parado, de frente, ampliado e suavizado (256×256), pra
+     * interface desenhar. null se ele não está nesta zona (ou é um boneco sem folha de "parado").
+     */
+    portrait(id: string): HTMLCanvasElement | null;
+    private cinemaUpdate;
     /** Trava/destrava o teclado do boneco (cena do mestre por cima da tela). */
     setInputLocked(locked: boolean): void;
     private following;

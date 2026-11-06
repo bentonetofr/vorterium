@@ -5,6 +5,7 @@ import {
   type CampaignCharacter,
 } from '../services/vortableService'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { talkIds } from '../../mesa/mesaSession'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage } from './EngineStage'
@@ -43,7 +44,15 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   const allowSpectate = stage.spectate.allow
   const covered = stage.scene.kind !== 'game' || !!stage.document
   const coveredRef = useRef(covered)
-  const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void; setZoom(zoom: number): void } | null>(null)
+  const gameRef = useRef<{ setInputLocked(locked: boolean): void; rename(): void; setZoom(zoom: number): void; cinema(ids: string[] | null): void; portrait(id: string): HTMLCanvasElement | null } | null>(null)
+  // câmera de conversa: os personagens em cena (null = câmera normal)
+  const talkKey = talkIds(stage.scene)?.join('|') ?? ''
+  const talkRef = useRef<string[] | null>(talkKey ? talkKey.split('|') : null)
+  useEffect(() => {
+    talkRef.current = talkKey ? talkKey.split('|') : null
+    gameRef.current?.cinema(talkRef.current)
+  }, [talkKey])
+  const portrait = useCallback((id: string) => gameRef.current?.portrait(id) ?? null, [])
   useEffect(() => {
     coveredRef.current = covered
     gameRef.current?.setInputLocked(covered)
@@ -143,7 +152,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
   }
 
   return (
-    <div className="vortable-player-wrap">
+    <div className={`vortable-player-wrap${talkKey ? ' vt-talking' : ''}`}>
       <EngineStage
         key={`${mine.id}:${active.id}`}
         deps={[campaign.id, userId, mine.id, JSON.stringify(mine.appearance), vnet.net, active.id]}
@@ -177,6 +186,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
             net: vnet.net ? { selfId: userId, get name() { return net?.name ?? vnet.name }, send: (m) => net?.send(m) } : undefined,
           })
           game.setInputLocked(coveredRef.current)
+          game.cinema(talkRef.current)
           gameRef.current = game
           if (net) {
             net.sink = (m) => game.receive(m)
@@ -214,7 +224,7 @@ export function PlayerStage({ campaign, userId }: { campaign: CampaignWithRole; 
       )}
       <CreatureSfxToggle />
       <TouchLayer hidden={covered} onZoom={(z) => gameRef.current?.setZoom(z)} />
-      <SceneOverlay scene={stage.scene} />
+      <SceneOverlay scene={stage.scene} portrait={portrait} />
     </div>
   )
 }

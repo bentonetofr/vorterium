@@ -117,3 +117,27 @@
   /* testando: o botão "Voltar ao editor" do motor basta; a faixa sai do caminho */
   .vortable-master--testing .vortable-master__top { display: none; }
 }
+
+/* ── Câmera de conversa: dois personagens lado a lado, de frente, na altura do rosto; o cenário vivo fica atrás, desfocado.
+      Sem texto, sem faixas: só o ângulo. ── */
+.vt-talking .vortable-stage__host { transition: filter 700ms ease, transform 900ms var(--ease-out, ease-out); filter: blur(7px) brightness(0.68) saturate(1.1); transform: scale(1.04); }
+.vortable-stage__host { transition: filter 500ms ease, transform 600ms var(--ease-out, ease-out); }
+.scene-overlay--cine { display: block; background: transparent; pointer-events: none; overflow: hidden; }
+.talk { position: absolute; inset: 0; overflow: hidden; }
+.talk__vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(0, 0, 0, 0.5) 100%); animation: scene-in 900ms ease backwards; }
+.talk__bust {
+  position: absolute; bottom: 0; width: min(46vw, 640px); aspect-ratio: 184 / 156;
+  transition: filter 450ms ease, transform 550ms var(--ease-out, ease-out);
+}
+.talk__bust--left { left: 3%; transform-origin: 50% 100%; animation: talk-in-left 800ms var(--ease-out, ease-out) backwards; }
+.talk__bust--right { right: 3%; transform-origin: 50% 100%; animation: talk-in-right 800ms var(--ease-out, ease-out) 120ms backwards; }
+.talk__bust--on { filter: brightness(1.04) drop-shadow(0 6px 22px rgba(0, 0, 0, 0.55)); transform: scale(1.03); z-index: 2; }
+.talk__bust--off { filter: brightness(0.62) saturate(0.8) drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45)); transform: scale(0.96) translateY(3%); }
+.talk__canvas { width: 100%; height: 100%; display: block; transform-origin: 50% 100%; animation: talk-breathe 4.6s ease-in-out infinite; opacity: 0; transition: opacity 500ms ease; }
+.talk__canvas[data-ready='1'] { opacity: 1; }
+.talk__bust--right .talk__canvas { animation-delay: -2.1s; }
+@keyframes talk-in-left { from { opacity: 0; transform: translateX(-12%) scale(0.96); } }
+@keyframes talk-in-right { from { opacity: 0; transform: translateX(12%) scale(0.96); } }
+@keyframes talk-breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.014); } }
+@media (max-width: 640px) { .talk__bust { width: 58vw; } .talk__bust--left { left: -4%; } .talk__bust--right { right: -4%; } }
+@media (prefers-reduced-motion: reduce) { .talk__bust, .talk__canvas, .talk__vignette { animation: none; transition: none; } }

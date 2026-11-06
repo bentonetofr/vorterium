@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { MesaScene } from '../../mesa/mesaSession'
+import { TalkScene } from './TalkScene'
 
 /**
  * Cena do mestre por cima do jogo (jogador): preto, pausa, imagem ou título,
  * com fade. O jogo continua por baixo; com a cena no ar, o teclado do boneco
  * fica travado (PlayerStage).
  */
-export function SceneOverlay({ scene }: { scene: MesaScene }) {
+export function SceneOverlay({ scene, portrait }: { scene: MesaScene; /** Retrato de um personagem em cena (vem do motor). */ portrait?: (id: string) => HTMLCanvasElement | null }) {
   const active = scene.kind !== 'game'
   // guarda a última cena aberta pra ela sumir com fade em vez de cortar
   const [shown, setShown] = useState<MesaScene | null>(active ? scene : null)
@@ -20,7 +21,8 @@ export function SceneOverlay({ scene }: { scene: MesaScene }) {
   if (!shown) return null
 
   return (
-    <div className={`scene-overlay${active ? '' : ' scene-overlay--off'}`} role="presentation">
+    <div className={`scene-overlay${active ? '' : ' scene-overlay--off'}${shown.kind === 'talk' ? ' scene-overlay--cine' : ''}`} role="presentation">
+      {shown.kind === 'talk' && portrait && <TalkScene scene={shown} portrait={portrait} />}
       {shown.kind === 'pause' && (
         <div className="scene-card">
           <span className="scene-card__sigil" aria-hidden="true">ᛉ</span>

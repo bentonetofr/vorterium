@@ -187,6 +187,16 @@ export interface VortableHandle {
     /** O nome do jogador mudou (NetLink.name): os outros passam a ver o nome novo. */
     rename(): void;
     setAppearance(appearance: Appearance): Promise<void>;
+    /**
+     * Câmera de conversa: se abre sobre os personagens em cena (ids de jogador ou de NPC) e fica com o cenário vivo
+     * atrás. null volta à câmera normal. Vale no jogo e na câmera do mestre/espectador.
+     */
+    cinema(ids: string[] | null): void;
+    /**
+     * O retrato de um personagem (jogador ou NPC desta zona): o desenho dele parado, de frente, ampliado e
+     * suavizado (256×256), pra interface da conversa. null se ele não está à vista.
+     */
+    portrait(id: string): HTMLCanvasElement | null;
     /** Trava o teclado do boneco (o mestre cobriu a tela com uma cena). */
     setInputLocked(locked: boolean): void;
     /** Jogo: muda o zoom da câmera (1 = um bloco de 32 px vira 32 px na tela; o padrão é 2). (remenda do Vorterium) */

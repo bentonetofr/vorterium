@@ -35,8 +35,15 @@ export type MesaScene =
   | { kind: 'pause' }
   | { kind: 'image'; id: string; url: string; name: string }
   | { kind: 'title'; title: string; subtitle: string }
+  /** Câmera de conversa: os dois personagens (ids de jogador ou de NPC) lado a lado, de frente, e quem fala em destaque. Ninguém move o boneco. */
+  | { kind: 'talk'; left: string; right: string | null; speaker: 'left' | 'right' }
 
 export type SceneKind = MesaScene['kind']
+
+/** Quem está em cena na câmera de conversa (esquerda e, se houver, direita). */
+export function talkIds(scene: MesaScene): string[] | null {
+  return scene.kind === 'talk' ? [scene.left, ...(scene.right ? [scene.right] : [])] : null
+}
 
 /** Documento (carta ou livro) na mesa — e a página aberta, num livro. (Guardado pra entrar no Vortable.) */
 export interface MesaDocRef {
@@ -152,6 +159,11 @@ function parseScene(raw: unknown): MesaScene {
         ? { kind: 'image', id: text(s.id, 80), url: s.url, name: text(s.name, 200) }
         : GAME_SCENE
     case 'title': return { kind: 'title', title: text(s.title, MAX_TITLE), subtitle: text(s.subtitle, MAX_SUBTITLE) }
+    case 'talk': {
+      if (typeof s.left !== 'string' || !s.left) return GAME_SCENE
+      const right = typeof s.right === 'string' && s.right ? s.right.slice(0, 80) : null
+      return { kind: 'talk', left: s.left.slice(0, 80), right, speaker: s.speaker === 'right' && right ? 'right' : 'left' }
+    }
     default: return GAME_SCENE
   }
 }

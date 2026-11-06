@@ -1,8 +1,9 @@
 import { setLocalZone } from '../enemies/localZone'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { WatchControls } from '../../../vendor/vortable/vortable'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { talkIds } from '../../mesa/mesaSession'
 import { createWorldStorage, VORTABLE_ASSETS } from '../services/vortableService'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
@@ -42,6 +43,7 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
   const { stage } = useMesaStream()
   const rules = stage.spectate
   const watch = useRef<WatchControls | null>(null)
+  const gameRef = useRef<{ cinema(ids: string[] | null): void; portrait(id: string): HTMLCanvasElement | null } | null>(null)
   const [peers, setPeers] = useState<Peer[]>([])
   const [camera, setCamera] = useState<Camera>('seguir')
   const [picked, setPicked] = useState<string | null>(null)
@@ -92,6 +94,11 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [followId, effective, epoch])
 
+  // câmera de conversa do mestre: o espectador vê o mesmo rosto de perto
+  const talkKey = talkIds(stage.scene)?.join('|') ?? ''
+  useEffect(() => { gameRef.current?.cinema(talkKey ? talkKey.split('|') : null) }, [talkKey, epoch])
+  const portrait = useCallback((id: string) => gameRef.current?.portrait(id) ?? null, [])
+
   function react(emoji: string) {
     if (cooling) return
     watch.current?.react(emoji)
@@ -115,7 +122,7 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
   const waitingMaster = effective === 'mestre' && !rules.focus
 
   return (
-    <div className="vortable-player-wrap spectator">
+    <div className={`vortable-player-wrap spectator${talkKey ? ' vt-talking' : ''}`}>
       <EngineStage
         key={active.id}
         deps={[campaign.id, userId, vnet.net, active.id]}
@@ -134,6 +141,7 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
             net: net ? { selfId: `spec:${userId}`, get name() { return net.name }, send: (m) => net.send(m) } : undefined,
           })
           watch.current = game.watch ?? null
+          gameRef.current = game
           setEpoch((n) => n + 1)
           if (net) {
             net.sink = (m) => game.receive(m)
@@ -207,7 +215,7 @@ export function SpectatorStage({ campaign, userId, canPlay, onPlay }: {
         ))}
       </div>
 
-      <SceneOverlay scene={stage.scene} />
+      <SceneOverlay scene={stage.scene} portrait={portrait} />
     </div>
   )
 }

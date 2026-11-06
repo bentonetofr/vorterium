@@ -11,6 +11,8 @@ export declare class NpcLayer {
     constructor(scene: Phaser.Scene, assetBase: string, names?: 'near' | 'always');
     /** Sprites visíveis agora (pra sombra do sol e luzes). */
     get sprites(): Phaser.GameObjects.Sprite[];
+    /** O boneco deste NPC parado, se está à vista (câmera de conversa). */
+    spriteOf(id: string): Phaser.GameObjects.Sprite | null;
     /** Esconde (ou mostra de volta) os NPCs parados com estes ids. */
     setHidden(ids: Set<string>): void;
     /** Põe a lista de NPCs da zona na cena (cria os novos, move os que mudaram, tira os que saíram). */

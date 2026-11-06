@@ -305,3 +305,31 @@
 .live__npcmenu-del { color: var(--danger-bright, #ff7a6b); border-color: color-mix(in srgb, var(--danger, #c0392b) 60%, transparent); }
 .live__npcrow { display: flex; gap: 4px; align-items: stretch; }
 .live__npcrow .live__player { flex: 1 1 auto; min-width: 0; }
+
+/* ── Câmera de conversa: faixa de "quem fala" embaixo da cena ── */
+.live__talkbar {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 21;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  max-width: calc(100% - 24px);
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  border: 1px solid var(--gilded, var(--border-base));
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  animation: m-pop-in 320ms var(--ease-spring, ease-out) backwards;
+}
+.live__talkbar-label { flex: none; font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-bright); }
+.live__talkbar-cast { display: flex; gap: 6px; overflow-x: auto; min-width: 0; padding: 2px; }
+.live__talkbar-cast .live__chip { flex: none; white-space: nowrap; }
+.live__talkbar-end { flex: none; padding: 4px 14px; }
+.live__check { display: flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--text-secondary); cursor: var(--cursor-hand); }
+.live__check input { accent-color: var(--accent-bright); }
+@media (max-width: 640px) { .live__talkbar { flex-wrap: wrap; justify-content: center; } .live__talkbar-cast { flex: 1 1 100%; order: 3; } }
+.live__talkbar-sep { flex: none; width: 1px; align-self: stretch; margin: 0 4px; background: var(--border-base); }

@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { LiveSound, WatchControls } from '../../../vendor/vortable/vortable'
 import { createWorldStorage, setActiveWorld, VORTABLE_ASSETS } from '../services/vortableService'
 import { useVortableNet } from '../net/VortableNetProvider'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
+import { talkIds } from '../../mesa/mesaSession'
+import { SceneOverlay } from './SceneOverlay'
 import { useVortableWorlds } from '../worlds/VortableWorldProvider'
 import { EngineStage, type Engine } from './EngineStage'
 import { SoundPanel } from './SoundPanel'
@@ -18,8 +20,8 @@ import { alertDialog, ask, confirmDialog } from '../../../shared/components/dial
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type Pane = 'zonas' | 'jogadores' | 'npcs' | 'gerador' | 'inimigos' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
-const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', npcs: 'NPCs desta zona', gerador: 'Gerador de NPCs', inimigos: 'Inimigos', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
+type Pane = 'zonas' | 'jogadores' | 'conversa' | 'npcs' | 'gerador' | 'inimigos' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
+const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', conversa: 'Câmera de conversa', npcs: 'NPCs desta zona', gerador: 'Gerador de NPCs', inimigos: 'Inimigos', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
 type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null; timeShift?: number | null }
 
 /**
@@ -33,6 +35,9 @@ const PERSON_PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentCo
 /** Uma caveira (o botão e o painel de inimigos). */
 const SKULL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-4.4 0-8 3.1-8 7.2 0 2.3 1.1 4.2 2.8 5.5V19a1 1 0 0 0 1 1h8.4a1 1 0 0 0 1-1v-3.3c1.7-1.3 2.8-3.200 2.800-5.500C20 6.100 16.400 3 12 3Z"/><circle cx="9" cy="11" r="1.600"/><circle cx="15" cy="11" r="1.600"/><path d="M12 13.500v2M10 20v-2.200M14 20v-2.200"/></svg>'
 
+/** Um balão de fala (o botão e o painel da câmera de conversa). */
+const SPEECH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.500l1.500-4.800A8 8 0 1 1 21 12Z"/><path d="M8.500 11h.01M12 11h.01M15.500 11h.01"/></svg>'
+
 /** Uma tevê (o botão e o painel de espectadores). */
 const TV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="m8 3 4 4 4-4"/><path d="M7 16.5h.01M17 12.5v4"/></svg>'
 
@@ -43,12 +48,17 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const mesa = useMesaStream()
   const [opening, setOpening] = useState(false)
   const watch = useRef<WatchControls | null>(null)
+  const gameRef = useRef<{ cinema(ids: string[] | null): void; portrait(id: string): HTMLCanvasElement | null } | null>(null)
   const engine = useRef<Engine | null>(null)
   const [zones, setZones] = useState<{ id: string; name: string }[]>([])
   const [zoneId, setZoneId] = useState<string | null>(null)
   const [peers, setPeers] = useState<Peer[]>([])
   const [scope, setScope] = useState<'all' | 'zone'>('all')
   const [following, setFollowing] = useState<string | null>(null)
+  // câmera de conversa: a câmera do mestre acompanha o foco (ele vê o que os jogadores veem)?
+  const [mirror, setMirror] = useState(true)
+  // sobe quando o motor monta (a câmera de conversa se aplica de novo)
+  const [mounted, setMounted] = useState(0)
   // NPCs da zona e o que o mestre controla agora
   const [npcs, setNpcs] = useState<Npc[]>([])
   const [controlling, setControlling] = useState<string | null>(null)
@@ -225,6 +235,28 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const elsewhere = peers.filter((p) => p.zone !== zoneId)
   const zoneName = (id: string | null) => zones.find((z) => z.id === id)?.name ?? 'outra zona'
 
+  // ── Câmera de conversa ──
+  const talk = mesa.stage.scene.kind === 'talk' ? mesa.stage.scene : null
+  // quem pode entrar em cena: jogadores e NPCs desta zona (o NPC que o mestre controla já está na lista de NPCs)
+  const cast = [
+    ...here.filter((p) => !p.id.startsWith('npc:')).map((p) => ({ id: p.id, name: p.name, npc: false })),
+    ...npcs.map((n) => ({ id: n.id, name: n.name, npc: true })),
+  ]
+  const talkKey = talkIds(mesa.stage.scene)?.join('|') ?? ''
+  useEffect(() => { gameRef.current?.cinema(mirror && talkKey ? talkKey.split('|') : null) }, [talkKey, mirror, mounted])
+  const portrait = useCallback((id: string) => gameRef.current?.portrait(id) ?? null, [])
+  const nameOf = (id: string | null) => cast.find((c) => c.id === id)?.name ?? '?'
+  /** Clicar num nome: quem já está em cena passa a falar; um nome novo entra (e fala), no lugar de quem estava calado. */
+  function pick(c: { id: string }) {
+    const t = talk
+    if (!t) { mesa.setScene({ kind: 'talk', left: c.id, right: null, speaker: 'left' }); return }
+    if (c.id === t.left) { mesa.setScene({ ...t, speaker: 'left' }); return }
+    if (c.id === t.right) { mesa.setScene({ ...t, speaker: 'right' }); return }
+    if (!t.right) { mesa.setScene({ ...t, right: c.id, speaker: 'right' }); return }
+    mesa.setScene(t.speaker === 'left' ? { ...t, right: c.id, speaker: 'right' } : { ...t, left: c.id, speaker: 'left' })
+  }
+  function endTalk() { mesa.setScene({ kind: 'game' }) }
+
   if (!ready || !active) {
     return <div className="vortable-stage"><div className="vortable-stage__cover"><Loader /></div></div>
   }
@@ -250,7 +282,8 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
           <button type="button" className="btn btn-primary" disabled={opening} onClick={() => void openEdited()}>{opening ? 'Abrindo…' : `Abrir "${other.name}"`}</button>
         </div>
       )}
-      <div className="live__view" ref={viewRef}>
+      <div className={`live__view${talk && mirror ? ' vt-talking' : ''}`} ref={viewRef}>
+        {talk && mirror && <SceneOverlay scene={talk} portrait={portrait} />}
         {npcMenu && (
           <div className="live__npcmenu" style={{ left: npcMenu.left, top: npcMenu.top }} role="menu" aria-label={`NPC ${npcMenu.name}`}>
             <strong>{npcMenu.name}</strong>
@@ -278,6 +311,8 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
               net: net ? { selfId: `watch:${userId}`, name: 'Mestre', send: (m) => net.send(m) } : undefined,
             })
             watch.current = game.watch ?? null
+            gameRef.current = game
+            setMounted((n) => n + 1)
             if (net) {
               net.sink = (m) => game.receive(m)
               net.onOpen = null
@@ -286,6 +321,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
             }
             return () => {
               watch.current = null
+              gameRef.current = null
               if (net) net.sink = null
               game.destroy()
             }
@@ -293,10 +329,30 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
         />
       </div>
 
+      {talk && (
+        <div className="live__talkbar" role="toolbar" aria-label="Câmera de conversa">
+          <span className="live__talkbar-label">Em cena</span>
+          <div className="live__talkbar-cast">
+            {[talk.left, talk.right].filter((id): id is string => !!id).map((id, i) => {
+              const side = i === 0 ? 'left' : 'right'
+              return (
+                <button key={id} type="button" className={`live__chip${talk.speaker === side ? ' live__chip--on' : ''}`} onClick={() => pick({ id })} title="Passar o destaque pra ele">{nameOf(id)}</button>
+              )
+            })}
+            <span className="live__talkbar-sep" aria-hidden="true" />
+            {cast.filter((c) => c.id !== talk.left && c.id !== talk.right).map((c) => (
+              <button key={c.id} type="button" className="live__chip" onClick={() => pick(c)} title="Chamar pra cena">{c.name}</button>
+            ))}
+          </div>
+          <button type="button" className="btn btn-primary live__talkbar-end" onClick={endTalk}>Encerrar</button>
+        </div>
+      )}
+
       <div className="live__menu" ref={menuRef}>
         <div className="live__bar" role="toolbar" aria-label="Controle ao vivo">
           {tool('zonas', 'world', 'Zonas e câmera')}
           {tool('jogadores', 'person', 'Jogadores', { badge: peers.length || undefined })}
+          {tool('conversa', SPEECH_ICON, 'Câmera de conversa: todos veem de perto o rosto de quem fala', { dot: talk != null })}
           {tool('npcs', 'npc', 'NPCs desta zona', { dot: controlling != null })}
           {tool('gerador', PERSON_PLUS_ICON, 'Gerador de NPCs (pessoas, soldados, sobreviventes...)', { badge: npcs.filter((n) => n.id.startsWith('pess-')).length || undefined })}
           {tool('inimigos', SKULL_ICON, 'Inimigos e sons de criaturas', { badge: npcs.filter((n) => n.id.startsWith('inim-')).length || undefined })}
@@ -364,6 +420,35 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
                 </ul>
               </section>
               </>
+            )}
+            {open === 'conversa' && (
+              <section className="live__block">
+                <h4>Câmera de conversa</h4>
+                <p className="live__empty">
+                  Escolha dois personagens: todos os jogadores passam a vê-los lado a lado, de frente, com o cenário atrás, e ninguém mexe no boneco até você encerrar.
+                  Clique em quem está falando pra passar o destaque pra ele.
+                </p>
+                {cast.length === 0 && <p className="live__empty">Ninguém nesta zona.</p>}
+                <ul className="live__players">
+                  {cast.map((c) => {
+                    const side = talk?.left === c.id ? 'esquerda' : talk?.right === c.id ? 'direita' : null
+                    const speaking = !!talk && ((talk.speaker === 'left' && talk.left === c.id) || (talk.speaker === 'right' && talk.right === c.id))
+                    return (
+                      <li key={c.id}>
+                        <button type="button" className={`live__player${side ? ' live__player--on' : ''}`} onClick={() => pick(c)}>
+                          <span>{c.name}</span>
+                          <small>{speaking ? 'falando' : side ? `em cena (${side})` : c.npc ? 'NPC' : 'jogador'}</small>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <label className="live__check">
+                  <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} />
+                  <span>Minha tela mostra a cena também</span>
+                </label>
+                {talk && <button type="button" className="btn btn-primary" onClick={endTalk}>Encerrar conversa</button>}
+              </section>
             )}
             {open === 'npcs' && (
               <>

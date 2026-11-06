@@ -34,9 +34,12 @@ const ident = (src, re, what) => {
 if (code.includes('worldAt:')) {
   console.log('motor: já remendado (worldAt)')
 } else {
-  const anchor = 'focus: (e, t) => _()?.watchFocus(e, t),'
-  if (!code.includes(anchor)) throw new Error('motor: não achei onde remendar (o motor mudou?)')
-  code = code.replace(anchor, `${anchor}\n\t\t\tworldAt: (e, t) => {\n\t\t\t\tlet n = _();\n\t\t\t\tif (!n) return null;\n\t\t\t\tlet r = n.cameras.main.getWorldPoint(n.scale.transformX(e), n.scale.transformY(t));\n\t\t\t\treturn { x: r.x, y: r.y };\n\t\t\t},`)
+  // o nome curto da função que devolve a cena do mundo muda a cada build (já foi `_`, já foi `v`): descobre por regex
+  const found = code.match(/focus: \(e, t\) => ([\w$]+)\(\)\?\.watchFocus\(e, t\),/)
+  if (!found) throw new Error('motor: não achei onde remendar (o motor mudou?)')
+  const anchor = found[0]
+  const worldFn = found[1]
+  code = code.replace(anchor, `${anchor}\n\t\t\tworldAt: (e, t) => {\n\t\t\t\tlet n = ${worldFn}();\n\t\t\t\tif (!n) return null;\n\t\t\t\tlet r = n.cameras.main.getWorldPoint(n.scale.transformX(e), n.scale.transformY(t));\n\t\t\t\treturn { x: r.x, y: r.y };\n\t\t\t},`)
   writeFileSync(js, code)
   console.log('motor: remendado (worldAt)')
 }
@@ -151,9 +154,12 @@ if (code.includes('this.cfg.gate')) {
     '\t\t}',
     '\t\tlet r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));',
   ].join('\n')
-  const cfgOld = '\t\tonClock: (e) => u?.showTestClock(e),\n\t\tinputLocked: () => o,'
-  const cfgNew = '\t\tonClock: (e) => u?.showTestClock(e),\n\t\tgate: t.gate,\n\t\tinputLocked: () => o,'
-  for (const a of [travelOld, cfgOld]) if (!code.includes(a)) throw new Error('motor: não achei onde remendar a licença de saída (o motor mudou?): ' + a.slice(0, 50))
+  // os nomes curtos (`u`, `d`, `o`...) mudam a cada build: o do relógio e o do travar-teclado saem por regex
+  const cfgMatch = code.match(/\t\tonClock: \(e\) => ([\w$]+)\?\.showTestClock\(e\),\n\t\tinputLocked: \(\) => ([\w$]+),/)
+  if (!cfgMatch) throw new Error('motor: não achei onde remendar a licença de saída (o motor mudou?): onClock/inputLocked')
+  const cfgOld = cfgMatch[0]
+  const cfgNew = `\t\tonClock: (e) => ${cfgMatch[1]}?.showTestClock(e),\n\t\tgate: t.gate,\n\t\tinputLocked: () => ${cfgMatch[2]},`
+  if (!code.includes(travelOld)) throw new Error('motor: não achei onde remendar a licença de saída (o motor mudou?): ' + travelOld.slice(0, 50))
   code = code.replace(travelOld, travelNew).replace(cfgOld, cfgNew)
   writeFileSync(js, code)
   console.log('motor: licença de saída remendada')
@@ -278,9 +284,13 @@ if (code.includes('setPlayZoom(')) {
   const camNew = '\t\tlet vz = this.cfg.watch ? 2 : window.__vtPlayZoom ?? 2;\n\t\tif (l.setBounds(0, 0, i, a).setZoom(vz).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * vz < l.width || a * vz < l.height) && l.removeBounds(),'
   const lockOld = '\tsetInputLocked(e) {\n\t\tthis.inputLocked = e, this.player && (this.player.locked = e), this.npcCtl && (this.npcCtl.player.locked = e);\n\t}'
   const lockNew = lockOld + '\n\tsetPlayZoom(e) {\n\t\tif (this.cfg.watch) return;\n\t\tlet t = this.cameras.main, n = this.cfg.zone.width * 32, r = this.cfg.zone.height * 32;\n\t\tt.setZoom(e), n * e < t.width || r * e < t.height ? t.removeBounds() : t.setBounds(0, 0, n, r);\n\t}'
-  const handleOld = '\t\tsetInputLocked(e) {\n\t\t\to = e, g.scene.isActive("world") && g.scene.getScene("world").setInputLocked(e);\n\t\t},'
-  const handleNew = handleOld + '\n\t\tsetZoom(e) {\n\t\t\twindow.__vtPlayZoom = e, g.scene.isActive("world") && g.scene.getScene("world").setPlayZoom?.(e);\n\t\t},'
-  for (const x of [camOld, lockOld, handleOld]) if (!code.includes(x)) throw new Error('motor: não achei onde remendar o zoom do jogador (o motor mudou?): ' + x.slice(0, 50))
+  // o nome curto do jogo Phaser (`g`, `_`...) e da variável do travar-teclado (`o`...) mudam a cada build: saem por regex
+  const handleMatch = code.match(/\t\tsetInputLocked\(e\) \{\n\t\t\t([\w$]+) = e, ([\w$]+)\.scene\.isActive\("world"\) && \2\.scene\.getScene\("world"\)\.setInputLocked\(e\);\n\t\t\},/)
+  if (!handleMatch) throw new Error('motor: não achei onde remendar o zoom do jogador (o motor mudou?): setInputLocked do handle')
+  const handleOld = handleMatch[0]
+  const gameVar = handleMatch[2]
+  const handleNew = handleOld + `\n\t\tsetZoom(e) {\n\t\t\twindow.__vtPlayZoom = e, ${gameVar}.scene.isActive("world") && ${gameVar}.scene.getScene("world").setPlayZoom?.(e);\n\t\t},`
+  for (const x of [camOld, lockOld]) if (!code.includes(x)) throw new Error('motor: não achei onde remendar o zoom do jogador (o motor mudou?): ' + x.slice(0, 50))
   code = code.replace(camOld, () => camNew).replace(lockOld, () => lockNew).replace(handleOld, () => handleNew)
   writeFileSync(js, code)
   console.log('motor: zoom do jogador remendado')
