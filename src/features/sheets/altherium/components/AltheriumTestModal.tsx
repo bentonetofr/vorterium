@@ -108,13 +108,172 @@ interface Props {
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 const sum = (list?: Modifier[]) => (list ?? []).reduce((s, m) => s + m.value, 0)
 
-export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClose, onRolled, after, autoRoll = false, noAgain = false, contextExtra }: Props) {
-  const [situational, setSituational] = useState(0)
-  const [target, setTarget] = useState(spec.initialTarget != null ? String(spec.initialTarget) : '')
-  const [isPrivate, setIsPrivate] = useState(false)
-  const [manDice, setManDice] = useState(spec.manual?.dice != null ? String(spec.manual.dice) : '')
-  const [manKeep, setManKeep] = useState<'auto' | 'highest' | 'lowest'>(spec.manual?.keep ?? 'auto')
-  const [manBonus, setManBonus] = useState(spec.manual?.bonus != null ? String(spec.manual.bonus) : '')
+/** O que o jogador (ou a janela que chamou) decidiu antes de rolar. */
+interface RollSettings {
+  pool:         { count: number; keep: 'highest' | 'lowest' }
+  modifier:     number
+  manualBonus:  number | undefined
+  targetValue:  number | null
+  /** Dados de situação somados aos que o combate já pôs. */
+  totalDice:    number
+  isPrivate:    boolean
+}
+
+/** Os campos da tela de preparo. */
+interface SetupInput {
+  situational: number
+  target:      string
+  isPrivate:   boolean
+  manDice:     string
+  manKeep:     'auto' | 'highest' | 'lowest'
+  manBonus:    string
+}
+
+function initialInput(spec: AltheriumTestSpec): SetupInput {
+  return {
+    situational: 0,
+    target:      spec.initialTarget != null ? String(spec.initialTarget) : '',
+    isPrivate:   false,
+    manDice:     spec.manual?.dice != null ? String(spec.manual.dice) : '',
+    manKeep:     spec.manual?.keep ?? 'auto',
+    manBonus:    spec.manual?.bonus != null ? String(spec.manual.bonus) : '',
+  }
+}
+
+/** A conta do teste: dados, qual fica, bônus e alvo — a mesma na tela de preparo (ao vivo) e na rolagem. */
+function settingsFrom(spec: AltheriumTestSpec, input: SetupInput, useSpecManual: boolean): RollSettings & { autoDice: number; autoPool: { count: number; keep: 'highest' | 'lowest' }; autoModifier: number } {
+  const autoDice = sum(spec.diceMods)
+  const totalDice = clampSituation(autoDice + input.situational)
+  const autoPool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational: totalDice })
+  const autoModifier = spec.attribute + sum(spec.flat)
+  // Ajuste manual: vem pronto da janela (rola direto) ou dos campos da tela de preparo.
+  const fieldInt = (v: string, min: number, max: number) => (v.trim() === '' ? undefined : Math.max(min, Math.min(max, Math.trunc(Number(v)) || 0)))
+  const manual: ManualRoll | undefined = useSpecManual
+    ? spec.manual
+    : { dice: fieldInt(input.manDice, 1, MANUAL_DICE_MAX), keep: input.manKeep === 'auto' ? undefined : input.manKeep, bonus: fieldInt(input.manBonus, -99, 99) }
+  const pool = { count: manual?.dice ?? autoPool.count, keep: manual?.keep ?? autoPool.keep }
+  const manualBonus = manual?.bonus
+  const targetValue = input.target.trim() === '' ? null : Math.max(0, Math.min(99, Math.trunc(Number(input.target)) || 0))
+  return { pool, modifier: manualBonus ?? autoModifier, manualBonus, targetValue, totalDice, isPrivate: input.isPrivate, autoDice, autoPool, autoModifier }
+}
+
+export function AltheriumTestModal(props: Props) {
+  const { spec, autoRoll = false } = props
+  // Sem a tela de preparo (a janela que chamou já escolheu tudo): rola direto, no painel dos dados.
+  const [settings, setSettings] = useState<RollSettings | null>(() => (autoRoll ? settingsFrom(spec, initialInput(spec), true) : null))
+  if (!settings) return <TestSetup {...props} onRoll={setSettings} />
+  return <TestRoll {...props} settings={settings} onBack={() => setSettings(null)} />
+}
+
+// ── Painel 1: a conta do teste, como um recibo ──────────────────────
+
+function TestSetup({ spec, onClose, onRoll }: Props & { onRoll: (s: RollSettings) => void }) {
+  const [input, setInput] = useState<SetupInput>(() => initialInput(spec))
+  const set = (patch: Partial<SetupInput>) => setInput((prev) => ({ ...prev, ...patch }))
+  const title = spec.title ?? `Teste de ${spec.domainLabel}`
+  const targetLabel = spec.targetLabel ?? 'DT'
+  const s = settingsFrom(spec, input, false)
+  const { pool, manualBonus } = s
+  const manual = manualBonus != null || input.manDice.trim() !== '' || input.manKeep !== 'auto'
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="alth-modal__window alth-test alth-test--setup" role="dialog" aria-modal="true" aria-labelledby="alth-test-title">
+        <header className="alth-modal__header">
+          <h4 id="alth-test-title" className="alth-modal__title">{title}</h4>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        </header>
+
+        <div className="alth-test__body">
+          {spec.disadvantage && <p className="alth-test__note alth-test__note--warn">Desvantagem: {spec.disadvantage}.</p>}
+
+          <div className="alth-bill" aria-label="A conta do teste">
+            <div className="alth-bill__row"><span>Dados</span><strong>{pool.count}d10</strong></div>
+            {manualBonus != null ? (
+              <div className="alth-bill__row"><span>Bônus manual</span><strong>{signed(manualBonus)}</strong></div>
+            ) : (
+              <>
+                <div className="alth-bill__row"><span>{spec.attributeLabel}</span><strong>{signed(spec.attribute)}</strong></div>
+                {(spec.flat ?? []).filter((m) => m.value !== 0).map((m) => <div key={m.label} className="alth-bill__row"><span>{m.label}</span><strong>{signed(m.value)}</strong></div>)}
+              </>
+            )}
+            {spec.extraDie && <div className="alth-bill__row"><span>{spec.extraDie.label}</span><strong>+1d{spec.extraDie.sides}</strong></div>}
+            {(spec.diceMods ?? []).filter((m) => m.value !== 0).map((m) => (
+              <div key={m.label} className="alth-bill__row"><span>{m.label}</span><strong>{signed(m.value)} {Math.abs(m.value) === 1 ? 'dado' : 'dados'}</strong></div>
+            ))}
+            {!spec.noSituation && (
+              <div className="alth-bill__row">
+                <span title={`Itens, condições e o que o mestre conceder. Somando tudo, no máximo ${SITUATION_LIMIT} dados a mais ou a menos.`}>Situação</span>
+                <span className="alth-bill__stepper">
+                  <button type="button" onClick={() => set({ situational: input.situational - 1 })}
+                    disabled={s.autoDice + input.situational <= -SITUATION_LIMIT} aria-label="Tirar um dado">−</button>
+                  <output aria-label="Dados de situação">{input.situational === 0 ? '0' : signed(input.situational)}</output>
+                  <button type="button" onClick={() => set({ situational: input.situational + 1 })}
+                    disabled={s.autoDice + input.situational >= SITUATION_LIMIT} aria-label="Pôr um dado">+</button>
+                </span>
+              </div>
+            )}
+            <div className="alth-bill__row alth-bill__row--total">
+              <span>Fica o {pool.keep === 'highest' ? 'maior' : 'menor'}</span>
+              <strong>{pool.count}d10 {signed(s.modifier)}{spec.extraDie ? ` +1d${spec.extraDie.sides}` : ''}</strong>
+            </div>
+          </div>
+
+          {(spec.notes ?? []).map((n) => <p key={n} className="alth-test__note">{n}</p>)}
+
+          <label className="alth-bill__line">
+            <span>Contra {targetLabel}</span>
+            <input type="number" className="input alth-test__dt" min={0} max={99} inputMode="numeric"
+              value={input.target} onChange={(e) => set({ target: e.target.value })} placeholder="Sem DT" aria-label={`${targetLabel} (opcional)`} />
+          </label>
+
+          <label className="alth-bill__line alth-switch">
+            <span title="Só você e o mestre veem a rolagem, sem aviso no chat.">Rolagem privada</span>
+            <input type="checkbox" className="alth-switch__input" checked={input.isPrivate} onChange={(e) => set({ isPrivate: e.target.checked })} />
+            <span className="alth-switch__track" aria-hidden="true" />
+          </label>
+
+          <button type="button" className="btn btn-primary alth-test__go" onClick={() => onRoll({ ...s })}>
+            Rolar {pool.count}d10
+          </button>
+
+          <div className="alth-test__aux">
+            <button type="button" className="alth-test__link" onClick={onClose}>Cancelar</button>
+          </div>
+
+          <details className="alth-win__details" open={manual}>
+            <summary>Ajuste manual: dados, maior ou menor e bônus</summary>
+            <div className="alth-test__manual">
+              <label className="alth-test__field">
+                <span className="alth-test__label">Dados d10</span>
+                <input type="number" className="input" min={1} max={MANUAL_DICE_MAX} inputMode="numeric" value={input.manDice}
+                  onChange={(e) => set({ manDice: e.target.value })} placeholder={`${s.autoPool.count} (auto)`} />
+              </label>
+              <label className="alth-test__field">
+                <span className="alth-test__label">Fica o</span>
+                <select className="input" value={input.manKeep} onChange={(e) => set({ manKeep: e.target.value as 'auto' | 'highest' | 'lowest' })}>
+                  <option value="auto">{s.autoPool.keep === 'highest' ? 'Maior (auto)' : 'Menor (auto)'}</option>
+                  <option value="highest">Maior</option>
+                  <option value="lowest">Menor</option>
+                </select>
+              </label>
+              <label className="alth-test__field">
+                <span className="alth-test__label">Bônus total</span>
+                <input type="number" className="input" min={-99} max={99} inputMode="numeric" value={input.manBonus}
+                  onChange={(e) => set({ manBonus: e.target.value })} placeholder={`${signed(s.autoModifier)} (auto)`} />
+              </label>
+            </div>
+          </details>
+        </div>
+      </div>
+    </ModalOverlay>
+  )
+}
+
+// ── Painel 2: os dados 3D rolando e o resultado ─────────────────────
+
+function TestRoll({ campaignId, sheetId, character, spec, onClose, onRolled, after, autoRoll = false, noAgain = false, contextExtra, settings, onBack }: Props & { settings: RollSettings; onBack: () => void }) {
+  const { pool, modifier, manualBonus, targetValue, totalDice, isPrivate } = settings
   const [rolling, setRolling] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [roll, setRoll] = useState<DiceRoll | null>(null)
@@ -125,20 +284,6 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
   const title = spec.title ?? `Teste de ${spec.domainLabel}`
   const targetLabel = spec.targetLabel ?? 'DT'
   const words = spec.words ?? ['sucesso', 'falha']
-
-  const autoDice = sum(spec.diceMods)
-  const totalDice = clampSituation(autoDice + situational)
-  const autoPool = testPool({ baseDice: spec.baseDice, disadvantage: !!spec.disadvantage, situational: totalDice })
-  const autoModifier = spec.attribute + sum(spec.flat)
-  // Ajuste manual: vem pronto da janela (rola direto) ou dos campos desta tela.
-  const fieldInt = (v: string, min: number, max: number) => (v.trim() === '' ? undefined : Math.max(min, Math.min(max, Math.trunc(Number(v)) || 0)))
-  const manual: ManualRoll | undefined = autoRoll
-    ? spec.manual
-    : { dice: fieldInt(manDice, 1, MANUAL_DICE_MAX), keep: manKeep === 'auto' ? undefined : manKeep, bonus: fieldInt(manBonus, -99, 99) }
-  const pool = { count: manual?.dice ?? autoPool.count, keep: manual?.keep ?? autoPool.keep }
-  const manualBonus = manual?.bonus
-  const modifier = manualBonus ?? autoModifier
-  const targetValue = target.trim() === '' ? null : Math.max(0, Math.min(99, Math.trunc(Number(target)) || 0))
   const reading = roll ? readTest(roll.roll_breakdown ?? []) : null
 
   function judge(r: TestReading, t: number | null): TestOutcome | null {
@@ -157,7 +302,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
     setRolling(true)
     setDone(false)
     try {
-      // o conjunto escolhido agora (lido na hora: rolar sozinho ao abrir não pode sair com o padrão)
+      // o conjunto escolhido agora (lido na hora: rolar logo ao abrir não pode sair com o padrão)
       const skin = await rollSkin()
       const rolled = rollParsedFormula(parseDiceFormula(testFormula(pool, modifier, spec.extraDie?.sides)))
       const read = readTest(rolled.breakdown)
@@ -209,28 +354,30 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
     }
   }
 
+  /** "Rolar de novo": nas janelas que já escolheram tudo, rola na hora; nas outras, volta à conta pra ajustar. */
   function again() {
     setRoll(null)
     setDone(false)
     setError(null)
     if (autoRoll) void doRoll()
+    else onBack()
   }
 
-  // Rola sozinho quando o palco 3D está pronto (ou quando não há palco).
-  const autoStarted = useRef(false)
+  // Rola assim que o palco 3D está pronto (ou quando não há palco): o jogador já clicou em Rolar.
+  const started = useRef(false)
   useEffect(() => {
-    if (!autoRoll || autoStarted.current || !(stage || simple)) return
-    autoStarted.current = true
+    if (started.current || !(stage || simple)) return
+    started.current = true
     void doRoll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoRoll, stage, simple])
+  }, [stage, simple])
 
   const showResult = roll && reading && (done || simple)
   const keptIndex = reading ? reading.results.indexOf(reading.kept) : -1
 
   return (
     <ModalOverlay onClose={onClose} closeDisabled={rolling}>
-      <div className={`alth-modal__window alth-test${showResult ? ' alth-test--shown' : ''}`} role="dialog" aria-modal="true" aria-labelledby="alth-test-title">
+      <div className={`alth-modal__window alth-test alth-test--roll${showResult ? ' alth-test--shown' : ''}`} role="dialog" aria-modal="true" aria-labelledby="alth-test-title">
         <header className="alth-modal__header">
           <h4 id="alth-test-title" className="alth-modal__title">{title}</h4>
           <button type="button" className="modal-close" onClick={onClose} disabled={rolling} aria-label="Fechar">×</button>
@@ -239,96 +386,20 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
         <div className="alth-test__body">
           <div className="alth-test__stage">
             <div ref={stageRef} className="alth-test__canvas" aria-hidden="true" />
-            {!roll && (
+            {!roll && !error && (
               <span className="alth-test__pool">
-                {spec.domainLabel}: {pool.count}d10 · fica o {pool.keep === 'highest' ? 'maior' : 'menor'}
+                {pool.count}d10 · fica o {pool.keep === 'highest' ? 'maior' : 'menor'}
                 {spec.extraDie ? ` · +1d${spec.extraDie.sides}` : ''} · {signed(modifier)}
               </span>
             )}
           </div>
 
-          {!roll && autoRoll && (
+          {!roll && error && (
             <>
-              {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
-              {error && (
-                <div className="alth-test__actions">
-                  <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
-                  <button type="button" className="btn btn-primary" onClick={() => void doRoll()}>Tentar de novo</button>
-                </div>
-              )}
-            </>
-          )}
-
-          {!roll && !autoRoll && (
-            <>
-              {spec.disadvantage && <p className="alth-test__note alth-test__note--warn">Desvantagem: {spec.disadvantage}.</p>}
-
-              <ul className="alth-test__mods" aria-label="O que entra no teste">
-                <li>{spec.attributeLabel} <strong>{signed(spec.attribute)}</strong></li>
-                {(spec.flat ?? []).filter((m) => m.value !== 0).map((m) => <li key={m.label}>{m.label} <strong>{signed(m.value)}</strong></li>)}
-                {spec.extraDie && <li>{spec.extraDie.label} <strong>+1d{spec.extraDie.sides}</strong></li>}
-                {(spec.diceMods ?? []).filter((m) => m.value !== 0).map((m) => <li key={m.label}>{m.label} <strong>{signed(m.value)} {Math.abs(m.value) === 1 ? 'dado' : 'dados'}</strong></li>)}
-              </ul>
-
-              {(spec.notes ?? []).map((n) => <p key={n} className="alth-test__note">{n}</p>)}
-
-              {!spec.noSituation && <div className="alth-test__field">
-                <span className="alth-test__label">Dados de situação</span>
-                <div className="alth-test__stepper">
-                  <button type="button" onClick={() => setSituational(situational - 1)}
-                    disabled={autoDice + situational <= -SITUATION_LIMIT} aria-label="Tirar um dado">−</button>
-                  <span className="alth-test__stepper-value">{situational === 0 ? '0' : signed(situational)}</span>
-                  <button type="button" onClick={() => setSituational(situational + 1)}
-                    disabled={autoDice + situational >= SITUATION_LIMIT} aria-label="Pôr um dado">+</button>
-                </div>
-                <span className="alth-test__hint">
-                  Itens, condições e o que o mestre conceder. Somando tudo, no máximo 2 dados a mais ou a menos
-                  {autoDice !== 0 ? ` (o combate já pôs ${signed(autoDice)})` : ''}.
-                </span>
-              </div>}
-
-              <details className="alth-win__details" open={manual?.dice != null || manual?.keep != null || manualBonus != null}>
-                <summary>Ajuste manual: dados, maior ou menor e bônus</summary>
-                <div className="alth-test__manual">
-                  <label className="alth-test__field">
-                    <span className="alth-test__label">Dados d10</span>
-                    <input type="number" className="input" min={1} max={MANUAL_DICE_MAX} inputMode="numeric" value={manDice}
-                      onChange={(e) => setManDice(e.target.value)} placeholder={`${autoPool.count} (auto)`} />
-                  </label>
-                  <label className="alth-test__field">
-                    <span className="alth-test__label">Fica o</span>
-                    <select className="input" value={manKeep} onChange={(e) => setManKeep(e.target.value as 'auto' | 'highest' | 'lowest')}>
-                      <option value="auto">{autoPool.keep === 'highest' ? 'Maior (auto)' : 'Menor (auto)'}</option>
-                      <option value="highest">Maior</option>
-                      <option value="lowest">Menor</option>
-                    </select>
-                  </label>
-                  <label className="alth-test__field">
-                    <span className="alth-test__label">Bônus total</span>
-                    <input type="number" className="input" min={-99} max={99} inputMode="numeric" value={manBonus}
-                      onChange={(e) => setManBonus(e.target.value)} placeholder={`${signed(autoModifier)} (auto)`} />
-                  </label>
-                </div>
-              </details>
-
-              <label className="alth-test__field">
-                <span className="alth-test__label">{targetLabel} (opcional)</span>
-                <input type="number" className="input alth-test__dt" min={0} max={99} inputMode="numeric"
-                  value={target} onChange={(e) => setTarget(e.target.value)} placeholder={`Sem ${targetLabel}`} />
-              </label>
-
-              <label className="alth-test__check">
-                <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-                Rolagem privada (só você e o mestre veem, sem aviso no chat)
-              </label>
-
-              {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
-
+              <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>
               <div className="alth-test__actions">
-                <button type="button" className="btn btn-ghost" onClick={onClose} disabled={rolling}>Cancelar</button>
-                <button type="button" className="btn btn-primary" onClick={() => void doRoll()} disabled={rolling}>
-                  {rolling ? 'Rolando…' : `Rolar ${pool.count}d10`}
-                </button>
+                <button type="button" className="btn btn-ghost" onClick={onClose}>Fechar</button>
+                <button type="button" className="btn btn-primary" onClick={() => void doRoll()}>Tentar de novo</button>
               </div>
             </>
           )}
@@ -376,7 +447,7 @@ export function AltheriumTestModal({ campaignId, sheetId, character, spec, onClo
               {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
 
               <div className="alth-test__actions">
-                {!noAgain && <button type="button" className="btn btn-ghost" onClick={again} disabled={rolling}>Rolar de novo</button>}
+                {!noAgain && <button type="button" className="btn btn-ghost" onClick={again} disabled={rolling}>{autoRoll ? 'Rolar de novo' : 'Ajustar e rolar de novo'}</button>}
                 <button type="button" className="btn btn-primary" onClick={onClose} disabled={rolling}>Fechar</button>
               </div>
             </>

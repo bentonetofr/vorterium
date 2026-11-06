@@ -515,3 +515,55 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
   .alth-win .alth-test__actions { flex-wrap: wrap; }
   .alth-win .alth-test__actions .btn { flex: 1 1 140px; white-space: normal; line-height: 1.2; }
 }
+
+/* ── Janela de teste, painel 1: a conta como um recibo ── */
+.alth-test.alth-test--setup { width: min(420px, 100%); }
+.alth-bill {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-void); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+}
+.alth-bill__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-bill__row strong { font-family: var(--font-label); font-weight: 700; color: var(--accent-bright); }
+.alth-bill__row--total { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--border-dim); }
+.alth-bill__row--total strong { font-size: var(--text-md); }
+.alth-bill__stepper { display: inline-flex; border: 1px solid var(--border-base); border-radius: var(--radius-md); overflow: hidden; }
+.alth-bill__stepper button {
+  width: 30px; height: 28px; border: none; background: var(--bg-overlay); color: var(--text-secondary);
+  font-family: var(--font-label); font-size: 16px; font-weight: 700; line-height: 1; cursor: var(--cursor-hand);
+}
+.alth-bill__stepper button:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-surface); }
+.alth-bill__stepper button:disabled { opacity: 0.35; cursor: default; }
+.alth-bill__stepper output {
+  display: grid; place-items: center; min-width: 34px; background: var(--bg-void);
+  font-family: var(--font-label); font-weight: 700; color: var(--accent-bright);
+}
+.alth-bill__line { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-test--setup .alth-test__dt { width: 96px; }
+.alth-test__go { width: 100%; justify-content: center; padding-block: var(--space-3); font-size: var(--text-md); }
+.alth-test__aux { display: flex; justify-content: center; margin-top: calc(var(--space-1) * -1); }
+.alth-test__link {
+  background: none; border: none; padding: 4px 8px; font-size: var(--text-xs); color: var(--text-muted);
+  text-decoration: underline; text-underline-offset: 3px; cursor: var(--cursor-hand);
+}
+.alth-test__link:hover { color: var(--text-primary); }
+
+/* Interruptor (no lugar da caixinha de marcar). */
+.alth-switch { position: relative; cursor: var(--cursor-hand); }
+.alth-switch__input { position: absolute; opacity: 0; width: 0; height: 0; }
+.alth-switch__track {
+  position: relative; flex-shrink: 0; width: 38px; height: 22px;
+  background: var(--bg-overlay); border: 1px solid var(--border-base); border-radius: 999px;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.alth-switch__track::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text-muted); transition: transform 160ms var(--ease-out), background var(--transition-fast);
+}
+.alth-switch__input:checked + .alth-switch__track { background: var(--accent-glow); border-color: var(--accent-bright); }
+.alth-switch__input:checked + .alth-switch__track::after { transform: translateX(16px); background: var(--accent-bright); }
+.alth-switch__input:focus-visible + .alth-switch__track { outline: 2px solid var(--accent-bright); outline-offset: 2px; }
+
+/* ── Painel 2: os dados rolando (compacto; abre larga quando o resultado aparece) ── */
+.alth-test--roll:not(.alth-test--shown) { width: min(440px, 100%); }
+.alth-test--roll:not(.alth-test--shown) .alth-test__stage { height: 230px; }
