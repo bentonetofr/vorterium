@@ -145,7 +145,6 @@
   border-color: var(--accent-bright);
   color: var(--accent-bright);
   box-shadow: 0 0 18px rgba(212, 175, 55, 0.3);
-  animation: dice-toast-crit 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .dice-toast__total--min {
   border-color: var(--danger);
@@ -224,11 +223,6 @@
 @keyframes dice-toast-in {
   0%   { transform: scale(0.9) translateY(8px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-@keyframes dice-toast-crit {
-  0%   { transform: scale(0.75); opacity: 0; }
-  70%  { transform: scale(1.06); }
-  100% { transform: scale(1); opacity: 1; }
 }
 @keyframes dice-toast-pulse {
   0%, 100% { opacity: 0.55; transform: scale(0.96); }

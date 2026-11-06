@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import type { DiceRoll } from '../../../../shared/types'
 import type { RollExtras, RollResult } from '../../../dice/services/diceService'
-import { playDiceFlourish } from '../../../dice3d/sound'
 import { stageDiceFor } from './diceKinds'
 import {
   BARDIC_DICE, REACTIONS, SITUATIONAL_MAX, checkContext, checkFormula, judge, readCheck, tilesTotal,
@@ -92,7 +91,6 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
       if (spec.dcHidden && spec.requestId && revealDc) dc = await revealDc(spec.requestId)
       const { outcome, crit } = judge(spec.kind, reading.natural, reading.total, dc)
       // com o palco 3D, o 20 e o 1 naturais já tocaram o som da animação sorteada quando o dado parou
-      if (crit && !stage) playDiceFlourish(crit)
       const result: CheckDone = { roll: saved, reading, dc, outcome, crit }
       setDone(result)
       setPhase('done')
@@ -132,7 +130,6 @@ export function DndCheckPanel({ spec, character, sheetId, skin, perform, revealD
             <div ref={stageRef} className="dcp__canvas" aria-hidden="true" />
             {simple && <span className="dcp__simple" aria-hidden="true">{spin ?? 'd20'}</span>}
             {phase === 'ready' && <span className="dcp__hint">Clique no dado para rolar</span>}
-            {crit && <span className={`dcp__fx dcp__fx--${crit}`} aria-hidden="true" />}
           </button>
 
           {done && (

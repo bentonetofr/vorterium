@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { DiceRoll } from '../../../../shared/types'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
-import { playDiceFlourish } from '../../../dice3d/sound'
 import { revealCheckDc } from '../services/dndCheckService'
 import { judge, type CheckKind } from './checkModel'
 import { stageDiceFor } from './diceKinds'
@@ -62,7 +61,6 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
     })
     void play.then(() => {
       if (!alive) return
-      if (w.crit && !stage) playDiceFlourish(w.crit)
       setPhase('done')
       const requestId = roll.roll_context?.request_id
       if (w.dcHidden && requestId) void revealCheckDc(requestId).then((dc) => { if (alive && dc != null) setRevealed(dc) })
@@ -100,7 +98,6 @@ export function DndWatchPanel({ roll, player, hurry, onDone }: Props) {
             <div ref={stageRef} className="dcp__canvas" aria-hidden="true" />
             {simple && <span className="dcp__simple" aria-hidden="true">{spin ?? 'd20'}</span>}
             {!done && <span className="dcp__hint">{who} está rolando…</span>}
-            {w.crit && done && <span className={`dcp__fx dcp__fx--${w.crit}`} aria-hidden="true" />}
           </div>
 
           {done && (

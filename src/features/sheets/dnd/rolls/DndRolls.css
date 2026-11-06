@@ -76,35 +76,13 @@
 .dcp__natural strong { font-family: var(--font-display); font-size: 22px; color: var(--dsh-bone); }
 .dcp__total { font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
 .dcp__total strong { margin-left: 4px; font-family: var(--font-display); font-size: 34px; letter-spacing: 0; color: #fff7e6; }
-.dcp__outcome { flex-basis: 100%; text-align: center; font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; animation: dcp-stamp 520ms var(--ease-out) both; }
+.dcp__outcome { flex-basis: 100%; text-align: center; font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
 .dcp__outcome--success { color: #f6d27c; text-shadow: 0 0 22px rgba(246, 210, 124, 0.5); }
 .dcp__outcome--failure { color: #ff6b6b; text-shadow: 0 0 22px rgba(255, 80, 80, 0.45); }
 .dcp__critlabel { flex-basis: 100%; text-align: center; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #f6d27c; }
 .dcp__critlabel--bad { color: #ff6b6b; }
 @keyframes dcp-rise { from { opacity: 0; transform: translateY(8px); } }
-@keyframes dcp-stamp { from { opacity: 0; transform: scale(1.6); letter-spacing: 0.4em; } }
 
-/* crítico: explosão dourada; falha crítica: racha vermelho e tremida */
-.dcp__fx { position: absolute; inset: 0; pointer-events: none; }
-.dcp__fx--crit {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 226, 140, 0.55), transparent 42%),
-    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 220, 120, 0.22) 0deg 6deg, transparent 6deg 22deg);
-  animation: dcp-burst 1.4s var(--ease-out) both;
-}
-@keyframes dcp-burst { 0% { opacity: 0; transform: scale(0.4) rotate(-10deg); } 25% { opacity: 1; } 100% { opacity: 0.35; transform: scale(1.25) rotate(8deg); } }
-.dcp__fx--fumble {
-  background:
-    linear-gradient(115deg, transparent 47%, rgba(255, 70, 70, 0.85) 48%, transparent 49.5%),
-    linear-gradient(62deg, transparent 52%, rgba(255, 70, 70, 0.7) 52.6%, transparent 53.6%),
-    linear-gradient(160deg, transparent 55%, rgba(255, 70, 70, 0.6) 55.5%, transparent 56.4%),
-    radial-gradient(circle at 50% 50%, rgba(180, 20, 30, 0.45), transparent 50%);
-  animation: dcp-crack 700ms ease-out both;
-}
-@keyframes dcp-crack { from { opacity: 0; clip-path: circle(0% at 50% 50%); } to { opacity: 1; clip-path: circle(75% at 50% 50%); } }
-.dcp.is-fumble .dcp__frame { animation: dcp-shake 420ms ease-in-out; }
-@keyframes dcp-shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
-.dcp.is-crit .dcp__frame { box-shadow: inset 0 0 0 3px rgba(12, 10, 18, 0.85), inset 0 0 0 4px rgba(246, 210, 124, 0.6), inset 0 0 80px rgba(246, 210, 124, 0.18), 0 0 40px rgba(246, 210, 124, 0.3); }
 .dcp.is-success .dcp__frame { border-color: rgba(246, 210, 124, 0.8); }
 .dcp.is-failure .dcp__frame { border-color: rgba(255, 107, 107, 0.6); }
 
