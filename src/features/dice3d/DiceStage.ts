@@ -165,12 +165,19 @@ export class DiceStage {
 
   /**
    * A caixa da tela em que os dados precisam aparecer inteiros: o palco todo, menos o que o título e o total
-   * cobrem (o elemento diz quantos px em `data-insets="cima,baixo"`) e um respiro dos lados.
+   * cobrem (o elemento diz quantos px em `data-insets="cima,baixo"`) e um respiro: 10 px em cima e embaixo e
+   * 6% de cada lado, ou o que o elemento pedir em `data-margin` (px) e `data-xbox` (0 a 1, a parte da largura usada).
+   * Com `data-margin="2" data-xbox="0.99" data-fit="0.4"` as paredes da rolagem ficam praticamente nas bordas do palco
+   * (`data-fit`, de 0 a 1: quanto da altura do dado conta para ele caber inteiro; ver ScreenBox).
    */
   private screenBox(): ScreenBox {
     const h = Math.max(1, this.host.clientHeight)
     const [top, bottom] = (this.host.dataset.insets ?? '0,0').split(',').map((n) => Number(n) || 0)
-    return { x: 0.94, top: 1 - (2 * (top + 10)) / h, bottom: -1 + (2 * (bottom + 10)) / h }
+    const margin = Number(this.host.dataset.margin ?? 10)
+    const x = Math.min(1, Math.max(0.5, Number(this.host.dataset.xbox ?? 0.94) || 0.94))
+    const m = Number.isFinite(margin) ? Math.max(0, margin) : 10
+    const fit = Number(this.host.dataset.fit ?? 1)
+    return { x, top: 1 - (2 * (top + m)) / h, bottom: -1 + (2 * (bottom + m)) / h, fit: Number.isFinite(fit) ? Math.min(1, Math.max(0, fit)) : 1 }
   }
 
   /** Palco largo: a câmera se afasta conforme a quantidade de dados (ver camera.ts) e devolve a mesa visível. */

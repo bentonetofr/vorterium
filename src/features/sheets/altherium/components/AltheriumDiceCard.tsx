@@ -137,7 +137,7 @@ export function AltheriumDiceCard({ campaignId, currentUserId, onClose }: Props)
 
         <div className="alth-dice__main">
           <div className="alth-dice__telao" aria-live="polite">
-            <div ref={stageRef} className="alth-dice__canvas" data-insets="34,70" aria-hidden="true" />
+            <div ref={stageRef} className="alth-dice__canvas" data-insets="46,0" data-margin="2" data-xbox="0.99" data-fit="0.4" aria-hidden="true" />
             {simple && <span className="alth-dice__simple" aria-hidden="true">{spin ?? idleKind}</span>}
             <span className="alth-dice__skin">Seu dado: {getSkin(skin).name}</span>
             {phase === 'idle' && <span className="alth-dice__hint">{tab === 'skins' ? 'Escolha o seu conjunto de dados' : 'O dado gira até você rolar'}</span>}

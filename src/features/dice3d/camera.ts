@@ -52,6 +52,12 @@ export interface ScreenBox {
   x:      number
   top:    number
   bottom: number
+  /**
+   * Quanto da altura do dado conta ao conferir que ele cabe na caixa (1 = o dado inteiro, com o topo, que fica
+   * mais perto da câmera e aparece mais para fora). Menos que 1 deixa as paredes mais perto das bordas do
+   * palco, aceitando que o topo de um dado encostado na parede encoste na borda.
+   */
+  fit?:   number
 }
 
 /** O maior dado (raio do vértice mais longe), para conferir que ele cabe inteiro na caixa. */
@@ -78,7 +84,7 @@ export function boxArena(camera: THREE.PerspectiveCamera, box: ScreenBox): Table
   const dz = (zNear + zFar) / 2
   const R = DIE_REACH
   const fits = () => {
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const h of [0, 2 * R]) {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const h of [0, 2 * R * (box.fit ?? 1)]) {
       const p = new THREE.Vector3(sx * (halfW + R * 0.2), h, dz + sz * (halfD + R * 0.2)).project(camera)
       if (Math.abs(p.x) > box.x || p.y > box.top || p.y < box.bottom) return false
     }

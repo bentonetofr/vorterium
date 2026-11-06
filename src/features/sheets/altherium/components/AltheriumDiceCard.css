@@ -12,7 +12,7 @@
 .alth-dicehub > .alth-dice { pointer-events: auto; }
 
 .alth-dice {
-  width: min(720px, 100%);
+  width: min(800px, 100%);
   max-height: calc(100dvh - 2 * var(--space-4));
   overflow-y: auto;
   background: var(--bg-surface);
@@ -38,7 +38,7 @@
 .alth-dice__close:disabled { opacity: 0.4; cursor: default; }
 
 /* Altura fixa: o painel não muda de tamanho ao trocar de aba; o que passar rola dentro da coluna da direita. */
-.alth-dice__main { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); height: 410px; }
+.alth-dice__main { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); height: 470px; }
 
 /* O telão: o dado 3D na skin da pessoa, girando; os dados rolam aqui mesmo. */
 .alth-dice__telao {
@@ -60,13 +60,13 @@
 .alth-dice__hint { left: 0; right: 0; bottom: 14px; text-align: center; }
 
 .alth-dice__result {
-  position: absolute; left: 14px; right: 14px; bottom: 12px;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 12px; background: rgba(6, 14, 32, 0.78); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
-  pointer-events: none;
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%); max-width: calc(100% - 28px);
+  display: flex; align-items: baseline; gap: var(--space-3);
+  padding: 4px 14px; background: rgba(6, 14, 32, 0.72); border: 1px solid var(--border-dim); border-radius: 999px;
+  pointer-events: none; white-space: nowrap;
 }
-.alth-dice__total { font-family: var(--font-display); font-size: 46px; line-height: 1; font-weight: 700; color: var(--accent-bright); }
-.alth-dice__sum { font-size: var(--text-xs); color: var(--text-secondary); text-align: center; line-height: 1.4; }
+.alth-dice__total { font-family: var(--font-display); font-size: 30px; line-height: 1; font-weight: 700; color: var(--accent-bright); }
+.alth-dice__sum { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: var(--text-xs); color: var(--text-secondary); }
 
 .alth-dice__ctl { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) var(--space-5); min-width: 0; min-height: 0; overflow-y: auto; }
 .alth-dice__group { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -144,7 +144,7 @@
 @media (max-width: 640px) {
   .alth-dice__main { grid-template-columns: minmax(0, 1fr); }
   .alth-dice__main { height: auto; }
-  .alth-dice__telao { height: 230px; border-right: none; border-bottom: 1px solid var(--border-dim); }
+  .alth-dice__telao { height: 300px; border-right: none; border-bottom: 1px solid var(--border-dim); }
   .alth-dice__ctl { overflow-y: visible; }
   .alth-dice__ctl, .alth-dice__header, .alth-dice__recent { padding-inline: var(--space-4); }
 }
