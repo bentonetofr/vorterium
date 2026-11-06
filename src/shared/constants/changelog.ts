@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.11',
+    date:    '2026-11-06',
+    title:   'Vortable: tela Mundos mais limpa',
+    items: [
+      'A tela Mundos foi refeita: cada mundo é um cartão com capa, o mundo aberto vem primeiro (borda dourada, selo “Aberto” e “Jogadores aqui” com a luzinha verde) e os outros têm um botão Abrir bem à vista. Editar, Renomear e Apagar foram para o menu de três pontos de cada cartão (o Apagar avisa por que está desligado: mundo aberto ou único da campanha).',
+      'A lista “Mundos prontos” saiu da página. O cartão “Novo mundo” agora abre uma janela com Em branco, Importar arquivo e os mundos prontos (Torvallen, Cidade em Ruínas, Saltmore e Nova York), cada um com o botão Criar.',
+    ],
+  },
+  {
     version: '2.10',
     date:    '2026-11-06',
     title:   'Lore dos personagens, para o mestre ler tudo num lugar só',

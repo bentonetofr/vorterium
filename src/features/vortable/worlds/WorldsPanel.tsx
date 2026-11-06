@@ -1,10 +1,12 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CampaignWorld } from '../services/vortableService'
 import { createWorld, deleteWorld, importWorldBundle, renameWorld, setActiveWorld } from '../services/vortableService'
 import { useVortableWorlds } from './VortableWorldProvider'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import './WorldsPanel.css'
 import { confirmDialog, promptDialog } from '../../../shared/components/dialogs'
+import { ModalOverlay } from '../../../shared/components/ModalOverlay'
+import { Presence } from '../../../shared/components/Presence'
 
 /** Mundos prontos que vêm com o site (viram um mundo seu ao importar). */
 const TEMPLATES = [
@@ -21,9 +23,12 @@ interface WorldsPanelProps {
   onEdit: () => void
 }
 
+const MAP_ICON = <path d="M9 4 3 6.5v13L9 17l6 3 6-2.5v-13L15 7 9 4ZM9 4v13M15 7v13" />
+
 /**
  * Mundos do mestre (cada mundo é um conjunto de zonas). Abrir um mundo coloca
- * os jogadores nele, na hora; o "+" cria um mundo novo.
+ * os jogadores nele, na hora; o "Novo mundo" abre uma janela com "Em branco",
+ * "Importar arquivo" e os mundos prontos do site.
  */
 export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
   const { worlds, active, editing, setEditId, refresh } = useVortableWorlds()
@@ -31,6 +36,18 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
   const fileInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [menuFor, setMenuFor] = useState<string | null>(null)
+  const [newOpen, setNewOpen] = useState(false)
+
+  // Menu de três pontos: fecha ao clicar fora ou com Esc.
+  useEffect(() => {
+    if (!menuFor) return
+    const onDown = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.world__menu-wrap')) setMenuFor(null) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuFor(null) }
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey) }
+  }, [menuFor])
 
   async function run(key: string, action: () => Promise<void>) {
     setBusy(key)
@@ -46,6 +63,7 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
   }
 
   async function create() {
+    setNewOpen(false)
     const name = (await promptDialog({ title: 'Novo mundo', label: 'Nome do novo mundo', confirmLabel: 'Criar', maxLength: 80 }))?.trim()
     if (!name) return
     void run('new', async () => {
@@ -69,6 +87,7 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
       if (!res.ok) throw new Error(`Não deu pra baixar o mundo pronto (${res.status}).`)
       const world = await importWorldBundle(campaignId, await res.json())
       setEditId(world.id)
+      setNewOpen(false)
     })
   }
 
@@ -123,45 +142,92 @@ export function WorldsPanel({ campaignId, onClose, onEdit }: WorldsPanelProps) {
       {error && <p className="worlds__error" role="alert">{error}</p>}
 
       <ul className="worlds__grid">
-        {worlds.map((w) => (
-          <li key={w.id} className={`world${w.active ? ' world--open' : ''}`}>
-            <div className="world__top">
-              <strong className="world__name" title={w.name}>{w.name}</strong>
-              {w.active && <span className="world__badge">Aberto</span>}
-              {editing?.id === w.id && !w.active && <span className="world__badge world__badge--edit">Editando</span>}
-            </div>
-            <span className="world__meta">{w.zones} {w.zones === 1 ? 'zona' : 'zonas'}</span>
-            <div className="world__actions">
-              <button type="button" className="btn btn-primary" onClick={() => open(w)} disabled={w.active || busy !== null}>
-                {w.active ? 'Os jogadores estão aqui' : 'Abrir pros jogadores'}
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={() => edit(w)}>Editar</button>
-              <button type="button" className="btn btn-ghost" onClick={() => rename(w)} disabled={busy !== null}>Renomear</button>
-              <button type="button" className="btn btn-ghost" onClick={() => remove(w)} disabled={w.active || busy !== null || worlds.length < 2}>Apagar</button>
-            </div>
-          </li>
-        ))}
+        {[...worlds].sort((a, b) => Number(b.active) - Number(a.active)).map((w) => {
+          const lastOne = worlds.length < 2
+          return (
+            <li key={w.id} className={`world${w.active ? ' world--open' : ''}`}>
+              <div className="world__cover" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{MAP_ICON}</svg>
+                {w.active && <span className="world__badge world__ribbon">Aberto</span>}
+                {editing?.id === w.id && !w.active && <span className="world__badge world__badge--edit world__ribbon">Editando</span>}
+              </div>
+              <div className="world__body">
+                <strong className="world__name" title={w.name}>{w.name}</strong>
+                <span className="world__meta">{w.zones} {w.zones === 1 ? 'zona' : 'zonas'}</span>
+                <div className="world__actions">
+                  {w.active ? (
+                    <span className="world__here"><i className="world__live" aria-hidden="true" />Jogadores aqui</span>
+                  ) : (
+                    <button type="button" className="btn btn-primary" onClick={() => open(w)} disabled={busy !== null}>Abrir</button>
+                  )}
+                  <div className="world__menu-wrap">
+                    <button
+                      type="button" className="world__more" aria-label={`Mais ações de ${w.name}`} aria-haspopup="menu" aria-expanded={menuFor === w.id}
+                      onClick={() => setMenuFor(menuFor === w.id ? null : w.id)}
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="19" cy="12" r="1.7" /></svg>
+                    </button>
+                    {menuFor === w.id && (
+                      <div className="world__menu anim-drop" role="menu">
+                        <button type="button" role="menuitem" onClick={() => { setMenuFor(null); edit(w) }}>Editar</button>
+                        <button type="button" role="menuitem" disabled={busy !== null} onClick={() => { setMenuFor(null); void rename(w) }}>Renomear</button>
+                        <button
+                          type="button" role="menuitem" className="world__menu-danger" disabled={w.active || lastOne || busy !== null}
+                          title={w.active ? 'Abra outro mundo antes de apagar este.' : lastOne ? 'É o único mundo da campanha.' : undefined}
+                          onClick={() => { setMenuFor(null); void remove(w) }}
+                        >
+                          Apagar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </li>
+          )
+        })}
         <li>
-          <button type="button" className="world world--new" onClick={create} disabled={busy !== null} aria-label="Criar um mundo novo">
+          <button type="button" className="world world--new" onClick={() => setNewOpen(true)} disabled={busy !== null} aria-label="Criar um mundo novo">
             <span className="world__plus" aria-hidden="true">+</span>
             <span>Novo mundo</span>
           </button>
         </li>
       </ul>
-      <section className="worlds__templates">
-        <h4 className="worlds__sub">Mundos prontos</h4>
-        <ul className="worlds__tpl-list">
-          {TEMPLATES.map((t) => (
-            <li key={t.id} className="worlds__tpl">
-              <div><strong>{t.label}</strong><span>{t.text}</span></div>
-              <button type="button" className="btn btn-ghost" onClick={() => void importTemplate(t)} disabled={busy !== null}>
-                {busy === `tpl:${t.id}` ? 'Criando…' : 'Criar este mundo'}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
       {active && <p className="worlds__hint">Aberto agora: {active.name}</p>}
+
+      <Presence show={newOpen} exitMs={220}>
+        {() => (
+          <ModalOverlay onClose={() => setNewOpen(false)} closeDisabled={busy !== null}>
+            <div className="worlds-new" role="dialog" aria-modal="true" aria-labelledby="worlds-new-title">
+              <header className="worlds-new__head">
+                <h4 id="worlds-new-title" className="worlds-new__title">Novo mundo</h4>
+                <button type="button" className="modal-close" onClick={() => setNewOpen(false)} disabled={busy !== null} aria-label="Fechar">×</button>
+              </header>
+              <div className="worlds-new__opts">
+                <button type="button" className="worlds-new__opt" onClick={() => void create()} disabled={busy !== null}>
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M12 17v-6M9 14h6" /></svg>
+                  <span><strong>Em branco</strong><small>Começar do zero</small></span>
+                </button>
+                <button type="button" className="worlds-new__opt" onClick={() => { setNewOpen(false); fileInput.current?.click() }} disabled={busy !== null}>
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14" /></svg>
+                  <span><strong>Importar arquivo</strong><small>Um .json de mundo</small></span>
+                </button>
+              </div>
+              <h5 className="worlds__sub worlds-new__sub">Ou comece por um mundo pronto</h5>
+              <ul className="worlds-new__list">
+                {TEMPLATES.map((t) => (
+                  <li key={t.id} className="worlds-new__tpl">
+                    <div><strong>{t.label}</strong><span title={t.text}>{t.text}</span></div>
+                    <button type="button" className="btn btn-ghost" onClick={() => void importTemplate(t)} disabled={busy !== null}>
+                      {busy === `tpl:${t.id}` ? 'Criando…' : 'Criar'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </ModalOverlay>
+        )}
+      </Presence>
     </div>
   )
 }

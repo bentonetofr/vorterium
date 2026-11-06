@@ -22,28 +22,43 @@
 
 .worlds__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: var(--space-3, 12px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.worlds__grid > li { animation: m-item-in 420ms var(--ease-out) backwards; }
+.worlds__grid > li:nth-child(2) { animation-delay: 50ms; } .worlds__grid > li:nth-child(3) { animation-delay: 100ms; }
+.worlds__grid > li:nth-child(4) { animation-delay: 150ms; } .worlds__grid > li:nth-child(n + 5) { animation-delay: 200ms; }
 
 .world {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 8px);
   height: 100%;
-  padding: var(--space-4, 16px);
   background: var(--bg-surface);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-lg);
+  transition: border-color 220ms var(--ease-out), transform 260ms var(--ease-out), box-shadow 260ms var(--ease-out);
 }
-.world--open { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
+@media (hover: hover) { .world:not(.world--new):hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3); } }
+.world--open { border-color: var(--accent-bright); box-shadow: 0 0 0 1px var(--accent-glow); }
 
-.world__top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* Capa do cartão: faixa lisa com o ícone de mapa; no mundo aberto, tom dourado. */
+.world__cover {
+  position: relative;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.world--open .world__cover { color: var(--gilded-bright); background: rgba(212, 175, 55, 0.1); }
+.world__ribbon { position: absolute; top: 8px; right: 8px; }
+.world__body { display: flex; flex-direction: column; gap: 4px; flex: 1; padding: var(--space-3, 12px) var(--space-4, 16px) var(--space-4, 16px); }
+
 .world__name {
-  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -64,27 +79,69 @@
   background: var(--success);
   border-radius: 999px;
 }
-.world__badge--edit { color: var(--accent-bright); background: var(--accent-glow); border: 1px solid var(--accent); }
+.world__badge--edit { color: var(--accent-bright); background: var(--bg-surface); border: 1px solid var(--accent); }
 .world__meta { color: var(--text-secondary); font-size: var(--text-sm); }
 
-.world__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
-.world__actions .btn { padding: 4px 12px; font-size: var(--text-sm); }
-.world__actions .btn-primary { flex: 1 1 100%; }
+.world__actions { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: var(--space-2, 8px); }
+.world__actions .btn-primary { flex: 1; justify-content: center; }
+.world__here {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.world__live { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; animation: glowPulse 2.4s ease-in-out infinite; }
+
+.world__menu-wrap { position: relative; flex: none; }
+.world__more {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  background: transparent; border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  color: var(--text-secondary); cursor: var(--cursor-hand);
+  transition: all 200ms var(--ease-out), transform 180ms var(--ease-spring);
+}
+.world__more:hover, .world__more[aria-expanded='true'] { color: var(--accent-bright); border-color: var(--gilded-bright); }
+.world__more:active { transform: scale(0.9); }
+.world__menu {
+  position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 5; min-width: 150px;
+  display: flex; flex-direction: column; padding: 4px;
+  background: var(--bg-surface); border: 1px solid var(--gilded); border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  transform-origin: bottom right;
+}
+.world__menu button {
+  padding: 8px 12px; text-align: left; background: none; border: none; border-radius: var(--radius-sm);
+  font-size: var(--text-sm); color: var(--text-primary); cursor: var(--cursor-hand);
+  transition: background 140ms;
+}
+.world__menu button:hover:not(:disabled) { background: var(--bg-overlay); }
+.world__menu button:disabled { opacity: 0.4; cursor: not-allowed; }
+.world__menu .world__menu-danger { color: var(--danger-bright); }
 
 .world--new {
   width: 100%;
   min-height: 150px;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   color: var(--text-secondary);
   background: transparent;
   border-style: dashed;
   cursor: var(--cursor-hand);
 }
 .world--new:hover:not(:disabled) { color: var(--accent-bright); border-color: var(--accent); }
-.world__plus { font-size: 44px; line-height: 1; }
+.world__plus { font-size: 44px; line-height: 1; transition: transform 300ms var(--ease-spring); }
+.world--new:hover .world__plus { transform: rotate(90deg) scale(1.1); }
 
-.worlds__templates { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
 .worlds__sub {
   margin: 0;
   font-family: var(--font-label);
@@ -94,22 +151,44 @@
   text-transform: uppercase;
   color: var(--text-muted);
 }
-.worlds__tpl-list { display: flex; flex-direction: column; gap: var(--space-2, 8px); margin: 0; padding: 0; list-style: none; }
-.worlds__tpl {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3, 12px);
-  padding: var(--space-3, 12px) var(--space-4, 16px);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-base);
-  border-radius: var(--radius-md);
-}
-.worlds__tpl div { display: flex; flex-direction: column; }
-.worlds__tpl strong { font-family: var(--font-display); color: var(--text-primary); }
-.worlds__tpl span { color: var(--text-secondary); font-size: var(--text-sm); }
 
-/* celular: o cabeçalho quebra em duas linhas, os mundos empilham e os mundos prontos ganham a largura toda */
+/* Janela "Novo mundo" */
+.worlds-new {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 2 * var(--space-4, 16px));
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--gilded);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.worlds-new__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3, 12px) var(--space-4, 16px); border-bottom: 1px solid var(--border-dim); }
+.worlds-new__title { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--accent-bright); }
+.worlds-new__opts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3, 12px); padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-2, 8px); }
+.worlds-new__opt {
+  display: flex; align-items: center; gap: var(--space-3, 12px); padding: var(--space-3, 12px); text-align: left;
+  background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  color: var(--accent-bright); cursor: var(--cursor-hand);
+  transition: all 220ms var(--ease-out), transform 180ms var(--ease-spring);
+}
+.worlds-new__opt:hover:not(:disabled) { border-color: var(--gilded-bright); transform: translateY(-2px); }
+.worlds-new__opt:active:not(:disabled) { transform: scale(0.97); }
+.worlds-new__opt:disabled { opacity: 0.5; cursor: not-allowed; }
+.worlds-new__opt strong { display: block; color: var(--text-primary); font-size: var(--text-sm); }
+.worlds-new__opt small { color: var(--text-muted); font-size: var(--text-xs); }
+.worlds-new__sub { padding: var(--space-3, 12px) var(--space-4, 16px) var(--space-2, 8px); }
+.worlds-new__list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0 var(--space-4, 16px) var(--space-4, 16px); list-style: none; }
+.worlds-new__tpl {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3, 12px); padding: var(--space-2, 8px) var(--space-3, 12px);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  animation: m-item-in 360ms var(--ease-out) backwards;
+}
+.worlds-new__tpl:nth-child(2) { animation-delay: 40ms; } .worlds-new__tpl:nth-child(3) { animation-delay: 80ms; } .worlds-new__tpl:nth-child(4) { animation-delay: 120ms; }
+.worlds-new__tpl div { display: flex; flex-direction: column; min-width: 0; }
+.worlds-new__tpl strong { font-family: var(--font-display); color: var(--text-primary); }
+.worlds-new__tpl span { color: var(--text-secondary); font-size: var(--text-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* celular: o cabeçalho quebra em duas linhas e os mundos empilham */
 @media (max-width: 640px) {
   .worlds { padding: var(--space-4, 16px) var(--space-3, 12px); padding-right: 64px; /* o botão de menu da borda direita não cobre o conteúdo */ }
   .worlds__head { flex-wrap: wrap; gap: var(--space-2, 8px); }
@@ -117,6 +196,5 @@
   .worlds__head-actions .btn { flex: 1 1 0; min-width: 0; padding-inline: var(--space-3, 12px); }
   .worlds__grid { grid-template-columns: minmax(0, 1fr); }
   .world--new { min-height: 96px; }
-  .worlds__tpl { flex-direction: column; align-items: stretch; }
-  .worlds__tpl .btn { align-self: stretch; }
+  .worlds-new__opts { grid-template-columns: minmax(0, 1fr); }
 }
