@@ -319,9 +319,9 @@
   transition: width 480ms var(--ease-out);
 }
 .alth-drag-bar--dragging .alth-vital__fill { transition: none; }
-.alth-vital--vitality .alth-vital__fill { background: linear-gradient(90deg, color-mix(in srgb, var(--danger) 70%, #000), var(--danger-bright)); }
-.alth-vital--mystic   .alth-vital__fill { background: linear-gradient(90deg, color-mix(in srgb, var(--alth-mystic) 55%, #000), var(--alth-mystic)); }
-.alth-vital--resource .alth-vital__fill { background: linear-gradient(90deg, color-mix(in srgb, var(--alth-resource) 55%, #000), var(--alth-resource)); }
+.alth-vital--vitality .alth-vital__fill { background: var(--danger); box-shadow: 0 0 8px var(--alth-vitality-glow); }
+.alth-vital--mystic   .alth-vital__fill { background: var(--alth-mystic); box-shadow: 0 0 8px var(--alth-mystic-glow); }
+.alth-vital--resource .alth-vital__fill { background: var(--alth-resource); box-shadow: 0 0 8px var(--alth-resource-glow); }
 
 /* Texto por cima da barra: não pega o clique (a barra arrasta), só os números. */
 .alth-vital__text {
@@ -334,8 +334,9 @@
   pointer-events: none;
   font-family: var(--font-label);
   font-weight: 700;
-  color: var(--text-primary);
-  text-shadow: 0 0 3px var(--bg-void), 0 1px 2px var(--bg-void);
+  /* Branco com contorno escuro: lê sobre o preenchimento (claro) e sobre o fundo da barra, nos dois temas. */
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.7), 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 .alth-vital__sigla { font-size: var(--text-sm); letter-spacing: 0.06em; text-transform: uppercase; }
 .alth-vital__values { display: inline-flex; align-items: baseline; gap: 2px; pointer-events: auto; }
