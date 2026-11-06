@@ -5,7 +5,9 @@ import type { AltheriumAttribute, AltheriumDomain } from '../constants/altherium
 import type { AltheriumScene } from '../services/altheriumSceneService'
 import {
   listAltheriumAnswers,
+  listMyAltheriumRolls,
   listOpenAltheriumRequests,
+  requestAnswered,
   subscribeToAltheriumRequests,
   type AltheriumRequest,
 } from '../services/altheriumRequestService'
@@ -14,6 +16,7 @@ import type { DomainCheck } from './AltheriumCombatPanel'
 import { LossResult } from './AltheriumMindWindow'
 import { StealthResult } from './AltheriumStealthWindow'
 import { Icon } from './AltheriumPlayKit'
+import { useRollBusy } from '../../dnd/rolls/rollActivity'
 import './AltheriumMaster.css'
 
 // ────────────────────────────────────────────────────────
@@ -50,9 +53,17 @@ export function AltheriumRequestCard({ campaignId, sheetId, character, check, sc
     const list = await listOpenAltheriumRequests(campaignId)
     const mine = me ? list.filter((r) => r.targets.includes(me)) : []
     const rolls = await listAltheriumAnswers(campaignId, mine.map((r) => r.id))
+    const linked = new Set(rolls.filter((r) => r.user_id === me).map((r) => String((r.roll_context as { request_id?: string } | null)?.request_id)))
+    // Quem rolou o domínio pedido direto na ficha também respondeu: o aviso some.
+    const since = mine.reduce((min, r) => (r.created_at < min ? r.created_at : min), mine[0]?.created_at ?? '')
+    const myRolls = me && mine.length > 0 ? await listMyAltheriumRolls(campaignId, me, since) : []
     setOpen(mine)
-    setAnswered(new Set(rolls.filter((r) => r.user_id === me).map((r) => String((r.roll_context as { request_id?: string } | null)?.request_id))))
+    setAnswered(new Set(mine.filter((r) => requestAnswered(r, myRolls, linked)).map((r) => r.id)))
   }, [campaignId, me])
+
+  // Terminou uma rolagem sua (de qualquer janela da ficha): confere de novo se ela respondeu algum pedido.
+  const busy = useRollBusy()
+  useEffect(() => { if (!busy) void refresh() }, [busy, refresh])
 
   useEffect(() => {
     void refresh()

@@ -71,6 +71,33 @@ export function subscribeToAltheriumRequests(campaignId: string, onChange: () =>
   return () => { supabase.removeChannel(channel) }
 }
 
+/** O domínio que o pedido cobra: o do pedido de teste, a Furtividade, ou a Vontade do Equilíbrio. */
+export function requestDomainKey(r: Pick<AltheriumRequest, 'kind' | 'domain'>): string | null {
+  return r.kind === 'stealth' ? 'furtividade' : r.kind === 'equilibrium' ? 'vontade' : r.domain
+}
+
+/**
+ * O pedido já foi respondido por quem rolou? Vale a rolagem ligada ao pedido (roll_context.request_id) e também
+ * a de quem rolou o domínio pedido por conta própria, na ficha, depois que o pedido foi feito.
+ */
+export function requestAnswered(r: AltheriumRequest, myRolls: readonly DiceRoll[], linkedIds: ReadonlySet<string>): boolean {
+  if (linkedIds.has(r.id)) return true
+  const key = requestDomainKey(r)
+  if (!key) return false
+  return myRolls.some((x) => {
+    const c = x.roll_context
+    return c?.system === 'altherium' && c.kind === 'skill' && c.key === key && x.created_at >= r.created_at
+  })
+}
+
+/** As rolagens de teste desta pessoa na campanha desde `since` (para ver se ela já rolou o que o mestre pediu). */
+export async function listMyAltheriumRolls(campaignId: string, userId: string, since: string): Promise<DiceRoll[]> {
+  const { data, error } = await supabase.from('dice_rolls').select('*')
+    .eq('campaign_id', campaignId).eq('user_id', userId).gte('created_at', since).order('created_at', { ascending: true }).limit(100)
+  if (error) return []
+  return data as DiceRoll[]
+}
+
 /** As rolagens que responderam a estes pedidos (roll_context.request_id), da mais antiga para a mais nova. */
 export async function listAltheriumAnswers(campaignId: string, ids: readonly string[]): Promise<DiceRoll[]> {
   if (ids.length === 0) return []
