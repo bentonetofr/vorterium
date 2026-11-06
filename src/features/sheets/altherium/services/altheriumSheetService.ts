@@ -1,5 +1,6 @@
 import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
 import { pcOnly } from '../../services/npcService'
+import { countDomainUse } from '../utils/altheriumDomainUse'
 import { logActivity } from '../../../activity/services/activityService'
 import { sendMessage } from '../../../chat/services/chatService'
 import type {
@@ -535,4 +536,16 @@ export async function setAltheriumCampaignSagas(campaignId: string, sagas: strin
     .upsert({ campaign_id: campaignId, sagas, updated_at: new Date().toISOString() }, { onConflict: 'campaign_id' })
 
   if (error) throw new Error('Não foi possível salvar as Sagas.')
+}
+
+/**
+ * Quantas vezes esta pessoa rolou cada domínio nesta campanha (as últimas 500 rolagens de teste do Altherium).
+ * Serve para a ficha mostrar por padrão só os domínios que ela mais usa. Sem acesso ou sem rolagens, vazio.
+ */
+export async function getAltheriumDomainUsage(campaignId: string, userId: string): Promise<Record<string, number>> {
+  const { data, error } = await supabase.from('dice_rolls').select('roll_context')
+    .eq('campaign_id', campaignId).eq('user_id', userId).eq('roll_context->>system', 'altherium')
+    .order('created_at', { ascending: false }).limit(500)
+  if (error || !data) return {}
+  return countDomainUse(data as { roll_context: { system?: string; kind?: string; key?: string } | null }[])
 }

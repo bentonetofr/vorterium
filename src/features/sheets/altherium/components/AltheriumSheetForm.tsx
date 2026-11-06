@@ -35,6 +35,8 @@ import {
   usesRunico,
 } from '../utils/altheriumCalculations'
 import { AlthGlyph } from './AltheriumGlyph'
+import { DOMAINS_SHOWN, pickShownDomains } from '../utils/altheriumDomainUse'
+import { getAltheriumDomainUsage } from '../services/altheriumSheetService'
 import { AltheriumBodyDiagram, type BodyBuild, type BodyZone } from './AltheriumBodyDiagram'
 import { carriedWeapons, quiverAmmo } from './AltheriumWeaponArt'
 import { AltheriumAttributeRadar } from './AltheriumAttributeRadar'
@@ -382,6 +384,14 @@ export function AltheriumSheetForm({
   const [form, setForm] = useState<FormData>(() => sheetToForm(sheet))
   const [error, setError] = useState<string | null>(null)
   const [domainFilter, setDomainFilter] = useState('')
+  /** Domínios: por padrão só os 10 mais usados; "Mostrar mais" abre todos. */
+  const [showAllDomains, setShowAllDomains] = useState(false)
+  const [domainUsage, setDomainUsage] = useState<Record<string, number>>({})
+  useEffect(() => {
+    let alive = true
+    void getAltheriumDomainUsage(sheet.campaign_id, sheet.user_id).then((u) => { if (alive) setDomainUsage(u) }).catch(() => { /* sem o histórico, vale a ordem da lista */ })
+    return () => { alive = false }
+  }, [sheet.campaign_id, sheet.user_id])
   /** Aba Equipamento: os itens e a anatomia, ou o Ofício (recursos, reparo, receitas). */
   const [equipView, setEquipView] = useState<'itens' | 'oficio'>('itens')
   const menuRef = useRef<HTMLDetailsElement>(null)
@@ -607,6 +617,11 @@ export function AltheriumSheetForm({
     if (!q) return list
     return list.filter((d) => normalize(d.label).includes(q))
   }, [domainFilter, raiz])
+  // Os que aparecem por padrão: os com pontos e os mais rolados (10 no mínimo). Buscar mostra tudo o que combina.
+  const searchingDomains = domainFilter.trim() !== ''
+  const shownDomainIds = pickShownDomains({ ids: domainsForRaiz(raiz).map((d) => d.id), points: domainMap, usage: domainUsage })
+  const visibleDomains = searchingDomains || showAllDomains ? filteredDomains : filteredDomains.filter((d) => shownDomainIds.has(d.id))
+  const hiddenDomains = filteredDomains.length - visibleDomains.length
   // Teste de domínio aberto (clicar nos dados do domínio). A conta dev observadora só olha.
   const [testSpec, setTestSpec] = useState<AltheriumTestSpec | null>(null)
   const canRollTests = !isObserver()
@@ -1163,7 +1178,7 @@ export function AltheriumSheetForm({
                   <p className="alth-doms__empty">Nenhum domínio encontrado.</p>
                 )}
 
-                {filteredDomains.map((d) => {
+                {visibleDomains.map((d) => {
                   const points    = domainMap.get(d.id) ?? 0
                   const attrLabel = ATTRIBUTES.find((a) => a.id === d.attribute)?.label ?? ''
                   const fromGenesis = genesisBonusFor(form.genesis, d.id)
@@ -1229,6 +1244,11 @@ export function AltheriumSheetForm({
                   )
                 })}
               </div>
+              {!searchingDomains && filteredDomains.length > DOMAINS_SHOWN && (hiddenDomains > 0 || showAllDomains) && (
+                <button type="button" className="alth-doms__more" aria-expanded={showAllDomains} onClick={() => setShowAllDomains((v) => !v)}>
+                  {showAllDomains ? 'Mostrar só os mais usados' : `Mostrar mais (${hiddenDomains})`}
+                </button>
+              )}
               <p className="alth-hint">
                 Cada ponto vale +1d10 no teste do domínio (máximo {DOMAIN_MAX_POINTS}); o "2+" soma mais 1d10 (4d10) sem gastar ponto.
                 O −1 marca desvantagem (1d de desvantagem). Um atributo em 0 deixa os domínios dele com desvantagem por padrão; subir o valor tira.

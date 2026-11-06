@@ -946,6 +946,14 @@
 
 /* ── Domínios: nome + dados + [−] valor [+] ── */
 .alth-doms__list { display: flex; flex-direction: column; gap: 4px; }
+/* "Mostrar mais": abre a lista toda de domínios (por padrão só os 10 mais usados). */
+.alth-doms__more {
+  width: 100%; padding: 9px; background: none; border: 1px dashed var(--border-base); border-radius: var(--radius-md);
+  font-family: var(--font-label); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-secondary); cursor: var(--cursor-hand);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.alth-doms__more:hover { border-color: var(--gilded-bright); color: var(--accent-bright); }
 .alth-doms__empty { padding: var(--space-4); text-align: center; color: var(--text-muted); font-size: var(--text-sm); }
 .alth-dom {
   display: grid;
