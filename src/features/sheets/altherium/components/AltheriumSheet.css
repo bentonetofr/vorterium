@@ -653,6 +653,35 @@
   font-weight: 400;
   color: var(--text-muted);
 }
+/* Nome do atributo com a setinha: abre a janelinha que explica o atributo. */
+.alth-attrs { position: relative; }
+.alth-table__head--btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  padding: 2px 4px; background: none; border: none; border-radius: var(--radius-sm);
+  cursor: var(--cursor-hand);
+}
+.alth-table__head--btn svg { transition: transform 160ms var(--ease-out); flex-shrink: 0; }
+.alth-table__head--btn:hover,
+.alth-table__head--btn.is-open { color: var(--accent-bright); }
+.alth-table__head--btn.is-open svg { transform: rotate(180deg); }
+.alth-attr-pop {
+  position: absolute; left: 0; right: 0; top: calc(100% + 10px); z-index: 20;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface); border: 1px solid var(--gilded-bright); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  animation: fadeUp 0.16s ease-out;
+}
+.alth-attr-pop::before {
+  content: ''; position: absolute; top: -6px; left: var(--arrow-x, 50%);
+  width: 10px; height: 10px; margin-left: -5px; transform: rotate(45deg);
+  background: var(--bg-surface); border-left: 1px solid var(--gilded-bright); border-top: 1px solid var(--gilded-bright);
+}
+.alth-attr-pop p { margin: 4px 0 0; font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.45; }
+.alth-attr-pop__title { font-family: var(--font-display); font-size: var(--text-lg); color: var(--accent-bright); }
+.alth-attr-pop__doms span { color: var(--text-muted); font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.alth-attr-pop__limit { color: var(--text-muted) !important; font-size: var(--text-xs) !important; }
+@media (prefers-reduced-motion: reduce) { .alth-attr-pop { animation: none; } }
+
 /* Atributo: anel que enche com o valor, número editável no meio. */
 .alth-ring { position: relative; width: 68px; height: 68px; }
 .alth-ring__svg { display: block; width: 100%; height: 100%; }

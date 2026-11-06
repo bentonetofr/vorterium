@@ -5,6 +5,7 @@ import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../s
 import {
   ATTRIBUTES,
   ATTRIBUTE_HARD_MAX,
+  ATTRIBUTE_MAX_AT_CREATION,
   BODY_PARTS,
   DOMAINS,
   DOMAIN_MAX_POINTS,
@@ -383,6 +384,17 @@ export function AltheriumSheetForm({
   /** Aba Equipamento: os itens e a anatomia, ou o Ofício (recursos, reparo, receitas). */
   const [equipView, setEquipView] = useState<'itens' | 'oficio'>('itens')
   const menuRef = useRef<HTMLDetailsElement>(null)
+  /** Atributo cuja janelinha de explicação está aberta (a setinha ao lado do nome). */
+  const [attrInfo, setAttrInfo] = useState<AltheriumAttribute | null>(null)
+  const attrsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!attrInfo) return
+    const onDown = (e: PointerEvent) => { if (!attrsRef.current?.contains(e.target as Node)) setAttrInfo(null) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAttrInfo(null) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [attrInfo])
   const [activeTab, setActiveTab] = useState<AltheriumFormTabId>('visao-geral')
   const tabDir = useTabDirection(ALTHERIUM_FORM_TAB_IDS, activeTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveTab)
@@ -1067,6 +1079,7 @@ export function AltheriumSheetForm({
                 <h4 className="alth-card__title">Atributos</h4>
               </div>
 
+              <div className="alth-attrs" ref={attrsRef}>
               <div className="alth-table alth-table--attrs">
                 {ATTRIBUTES.map((attr) => {
                   const key    = `attr_${attr.id}` as keyof FormData
@@ -1074,8 +1087,16 @@ export function AltheriumSheetForm({
                   const hidden = attr.id === 'runico' && raiz !== null && !usesRunico(raiz)
                   if (hidden) return null
                   return (
-                    <div key={attr.id} className="alth-table__col" title={attr.description}>
-                      <span className="alth-table__head">{attr.label}</span>
+                    <div key={attr.id} className="alth-table__col">
+                      <button
+                        type="button" className={`alth-table__head alth-table__head--btn${attrInfo === attr.id ? ' is-open' : ''}`}
+                        aria-expanded={attrInfo === attr.id} aria-controls="alth-attr-info"
+                        aria-label={`Sobre ${attr.label}`}
+                        onClick={() => setAttrInfo(attrInfo === attr.id ? null : attr.id)}
+                      >
+                        {attr.label}
+                        <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </button>
                       {/* Anel que enche com o valor (0 a 10); o número no meio continua editável. */}
                       <div className="alth-ring">
                         <svg className="alth-ring__svg" viewBox="0 0 64 64" aria-hidden="true">
@@ -1096,6 +1117,26 @@ export function AltheriumSheetForm({
                     </div>
                   )
                 })}
+              </div>
+              {attrInfo && (() => {
+                const shown = ATTRIBUTES.filter((a) => !(a.id === 'runico' && raiz !== null && !usesRunico(raiz)))
+                const idx = shown.findIndex((a) => a.id === attrInfo)
+                const attr = shown[idx]
+                if (!attr) return null
+                const cols = Math.min(shown.length, 5)
+                const doms = domainsForRaiz(raiz).filter((d) => d.attribute === attr.id).map((d) => d.label)
+                return (
+                  <div
+                    id="alth-attr-info" role="dialog" aria-label={`Sobre ${attr.label}`} className="alth-attr-pop"
+                    style={{ '--arrow-x': `${((idx % cols) + 0.5) / cols * 100}%` } as CSSProperties}
+                  >
+                    <strong className="alth-attr-pop__title">{attr.label}</strong>
+                    <p>{attr.description}</p>
+                    {doms.length > 0 && <p className="alth-attr-pop__doms"><span>Domínios:</span> {doms.join(', ')}.</p>}
+                    <p className="alth-attr-pop__limit">Vai de 0 a {ATTRIBUTE_HARD_MAX}; na criação, no máximo {ATTRIBUTE_MAX_AT_CREATION}.</p>
+                  </div>
+                )
+              })()}
               </div>
             </section>
 
