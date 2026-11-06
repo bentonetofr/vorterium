@@ -336,9 +336,24 @@ button.alth-pip:hover { border-color: var(--accent-bright); }
 .alth-scene__dts { font-size: var(--text-xs); color: var(--text-muted); }
 .alth-scene__dts summary { cursor: var(--cursor-hand, pointer); color: var(--accent-bright); }
 .alth-scene__dts[open] { display: flex; flex-direction: column; gap: var(--space-2); }
-.alth-scene__dtrow { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
-.alth-scene__dt { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-muted); }
-.alth-scene__dt .input { width: 70px; }
+.alth-scene__dtlist { display: flex; flex-direction: column; gap: 6px; margin-top: var(--space-2); max-width: 300px; }
+.alth-scene__dtitem { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.alth-scene__dtname { display: inline-flex; align-items: center; gap: 8px; font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-scene__dtname i { width: 10px; height: 10px; border-radius: 50%; }
+.alth-stepper { display: inline-flex; border: 1px solid var(--border-base); border-radius: var(--radius-md); overflow: hidden; }
+.alth-stepper button {
+  width: 30px; height: 30px; border: none; background: var(--bg-overlay); color: var(--text-secondary);
+  font-family: var(--font-label); font-size: 16px; font-weight: 700; line-height: 1; cursor: var(--cursor-hand, pointer);
+}
+.alth-stepper button:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-surface); }
+.alth-stepper button:disabled { opacity: 0.35; cursor: default; }
+.alth-stepper output { display: grid; place-items: center; min-width: 38px; background: var(--bg-void); font-family: var(--font-label); font-size: var(--text-md); font-weight: 700; }
+.alth-scene__dtfoot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-1); }
+.alth-scene__reset {
+  background: none; border: none; padding: 2px 4px; font-size: var(--text-xs); color: var(--accent-bright);
+  text-decoration: underline; text-underline-offset: 3px; cursor: var(--cursor-hand, pointer);
+}
+.alth-scene__reset:disabled { color: var(--text-muted); text-decoration: none; cursor: default; }
 
 /* Local: um bloco com ícone para cada lugar. */
 .alth-scene__tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: var(--space-2); }

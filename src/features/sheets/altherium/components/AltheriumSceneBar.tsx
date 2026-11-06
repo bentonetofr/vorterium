@@ -14,6 +14,9 @@ import './AltheriumPlay.css'
 // farto a devastado); o local tem ícones; o clima são chips que se acendem.
 // ────────────────────────────────────────────────────────
 
+const DT_MIN = 1
+const DT_MAX = 30
+
 const WEATHER = [
   { id: 'noite',      label: 'Noite',         full: 'Noite ou escuridão',     delta: -1, icon: 'moon' },
   { id: 'chuva',      label: 'Chuva ou neve', full: 'Chuva, neblina ou neve', delta: -1, icon: 'rain' },
@@ -54,6 +57,7 @@ export function AltheriumSceneBar({ campaignId }: { campaignId: string }) {
 
   const enemy = enemyStateDef(scene.enemy)
   const scarcity = scarcityDef(scene.scarcity)
+  const dtsChanged = ENEMY_STATES.some((s) => scene.dts[s.id] !== s.defaultDt)
   const weatherSum = WEATHER.filter((w) => scene.weather.includes(w.id)).reduce((sum, w) => sum + w.delta, 0)
 
   return (
@@ -81,21 +85,29 @@ export function AltheriumSceneBar({ campaignId }: { campaignId: string }) {
               <span className="alth-win__hint">{enemy.meaning}</span>
               <details className="alth-scene__dts">
                 <summary>Ajustar as DTs</summary>
-                <div className="alth-scene__dtrow">
-                  {ENEMY_STATES.map((s) => (
-                    <label key={s.id} className="alth-scene__dt">
-                      <span>{s.label}</span>
-                      <input
-                        type="number" className="input" min={1} max={30} value={scene.dts[s.id]}
-                        onChange={(e) => {
-                          const n = Math.max(1, Math.min(30, Math.trunc(Number(e.target.value)) || s.defaultDt))
-                          void change({ dts: { ...scene.dts, [s.id]: n } })
-                        }}
-                      />
-                    </label>
-                  ))}
+                <div className="alth-scene__dtlist">
+                  {ENEMY_STATES.map((s) => {
+                    const dt = scene.dts[s.id]
+                    const set = (n: number) => void change({ dts: { ...scene.dts, [s.id]: Math.max(DT_MIN, Math.min(DT_MAX, n)) } })
+                    return (
+                      <div key={s.id} className="alth-scene__dtitem">
+                        <span className="alth-scene__dtname"><i style={{ background: ENEMY_TONE[s.id] }} aria-hidden="true" />{s.label}</span>
+                        <span className="alth-stepper" role="group" aria-label={`DT ${s.label}`}>
+                          <button type="button" onClick={() => set(dt - 1)} disabled={dt <= DT_MIN} aria-label={`Diminuir a DT ${s.label}`}>−</button>
+                          <output style={{ color: ENEMY_TONE[s.id] }}>{dt}</output>
+                          <button type="button" onClick={() => set(dt + 1)} disabled={dt >= DT_MAX} aria-label={`Aumentar a DT ${s.label}`}>+</button>
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
-                <span className="alth-win__hint">O livro deixa as DTs em aberto: aqui o padrão é 6, 8 e 10.</span>
+                <div className="alth-scene__dtfoot">
+                  <span className="alth-win__hint">O livro deixa as DTs em aberto: o padrão aqui é {ENEMY_STATES.map((s) => s.defaultDt).join(', ')}.</span>
+                  <button type="button" className="alth-scene__reset" disabled={!dtsChanged}
+                    onClick={() => void change({ dts: Object.fromEntries(ENEMY_STATES.map((s) => [s.id, s.defaultDt])) as unknown as AltheriumScene['dts'] })}>
+                    Restaurar
+                  </button>
+                </div>
               </details>
             </div>
 
