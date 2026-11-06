@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import { formatRelativeTime, useRecentRolls } from '../../../dice/useRecentRolls'
 import { getMyDiceSkin, onDiceSkinChange, peekMyDiceSkin, setMyDiceSkin } from '../../../dice3d/diceSkinService'
-import { DEFAULT_SKIN, getSkin } from '../../../dice3d/skins'
+import { DEFAULT_SKIN, getSkin, skinsFor } from '../../../dice3d/skins'
+import { useFeatureAccess } from '../../../control/siteFeatures'
 import { useRollSkin } from '../../../dice3d/useRollSkin'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
-import { DndDiceVitrine } from '../../dnd/rolls/DndDiceVitrine'
 import { freeContext, freeLabel, idleKindOf, readFree, resultsText, type FreeReading } from '../../dnd/rolls/freeRoll'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import './AltheriumPlay.css'
@@ -219,7 +219,7 @@ export function AltheriumDiceCard({ campaignId, currentUserId, onClose }: Props)
                 </label>
               </>
             ) : (
-              <div className="alth-dice__skins"><DndDiceVitrine skin={skin} error={skinError} onPick={(id) => void pickSkin(id)} /></div>
+              <SkinList skin={skin} error={skinError} onPick={(id) => void pickSkin(id)} />
             )}
           </div>
         </div>
@@ -239,6 +239,35 @@ export function AltheriumDiceCard({ campaignId, currentUserId, onClose }: Props)
           <button type="button" className="alth-test__link" onClick={() => void reload(true)}>Atualizar</button>
         </footer>
       </div>
+    </div>
+  )
+}
+
+// ── Meus dados: a lista dos conjuntos (o telão mostra o escolhido, girando) ──
+
+function SkinList({ skin, error, onPick }: { skin: string; error: string | null; onPick: (id: string) => void }) {
+  // os de todos e os exclusivos liberados para esta conta
+  const skins = skinsFor(useFeatureAccess())
+  return (
+    <div className="alth-dice__skins">
+      <p className="alth-dice__note">É com o conjunto escolhido que os seus dados rolam, e é assim que os outros jogadores os veem. O dado do telão já mostra a sua escolha.</p>
+      <ul className="alth-dice__skinlist" role="radiogroup" aria-label="Conjuntos de dados">
+        {skins.map((k) => (
+          <li key={k.id}>
+            <button type="button" role="radio" aria-checked={skin === k.id} className={`alth-dice__skin-row${skin === k.id ? ' is-on' : ''}`} onClick={() => onPick(k.id)}>
+              <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true" style={{ opacity: k.glass || k.resin ? 0.88 : 1 }}>
+                <polygon points="20,3 35,11 35,29 20,37 5,29 5,11" fill={k.body} stroke={k.bodyEdge} strokeWidth="2" />
+                <polyline points="20,3 20,16 5,29 M20,16 35,29 M5,11 20,16 35,11" fill="none" stroke={k.bodyEdge} strokeWidth="1" />
+                <text x="20" y="28" textAnchor="middle" fontSize="9" fontWeight="700" fill={k.ink} fontFamily="Georgia, serif">20</text>
+              </svg>
+              <span className="alth-dice__skin-name">{k.name}</span>
+              {k.exclusive && <span className="alth-dice__tag">Exclusivo</span>}
+              <span className="alth-dice__skin-state">{skin === k.id ? 'Em uso' : 'Usar'}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
     </div>
   )
 }
