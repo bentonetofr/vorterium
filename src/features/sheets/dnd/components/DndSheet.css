@@ -1228,7 +1228,6 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
 @container dsh (max-width: 560px) {
   .dsh-tabs { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; overflow: visible; }
   .dsh-tabs > .campaign-tab { grid-column: span 3; justify-content: center; min-width: 0; min-height: 40px; padding: var(--space-2) 2px; white-space: normal; text-align: center; }
-  .dsh-tabs > .campaign-tab:nth-of-type(n + 5) { grid-column: span 4; }
   .dsh-tabs .campaign-tab__label { font-size: 0.64rem; letter-spacing: 0.04em; line-height: 1.15; overflow-wrap: anywhere; }
   .dsh-tabs__full { display: none; }
   .dsh-tabs__short { display: inline; }

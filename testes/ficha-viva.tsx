@@ -15,6 +15,7 @@ import '../src/features/campaigns/pages/CampaignPages.css'
 import '../src/shared/theme/touch.css'
 import { cls, details, feature, makeData, makeSheet, resource } from '../src/features/sheets/dnd/components/fixtures'
 import { DndSheetForm } from '../src/features/sheets/dnd/components/DndSheetForm'
+import { AuthProvider } from '../src/features/auth/AuthProvider'
 import type { DndCharacterSheet, DndCharacterSheetUpdateInput } from '../src/shared/types'
 
 const params = new URLSearchParams(location.search)
@@ -49,5 +50,5 @@ function Preview() {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <div style={{ padding: 16, width: '100%', maxWidth: width ?? 1100, margin: '0 auto' }}><Preview /></div>,
+  <AuthProvider><div style={{ padding: 16, width: '100%', maxWidth: width ?? 1100, margin: '0 auto' }}><Preview /></div></AuthProvider>,
 )

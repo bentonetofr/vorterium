@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.10',
+    date:    '2026-11-06',
+    title:   'Lore dos personagens, para o mestre ler tudo num lugar só',
+    items: [
+      'Nova aba Lore na ficha de Altherium e na de D&D. O jogador escreve a história do personagem num campo grande (salva sozinho, com contagem de palavras) e/ou guarda arquivos: PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON e CSV, até 20 MB cada e 25 por ficha. É só soltar os arquivos na área ou escolher; cada arquivo vira um cartão com Ler, Baixar e Remover. No Altherium o texto usa a fonte caligráfica; no D&D, a serifada do site.',
+      'Os arquivos abrem numa janela de leitura dentro do site: PDF na tela, DOCX como texto com títulos, e TXT, MD, JSON e CSV direto. DOC, ODT e RTF só baixam.',
+      'Nova aba Lores na Sessão do mestre (Altherium e D&D): uma lista com todos os personagens da campanha, com retrato, jogador, trecho do texto, palavras, arquivos e “há quanto tempo”, e a leitura ao lado, em página de livro com letra capitular. Tem busca (por nome, texto ou arquivo), um ponto dourado nas lores com novidade desde a última vez que você leu, “Copiar texto” e atualização ao vivo quando alguém escreve. No celular a lista e a leitura se alternam. Só o jogador mexe na própria lore; o mestre só lê.',
+      'Precisa rodar a migration 20240225000000 no Supabase.',
+    ],
+  },
+  {
     version: '2.9',
     date:    '2026-11-05',
     title:   'Altherium: ficha com visual novo e dados 3D em tudo',

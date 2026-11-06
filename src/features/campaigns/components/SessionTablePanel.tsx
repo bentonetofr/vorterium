@@ -7,6 +7,7 @@ import { RulebookPanel, hasRulebook } from '../../rulebook/components/RulebookPa
 import { BestiaryPanel } from '../../bestiary/components/BestiaryPanel'
 import { TdaBestiaryPanel } from '../../sheets/terraDevastadaAdaptada/components/TdaBestiaryPanel'
 import { VortableMesa } from '../../vortable/components/VortableMesa'
+import { LoresPanel } from '../../lore/LoresPanel'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { useScreenShare } from '../../mesa/screen/ScreenShareProvider'
 import type { CampaignWithRole } from '../../../shared/types'
@@ -24,7 +25,7 @@ interface SubTab {
   label: string
 }
 
-const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'livro']
+const SUB_TAB_ORDER: SessionSubTabId[] = ['mesa', 'ficha', 'atividade', 'iniciativa', 'bestiario', 'lores', 'livro']
 
 interface NavigationState {
   initialSessionSubTab?: SessionSubTabId
@@ -40,11 +41,14 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
   const screen = useScreenShare()
   const showBestiary = campaign.role === 'master'
     && (campaign.system === 'altherium' || campaign.system === 'terra_devastada_adaptada')
+  // Lores dos personagens: o mestre as lê todas num lugar só (Altherium e D&D).
+  const showLores = campaign.role === 'master' && (campaign.system === 'altherium' || campaign.system === 'dnd5e')
   // Abas que essa pessoa tem nessa campanha — pedido de outra (ex.:
   // Bestiário pra jogador) cai na Ficha em vez de abrir um painel vazio.
   const available = (tab: SessionSubTabId | undefined): tab is SessionSubTabId =>
     tab != null &&
     (tab !== 'bestiario' || showBestiary) &&
+    (tab !== 'lores' || showLores) &&
     (tab !== 'livro' || hasRulebook(campaign.system))
   // Com sessão ou transmissão rolando, a Sessão já abre na Mesa.
   const [activeSubTab, setActiveSubTab] = useState<SessionSubTabId>(() => {
@@ -73,6 +77,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
     { id: 'iniciativa', label: 'Iniciativa' },
     // Bestiário — só o mestre, em Altherium (as contas usam as fichas) e em Terra Devastada Adaptada.
     ...(showBestiary ? [{ id: 'bestiario' as const, label: 'Bestiário' }] : []),
+    ...(showLores ? [{ id: 'lores' as const, label: 'Lores' }] : []),
     // Livro de regras — só nos sistemas que têm um (hoje, Altherium).
     ...(hasRulebook(campaign.system) ? [{ id: 'livro' as const, label: 'Livro' }] : []),
   ]
@@ -162,6 +167,17 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
           {activeSubTab === 'bestiario' && (campaign.system === 'terra_devastada_adaptada'
             ? <TdaBestiaryPanel campaignId={campaign.id} />
             : <BestiaryPanel campaign={campaign} />)}
+        </div>
+      )}
+
+      {showLores && (
+        <div
+          id="session-subtabpanel-lores"
+          role="tabpanel"
+          hidden={activeSubTab !== 'lores'}
+          className="anim-tab-panel"
+        >
+          {activeSubTab === 'lores' && <LoresPanel campaign={campaign} />}
         </div>
       )}
 

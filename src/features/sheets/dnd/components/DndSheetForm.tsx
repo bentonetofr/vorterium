@@ -25,6 +25,7 @@ const DndImportWizard = lazy(() => import('../import/DndImportWizard').then((m) 
 import { Presence } from '../../../../shared/components/Presence'
 import './DndSheet.css'
 import './DndMotion.css'
+import { LoreEditor } from '../../../lore/LoreEditor'
 
 // ────────────────────────────────────────────────────────
 // Ficha de D&D 5e (2014): cabeçalho, sete abas e salvamento automático igual
@@ -51,7 +52,7 @@ interface DndSheetFormProps {
 const AUTOSAVE_DELAY_MS = 800
 type SaveState = 'saved' | 'pending' | 'saving' | 'error'
 
-type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'inventario' | 'caracteristicas' | 'historia'
+type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'inventario' | 'caracteristicas' | 'historia' | 'lore'
 /** `short`: o nome na grade de abas do celular, onde o completo não cabe. */
 const TABS: { id: TabId; label: string; short: string }[] = [
   { id: 'personagem',      label: 'Personagem',           short: 'Personagem' },
@@ -61,6 +62,7 @@ const TABS: { id: TabId; label: string; short: string }[] = [
   { id: 'inventario',      label: 'Inventário',           short: 'Inventário' },
   { id: 'caracteristicas', label: 'Características',      short: 'Características' },
   { id: 'historia',        label: 'História',             short: 'História' },
+  { id: 'lore',            label: 'Lore',                 short: 'Lore' },
 ]
 const TAB_IDS = TABS.map((t) => t.id)
 
@@ -378,6 +380,16 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         <div id="dsh-tabpanel-inventario" role="tabpanel" hidden={activeTab !== 'inventario'}>{activeTab === 'inventario' && <InventarioTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-caracteristicas" role="tabpanel" hidden={activeTab !== 'caracteristicas'}>{activeTab === 'caracteristicas' && <CaracteristicasTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-historia" role="tabpanel" hidden={activeTab !== 'historia'}>{activeTab === 'historia' && <HistoriaTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-lore" role="tabpanel" hidden={activeTab !== 'lore'}>
+          {activeTab === 'lore' && (
+            <div className="dsh-tab anim-tab-panel">
+              <LoreEditor
+                campaignId={sheet.campaign_id} sheetId={sheet.id} ownerId={sheet.user_id} system="dnd5e"
+                characterName={form.character_name.trim()} readOnly={readOnly}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <Presence show={importOpen}>

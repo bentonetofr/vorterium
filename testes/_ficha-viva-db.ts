@@ -23,6 +23,7 @@ const SKIP = new Set(['select', 'order', 'limit', 'offset', 'on_conflict', 'colu
 
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
+  if (url.pathname.includes('/storage/v1/object/') && new URLSearchParams(location.search).has('storage')) return fakeStorage(url, init)
   if (!url.pathname.includes('/rest/v1/')) {
     if (url.pathname.includes('/auth/v1/') || url.pathname.includes('/storage/v1/')) return json(401, { message: 'prévia sem login' })
     return realFetch(input, init)
@@ -63,4 +64,30 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     return new Response(null, { status: 204 })
   }
   return json(405, { message: 'método não suportado na prévia' })
+}
+
+// Storage na memória (só com ?storage=1): envio, assinatura de endereço, leitura e remoção de arquivos.
+const files = new Map<string, Blob>()
+async function fakeStorage(url: URL, init?: RequestInit): Promise<Response> {
+  await sleep(DELAY_MS)
+  const method = (init?.method ?? 'GET').toUpperCase()
+  const rest = url.pathname.split('/storage/v1/object/')[1]
+  if (rest.startsWith('sign/')) {
+    const key = rest.slice(5)
+    return json(200, { signedURL: `/object/sign/${key}?token=fake` })
+  }
+  if (method === 'POST') {
+    const body = init?.body
+    const blob = body instanceof FormData ? [...body.values()].find((v): v is File => v instanceof Blob) : (body as Blob)
+    files.set(rest, blob ?? new Blob([]))
+    return json(200, { Key: rest, Id: `obj-${seq++}` })
+  }
+  if (method === 'DELETE') {
+    const prefixes = (JSON.parse(String(init?.body ?? '{}')) as { prefixes?: string[] }).prefixes ?? []
+    const bucket = rest.split('/')[0]
+    for (const p of prefixes) files.delete(`${bucket}/${p}`)
+    return json(200, [])
+  }
+  const blob = files.get(rest.replace(/^authenticated\//, ''))
+  return blob ? new Response(blob, { status: 200 }) : json(404, { message: 'arquivo não existe na prévia' })
 }

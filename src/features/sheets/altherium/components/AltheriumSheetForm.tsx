@@ -90,6 +90,7 @@ import { isObserver } from '../../../../shared/lib/observer'
 import { ExportSheetButton } from '../../export/ExportSheetButton'
 import { altheriumSheetText, type AltheriumTextSheet } from '../utils/altheriumSheetText'
 import './AltheriumMotion.css'
+import { LoreEditor } from '../../../lore/LoreEditor'
 
 const NOTES_MAX = 2000
 /** Comprimento da circunferência do anel dos atributos (raio 27). */
@@ -354,7 +355,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'triunfos' | 'inspiracoes' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'triunfos' | 'inspiracoes' | 'lore' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -367,6 +368,7 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'combate',     label: 'Equipamento' },
   { id: 'triunfos',    label: 'Triunfos' },
   { id: 'inspiracoes', label: 'Inspirações' },
+  { id: 'lore',        label: 'Lore' },
   { id: 'anotacoes',   label: 'Anotações' },
 ]
 const ALTHERIUM_FORM_TAB_IDS = ALTHERIUM_FORM_TABS.map((tab) => tab.id)
@@ -1543,6 +1545,18 @@ export function AltheriumSheetForm({
               inspirations={form.skald_inspirations}
               onChange={(next) => set('skald_inspirations', next)}
               onUse={(i) => announceTriumph(`a inspiração ${i.name}${i.cost ? ` (${i.cost})` : ''}`)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Lore: a história do personagem (texto e arquivos), lida pelo mestre ── */}
+      <div id="alth-tabpanel-lore" role="tabpanel" hidden={activeTab !== 'lore'}>
+        {activeTab === 'lore' && (
+          <div className="alth-tab-panel anim-tab-panel">
+            <LoreEditor
+              campaignId={sheet.campaign_id} sheetId={sheet.id} ownerId={sheet.user_id} system="altherium"
+              characterName={form.character_name.trim()} quill
             />
           </div>
         )}
