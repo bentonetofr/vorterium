@@ -216,15 +216,15 @@ button.alth-pip:hover { border-color: var(--accent-bright); }
 /* ── Armas na janela de ataque ── */
 .alth-weapons { display: flex; gap: var(--space-2); overflow-x: auto; margin: 0; padding: 0 0 var(--space-1); list-style: none; scroll-snap-type: x proximity; }
 .alth-weapons > li { flex: 0 0 auto; scroll-snap-align: start; }
-.alth-weapon {
+.alth-wcard {
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 200px; height: 100%;
   padding: var(--space-3); text-align: left; color: var(--text-secondary); font-size: var(--text-xs);
   background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md); cursor: var(--cursor-hand, pointer);
 }
-.alth-weapon strong { font-family: var(--font-display); font-size: var(--text-md); color: var(--text-primary); }
-.alth-weapon:hover { border-color: var(--border-bright); }
-.alth-weapon--on { border-color: var(--gilded-bright); box-shadow: 0 0 0 1px var(--gilded-bright), 0 6px 18px var(--accent-glow); }
-.alth-weapon__props { display: flex; flex-wrap: wrap; gap: 4px; }
+.alth-wcard strong { font-family: var(--font-display); font-size: var(--text-md); color: var(--text-primary); }
+.alth-wcard:hover { border-color: var(--border-bright); }
+.alth-wcard--on { border-color: var(--gilded-bright); box-shadow: 0 0 0 1px var(--gilded-bright), 0 6px 18px var(--accent-glow); }
+.alth-wcard__props { display: flex; flex-wrap: wrap; gap: 4px; }
 
 /* ── Achados, resultado, Complicações ── */
 .alth-finds { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -387,7 +387,7 @@ button.alth-pip:hover { border-color: var(--accent-bright); }
   .alth-acts { grid-template-columns: repeat(2, 1fr); }
   .alth-act { padding: var(--space-3); column-gap: var(--space-2); }
   .alth-strip__title { flex-basis: 100%; }
-  .alth-weapon { width: 170px; }
+  .alth-wcard { width: 170px; }
   .alth-rest__row { grid-template-columns: 1.2fr 1fr 1fr; padding: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {

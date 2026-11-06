@@ -345,13 +345,13 @@ export function AltheriumCombatActions({
                   <li key={w.inventoryId}>
                     <button
                       type="button" aria-pressed={w.inventoryId === weapon.inventoryId}
-                      className={`alth-weapon${w.inventoryId === weapon.inventoryId ? ' alth-weapon--on' : ''}`}
+                      className={`alth-wcard${w.inventoryId === weapon.inventoryId ? ' alth-wcard--on' : ''}`}
                       onClick={() => setWeaponId(w.inventoryId)}
                     >
                       <strong>{w.name}</strong>
                       <span>{w.damageDice} {DAMAGE_TYPE_LABELS[w.damageType]} · {WEAPON_RANGE_LABELS[w.range]}</span>
                       <span className={`alth-integrity alth-integrity--${band}`}>{w.integrity}%{band !== 'normal' ? ` · ${BAND_LABELS[band]}` : ''}</span>
-                      <span className="alth-weapon__props">
+                      <span className="alth-wcard__props">
                         {w.properties.map((p) => (
                           <span key={p.id} className="alth-inventory__prop" title={WEAPON_PROPERTIES[p.id].description}>{weaponPropertyLabel(p)}</span>
                         ))}
