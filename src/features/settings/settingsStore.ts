@@ -19,6 +19,13 @@ export const SOUND_CHANNELS: { id: SoundChannel; label: string; hint: string }[]
 export const TEXT_SCALES = [90, 100, 115, 130] as const
 export type TextScale = (typeof TEXT_SCALES)[number]
 
+/** Como as rolagens dos outros aparecem na tela: o painel grande de sempre, ou só uma janelinha no canto. */
+export const DICE_ON_SCREEN = [
+  { id: 'normal',   label: 'Normal' },
+  { id: 'simples',  label: 'Dados dos outros simplificados' },
+] as const
+export type DiceOnScreen = (typeof DICE_ON_SCREEN)[number]['id']
+
 export interface Settings {
   /** Mudo em tudo. */
   muteAll: boolean
@@ -38,6 +45,8 @@ export interface Settings {
   strongFocus: boolean
   /** Sem partículas e sem o anel do clique. */
   noEffects: boolean
+  /** Dados na tela: `simples` troca o painel grande das rolagens dos outros por uma janelinha no canto. */
+  diceOnScreen: DiceOnScreen
 }
 
 const STORAGE_KEY = 'vorterium:settings'
@@ -55,6 +64,7 @@ export function defaultSettings(): Settings {
     roomyText: false,
     strongFocus: false,
     noEffects: false,
+    diceOnScreen: 'normal',
   }
 }
 
@@ -82,6 +92,7 @@ export function parseSettings(raw: string | null): Settings {
     roomyText: flag(o.roomyText, base.roomyText),
     strongFocus: flag(o.strongFocus, base.strongFocus),
     noEffects: flag(o.noEffects, base.noEffects),
+    diceOnScreen: DICE_ON_SCREEN.some((d) => d.id === o.diceOnScreen) ? (o.diceOnScreen as DiceOnScreen) : base.diceOnScreen,
   }
 }
 

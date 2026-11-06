@@ -33,4 +33,12 @@ describe('configurações do site', () => {
     expect(parseSettings(JSON.stringify({ textScale: 77 })).textScale).toBe(100)
     expect(parseSettings(null).muteAll).toBe(false)
   })
+
+  it('dados na tela: começa normal, aceita simplificado e ignora lixo', () => {
+    expect(defaultSettings().diceOnScreen).toBe('normal')
+    expect(parseSettings(JSON.stringify({ diceOnScreen: 'simples' })).diceOnScreen).toBe('simples')
+    expect(parseSettings(JSON.stringify({ diceOnScreen: 'enorme' })).diceOnScreen).toBe('normal')
+    expect(parseSettings(JSON.stringify({ diceOnScreen: 3 })).diceOnScreen).toBe('normal')
+    expect(parseSettings(null).diceOnScreen).toBe('normal')
+  })
 })

@@ -6,7 +6,9 @@ import { useFeature } from '../../../control/siteFeatures'
 import { subscribeToRolls } from '../../../dice/services/diceService'
 import { getCampaignMembers } from '../../../members/services/memberService'
 import { DND_FEATURE } from '../constants/dnd'
+import { useSettings } from '../../../settings/settingsStore'
 import { DndWatchFreePanel } from './DndWatchFreePanel'
+import { DndWatchMini } from './DndWatchMini'
 import { DndWatchPanel } from './DndWatchPanel'
 import { useRollBusy } from './rollActivity'
 import { isCheckRoll } from './watchModel'
@@ -23,6 +25,11 @@ const MAX_WAITING = 8
 
 function WatchInner({ campaignId, userId }: { campaignId: string; userId: string }) {
   const [checks, setChecks] = useState<DiceRoll[]>([])
+  // "Dados dos outros simplificados": as rolagens vão para a janelinha do canto em vez do painel grande.
+  const [minis, setMinis] = useState<DiceRoll[]>([])
+  const simple = useSettings().diceOnScreen === 'simples'
+  const simpleNow = useRef(simple)
+  simpleNow.current = simple
   const names = useRef(new Map<string, string>())
   const busy = useRollBusy()
 
@@ -37,11 +44,19 @@ function WatchInner({ campaignId, userId }: { campaignId: string; userId: string
   useEffect(() => subscribeToRolls(campaignId, (row) => {
     if (row.user_id === userId) return
     const add = (list: DiceRoll[]) => (list.some((r) => r.id === row.id) ? list : [...list, row].slice(-MAX_WAITING))
-    setChecks(add)
+    if (simpleNow.current) setMinis(add)
+    else setChecks(add)
   }), [campaignId, userId])
 
   const playerOf = useCallback((r: DiceRoll) => names.current.get(r.user_id) ?? 'Alguém', [])
   const nextCheck = useCallback(() => setChecks((l) => l.slice(1)), [])
+
+  const dropMini = useCallback((id: string) => setMinis((l) => l.filter((r) => r.id !== id)), [])
+
+  // Trocou de modo: o que esperava pelo outro jeito não abre mais.
+  useEffect(() => { if (simple) setChecks([]); else setMinis([]) }, [simple])
+
+  if (simple) return minis.length > 0 ? <DndWatchMini rolls={minis} playerOf={playerOf} onDone={dropMini} /> : null
 
   const current = !busy ? checks[0] : undefined
   return (

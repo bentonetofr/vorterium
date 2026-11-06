@@ -2,7 +2,7 @@ import { useId, useRef, useState } from 'react'
 import { ModalOverlay } from '../../shared/components/ModalOverlay'
 import { useTheme } from '../../shared/theme/ThemeProvider'
 import { playDiceRattle } from '../dice3d/sound'
-import { SOUND_CHANNELS, TEXT_SCALES, resetSettings, soundVolume, updateSettings, useSettings, type SoundChannel, type TextScale } from './settingsStore'
+import { DICE_ON_SCREEN, SOUND_CHANNELS, TEXT_SCALES, resetSettings, soundVolume, updateSettings, useSettings, type SoundChannel, type TextScale } from './settingsStore'
 import './Settings.css'
 
 // ────────────────────────────────────────────────────────
@@ -192,6 +192,19 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
                 </div>
                 <p className="cfg-sample">
                   Aa — o texto do site muda de tamanho aqui e em todas as telas.
+                </p>
+              </div>
+              <div className="cfg-block">
+                <span className="cfg-row__label" id="cfg-dice-l">Dados na tela</span>
+                <div className="cfg-seg" role="radiogroup" aria-labelledby="cfg-dice-l">
+                  {DICE_ON_SCREEN.map((d) => (
+                    <button key={d.id} type="button" role="radio" aria-checked={s.diceOnScreen === d.id} className="cfg-seg__btn" onClick={() => updateSettings({ diceOnScreen: d.id })}>{d.label}</button>
+                  ))}
+                </div>
+                <p className="cfg-row__hint">
+                  {s.diceOnScreen === 'simples'
+                    ? 'As rolagens dos outros jogadores e do mestre aparecem numa janelinha no canto inferior direito, sem cobrir a sua ficha. As suas continuam com os dados 3D.'
+                    : 'As rolagens dos outros jogadores e do mestre abrem o painel grande, no meio da tela, com os dados 3D rolando.'}
                 </p>
               </div>
             </>
