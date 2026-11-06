@@ -1,6 +1,4 @@
-import { Select } from '../../../../shared/components/Select'
 import {
-  CONDITIONS,
   conditionDef,
   reactionAvailable,
   removeCondition,
@@ -14,7 +12,13 @@ import {
 // que leva ao Teste de Morte).
 // ────────────────────────────────────────────────────────
 
-const CONDITION_OPTIONS = [{ value: '', label: '+ Condição' }, ...CONDITIONS.map((c) => ({ value: c.id, label: c.label }))]
+/** As condições em grupos, na ordem em que aparecem; `tone` é a cor de quando estão ligadas. */
+const CONDITION_GROUPS: { title: string; tone: 'bad' | 'ctl' | 'pun'; ids: ConditionId[] }[] = [
+  { title: 'Dano contínuo', tone: 'bad', ids: ['sangrando', 'queimando'] },
+  { title: 'Controle', tone: 'ctl', ids: ['atordoado', 'derrubado', 'amedrontado', 'preso', 'surpreendido'] },
+  { title: 'Da punição', tone: 'pun', ids: ['abertura_fatal', 'desequilibrio', 'arma_exposta', 'fraqueza', 'folego_quebrado', 'brecha', 'atordoamento_breve'] },
+  { title: 'Graves', tone: 'bad', ids: ['incapacitado', 'coma'] },
+]
 
 interface Props {
   combat:      CombatState
@@ -73,28 +77,42 @@ export function AltheriumTurnPanel({ combat, combatKnown, onCombat, onNewTurn, o
       </section>
 
       <section className="alth-card">
-        <div className="alth-card__header"><h4 className="alth-card__title">Condições</h4></div>
-        <div className="alth-turn__chips">
-          {combat.conditions.length === 0 && !dying && <span className="alth-hint">Nenhuma condição.</span>}
-          {dying && (
-            <button type="button" className="alth-combat__cond alth-combat__cond--dying" onClick={onOpenDying} disabled={readOnly}>
-              Caído · Teste de Morte
-            </button>
-          )}
-          {combat.conditions.map((c) => {
-            const def = conditionDef(c.id)
-            return (
-              <span key={c.id} className="alth-combat__cond" title={def.effect}>
-                {def.label}{c.turns != null ? ` · ${c.turns} ${c.turns === 1 ? 'turno' : 'turnos'}` : ''}
-                {!readOnly && <button type="button" onClick={() => onCombat(removeCondition(combat, c.id))} aria-label={`Tirar ${def.label}`}>×</button>}
-              </span>
-            )
-          })}
+        <div className="alth-card__header">
+          <h4 className="alth-card__title">Condições</h4>
+          <span className="alth-hint">{combat.conditions.length === 0 && !dying ? 'Nenhuma ativa' : `${combat.conditions.length + (dying ? 1 : 0)} ${combat.conditions.length + (dying ? 1 : 0) === 1 ? 'ativa' : 'ativas'}`}</span>
         </div>
-        {!readOnly && (
-          <div className="alth-combat__select alth-strip__select">
-            <Select value="" options={CONDITION_OPTIONS} onChange={(v) => { if (v) onCondition(v as ConditionId) }} aria-label="Pôr condição" />
-          </div>
+        {dying && (
+          <button type="button" className="alth-combat__cond alth-combat__cond--dying" onClick={onOpenDying} disabled={readOnly}>
+            Caído · Teste de Morte
+          </button>
+        )}
+        <div className="alth-conds">
+          {CONDITION_GROUPS.map((g) => (
+            <div key={g.title} className="alth-conds__group">
+              <span className="alth-conds__title">{g.title}</span>
+              <div className="alth-conds__chips">
+                {g.ids.map((id) => {
+                  const def = conditionDef(id)
+                  const active = combat.conditions.find((c) => c.id === id)
+                  return (
+                    <button
+                      key={id} type="button" disabled={readOnly} aria-pressed={!!active}
+                      className={`alth-cond alth-cond--${g.tone}${active ? ' is-on' : ''}`} title={def.effect}
+                      onClick={() => (active ? onCombat(removeCondition(combat, id)) : onCondition(id))}
+                    >
+                      {def.label}
+                      {active && active.turns != null && <small>{active.turns} {active.turns === 1 ? 'turno' : 'turnos'}</small>}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        {combat.conditions.length > 0 && (
+          <ul className="alth-conds__effects" aria-label="O que as condições ativas fazem">
+            {combat.conditions.map((c) => <li key={c.id}><strong>{conditionDef(c.id).label}:</strong> {conditionDef(c.id).effect}</li>)}
+          </ul>
         )}
       </section>
     </div>
