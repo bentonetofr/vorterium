@@ -49,7 +49,7 @@
 .alth-act .alth-icon { grid-area: icon; color: var(--accent-bright); }
 .alth-act__label {
   grid-area: label;
-  font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; line-height: 1.1;
+  font-family: var(--font-rune); font-size: var(--text-lg); font-weight: 700; line-height: 1.1;
 }
 .alth-act__caption {
   grid-area: caption;
@@ -209,7 +209,7 @@ button.alth-pip:hover { border-color: var(--accent-bright); }
   padding: var(--space-3); text-align: center;
   background: var(--bg-void); border: 1px dashed var(--border-base); border-radius: var(--radius-md);
 }
-.alth-formula__big { font-family: var(--font-display); font-size: var(--text-3xl); color: var(--text-primary); line-height: 1.1; }
+.alth-formula__big { font-family: var(--font-rune); font-size: var(--text-3xl); color: var(--text-primary); line-height: 1.1; }
 .alth-formula__big span { color: var(--accent-bright); }
 .alth-formula small { font-size: var(--text-xs); color: var(--text-muted); }
 
@@ -417,7 +417,7 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 }
 .alth-supply__label small { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .alth-supply__name {
-  display: flex; flex-direction: column; font-family: var(--font-display); font-size: var(--text-md); font-weight: 700;
+  display: flex; flex-direction: column; font-family: var(--font-rune); font-size: var(--text-md); font-weight: 700;
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-primary);
 }
 .alth-supply__hint { font-family: var(--font-body); font-size: var(--text-xs); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text-muted); }
@@ -435,7 +435,7 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
   background: var(--bg-void); border: 1px solid var(--border-dim); border-left: 2px solid var(--border-bright); border-radius: var(--radius-sm);
 }
 .alth-material__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.alth-material__amount { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; color: var(--text-primary); }
+.alth-material__amount { font-family: var(--font-rune); font-size: var(--text-xl); font-weight: 700; color: var(--text-primary); }
 .alth-material__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .alth-material__find { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .alth-minibtn {
@@ -458,7 +458,7 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 }
 .alth-recipe--locked { opacity: 0.6; border-left-color: var(--border-base); }
 .alth-recipe__info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.alth-recipe__info strong { font-family: var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.alth-recipe__info strong { font-family: var(--font-rune); letter-spacing: 0.06em; text-transform: uppercase; }
 .alth-recipe__cost { font-family: var(--font-label); font-size: var(--text-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-bright); }
 .alth-bar { height: 6px; overflow: hidden; background: var(--bg-elevated); border: 1px solid var(--border-dim); }
 .alth-bar__fill { display: block; height: 100%; background: var(--alth-resource); transition: width 220ms var(--ease-out, ease-out); }
@@ -688,7 +688,7 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 .alth-dmg__advbody { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
 .alth-dmg__adj { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
 .alth-dmg__final { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; font-size: var(--text-sm); color: var(--text-secondary); }
-.alth-dmg__final strong { font-family: var(--font-display); font-size: var(--text-xl); color: var(--danger-bright); }
+.alth-dmg__final strong { font-family: var(--font-rune); font-size: var(--text-xl); color: var(--danger-bright); }
 @media (max-width: 420px) { .alth-dmg__where { grid-template-columns: minmax(0, 1fr) 84px; gap: var(--space-3); } .alth-dmg__body { width: 84px; height: 131px; } }
 
 /* ── Condições: todas à vista, em grupos; um toque liga e desliga ── */
@@ -710,3 +710,12 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 .alth-cond--pun.is-on { border-color: var(--alth-mystic, #5eead4); color: var(--alth-mystic, #5eead4); background: rgba(94, 234, 212, 0.1); }
 .alth-conds__effects { list-style: none; margin: 0; padding: var(--space-3); display: flex; flex-direction: column; gap: 4px; background: var(--bg-void); border: 1px solid var(--border-dim); border-radius: var(--radius-md); font-size: var(--text-xs); color: var(--text-secondary); }
 .alth-conds__effects strong { color: var(--text-primary); }
+
+/* Botões e campos herdam a fonte do site (o navegador usa Arial neles por padrão).
+   :where zera a especificidade, então as classes que escolhem outra fonte seguem valendo. */
+:where([class*="alth-"]) :where(button, input, select, textarea, output),
+:where(button, input, select, textarea, output):where([class*="alth-"]) { font-family: inherit; }
+
+/* Títulos da ficha na segunda fonte (Cinzel). */
+:where([class*="alth-"]) :is(h1, h2, h3, h4, h5, h6),
+:is(h1, h2, h3, h4, h5, h6):where([class*="alth-"]) { font-family: var(--font-rune); letter-spacing: 0.02em; }

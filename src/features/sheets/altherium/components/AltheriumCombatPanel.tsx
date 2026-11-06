@@ -816,7 +816,7 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
           </ol>
           {result.armorWear && <p className="alth-hint">O dano não passou do DB: a armadura de {ZONE_LABELS[zone]} perde 10% de Integridade.</p>}
           <div className="alth-dmg__final">
-            <span>Dano final <strong>{result.final}</strong> · PV {vitality} → <strong>{Math.max(0, vitality - result.final)}</strong></span>
+            <span>Dano final <strong key={result.final} className="anim-bump">{result.final}</strong> · PV {vitality} → <strong key={`pv${result.final}`} className="anim-bump">{Math.max(0, vitality - result.final)}</strong></span>
             <button type="button" className="btn btn-primary" disabled={applied !== null}
               onClick={() => {
                 onApply(result.final, zone)

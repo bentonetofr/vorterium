@@ -89,6 +89,7 @@ import type { RestResult } from '../utils/altheriumRest'
 import { isObserver } from '../../../../shared/lib/observer'
 import { ExportSheetButton } from '../../export/ExportSheetButton'
 import { altheriumSheetText, type AltheriumTextSheet } from '../utils/altheriumSheetText'
+import './AltheriumMotion.css'
 
 const NOTES_MAX = 2000
 /** Comprimento da circunferência do anel dos atributos (raio 27). */

@@ -12,6 +12,7 @@ import { markRollBusy } from '../../dnd/rolls/rollActivity'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import './AltheriumPlay.css'
 import './AltheriumDiceCard.css'
+import './AltheriumMotion.css'
 
 // ────────────────────────────────────────────────────────
 // O rolador de dados das campanhas de Altherium (a bolinha de dados): um

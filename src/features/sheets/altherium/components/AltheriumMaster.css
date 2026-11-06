@@ -31,7 +31,7 @@
   padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-dim); color: var(--accent-bright);
 }
 .alth-master-panel__titles { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.alth-master-panel__title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; color: var(--accent-bright); }
+.alth-master-panel__title { font-family: var(--font-rune); font-size: var(--text-lg); font-weight: 700; color: var(--accent-bright); }
 .alth-master-panel__sub { font-family: var(--font-label); font-size: 11px; color: var(--text-muted); }
 .alth-master-panel__close {
   width: 28px; height: 28px; line-height: 1; color: var(--text-muted);
@@ -109,3 +109,15 @@
   .alth-master__roster { position: static; }
 }
 .alth-master-panel.fab-panel { width: min(1040px, calc(100vw - 56px - var(--space-3) - 2 * var(--space-6))); }
+
+/* Botões e campos herdam a fonte do site (o navegador usa Arial neles por padrão).
+   :where zera a especificidade, então as classes que escolhem outra fonte seguem valendo. */
+:where([class*="alth-"]) :where(button, input, select, textarea, output),
+:where(button, input, select, textarea, output):where([class*="alth-"]) { font-family: inherit; }
+
+/* Títulos da ficha na segunda fonte (Cinzel). */
+:where([class*="alth-"]) :is(h1, h2, h3, h4, h5, h6),
+:is(h1, h2, h3, h4, h5, h6):where([class*="alth-"]) { font-family: var(--font-rune); letter-spacing: 0.02em; }
+
+/* O pedido do mestre fala na voz caligráfica (Almendra). */
+.alth-requests__info strong { font-family: var(--font-quill); font-size: var(--text-lg); font-weight: 700; letter-spacing: 0.01em; }

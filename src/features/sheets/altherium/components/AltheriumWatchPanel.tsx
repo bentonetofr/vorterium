@@ -6,6 +6,7 @@ import { miniRoll } from '../../dnd/rolls/miniRoll'
 import { readFree } from '../../dnd/rolls/freeRoll'
 import { useDiceStage } from '../../dnd/rolls/useDiceStage'
 import './AltheriumDiceCard.css'
+import './AltheriumMotion.css'
 
 // ────────────────────────────────────────────────────────
 // A rolagem de outra pessoa (jogador ou mestre), vista por quem não rolou, no

@@ -137,7 +137,7 @@
   border: none;
   border-bottom: 1px solid transparent;
   padding: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-rune);
   font-size: var(--text-2xl);
   font-weight: 700;
   line-height: 1.1;
@@ -592,7 +592,7 @@
   color: var(--gilded-bright);
 }
 .alth-coming-soon__title {
-  font-family: var(--font-display);
+  font-family: var(--font-rune);
   font-size: var(--text-lg);
   color: var(--text-primary);
 }
@@ -676,7 +676,6 @@
   padding: var(--space-3) var(--space-4);
   background: var(--bg-surface); border: 1px solid var(--gilded-bright); border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  animation: fadeUp 0.16s ease-out;
 }
 .alth-attr-pop::before {
   content: ''; position: absolute; top: -6px; left: var(--arrow-x, 50%);
@@ -684,7 +683,7 @@
   background: var(--bg-surface); border-left: 1px solid var(--gilded-bright); border-top: 1px solid var(--gilded-bright);
 }
 .alth-attr-pop p { margin: 4px 0 0; font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.45; }
-.alth-attr-pop__title { font-family: var(--font-display); font-size: var(--text-lg); color: var(--accent-bright); }
+.alth-attr-pop__title { font-family: var(--font-rune); font-size: var(--text-lg); color: var(--accent-bright); }
 .alth-attr-pop__doms span { color: var(--text-muted); font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
 .alth-attr-pop__limit { color: var(--text-muted) !important; font-size: var(--text-xs) !important; }
 @media (prefers-reduced-motion: reduce) { .alth-attr-pop { animation: none; } }
@@ -702,7 +701,7 @@
   position: absolute; inset: 0;
   width: 100%; height: 100%; padding: 0;
   text-align: center;
-  font-family: var(--font-display); font-size: 28px; font-weight: 700;
+  font-family: var(--font-rune); font-size: 28px; font-weight: 700;
   color: var(--accent-bright);
   background: transparent; border: none; border-radius: 50%;
   -moz-appearance: textfield;
@@ -1043,7 +1042,7 @@
   place-items: center;
   min-width: 36px;
   background: var(--bg-void);
-  font-family: var(--font-display);
+  font-family: var(--font-rune);
   font-size: var(--text-md);
   font-weight: 700;
   color: var(--text-primary);
@@ -1403,7 +1402,7 @@
   gap: var(--space-2);
 }
 .alth-triumph__name {
-  font-family: var(--font-display);
+  font-family: var(--font-rune);
   font-size: var(--text-lg);
   font-weight: 700;
   color: var(--accent-bright);
@@ -1573,7 +1572,6 @@
   overflow-y: auto;
   background: var(--bg-surface);
   box-shadow: var(--shadow-lg);
-  animation: fadeUp 0.2s ease-out;
 }
 .alth-modal__header {
   display: flex;
@@ -1584,7 +1582,7 @@
   border-bottom: 1px solid var(--border-dim);
 }
 .alth-modal__title {
-  font-family: var(--font-display);
+  font-family: var(--font-rune);
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--accent-bright);
@@ -1785,7 +1783,7 @@
   fill: var(--text-secondary);
 }
 .alth-radar__label-value {
-  font-family: var(--font-display);
+  font-family: var(--font-rune);
   font-size: 17px;
   font-weight: 700;
   fill: var(--text-primary);
@@ -2392,9 +2390,9 @@
 }
 .alth-test__die--ten.alth-test__die--kept { color: var(--accent-bright); border-color: var(--accent-bright); }
 .alth-test__sum { margin: 0; text-align: center; font-size: var(--text-sm); color: var(--text-secondary); }
-.alth-test__total { font-family: var(--font-display); font-size: var(--text-2xl); color: var(--accent-bright); }
+.alth-test__total { font-family: var(--font-rune); font-size: var(--text-2xl); color: var(--accent-bright); }
 .alth-test__crit {
-  margin: 0; text-align: center; font-family: var(--font-display); font-size: var(--text-lg);
+  margin: 0; text-align: center; font-family: var(--font-rune); font-size: var(--text-lg);
   color: var(--accent-bright); text-shadow: 0 0 14px var(--accent-dim);
 }
 .alth-test__outcome { margin: 0; text-align: center; font-family: var(--font-label); font-weight: 700; letter-spacing: 0.04em; }
@@ -2585,3 +2583,27 @@
   .alth-type-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .alth-custom-item__foot { position: sticky; bottom: 0; background: var(--bg-surface); }
+
+/* Botões e campos herdam a fonte do site (o navegador usa Arial neles por padrão).
+   :where zera a especificidade, então as classes que escolhem outra fonte seguem valendo. */
+:where([class*="alth-"]) :where(button, input, select, textarea, output),
+:where(button, input, select, textarea, output):where([class*="alth-"]) { font-family: inherit; }
+
+/* Janelas de tamanho fixo: trocar de tipo ou de categoria não muda o tamanho da janela. */
+.alth-custom-item--wide { display: flex; flex-direction: column; overflow: hidden; height: min(860px, calc(100dvh - 2 * var(--space-4))); }
+.alth-custom-item--wide .alth-custom-item__cols { flex: 1; min-height: 0; overflow-y: auto; }
+.alth-custom-item--wide .alth-custom-item__foot { position: static; flex-shrink: 0; }
+.alth-catalog { height: min(720px, calc(100dvh - 2 * var(--space-4))); }
+.alth-catalog__list { align-content: start; }
+
+/* Títulos da ficha na segunda fonte (Cinzel). */
+:where([class*="alth-"]) :is(h1, h2, h3, h4, h5, h6),
+:is(h1, h2, h3, h4, h5, h6):where([class*="alth-"]) { font-family: var(--font-rune); letter-spacing: 0.02em; }
+
+/* Terceira fonte (Almendra): descrições e texto de sabor, não regras nem números. */
+.alth-attr-pop p:not([class]),
+.alth-genesis__text p,
+.alth-icard__note,
+.alth-notes { font-family: var(--font-quill); font-size: calc(1em + 1px); line-height: 1.5; }
+.alth-attr-pop p:not([class]) { font-size: var(--text-sm); }
+.alth-notes { font-size: var(--text-md); line-height: 1.6; }

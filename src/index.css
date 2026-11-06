@@ -44,6 +44,10 @@
   --font-body:    'Hanken Grotesk', system-ui, sans-serif;
   --font-label:   'Space Grotesk', system-ui, sans-serif;
   --font-mono:    'Space Grotesk', 'Courier New', monospace;
+  /* Segunda fonte, só da ficha de Altherium: títulos e números grandes. */
+  --font-rune:    'Cinzel', 'EB Garamond', Georgia, serif;
+  /* Terceira fonte, só da ficha de Altherium: texto de sabor e a voz do mestre (caligráfica). */
+  --font-quill:   'Almendra', 'EB Garamond', Georgia, serif;
 
   /* Tamanhos */
   --text-xs:  0.75rem;

@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════════════
+   Altherium — movimento das telas novas (inventário, catálogo, item
+   personalizado, dano, condições, cena, dados, domínios, ataque).
+   Só opacidade e transform (leve); usa os tokens de shared/theme/motion.css,
+   que também já zeram tudo para quem prefere menos movimento.
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes alth-chip-pop {
+  0%   { transform: scale(0.9); }
+  60%  { transform: scale(1.06); }
+  100% { transform: none; }
+}
+@keyframes alth-grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: none; }
+}
+@keyframes alth-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Entrada em cascata: a lista nunca "pisca" inteira ── */
+.alth-icards > .alth-icard,
+.alth-catalog__list > *,
+.alth-dom,
+.alth-wcard,
+.alth-combat__steps > li,
+.alth-conds__effects > li,
+.alth-dice__rcard {
+  animation: m-item-in 420ms var(--ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 9) * 40ms);
+}
+.alth-icards > :nth-child(1), .alth-catalog__list > :nth-child(1), .alth-combat__steps > :nth-child(1), .alth-conds__effects > :nth-child(1) { --i: 0; }
+.alth-icards > :nth-child(2), .alth-catalog__list > :nth-child(2), .alth-combat__steps > :nth-child(2), .alth-conds__effects > :nth-child(2) { --i: 1; }
+.alth-icards > :nth-child(3), .alth-catalog__list > :nth-child(3), .alth-combat__steps > :nth-child(3), .alth-conds__effects > :nth-child(3) { --i: 2; }
+.alth-icards > :nth-child(4), .alth-catalog__list > :nth-child(4), .alth-combat__steps > :nth-child(4), .alth-conds__effects > :nth-child(4) { --i: 3; }
+.alth-icards > :nth-child(5), .alth-catalog__list > :nth-child(5), .alth-combat__steps > :nth-child(5), .alth-conds__effects > :nth-child(5) { --i: 4; }
+.alth-icards > :nth-child(6), .alth-catalog__list > :nth-child(6), .alth-combat__steps > :nth-child(6), .alth-conds__effects > :nth-child(6) { --i: 5; }
+.alth-icards > :nth-child(7), .alth-catalog__list > :nth-child(7) { --i: 6; }
+.alth-icards > :nth-child(8), .alth-catalog__list > :nth-child(8) { --i: 7; }
+.alth-icards > :nth-child(n + 9), .alth-catalog__list > :nth-child(n + 9) { --i: 8; }
+/* Domínios: 30 linhas, então entram mais curtas e sem atraso. */
+.alth-dom { animation-duration: 300ms; animation-delay: 0ms; }
+.alth-custom-item__side .alth-icard { animation: none; }
+
+/* ── Cartões de item e de arma: levantam ao passar o mouse ── */
+.alth-icard, .alth-wcard {
+  transition: transform 260ms var(--ease-out), box-shadow 260ms var(--ease-out), border-color var(--transition-fast), background var(--transition-fast);
+}
+@media (hover: hover) {
+  .alth-icards > .alth-icard:hover, .alth-wcard:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3); }
+}
+.alth-custom-item__side .alth-icard:hover { transform: none; box-shadow: none; }
+
+/* Barra de integridade cresce ao aparecer e acompanha mudanças. */
+.alth-icard__bar { position: relative; }
+.alth-icard__fill { transform-origin: left center; animation: alth-grow-x 700ms var(--ease-out) 120ms backwards; transition: width 420ms var(--ease-out), background 300ms; }
+
+/* ── Chips, abas e botões: ao ligar dão um pop; ao apertar, encolhem ── */
+.alth-inv-tab.is-on, .alth-type-tile.is-on, .alth-prop-chip.is-on, .alth-cond.is-on,
+.alth-dmg__chip.is-on, .alth-dmg__zone.is-on, .alth-dice__chip.is-on, .alth-wcard--on,
+.alth-scene__chip.is-on, .alth-icard__act.is-on, .alth-icard__badge--on {
+  animation: alth-chip-pop 340ms var(--ease-spring);
+}
+.alth-inv-tab, .alth-type-tile, .alth-prop-chip, .alth-cond, .alth-dmg__chip, .alth-dmg__zone,
+.alth-dmg__quick button, .alth-icard__act, .alth-inventory__qty-btn, .alth-inventory__add,
+.alth-inventory__remove, .alth-inventory__edit, .alth-stepper button, .alth-dom__btn, .alth-icard__more {
+  transition: all 200ms var(--ease-out), transform 180ms var(--ease-spring);
+}
+.alth-inv-tab:active, .alth-type-tile:active:not(:disabled), .alth-prop-chip:active:not(:disabled),
+.alth-cond:active:not(:disabled), .alth-dmg__chip:active, .alth-dmg__zone:active, .alth-dmg__quick button:active,
+.alth-icard__act:active:not(:disabled), .alth-inventory__qty-btn:active:not(:disabled),
+.alth-inventory__add:active:not(:disabled), .alth-inventory__remove:active:not(:disabled),
+.alth-stepper button:active:not(:disabled), .alth-dom__btn:active:not(:disabled) {
+  transform: scale(0.92);
+  transition-duration: 60ms;
+}
+.alth-cond small { animation: m-pop-in 320ms var(--ease-spring) backwards; }
+
+/* ── Janelas ── */
+/* O catálogo e o item personalizado aparecem com a mola do site (sem o fadeUp antigo). */
+.alth-catalog__have { animation: m-pop-in 320ms var(--ease-spring) backwards; display: inline-block; }
+.alth-prop-param { animation: m-form-in 320ms var(--ease-out) backwards; }
+.alth-icard__note { transition: opacity 200ms; }
+.alth-custom-item__side .label { animation: alth-rise 400ms var(--ease-out) 160ms backwards; }
+.alth-custom-item__side .alth-hint { animation: alth-rise 400ms var(--ease-out) 240ms backwards; }
+
+/* Aviso de erro das janelas: sacode de leve (o site já faz com [role=alert]). */
+.alth-custom-item__foot [role="alert"] { animation: m-alert-in 280ms var(--ease-out) backwards; }
+
+/* ── Dano: o resultado entra por último, o número bate ── */
+.alth-dmg__final { animation: alth-rise 420ms var(--ease-out) 120ms backwards; }
+.alth-dmg__body { transition: transform 300ms var(--ease-out); }
+.alth-dmg__part > * { transition: fill 240ms var(--ease-out), stroke 240ms var(--ease-out); }
+.alth-dmg__zone b { transition: color var(--transition-fast); }
+
+/* ── Cena da campanha e DTs ── */
+.alth-scene__chip, .alth-scene__tile { transition: all 220ms var(--ease-out), transform 180ms var(--ease-spring); }
+.alth-scene__chip:active, .alth-scene__tile:active { transform: scale(0.94); }
+.alth-scale__fill { transition: width 360ms var(--ease-out), background 300ms; }
+.alth-scale__step { transition: transform 200ms var(--ease-spring), background 240ms, border-color 240ms; }
+.alth-scale__step:active { transform: scale(0.88); }
+
+/* ── Pedidos do mestre, resultado dos testes e dados ── */
+.alth-requests__row { animation: m-item-in 460ms var(--ease-spring) backwards; }
+.alth-test__total, .alth-dice__total { animation: m-pop-in 460ms var(--ease-spring) backwards; }
+.alth-dice__result { animation: m-pop-in 420ms var(--ease-spring) backwards; }
+.alth-dice__skin { transition: transform 240ms var(--ease-out), border-color 200ms, background 200ms; }
+@media (hover: hover) { .alth-dice__skin:hover { transform: translateY(-2px); } }
+
+/* ── Atributos: popover com mola, anéis que reagem ── */
+.alth-attr-pop { transform-origin: top center; animation: m-drop-in 260ms var(--ease-out) both; }
+.alth-ring { transition: transform 300ms var(--ease-spring); }
+@media (hover: hover) { .alth-ring:hover { transform: scale(1.06); } }
+.alth-ring__fill { transition: stroke-dasharray 520ms var(--ease-out); }
+
+/* ── Domínios: botão Mostrar mais e os pips de ficha ── */
+.alth-doms__more { transition: all 220ms var(--ease-out), transform 180ms var(--ease-spring); }
+.alth-doms__more:active { transform: scale(0.97); }
+.alth-pip { transition: transform 200ms var(--ease-spring), background 240ms, border-color 240ms, box-shadow 240ms; }
+.alth-pip:active { transform: scale(0.8); }
+.alth-pip--on { animation: alth-chip-pop 320ms var(--ease-spring); }
+
+/* ── Barras de vida, PE e FV: o brilho respira ao mudar ── */
+.alth-vital-bar__bar-fill { transition: width 560ms var(--ease-out); }
+.alth-vital-bar__value-input, .alth-hero__num { transition: color 240ms, box-shadow 240ms var(--ease-out), transform 240ms var(--ease-spring); }

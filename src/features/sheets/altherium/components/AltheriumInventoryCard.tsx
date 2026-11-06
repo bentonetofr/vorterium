@@ -250,7 +250,7 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
             <button type="button" className="alth-inventory__qty-btn" disabled={disabled}
               onClick={() => void (inv.quantity > 1 ? onUpdateQuantity(inv.id, inv.quantity - 1) : onRemove(inv.id))}
               aria-label={`Diminuir quantidade de ${info.name}`}>−</button>
-            <span className="alth-inventory__qty-value">{inv.quantity}</span>
+            <span key={inv.quantity} className="alth-inventory__qty-value anim-bump">{inv.quantity}</span>
             <button type="button" className="alth-inventory__qty-btn" disabled={disabled}
               onClick={() => void onUpdateQuantity(inv.id, inv.quantity + 1)}
               aria-label={`Aumentar quantidade de ${info.name}`}>+</button>
@@ -323,7 +323,7 @@ export function AltheriumInventoryCard({
           </button>
         </div>
       ) : (
-        <div className="alth-icards">
+        <div key={activeFilter} className="alth-icards">
           {shown.map(({ inv, info }) => (
             <OwnedCard
               key={inv.id} inv={inv} info={info} disabled={disabled}
