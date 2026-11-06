@@ -82,7 +82,7 @@ export function inventoryArmor(inv: AltheriumInventoryItem): { db: number; cover
   return a ? { db: a.db, coverage: a.coverage } : undefined
 }
 
-interface ItemInfo { name: string; detail: string; weapon?: WeaponDef }
+interface ItemInfo { name: string; detail: string; note?: string; weapon?: WeaponDef }
 
 /** Propriedades da arma (passar o mouse mostra a regra), material de reparo e espaços de Reforço. */
 function WeaponTraits({ weapon }: { weapon: WeaponDef }) {
@@ -112,8 +112,8 @@ function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
           inv.custom_range ? WEAPON_RANGE_LABELS[inv.custom_range] : null,
         ]
       : [ITEM_TYPE_LABELS[inv.item_type]]
-    const parts = [...weapon, armor ? `${armor.db} DB` : null, inv.custom_detail]
-    return { name: inv.custom_name!, detail: parts.filter(Boolean).join(' · ') }
+    const parts = [...weapon, armor ? `${armor.db} DB` : null]
+    return { name: inv.custom_name!, detail: parts.filter(Boolean).join(' · '), note: inv.custom_detail ?? undefined }
   }
   if (inv.item_type === 'arma') {
     const w = findWeapon(inv.item_id)
@@ -130,235 +130,199 @@ function describeInventoryItem(inv: AltheriumInventoryItem): ItemInfo | null {
   return { name: i.name, detail: i.effect }
 }
 
+type OwnedFilter = 'todos' | 'arma' | 'armadura' | 'escudo' | 'outros'
+const OWNED_FILTERS: { id: OwnedFilter; label: string }[] = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'arma', label: 'Armas' },
+  { id: 'armadura', label: 'Armaduras' },
+  { id: 'escudo', label: 'Escudos' },
+  { id: 'outros', label: 'Outros' },
+]
+function ownedFilterOf(inv: AltheriumInventoryItem): OwnedFilter {
+  return inv.item_type === 'arma' || inv.item_type === 'armadura' || inv.item_type === 'escudo' ? inv.item_type : 'outros'
+}
+
+/** Observação longa de item personalizado fica em 2 linhas, com “Ver mais”. */
+const NOTE_LIMIT = 90
+
+interface OwnedCardProps {
+  inv:              AltheriumInventoryItem
+  info:             ItemInfo
+  disabled:         boolean
+  onUpdateQuantity: (id: string, quantity: number) => Promise<void>
+  onRemove:         (id: string) => Promise<void>
+  onToggleEquip:    AltheriumInventoryCardProps['onToggleEquip']
+  onEdit:           () => void
+}
+
+function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEquip, onEdit }: OwnedCardProps) {
+  const [choosingZone, setChoosingZone] = useState(false)
+  const [open, setOpen] = useState(false)
+  const armor = inventoryArmor(inv)
+  const custom = isCustom(inv)
+  const gear = gearInfo(inv)
+  const band = gear ? integrityBand(gear.integrity) : null
+  const zoneLabel = inv.equipped && inv.equipped_zone ? BODY_PARTS.find((p) => p.id === inv.equipped_zone)?.label : null
+  const note = info.note ?? ''
+  const longNote = note.length > NOTE_LIMIT
+
+  return (
+    <article className={`alth-icard${inv.equipped ? ' is-equipped' : ''}`}>
+      <header className="alth-icard__head">
+        <h5 className="alth-icard__name">{info.name}</h5>
+        <button type="button" className="alth-inventory__remove" disabled={disabled}
+          onClick={() => void onRemove(inv.id)} aria-label={`Remover ${info.name}`} title="Remover">×</button>
+      </header>
+
+      <div className="alth-icard__badges">
+        <span className="alth-icard__kind">{ITEM_TYPE_LABELS[inv.item_type]}</span>
+        {inv.equipped && <span className="alth-icard__badge alth-icard__badge--on">Equipada{zoneLabel ? ` · ${zoneLabel}` : ''}</span>}
+        {custom && <span className="alth-icard__badge">Personalizado</span>}
+      </div>
+
+      <p className="alth-icard__detail">{info.detail}</p>
+      {note && (
+        <p className={`alth-icard__note${open ? ' is-open' : ''}`}>{note}</p>
+      )}
+      {longNote && (
+        <button type="button" className="alth-icard__more" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {open ? 'Ver menos' : 'Ver mais'}
+        </button>
+      )}
+
+      {info.weapon && <WeaponTraits weapon={info.weapon} />}
+
+      {gear && band && (
+        <div className="alth-icard__integrity" title="Integridade (repare na aba Ofício)">
+          <span className="alth-icard__bar"><i className={`alth-icard__fill alth-icard__fill--${band}`} style={{ width: `${Math.max(0, Math.min(100, gear.integrity))}%` }} /></span>
+          <span className={`alth-integrity alth-integrity--${band}`}>
+            {gear.integrity}%{band !== 'normal' ? ` · ${BAND_LABELS[band]}` : ''}
+          </span>
+        </div>
+      )}
+      {gear && gear.reinforcements.length > 0 && (
+        <span className="alth-inventory__traits">
+          {gear.reinforcements.map((id) => (
+            <span key={id} className="alth-inventory__prop" title={reinforcementDef(id)?.effect}>{reinforcementDef(id)?.label}</span>
+          ))}
+        </span>
+      )}
+
+      {choosingZone && armor ? (
+        <div className="alth-inventory__zone-picker">
+          <span className="alth-inventory__zone-hint">Onde?</span>
+          {BODY_PARTS.map((part) => (
+            <button key={part.id} type="button" className="alth-inventory__zone-btn"
+              onClick={() => { onToggleEquip(inv, 'equip', part.id as BodyZone); setChoosingZone(false) }}>
+              {part.label}
+            </button>
+          ))}
+          <button type="button" className="alth-inventory__zone-cancel" onClick={() => setChoosingZone(false)}>Cancelar</button>
+        </div>
+      ) : (
+        <footer className="alth-icard__foot">
+          <div className="alth-inventory__qty">
+            <button type="button" className="alth-inventory__qty-btn" disabled={disabled}
+              onClick={() => void (inv.quantity > 1 ? onUpdateQuantity(inv.id, inv.quantity - 1) : onRemove(inv.id))}
+              aria-label={`Diminuir quantidade de ${info.name}`}>−</button>
+            <span className="alth-inventory__qty-value">{inv.quantity}</span>
+            <button type="button" className="alth-inventory__qty-btn" disabled={disabled}
+              onClick={() => void onUpdateQuantity(inv.id, inv.quantity + 1)}
+              aria-label={`Aumentar quantidade de ${info.name}`}>+</button>
+          </div>
+          <span className="alth-icard__spacer" />
+          {armor && (
+            <button type="button" className={`alth-icard__act${inv.equipped ? ' is-on' : ''}`} disabled={disabled} aria-pressed={inv.equipped}
+              onClick={() => {
+                if (inv.equipped) { onToggleEquip(inv, 'unequip'); return }
+                if (armor.coverage === 'todas') onToggleEquip(inv, 'equip')
+                else setChoosingZone(true)
+              }}>
+              {inv.equipped ? 'Desequipar' : 'Equipar'}
+            </button>
+          )}
+          {custom && (
+            <button type="button" className="alth-icard__act" disabled={disabled} onClick={onEdit} aria-label={`Editar ${info.name}`}>Editar</button>
+          )}
+        </footer>
+      )}
+    </article>
+  )
+}
+
 export function AltheriumInventoryCard({
   inventory, onAdd, onUpdateQuantity, onRemove, onToggleEquip, onAddCustom, onUpdateCustom, disabled = false,
 }: AltheriumInventoryCardProps) {
-  const [filter, setFilter] = useState('')
-  const [pendingZoneFor, setPendingZoneFor] = useState<string | null>(null)
+  const [filter, setFilter] = useState<OwnedFilter>('todos')
+  const [catalogOpen, setCatalogOpen] = useState(false)
   // Janela de item personalizado: novo (com nome sugerido pela busca) ou editando um existente.
   const [editor, setEditor] = useState<{ item?: AltheriumInventoryItem; name?: string } | null>(null)
 
-  const q = normalize(filter.trim())
-  const filteredWeapons     = useMemo(() => (q ? WEAPONS.filter((w) => normalize(w.name).includes(q)) : WEAPONS), [q])
-  const filteredArmors      = useMemo(() => (q ? ARMORS.filter((a) => normalize(a.name).includes(q)) : ARMORS), [q])
-  const filteredConsumables = useMemo(() => (q ? CONSUMABLES.filter((i) => normalize(i.name).includes(q)) : CONSUMABLES), [q])
-  const filteredUtilities   = useMemo(() => (q ? UTILITIES.filter((i) => normalize(i.name).includes(q)) : UTILITIES), [q])
-  const noResults = filteredWeapons.length === 0 && filteredArmors.length === 0
-    && filteredConsumables.length === 0 && filteredUtilities.length === 0
+  const entries = useMemo(
+    () => inventory.map((inv) => ({ inv, info: describeInventoryItem(inv) })).filter((e): e is { inv: AltheriumInventoryItem; info: ItemInfo } => e.info !== null),
+    [inventory],
+  )
+  const counts = useMemo(() => {
+    const c: Record<OwnedFilter, number> = { todos: entries.length, arma: 0, armadura: 0, escudo: 0, outros: 0 }
+    for (const e of entries) c[ownedFilterOf(e.inv)] += 1
+    return c
+  }, [entries])
+  const activeFilter = filter !== 'todos' && counts[filter] === 0 ? 'todos' : filter
+  const shown = activeFilter === 'todos' ? entries : entries.filter((e) => ownedFilterOf(e.inv) === activeFilter)
 
   return (
     <section className="alth-card alth-inventory">
       <div className="alth-card__header">
-        <h4 className="alth-card__title">Inventário</h4>
+        <h4 className="alth-card__title">Meus itens</h4>
+        <button type="button" className="alth-triumph__btn alth-triumph__btn--add" disabled={disabled} onClick={() => setCatalogOpen(true)}>
+          + Adicionar item
+        </button>
       </div>
 
-      <input
-        type="text"
-        className="input alth-inventory__search"
-        placeholder="Buscar no catálogo..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
-
-      <div className="alth-inventory__grid">
-        <div className="alth-inventory__catalog">
-          {WEAPON_CATEGORIES.map((cat) => {
-            const items = filteredWeapons.filter((w) => w.category === cat)
-            if (items.length === 0) return null
-            return (
-              <div key={cat} className="alth-inventory__group">
-                <h5 className="alth-inventory__group-title">{WEAPON_CATEGORY_LABELS[cat]}</h5>
-                {items.map((w) => (
-                  <div key={w.id} className="alth-inventory__row">
-                    <div className="alth-inventory__row-main">
-                      <span className="alth-inventory__name">
-                        {w.name}
-                        {w.berserkerOnly && <span className="alth-inventory__tag">Berserker</span>}
-                      </span>
-                      <span className="alth-inventory__detail">
-                        {w.damageDice} {DAMAGE_TYPE_LABELS[w.damageType]} · {WEAPON_ATTRIBUTE_LABELS[w.attribute]} · {WEAPON_RANGE_LABELS[w.range]}
-                      </span>
-                      <WeaponTraits weapon={w} />
-                    </div>
-                    <span className="alth-inventory__price">¤{w.price}</span>
-                    <button type="button" className="alth-inventory__add" disabled={disabled}
-                      onClick={() => void onAdd('arma', w.id)} aria-label={`Adicionar ${w.name}`}>+</button>
-                  </div>
-                ))}
-              </div>
-            )
-          })}
-
-          {filteredArmors.length > 0 && (
-            <div className="alth-inventory__group">
-              <h5 className="alth-inventory__group-title">Proteções</h5>
-              {filteredArmors.map((a) => (
-                <div key={a.id} className="alth-inventory__row">
-                  <div className="alth-inventory__row-main">
-                    <span className="alth-inventory__name">{a.name}</span>
-                    <span className="alth-inventory__detail">{a.description} · {a.db} DB</span>
-                  </div>
-                  <span className="alth-inventory__price">¤{a.price}</span>
-                  <button type="button" className="alth-inventory__add" disabled={disabled}
-                    onClick={() => void onAdd(a.kind, a.id)} aria-label={`Adicionar ${a.name}`}>+</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {filteredConsumables.length > 0 && (
-            <div className="alth-inventory__group">
-              <h5 className="alth-inventory__group-title">Consumíveis</h5>
-              {filteredConsumables.map((i) => (
-                <div key={i.id} className="alth-inventory__row">
-                  <div className="alth-inventory__row-main">
-                    <span className="alth-inventory__name">{i.name}</span>
-                    <span className="alth-inventory__detail">{i.effect}</span>
-                  </div>
-                  <span className="alth-inventory__price">¤{i.price}</span>
-                  <button type="button" className="alth-inventory__add" disabled={disabled}
-                    onClick={() => void onAdd('consumivel', i.id)} aria-label={`Adicionar ${i.name}`}>+</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {filteredUtilities.length > 0 && (
-            <div className="alth-inventory__group">
-              <h5 className="alth-inventory__group-title">Utilitários</h5>
-              {filteredUtilities.map((i) => (
-                <div key={i.id} className="alth-inventory__row">
-                  <div className="alth-inventory__row-main">
-                    <span className="alth-inventory__name">{i.name}</span>
-                    <span className="alth-inventory__detail">{i.effect}</span>
-                  </div>
-                  <span className="alth-inventory__price">¤{i.price}</span>
-                  <button type="button" className="alth-inventory__add" disabled={disabled}
-                    onClick={() => void onAdd('utilitario', i.id)} aria-label={`Adicionar ${i.name}`}>+</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {noResults && (
-            <div className="alth-inventory__empty">
-              <p>Nenhum item encontrado no catálogo.</p>
-              <button
-                type="button" className="alth-inventory__custom-btn" disabled={disabled}
-                onClick={() => setEditor({ name: filter.trim() })}
-              >
-                + Criar “{filter.trim()}” como item personalizado
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="alth-inventory__owned">
-          <div className="alth-inventory__owned-head">
-            <h5 className="alth-inventory__group-title">Meus itens</h5>
-            <button
-              type="button" className="alth-inventory__custom-btn" disabled={disabled}
-              onClick={() => setEditor({})}
-            >
-              + Personalizado
+      {entries.length > 0 && (
+        <div className="alth-inv-tabs" role="tablist" aria-label="Filtrar itens">
+          {OWNED_FILTERS.filter((f) => f.id === 'todos' || counts[f.id] > 0).map((f) => (
+            <button key={f.id} type="button" role="tab" aria-selected={activeFilter === f.id}
+              className={`alth-inv-tab${activeFilter === f.id ? ' is-on' : ''}`} onClick={() => setFilter(f.id)}>
+              {f.label} <b>{counts[f.id]}</b>
             </button>
-          </div>
-          {inventory.length === 0 && <p className="alth-inventory__empty">Nenhum item no inventário ainda.</p>}
-          {inventory.map((inv) => {
-            const info = describeInventoryItem(inv)
-            if (!info) return null
-            const armor = inventoryArmor(inv)
-            const custom = isCustom(inv)
-            const isChoosingZone = pendingZoneFor === inv.id
-            const equippedZoneLabel = inv.equipped && inv.equipped_zone
-              ? BODY_PARTS.find((p) => p.id === inv.equipped_zone)?.label
-              : null
-
-            return (
-              <div key={inv.id} className="alth-inventory__row alth-inventory__row--owned">
-                <div className="alth-inventory__row-main">
-                  <span className="alth-inventory__name">{info.name}</span>
-                  <span className="alth-inventory__detail">
-                    {custom && <span className="alth-inventory__tag alth-inventory__tag--custom">Personalizado</span>}
-                    {info.detail}
-                  </span>
-                  {info.weapon && <WeaponTraits weapon={info.weapon} />}
-                  {(() => {
-                    const g = gearInfo(inv)
-                    if (!g) return null
-                    const band = integrityBand(g.integrity)
-                    return (
-                      <span className="alth-inventory__traits">
-                        <span className={`alth-integrity alth-integrity--${band}`} title="Integridade (repare na aba Ofício)">
-                          {g.integrity}%{band !== 'normal' ? ` · ${BAND_LABELS[band]}` : ''}
-                        </span>
-                        {g.reinforcements.map((id) => (
-                          <span key={id} className="alth-inventory__prop" title={reinforcementDef(id)?.effect}>{reinforcementDef(id)?.label}</span>
-                        ))}
-                      </span>
-                    )
-                  })()}
-                </div>
-
-                <div className="alth-inventory__qty">
-                  <button type="button" className="alth-inventory__qty-btn" disabled={disabled}
-                    onClick={() => void (inv.quantity > 1 ? onUpdateQuantity(inv.id, inv.quantity - 1) : onRemove(inv.id))}
-                    aria-label={`Diminuir quantidade de ${info.name}`}>−</button>
-                  <span className="alth-inventory__qty-value">{inv.quantity}</span>
-                  <button type="button" className="alth-inventory__qty-btn" disabled={disabled}
-                    onClick={() => void onUpdateQuantity(inv.id, inv.quantity + 1)}
-                    aria-label={`Aumentar quantidade de ${info.name}`}>+</button>
-                </div>
-
-                {armor && !isChoosingZone && (
-                  <label className="alth-inventory__equip">
-                    <input
-                      type="checkbox"
-                      checked={inv.equipped}
-                      disabled={disabled}
-                      onChange={(e) => {
-                        if (!e.target.checked) { onToggleEquip(inv, 'unequip'); return }
-                        if (armor.coverage === 'todas') onToggleEquip(inv, 'equip')
-                        else setPendingZoneFor(inv.id)
-                      }}
-                    />
-                    Equipada{equippedZoneLabel ? ` (${equippedZoneLabel})` : ''}
-                  </label>
-                )}
-
-                {armor && isChoosingZone && (
-                  <div className="alth-inventory__zone-picker">
-                    <span className="alth-inventory__zone-hint">Onde?</span>
-                    {BODY_PARTS.map((part) => (
-                      <button
-                        key={part.id} type="button" className="alth-inventory__zone-btn"
-                        onClick={() => { onToggleEquip(inv, 'equip', part.id as BodyZone); setPendingZoneFor(null) }}
-                      >
-                        {part.label}
-                      </button>
-                    ))}
-                    <button type="button" className="alth-inventory__zone-cancel" onClick={() => setPendingZoneFor(null)}>
-                      Cancelar
-                    </button>
-                  </div>
-                )}
-
-                {custom && (
-                  <button type="button" className="alth-inventory__edit" disabled={disabled}
-                    onClick={() => setEditor({ item: inv })} aria-label={`Editar ${info.name}`} title="Editar">✎</button>
-                )}
-                <button type="button" className="alth-inventory__remove" disabled={disabled}
-                  onClick={() => void onRemove(inv.id)} aria-label={`Remover ${info.name}`}>×</button>
-              </div>
-            )
-          })}
+          ))}
         </div>
-      </div>
+      )}
+
+      {entries.length === 0 ? (
+        <div className="alth-inventory__empty">
+          <p>Nenhum item no inventário ainda.</p>
+          <button type="button" className="alth-inventory__custom-btn" disabled={disabled} onClick={() => setCatalogOpen(true)}>
+            + Abrir o catálogo
+          </button>
+        </div>
+      ) : (
+        <div className="alth-icards">
+          {shown.map(({ inv, info }) => (
+            <OwnedCard
+              key={inv.id} inv={inv} info={info} disabled={disabled}
+              onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onToggleEquip={onToggleEquip}
+              onEdit={() => setEditor({ item: inv })}
+            />
+          ))}
+        </div>
+      )}
 
       <p className="alth-hint">
         Equipar soma o DB da peça à zona escolhida (escudo cobre as 4 zonas de uma vez). Desequipar
         só desmarca: os campos de DB continuam manuais, ajuste-os se remover a peça.
       </p>
+
+      <Presence show={catalogOpen} exitMs={220}>
+        {() => (
+          <CatalogModal
+            inventory={inventory} disabled={disabled} onAdd={onAdd}
+            onClose={() => setCatalogOpen(false)}
+            onCustom={(name) => { setCatalogOpen(false); setEditor({ name }) }}
+          />
+        )}
+      </Presence>
 
       <Presence show={editor !== null} exitMs={220}>
         {() => editor && (
@@ -375,6 +339,138 @@ export function AltheriumInventoryCard({
         )}
       </Presence>
     </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// Catálogo em janela — busca + categorias; o + soma o item e a janela
+// continua aberta para pegar vários.
+// ────────────────────────────────────────────────────────
+
+type CatKey = WeaponCategory | 'armadura' | 'escudo' | 'consumivel' | 'utilitario'
+
+interface CatalogEntry {
+  key:    string
+  type:   AltheriumInventoryItem['item_type']
+  id:     string
+  cat:    CatKey
+  name:   string
+  stats:  string
+  price:  number
+  weapon?: WeaponDef
+  berserker?: boolean
+}
+
+const CATALOG: CatalogEntry[] = [
+  ...WEAPONS.map((w): CatalogEntry => ({
+    key: `arma:${w.id}`, type: 'arma', id: w.id, cat: w.category, name: w.name, price: w.price, weapon: w, berserker: w.berserkerOnly,
+    stats: `${w.damageDice} ${DAMAGE_TYPE_LABELS[w.damageType]} · ${WEAPON_ATTRIBUTE_LABELS[w.attribute]} · ${WEAPON_RANGE_LABELS[w.range]}`,
+  })),
+  ...ARMORS.map((a): CatalogEntry => ({
+    key: `${a.kind}:${a.id}`, type: a.kind, id: a.id, cat: a.kind === 'escudo' ? 'escudo' : 'armadura', name: a.name, price: a.price,
+    stats: `${a.description} · ${a.db} DB`,
+  })),
+  ...CONSUMABLES.map((i): CatalogEntry => ({ key: `consumivel:${i.id}`, type: 'consumivel', id: i.id, cat: 'consumivel', name: i.name, price: i.price, stats: i.effect })),
+  ...UTILITIES.map((i): CatalogEntry => ({ key: `utilitario:${i.id}`, type: 'utilitario', id: i.id, cat: 'utilitario', name: i.name, price: i.price, stats: i.effect })),
+]
+
+const CAT_CHIPS: { id: CatKey | 'todos'; label: string }[] = [
+  { id: 'todos', label: 'Todos' },
+  ...WEAPON_CATEGORIES.map((c) => ({ id: c as CatKey, label: WEAPON_CATEGORY_LABELS[c] })),
+  { id: 'armadura', label: 'Armaduras' },
+  { id: 'escudo', label: 'Escudos' },
+  { id: 'consumivel', label: 'Consumíveis' },
+  { id: 'utilitario', label: 'Utilitários' },
+]
+
+interface CatalogModalProps {
+  inventory: AltheriumInventoryItem[]
+  disabled:  boolean
+  onAdd:     AltheriumInventoryCardProps['onAdd']
+  onClose:   () => void
+  onCustom:  (suggestedName: string) => void
+}
+
+function CatalogModal({ inventory, disabled, onAdd, onClose, onCustom }: CatalogModalProps) {
+  const [query, setQuery] = useState('')
+  const [cat, setCat] = useState<CatKey | 'todos'>('todos')
+  const searchRef = useRef<HTMLInputElement>(null)
+  useEffect(() => { searchRef.current?.focus() }, [])
+
+  const owned = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const inv of inventory) {
+      if (isCustom(inv)) continue
+      const k = `${inv.item_type}:${inv.item_id}`
+      m.set(k, (m.get(k) ?? 0) + inv.quantity)
+    }
+    return m
+  }, [inventory])
+
+  const q = normalize(query.trim())
+  const rows = useMemo(
+    () => CATALOG.filter((e) => (cat === 'todos' || e.cat === cat) && (!q || normalize(e.name).includes(q))),
+    [cat, q],
+  )
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="alth-modal__window alth-catalog" role="dialog" aria-modal="true" aria-labelledby="alth-catalog-title">
+        <header className="alth-modal__header">
+          <h4 id="alth-catalog-title" className="alth-modal__title">Adicionar item</h4>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        </header>
+
+        <div className="alth-catalog__top">
+          <input
+            ref={searchRef} type="text" className="input" placeholder="Buscar no catálogo..."
+            value={query} onChange={(e) => setQuery(e.target.value)}
+          />
+          <div className="alth-catalog__chips" role="tablist" aria-label="Categoria">
+            {CAT_CHIPS.map((c) => (
+              <button key={c.id} type="button" role="tab" aria-selected={cat === c.id}
+                className={`alth-inv-tab${cat === c.id ? ' is-on' : ''}`} onClick={() => setCat(c.id)}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="alth-catalog__list">
+          {rows.map((e) => {
+            const have = owned.get(e.key) ?? 0
+            return (
+              <div key={e.key} className="alth-inventory__row">
+                <div className="alth-inventory__row-main">
+                  <span className="alth-inventory__name">
+                    {e.name}
+                    {e.berserker && <span className="alth-inventory__tag">Berserker</span>}
+                    {have > 0 && <span className="alth-catalog__have">×{have} no inventário</span>}
+                  </span>
+                  <span className="alth-inventory__detail">{e.stats}</span>
+                  {e.weapon && <WeaponTraits weapon={e.weapon} />}
+                </div>
+                <span className="alth-inventory__price">¤{e.price}</span>
+                <button type="button" className="alth-inventory__add" disabled={disabled}
+                  onClick={() => void onAdd(e.type, e.id)} aria-label={`Adicionar ${e.name}`}>+</button>
+              </div>
+            )
+          })}
+          {rows.length === 0 && (
+            <div className="alth-inventory__empty">
+              <p>Nenhum item encontrado no catálogo.</p>
+            </div>
+          )}
+        </div>
+
+        <footer className="alth-catalog__foot">
+          <button type="button" className="alth-inventory__custom-btn" disabled={disabled} onClick={() => onCustom(query.trim())}>
+            {query.trim() ? `+ Criar “${query.trim()}” como item personalizado` : '+ Item personalizado'}
+          </button>
+          <button type="button" className="alth-triumph__btn" onClick={onClose}>Fechar</button>
+        </footer>
+      </div>
+    </ModalOverlay>
   )
 }
 

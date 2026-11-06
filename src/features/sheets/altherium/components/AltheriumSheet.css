@@ -1104,23 +1104,6 @@
 /* ── Inventário (armas, armaduras, itens) ── */
 .alth-inventory__search { margin-bottom: var(--space-1); }
 
-.alth-inventory__grid {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: var(--space-4);
-  align-items: start;
-}
-
-.alth-inventory__catalog,
-.alth-inventory__owned {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  max-height: 420px;
-  overflow-y: auto;
-  padding-right: var(--space-1);
-}
-
 .alth-inventory__group { display: flex; flex-direction: column; gap: var(--space-1); }
 .alth-inventory__group-title {
   font-family: var(--font-label);
@@ -1705,8 +1688,6 @@
   .alth-body { width: calc(50% - var(--space-3) / 2); max-width: 150px; }
   .alth-anatomy__fields { width: 100%; min-width: 0; order: 3; }
 
-  .alth-inventory__grid { grid-template-columns: 1fr; }
-  .alth-inventory__catalog, .alth-inventory__owned { max-height: 320px; }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2506,3 +2487,64 @@
 }
 .alth-craft__recipe p { margin: 0; font-size: inherit; line-height: 1.5; color: var(--text-secondary); }
 .alth-craft__reinf { border-color: var(--accent-dim); color: var(--accent-bright); }
+
+/* ── Inventário: cartões de "Meus itens" e catálogo em janela ── */
+.alth-inv-tabs, .alth-catalog__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.alth-inv-tab {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+  background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  font-size: var(--text-xs); color: var(--text-secondary); cursor: var(--cursor-hand, pointer);
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+.alth-inv-tab b { font-family: var(--font-label); font-size: 10px; color: var(--text-muted); }
+.alth-inv-tab:hover { border-color: var(--gilded-bright); color: var(--text-primary); }
+.alth-inv-tab.is-on { border-color: var(--accent-bright); background: var(--bg-overlay); color: var(--accent-bright); }
+.alth-inv-tab.is-on b { color: var(--accent-bright); }
+
+.alth-icards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
+.alth-icard {
+  display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3);
+  background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: var(--radius-md);
+  animation: m-item-in 380ms var(--ease-out) backwards;
+}
+.alth-icard.is-equipped { border-color: var(--gilded); }
+.alth-icard__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
+.alth-icard__name { margin: 0; font-size: var(--text-sm); font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+.alth-icard__badges { display: flex; flex-wrap: wrap; gap: 5px; }
+.alth-icard__kind, .alth-icard__badge {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border-dim); color: var(--text-muted);
+}
+.alth-icard__badge { color: var(--accent-bright); border-color: var(--gilded); }
+.alth-icard__badge--on { background: var(--accent-glow); border-color: var(--gilded-bright); }
+.alth-icard__detail { margin: 0; font-size: var(--text-xs); color: var(--text-secondary); }
+.alth-icard__note {
+  margin: 0; font-size: var(--text-xs); color: var(--text-muted); overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.alth-icard__note.is-open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.alth-icard__more {
+  align-self: flex-start; padding: 0; background: none; border: none; font-size: var(--text-xs);
+  color: var(--accent-bright); cursor: var(--cursor-hand, pointer);
+}
+.alth-icard__integrity { display: flex; align-items: center; gap: var(--space-2); }
+.alth-icard__bar { flex: 1; height: 5px; border-radius: 3px; background: var(--bg-void); overflow: hidden; }
+.alth-icard__fill { display: block; height: 100%; background: var(--accent-bright); }
+.alth-icard__fill--gasta { background: var(--gilded-bright); }
+.alth-icard__fill--danificada, .alth-icard__fill--quebrada { background: var(--danger-bright); }
+.alth-icard__foot { display: flex; align-items: center; gap: var(--space-2); margin-top: auto; padding-top: var(--space-1); }
+.alth-icard__spacer { flex: 1; }
+.alth-icard__act {
+  padding: 4px 10px; background: transparent; border: 1px solid var(--border-base); border-radius: var(--radius-sm);
+  font-family: var(--font-label); font-size: var(--text-xs); color: var(--text-secondary); cursor: var(--cursor-hand, pointer);
+}
+.alth-icard__act:hover:not(:disabled) { border-color: var(--gilded-bright); color: var(--text-primary); }
+.alth-icard__act.is-on { border-color: var(--gilded-bright); color: var(--accent-bright); background: var(--accent-glow); }
+.alth-icard__act:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.alth-catalog { width: min(620px, 100%); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--gilded); border-radius: var(--radius-lg); }
+.alth-catalog__top { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-dim); }
+.alth-catalog__list { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); overflow-y: auto; min-height: 0; flex: 1; }
+.alth-catalog__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border-dim); }
+.alth-catalog__have { font-family: var(--font-label); font-size: 10px; font-weight: 400; color: var(--accent-bright); }
+@media (max-width: 520px) { .alth-icards { grid-template-columns: 1fr; } }
