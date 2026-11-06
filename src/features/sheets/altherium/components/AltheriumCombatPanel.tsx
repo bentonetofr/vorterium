@@ -110,9 +110,7 @@ interface Props {
 type Open = { spec: AltheriumTestSpec; kind: 'attack' | 'defense' | 'parry' | 'initiative' | 'death'; weapon?: CombatWeapon; mode?: AttackMode; counter?: boolean }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
-const ZONES: BodyZoneId[] = ['db_pernas', 'db_bracos', 'db_tronco', 'db_cabeca']
 const DAMAGE_OPTIONS = (Object.keys(FULL_DAMAGE_LABELS) as FullDamageType[]).map((t) => ({ value: t, label: FULL_DAMAGE_LABELS[t] }))
-const ZONE_OPTIONS = ZONES.map((z) => ({ value: z, label: ZONE_LABELS[z] }))
 
 export function AltheriumCombatActions({
   campaignId, sheetId, character, genesis, inventory, state, onState, domainCheck, zoneDb, vitality, onDamage,
@@ -728,57 +726,111 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
     eryndorArmor: zoneHasEryndorArmor(inventory, zone),
   })
 
-  return (
-    <div className="alth-combat__form">
-      <div className="alth-combat__form">
-        <div className="alth-combat__row">
-          <label className="alth-combat__num">
-            Dano
-            <input type="number" className="input" min={0} max={999} value={damage} onChange={(e) => { setDamage(e.target.value); setApplied(null) }} placeholder="0" />
-          </label>
-          <div className="alth-combat__select">
-            <Select value={type} options={DAMAGE_OPTIONS} onChange={(v) => setType(v as FullDamageType)} aria-label="Tipo de dano" />
-          </div>
-          <div className="alth-combat__select">
-            <Select value={zone} options={ZONE_OPTIONS} onChange={(v) => setZone(v as BodyZoneId)} aria-label="Parte atingida" />
-          </div>
-          <span className="alth-hint">DB {db}{dbNotes.length ? ` (${dbNotes.join(', ')})` : ''}</span>
-        </div>
-        <div className="alth-combat__row">
-          <label className="alth-combat__num">
-            Perfurante (ignora DB)
-            <input type="number" className="input" min={0} max={20} value={ignore} onChange={(e) => setIgnore(Math.max(0, Number(e.target.value) || 0))} />
-          </label>
-          <label className="alth-combat__num">
-            Resistência
-            <input type="number" className="input" min={0} max={50} value={resistance} onChange={(e) => setResistance(Math.max(0, Number(e.target.value) || 0))} />
-          </label>
-          <label className="alth-test__check"><input type="checkbox" checked={vulnerable} onChange={(e) => setVulnerable(e.target.checked)} /> Vulnerável</label>
-          <label className="alth-test__check"><input type="checkbox" checked={immune} onChange={(e) => setImmune(e.target.checked)} /> Imune</label>
-        </div>
+  const setDamageValue = (n: number) => { setDamage(String(Math.max(0, Math.min(999, n)))); setApplied(null) }
+  const adjusted = ignore > 0 || resistance > 0 || vulnerable || immune
+  const zoneRows: { id: BodyZoneId; label: string }[] = [
+    { id: 'db_cabeca', label: 'Cabeça' }, { id: 'db_bracos', label: 'Braços' }, { id: 'db_tronco', label: 'Tronco' }, { id: 'db_pernas', label: 'Pernas' },
+  ]
+  const zoneDbOf = (z: BodyZoneId) => Math.max(0, zoneDb[z] + dbMod + zoneArmor(inventory, z).delta)
+  const pick = (z: BodyZoneId) => { setZone(z); setApplied(null) }
+  const part = (z: BodyZoneId, label: string, shape: ReactNode) => (
+    <g className={`alth-dmg__part${zone === z ? ' is-on' : ''}`} role="button" tabIndex={0} aria-label={`${label}, DB ${zoneDbOf(z)}`} aria-pressed={zone === z}
+      onClick={() => pick(z)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(z) } }}>
+      <title>{label}</title>
+      {shape}
+    </g>
+  )
 
-        {result && (
-          <>
-            <ol className="alth-combat__steps">
-              {result.steps.map((s, i) => <li key={i}>{s.label}: <strong>{s.value}</strong></li>)}
-            </ol>
-            {result.armorWear && <p className="alth-hint">O dano não passou do DB: a armadura de {ZONE_LABELS[zone]} perde 10% de Integridade.</p>}
-            <div className="alth-combat__row">
-              <span className="alth-combat__final">Dano final: <strong>{result.final}</strong> · PV {vitality} → {Math.max(0, vitality - result.final)}</span>
-              <span className="alth-combat__spacer" />
-              <button type="button" className="btn btn-primary alth-combat__btn" disabled={applied !== null}
-                onClick={() => {
-                  onApply(result.final, zone)
-                  if (result.armorWear && piece.armorId) onArmorWear(piece.armorId)
-                  setApplied(vitality - result.final <= 0 ? 'PV chegou a 0: Estado Caído.' : 'Dano aplicado.')
-                }}>
-                Aplicar na ficha
-              </button>
-            </div>
-            {applied && <p className="alth-hint">{applied}</p>}
-          </>
-        )}
+  return (
+    <div className="alth-dmg">
+      <div className="alth-dmg__where">
+        <div className="alth-dmg__zones" role="radiogroup" aria-label="Parte atingida">
+          {zoneRows.map((z) => (
+            <button key={z.id} type="button" role="radio" aria-checked={zone === z.id} className={`alth-dmg__zone${zone === z.id ? ' is-on' : ''}`} onClick={() => pick(z.id)}>
+              <span>{z.label}</span><b>DB {zoneDbOf(z.id)}</b>
+            </button>
+          ))}
+          {dbNotes.length > 0 && <span className="alth-hint">{dbNotes.join(', ')}</span>}
+        </div>
+        <svg className="alth-dmg__body" viewBox="0 0 96 150" aria-label="Boneco: toque na parte atingida">
+          {part('db_cabeca', 'Cabeça', <circle cx="48" cy="16" r="13" />)}
+          {part('db_tronco', 'Tronco', <rect x="29" y="34" width="38" height="54" rx="10" />)}
+          {part('db_bracos', 'Braços', <><rect x="8" y="36" width="15" height="50" rx="7" /><rect x="73" y="36" width="15" height="50" rx="7" /></>)}
+          {part('db_pernas', 'Pernas', <><rect x="31" y="92" width="14" height="52" rx="7" /><rect x="51" y="92" width="14" height="52" rx="7" /></>)}
+        </svg>
       </div>
+
+      <div className="alth-dmg__line">
+        <span className="alth-win__label">Dano</span>
+        <span className="alth-stepper" role="group" aria-label="Dano">
+          <button type="button" onClick={() => setDamageValue(value - 1)} disabled={value <= 0} aria-label="Diminuir o dano">−</button>
+          <input type="number" className="alth-dmg__value" min={0} max={999} inputMode="numeric" value={damage} placeholder="0" aria-label="Dano"
+            onChange={(e) => { setDamage(e.target.value); setApplied(null) }} />
+          <button type="button" onClick={() => setDamageValue(value + 1)} aria-label="Aumentar o dano">+</button>
+        </span>
+        <span className="alth-dmg__quick">
+          {[5, 10].map((n) => <button key={n} type="button" onClick={() => setDamageValue(value + n)}>+{n}</button>)}
+        </span>
+      </div>
+
+      <div className="alth-dmg__group">
+        <span className="alth-win__label">Tipo</span>
+        <div className="alth-dmg__chips" role="radiogroup" aria-label="Tipo de dano">
+          {DAMAGE_OPTIONS.map((o) => (
+            <button key={o.value} type="button" role="radio" aria-checked={type === o.value} className={`alth-dmg__chip${type === o.value ? ' is-on' : ''}`}
+              onClick={() => { setType(o.value as FullDamageType); setApplied(null) }}>{o.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <details className="alth-dmg__adv" open={adjusted}>
+        <summary>Ajustes{adjusted ? ' (em uso)' : ' (perfurante, resistência, vulnerável, imune)'}</summary>
+        <div className="alth-dmg__advbody">
+          <label className="alth-dmg__adj">
+            <span>Perfurante (ignora DB)</span>
+            <span className="alth-stepper">
+              <button type="button" onClick={() => setIgnore(Math.max(0, ignore - 1))} disabled={ignore <= 0} aria-label="Diminuir o perfurante">−</button>
+              <output>{ignore}</output>
+              <button type="button" onClick={() => setIgnore(Math.min(20, ignore + 1))} disabled={ignore >= 20} aria-label="Aumentar o perfurante">+</button>
+            </span>
+          </label>
+          <label className="alth-dmg__adj">
+            <span>Resistência</span>
+            <span className="alth-stepper">
+              <button type="button" onClick={() => setResistance(Math.max(0, resistance - 1))} disabled={resistance <= 0} aria-label="Diminuir a resistência">−</button>
+              <output>{resistance}</output>
+              <button type="button" onClick={() => setResistance(Math.min(50, resistance + 1))} disabled={resistance >= 50} aria-label="Aumentar a resistência">+</button>
+            </span>
+          </label>
+          <div className="alth-dmg__chips">
+            <button type="button" aria-pressed={vulnerable} className={`alth-dmg__chip${vulnerable ? ' is-on' : ''}`} onClick={() => setVulnerable(!vulnerable)}>Vulnerável</button>
+            <button type="button" aria-pressed={immune} className={`alth-dmg__chip${immune ? ' is-on' : ''}`} onClick={() => setImmune(!immune)}>Imune</button>
+          </div>
+        </div>
+      </details>
+
+      {result ? (
+        <>
+          <ol className="alth-combat__steps">
+            {result.steps.map((st, i) => <li key={i}>{st.label}: <strong>{st.value}</strong></li>)}
+          </ol>
+          {result.armorWear && <p className="alth-hint">O dano não passou do DB: a armadura de {ZONE_LABELS[zone]} perde 10% de Integridade.</p>}
+          <div className="alth-dmg__final">
+            <span>Dano final <strong>{result.final}</strong> · PV {vitality} → <strong>{Math.max(0, vitality - result.final)}</strong></span>
+            <button type="button" className="btn btn-primary" disabled={applied !== null}
+              onClick={() => {
+                onApply(result.final, zone)
+                if (result.armorWear && piece.armorId) onArmorWear(piece.armorId)
+                setApplied(vitality - result.final <= 0 ? 'PV chegou a 0: Estado Caído.' : 'Dano aplicado.')
+              }}>
+              {applied ? 'Aplicado' : `Receber ${result.final} de dano`}
+            </button>
+          </div>
+          {applied && <p className="alth-hint" role="status">{applied}</p>}
+        </>
+      ) : (
+        <p className="alth-hint">Digite o dano para ver a conta, escolhida a parte do corpo e o tipo.</p>
+      )}
     </div>
   )
 }

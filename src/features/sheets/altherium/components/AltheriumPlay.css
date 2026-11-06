@@ -642,3 +642,51 @@ button.alth-combat__cond--dying { cursor: var(--cursor-hand, pointer); padding: 
 /* ── Painel 2: os dados rolando (compacto; abre larga quando o resultado aparece) ── */
 .alth-test--roll:not(.alth-test--shown) { width: min(440px, 100%); }
 .alth-test--roll:not(.alth-test--shown) .alth-test__stage { height: 230px; }
+
+/* ── Receber dano: o boneco escolhe a parte atingida ── */
+.alth-dmg { display: flex; flex-direction: column; gap: var(--space-4); }
+.alth-dmg__where { display: grid; grid-template-columns: minmax(150px, 190px) minmax(0, 1fr); gap: var(--space-5); align-items: center; }
+.alth-dmg__zones { display: flex; flex-direction: column; gap: 6px; }
+.alth-dmg__zone {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: 8px 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  font-size: var(--text-sm); color: var(--text-secondary); text-align: left; cursor: var(--cursor-hand, pointer);
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+.alth-dmg__zone b { font-family: var(--font-label); font-size: var(--text-xs); color: var(--text-muted); }
+.alth-dmg__zone:hover { border-color: var(--gilded-bright); color: var(--text-primary); }
+.alth-dmg__zone.is-on { border-color: var(--accent-bright); background: var(--bg-overlay); color: var(--accent-bright); }
+.alth-dmg__zone.is-on b { color: var(--accent-bright); }
+.alth-dmg__body { width: 112px; height: 175px; justify-self: center; overflow: visible; }
+.alth-dmg__part { cursor: var(--cursor-hand, pointer); outline: none; }
+.alth-dmg__part > * { fill: var(--bg-overlay); stroke: var(--border-bright); stroke-width: 1.5; transition: fill var(--transition-fast), stroke var(--transition-fast); }
+.alth-dmg__part:hover > *, .alth-dmg__part:focus-visible > * { stroke: var(--gilded-bright); }
+.alth-dmg__part.is-on > * { fill: rgba(255, 138, 125, 0.22); stroke: var(--danger-bright); }
+.alth-dmg__line { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.alth-dmg__value {
+  width: 64px; height: 32px; text-align: center; border: none; background: var(--bg-void); color: var(--danger-bright);
+  font-family: var(--font-label); font-size: var(--text-lg); font-weight: 700; -moz-appearance: textfield;
+}
+.alth-dmg__value::-webkit-inner-spin-button, .alth-dmg__value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.alth-dmg__value:focus { outline: none; box-shadow: inset 0 0 0 1px var(--gilded-bright); }
+.alth-dmg__quick { display: inline-flex; gap: 6px; }
+.alth-dmg__quick button {
+  padding: 4px 10px; background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-sm);
+  font-family: var(--font-label); font-size: var(--text-xs); color: var(--text-secondary); cursor: var(--cursor-hand, pointer);
+}
+.alth-dmg__quick button:hover { border-color: var(--gilded-bright); color: var(--text-primary); }
+.alth-dmg__group { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-dmg__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.alth-dmg__chip {
+  padding: 6px 11px; background: var(--bg-elevated); border: 1px solid var(--border-base); border-radius: var(--radius-md);
+  font-size: var(--text-xs); color: var(--text-secondary); cursor: var(--cursor-hand, pointer);
+}
+.alth-dmg__chip:hover { border-color: var(--gilded-bright); color: var(--text-primary); }
+.alth-dmg__chip.is-on { border-color: var(--accent-bright); background: var(--bg-overlay); color: var(--accent-bright); }
+.alth-dmg__adv { font-size: var(--text-xs); color: var(--text-muted); }
+.alth-dmg__adv summary { cursor: var(--cursor-hand, pointer); color: var(--accent-bright); }
+.alth-dmg__advbody { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+.alth-dmg__adj { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-dmg__final { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; font-size: var(--text-sm); color: var(--text-secondary); }
+.alth-dmg__final strong { font-family: var(--font-display); font-size: var(--text-xl); color: var(--danger-bright); }
+@media (max-width: 420px) { .alth-dmg__where { grid-template-columns: minmax(0, 1fr) 84px; gap: var(--space-3); } .alth-dmg__body { width: 84px; height: 131px; } }
