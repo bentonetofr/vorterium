@@ -9,7 +9,7 @@ import type { SoundGroupId } from './creatureSounds'
 // recarregam e o veem na hora. Os desenhos são peças do catálogo do personagem (scripts/tlou_art/creatures.py).
 // ────────────────────────────────────────────────────────
 
-export type CreatureId = 'corredor' | 'espreitador' | 'estalador' | 'tropego' | 'baiacu'
+export type CreatureId = 'corredor' | 'espreitador' | 'estalador' | 'tropego' | 'baiacu' | 'monstro' | 'draugrelmo' | 'draugrgalhada'
 
 export interface CreatureDef {
   id: CreatureId
@@ -26,6 +26,10 @@ export interface CreatureDef {
   slots: Record<string, { id: string; variant?: string; colors?: Record<string, string> }>
   /** Espaços do boneco padrão que somem (cabelo, por exemplo). */
   drop?: string[]
+  /** Criatura que é um corpo inteiro do catálogo (não parte de um boneco): começa sem nenhuma roupa ou cabelo. */
+  bare?: boolean
+  /** O que aparece no cargo do NPC (padrão: "Infectado, dano N"). */
+  role?: string
 }
 
 export const CREATURES: CreatureDef[] = [
@@ -68,6 +72,21 @@ export const CREATURES: CreatureDef[] = [
       legs: { id: 'tlou/legs/surrada', variant: 'cargo' }, infection: { id: 'tlou/infection/baiacu' },
     },
   },
+  {
+    id: 'monstro', name: 'Monstro de Cabeças', blurb: 'Gigante curvado de juba em espirais: uma cabeça de jacaré que morde e outras que vigiam. Lento, enorme e muito resistente.', damage: 8,
+    sound: 'monstro', body: 'male', skin: 'light', height: 1.9, bare: true, role: 'Monstro grande, dano 8',
+    slots: { body: { id: 'tlou/body/monstro-cabecas', variant: 'pergaminho' }, head: { id: 'tlou/head/nenhuma' } },
+  },
+  {
+    id: 'draugrelmo', name: 'Draugr de Elmo', blurb: 'Morto de elmo pontudo e armadura de espirais: garras enroladas numa mão e machado farpado na outra.', damage: 4,
+    sound: 'draugr', body: 'male', skin: 'light', height: 1.16, bare: true, role: 'Draugr, dano 4',
+    slots: { body: { id: 'tlou/body/draugr-elmo', variant: 'padrao' }, head: { id: 'tlou/head/nenhuma' } },
+  },
+  {
+    id: 'draugrgalhada', name: 'Draugr de Galhada', blurb: 'Morto barbudo de coroa de chamas, ombreiras de espinhos e espada longa. Curvado, rápido de golpe.', damage: 3,
+    sound: 'draugr', body: 'male', skin: 'light', height: 1.16, bare: true, role: 'Draugr, dano 3',
+    slots: { body: { id: 'tlou/body/draugr-galhada', variant: 'padrao' }, head: { id: 'tlou/head/nenhuma' } },
+  },
 ]
 
 export const creatureById = (id: string): CreatureDef | undefined => CREATURES.find((c) => c.id === id)
@@ -82,13 +101,16 @@ export async function creatureAppearance(def: CreatureDef): Promise<Appearance> 
   const engine = await loadEngine()
   const data = await engine.loadCharacterData(VORTABLE_ASSETS)
   const base = engine.defaultAppearance(def.body)
-  const slots = { ...base.slots }
+  const slots = def.bare ? {} : { ...base.slots }
   for (const k of def.drop ?? []) delete slots[k]
   for (const [k, v] of Object.entries(def.slots)) slots[k] = { ...v }
   const a: Appearance = { ...base, body: def.body, skin: def.skin, slots }
   if (def.height) a.height = def.height
   if (def.weight != null) a.shape = { weight: def.weight }
-  return engine.normalizeAppearance(data, a)
+  const look = engine.normalizeAppearance(data, a)
+  // catálogo sem a arte da criatura (site desatualizado): o motor trocaria pelo corpo humano; melhor avisar
+  if (def.bare && look.slots.body?.id !== def.slots.body.id) throw new Error(`Este site ainda não tem a arte de ${def.name} (catálogo de personagem desatualizado). Atualize o site e tente de novo.`)
+  return look
 }
 
 export type Anchor = { x: number; y: number } | null
@@ -160,7 +182,7 @@ export async function placeEnemies(o: PlaceOptions): Promise<string[]> {
     added.push({
       id: `inim-${o.creature.id}-${code()}`,
       name: `${o.creature.name} ${sameKind + i + 1}`,
-      role: `Infectado, dano ${o.creature.damage}`,
+      role: o.creature.role ?? `Infectado, dano ${o.creature.damage}`,
       appearance,
       x, y,
       dir: (['down', 'left', 'right', 'up'] as const)[Math.floor(Math.random() * 4)],

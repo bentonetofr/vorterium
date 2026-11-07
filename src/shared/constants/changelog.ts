@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.18',
+    date:    '2026-11-07',
+    title:   'Vortable: Monstro de Cabeças e dois Draugr',
+    items: [
+      'Três inimigos novos no painel Inimigos do controle ao vivo, desenhados por código a partir dos esboços: o Monstro de Cabeças (gigante curvado de juba de cachos em espiral, cabeça de jacaré de boca aberta, outras cabeças e um rostinho no pé; bem maior que um jogador, com 4 variantes de cor pelo catálogo), o Draugr de Elmo (esquelético, de elmo pontudo, ombreiras com chifres, garras enroladas e machado farpado) e o Draugr de Galhada (barbudo, de coroa de chamas, ombreiras de espinhos e espada longa). Andam, correm e ficam parados nas quatro direções.',
+      'Cada um tem seus sons sintetizados na aba de sons (rugido de muitas bocas, chiado, mandíbulas e passos de gigante; sussurro, rugido seco, armadura rangendo e passos ocos). O motor agora aceita NPCs bem maiores que o normal (alturas de gigante), usadas só por criaturas assim; o criador de personagem continua com as mesmas alturas. Também entra a peça Mecha de cabelo no criador.',
+    ],
+  },
+  {
     version: '2.17',
     date:    '2026-11-07',
     title:   'Lore: imagens',

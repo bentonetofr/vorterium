@@ -5815,13 +5815,13 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 						}
 						if (y = f[v], y) {
 							if (x = g, S = _, E !== null) {
-								var ne = y.kerning[D];
-								x += ne === void 0 ? 0 : ne;
+								var G = y.kerning[D];
+								x += G === void 0 ? 0 : G;
 							}
 							c > x && (c = x), l > S && (l = S);
-							var re = x + y.xAdvance, ie = S + p;
-							u < re && (u = re), d < ie && (d = ie);
-							var ae = y.xOffset + y.xAdvance + (ne === void 0 ? 0 : ne);
+							var ne = x + y.xAdvance, re = S + p;
+							u < ne && (u = ne), d < re && (d = re);
+							var ie = y.xOffset + y.xAdvance + (G === void 0 ? 0 : G);
 							v === s ? R !== null && (I.push({
 								word: R.word,
 								i: R.i,
@@ -5836,7 +5836,7 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 								y: _,
 								w: 0,
 								h: p
-							}), R.word = R.word.concat(i[N]), R.w += ae), L.push({
+							}), R.word = R.word.concat(i[N]), R.w += ie), L.push({
 								i: te,
 								idx: N,
 								char: i[N],
@@ -5846,11 +5846,11 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 								w: y.width * C,
 								h: y.height * C,
 								t: _ * C,
-								r: re * C,
+								r: ne * C,
 								b: p * C,
 								line: j,
 								glyph: y
-							}), g += y.xAdvance + m + (ne === void 0 ? 0 : ne), E = y, D = v, M = re * C, te++;
+							}), g += y.xAdvance + m + (G === void 0 ? 0 : G), E = y, D = v, M = ne * C, te++;
 						}
 					}
 					if (R !== null && I.push({
@@ -5860,18 +5860,18 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 						y: R.y * T,
 						w: R.w * w,
 						h: R.h * T
-					}), O[j] = M, M > A && (A = M), M < k && (k = M), b > 0) for (var oe = 0; oe < L.length; oe++) {
-						var se = L[oe];
+					}), O[j] = M, M > A && (A = M), M < k && (k = M), b > 0) for (var ae = 0; ae < L.length; ae++) {
+						var oe = L[ae];
 						if (b === 1) {
-							var ce = (A - O[se.line]) / 2;
-							se.x += ce, se.r += ce;
+							var se = (A - O[oe.line]) / 2;
+							oe.x += se, oe.r += se;
 						} else if (b === 2) {
-							var le = A - O[se.line];
-							se.x += le, se.r += le;
+							var ce = A - O[oe.line];
+							oe.x += ce, oe.r += ce;
 						}
 					}
-					var ue = r.local, G = r.global;
-					return F = r.lines, ue.x = c * C, ue.y = l * C, ue.width = u * C, ue.height = d * C, G.x = e.x - e._displayOriginX + c * w, G.y = e.y - e._displayOriginY + l * T, G.width = u * w, G.height = d * T, F.shortest = k, F.longest = A, F.lengths = O, t && (ue.x = Math.ceil(ue.x), ue.y = Math.ceil(ue.y), ue.width = Math.ceil(ue.width), ue.height = Math.ceil(ue.height), G.x = Math.ceil(G.x), G.y = Math.ceil(G.y), G.width = Math.ceil(G.width), G.height = Math.ceil(G.height), F.shortest = Math.ceil(k), F.longest = Math.ceil(A)), n && (e._displayOriginX = e.originX * ue.width, e._displayOriginY = e.originY * ue.height, G.x = e.x - e._displayOriginX * e.scaleX, G.y = e.y - e._displayOriginY * e.scaleY, t && (G.x = Math.ceil(G.x), G.y = Math.ceil(G.y))), r.words = I, r.characters = L, r.lines.height = p, r.scale = C, r.scaleX = e.scaleX, r.scaleY = e.scaleY, r;
+					var le = r.local, K = r.global;
+					return F = r.lines, le.x = c * C, le.y = l * C, le.width = u * C, le.height = d * C, K.x = e.x - e._displayOriginX + c * w, K.y = e.y - e._displayOriginY + l * T, K.width = u * w, K.height = d * T, F.shortest = k, F.longest = A, F.lengths = O, t && (le.x = Math.ceil(le.x), le.y = Math.ceil(le.y), le.width = Math.ceil(le.width), le.height = Math.ceil(le.height), K.x = Math.ceil(K.x), K.y = Math.ceil(K.y), K.width = Math.ceil(K.width), K.height = Math.ceil(K.height), F.shortest = Math.ceil(k), F.longest = Math.ceil(A)), n && (e._displayOriginX = e.originX * le.width, e._displayOriginY = e.originY * le.height, K.x = e.x - e._displayOriginX * e.scaleX, K.y = e.y - e._displayOriginY * e.scaleY, t && (K.x = Math.ceil(K.x), K.y = Math.ceil(K.y))), r.words = I, r.characters = L, r.lines.height = p, r.scale = C, r.scaleX = e.scaleX, r.scaleY = e.scaleY, r;
 				};
 			}),
 			61327: ((e, t, n) => {
@@ -6107,20 +6107,20 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 							}
 							if (D = P[w], D) {
 								O = D.width, k = D.height;
-								var ne = D.xOffset + S - j, re = D.yOffset + C - M;
+								var G = D.xOffset + S - j, ne = D.yOffset + C - M;
 								if (A !== null) {
-									var ie = D.kerning[T] || 0;
-									ne += ie, S += ie;
+									var re = D.kerning[T] || 0;
+									G += re, S += re;
 								}
 								if (S += D.xAdvance + E, A = D, T = w, O !== 0 && k !== 0 && w !== 32) {
 									if (I = t.fontSize / t.fontData.size, L = 0, ee) {
-										W.color = 0, W.tint.topLeft = _, W.tint.topRight = v, W.tint.bottomLeft = y, W.tint.bottomRight = b, W.index = te, W.charCode = w, W.x = ne, W.y = re, W.scale = I, W.rotation = L, W.data = D.data;
-										var ae = ee(W);
-										ne = ae.x, re = ae.y, I = ae.scale, L = ae.rotation, ae.color ? (_ = ae.color, v = ae.color, y = ae.color, b = ae.color) : (_ = ae.tint.topLeft, v = ae.tint.topRight, y = ae.tint.bottomLeft, b = ae.tint.bottomRight), _ = a.getTintAppendFloatAlpha(_, n.alpha * t._alphaTL), v = a.getTintAppendFloatAlpha(v, n.alpha * t._alphaTR), y = a.getTintAppendFloatAlpha(y, n.alpha * t._alphaBL), b = a.getTintAppendFloatAlpha(b, n.alpha * t._alphaBR);
+										W.color = 0, W.tint.topLeft = _, W.tint.topRight = v, W.tint.bottomLeft = y, W.tint.bottomRight = b, W.index = te, W.charCode = w, W.x = G, W.y = ne, W.scale = I, W.rotation = L, W.data = D.data;
+										var ie = ee(W);
+										G = ie.x, ne = ie.y, I = ie.scale, L = ie.rotation, ie.color ? (_ = ie.color, v = ie.color, y = ie.color, b = ie.color) : (_ = ie.tint.topLeft, v = ie.tint.topRight, y = ie.tint.bottomLeft, b = ie.tint.bottomRight), _ = a.getTintAppendFloatAlpha(_, n.alpha * t._alphaTL), v = a.getTintAppendFloatAlpha(v, n.alpha * t._alphaTR), y = a.getTintAppendFloatAlpha(y, n.alpha * t._alphaBL), b = a.getTintAppendFloatAlpha(b, n.alpha * t._alphaBR);
 									}
-									ne *= I, re *= I, ne -= t.displayOriginX, re -= t.displayOriginY, ne += B, p.applyITRS(ne, re, L, I, I), f.multiply(p, d);
-									var oe = D.u0, se = D.v0, ce = D.u1, le = D.v1, ue = O, G = k, de = d.e, fe = d.f, pe = G * d.c + d.e, me = G * d.d + d.f, he = ue * d.a + G * d.c + d.e, ge = ue * d.b + G * d.d + d.f, _e = ue * d.a + d.e, ve = ue * d.b + d.f;
-									U && (de = Math.round(de), fe = Math.round(fe), pe = Math.round(pe), me = Math.round(me), he = Math.round(he), ge = Math.round(ge), _e = Math.round(_e), ve = Math.round(ve)), l.shouldFlush(6) && (l.flush(), x = l.setGameObject(t)), l.batchQuad(t, de, fe, pe, me, he, ge, _e, ve, oe, se, ce, le, _, v, y, b, g, h, x);
+									G *= I, ne *= I, G -= t.displayOriginX, ne -= t.displayOriginY, G += B, p.applyITRS(G, ne, L, I, I), f.multiply(p, d);
+									var ae = D.u0, oe = D.v0, se = D.u1, ce = D.v1, le = O, K = k, ue = d.e, de = d.f, fe = K * d.c + d.e, pe = K * d.d + d.f, me = le * d.a + K * d.c + d.e, he = le * d.b + K * d.d + d.f, ge = le * d.a + d.e, _e = le * d.b + d.f;
+									U && (ue = Math.round(ue), de = Math.round(de), fe = Math.round(fe), pe = Math.round(pe), me = Math.round(me), he = Math.round(he), ge = Math.round(ge), _e = Math.round(_e)), l.shouldFlush(6) && (l.flush(), x = l.setGameObject(t)), l.batchQuad(t, ue, de, fe, pe, me, he, ge, _e, ae, oe, se, ce, _, v, y, b, g, h, x);
 								}
 							}
 						}
@@ -8619,8 +8619,8 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 								v.TL = k(m[++A], z), v.TR = k(m[++A], z), v.BL = k(m[++A], z), v.BR = k(m[++A], z);
 								break;
 							case r.ARC:
-								var B = 0, V = m[++A], H = m[++A], U = m[++A], ee = m[++A], W = m[++A], te = m[++A], ne = m[++A];
-								for (W -= ee, te ? W < -C ? W = -C : W > 0 && (W = -C + W % C) : W > C ? W = C : W < 0 && (W = C + W % C), O === null && (O = new c(V + Math.cos(ee) * U, H + Math.sin(ee) * U, g), T.push(O), B += S); B < 1 + ne;) x = W * B + ee, y = V + Math.cos(x) * U, b = H + Math.sin(x) * U, O.points.push(new s(y, b, g)), B += S;
+								var B = 0, V = m[++A], H = m[++A], U = m[++A], ee = m[++A], W = m[++A], te = m[++A], G = m[++A];
+								for (W -= ee, te ? W < -C ? W = -C : W > 0 && (W = -C + W % C) : W > C ? W = C : W < 0 && (W = C + W % C), O === null && (O = new c(V + Math.cos(ee) * U, H + Math.sin(ee) * U, g), T.push(O), B += S); B < 1 + G;) x = W * B + ee, y = V + Math.cos(x) * U, b = H + Math.sin(x) * U, O.points.push(new s(y, b, g)), B += S;
 								x = W + ee, y = V + Math.cos(x) * U, b = H + Math.sin(x) * U, O.points.push(new s(y, b, g));
 								break;
 							case r.FILL_RECT:
@@ -14904,19 +14904,19 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 					O && (V = O.u0, H = O.u1, T ? (U = O.v1, ee = O.v0) : (U = O.v0, ee = O.v1));
 					var W = H - V, te = ee - U;
 					for (B = 0; B < P; B++) {
-						var ne = B * I - A;
+						var G = B * I - A;
 						for (z = 0; z < N; z++) {
-							var re = z * F - k;
-							R.push(re, -ne);
-							var ie = V + z / j * W, ae = U + B / M * te;
-							L.push(ie, ae);
+							var ne = z * F - k;
+							R.push(ne, -G);
+							var re = V + z / j * W, ie = U + B / M * te;
+							L.push(re, ie);
 						}
 					}
 					Array.isArray(S) || (S = [S]), Array.isArray(C) || (C = [C]);
-					var oe = 0, se = 0;
+					var ae = 0, oe = 0;
 					for (B = 0; B < M; B++) for (z = 0; z < j; z++) {
-						var ce = (z + N * B) * 2, le = (z + N * (B + 1)) * 2, ue = (z + 1 + N * (B + 1)) * 2, G = (z + 1 + N * B) * 2, de = S[se], fe = C[oe], pe = new s(R[ce], R[ce + 1], 0, L[ce], L[ce + 1], de, fe).transformMat4(u), me = new s(R[le], R[le + 1], 0, L[le], L[le + 1], de, fe).transformMat4(u), he = new s(R[G], R[G + 1], 0, L[G], L[G + 1], de, fe).transformMat4(u), ge = new s(R[le], R[le + 1], 0, L[le], L[le + 1], de, fe).transformMat4(u), _e = new s(R[ue], R[ue + 1], 0, L[ue], L[ue + 1], de, fe).transformMat4(u), ve = new s(R[G], R[G + 1], 0, L[G], L[G + 1], de, fe).transformMat4(u);
-						w && (pe.setUVs(V, ee), me.setUVs(V, U), he.setUVs(H, ee), ge.setUVs(V, U), _e.setUVs(H, U), ve.setUVs(H, ee)), se++, se === S.length && (se = 0), oe++, oe === C.length && (oe = 0), D.verts.push(pe, me, he, ge, _e, ve), D.faces.push(new r(pe, me, he), new r(ge, _e, ve));
+						var se = (z + N * B) * 2, ce = (z + N * (B + 1)) * 2, le = (z + 1 + N * (B + 1)) * 2, K = (z + 1 + N * B) * 2, ue = S[oe], de = C[ae], fe = new s(R[se], R[se + 1], 0, L[se], L[se + 1], ue, de).transformMat4(u), pe = new s(R[ce], R[ce + 1], 0, L[ce], L[ce + 1], ue, de).transformMat4(u), me = new s(R[K], R[K + 1], 0, L[K], L[K + 1], ue, de).transformMat4(u), he = new s(R[ce], R[ce + 1], 0, L[ce], L[ce + 1], ue, de).transformMat4(u), ge = new s(R[le], R[le + 1], 0, L[le], L[le + 1], ue, de).transformMat4(u), _e = new s(R[K], R[K + 1], 0, L[K], L[K + 1], ue, de).transformMat4(u);
+						w && (fe.setUVs(V, ee), pe.setUVs(V, U), me.setUVs(H, ee), he.setUVs(V, U), ge.setUVs(H, U), _e.setUVs(H, ee)), oe++, oe === S.length && (oe = 0), ae++, ae === C.length && (ae = 0), D.verts.push(fe, pe, me, he, ge, _e), D.faces.push(new r(fe, pe, me), new r(he, ge, _e));
 					}
 					return t && (t.faces = t.faces.concat(D.faces), t.vertices = t.vertices.concat(D.verts)), D;
 				};
@@ -26087,23 +26087,23 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 							if (h.isActive && !h.isSensor) {
 								var g = h.collision, _ = g.parentA, v = g.parentB, y = g.normal.x, b = g.normal.y, x = g.tangent.x, S = g.tangent.y, C = h.inverseMass, w = h.friction * h.frictionStatic * c, T = h.contacts, E = h.contactCount, D = 1 / E, O = _.position.x - _.positionPrev.x, k = _.position.y - _.positionPrev.y, A = _.angle - _.anglePrev, j = v.position.x - v.positionPrev.x, M = v.position.y - v.positionPrev.y, N = v.angle - v.anglePrev;
 								for (m = 0; m < E; m++) {
-									var P = T[m], F = P.vertex, I = F.x - _.position.x, L = F.y - _.position.y, R = F.x - v.position.x, z = F.y - v.position.y, B = O - L * A, V = k + I * A, H = j - z * N, U = M + R * N, ee = B - H, W = V - U, te = y * ee + b * W, ne = x * ee + S * W, re = h.separation + te, ie = Math.min(re, 1);
-									ie = re < 0 ? 0 : ie;
-									var ae = ie * w;
-									ne < -ae || ne > ae ? (f = ne > 0 ? ne : -ne, d = h.friction * (ne > 0 ? 1 : -1) * i, d < -f ? d = -f : d > f && (d = f)) : (d = ne, f = l);
-									var oe = I * b - L * y, se = R * b - z * y, ce = D / (C + _.inverseInertia * oe * oe + v.inverseInertia * se * se), le = (1 + h.restitution) * te * ce;
-									if (d *= ce, te < o) P.normalImpulse = 0;
+									var P = T[m], F = P.vertex, I = F.x - _.position.x, L = F.y - _.position.y, R = F.x - v.position.x, z = F.y - v.position.y, B = O - L * A, V = k + I * A, H = j - z * N, U = M + R * N, ee = B - H, W = V - U, te = y * ee + b * W, G = x * ee + S * W, ne = h.separation + te, re = Math.min(ne, 1);
+									re = ne < 0 ? 0 : re;
+									var ie = re * w;
+									G < -ie || G > ie ? (f = G > 0 ? G : -G, d = h.friction * (G > 0 ? 1 : -1) * i, d < -f ? d = -f : d > f && (d = f)) : (d = G, f = l);
+									var ae = I * b - L * y, oe = R * b - z * y, se = D / (C + _.inverseInertia * ae * ae + v.inverseInertia * oe * oe), ce = (1 + h.restitution) * te * se;
+									if (d *= se, te < o) P.normalImpulse = 0;
 									else {
-										var ue = P.normalImpulse;
-										P.normalImpulse += le, P.normalImpulse > 0 && (P.normalImpulse = 0), le = P.normalImpulse - ue;
+										var le = P.normalImpulse;
+										P.normalImpulse += ce, P.normalImpulse > 0 && (P.normalImpulse = 0), ce = P.normalImpulse - le;
 									}
-									if (ne < -s || ne > s) P.tangentImpulse = 0;
+									if (G < -s || G > s) P.tangentImpulse = 0;
 									else {
-										var G = P.tangentImpulse;
-										P.tangentImpulse += d, P.tangentImpulse < -f && (P.tangentImpulse = -f), P.tangentImpulse > f && (P.tangentImpulse = f), d = P.tangentImpulse - G;
+										var K = P.tangentImpulse;
+										P.tangentImpulse += d, P.tangentImpulse < -f && (P.tangentImpulse = -f), P.tangentImpulse > f && (P.tangentImpulse = f), d = P.tangentImpulse - K;
 									}
-									var de = y * le + x * d, fe = b * le + S * d;
-									_.isStatic || _.isSleeping || (_.positionPrev.x += de * _.inverseMass, _.positionPrev.y += fe * _.inverseMass, _.anglePrev += (I * fe - L * de) * _.inverseInertia), v.isStatic || v.isSleeping || (v.positionPrev.x -= de * v.inverseMass, v.positionPrev.y -= fe * v.inverseMass, v.anglePrev -= (R * fe - z * de) * v.inverseInertia);
+									var ue = y * ce + x * d, de = b * ce + S * d;
+									_.isStatic || _.isSleeping || (_.positionPrev.x += ue * _.inverseMass, _.positionPrev.y += de * _.inverseMass, _.anglePrev += (I * de - L * ue) * _.inverseInertia), v.isStatic || v.isSleeping || (v.positionPrev.x -= ue * v.inverseMass, v.positionPrev.y -= de * v.inverseMass, v.anglePrev -= (R * de - z * ue) * v.inverseInertia);
 								}
 							}
 						}
@@ -29655,12 +29655,12 @@ var e = Object.create, t = Object.defineProperty, n = Object.getOwnPropertyDescr
 						if (e.isCropped) {
 							var ee = e._crop, W = ee.width, te = ee.height;
 							B = W, V = te, o = W, s = te, _ = ee.x, v = ee.y;
-							var ne = _, re = v;
-							d && (ne = y - ee.x - W), f && (re = b - ee.y - te), I = ne / n + E, L = re / r + D, R = (ne + W) / n + E, z = (re + te) / r + D, H = -h + _, U = -g + v;
+							var G = _, ne = v;
+							d && (G = y - ee.x - W), f && (ne = b - ee.y - te), I = G / n + E, L = ne / r + D, R = (G + W) / n + E, z = (ne + te) / r + D, H = -h + _, U = -g + v;
 						}
 						f ^= !A && t.isRenderTexture ? 1 : 0, d && (B *= -1, H += o), f && (V *= -1, U += s), O.roundPixels && (i = Math.floor(i), a = Math.floor(a)), P.applyITRS(i, a, u, c, l), N.copyFrom(O.matrix), k ? (N.multiplyWithOffset(k, -O.scrollX * p, -O.scrollY * m), P.e = i, P.f = a) : (P.e -= O.scrollX * p, P.f -= O.scrollY * m), N.multiply(P, F);
-						var ie = F.setQuad(H, U, H + B, U + V, O.renderRoundPixels);
-						j ??= this.setTexture2D(t), e && !M && this.manager.preBatch(e), this.batchQuad(e, ie[0], ie[1], ie[2], ie[3], ie[4], ie[5], ie[6], ie[7], I, L, R, z, x, S, C, w, T, t, j), e && !M && this.manager.postBatch(e);
+						var re = F.setQuad(H, U, H + B, U + V, O.renderRoundPixels);
+						j ??= this.setTexture2D(t), e && !M && this.manager.preBatch(e), this.batchQuad(e, re[0], re[1], re[2], re[3], re[4], re[5], re[6], re[7], I, L, R, z, x, S, C, w, T, t, j), e && !M && this.manager.postBatch(e);
 					},
 					batchTextureFrame: function(e, t, n, r, i, a, o) {
 						this.manager.set(this);
@@ -40428,15 +40428,21 @@ var V = [
 	1,
 	1.08,
 	1.16
+], H = [
+	1.5,
+	1.7,
+	1.9,
+	2.2,
+	2.6
 ];
 //#endregion
 //#region src/engine/rng.ts
-function H(e, t) {
+function U(e, t) {
 	let n = Math.imul(e, 374761393) + Math.imul(t, 668265263);
 	return n = Math.imul(n ^ n >>> 13, 1274126177), (n ^ n >>> 16) >>> 0;
 }
-var U = (e) => `${e.floor}|${e.wall}|${e.trim}|${e.height}`;
-function ee(e) {
+var ee = (e) => `${e.floor}|${e.wall}|${e.trim}|${e.height}`;
+function W(e) {
 	let [t, n, r, i] = e.split("|");
 	return !t || !n || !r ? null : {
 		floor: t,
@@ -40445,7 +40451,7 @@ function ee(e) {
 		height: Math.max(0, Math.min(4, Number(i) || 0))
 	};
 }
-var W = [
+var te = [
 	{
 		name: "Casa de fazenda",
 		style: {
@@ -40501,7 +40507,7 @@ var W = [
 		}
 	}
 ];
-function te(e) {
+function G(e) {
 	let t = e.width + 1, n = e.height + 1, r = Array(t * n).fill(""), i = e.rooms;
 	if (!i) return r;
 	let a = new Int32Array(t * n).fill(-1);
@@ -40509,7 +40515,7 @@ function te(e) {
 		let r = -1;
 		for (let o = 0; o < n; o++) {
 			let n = o * t + e;
-			if (!i[n] || !ee(i[n])) {
+			if (!i[n] || !W(i[n])) {
 				r = -1;
 				continue;
 			}
@@ -40519,20 +40525,20 @@ function te(e) {
 	for (let e = 0; e < n; e++) for (let n = 0; n < t; n++) {
 		let o = e * t + n;
 		if (a[o] < 0) continue;
-		let s = ee(i[o]), c = e - a[o], l = n > 0 && a[o - 1] === a[o] || n < t - 1 && a[o + 1] === a[o];
+		let s = W(i[o]), c = e - a[o], l = n > 0 && a[o - 1] === a[o] || n < t - 1 && a[o + 1] === a[o];
 		r[o] = `${i[o]}#${s.height > 0 && c <= s.height && l ? "w" : "f"}`;
 	}
 	return r;
 }
 function ne(e, t) {
-	let n = te(e), r = !1;
+	let n = G(e), r = !1;
 	for (let i = 0; i < n.length; i++) {
 		if (n[i] === t[i]) continue;
 		if (r = !0, !n[i]) {
 			e.corners[i] = "", e.overlay && (e.overlay[i] = "");
 			continue;
 		}
-		let a = ee(n[i].slice(0, -2));
+		let a = W(n[i].slice(0, -2));
 		e.corners[i] = n[i].endsWith("#w") ? a.wall : a.floor, e.overlay ||= Array(e.corners.length).fill(""), e.overlay[i] = a.trim;
 	}
 	return e.rooms && !e.rooms.some((e) => e) && delete e.rooms, r;
@@ -40578,7 +40584,7 @@ var ie = [
 	]
 ], ae = .45, oe = /pendurad|placa de (estalagem|ferreiro|mercador)|sach[êe]|teia|varal|espantalho/i;
 function se(e, t, n) {
-	let r = H(Math.round(t), Math.round(n)) % 1e3 / 1e3 * Math.PI * 2, i = e.category, a = (e, i, a = "bottom") => ({
+	let r = U(Math.round(t), Math.round(n)) % 1e3 / 1e3 * Math.PI * 2, i = e.category, a = (e, i, a = "bottom") => ({
 		amp: e,
 		freq: i,
 		anchor: a,
@@ -40607,9 +40613,9 @@ var le = class {
 		let t = this.strength, n = this.gust(e.x, e.y), r = Math.sin(this.time * e.freq * Math.PI * 2 * (.75 + .5 * t) + e.phase);
 		return e.anchor === "top" ? e.amp * (r * (.15 + .6 * t * (.5 + n)) + t * n * .4) : e.amp * (t * (.2 + .8 * n) + r * (.12 + .3 * t) * (.6 + .8 * n));
 	}
-}, ue = null;
-function G(e) {
-	ue = e;
+}, K = null;
+function ue(e) {
+	K = e;
 }
 var de = class extends c.default.Renderer.WebGL.Pipelines.MultiPipeline {
 	zoom = 1;
@@ -40624,8 +40630,8 @@ var de = class extends c.default.Renderer.WebGL.Pipelines.MultiPipeline {
 	}
 	batchQuad(e, t, n, r, i, a, o, s, c, ...l) {
 		let u = e?.sway;
-		if (u && ue) {
-			let e = (ue.sway(u) + (u.kick ?? 0)) * this.zoom;
+		if (u && K) {
+			let e = (K.sway(u) + (u.kick ?? 0)) * this.zoom;
 			u.anchor === "top" ? (r += e, a += e) : (t += e, s += e);
 		}
 		return super.batchQuad(e, t, n, r, i, a, o, s, c, ...l);
@@ -40640,7 +40646,7 @@ function me(e, t) {
 	n instanceof c.default.Renderer.WebGL.WebGLRenderer && (n.pipelines.has("VortableSway") || n.pipelines.add(fe, new de(e.scene.game)), t ? e.setPipeline(fe) : e.pipeline?.name === "VortableSway" && e.resetPipeline());
 }
 function he(e) {
-	return e && ue ? ue.sway(e) : 0;
+	return e && K ? K.sway(e) : 0;
 }
 //#endregion
 //#region src/engine/world/tufts.ts
@@ -40712,7 +40718,7 @@ var xe = class {
 						amp: 0,
 						freq: 1.25,
 						anchor: "bottom",
-						phase: H(t, e) % 628 / 100,
+						phase: U(t, e) % 628 / 100,
 						x: 0,
 						y: 0
 					},
@@ -40767,7 +40773,7 @@ function Ce(e, t, n) {
 		15,
 		16,
 		17
-	], i = H(t, n) % 7;
+	], i = U(t, n) % 7;
 	return i < r.length ? r[i] : 10;
 }
 var we = [
@@ -40787,7 +40793,7 @@ var we = [
 function Te(e, t, n, r) {
 	let i = e.wang, a = (e) => {
 		let t = i[e];
-		return t && t.length ? t[H(n, r) % t.length] : null;
+		return t && t.length ? t[U(n, r) % t.length] : null;
 	}, o = a(t);
 	if (o) return [o];
 	let s = [], c = 0;
@@ -40859,7 +40865,7 @@ function ke(e, t) {
 	return (e[0] && e[0].rank >= t ? 1 : 0) | (e[1] && e[1].rank >= t ? 2 : 0) | (e[2] && e[2].rank >= t ? 4 : 0) | (e[3] && e[3].rank >= t ? 8 : 0);
 }
 function Ae(e) {
-	let t = [], n = e.width + 1, r = e.rooms ? te(e) : null, i = (e, t) => !!r && r[t * n + e].endsWith("#w"), a = (e, t) => !!r && r[t * n + e] !== "", o = (e, t) => {
+	let t = [], n = e.width + 1, r = e.rooms ? G(e) : null, i = (e, t) => !!r && r[t * n + e].endsWith("#w"), a = (e, t) => !!r && r[t * n + e] !== "", o = (e, t) => {
 		if (!r) return !1;
 		let n = +!!a(e, t) + +!!a(e + 1, t) + +!!a(e, t + 1) + +!!a(e + 1, t + 1);
 		return n > 0 && n < 4;
@@ -41083,7 +41089,7 @@ var ot = .35, st = .55, ct = 48, lt = class {
 };
 //#endregion
 //#region src/engine/ui/dom.ts
-function K(e, t = {}, ...n) {
+function q(e, t = {}, ...n) {
 	let r = document.createElement(e);
 	for (let [e, n] of Object.entries(t)) n != null && n !== !1 && (e === "class" ? r.className = String(n) : e === "html" ? r.innerHTML = String(n) : e.startsWith("on") ? r.addEventListener(e.slice(2).toLowerCase(), n) : r.setAttribute(e, n === !0 ? "" : String(n)));
 	for (let e of n) e != null && e !== !1 && r.append(e);
@@ -41091,22 +41097,22 @@ function K(e, t = {}, ...n) {
 }
 var ut = /* @__PURE__ */ new Set();
 function dt(e, t) {
-	ut.has(e) || (ut.add(e), document.head.append(K("style", { "data-vortable": e }, t)));
+	ut.has(e) || (ut.add(e), document.head.append(q("style", { "data-vortable": e }, t)));
 }
 //#endregion
 //#region src/engine/ui/loader.ts
 var ft = "\n.vt-loader { --vt-loader-size: 128px; position: relative; flex: none; width: var(--vt-loader-size); height: var(--vt-loader-size); }\n.vt-loader--sm { --vt-loader-size: 84px; }\n.vt-loader::before { content: ''; position: absolute; inset: 19%; border-radius: 50%; border: 2px dashed rgba(240, 180, 90, 0.4); }\n.vt-loader__run {\n  position: absolute; left: 0; top: 0; width: 38%; aspect-ratio: 246 / 240;\n  offset-path: circle(31% at 50% 50%); offset-rotate: 0deg;\n  animation: vt-loader-orbit 1.9s linear infinite;\n}\n.vt-loader__knight {\n  display: block; width: 100%; height: 100%;\n  background: var(--vt-loader-img) center / contain no-repeat;\n  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55));\n  transform-origin: 50% 100%;\n  animation: vt-loader-trot 0.32s ease-in-out infinite;\n}\n@keyframes vt-loader-orbit {\n  0% { offset-distance: 0%; transform: scaleX(1); }\n  48% { transform: scaleX(1); }\n  52% { transform: scaleX(-1); }\n  98% { transform: scaleX(-1); }\n  100% { offset-distance: 100%; transform: scaleX(1); }\n}\n@keyframes vt-loader-trot {\n  0%, 100% { transform: translateY(0) rotate(-6deg); }\n  50% { transform: translateY(-10%) rotate(6deg); }\n}\n/* por cima do palco enquanto carrega */\n.vt-loader-cover { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; background: #07080c; }\n@media (prefers-reduced-motion: reduce) {\n  .vt-loader__run { animation-duration: 3.8s; }\n  .vt-loader__knight { animation: none; }\n}\n";
 function pt(e, t = !1) {
 	dt("loader", ft);
-	let n = K("div", {
+	let n = q("div", {
 		class: `vt-loader${t ? " vt-loader--sm" : ""}`,
 		role: "status",
 		"aria-label": "Carregando"
-	}, K("span", { class: "vt-loader__run" }, K("i", { class: "vt-loader__knight" })));
+	}, q("span", { class: "vt-loader__run" }, q("i", { class: "vt-loader__knight" })));
 	return n.style.setProperty("--vt-loader-img", `url("${e}cavaleiro-loading.png")`), n;
 }
 function mt(e) {
-	return K("div", { class: "vt-loader-cover" }, pt(e));
+	return q("div", { class: "vt-loader-cover" }, pt(e));
 }
 //#endregion
 //#region src/engine/scenes/BootScene.ts
@@ -41320,13 +41326,13 @@ var ht = class extends c.default.Scene {
 		roxo: ["#4a2a7a"],
 		cinza: ["#555563"]
 	}
-}, yt = [], q = (e) => {
+}, yt = [], J = (e) => {
 	yt.push({
 		z: _t,
 		...e
 	});
 };
-q({
+J({
 	id: "proc/sardas_leves",
 	slot: "skin_spots",
 	name: "Sardas leves",
@@ -41339,7 +41345,7 @@ q({
 		8,
 		4
 	]))
-}), q({
+}), J({
 	id: "proc/sardas_fortes",
 	slot: "skin_spots",
 	name: "Sardas por todo o rosto",
@@ -41359,7 +41365,7 @@ q({
 			-4
 		], .7);
 	})
-}), q({
+}), J({
 	id: "proc/sardas_nariz",
 	slot: "skin_spots",
 	name: "Sardas no nariz",
@@ -41372,7 +41378,7 @@ q({
 		2,
 		3
 	]))
-}), q({
+}), J({
 	id: "proc/pinta_bochecha",
 	slot: "skin_spots",
 	name: "Pinta na bochecha",
@@ -41380,7 +41386,7 @@ q({
 	color: "escuro",
 	alpha: 1,
 	draw: (e) => e.dot(6, 3)
-}), q({
+}), J({
 	id: "proc/pinta_boca",
 	slot: "skin_spots",
 	name: "Pinta perto da boca",
@@ -41388,7 +41394,7 @@ q({
 	color: "escuro",
 	alpha: 1,
 	draw: (e) => e.dot(2, 4)
-}), q({
+}), J({
 	id: "proc/manchas_idade",
 	slot: "skin_spots",
 	name: "Manchas de idade",
@@ -41401,7 +41407,7 @@ q({
 		8,
 		4
 	], .5, 2))
-}), q({
+}), J({
 	id: "proc/acne",
 	slot: "skin_spots",
 	name: "Espinhas",
@@ -41414,7 +41420,7 @@ q({
 		8,
 		4
 	]))
-}), q({
+}), J({
 	id: "proc/queimado_sol",
 	slot: "skin_spots",
 	name: "Queimado de sol",
@@ -41424,7 +41430,7 @@ q({
 	draw: (e) => e.both(() => {
 		e.rect(-1, 1, 10, 3), e.rect(3, -2, 6, 1);
 	})
-}), q({
+}), J({
 	id: "proc/vitiligo",
 	slot: "skin_spots",
 	name: "Manchas claras (vitiligo)",
@@ -41459,7 +41465,7 @@ q({
 			[4, 3]
 		]), e.side = 1;
 	}
-}), q({
+}), J({
 	id: "proc/olheiras",
 	slot: "skin_spots",
 	name: "Olheiras",
@@ -41469,7 +41475,7 @@ q({
 	draw: (e) => e.both(() => {
 		e.rect(2, 2, 4, 1), e.rect(3, 3, 2, 1);
 	})
-}), q({
+}), J({
 	id: "proc/olho_roxo",
 	slot: "skin_spots",
 	name: "Olho roxo",
@@ -41479,7 +41485,7 @@ q({
 	draw: (e) => {
 		e.rect(2, -2, 5, 1), e.rect(2, 2, 5, 1), e.rect(2, -1, 1, 3), e.rect(6, -1, 1, 3), e.rect(3, 3, 3, 1);
 	}
-}), q({
+}), J({
 	id: "proc/fuligem",
 	slot: "skin_spots",
 	name: "Fuligem e sujeira",
@@ -41501,7 +41507,7 @@ q({
 	})
 });
 var bt = (e, t, n, r = !1) => {
-	for (let [i, a] of [["esq.", 1], ["dir.", -1]]) q({
+	for (let [i, a] of [["esq.", 1], ["dir.", -1]]) J({
 		id: `${e}_${i === "esq." ? "e" : "d"}`,
 		slot: "scar_face",
 		name: `${t} (${i})`,
@@ -41540,7 +41546,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	[7, 4],
 	[8, 4],
 	[6, 4]
-])), bt("proc/cic_testa", "Cicatriz na testa", (e) => e.line(2, -9, 5, -5)), q({
+])), bt("proc/cic_testa", "Cicatriz na testa", (e) => e.line(2, -9, 5, -5)), J({
 	id: "proc/cic_labio",
 	slot: "scar_face",
 	name: "Lábio partido",
@@ -41550,7 +41556,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		for (let t = 2; t <= 5; t++) e.cdot(1, t);
 	}
-}), q({
+}), J({
 	id: "proc/cic_nariz",
 	slot: "scar_face",
 	name: "Corte no nariz",
@@ -41560,7 +41566,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.dot(-2, 1), e.dot(-1, 2), e.dot(0, 2), e.dot(1, 3);
 	}
-}), q({
+}), J({
 	id: "proc/cic_queixo",
 	slot: "scar_face",
 	name: "Cicatriz no queixo",
@@ -41570,7 +41576,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.dot(0, 4), e.dot(0, 5), e.dot(1, 5);
 	}
-}), q({
+}), J({
 	id: "proc/batom_fino",
 	slot: "makeup_lips",
 	name: "Batom fino",
@@ -41580,7 +41586,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		for (let t = -2; t <= 1; t++) e.cdot(t, 3);
 	}
-}), q({
+}), J({
 	id: "proc/batom_cheio",
 	slot: "makeup_lips",
 	name: "Batom cheio",
@@ -41591,7 +41597,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 		for (let t = -2; t <= 1; t++) e.cdot(t, 3);
 		e.cdot(-1, 4), e.cdot(0, 4);
 	}
-}), q({
+}), J({
 	id: "proc/batom_largo",
 	slot: "makeup_lips",
 	name: "Batom largo",
@@ -41602,7 +41608,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 		for (let t = -3; t <= 2; t++) e.cdot(t, 3);
 		for (let t = -2; t <= 1; t++) e.cdot(t, 4);
 	}
-}), q({
+}), J({
 	id: "proc/batom_escuro",
 	slot: "makeup_lips",
 	name: "Batom escuro (gótico)",
@@ -41614,7 +41620,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 		for (let t = -2; t <= 1; t++) e.cdot(t, 4);
 		e.cdot(-3, 2), e.cdot(2, 2);
 	}
-}), q({
+}), J({
 	id: "proc/gloss",
 	slot: "makeup_lips",
 	name: "Gloss",
@@ -41625,7 +41631,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 		for (let t = -2; t <= 1; t++) e.cdot(t, 3);
 		e.cdot(-1, 4), e.cdot(0, 4), e.cdot(0, 3, 1, "#ffffff");
 	}
-}), q({
+}), J({
 	id: "proc/delineado",
 	slot: "makeup_eyes",
 	name: "Delineado",
@@ -41634,7 +41640,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	alpha: .95,
 	eyes: !0,
 	draw: (e) => e.both(() => e.rect(2, -2, 4, 1))
-}), q({
+}), J({
 	id: "proc/delineado_gatinho",
 	slot: "makeup_eyes",
 	name: "Delineado gatinho",
@@ -41645,7 +41651,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.rect(2, -2, 4, 1), e.dot(6, -3), e.dot(7, -4);
 	})
-}), q({
+}), J({
 	id: "proc/sombra",
 	slot: "makeup_eyes",
 	name: "Sombra nos olhos",
@@ -41653,7 +41659,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	color: "roxo",
 	alpha: .6,
 	draw: (e) => e.both(() => e.rect(2, -3, 4, 2))
-}), q({
+}), J({
 	id: "proc/esfumado",
 	slot: "makeup_eyes",
 	name: "Olho esfumado",
@@ -41663,7 +41669,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.rect(1, -3, 6, 2), e.rect(2, 2, 5, 2), e.rect(2, -1, 1, 3), e.rect(5, -1, 2, 3);
 	})
-}), q({
+}), J({
 	id: "proc/brilho_olhos",
 	slot: "makeup_eyes",
 	name: "Glitter nos olhos",
@@ -41682,7 +41688,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 			[1, -1]
 		]);
 	})
-}), q({
+}), J({
 	id: "proc/lagrima_brilho",
 	slot: "makeup_eyes",
 	name: "Lágrima de glitter",
@@ -41692,7 +41698,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.dot(4, 2), e.dot(4, 3), e.dot(5, 4);
 	})
-}), q({
+}), J({
 	id: "proc/olheiras_goticas",
 	slot: "makeup_eyes",
 	name: "Olheiras góticas",
@@ -41703,7 +41709,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.rect(2, 2, 5, 2), e.rect(2, -2, 5, 1), e.dot(7, 1);
 	})
-}), q({
+}), J({
 	id: "proc/blush_suave",
 	slot: "makeup_cheeks",
 	name: "Blush suave",
@@ -41711,7 +41717,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	color: "rosa",
 	alpha: .45,
 	draw: (e) => e.both(() => e.rect(5, 2, 3, 2))
-}), q({
+}), J({
 	id: "proc/blush_forte",
 	slot: "makeup_cheeks",
 	name: "Blush forte",
@@ -41721,7 +41727,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.rect(5, 1, 4, 3), e.rect(6, 4, 2, 1);
 	})
-}), q({
+}), J({
 	id: "proc/rubor_nariz",
 	slot: "makeup_cheeks",
 	name: "Rubor no nariz e bochechas",
@@ -41731,7 +41737,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.rect(-1, 1, 10, 2), e.rect(-1, 3, 3, 1);
 	})
-}), q({
+}), J({
 	id: "proc/contorno",
 	slot: "makeup_cheeks",
 	name: "Contorno",
@@ -41741,7 +41747,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.line(9, 0, 6, 4), e.line(8, 0, 6, 3);
 	})
-}), q({
+}), J({
 	id: "proc/guerra_listras",
 	slot: "face_paint",
 	name: "Pintura de guerra",
@@ -41751,7 +41757,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.line(5, 0, 8, 3), e.line(4, 1, 7, 4), e.line(3, 2, 6, 5);
 	})
-}), q({
+}), J({
 	id: "proc/faixa_olhos",
 	slot: "face_paint",
 	name: "Faixa sobre os olhos",
@@ -41761,7 +41767,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.rect(-9, -2, 19, 1), e.rect(-9, 2, 19, 1), e.rect(-9, -1, 4, 3), e.rect(6, -1, 4, 3);
 	}
-}), q({
+}), J({
 	id: "proc/boca_costurada",
 	slot: "face_paint",
 	name: "Boca costurada",
@@ -41776,7 +41782,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 			1
 		]) e.cdot(t, 2), e.cdot(t, 4);
 	}
-}), q({
+}), J({
 	id: "proc/meia_face",
 	slot: "face_paint",
 	name: "Meia face pintada",
@@ -41786,7 +41792,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.rect(0, -8, 10, 14);
 	}
-}), q({
+}), J({
 	id: "proc/lagrimas_pintadas",
 	slot: "face_paint",
 	name: "Lágrimas pintadas",
@@ -41796,7 +41802,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.dot(4, 2), e.dot(4, 3), e.dot(3, 4), e.dot(4, 4), e.dot(5, 4), e.dot(4, 5);
 	})
-}), q({
+}), J({
 	id: "proc/estrelas",
 	slot: "face_paint",
 	name: "Estrelas",
@@ -41812,7 +41818,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 			[6, 4]
 		]), e.dot(8, -2), e.dot(2, 4);
 	})
-}), q({
+}), J({
 	id: "proc/raio",
 	slot: "face_paint",
 	name: "Raio",
@@ -41837,7 +41843,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 			[4, 5]
 		]);
 	}
-}), q({
+}), J({
 	id: "proc/linhas_cyber",
 	slot: "face_paint",
 	name: "Linhas cyber",
@@ -41847,7 +41853,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.line(9, -3, 6, -3), e.line(6, -3, 6, 1), e.line(6, 1, 8, 3), e.dot(9, -3, 1, "#ffffff"), e.dot(8, 3, 1, "#ffffff");
 	})
-}), q({
+}), J({
 	id: "proc/tigre",
 	slot: "face_paint",
 	name: "Listras de tigre",
@@ -41857,7 +41863,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.rect(6, 0, 3, 1), e.rect(5, 2, 4, 1), e.rect(6, 4, 3, 1), e.rect(2, -7, 1, 3), e.rect(5, -7, 1, 3);
 	})
-}), q({
+}), J({
 	id: "proc/palhaco",
 	slot: "face_paint",
 	name: "Bochechas de palhaço",
@@ -41867,7 +41873,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.both(() => e.rect(6, 1, 3, 3)), e.cdot(-1, 2), e.cdot(0, 2), e.cdot(-1, 1), e.cdot(0, 1);
 	}
-}), q({
+}), J({
 	id: "proc/lua_testa",
 	slot: "face_paint",
 	name: "Lua na testa",
@@ -41888,7 +41894,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 			[-1, -4]
 		]);
 	}
-}), q({
+}), J({
 	id: "proc/tat_tribal",
 	slot: "tattoo_face",
 	name: "Tribal na testa",
@@ -41898,7 +41904,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.line(0, -5, 4, -7), e.line(1, -4, 6, -6), e.line(4, -7, 4, -4);
 	})
-}), q({
+}), J({
 	id: "proc/tat_lagrima",
 	slot: "tattoo_face",
 	name: "Lágrima tatuada",
@@ -41908,7 +41914,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.dot(4, 2), e.dot(4, 3), e.dot(3, 4), e.dot(5, 4), e.dot(4, 5);
 	}
-}), q({
+}), J({
 	id: "proc/tat_queixo",
 	slot: "tattoo_face",
 	name: "Linhas no queixo",
@@ -41922,7 +41928,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 			2
 		]) e.cdot(t, 4), e.cdot(t, 5);
 	}
-}), q({
+}), J({
 	id: "proc/tat_tempora",
 	slot: "tattoo_face",
 	name: "Linhas na têmpora",
@@ -41932,7 +41938,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => e.both(() => {
 		e.line(8, -4, 8, 2), e.line(9, -2, 9, 3);
 	})
-}), q({
+}), J({
 	id: "proc/tat_runas",
 	slot: "tattoo_face",
 	name: "Runas na bochecha",
@@ -41942,7 +41948,7 @@ bt("proc/cic_olho_diag", "Corte no olho", (e) => e.line(2, -5, 6, 4), !0), bt("p
 	draw: (e) => {
 		e.line(7, 0, 7, 4), e.dot(6, 1), e.dot(8, 2), e.dot(6, 3);
 	}
-}), q({
+}), J({
 	id: "proc/tat_estrela",
 	slot: "tattoo_face",
 	name: "Estrela na bochecha",
@@ -42424,7 +42430,7 @@ function en(e, t) {
 			i.id && (n[r.id] = structuredClone(i));
 		}
 	}
-	let r = e.palettes.body?.[t.skin] ? t.skin : "light", i = V.includes(t.height) && t.height !== 1 ? t.height : void 0, a = (e, t = -1) => e === 1 || e !== void 0 && e < 0 && e >= t ? e : 0, o = t.body === "female" ? a(t.shape?.bust, -2) : 0, s = t.body === "female" ? a(t.shape?.hips, -2) : 0, c = t.body === "muscular" ? 0 : a(t.shape?.weight), l = o || s || c ? {
+	let r = e.palettes.body?.[t.skin] ? t.skin : "light", i = V.includes(t.height) && t.height !== 1 || H.includes(t.height) ? t.height : void 0, a = (e, t = -1) => e === 1 || e !== void 0 && e < 0 && e >= t ? e : 0, o = t.body === "female" ? a(t.shape?.bust, -2) : 0, s = t.body === "female" ? a(t.shape?.hips, -2) : 0, c = t.body === "muscular" ? 0 : a(t.shape?.weight), l = o || s || c ? {
 		...o ? { bust: o } : {},
 		...s ? { hips: s } : {},
 		...c ? { weight: c } : {}
@@ -43467,7 +43473,7 @@ var xi = [
 	}
 ], Si = { willReadFrequently: !0 };
 function Ci(e) {
-	let t = e.width, n = e.height, r = t + 1, i = e.rooms ? te(e) : null, a = new Uint8Array(t * n), o = !1;
+	let t = e.width, n = e.height, r = t + 1, i = e.rooms ? G(e) : null, a = new Uint8Array(t * n), o = !1;
 	for (let s = 0; s < n; s++) for (let n = 0; n < t; n++) {
 		let c = 0, l = 0;
 		for (let [t, a] of [
@@ -44218,7 +44224,7 @@ var ga = class {
 		this.dark = r(this.dark, i, a, Ca, c.default.BlendModes.MULTIPLY, !0), this.glow = r(this.glow, i, a, wa, c.default.BlendModes.ADD, !0), this.shade = r(this.shade, t + 2, n + 2, Sa, c.default.BlendModes.NORMAL, !1);
 	}
 	destroy() {
-		G(null), this.weather.destroy(), this.scene.scale.off(c.default.Scale.Events.RESIZE, this.resize, this), this.particles.destroy();
+		ue(null), this.weather.destroy(), this.scene.scale.off(c.default.Scale.Events.RESIZE, this.resize, this), this.particles.destroy();
 		for (let e of this.masks.values()) e && this.scene.textures.remove(e.key);
 		this.masks.clear(), this.emission && this.scene.textures.remove(this.emission.key), this.emission = null;
 	}
@@ -44304,8 +44310,8 @@ var ga = class {
 			(t.x + t.w) * f + (t.y + t.h) * p
 		], h = Math.floor(Math.min(...m) / a) - 1, g = Math.ceil(Math.max(...m) / a) + 1, _ = (e) => (e - t.x) * n, v = (e) => (e - t.y) * n;
 		for (let m = h; m <= g; m++) {
-			let h = H(m, 11 + u) % 1e3 / 1e3, g = H(m, 29 + u) % 1e3 / 1e3;
-			if (H(m, 47 + u) % 1e3 / 1e3 < l) continue;
+			let h = U(m, 11 + u) % 1e3 / 1e3, g = U(m, 29 + u) % 1e3 / 1e3;
+			if (U(m, 47 + u) % 1e3 / 1e3 < l) continue;
 			let y = m * a + (h - .5) * a * .7 + Math.sin(r * .12 + m * 1.3) * 14, b = 56 + 80 * g, x = .5 + .5 * Math.sin(r * (.3 + .25 * h) + m * 2.3), S = t.y + t.h / 2, C = (y - p * S) / f, w = d * .5;
 			e.stamp(Oa, void 0, _(C + Math.sin(i) * w), v(S - Math.cos(i) * w), {
 				originX: .5,
@@ -44368,14 +44374,14 @@ var ga = class {
 		this.time += t;
 		let n = this.enabled;
 		if (this.dark.setVisible(n), this.glow.setVisible(!1), this.shade.setVisible(!1), !n) {
-			this.cloudShade.setVisible(!1), this.vignette.setVisible(!1), this.dapple.setVisible(!1), this.particles.clear(), this.weather.clear(), G(null);
+			this.cloudShade.setVisible(!1), this.vignette.setVisible(!1), this.dapple.setVisible(!1), this.particles.clear(), this.weather.clear(), ue(null);
 			return;
 		}
 		let r = Ur(this.zone), i = this.liveEnv, a = i?.wind == null ? r : {
 			...r,
 			wind: i.wind
 		}, o = i?.weather == null ? this.sky.weather : i.weather === "clear" ? void 0 : i.weather, s = Date.now() + this.timeOffset, l = this.hour = this.hourOverride ?? i?.hour ?? (i ? mi(i.dayMinutes ?? this.sky.dayMinutes, s + (i.timeShift ?? 0)) : gi(this.sky, s)), u = this.view(), d = this.time, f = a.place === "outdoor", p = this.weatherNow = Qi(a.place === "underground" ? void 0 : o), m = si(l), h = oi(l), g = Math.max(0, 1 - p.rain * .9 - p.snow * .6 - p.cover * .3), _ = f ? h * g : 0, v = l < 12, y = f ? ri(l) * g : 0, b = f ? ii(l) * g : 0, x = ai(l), S = Math.max(0, 1 - p.rain - p.snow), C = f && v ? h * .38 * S : 0, w = y * .2 * S;
-		this.wind.update(t, f ? Math.max(a.wind ?? .45, p.minWind) : 0), G(this.wind);
+		this.wind.update(t, f ? Math.max(a.wind ?? .45, p.minWind) : 0), ue(this.wind);
 		let T = f && (p.cover >= .5 || a.clouds !== !1) ? p.cover : 0, E = 10 + 45 * this.wind.strength, D = d * E * this.wind.dx, O = d * E * this.wind.dy;
 		this.weather.update(t, {
 			view: {
@@ -44628,14 +44634,14 @@ var ga = class {
 			.2 * h,
 			.08 * h,
 			.34 * h
-		]), ee = Ea * (1 + .55 * h) * H, W = a.sunShadows === !1 ? 0 : .24 * y, te = W > ee, ne = te ? W : ee;
-		if (ne > .02) {
+		]), ee = Ea * (1 + .55 * h) * H, W = a.sunShadows === !1 ? 0 : .24 * y, te = W > ee, G = te ? W : ee;
+		if (G > .02) {
 			let e = this.shade, t = u.zoom, n = te ? x.angle : m.angle, r = te ? x.length : m.length, i = te ? Kr([
 				.02,
 				.05,
 				.16
 			]) : U;
-			e.setVisible(!0).setPosition(u.x, u.y).setScale(1 / t).setAlpha(ne), e.clear(), e.beginDraw();
+			e.setVisible(!0).setPosition(u.x, u.y).setScale(1 / t).setAlpha(G), e.clear(), e.beginDraw();
 			for (let a of this.casters) {
 				let { o, def: s } = a;
 				if (!B(o.x, o.y, a.reach)) continue;
@@ -44661,7 +44667,7 @@ var ga = class {
 			});
 			e.endDraw();
 		}
-		let re = a.particles !== !1, ie = re ? this.live.filter((e) => e.flames || e.fire && e.radius >= 110).map((e) => ({
+		let ne = a.particles !== !1, re = ne ? this.live.filter((e) => e.flames || e.fire && e.radius >= 110).map((e) => ({
 			x: e.x,
 			y: e.y,
 			size: e.flames,
@@ -44680,14 +44686,14 @@ var ga = class {
 				h: this.zone.height * 32
 			},
 			wind: this.wind,
-			fires: ie,
-			trees: re && f ? this.trees : [],
-			water: re && a.place !== "underground" ? this.water : [],
+			fires: re,
+			trees: ne && f ? this.trees : [],
+			water: ne && a.place !== "underground" ? this.water : [],
 			day: M,
-			warm: re ? _ : 0,
-			dew: re && f && v ? _ : 0,
-			fireflies: re && f && !p.rain && !p.snow ? Math.max(0, (j - .45) / .4) : 0,
-			dust: re && a.place !== "outdoor" ? 1 : 0
+			warm: ne ? _ : 0,
+			dew: ne && f && v ? _ : 0,
+			fireflies: ne && f && !p.rain && !p.snow ? Math.max(0, (j - .45) / .4) : 0,
+			dust: ne && a.place !== "outdoor" ? 1 : 0
 		});
 	}
 };
@@ -44842,7 +44848,7 @@ var Ya = (e) => e === "down" ? -.2 : .2, Xa = "\n.vt-mount {\n  position: absolu
 	constructor(e, t) {
 		dt("mount", Xa), getComputedStyle(e).position === "static" && (e.style.position = "relative");
 		let n = typeof matchMedia == "function" && matchMedia("(pointer: coarse)").matches;
-		this.el = K("button", {
+		this.el = q("button", {
 			type: "button",
 			class: `vt-mount${n ? " vt-mount--touch" : ""}`
 		}), this.el.addEventListener("pointerdown", (e) => e.stopPropagation()), this.el.addEventListener("click", (e) => {
@@ -44850,7 +44856,7 @@ var Ya = (e) => e === "down" ? -.2 : .2, Xa = "\n.vt-mount {\n  position: absolu
 		}), e.append(this.el);
 	}
 	show(e) {
-		this.label !== e && (this.label = e, this.el.replaceChildren(e, K("kbd", {}, "E"))), this.el.classList.add("vt-mount--on");
+		this.label !== e && (this.label = e, this.el.replaceChildren(e, q("kbd", {}, "E"))), this.el.classList.add("vt-mount--on");
 	}
 	hide() {
 		this.el.classList.remove("vt-mount--on");
@@ -47354,7 +47360,7 @@ var vs = .1, ys = .0015, bs = 700, xs = 10474495, Ss = 8, Cs = 180, ws = class e
 			let e = this.roomDrag;
 			this.roomDrag = null;
 			let t = this.tileRect(e), n = t.x0 === t.x1 && t.y0 === t.y1;
-			e.mode === "wall" ? this.drawWall(this.wallLine(e)) : e.mode === "door" ? this.openDoor(t) : e.mode === "erase" ? this.paintRooms(t, "") : n && this.restyleRoomAt(t.x0, t.y0) || this.paintRooms(t, U(this.state.roomStyle)), this.drawCursor(this.input.activePointer);
+			e.mode === "wall" ? this.drawWall(this.wallLine(e)) : e.mode === "door" ? this.openDoor(t) : e.mode === "erase" ? this.paintRooms(t, "") : n && this.restyleRoomAt(t.x0, t.y0) || this.paintRooms(t, ee(this.state.roomStyle)), this.drawCursor(this.input.activePointer);
 		}
 		if (this.marquee) {
 			let e = this.marquee;
@@ -47538,7 +47544,7 @@ var vs = .1, ys = .0015, bs = 700, xs = 10474495, Ss = 8, Cs = 180, ws = class e
 	commitRooms(e) {
 		let t = this.state.zone, n = t.rooms ?? Array(t.corners.length).fill(""), r = e.filter(([e, t]) => n[e] !== t);
 		if (!r.length) return;
-		let i = te(t);
+		let i = G(t);
 		this.state.checkpoint();
 		for (let [e, t] of r) n[e] = t;
 		t.rooms = n, ne(t, i), this.ground.redrawAll(), this.refreshOverlays(), this.state.edited();
@@ -47586,9 +47592,9 @@ var vs = .1, ys = .0015, bs = 700, xs = 10474495, Ss = 8, Cs = 180, ws = class e
 			[e + 1, t + 1]
 		].find(([e, t]) => n.rooms?.[t * r + e]);
 		if (!i) return !1;
-		let a = U(this.state.roomStyle), o = re(n, i[0], i[1]);
+		let a = ee(this.state.roomStyle), o = re(n, i[0], i[1]);
 		if (o.every((e) => n.rooms[e] === a)) return !0;
-		let s = te(n);
+		let s = G(n);
 		this.state.checkpoint();
 		for (let e of o) n.rooms[e] = a;
 		return ne(n, s), this.ground.redrawAll(), this.refreshOverlays(), this.state.edited(), !0;
@@ -47596,7 +47602,7 @@ var vs = .1, ys = .0015, bs = 700, xs = 10474495, Ss = 8, Cs = 180, ws = class e
 	eyedropper(e) {
 		let { tool: t } = this.state;
 		if (t === "room") {
-			let t = this.state.zone, n = c.default.Math.Clamp(Math.round(e.worldX / 32), 0, t.width), r = c.default.Math.Clamp(Math.round(e.worldY / 32), 0, t.height), i = ee(t.rooms?.[r * (t.width + 1) + n] ?? "");
+			let t = this.state.zone, n = c.default.Math.Clamp(Math.round(e.worldX / 32), 0, t.width), r = c.default.Math.Clamp(Math.round(e.worldY / 32), 0, t.height), i = W(t.rooms?.[r * (t.width + 1) + n] ?? "");
 			i && this.state.set({ roomStyle: i });
 			return;
 		}
@@ -47910,7 +47916,7 @@ ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 	brush = 2;
 	objectKind = null;
 	flip = !1;
-	roomStyle = { ...W[0].style };
+	roomStyle = { ...te[0].style };
 	roomMode = "room";
 	rulerMode = "line";
 	coneAngle = 60;
@@ -48009,18 +48015,18 @@ ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 	}
 ];
 function ks(e) {
-	let t = K("p", { class: "vt-credits-intro" }, "A arte do Vortable vem do projeto Liberated Pixel Cup (LPC) e de artistas que a publicaram com licenças livres ", "(CC-BY-SA 3.0, GPL 3.0, OGA-BY e outras indicadas abaixo). Obrigado a todos."), n = ({ title: t, file: n }) => {
-		let r = K("pre", { class: "vt-credits-text" }, pt(e, !0));
+	let t = q("p", { class: "vt-credits-intro" }, "A arte do Vortable vem do projeto Liberated Pixel Cup (LPC) e de artistas que a publicaram com licenças livres ", "(CC-BY-SA 3.0, GPL 3.0, OGA-BY e outras indicadas abaixo). Obrigado a todos."), n = ({ title: t, file: n }) => {
+		let r = q("pre", { class: "vt-credits-text" }, pt(e, !0));
 		return fetch(e + n).then((e) => e.ok ? e.text() : Promise.reject(Error(String(e.status)))).then((e) => {
 			r.textContent = e.trim();
 		}).catch(() => {
 			r.textContent = `Não deu pra carregar ${n}.`;
-		}), K("details", { class: "vt-credits" }, K("summary", {}, t), r);
-	}, r = K("div"), i = (e) => r.append(...e.map((e) => n({
+		}), q("details", { class: "vt-credits" }, q("summary", {}, t), r);
+	}, r = q("div"), i = (e) => r.append(...e.map((e) => n({
 		title: `Objetos: ${e.name}`,
 		file: e.credits
 	})));
-	return Ke().packs.length ? i(Ke().packs) : fetch(e + Re).then((e) => e.ok ? e.json() : Promise.reject(Error(String(e.status)))).then((e) => i(e.packs ?? [])).catch(() => r.append(K("p", { class: "vt-credits-intro" }, "Não deu pra carregar a lista de pacotes de objetos."))), [
+	return Ke().packs.length ? i(Ke().packs) : fetch(e + Re).then((e) => e.ok ? e.json() : Promise.reject(Error(String(e.status)))).then((e) => i(e.packs ?? [])).catch(() => r.append(q("p", { class: "vt-credits-intro" }, "Não deu pra carregar a lista de pacotes de objetos."))), [
 		t,
 		...Os.map(n),
 		r
@@ -48028,69 +48034,69 @@ function ks(e) {
 }
 //#endregion
 //#region src/engine/editor/icons.ts
-var J = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${e}</svg>`, Y = {
-	brush: J("<path d=\"m14.6 3.4 6 6L10 20H4v-6Z\"/><path d=\"m12 6 6 6\"/>"),
-	fill: J("<path d=\"m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0Z\"/><path d=\"m5 2 5 5\"/><path d=\"M2 13h15\"/><path d=\"M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z\"/>"),
-	erase: J("<path d=\"m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L11 21\"/><path d=\"M22 21H7\"/><path d=\"m5 11 9 9\"/>"),
-	object: J("<path d=\"M12 22v-6\"/><path d=\"M8 16h8l-2-4h2l-4-6-4 6h2Z\"/><path d=\"M12 2v2\"/>"),
-	select: J("<path d=\"m4 4 7 17 2.5-7.5L21 11Z\"/>"),
-	portal: J("<path d=\"M13 4h3a2 2 0 0 1 2 2v14\"/><path d=\"M2 20h3\"/><path d=\"M13 20h9\"/><path d=\"M10 12v.01\"/><path d=\"M13 4.56v16.88a.5.5 0 0 1-.68.47L5 19V5.24a1 1 0 0 1 .74-.97l6-1.5A1 1 0 0 1 13 3.74Z\"/>"),
-	world: J("<path d=\"M14.1 6.3 9.9 4.2a2 2 0 0 0-1.8 0L3.6 6.4A1 1 0 0 0 3 7.3v12.1a1 1 0 0 0 1.4.9l3.7-1.8a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.2a1 1 0 0 0 .6-.9V5.4a1 1 0 0 0-1.4-.9l-3.7 1.8a2 2 0 0 1-1.8 0Z\"/><path d=\"M15 6.8v14\"/><path d=\"M9 3.2v14\"/>"),
-	ruler: J("<path d=\"M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z\"/><path d=\"m14.5 12.5 2-2\"/><path d=\"m11.5 9.5 2-2\"/><path d=\"m8.5 6.5 2-2\"/><path d=\"m17.5 15.5 2-2\"/>"),
-	rulerRect: J("<rect x=\"3.5\" y=\"6\" width=\"17\" height=\"12\" rx=\"1.5\"/><path d=\"M7 6v3M11 6v2M15 6v3M19 6v2\"/>"),
-	rulerCircle: J("<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 12h8.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\" fill=\"currentColor\"/>"),
-	rulerCone: J("<path d=\"M12 20 4.5 7.2a9.5 9.5 0 0 1 15 0Z\"/><path d=\"M12 20V6.5\" stroke-dasharray=\"2 2.5\"/>"),
-	npc: J("<circle cx=\"12\" cy=\"5\" r=\"2.6\"/><path d=\"M12 8.2v6.3\"/><path d=\"M6.5 11.2 12 9l5.5 2.2\"/><path d=\"M8.5 21.5l3.5-7 3.5 7\"/>"),
-	nametag: J("<path d=\"M3 7h18v8H12l-3 3v-3H3Z\"/><path d=\"M7 10.5h6\"/>"),
-	flip: J("<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>"),
-	person: J("<circle cx=\"12\" cy=\"7\" r=\"4\"/><path d=\"M5.5 21a6.5 6.5 0 0 1 13 0\"/>"),
-	star: J("<path d=\"M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9Z\"/>"),
-	room: J("<path d=\"M3 21h18\"/><path d=\"M5 21V8l7-5 7 5v13\"/><path d=\"M9 21v-6h6v6\"/>"),
-	light: J("<path d=\"M9 18h6\"/><path d=\"M10 22h4\"/><path d=\"M15 14c.2-1 .7-1.7 1.5-2.5A5 5 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5\"/>"),
-	sun: J("<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4\"/>"),
-	cloud: J("<path d=\"M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z\"/>"),
-	fog: J("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M16 17H7\"/><path d=\"M17 21H9\"/>"),
-	drizzle: J("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M8 19v1\"/><path d=\"M8 14v1\"/><path d=\"M16 19v1\"/><path d=\"M16 14v1\"/><path d=\"M12 21v1\"/><path d=\"M12 16v1\"/>"),
-	rain: J("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M16 14v6\"/><path d=\"M8 14v6\"/><path d=\"M12 16v6\"/>"),
-	storm: J("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"m13 12-3 5h4l-3 5\"/>"),
-	lightsnow: J("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M9 17h.01\"/><path d=\"M15 19h.01\"/>"),
-	snow: J("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M8 15h.01\"/><path d=\"M8 19h.01\"/><path d=\"M12 17h.01\"/><path d=\"M12 21h.01\"/><path d=\"M16 15h.01\"/><path d=\"M16 19h.01\"/>"),
-	blizzard: J("<path d=\"M2 12h20\"/><path d=\"M12 2v20\"/><path d=\"m20 16-4-4 4-4\"/><path d=\"m4 8 4 4-4 4\"/><path d=\"m16 4-4 4-4-4\"/><path d=\"m8 20 4-4 4 4\"/>"),
-	sound: J("<path d=\"M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z\"/><path d=\"M16 9a5 5 0 0 1 0 6\"/><path d=\"M19.4 18.4a9 9 0 0 0 0-12.8\"/>"),
-	mute: J("<path d=\"M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z\"/><path d=\"m22 9-6 6\"/><path d=\"m16 9 6 6\"/>"),
-	tree: J("<path d=\"M12 22v-5\"/><path d=\"M8 17h8a4 4 0 0 0 2-7.5 5 5 0 0 0-9.6-2A4 4 0 0 0 8 17Z\"/>"),
-	ghost: J("<path d=\"M9 10h.01\"/><path d=\"M15 10h.01\"/><path d=\"M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8Z\"/>"),
-	wind: J("<path d=\"M12.8 19.6A2 2 0 1 0 14 16H2\"/><path d=\"M17.5 8a2.5 2.5 0 1 1 2 4H2\"/><path d=\"M9.8 4.4A2 2 0 1 1 11 8H2\"/>"),
-	zap: J("<path d=\"M4 14a1 1 0 0 1-.8-1.6l9.9-10.2a.5.5 0 0 1 .9.5l-1.9 6A1 1 0 0 0 13 10h7a1 1 0 0 1 .8 1.6l-9.9 10.2a.5.5 0 0 1-.9-.5l1.9-6A1 1 0 0 0 11 14Z\"/>"),
-	waves: J("<path d=\"M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/>"),
-	droplet: J("<path d=\"M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5S5 13 5 15a7 7 0 0 0 7 7Z\"/>"),
-	waterfall: J("<path d=\"M4 3h16\"/><path d=\"M7 3v13\"/><path d=\"M12 3v15\"/><path d=\"M17 3v13\"/><path d=\"M3 20c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0\"/>"),
-	sprout: J("<path d=\"M7 20h10\"/><path d=\"M10 20c5.5-2.5.8-6.4 3-10\"/><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8Z\"/><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2Z\"/>"),
-	sea: J("<path d=\"M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M2 20c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M5 11c2-4 4-7 8-7 2 0 3 1 3 2.5S15 9 13.5 9 11 8 11 8\"/>"),
-	mountain: J("<path d=\"m8 3 4 8 5-5 5 15H2L8 3Z\"/>"),
-	flame: J("<path d=\"M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.4.4 1.5 1.2 2.4 2.5 2.9Z\"/>"),
-	torch: J("<path d=\"M12 9c2-1.5 2-3.5 0-6-2 2.5-2 4.5 0 6Z\"/><path d=\"M9 11h6l-1.5 3h-3Z\"/><path d=\"M12 14v8\"/>"),
-	moon: J("<path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\"/>"),
-	chevron: J("<path d=\"m9 6 6 6-6 6\"/>"),
-	search: J("<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/>"),
-	clock: J("<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>"),
-	spawn: J("<circle cx=\"12\" cy=\"10\" r=\"3\"/><path d=\"M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z\"/>"),
-	grid: J("<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M3 9h18M3 15h18M9 3v18M15 3v18\"/>"),
-	collision: J("<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z\"/>"),
-	snap: J("<path d=\"M6 15a6 6 0 0 0 12 0V4h-4v11a2 2 0 0 1-4 0V4H6Z\"/><path d=\"M6 8h4M14 8h4\"/>"),
-	center: J("<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M3 12h3M18 12h3M12 3v3M12 18v3\"/>"),
-	undo: J("<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H11\"/>"),
-	redo: J("<path d=\"m15 14 5-5-5-5\"/><path d=\"M20 9H9.5a5.5 5.5 0 0 0 0 11H13\"/>"),
-	play: J("<path d=\"m6 3 14 9-14 9Z\"/>"),
-	stop: J("<rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"2\"/>"),
-	menu: J("<path d=\"M4 6h16M4 12h16M4 18h16\"/>"),
-	close: J("<path d=\"M18 6 6 18M6 6l12 12\"/>"),
-	plus: J("<path d=\"M12 5v14M5 12h14\"/>"),
-	open: J("<path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.2 10H20a2 2 0 0 1 1.9 2.5l-1.5 6A2 2 0 0 1 18.5 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l2 3h7a2 2 0 0 1 2 2v2\"/>"),
-	save: J("<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>"),
-	download: J("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M12 15V3\"/>"),
-	upload: J("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M12 3v12\"/>"),
-	trash: J("<path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/>")
+var Y = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${e}</svg>`, X = {
+	brush: Y("<path d=\"m14.6 3.4 6 6L10 20H4v-6Z\"/><path d=\"m12 6 6 6\"/>"),
+	fill: Y("<path d=\"m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2a2 2 0 0 0 2.8 0Z\"/><path d=\"m5 2 5 5\"/><path d=\"M2 13h15\"/><path d=\"M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z\"/>"),
+	erase: Y("<path d=\"m7 21-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L11 21\"/><path d=\"M22 21H7\"/><path d=\"m5 11 9 9\"/>"),
+	object: Y("<path d=\"M12 22v-6\"/><path d=\"M8 16h8l-2-4h2l-4-6-4 6h2Z\"/><path d=\"M12 2v2\"/>"),
+	select: Y("<path d=\"m4 4 7 17 2.5-7.5L21 11Z\"/>"),
+	portal: Y("<path d=\"M13 4h3a2 2 0 0 1 2 2v14\"/><path d=\"M2 20h3\"/><path d=\"M13 20h9\"/><path d=\"M10 12v.01\"/><path d=\"M13 4.56v16.88a.5.5 0 0 1-.68.47L5 19V5.24a1 1 0 0 1 .74-.97l6-1.5A1 1 0 0 1 13 3.74Z\"/>"),
+	world: Y("<path d=\"M14.1 6.3 9.9 4.2a2 2 0 0 0-1.8 0L3.6 6.4A1 1 0 0 0 3 7.3v12.1a1 1 0 0 0 1.4.9l3.7-1.8a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.2a1 1 0 0 0 .6-.9V5.4a1 1 0 0 0-1.4-.9l-3.7 1.8a2 2 0 0 1-1.8 0Z\"/><path d=\"M15 6.8v14\"/><path d=\"M9 3.2v14\"/>"),
+	ruler: Y("<path d=\"M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z\"/><path d=\"m14.5 12.5 2-2\"/><path d=\"m11.5 9.5 2-2\"/><path d=\"m8.5 6.5 2-2\"/><path d=\"m17.5 15.5 2-2\"/>"),
+	rulerRect: Y("<rect x=\"3.5\" y=\"6\" width=\"17\" height=\"12\" rx=\"1.5\"/><path d=\"M7 6v3M11 6v2M15 6v3M19 6v2\"/>"),
+	rulerCircle: Y("<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 12h8.5\"/><circle cx=\"12\" cy=\"12\" r=\"1\" fill=\"currentColor\"/>"),
+	rulerCone: Y("<path d=\"M12 20 4.5 7.2a9.5 9.5 0 0 1 15 0Z\"/><path d=\"M12 20V6.5\" stroke-dasharray=\"2 2.5\"/>"),
+	npc: Y("<circle cx=\"12\" cy=\"5\" r=\"2.6\"/><path d=\"M12 8.2v6.3\"/><path d=\"M6.5 11.2 12 9l5.5 2.2\"/><path d=\"M8.5 21.5l3.5-7 3.5 7\"/>"),
+	nametag: Y("<path d=\"M3 7h18v8H12l-3 3v-3H3Z\"/><path d=\"M7 10.5h6\"/>"),
+	flip: Y("<path d=\"M8 3 4 7l4 4\"/><path d=\"M4 7h16\"/><path d=\"m16 21 4-4-4-4\"/><path d=\"M20 17H4\"/>"),
+	person: Y("<circle cx=\"12\" cy=\"7\" r=\"4\"/><path d=\"M5.5 21a6.5 6.5 0 0 1 13 0\"/>"),
+	star: Y("<path d=\"M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9Z\"/>"),
+	room: Y("<path d=\"M3 21h18\"/><path d=\"M5 21V8l7-5 7 5v13\"/><path d=\"M9 21v-6h6v6\"/>"),
+	light: Y("<path d=\"M9 18h6\"/><path d=\"M10 22h4\"/><path d=\"M15 14c.2-1 .7-1.7 1.5-2.5A5 5 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5\"/>"),
+	sun: Y("<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4\"/>"),
+	cloud: Y("<path d=\"M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z\"/>"),
+	fog: Y("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M16 17H7\"/><path d=\"M17 21H9\"/>"),
+	drizzle: Y("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M8 19v1\"/><path d=\"M8 14v1\"/><path d=\"M16 19v1\"/><path d=\"M16 14v1\"/><path d=\"M12 21v1\"/><path d=\"M12 16v1\"/>"),
+	rain: Y("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M16 14v6\"/><path d=\"M8 14v6\"/><path d=\"M12 16v6\"/>"),
+	storm: Y("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"m13 12-3 5h4l-3 5\"/>"),
+	lightsnow: Y("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M9 17h.01\"/><path d=\"M15 19h.01\"/>"),
+	snow: Y("<path d=\"M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2\"/><path d=\"M8 15h.01\"/><path d=\"M8 19h.01\"/><path d=\"M12 17h.01\"/><path d=\"M12 21h.01\"/><path d=\"M16 15h.01\"/><path d=\"M16 19h.01\"/>"),
+	blizzard: Y("<path d=\"M2 12h20\"/><path d=\"M12 2v20\"/><path d=\"m20 16-4-4 4-4\"/><path d=\"m4 8 4 4-4 4\"/><path d=\"m16 4-4 4-4-4\"/><path d=\"m8 20 4-4 4 4\"/>"),
+	sound: Y("<path d=\"M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z\"/><path d=\"M16 9a5 5 0 0 1 0 6\"/><path d=\"M19.4 18.4a9 9 0 0 0 0-12.8\"/>"),
+	mute: Y("<path d=\"M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z\"/><path d=\"m22 9-6 6\"/><path d=\"m16 9 6 6\"/>"),
+	tree: Y("<path d=\"M12 22v-5\"/><path d=\"M8 17h8a4 4 0 0 0 2-7.5 5 5 0 0 0-9.6-2A4 4 0 0 0 8 17Z\"/>"),
+	ghost: Y("<path d=\"M9 10h.01\"/><path d=\"M15 10h.01\"/><path d=\"M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8Z\"/>"),
+	wind: Y("<path d=\"M12.8 19.6A2 2 0 1 0 14 16H2\"/><path d=\"M17.5 8a2.5 2.5 0 1 1 2 4H2\"/><path d=\"M9.8 4.4A2 2 0 1 1 11 8H2\"/>"),
+	zap: Y("<path d=\"M4 14a1 1 0 0 1-.8-1.6l9.9-10.2a.5.5 0 0 1 .9.5l-1.9 6A1 1 0 0 0 13 10h7a1 1 0 0 1 .8 1.6l-9.9 10.2a.5.5 0 0 1-.9-.5l1.9-6A1 1 0 0 0 11 14Z\"/>"),
+	waves: Y("<path d=\"M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/>"),
+	droplet: Y("<path d=\"M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5S5 13 5 15a7 7 0 0 0 7 7Z\"/>"),
+	waterfall: Y("<path d=\"M4 3h16\"/><path d=\"M7 3v13\"/><path d=\"M12 3v15\"/><path d=\"M17 3v13\"/><path d=\"M3 20c1.5 1 3 1 4.5 0s3-1 4.5 0 3 1 4.5 0 3-1 4.5 0\"/>"),
+	sprout: Y("<path d=\"M7 20h10\"/><path d=\"M10 20c5.5-2.5.8-6.4 3-10\"/><path d=\"M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8Z\"/><path d=\"M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2Z\"/>"),
+	sea: Y("<path d=\"M2 15c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M2 20c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M5 11c2-4 4-7 8-7 2 0 3 1 3 2.5S15 9 13.5 9 11 8 11 8\"/>"),
+	mountain: Y("<path d=\"m8 3 4 8 5-5 5 15H2L8 3Z\"/>"),
+	flame: Y("<path d=\"M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.4.4 1.5 1.2 2.4 2.5 2.9Z\"/>"),
+	torch: Y("<path d=\"M12 9c2-1.5 2-3.5 0-6-2 2.5-2 4.5 0 6Z\"/><path d=\"M9 11h6l-1.5 3h-3Z\"/><path d=\"M12 14v8\"/>"),
+	moon: Y("<path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\"/>"),
+	chevron: Y("<path d=\"m9 6 6 6-6 6\"/>"),
+	search: Y("<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/>"),
+	clock: Y("<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>"),
+	spawn: Y("<circle cx=\"12\" cy=\"10\" r=\"3\"/><path d=\"M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z\"/>"),
+	grid: Y("<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M3 9h18M3 15h18M9 3v18M15 3v18\"/>"),
+	collision: Y("<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z\"/>"),
+	snap: Y("<path d=\"M6 15a6 6 0 0 0 12 0V4h-4v11a2 2 0 0 1-4 0V4H6Z\"/><path d=\"M6 8h4M14 8h4\"/>"),
+	center: Y("<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M3 12h3M18 12h3M12 3v3M12 18v3\"/>"),
+	undo: Y("<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H11\"/>"),
+	redo: Y("<path d=\"m15 14 5-5-5-5\"/><path d=\"M20 9H9.5a5.5 5.5 0 0 0 0 11H13\"/>"),
+	play: Y("<path d=\"m6 3 14 9-14 9Z\"/>"),
+	stop: Y("<rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"2\"/>"),
+	menu: Y("<path d=\"M4 6h16M4 12h16M4 18h16\"/>"),
+	close: Y("<path d=\"M18 6 6 18M6 6l12 12\"/>"),
+	plus: Y("<path d=\"M12 5v14M5 12h14\"/>"),
+	open: Y("<path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.2 10H20a2 2 0 0 1 1.9 2.5l-1.5 6A2 2 0 0 1 18.5 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l2 3h7a2 2 0 0 1 2 2v2\"/>"),
+	save: Y("<path d=\"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z\"/><path d=\"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7\"/><path d=\"M7 3v4a1 1 0 0 0 1 1h7\"/>"),
+	download: Y("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M12 15V3\"/>"),
+	upload: Y("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M12 3v12\"/>"),
+	trash: Y("<path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/>")
 }, As = {
 	biblioteca: "Biblioteca / palácio",
 	taverna: "Taverna",
@@ -48271,7 +48277,7 @@ var Fs = [
 	"tan",
 	"yellow",
 	"rose"
-], X = [
+], Z = [
 	"black",
 	"charcoal",
 	"midnight",
@@ -48301,17 +48307,17 @@ var Fs = [
 	"brown",
 	"gray",
 	"midnight"
-], Z = (e, t, n = 1) => ({
+], Q = (e, t, n = 1) => ({
 	re: e,
 	colors: t,
 	chance: n
-}), Hs = /shirts\/longsleeve\//, Us = /torso_clothes_blouse/, Ws = /shirts\/shortsleeve\//, Gs = /shirts\/sleeveless\//, Ks = /torso_clothes_(robe|tunic)\b/, qs = /torso_clothes_(vest|corset)/, Js = /jacket_(frock|collared)/, Ys = /jacket_tabard/, Xs = /legs\/pants\/legs_(pants|pants2|formal|cuffed|pantaloons)/, Q = /legs\/pants\/legs_(pants|pants2|cuffed)/, Zs = /skirts\/legs_(skirts_plain|skirt_straight|skirt_belle)/, Qs = /feet\/shoes\/feet_shoes_(basic|revised|ghillies)/, $ = /feet\/boots\/feet_boots_(basic|revised|rim|fold)/, $s = /hat_formal_(tophat|bowler)/, ec = /hat_cap_(leather|bonnie)/, tc = /hat_hood_cloth/, nc = /hat_helmet_(legion|kettle|nasal|norman|morion|spangenhelm|flattop)/, rc = /neck_(cravat|jabot|bowtie|bowtie2|necktie)/, ic = /neck_scarf/, ac = /belt_(leather|double|loose|leather2)/, oc = /torso_aprons_apron(_full|_half)?$/, sc = /cape_solid/, cc = /facial_glasses(_halfmoon|_round|_secretary|_nerd)?$/, lc = /arms_gloves/, uc = /torso_aprons_(overalls|suspenders)/, dc = /armour\/torso_armour_(leather|legion|plate)|torso_chainmail/, fc = /torso_armour_leather/, pc = {
+}), Hs = /shirts\/longsleeve\//, Us = /torso_clothes_blouse/, Ws = /shirts\/shortsleeve\//, Gs = /shirts\/sleeveless\//, Ks = /torso_clothes_(robe|tunic)\b/, qs = /torso_clothes_(vest|corset)/, Js = /jacket_(frock|collared)/, Ys = /jacket_tabard/, Xs = /legs\/pants\/legs_(pants|pants2|formal|cuffed|pantaloons)/, $ = /legs\/pants\/legs_(pants|pants2|cuffed)/, Zs = /skirts\/legs_(skirts_plain|skirt_straight|skirt_belle)/, Qs = /feet\/shoes\/feet_shoes_(basic|revised|ghillies)/, $s = /feet\/boots\/feet_boots_(basic|revised|rim|fold)/, ec = /hat_formal_(tophat|bowler)/, tc = /hat_cap_(leather|bonnie)/, nc = /hat_hood_cloth/, rc = /hat_helmet_(legion|kettle|nasal|norman|morion|spangenhelm|flattop)/, ic = /neck_(cravat|jabot|bowtie|bowtie2|necktie)/, ac = /neck_scarf/, oc = /belt_(leather|double|loose|leather2)/, sc = /torso_aprons_apron(_full|_half)?$/, cc = /cape_solid/, lc = /facial_glasses(_halfmoon|_round|_secretary|_nerd)?$/, uc = /arms_gloves/, dc = /torso_aprons_(overalls|suspenders)/, fc = /armour\/torso_armour_(leather|legion|plate)|torso_chainmail/, pc = /torso_armour_leather/, mc = {
 	biblioteca: [
 		{
 			label: ["Bibliotecário", "Bibliotecária"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"navy",
 					"slate",
 					"bluegray",
@@ -48319,29 +48325,29 @@ var Fs = [
 					"forest",
 					"maroon",
 					"white"
-				]), Z(Us, [
+				]), Q(Us, [
 					"navy",
 					"slate",
 					"white",
 					"forest",
 					"maroon"
 				])],
-				vest: [Z(qs, [
+				vest: [Q(qs, [
 					"black",
 					"navy",
 					"maroon",
 					"forest",
 					"gray"
 				], .45)],
-				legs: [Z(Xs, X), Z(Zs, X, .5)],
-				shoes: [Z(Qs, X)],
-				neck: [Z(rc, [
+				legs: [Q(Xs, Z), Q(Zs, Z, .5)],
+				shoes: [Q(Qs, Z)],
+				neck: [Q(ic, [
 					"midnight",
 					"steel_blue",
 					"white",
 					"maroon"
 				], .6)],
-				facial: [Z(cc, void 0, .55)],
+				facial: [Q(lc, void 0, .55)],
 				hair: "neat",
 				beard: .2
 			}
@@ -48351,18 +48357,18 @@ var Fs = [
 			weight: 3,
 			outfit: {
 				clothes: [
-					Z(Ks, Ls.slice(0, 6)),
-					Z(Hs, Fs),
-					Z(Us, Fs)
+					Q(Ks, Ls.slice(0, 6)),
+					Q(Hs, Fs),
+					Q(Us, Fs)
 				],
-				belt: [Z(ac, [
+				belt: [Q(oc, [
 					"brown",
 					"leather",
 					"walnut"
 				], .5)],
-				legs: [Z(Q, X), Z(Zs, X, .4)],
-				shoes: [Z(Qs, X), Z($, ["brown", "espresso"])],
-				facial: [Z(cc, void 0, .35)],
+				legs: [Q($, Z), Q(Zs, Z, .4)],
+				shoes: [Q(Qs, Z), Q($s, ["brown", "espresso"])],
+				facial: [Q(lc, void 0, .35)],
 				hair: "rustic",
 				beard: .25
 			}
@@ -48371,22 +48377,22 @@ var Fs = [
 			label: ["Nobre", "Nobre"],
 			weight: 2,
 			outfit: {
-				jacket: [Z(Js, Is, .9)],
-				dress: [Z(/dress_(sash|slit)/, Is, .7)],
-				clothes: [Z(Hs, Rs), Z(Us, Rs)],
-				neck: [Z(rc, [
+				jacket: [Q(Js, Is, .9)],
+				dress: [Q(/dress_(sash|slit)/, Is, .7)],
+				clothes: [Q(Hs, Rs), Q(Us, Rs)],
+				neck: [Q(ic, [
 					"white",
 					"maroon",
 					"steel_blue"
 				], .7)],
-				legs: [Z(Xs, X)],
-				shoes: [Z($, [
+				legs: [Q(Xs, Z)],
+				shoes: [Q($s, [
 					"black",
 					"espresso",
 					"brown"
-				]), Z(Qs, X)],
-				hat: [Z($s, X, .22)],
-				gloves: [Z(lc, ["white", "black"], .2)],
+				]), Q(Qs, Z)],
+				hat: [Q(ec, Z, .22)],
+				gloves: [Q(uc, ["white", "black"], .2)],
 				hair: "neat",
 				beard: .3
 			}
@@ -48395,21 +48401,21 @@ var Fs = [
 			label: ["Guarda do palácio", "Guarda do palácio"],
 			weight: 2,
 			outfit: {
-				armour: [Z(dc, Bs)],
-				hat: [Z(nc, Bs)],
-				cape: [Z(sc, [
+				armour: [Q(fc, Bs)],
+				hat: [Q(rc, Bs)],
+				cape: [Q(cc, [
 					"maroon",
 					"navy",
 					"black"
 				], .6)],
-				legs: [Z(Q, [
+				legs: [Q($, [
 					"charcoal",
 					"gray",
 					"black",
 					"navy"
 				])],
-				shoes: [Z($, ["black", "espresso"])],
-				gloves: [Z(lc, ["black", "gray"], .5)],
+				shoes: [Q($s, ["black", "espresso"])],
+				gloves: [Q(uc, ["black", "gray"], .5)],
 				hair: "short",
 				beard: .3
 			}
@@ -48418,22 +48424,22 @@ var Fs = [
 			label: ["Criado", "Criada"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Us, Rs), Z(Hs, Rs)],
-				apron: [Z(oc, [
+				clothes: [Q(Us, Rs), Q(Hs, Rs)],
+				apron: [Q(sc, [
 					"white",
 					"pale_gray",
 					"tan"
 				])],
-				legs: [Z(Q, [
+				legs: [Q($, [
 					"charcoal",
 					"brown",
 					"black"
-				]), Z(Zs, [
+				]), Q(Zs, [
 					"charcoal",
 					"brown",
 					"black"
 				], .6)],
-				shoes: [Z(Qs, X)],
+				shoes: [Q(Qs, Z)],
 				hair: "neat"
 			}
 		}
@@ -48443,22 +48449,22 @@ var Fs = [
 			label: ["Taverneiro", "Taverneira"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Ws, [
+				clothes: [Q(Ws, [
 					"tan",
 					"white",
 					"brown"
-				]), Z(Hs, [
+				]), Q(Hs, [
 					"tan",
 					"white",
 					"brown"
 				])],
-				apron: [Z(oc, [
+				apron: [Q(sc, [
 					"white",
 					"tan",
 					"brown"
 				])],
-				legs: [Z(Q, X)],
-				shoes: [Z(Qs, X)],
+				legs: [Q($, Z)],
+				shoes: [Q(Qs, Z)],
 				hair: "rustic",
 				beard: .5
 			}
@@ -48468,14 +48474,14 @@ var Fs = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Hs, zs),
-					Z(Ws, zs),
-					Z(Us, zs)
+					Q(Hs, zs),
+					Q(Ws, zs),
+					Q(Us, zs)
 				],
-				vest: [Z(qs, Ls, .3)],
-				legs: [Z(Q, X), Z(Zs, X, .3)],
-				shoes: [Z(Qs, X), Z($, ["brown", "espresso"])],
-				hat: [Z(ec, Ls, .2)],
+				vest: [Q(qs, Ls, .3)],
+				legs: [Q($, Z), Q(Zs, Z, .3)],
+				shoes: [Q(Qs, Z), Q($s, ["brown", "espresso"])],
+				hat: [Q(tc, Ls, .2)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -48484,26 +48490,26 @@ var Fs = [
 			label: ["Bardo", "Bardo"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Us, [
+				clothes: [Q(Us, [
 					"red",
 					"teal",
 					"purple",
 					"yellow",
 					"white"
-				]), Z(Hs, [
+				]), Q(Hs, [
 					"red",
 					"teal",
 					"purple",
 					"orange"
 				])],
-				vest: [Z(qs, Is, .7)],
-				legs: [Z(Xs, X)],
-				shoes: [Z($, [
+				vest: [Q(qs, Is, .7)],
+				legs: [Q(Xs, Z)],
+				shoes: [Q($s, [
 					"brown",
 					"espresso",
 					"black"
 				])],
-				hat: [Z(ec, [
+				hat: [Q(tc, [
 					"red",
 					"green",
 					"teal",
@@ -48517,14 +48523,14 @@ var Fs = [
 			label: ["Garçom", "Garçonete"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Us, ["white", "pale_gray"]), Z(Hs, ["white", "pale_gray"])],
-				apron: [Z(oc, [
+				clothes: [Q(Us, ["white", "pale_gray"]), Q(Hs, ["white", "pale_gray"])],
+				apron: [Q(sc, [
 					"white",
 					"black",
 					"charcoal"
 				])],
-				legs: [Z(Q, ["black", "charcoal"]), Z(Zs, ["black", "charcoal"], .6)],
-				shoes: [Z(Qs, X)],
+				legs: [Q($, ["black", "charcoal"]), Q(Zs, ["black", "charcoal"], .6)],
+				shoes: [Q(Qs, Z)],
 				hair: "neat"
 			}
 		},
@@ -48532,12 +48538,12 @@ var Fs = [
 			label: ["Viajante", "Viajante"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Hs, Ls), Z(Ws, Ls)],
-				cape: [Z(sc, Vs, .7)],
-				hat: [Z(tc, Vs, .3)],
-				legs: [Z(Q, X)],
-				shoes: [Z($, ["brown", "espresso"])],
-				backpack: [Z(/backpack\/backpack$/, void 0, .6)],
+				clothes: [Q(Hs, Ls), Q(Ws, Ls)],
+				cape: [Q(cc, Vs, .7)],
+				hat: [Q(nc, Vs, .3)],
+				legs: [Q($, Z)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				backpack: [Q(/backpack\/backpack$/, void 0, .6)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -48549,18 +48555,18 @@ var Fs = [
 			weight: 3,
 			outfit: {
 				clothes: [
-					Z(Hs, Ls),
-					Z(Ws, Ls),
-					Z(Us, Ls)
+					Q(Hs, Ls),
+					Q(Ws, Ls),
+					Q(Us, Ls)
 				],
-				apron: [Z(uc, [
+				apron: [Q(dc, [
 					"brown",
 					"tan",
 					"forest"
 				], .3)],
-				legs: [Z(Q, X), Z(Zs, Ls, .45)],
-				shoes: [Z(Qs, ["brown", "espresso"]), Z($, ["brown"])],
-				hat: [Z(ec, Ls, .3)],
+				legs: [Q($, Z), Q(Zs, Ls, .45)],
+				shoes: [Q(Qs, ["brown", "espresso"]), Q($s, ["brown"])],
+				hat: [Q(tc, Ls, .3)],
 				hair: "rustic",
 				beard: .35
 			}
@@ -48569,19 +48575,19 @@ var Fs = [
 			label: ["Ferreiro", "Ferreira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Gs, X), Z(Ws, X)],
-				apron: [Z(oc, [
+				clothes: [Q(Gs, Z), Q(Ws, Z)],
+				apron: [Q(sc, [
 					"leather",
 					"brown",
 					"charcoal"
 				])],
-				gloves: [Z(lc, ["black", "brown"], .7)],
-				legs: [Z(Q, [
+				gloves: [Q(uc, ["black", "brown"], .7)],
+				legs: [Q($, [
 					"charcoal",
 					"brown",
 					"black"
 				])],
-				shoes: [Z($, ["black", "espresso"])],
+				shoes: [Q($s, ["black", "espresso"])],
 				hair: "short",
 				beard: .55
 			}
@@ -48590,14 +48596,14 @@ var Fs = [
 			label: ["Padeiro", "Padeira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Ws, Rs), Z(Us, Rs)],
-				apron: [Z(oc, ["white", "pale_gray"])],
-				legs: [Z(Q, [
+				clothes: [Q(Ws, Rs), Q(Us, Rs)],
+				apron: [Q(sc, ["white", "pale_gray"])],
+				legs: [Q($, [
 					"tan",
 					"gray",
 					"brown"
-				]), Z(Zs, ["tan", "gray"], .5)],
-				shoes: [Z(Qs, ["brown", "espresso"])],
+				]), Q(Zs, ["tan", "gray"], .5)],
+				shoes: [Q(Qs, ["brown", "espresso"])],
 				hair: "neat",
 				beard: .2
 			}
@@ -48606,23 +48612,23 @@ var Fs = [
 			label: ["Guarda da vila", "Guarda da vila"],
 			weight: 2,
 			outfit: {
-				armour: [Z(fc, [
+				armour: [Q(pc, [
 					"brown",
 					"leather",
 					"walnut"
 				])],
-				hat: [Z(nc, Bs, .8)],
-				legs: [Z(Q, [
+				hat: [Q(rc, Bs, .8)],
+				legs: [Q($, [
 					"brown",
 					"charcoal",
 					"navy"
 				])],
-				shoes: [Z($, [
+				shoes: [Q($s, [
 					"brown",
 					"espresso",
 					"black"
 				])],
-				cape: [Z(sc, [
+				cape: [Q(cc, [
 					"green",
 					"forest",
 					"navy",
@@ -48637,13 +48643,13 @@ var Fs = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Hs, zs),
-					Z(Ws, zs),
-					Z(Us, zs)
+					Q(Hs, zs),
+					Q(Ws, zs),
+					Q(Us, zs)
 				],
-				vest: [Z(qs, Ls, .25)],
-				legs: [Z(Q, X), Z(Zs, X, .5)],
-				shoes: [Z(Qs, X), Z($, ["brown"])],
+				vest: [Q(qs, Ls, .25)],
+				legs: [Q($, Z), Q(Zs, Z, .5)],
+				shoes: [Q(Qs, Z), Q($s, ["brown"])],
 				hair: "rustic",
 				beard: .3
 			}
@@ -48652,17 +48658,17 @@ var Fs = [
 			label: ["Mercador", "Mercadora"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Hs, Is), Z(Us, Is)],
-				vest: [Z(qs, [
+				clothes: [Q(Hs, Is), Q(Us, Is)],
+				vest: [Q(qs, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .6)],
-				belt: [Z(ac, ["brown", "leather"], .6)],
-				legs: [Z(Xs, X)],
-				shoes: [Z($, ["brown", "espresso"])],
-				hat: [Z(ec, Is, .35)],
+				belt: [Q(oc, ["brown", "leather"], .6)],
+				legs: [Q(Xs, Z)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				hat: [Q(tc, Is, .35)],
 				hair: "neat",
 				beard: .35
 			}
@@ -48673,18 +48679,18 @@ var Fs = [
 			label: ["Mercador", "Mercadora"],
 			weight: 4,
 			outfit: {
-				clothes: [Z(Hs, Is), Z(Us, zs)],
-				vest: [Z(qs, [
+				clothes: [Q(Hs, Is), Q(Us, zs)],
+				vest: [Q(qs, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .6)],
-				apron: [Z(oc, Rs, .3)],
-				belt: [Z(ac, ["brown", "leather"], .6)],
-				legs: [Z(Xs, X), Z(Zs, X, .4)],
-				shoes: [Z(Qs, X), Z($, ["brown"])],
-				hat: [Z(ec, Is, .35)],
+				apron: [Q(sc, Rs, .3)],
+				belt: [Q(oc, ["brown", "leather"], .6)],
+				legs: [Q(Xs, Z), Q(Zs, Z, .4)],
+				shoes: [Q(Qs, Z), Q($s, ["brown"])],
+				hat: [Q(tc, Is, .35)],
 				hair: "rustic",
 				beard: .35
 			}
@@ -48694,14 +48700,14 @@ var Fs = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Hs, zs),
-					Z(Ws, zs),
-					Z(Us, zs)
+					Q(Hs, zs),
+					Q(Ws, zs),
+					Q(Us, zs)
 				],
-				legs: [Z(Q, X), Z(Zs, X, .5)],
-				shoes: [Z(Qs, X)],
-				hat: [Z(ec, Ls, .15)],
-				backpack: [Z(/backpack_basket/, void 0, .3)],
+				legs: [Q($, Z), Q(Zs, Z, .5)],
+				shoes: [Q(Qs, Z)],
+				hat: [Q(tc, Ls, .15)],
+				backpack: [Q(/backpack_basket/, void 0, .3)],
 				hair: "rustic",
 				beard: .3
 			}
@@ -48710,15 +48716,15 @@ var Fs = [
 			label: ["Artesão", "Artesã"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Ws, Ls), Z(Gs, Ls)],
-				apron: [Z(oc, [
+				clothes: [Q(Ws, Ls), Q(Gs, Ls)],
+				apron: [Q(sc, [
 					"leather",
 					"brown",
 					"tan"
 				])],
-				gloves: [Z(lc, ["brown"], .3)],
-				legs: [Z(Q, ["brown", "charcoal"])],
-				shoes: [Z($, ["brown"])],
+				gloves: [Q(uc, ["brown"], .3)],
+				legs: [Q($, ["brown", "charcoal"])],
+				shoes: [Q($s, ["brown"])],
 				hair: "short",
 				beard: .4
 			}
@@ -48727,14 +48733,14 @@ var Fs = [
 			label: ["Guarda", "Guarda"],
 			weight: 2,
 			outfit: {
-				armour: [Z(fc, ["brown", "leather"])],
-				hat: [Z(nc, Bs, .8)],
-				legs: [Z(Q, [
+				armour: [Q(pc, ["brown", "leather"])],
+				hat: [Q(rc, Bs, .8)],
+				legs: [Q($, [
 					"charcoal",
 					"brown",
 					"navy"
 				])],
-				shoes: [Z($, ["black", "espresso"])],
+				shoes: [Q($s, ["black", "espresso"])],
 				hair: "short",
 				beard: .3
 			}
@@ -48745,30 +48751,30 @@ var Fs = [
 			label: ["Fazendeiro", "Fazendeira"],
 			weight: 4,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"tan",
 					"white",
 					"brown",
 					"yellow",
 					"gray"
-				]), Z(Ws, [
+				]), Q(Ws, [
 					"tan",
 					"white",
 					"yellow"
 				])],
-				apron: [Z(uc, [
+				apron: [Q(dc, [
 					"brown",
 					"navy",
 					"forest",
 					"tan"
 				], .7)],
-				legs: [Z(Q, [
+				legs: [Q($, [
 					"brown",
 					"tan",
 					"navy"
 				])],
-				shoes: [Z($, ["brown", "espresso"])],
-				hat: [Z(ec, [
+				shoes: [Q($s, ["brown", "espresso"])],
+				hat: [Q(tc, [
 					"tan",
 					"brown",
 					"yellow"
@@ -48781,14 +48787,14 @@ var Fs = [
 			label: ["Peão", "Peã"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Ws, Ls), Z(Gs, Ls)],
-				legs: [Z(Q, [
+				clothes: [Q(Ws, Ls), Q(Gs, Ls)],
+				legs: [Q($, [
 					"brown",
 					"tan",
 					"charcoal"
 				])],
-				shoes: [Z($, ["brown"]), Z(Qs, ["brown"])],
-				hat: [Z(ec, ["tan", "brown"], .5)],
+				shoes: [Q($s, ["brown"]), Q(Qs, ["brown"])],
+				hat: [Q(tc, ["tan", "brown"], .5)],
 				hair: "short",
 				beard: .4
 			}
@@ -48797,20 +48803,20 @@ var Fs = [
 			label: ["Pastor", "Pastora"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"brown",
 					"tan",
 					"gray",
 					"forest"
 				])],
-				cape: [Z(sc, [
+				cape: [Q(cc, [
 					"brown",
 					"forest",
 					"gray"
 				], .6)],
-				hat: [Z(tc, ["brown", "forest"], .3)],
-				legs: [Z(Q, ["brown", "charcoal"])],
-				shoes: [Z($, ["brown", "espresso"])],
+				hat: [Q(nc, ["brown", "forest"], .3)],
+				legs: [Q($, ["brown", "charcoal"])],
+				shoes: [Q($s, ["brown", "espresso"])],
 				hair: "rustic",
 				beard: .4
 			}
@@ -48819,10 +48825,10 @@ var Fs = [
 			label: ["Cozinheiro", "Cozinheira"],
 			weight: 1,
 			outfit: {
-				clothes: [Z(Us, Rs), Z(Ws, Rs)],
-				apron: [Z(oc, ["white", "pale_gray"])],
-				legs: [Z(Q, ["brown", "gray"]), Z(Zs, ["brown", "gray"], .5)],
-				shoes: [Z(Qs, X)],
+				clothes: [Q(Us, Rs), Q(Ws, Rs)],
+				apron: [Q(sc, ["white", "pale_gray"])],
+				legs: [Q($, ["brown", "gray"]), Q(Zs, ["brown", "gray"], .5)],
+				shoes: [Q(Qs, Z)],
 				hair: "neat"
 			}
 		}
@@ -48832,36 +48838,36 @@ var Fs = [
 			label: ["Caçador", "Caçadora"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"brown",
 					"forest",
 					"green",
 					"tan",
 					"walnut"
-				]), Z(Ws, [
+				]), Q(Ws, [
 					"brown",
 					"forest",
 					"tan"
 				])],
-				vest: [Z(qs, [
+				vest: [Q(qs, [
 					"leather",
 					"brown",
 					"forest"
 				], .5)],
-				cape: [Z(sc, [
+				cape: [Q(cc, [
 					"forest",
 					"brown",
 					"green"
 				], .5)],
-				hat: [Z(tc, ["forest", "brown"], .4), Z(ec, ["brown", "forest"], .2)],
-				belt: [Z(ac, ["brown", "leather"], .7)],
-				legs: [Z(Q, [
+				hat: [Q(nc, ["forest", "brown"], .4), Q(tc, ["brown", "forest"], .2)],
+				belt: [Q(oc, ["brown", "leather"], .7)],
+				legs: [Q($, [
 					"brown",
 					"forest",
 					"charcoal"
 				])],
-				shoes: [Z($, ["brown", "espresso"])],
-				backpack: [Z(/backpack\/backpack$/, void 0, .4)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				backpack: [Q(/backpack\/backpack$/, void 0, .4)],
 				hair: "rustic",
 				beard: .5
 			}
@@ -48870,12 +48876,12 @@ var Fs = [
 			label: ["Andarilho", "Andarilha"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Hs, Ls)],
-				cape: [Z(sc, Vs)],
-				hat: [Z(tc, Vs, .5)],
-				legs: [Z(Q, X)],
-				shoes: [Z($, ["brown", "espresso"])],
-				backpack: [Z(/backpack\/backpack/, void 0, .5)],
+				clothes: [Q(Hs, Ls)],
+				cape: [Q(cc, Vs)],
+				hat: [Q(nc, Vs, .5)],
+				legs: [Q($, Z)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				backpack: [Q(/backpack\/backpack/, void 0, .5)],
 				hair: "rustic",
 				beard: .5
 			}
@@ -48884,20 +48890,20 @@ var Fs = [
 			label: ["Ervanário", "Ervanária"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Ks, [
+				clothes: [Q(Ks, [
 					"forest",
 					"green",
 					"tan",
 					"brown"
-				]), Z(Us, [
+				]), Q(Us, [
 					"green",
 					"forest",
 					"white"
 				])],
-				belt: [Z(ac, ["brown", "leather"], .6)],
-				legs: [Z(Q, ["brown", "forest"]), Z(Zs, ["brown", "forest"], .5)],
-				shoes: [Z(Qs, ["brown"]), Z($, ["brown"])],
-				backpack: [Z(/backpack_basket/, void 0, .6)],
+				belt: [Q(oc, ["brown", "leather"], .6)],
+				legs: [Q($, ["brown", "forest"]), Q(Zs, ["brown", "forest"], .5)],
+				shoes: [Q(Qs, ["brown"]), Q($s, ["brown"])],
+				backpack: [Q(/backpack_basket/, void 0, .6)],
 				hair: "rustic",
 				age: "any",
 				beard: .35
@@ -48907,20 +48913,20 @@ var Fs = [
 			label: ["Batedor", "Batedora"],
 			weight: 2,
 			outfit: {
-				armour: [Z(fc, [
+				armour: [Q(pc, [
 					"brown",
 					"leather",
 					"forest"
 				])],
-				hat: [Z(ec, ["brown", "forest"], .6)],
-				cape: [Z(sc, ["forest", "green"], .5)],
-				legs: [Z(Q, [
+				hat: [Q(tc, ["brown", "forest"], .6)],
+				cape: [Q(cc, ["forest", "green"], .5)],
+				legs: [Q($, [
 					"brown",
 					"forest",
 					"charcoal"
 				])],
-				shoes: [Z($, ["brown", "espresso"])],
-				gloves: [Z(lc, ["brown"], .5)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				gloves: [Q(uc, ["brown"], .5)],
 				hair: "short",
 				beard: .35
 			}
@@ -48931,20 +48937,20 @@ var Fs = [
 			label: ["Coveiro", "Coveira"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"charcoal",
 					"gray",
 					"brown",
 					"black"
-				]), Z(Ws, ["charcoal", "gray"])],
-				vest: [Z(qs, ["black", "charcoal"], .4)],
-				hat: [Z(ec, [
+				]), Q(Ws, ["charcoal", "gray"])],
+				vest: [Q(qs, ["black", "charcoal"], .4)],
+				hat: [Q(tc, [
 					"black",
 					"charcoal",
 					"brown"
 				], .4)],
-				legs: [Z(Q, ["black", "charcoal"])],
-				shoes: [Z($, ["black", "espresso"])],
+				legs: [Q($, ["black", "charcoal"])],
+				shoes: [Q($s, ["black", "espresso"])],
 				hair: "short",
 				beard: .5
 			}
@@ -48953,21 +48959,21 @@ var Fs = [
 			label: ["Sacerdote", "Sacerdotisa"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Ks, [
+				clothes: [Q(Ks, [
 					"black",
 					"white",
 					"pale_gray",
 					"midnight",
 					"oxblood"
 				])],
-				hat: [Z(tc, [
+				hat: [Q(nc, [
 					"black",
 					"midnight",
 					"white"
 				], .4)],
-				belt: [Z(ac, ["brown", "leather"], .4)],
-				legs: [Z(Q, ["black", "charcoal"])],
-				shoes: [Z(Qs, X)],
+				belt: [Q(oc, ["brown", "leather"], .4)],
+				legs: [Q($, ["black", "charcoal"])],
+				shoes: [Q(Qs, Z)],
 				hair: "neat",
 				age: "any",
 				beard: .35
@@ -48977,16 +48983,16 @@ var Fs = [
 			label: ["Enlutado", "Enlutada"],
 			weight: 3,
 			outfit: {
-				jacket: [Z(Js, [
+				jacket: [Q(Js, [
 					"black",
 					"charcoal",
 					"midnight"
 				], .4)],
-				dress: [Z(/dress_(sash|slit)/, ["black", "charcoal"], .6)],
-				clothes: [Z(Hs, ["black", "charcoal"]), Z(Us, ["black", "charcoal"])],
-				legs: [Z(Xs, ["black", "charcoal"]), Z(Zs, ["black"], .5)],
-				shoes: [Z(Qs, ["black"]), Z($, ["black"])],
-				hat: [Z($s, ["black"], .2)],
+				dress: [Q(/dress_(sash|slit)/, ["black", "charcoal"], .6)],
+				clothes: [Q(Hs, ["black", "charcoal"]), Q(Us, ["black", "charcoal"])],
+				legs: [Q(Xs, ["black", "charcoal"]), Q(Zs, ["black"], .5)],
+				shoes: [Q(Qs, ["black"]), Q($s, ["black"])],
+				hat: [Q(ec, ["black"], .2)],
 				hair: "neat",
 				age: "any",
 				beard: .2
@@ -48996,15 +49002,15 @@ var Fs = [
 			label: ["Vigia", "Vigia"],
 			weight: 1,
 			outfit: {
-				clothes: [Z(Hs, ["charcoal", "gray"])],
-				cape: [Z(sc, [
+				clothes: [Q(Hs, ["charcoal", "gray"])],
+				cape: [Q(cc, [
 					"black",
 					"charcoal",
 					"midnight"
 				])],
-				hat: [Z(tc, ["black", "charcoal"], .5)],
-				legs: [Z(Q, ["black", "charcoal"])],
-				shoes: [Z($, ["black", "espresso"])],
+				hat: [Q(nc, ["black", "charcoal"], .5)],
+				legs: [Q($, ["black", "charcoal"])],
+				shoes: [Q($s, ["black", "espresso"])],
 				hair: "short",
 				beard: .4
 			}
@@ -49015,16 +49021,16 @@ var Fs = [
 			label: ["Guarda", "Guarda"],
 			weight: 4,
 			outfit: {
-				armour: [Z(dc, Bs)],
-				hat: [Z(nc, Bs)],
-				legs: [Z(Q, [
+				armour: [Q(fc, Bs)],
+				hat: [Q(rc, Bs)],
+				legs: [Q($, [
 					"charcoal",
 					"black",
 					"gray"
 				])],
-				shoes: [Z($, ["black", "espresso"])],
-				gloves: [Z(lc, ["black", "gray"], .6)],
-				cape: [Z(sc, ["black", "charcoal"], .3)],
+				shoes: [Q($s, ["black", "espresso"])],
+				gloves: [Q(uc, ["black", "gray"], .6)],
+				cape: [Q(cc, ["black", "charcoal"], .3)],
 				hair: "short",
 				beard: .4
 			}
@@ -49033,20 +49039,20 @@ var Fs = [
 			label: ["Carcereiro", "Carcereira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Gs, X), Z(Ws, X)],
-				vest: [Z(qs, [
+				clothes: [Q(Gs, Z), Q(Ws, Z)],
+				vest: [Q(qs, [
 					"leather",
 					"brown",
 					"black"
 				], .8)],
-				belt: [Z(ac, [
+				belt: [Q(oc, [
 					"brown",
 					"leather",
 					"charcoal"
 				])],
-				gloves: [Z(lc, ["black", "brown"], .6)],
-				legs: [Z(Q, ["charcoal", "brown"])],
-				shoes: [Z($, ["black", "espresso"])],
+				gloves: [Q(uc, ["black", "brown"], .6)],
+				legs: [Q($, ["charcoal", "brown"])],
+				shoes: [Q($s, ["black", "espresso"])],
 				hair: "short",
 				beard: .55
 			}
@@ -49055,22 +49061,22 @@ var Fs = [
 			label: ["Prisioneiro", "Prisioneira"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Gs, [
+				clothes: [Q(Gs, [
 					"gray",
 					"tan",
 					"brown",
 					"pale_gray"
-				]), Z(Ws, [
+				]), Q(Ws, [
 					"gray",
 					"tan",
 					"brown"
 				])],
-				legs: [Z(Q, [
+				legs: [Q($, [
 					"gray",
 					"brown",
 					"tan"
 				])],
-				shoes: [Z(/feet_sandals|feet_slippers|feet_shoes_basic/, ["brown", "gray"], .7)],
+				shoes: [Q(/feet_sandals|feet_slippers|feet_shoes_basic/, ["brown", "gray"], .7)],
 				hair: "rustic",
 				beard: .6
 			}
@@ -49079,16 +49085,16 @@ var Fs = [
 			label: ["Aventureiro", "Aventureira"],
 			weight: 2,
 			outfit: {
-				armour: [Z(fc, [
+				armour: [Q(pc, [
 					"brown",
 					"leather",
 					"charcoal"
 				])],
-				cape: [Z(sc, Vs, .6)],
-				backpack: [Z(/backpack\/backpack/, void 0, .6)],
-				legs: [Z(Q, ["brown", "charcoal"])],
-				shoes: [Z($, ["brown", "espresso"])],
-				belt: [Z(ac, ["brown", "leather"], .5)],
+				cape: [Q(cc, Vs, .6)],
+				backpack: [Q(/backpack\/backpack/, void 0, .6)],
+				legs: [Q($, ["brown", "charcoal"])],
+				shoes: [Q($s, ["brown", "espresso"])],
+				belt: [Q(oc, ["brown", "leather"], .5)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -49099,37 +49105,37 @@ var Fs = [
 			label: ["Montanhês", "Montanhesa"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"brown",
 					"gray",
 					"tan",
 					"forest",
 					"navy"
 				])],
-				cape: [Z(sc, [
+				cape: [Q(cc, [
 					"brown",
 					"gray",
 					"forest",
 					"navy"
 				], .8)],
-				hat: [Z(tc, [
+				hat: [Q(nc, [
 					"brown",
 					"gray",
 					"forest"
 				], .7)],
-				neck: [Z(ic, [
+				neck: [Q(ac, [
 					"red",
 					"maroon",
 					"gray",
 					"forest"
 				], .7)],
-				legs: [Z(Q, [
+				legs: [Q($, [
 					"brown",
 					"charcoal",
 					"navy"
 				])],
-				shoes: [Z($, ["brown", "espresso"])],
-				gloves: [Z(lc, ["brown", "gray"], .7)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				gloves: [Q(uc, ["brown", "gray"], .7)],
 				hair: "rustic",
 				beard: .6
 			}
@@ -49138,18 +49144,18 @@ var Fs = [
 			label: ["Caçador", "Caçadora"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"brown",
 					"tan",
 					"gray"
 				])],
-				vest: [Z(qs, ["leather", "brown"], .6)],
-				cape: [Z(sc, ["brown", "gray"], .6)],
-				hat: [Z(tc, ["brown", "gray"], .6)],
-				legs: [Z(Q, ["brown", "charcoal"])],
-				shoes: [Z($, ["brown", "espresso"])],
-				gloves: [Z(lc, ["brown"], .6)],
-				backpack: [Z(/backpack\/backpack$/, void 0, .4)],
+				vest: [Q(qs, ["leather", "brown"], .6)],
+				cape: [Q(cc, ["brown", "gray"], .6)],
+				hat: [Q(nc, ["brown", "gray"], .6)],
+				legs: [Q($, ["brown", "charcoal"])],
+				shoes: [Q($s, ["brown", "espresso"])],
+				gloves: [Q(uc, ["brown"], .6)],
+				backpack: [Q(/backpack\/backpack$/, void 0, .4)],
 				hair: "rustic",
 				beard: .5
 			}
@@ -49158,36 +49164,36 @@ var Fs = [
 			label: ["Viajante agasalhado", "Viajante agasalhada"],
 			weight: 3,
 			outfit: {
-				jacket: [Z(Ys, [
+				jacket: [Q(Ys, [
 					"navy",
 					"maroon",
 					"forest",
 					"gray",
 					"brown"
 				], .8)],
-				clothes: [Z(Hs, [
+				clothes: [Q(Hs, [
 					"white",
 					"tan",
 					"gray"
 				])],
-				neck: [Z(ic, [
+				neck: [Q(ac, [
 					"red",
 					"teal",
 					"yellow",
 					"maroon"
 				], .8)],
-				hat: [Z(tc, [
+				hat: [Q(nc, [
 					"gray",
 					"brown",
 					"navy"
 				], .5)],
-				legs: [Z(Q, [
+				legs: [Q($, [
 					"charcoal",
 					"brown",
 					"navy"
 				])],
-				shoes: [Z($, ["brown", "black"])],
-				gloves: [Z(lc, ["brown", "gray"], .6)],
+				shoes: [Q($s, ["brown", "black"])],
+				gloves: [Q(uc, ["brown", "gray"], .6)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -49199,13 +49205,13 @@ var Fs = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Z(Hs, zs),
-					Z(Ws, zs),
-					Z(Us, zs)
+					Q(Hs, zs),
+					Q(Ws, zs),
+					Q(Us, zs)
 				],
-				vest: [Z(qs, Ls, .25)],
-				legs: [Z(Q, X), Z(Zs, X, .5)],
-				shoes: [Z(Qs, X), Z($, ["brown"])],
+				vest: [Q(qs, Ls, .25)],
+				legs: [Q($, Z), Q(Zs, Z, .5)],
+				shoes: [Q(Qs, Z), Q($s, ["brown"])],
 				hair: "rustic",
 				beard: .3
 			}
@@ -49214,12 +49220,12 @@ var Fs = [
 			label: ["Viajante", "Viajante"],
 			weight: 3,
 			outfit: {
-				clothes: [Z(Hs, Ls)],
-				cape: [Z(sc, Vs, .6)],
-				hat: [Z(tc, Vs, .3)],
-				legs: [Z(Q, X)],
-				shoes: [Z($, ["brown", "espresso"])],
-				backpack: [Z(/backpack\/backpack$/, void 0, .5)],
+				clothes: [Q(Hs, Ls)],
+				cape: [Q(cc, Vs, .6)],
+				hat: [Q(nc, Vs, .3)],
+				legs: [Q($, Z)],
+				shoes: [Q($s, ["brown", "espresso"])],
+				backpack: [Q(/backpack\/backpack$/, void 0, .5)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -49228,17 +49234,17 @@ var Fs = [
 			label: ["Comerciante", "Comerciante"],
 			weight: 2,
 			outfit: {
-				clothes: [Z(Hs, Is), Z(Us, Is)],
-				vest: [Z(qs, [
+				clothes: [Q(Hs, Is), Q(Us, Is)],
+				vest: [Q(qs, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .5)],
-				belt: [Z(ac, ["brown", "leather"], .6)],
-				legs: [Z(Xs, X)],
-				shoes: [Z($, ["brown", "espresso"]), Z(Qs, X)],
-				hat: [Z(ec, Is, .3)],
+				belt: [Q(oc, ["brown", "leather"], .6)],
+				legs: [Q(Xs, Z)],
+				shoes: [Q($s, ["brown", "espresso"]), Q(Qs, Z)],
+				hat: [Q(tc, Is, .3)],
 				hair: "neat",
 				beard: .35
 			}
@@ -49247,16 +49253,16 @@ var Fs = [
 			label: ["Guarda", "Guarda"],
 			weight: 1,
 			outfit: {
-				armour: [Z(fc, ["brown", "leather"])],
-				hat: [Z(nc, Bs, .7)],
-				legs: [Z(Q, ["charcoal", "brown"])],
-				shoes: [Z($, ["black", "espresso"])],
+				armour: [Q(pc, ["brown", "leather"])],
+				hat: [Q(rc, Bs, .7)],
+				legs: [Q($, ["charcoal", "brown"])],
+				shoes: [Q($s, ["black", "espresso"])],
 				hair: "short",
 				beard: .35
 			}
 		}
 	]
-}, mc = {
+}, hc = {
 	neat: {
 		male: /hair_(parted|parted2|parted3|page|page2|swoop|swoop_side|curtains|plain|bangsshort|parted_side_bangs|parted_side_bangs2|relm_short)$/,
 		female: /hair_(page|page2|bob|bob_side_part|lob|parted|parted2|parted3|bangs|bangslong|bangslong2|long_center_part|long_straight|half_up|bangs_bun|ponytail|ponytail2|high_ponytail|princess|shoulderl|shoulderr|topknot_long|topknot_short)$/
@@ -49273,7 +49279,7 @@ var Fs = [
 		male: /hair_(balding|plain|parted|buzzcut|high_and_tight|page|messy3|curtains)$/,
 		female: /hair_(bob|lob|bangs_bun|half_up|page|plain|long_straight|ponytail|topknot_short|bangs)$/
 	}
-}, hc = {
+}, gc = {
 	branca: ["light"],
 	parda: [
 		"amber",
@@ -49282,7 +49288,7 @@ var Fs = [
 		"bronze"
 	],
 	negra: ["brown", "black"]
-}, gc = {
+}, _c = {
 	branca: [
 		"black",
 		"cocoa",
@@ -49311,7 +49317,7 @@ var Fs = [
 		"umber",
 		"dark_gray"
 	]
-}, _c = {
+}, vc = {
 	branca: [
 		"rose",
 		"pink",
@@ -49336,12 +49342,12 @@ var Fs = [
 		"black",
 		"orange"
 	]
-}, vc = [
+}, yc = [
 	"gray",
 	"white",
 	"dark_gray",
 	"gray"
-], yc = [
+], bc = [
 	"brown",
 	"brown",
 	"brown",
@@ -49349,13 +49355,13 @@ var Fs = [
 	"green",
 	"gray",
 	"blue"
-], bc = /* @__PURE__ */ "Aurélio.Benício.Cássio.Davi.Eládio.Fausto.Gaspar.Heitor.Isidoro.Joaquim.Leandro.Matias.Nestor.Otávio.Rúben.Silvestre.Tadeu.Ulisses.Valério.Xavier.Abel.Bento.Caetano.Dimas.Elias.Félix.Gil.Hugo".split("."), xc = /* @__PURE__ */ "Adélia.Beatriz.Cecília.Dalila.Eulália.Fabíola.Gabriela.Helena.Ísis.Joana.Lívia.Marta.Nair.Olívia.Pietra.Quitéria.Rosana.Sílvia.Tereza.Valéria.Zélia.Alice.Bianca.Clara.Dora.Elisa.Flora.Graça".split("."), Sc = /* @__PURE__ */ "Albuquerque.Barbosa.Cardoso.Duarte.Esteves.Furtado.Guedes.Horta.Ivo.Junqueira.Lacerda.Moura.Nogueira.Oliveira.Paiva.Queiroz.Rangel.Siqueira.Teixeira.Valadares.Xavier.Pimentel.Sampaio.Tavares.Brandão.Coelho.Ferraz.Lobo".split("."), Cc = (e, t) => e[Math.floor(t() * e.length)];
-function wc(e, t) {
+], xc = /* @__PURE__ */ "Aurélio.Benício.Cássio.Davi.Eládio.Fausto.Gaspar.Heitor.Isidoro.Joaquim.Leandro.Matias.Nestor.Otávio.Rúben.Silvestre.Tadeu.Ulisses.Valério.Xavier.Abel.Bento.Caetano.Dimas.Elias.Félix.Gil.Hugo".split("."), Sc = /* @__PURE__ */ "Adélia.Beatriz.Cecília.Dalila.Eulália.Fabíola.Gabriela.Helena.Ísis.Joana.Lívia.Marta.Nair.Olívia.Pietra.Quitéria.Rosana.Sílvia.Tereza.Valéria.Zélia.Alice.Bianca.Clara.Dora.Elisa.Flora.Graça".split("."), Cc = /* @__PURE__ */ "Albuquerque.Barbosa.Cardoso.Duarte.Esteves.Furtado.Guedes.Horta.Ivo.Junqueira.Lacerda.Moura.Nogueira.Oliveira.Paiva.Queiroz.Rangel.Siqueira.Teixeira.Valadares.Xavier.Pimentel.Sampaio.Tavares.Brandão.Coelho.Ferraz.Lobo".split("."), wc = (e, t) => e[Math.floor(t() * e.length)];
+function Tc(e, t) {
 	let n = e.reduce((e, t) => e + t.weight, 0), r = t() * n;
 	for (let t of e) if (r -= t.weight, r <= 0) return t;
 	return e[e.length - 1];
 }
-function Tc(e, t) {
+function Ec(e, t) {
 	let n = [...e];
 	for (let e = n.length - 1; e > 0; e--) {
 		let r = Math.floor(t() * (e + 1));
@@ -49363,10 +49369,10 @@ function Tc(e, t) {
 	}
 	return n;
 }
-var Ec = /shirts\/longsleeve\//;
-function Dc(e, t) {
+var Dc = /shirts\/longsleeve\//;
+function Oc(e, t) {
 	if (!e.colors) return e;
-	let n = e.colors.filter((e) => !_c[t].includes(e));
+	let n = e.colors.filter((e) => !vc[t].includes(e));
 	return {
 		...e,
 		colors: n.length ? n : [
@@ -49377,55 +49383,55 @@ function Dc(e, t) {
 		]
 	};
 }
-function Oc(e, t, n, r, i, a = !1) {
+function kc(e, t, n, r, i, a = !1) {
 	if (!r?.length) return null;
-	let o = Tc(r, i);
+	let o = Ec(r, i);
 	for (let r of o) {
 		if (!a && i() > (r.chance ?? 1)) continue;
 		let o = Kt(e, t, n).filter((e) => r.re.test(e.id));
-		if (o.length) return kc(e, Cc(o, i), r.colors, i);
+		if (o.length) return Ac(e, wc(o, i), r.colors, i);
 	}
 	return null;
 }
-function kc(e, t, n, r) {
+function Ac(e, t, n, r) {
 	let i = { id: t.id };
 	if (t.variants?.length) {
 		let e = n?.filter((e) => t.variants.includes(e)) ?? [];
-		i.variant = e.length ? Cc(e, r) : Cc(t.variants, r);
+		i.variant = e.length ? wc(e, r) : wc(t.variants, r);
 	}
 	for (let a of t.colors ?? []) {
 		if (a.material === "body" && t.matchBody) continue;
 		let o = Object.keys(e.palettes[a.material] ?? {});
 		if (!o.length) continue;
 		let s = n?.filter((e) => o.includes(e)) ?? [];
-		(i.colors ??= {})[a.key] = s.length ? Cc(s, r) : Cc(o, r);
+		(i.colors ??= {})[a.key] = s.length ? wc(s, r) : wc(o, r);
 	}
 	return i;
 }
-function Ac(e, t, n, r, i, a, o, s) {
-	let c = Kt(e, "hair", t), l = i ? "elder" : r, u = mc[l][n], d = c.filter((e) => u.test(e.id) && !s.has(e.id));
+function jc(e, t, n, r, i, a, o, s) {
+	let c = Kt(e, "hair", t), l = i ? "elder" : r, u = hc[l][n], d = c.filter((e) => u.test(e.id) && !s.has(e.id));
 	if (d.length || (d = c.filter((e) => u.test(e.id))), o() < .2) {
-		let e = mc[l][n === "male" ? "female" : "male"], t = c.filter((t) => e.test(t.id) && !s.has(t.id));
+		let e = hc[l][n === "male" ? "female" : "male"], t = c.filter((t) => e.test(t.id) && !s.has(t.id));
 		t.length && (d = t);
 	}
-	return d.length ? kc(e, Cc(d, o), [Cc(i ? vc : gc[a], o)], o) : null;
+	return d.length ? Ac(e, wc(d, o), [wc(i ? yc : _c[a], o)], o) : null;
 }
-function jc(e, t, n, r, i) {
+function Mc(e, t, n, r, i) {
 	let a = Kt(e, "head", t).filter((e) => e.id.includes("/human/") && !/_small$/.test(e.id)), o = a.filter((e) => r ? /elderly/.test(e.id) : !/elderly/.test(e.id)), s = o.length ? o : a;
 	if (n === "male" && !r && i() < .25) {
 		let e = s.filter((e) => /gaunt|plump/.test(e.id));
 		e.length && (s = e);
 	} else n === "male" && !r && (s = s.filter((e) => !/gaunt|plump/.test(e.id)).length ? s.filter((e) => !/gaunt|plump/.test(e.id)) : s);
 	return {
-		id: Cc(s, i).id,
-		colors: { color_2: Cc(yc, i) }
+		id: wc(s, i).id,
+		colors: { color_2: wc(bc, i) }
 	};
 }
-function Mc(e, t) {
-	let n = t.rnd ?? Math.random, r = pc[t.profile] ?? pc.geral, i = t.avoid, a = r.map((e) => ({
+function Nc(e, t) {
+	let n = t.rnd ?? Math.random, r = mc[t.profile] ?? mc.geral, i = t.avoid, a = r.map((e) => ({
 		...e,
 		weight: e.weight / (1 + (i?.roles.get(e.label[0]) ?? 0) * 1.5)
-	})), o = t.role && a.find((e) => e.label[0] === t.role) || wc(a, n), s = n() < .5 ? "male" : "female", c = t.skin ?? Cc(Object.keys(hc), n), l = Cc(hc[c], n), u = o.outfit, d = u.age ?? "adult", f = d === "elder" || (d === "adult" ? n() < .08 : n() < .35), p = s, m = o.label[0];
+	})), o = t.role && a.find((e) => e.label[0] === t.role) || Tc(a, n), s = n() < .5 ? "male" : "female", c = t.skin ?? wc(Object.keys(gc), n), l = wc(gc[c], n), u = o.outfit, d = u.age ?? "adult", f = d === "elder" || (d === "adult" ? n() < .08 : n() < .35), p = s, m = o.label[0];
 	s === "male" && !f && (m === "Ferreiro" && n() < .55 || m === "Prisioneiro" && n() < .25) ? p = "muscular" : !f && [
 		"Criado",
 		"Peão",
@@ -49437,43 +49443,43 @@ function Mc(e, t) {
 	].includes(m) && n() < .18 && (p = "teen");
 	let h = {
 		body: { id: "body/body" },
-		head: jc(e, p, s, f, n)
-	}, g = Ac(e, p, s, u.hair, f, c, n, i?.hair ?? /* @__PURE__ */ new Set());
+		head: Mc(e, p, s, f, n)
+	}, g = jc(e, p, s, u.hair, f, c, n, i?.hair ?? /* @__PURE__ */ new Set());
 	if (g) {
 		h.hair = g;
-		let t = g.colors?.color, r = Oc(e, "eyebrows", p, [{
+		let t = g.colors?.color, r = kc(e, "eyebrows", p, [{
 			re: /eyebrows_(thick|thin)/,
 			chance: 1
 		}], n, !0);
 		if (r && (r.colors = { color: t && n() < .8 ? t : "black" }, h.eyebrows = r), s === "male" && u.beard && n() < (f ? Math.max(u.beard, .45) : u.beard)) {
-			let r = Oc(e, n() < .7 ? "beard" : "mustache", p, [{ re: /beards_/ }], n, !0);
-			r && (t && (r.colors = { color: t }), h[Lc(e, r)] = r);
+			let r = kc(e, n() < .7 ? "beard" : "mustache", p, [{ re: /beards_/ }], n, !0);
+			r && (t && (r.colors = { color: t }), h[Rc(e, r)] = r);
 		}
 	}
 	let _ = !1;
 	if (s === "female" && u.dress) {
-		let t = Oc(e, "dress", p, u.dress, n);
+		let t = kc(e, "dress", p, u.dress, n);
 		t && (h.dress = t, _ = !0);
 	}
 	if (!_) {
 		let t = (t, r, i = !1) => {
-			let a = Oc(e, t, p, r, n, i);
+			let a = kc(e, t, p, r, n, i);
 			a && (h[t] = a);
 		};
-		u.armour ? t("armour", u.armour, !0) : t("clothes", u.clothes?.map((e) => Dc(e, c)), !0), t("vest", u.vest), t("jacket", u.jacket), t("legs", u.legs, !0);
+		u.armour ? t("armour", u.armour, !0) : t("clothes", u.clothes?.map((e) => Oc(e, c)), !0), t("vest", u.vest), t("jacket", u.jacket), t("legs", u.legs, !0);
 	}
 	if (!_ && !h.clothes && !h.armour) {
-		let t = Oc(e, "clothes", p, [{
-			re: Ec,
-			colors: Dc(u.clothes?.[0] ?? { re: Ec }, c).colors
+		let t = kc(e, "clothes", p, [{
+			re: Dc,
+			colors: Oc(u.clothes?.[0] ?? { re: Dc }, c).colors
 		}], n, !0);
 		t && (h.clothes = t);
 	}
 	let v = (t, r, i = !1) => {
-		let a = Oc(e, t, p, r, n, i);
+		let a = kc(e, t, p, r, n, i);
 		a && (h[t] = a);
 	};
-	v("shoes", u.shoes, !0), v("hat", u.hat), v("neck", u.neck), v("cape", u.cape), v("apron", u.apron), v("belt", u.belt), v("gloves", u.gloves), v("arms", u.arms), v("backpack", u.backpack), v("facial", u.facial), Ic(e, p, s, o, f, h, n);
+	v("shoes", u.shoes, !0), v("hat", u.hat), v("neck", u.neck), v("cape", u.cape), v("apron", u.apron), v("belt", u.belt), v("gloves", u.gloves), v("arms", u.arms), v("backpack", u.backpack), v("facial", u.facial), Lc(e, p, s, o, f, h, n);
 	let y = n(), b = f ? y < .5 ? .92 : 1 : y < .6 ? 1 : y < .8 ? .92 : y < .95 ? 1.08 : .84, x = n(), S = p === "muscular" ? 0 : x < .1 ? -1 : +(x < .22), C = () => {
 		let e = n();
 		return e < .2 ? -1 : e < .8 ? 0 : 1;
@@ -49490,14 +49496,14 @@ function Mc(e, t) {
 		slots: h,
 		height: b,
 		shape: w
-	}), E = `${Cc(s === "male" ? bc : xc, n)} ${Cc(Sc, n)}`, D = o.label[s === "male" ? 0 : 1];
+	}), E = `${wc(s === "male" ? xc : Sc, n)} ${wc(Cc, n)}`, D = o.label[s === "male" ? 0 : 1];
 	return i && (T.slots.hair && i.hair.add(T.slots.hair.id), i.roles.set(o.label[0], (i.roles.get(o.label[0]) ?? 0) + 1), i.looks.add(`${T.slots.clothes?.id ?? T.slots.dress?.id}:${JSON.stringify(T.slots.clothes?.colors ?? T.slots.clothes?.variant ?? "")}`)), {
 		name: E,
 		role: D,
 		appearance: T
 	};
 }
-var Nc = [
+var Pc = [
 	"Guarda do palácio",
 	"Guarda da vila",
 	"Guarda",
@@ -49510,7 +49516,7 @@ var Nc = [
 	"Montanhês",
 	"Ferreiro",
 	"Taverneiro"
-], Pc = [
+], Fc = [
 	"Nobre",
 	"Bardo",
 	"Garçom",
@@ -49519,7 +49525,7 @@ var Nc = [
 	"Freguês",
 	"Mercador",
 	"Comerciante"
-], Fc = {
+], Ic = {
 	freckle: [
 		"castanho",
 		"ruivo",
@@ -49566,46 +49572,46 @@ var Nc = [
 		"azul"
 	]
 };
-function Ic(e, t, n, r, i, a, o) {
+function Lc(e, t, n, r, i, a, o) {
 	let s = r.label[0], c = (n, r, i) => {
 		if (o() > r) return;
 		let s = Kt(e, n, t).filter((e) => e.proc && (!i || i.test(e.id)));
 		if (!s.length) return;
-		let c = Cc(s, o), l = c.colors?.[0]?.material;
-		a[n] = kc(e, c, l ? Fc[l] : void 0, o);
-	}, l = Nc.includes(s);
-	if (c("skin_spots", i ? .5 : .22, i ? /manchas_idade|olheiras|sardas_leves/ : /sardas|pinta|acne|fuligem|queimado|olheiras/), c("scar_face", l ? .3 : .04), (n === "female" || Pc.includes(s)) && (c("makeup_lips", n === "female" ? Pc.includes(s) ? .5 : .14 : .03, /batom_(fino|cheio)|gloss/), c("makeup_cheeks", n === "female" && Pc.includes(s) ? .35 : .06, /blush_suave|rubor/), c("makeup_eyes", n === "female" && Pc.includes(s) ? .2 : .03, /delineado|sombra/)), s === "Bardo" && c("face_paint", .18), (l || s === "Andarilho") && c("tattoo_face", .1), o() < .18 && !i) {
+		let c = wc(s, o), l = c.colors?.[0]?.material;
+		a[n] = Ac(e, c, l ? Ic[l] : void 0, o);
+	}, l = Pc.includes(s);
+	if (c("skin_spots", i ? .5 : .22, i ? /manchas_idade|olheiras|sardas_leves/ : /sardas|pinta|acne|fuligem|queimado|olheiras/), c("scar_face", l ? .3 : .04), (n === "female" || Fc.includes(s)) && (c("makeup_lips", n === "female" ? Fc.includes(s) ? .5 : .14 : .03, /batom_(fino|cheio)|gloss/), c("makeup_cheeks", n === "female" && Fc.includes(s) ? .35 : .06, /blush_suave|rubor/), c("makeup_eyes", n === "female" && Fc.includes(s) ? .2 : .03, /delineado|sombra/)), s === "Bardo" && c("face_paint", .18), (l || s === "Andarilho") && c("tattoo_face", .1), o() < .18 && !i) {
 		let n = Kt(e, "expression", t).filter((e) => !e.proc && /happy|sad|angry|shame|neutral|blush/i.test(e.name));
-		n.length && (a.expression = kc(e, Cc(n, o), yc, o));
+		n.length && (a.expression = Ac(e, wc(n, o), bc, o));
 	}
 }
-function Lc(e, t) {
+function Rc(e, t) {
 	return e.byId.get(t.id)?.slot ?? "beard";
 }
-function Rc(e, t, n, r = Math.random) {
+function zc(e, t, n, r = Math.random) {
 	let i = {
 		hair: /* @__PURE__ */ new Set(),
 		looks: /* @__PURE__ */ new Set(),
 		roles: /* @__PURE__ */ new Map()
-	}, a = Tc(Object.keys(hc), r), o = [];
-	for (let s = 0; s < n; s++) o.push(Mc(e, {
+	}, a = Ec(Object.keys(gc), r), o = [];
+	for (let s = 0; s < n; s++) o.push(Nc(e, {
 		rnd: r,
 		profile: t,
 		skin: a[s % a.length],
 		avoid: i
 	}));
-	return Tc(o, r);
+	return Ec(o, r);
 }
 //#endregion
 //#region src/engine/character/storage.ts
-var zc = [
+var Bc = [
 	"male",
 	"female",
 	"muscular",
 	"teen",
 	"child"
 ];
-function Bc(e, t) {
+function Vc(e, t) {
 	return {
 		version: 1,
 		id: F("pers"),
@@ -49614,9 +49620,9 @@ function Bc(e, t) {
 		updatedAt: Date.now()
 	};
 }
-function Vc(e) {
+function Hc(e) {
 	let t = e, n = t?.appearance;
-	return !t || typeof t.id != "string" || !n || n.version !== 2 || !zc.includes(n.body) || typeof n.slots != "object" || !n.slots ? null : {
+	return !t || typeof t.id != "string" || !n || n.version !== 2 || !Bc.includes(n.body) || typeof n.slots != "object" || !n.slots ? null : {
 		version: 1,
 		id: t.id,
 		name: typeof t.name == "string" ? t.name : "Sem nome",
@@ -49633,7 +49639,7 @@ function Vc(e) {
 		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
 	};
 }
-var Hc = class {
+var Uc = class {
 	key;
 	activeKey;
 	constructor(e = "") {
@@ -49642,7 +49648,7 @@ var Hc = class {
 	}
 	read() {
 		try {
-			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Vc).filter((e) => !!e);
+			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Hc).filter((e) => !!e);
 		} catch {
 			return [];
 		}
@@ -49670,10 +49676,10 @@ var Hc = class {
 	async setActive(e) {
 		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
 	}
-}, Uc = "vortable-character";
-function Wc(e) {
+}, Wc = "vortable-character";
+function Gc(e) {
 	return JSON.stringify({
-		format: Uc,
+		format: Wc,
 		version: 1,
 		characters: e.map((e) => ({
 			name: e.name,
@@ -49681,13 +49687,13 @@ function Wc(e) {
 		}))
 	}, null, 2);
 }
-function Gc(e) {
+function Kc(e) {
 	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
 }
 function vtConfirm(message, options) {
 	return typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));
 }
-function Kc(e, t) {
+function qc(e, t) {
 	let n = e;
 	if (typeof e == "string") try {
 		n = JSON.parse(e);
@@ -49698,23 +49704,23 @@ function Kc(e, t) {
 	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
 	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
 	for (let e of i) {
-		let n = e, r = Vc({
+		let n = e, r = Hc({
 			id: "x",
 			name: n?.name,
 			appearance: n?.appearance
 		});
 		if (!r) continue;
 		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
-		a.push(Bc(i, t ? en(t, r.appearance) : r.appearance));
+		a.push(Vc(i, t ? en(t, r.appearance) : r.appearance));
 	}
 	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
 	return a;
 }
-function qc(e, t, n = "application/json") {
+function Jc(e, t, n = "application/json") {
 	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
 	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function Jc(e = ".json,application/json") {
+function Yc(e = ".json,application/json") {
 	return new Promise((t) => {
 		let n = document.createElement("input");
 		n.type = "file", n.accept = e, n.onchange = async () => {
@@ -49725,7 +49731,7 @@ function Jc(e = ".json,application/json") {
 }
 //#endregion
 //#region src/engine/character/creator.css?inline
-var Yc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);flex-wrap:wrap;display:flex}.cp-tab{color:var(--cp-dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:auto;padding:11px 10px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}", Xc = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cachorro|head\/nenhuma|grime\/|clothes\/surrada|legs\/surrada|hat\/(gorro|boina|chapeu))/, Zc = new RegExp([
+var Xc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);flex-wrap:wrap;display:flex}.cp-tab{color:var(--cp-dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:auto;padding:11px 10px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}", Zc = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cachorro|head\/nenhuma|grime\/|clothes\/surrada|legs\/surrada|hat\/(gorro|boina|chapeu))/, Qc = new RegExp([
 	"backpack_jetpack",
 	"facial_glasses(_shades|_sunglasses|_nerd|_secretary)?$",
 	"neck_necktie",
@@ -49736,7 +49742,7 @@ var Yc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp
 	"hat_holiday_christmas",
 	"hat_formal_(bowler|tophat)",
 	"heads_alien"
-].join("|")), Qc = new RegExp([
+].join("|")), $c = new RegExp([
 	"headwear/helmets/helmets/",
 	"hat_magic_",
 	"hat_formal_(crown|tiara)",
@@ -49762,18 +49768,18 @@ var Yc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp
 	"eyes_cyclops",
 	"backpack_jetpack"
 ].join("|"));
-function $c(e, t) {
+function el(e, t) {
 	if (!t) return !0;
 	let n = e.id;
-	return t === "medieval" ? n.startsWith("tlou/") ? Xc.test(n) : !Zc.test(n) : ![
+	return t === "medieval" ? n.startsWith("tlou/") ? Zc.test(n) : !Qc.test(n) : ![
 		"wings",
 		"horns",
 		"tail"
-	].includes(e.slot) && !Qc.test(n);
+	].includes(e.slot) && !$c.test(n);
 }
-function el(e, t) {
+function tl(e, t) {
 	if (!t) return e;
-	let n = e.catalog.items.filter((e) => $c(e, t));
+	let n = e.catalog.items.filter((e) => el(e, t));
 	return {
 		...e,
 		catalog: {
@@ -49785,16 +49791,16 @@ function el(e, t) {
 }
 //#endregion
 //#region src/engine/character/CreatorUI.ts
-var tl = {
+var nl = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, nl = [
+}, rl = [
 	"male",
 	"female",
 	"teen",
 	"child"
-], rl = [
+], il = [
 	"Corpo",
 	"Rosto",
 	"Cabelo",
@@ -49802,7 +49808,7 @@ var tl = {
 	"Marcas",
 	"Roupa",
 	"Acessórios"
-], il = {
+], al = {
 	body: "Corpo",
 	tail: "Corpo",
 	wings: "Corpo",
@@ -49818,11 +49824,11 @@ var tl = {
 	ponytail: "Cabelo",
 	beard: "Cabelo",
 	mustache: "Cabelo"
-}, al = /* @__PURE__ */ new Set(/* @__PURE__ */ "head.ears.nose.eyebrows.eyes.wrinkles.expression.hair.ponytail.beard.mustache.horns.hat.bandana.facial.mask.earrings.scar_eye_l.scar_eye_r.scar_mouth.wound_head.skin_spots.scar_face.makeup_lips.makeup_eyes.makeup_cheeks.face_paint.tattoo_face".split(".")), ol = /* @__PURE__ */ new Set([
+}, ol = /* @__PURE__ */ new Set(/* @__PURE__ */ "head.ears.nose.eyebrows.eyes.wrinkles.expression.hair.ponytail.beard.mustache.horns.hat.bandana.facial.mask.earrings.scar_eye_l.scar_eye_r.scar_mouth.wound_head.skin_spots.scar_face.makeup_lips.makeup_eyes.makeup_cheeks.face_paint.tattoo_face".split(".")), sl = /* @__PURE__ */ new Set([
 	"Rosto",
 	"Cabelo",
 	"Maquiagem"
-]), sl = {
+]), cl = {
 	"Eye color": "Cor dos olhos",
 	"Eye Color": "Cor dos olhos",
 	"eye color": "Cor dos olhos",
@@ -49835,14 +49841,14 @@ var tl = {
 	Fabric: "Tecido",
 	Cloth: "Tecido",
 	Leather: "Couro"
-}, cl = {
+}, ll = {
 	body: "pele",
 	hair: "cabelo",
 	cloth: "tecido",
 	eye: "olho",
 	metal: "metal",
 	wood: "madeira"
-}, ll = {
+}, ul = {
 	face: {
 		cx: 32,
 		cy: 27,
@@ -49855,7 +49861,7 @@ var tl = {
 		h: 70,
 		minW: 46
 	}
-}, ul = 3, dl = 2 ** ul, fl = class {
+}, dl = 3, fl = 2 ** dl, pl = class {
 	opts;
 	root;
 	data;
@@ -49898,7 +49904,7 @@ var tl = {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
-		this.opts = t, dt("editor", Ds), dt("creator", Yc), this.character = Bc(t.initialName ?? "Novo personagem", $t()), this.nameInput = K("input", {
+		this.opts = t, dt("editor", Ds), dt("creator", Xc), this.character = Vc(t.initialName ?? "Novo personagem", $t()), this.nameInput = q("input", {
 			class: "cp-name",
 			value: this.character.name,
 			title: "Nome do personagem",
@@ -49907,67 +49913,67 @@ var tl = {
 			oninput: () => {
 				this.character.name = this.nameInput.value, this.markDirty();
 			}
-		}), this.canvas = K("canvas", { class: "cp-canvas" }), this.tabsEl = K("div", {
+		}), this.canvas = q("canvas", { class: "cp-canvas" }), this.tabsEl = q("div", {
 			class: "cp-tabs",
 			role: "tablist"
-		}), this.rowsEl = K("div", { class: "cp-rows" }), this.statusEl = K("footer", { class: "cp-status" }), this.camBtn = K("button", {
+		}), this.rowsEl = q("div", { class: "cp-rows" }), this.statusEl = q("footer", { class: "cp-status" }), this.camBtn = q("button", {
 			class: "cp-chip",
 			title: "Aproximar no rosto ou ver o corpo inteiro",
 			onclick: () => this.toggleCamera()
-		}), this.prevBtn = K("button", {
+		}), this.prevBtn = q("button", {
 			class: "cp-btn cp-ghost",
 			onclick: () => this.stepGroup(-1)
-		}, "‹ Anterior"), this.nextBtn = K("button", {
+		}, "‹ Anterior"), this.nextBtn = q("button", {
 			class: "cp-btn",
 			onclick: () => this.stepGroup(1)
 		}, "Próximo ›");
-		let n = K("div", { class: "cp-chips" });
+		let n = q("div", { class: "cp-chips" });
 		for (let e of [
 			"idle",
 			"walk",
 			"run"
 		]) {
-			let t = K("button", {
+			let t = q("button", {
 				class: "cp-chip",
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, tl[e]);
+			}, nl[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
-		this.stageEl = K("section", { class: "cp-stage" }, this.canvas, K("div", {
+		this.stageEl = q("section", { class: "cp-stage" }, this.canvas, q("div", {
 			class: "cp-stage__fx",
 			"aria-hidden": "true"
-		}), K("header", { class: "cp-stage__head" }, K("span", { class: "cp-kicker" }, t.title ?? "Definir aparência"), this.nameInput, K("div", { class: "cp-tools" }, t.single ? null : this.tool(Y.plus, "Novo personagem", () => this.newCharacter()), t.single ? null : this.tool(Y.open, "Meus personagens", () => this.openList()), this.tool(Y.upload, "Importar de um arquivo", () => void this.importFile()), this.tool(Y.download, "Exportar para um arquivo", () => this.exportFile()))), K("footer", { class: "cp-stage__foot" }, K("div", { class: "cp-rotate" }, K("button", {
+		}), q("header", { class: "cp-stage__head" }, q("span", { class: "cp-kicker" }, t.title ?? "Definir aparência"), this.nameInput, q("div", { class: "cp-tools" }, t.single ? null : this.tool(X.plus, "Novo personagem", () => this.newCharacter()), t.single ? null : this.tool(X.open, "Meus personagens", () => this.openList()), this.tool(X.upload, "Importar de um arquivo", () => void this.importFile()), this.tool(X.download, "Exportar para um arquivo", () => this.exportFile()))), q("footer", { class: "cp-stage__foot" }, q("div", { class: "cp-rotate" }, q("button", {
 			class: "cp-round",
 			title: "Girar (Q)",
 			onclick: () => this.turn(-1)
-		}, "⟲"), K("span", {}, "Arraste pra girar"), K("button", {
+		}, "⟲"), q("span", {}, "Arraste pra girar"), q("button", {
 			class: "cp-round",
 			title: "Girar (E)",
 			onclick: () => this.turn(1)
-		}, "⟳")), K("div", { class: "cp-stage__opts" }, n, this.camBtn))), this.root = K("div", { class: "cp-root" }, this.stageEl, K("section", { class: "cp-panel" }, K("header", { class: "cp-panel__head" }, K("div", { class: "cp-panel__title" }, K("span", {
+		}, "⟳")), q("div", { class: "cp-stage__opts" }, n, this.camBtn))), this.root = q("div", { class: "cp-root" }, this.stageEl, q("section", { class: "cp-panel" }, q("header", { class: "cp-panel__head" }, q("div", { class: "cp-panel__title" }, q("span", {
 			class: "cp-panel__icon",
-			html: Y.person
-		}), K("div", {}, K("b", {}, "Personagem"), K("small", {}, "A aparência é tudo"))), K("div", { class: "cp-panel__actions" }, K("button", {
+			html: X.person
+		}), q("div", {}, q("b", {}, "Personagem"), q("small", {}, "A aparência é tudo"))), q("div", { class: "cp-panel__actions" }, q("button", {
 			class: "cp-btn cp-primary",
 			onclick: () => void this.save()
-		}, t.saveLabel ?? "Salvar"), t.back ? K("button", {
+		}, t.saveLabel ?? "Salvar"), t.back ? q("button", {
 			class: "cp-btn cp-ghost cp-x",
 			title: t.back.label,
 			"aria-label": t.back.label,
-			html: Y.close,
+			html: X.close,
 			onclick: () => void this.goBack()
-		}) : null)), this.tabsEl, this.rowsEl, K("footer", { class: "cp-panel__foot" }, K("button", {
+		}) : null)), this.tabsEl, this.rowsEl, q("footer", { class: "cp-panel__foot" }, q("button", {
 			class: "cp-btn cp-ghost",
 			title: "Sortear um personagem inteiro",
-			html: `${Y.star}<span>Aleatório</span>`,
+			html: `${X.star}<span>Aleatório</span>`,
 			onclick: () => this.randomize()
-		}), K("span", { class: "cp-spacer" }), this.prevBtn, this.nextBtn), this.statusEl)), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload), this.setupStageInput(), this.loading = mt(t.assetBase), this.root.append(this.loading), this.init();
+		}), q("span", { class: "cp-spacer" }), this.prevBtn, this.nextBtn), this.statusEl)), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), window.addEventListener("keydown", this.onKey), window.addEventListener("beforeunload", this.onBeforeUnload), this.setupStageInput(), this.loading = mt(t.assetBase), this.root.append(this.loading), this.init();
 	}
 	async init() {
 		try {
-			this.data = el(await Bt(this.opts.assetBase), this.opts.setting);
+			this.data = tl(await Bt(this.opts.assetBase), this.opts.setting);
 		} catch (e) {
 			this.loading?.remove(), this.statusEl.textContent = `Não deu pra carregar o catálogo de personagem: ${e.message}`;
 			return;
@@ -49979,7 +49985,7 @@ var tl = {
 		cancelAnimationFrame(this.raf), this.resizeObs?.disconnect(), this.thumbObserver?.disconnect(), window.removeEventListener("keydown", this.onKey), window.removeEventListener("beforeunload", this.onBeforeUnload), this.root.remove();
 	}
 	tool(e, t, n) {
-		return K("button", {
+		return q("button", {
 			class: "cp-tool",
 			title: t,
 			"aria-label": t,
@@ -49994,23 +50000,23 @@ var tl = {
 		return Kt(this.data, e, this.appearance.body, this.appearance);
 	}
 	groupOf(e) {
-		return il[e.id] ?? e.group;
+		return al[e.id] ?? e.group;
 	}
 	groups() {
-		let e = new Set(this.data.catalog.slots.filter((e) => this.itemsFor(e.id).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !rl.includes(e));
-		return [...rl, ...t].filter((t) => e.has(t));
+		let e = new Set(this.data.catalog.slots.filter((e) => this.itemsFor(e.id).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !il.includes(e));
+		return [...il, ...t].filter((t) => e.has(t));
 	}
 	slotsOfGroup(e = this.group) {
 		return this.data.catalog.slots.filter((t) => this.groupOf(t) === e && this.itemsFor(t.id).length);
 	}
 	renderTabs() {
 		let e = this.groups();
-		e.includes(this.group) || this.setGroup(e[0] ?? "Corpo", !1), this.tabsEl.replaceChildren(...e.map((e, t) => K("button", {
+		e.includes(this.group) || this.setGroup(e[0] ?? "Corpo", !1), this.tabsEl.replaceChildren(...e.map((e, t) => q("button", {
 			class: `cp-tab${e === this.group ? " cp-on" : ""}`,
 			role: "tab",
 			"aria-selected": e === this.group ? "true" : "false",
 			onclick: () => this.setGroup(e)
-		}, K("i", {}, String(t + 1)), e)));
+		}, q("i", {}, String(t + 1)), e)));
 		let t = e.indexOf(this.group);
 		this.prevBtn.disabled = t <= 0, this.nextBtn.disabled = t >= e.length - 1;
 	}
@@ -50031,7 +50037,7 @@ var tl = {
 		this.rowsEl.replaceChildren(...t), this.rowsEl.scrollTop = e, this.refreshStatus();
 	}
 	arrow(e, t) {
-		return K("button", {
+		return q("button", {
 			class: "cp-arrow",
 			title: e < 0 ? "Anterior" : "Próximo",
 			"aria-label": e < 0 ? "Anterior" : "Próximo",
@@ -50040,11 +50046,11 @@ var tl = {
 	}
 	choiceRow(e, t, n, r) {
 		let i = (e) => r((n + e + t.length) % t.length);
-		return K("div", { class: "cp-row cp-plain" }, K("div", { class: "cp-row__head" }, K("span", { class: "cp-row__label" }, e), K("span", { class: "cp-row__count" }, `${n + 1}/${t.length}`)), K("div", { class: "cp-row__ctl" }, this.arrow(-1, () => i(-1)), K("span", { class: "cp-row__value" }, t[n]), this.arrow(1, () => i(1))));
+		return q("div", { class: "cp-row cp-plain" }, q("div", { class: "cp-row__head" }, q("span", { class: "cp-row__label" }, e), q("span", { class: "cp-row__count" }, `${n + 1}/${t.length}`)), q("div", { class: "cp-row__ctl" }, this.arrow(-1, () => i(-1)), q("span", { class: "cp-row__value" }, t[n]), this.arrow(1, () => i(1))));
 	}
 	bodyRow() {
 		let e = this.appearance, t = e.body === "muscular" ? "male" : e.body;
-		return this.choiceRow("Tipo de corpo", nl.map((e) => Ht[e]), nl.indexOf(t), (e) => this.setBody(nl[e]));
+		return this.choiceRow("Tipo de corpo", rl.map((e) => Ht[e]), rl.indexOf(t), (e) => this.setBody(rl[e]));
 	}
 	shapeRows() {
 		let e = this.appearance, t = e.shape ?? {}, n = (e) => e === -1 ? 0 : e === 1 ? 2 : 1, r = (e) => e === -2 ? 0 : e === -1 ? 1 : e === 1 ? 3 : 2, i = (e, t) => this.update((n) => {
@@ -50102,7 +50108,7 @@ var tl = {
 			let r = V[(t + e + V.length) % V.length];
 			r === 1 ? delete n.height : n.height = r;
 		});
-		return K("div", { class: "cp-row cp-plain" }, K("div", { class: "cp-row__head" }, K("span", { class: "cp-row__label" }, "Altura"), K("span", { class: "cp-row__count" }, `${t + 1}/${V.length}`)), K("div", { class: "cp-row__ctl" }, this.arrow(-1, () => n(-1)), K("span", { class: "cp-row__value" }, Ut[t]), this.arrow(1, () => n(1))));
+		return q("div", { class: "cp-row cp-plain" }, q("div", { class: "cp-row__head" }, q("span", { class: "cp-row__label" }, "Altura"), q("span", { class: "cp-row__count" }, `${t + 1}/${V.length}`)), q("div", { class: "cp-row__ctl" }, this.arrow(-1, () => n(-1)), q("span", { class: "cp-row__value" }, Ut[t]), this.arrow(1, () => n(1))));
 	}
 	poseRow() {
 		return this.choiceRow("Pose", ["Em pé", "Sentado"], +(this.appearance.pose === "sitting"), (e) => this.update((t) => {
@@ -50120,28 +50126,28 @@ var tl = {
 		}));
 	}
 	skinRow() {
-		return K("div", { class: "cp-row cp-plain" }, K("div", { class: "cp-row__head" }, K("span", { class: "cp-row__label" }, "Tom de pele")), this.swatches("body", this.appearance.skin, (e) => this.update((t) => {
+		return q("div", { class: "cp-row cp-plain" }, q("div", { class: "cp-row__head" }, q("span", { class: "cp-row__label" }, "Tom de pele")), this.swatches("body", this.appearance.skin, (e) => this.update((t) => {
 			t.skin = e;
 		})));
 	}
 	slotRow(e) {
-		let t = this.appearance, n = this.itemsFor(e.id), r = t.slots[e.id], i = r && this.data.byId.get(r.id), a = e.id === this.slot, o = n.length + +!e.required, s = i ? n.findIndex((e) => e.id === i.id) + 1 + +!e.required : 1, c = K("div", {
+		let t = this.appearance, n = this.itemsFor(e.id), r = t.slots[e.id], i = r && this.data.byId.get(r.id), a = e.id === this.slot, o = n.length + +!e.required, s = i ? n.findIndex((e) => e.id === i.id) + 1 + +!e.required : 1, c = q("div", {
 			class: `cp-row${a ? " cp-on" : ""}${i ? " cp-filled" : ""}`,
 			"data-slot": e.id
-		}, K("button", {
+		}, q("button", {
 			class: "cp-row__head",
 			onclick: () => this.focusSlot(e.id)
-		}, K("span", { class: "cp-row__label" }, e.label), K("span", { class: "cp-row__count" }, `${s}/${o}`)), K("div", { class: "cp-row__ctl" }, this.arrow(-1, () => this.cycle(e, -1)), K("button", {
+		}, q("span", { class: "cp-row__label" }, e.label), q("span", { class: "cp-row__count" }, `${s}/${o}`)), q("div", { class: "cp-row__ctl" }, this.arrow(-1, () => this.cycle(e, -1)), q("button", {
 			class: "cp-row__value",
 			title: "Ver todas as opções",
 			onclick: () => {
 				this.focusSlot(e.id), this.openGrid(e);
 			}
-		}, i ? Xt(i) : "Nenhum"), this.arrow(1, () => this.cycle(e, 1)), K("button", {
+		}, i ? Xt(i) : "Nenhum"), this.arrow(1, () => this.cycle(e, 1)), q("button", {
 			class: "cp-arrow cp-grid",
 			title: "Ver todas as opções",
 			"aria-label": "Ver todas as opções",
-			html: Y.grid,
+			html: X.grid,
 			onclick: () => {
 				this.focusSlot(e.id), this.openGrid(e);
 			}
@@ -50152,12 +50158,12 @@ var tl = {
 		let r = [];
 		for (let i of n.colors ?? []) {
 			if (i.material === "body" && n.matchBody) continue;
-			let a = i.label ? sl[i.label] ?? i.label : n.colors.length > 1 ? `Cor (${cl[i.material] ?? i.material})` : "Cor";
-			r.push(K("div", { class: "cp-sub" }, a), this.swatches(i.material, t.colors?.[i.key] ?? null, (t) => this.update((n) => {
+			let a = i.label ? cl[i.label] ?? i.label : n.colors.length > 1 ? `Cor (${ll[i.material] ?? i.material})` : "Cor";
+			r.push(q("div", { class: "cp-sub" }, a), this.swatches(i.material, t.colors?.[i.key] ?? null, (t) => this.update((n) => {
 				(n.slots[e.id].colors ??= {})[i.key] = t;
 			})));
 		}
-		return n.variants && n.variants.length > 1 && r.push(K("div", { class: "cp-sub" }, "Versão"), K("div", { class: "cp-chips cp-wrap" }, ...n.variants.map((n) => K("button", {
+		return n.variants && n.variants.length > 1 && r.push(q("div", { class: "cp-sub" }, "Versão"), q("div", { class: "cp-chips cp-wrap" }, ...n.variants.map((n) => q("button", {
 			class: `cp-chip${t.variant === n ? " cp-on" : ""}`,
 			onclick: () => this.update((t) => {
 				t.slots[e.id].variant = n;
@@ -50165,7 +50171,7 @@ var tl = {
 		}, n.replace(/_/g, " "))))), r;
 	}
 	swatches(e, t, n) {
-		return K("div", { class: "cp-swatches" }, ...Object.keys(this.data.palettes[e] ?? {}).map((r) => K("button", {
+		return q("div", { class: "cp-swatches" }, ...Object.keys(this.data.palettes[e] ?? {}).map((r) => q("button", {
 			class: `cp-swatch${r === t ? " cp-on" : ""}`,
 			title: r.replace(/_/g, " "),
 			style: `background:${Gt(this.data.palettes, e, r)}`,
@@ -50173,8 +50179,8 @@ var tl = {
 		})));
 	}
 	openGrid(e) {
-		let t = this.appearance, n = this.itemsFor(e.id), r = t.slots[e.id], i = K("div", { class: "cp-grid-list" }), a = K("div", { class: "cp-modal-body" }, i), o = () => {};
-		e.required || i.append(K("button", {
+		let t = this.appearance, n = this.itemsFor(e.id), r = t.slots[e.id], i = q("div", { class: "cp-grid-list" }), a = q("div", { class: "cp-modal-body" }, i), o = () => {};
+		e.required || i.append(q("button", {
 			class: `cp-cell cp-none${r ? "" : " cp-on"}`,
 			title: "Nenhum",
 			onclick: () => {
@@ -50182,7 +50188,7 @@ var tl = {
 					delete t.slots[e.id];
 				}), o();
 			}
-		}, K("span", {}, "Nenhum"))), this.thumbObserver?.disconnect();
+		}, q("span", {}, "Nenhum"))), this.thumbObserver?.disconnect();
 		let s = new IntersectionObserver((t) => {
 			for (let n of t) n.isIntersecting && (s.unobserve(n.target), this.drawThumb(n.target, e.id));
 		}, {
@@ -50191,20 +50197,20 @@ var tl = {
 		});
 		this.thumbObserver = s;
 		for (let t of n) {
-			let n = K("button", {
+			let n = q("button", {
 				class: `cp-cell${r?.id === t.id ? " cp-on" : ""}`,
 				title: Xt(t),
 				"data-item": t.id,
 				onclick: () => {
 					this.chooseItem(e.id, t), o();
 				}
-			}, K("canvas", {
+			}, q("canvas", {
 				width: 64,
 				height: 64
-			}), K("span", {}, Xt(t)));
+			}), q("span", {}, Xt(t)));
 			i.append(n), s.observe(n);
 		}
-		o = this.modal(`${e.label} — ${n.length} opç${n.length === 1 ? "ão" : "ões"}`, [a], [K("button", {
+		o = this.modal(`${e.label} — ${n.length} opç${n.length === 1 ? "ão" : "ões"}`, [a], [q("button", {
 			class: "cp-btn cp-ghost",
 			onclick: () => o()
 		}, "Fechar")]);
@@ -50226,7 +50232,7 @@ var tl = {
 				}, r = await ar(this.opts.assetBase, {
 					...a,
 					slots: {
-						...pl(a, ["body", "head"]),
+						...ml(a, ["body", "head"]),
 						hair: n,
 						[t]: o
 					}
@@ -50238,7 +50244,7 @@ var tl = {
 				let n = await ar(this.opts.assetBase, {
 					...a,
 					slots: {
-						...pl(a, ["body", "head"]),
+						...ml(a, ["body", "head"]),
 						[t]: o
 					}
 				});
@@ -50247,7 +50253,7 @@ var tl = {
 			}
 			let [s, c] = await Promise.all([this.baseThumb ??= ar(this.opts.assetBase, {
 				...a,
-				slots: pl(a, ["body", "head"])
+				slots: ml(a, ["body", "head"])
 			}), ar(this.opts.assetBase, {
 				...a,
 				slots: { [t]: o }
@@ -50331,13 +50337,13 @@ var tl = {
 	refreshStatus() {
 		if (!this.data) return;
 		let e = Object.keys(this.appearance.slots).length;
-		this.statusEl.replaceChildren(K("span", {}, `${this.data.catalog.items.length} peças no catálogo · ${e} neste personagem`), this.dirty ? K("span", { class: "cp-dirty" }, "● não salvo") : K("span", {}, "salvo"), K("button", {
+		this.statusEl.replaceChildren(q("span", {}, `${this.data.catalog.items.length} peças no catálogo · ${e} neste personagem`), this.dirty ? q("span", { class: "cp-dirty" }, "● não salvo") : q("span", {}, "salvo"), q("button", {
 			class: "cp-link",
 			onclick: () => this.openCredits()
 		}, "Créditos da arte"));
 	}
 	cameraMode() {
-		return this.camOverride ? this.camOverride : al.has(this.slot) || ol.has(this.group) ? "face" : "body";
+		return this.camOverride ? this.camOverride : ol.has(this.slot) || sl.has(this.group) ? "face" : "body";
 	}
 	toggleCamera() {
 		this.camOverride = this.cameraMode() === "face" ? "body" : "face";
@@ -50368,7 +50374,7 @@ var tl = {
 		let i = `${this.rev}:${e}:${t}:${n}`, a = this.upCache.get(i);
 		if (!a) {
 			let e = document.createElement("canvas");
-			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = fo(e, ul), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
+			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = fo(e, dl), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
 		}
 		return a;
 	}
@@ -50381,7 +50387,7 @@ var tl = {
 			n = i, this.fitCanvas();
 			let o = this.canvas.width, s = this.canvas.height;
 			e.clearRect(0, 0, o, s);
-			let c = this.cameraMode(), l = ll[c], u = 1 - Math.exp(-a * 7);
+			let c = this.cameraMode(), l = ul[c], u = 1 - Math.exp(-a * 7);
 			this.hs += ((this.appearance.height ?? 1) - this.hs) * u;
 			let d = this.hs, f = 62 - (62 - l.cy) * d, p = Math.max(l.h * (c === "body" ? Math.max(1, d) : 1), l.minW * d / (o / s));
 			this.cam.cx += (l.cx - this.cam.cx) * u, this.cam.cy += (f - this.cam.cy) * u, this.cam.h += (p - this.cam.h) * u, this.camBtn.textContent = this.cameraMode() === "face" ? "Ver o corpo" : "Ver o rosto";
@@ -50390,7 +50396,7 @@ var tl = {
 			let { frames: h, rate: g } = Kn[this.anim], _ = +(this.anim === "walk"), v = h - _, y = _ + Math.floor((i - t) / 1e3 * g) % v, b = this.upscaled(this.anim, this.dir, y, m), x = this.cam.h, S = o / s * x, C = this.cam.cx - S / 2, w = this.cam.cy - x / 2, T = o / S, E = (32 - C) * T, D = (61.5 - w) * T;
 			e.save(), e.translate(E, D), e.scale(1, .22);
 			let O = 17 * T, k = e.createRadialGradient(0, 0, 0, 0, 0, O);
-			k.addColorStop(0, "rgba(0,0,0,0.55)"), k.addColorStop(.7, "rgba(0,0,0,0.25)"), k.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = k, e.beginPath(), e.arc(0, 0, O, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, T * .35), e.beginPath(), e.arc(0, 0, O * .82, 0, Math.PI * 2), e.stroke(), e.restore(), e.save(), e.translate(E, (62 - w) * T), e.scale(this.hs, this.hs), e.translate(-E, -(62 - w) * T), ml(e, b, C * dl, w * dl, S * dl, x * dl, 0, 0, o, s), e.restore();
+			k.addColorStop(0, "rgba(0,0,0,0.55)"), k.addColorStop(.7, "rgba(0,0,0,0.25)"), k.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = k, e.beginPath(), e.arc(0, 0, O, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, T * .35), e.beginPath(), e.arc(0, 0, O * .82, 0, Math.PI * 2), e.stroke(), e.restore(), e.save(), e.translate(E, (62 - w) * T), e.scale(this.hs, this.hs), e.translate(-E, -(62 - w) * T), hl(e, b, C * fl, w * fl, S * fl, x * fl, 0, 0, o, s), e.restore();
 		};
 		this.raf = requestAnimationFrame(r);
 	}
@@ -50445,15 +50451,15 @@ var tl = {
 	}
 	exportFile() {
 		let e = this.nameInput.value.trim() || "Sem nome";
-		qc(Gc(e), Wc([{
+		Jc(Kc(e), Gc([{
 			name: e,
 			appearance: this.appearance
 		}])), this.toast(`"${e}" exportado.`);
 	}
 	async importFile() {
-		let e = await Jc();
+		let e = await Yc();
 		if (e !== null) try {
-			let [t] = Kc(e, this.data);
+			let [t] = qc(e, this.data);
 			if (this.dirty && !await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) return;
 			this.character = this.opts.single ? {
 				...t,
@@ -50467,19 +50473,19 @@ var tl = {
 		this.dirty && await vtConfirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?`, { title: "Salvar antes de sair?", confirmLabel: "Salvar e sair", cancelLabel: "Sair sem salvar" }) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", ks(this.opts.assetBase), [K("button", {
+		let e = this.modal("Créditos da arte", ks(this.opts.assetBase), [q("button", {
 			class: "cp-btn cp-ghost",
 			onclick: () => e()
 		}, "Fechar")]);
 	}
 	async newCharacter() {
-		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Bc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Vc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = en(this.data, this.character.appearance), this.baseThumb = null, this.renderTabs(), this.renderRows(), this.recompose();
 	}
 	async openList() {
-		let e = K("div", { class: "cp-list" }), t = this.modal("Personagens", [e], [K("button", {
+		let e = q("div", { class: "cp-list" }), t = this.modal("Personagens", [e], [q("button", {
 			class: "cp-btn cp-ghost",
 			onclick: () => t()
 		}, "Fechar")]), n = async () => {
@@ -50487,25 +50493,25 @@ var tl = {
 			try {
 				[r, i] = await Promise.all([this.opts.storage.list(), this.opts.storage.getActive()]);
 			} catch (t) {
-				e.replaceChildren(K("div", { class: "cp-empty" }, `Não deu pra ler os personagens: ${t.message}`));
+				e.replaceChildren(q("div", { class: "cp-empty" }, `Não deu pra ler os personagens: ${t.message}`));
 				return;
 			}
-			e.replaceChildren(), r.length || e.append(K("div", { class: "cp-empty" }, "Nenhum personagem salvo ainda."));
+			e.replaceChildren(), r.length || e.append(q("div", { class: "cp-empty" }, "Nenhum personagem salvo ainda."));
 			for (let a of r) {
-				let r = K("canvas", {
+				let r = q("canvas", {
 					class: "cp-item-thumb",
 					width: 64,
 					height: 64
 				});
-				ar(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(K("div", { class: "cp-item" }, r, K("div", {}, K("b", {}, a.name), K("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), K("button", {
+				ar(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(q("div", { class: "cp-item" }, r, q("div", {}, q("b", {}, a.name), q("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), q("button", {
 					class: "cp-btn cp-primary",
 					onclick: async () => {
 						(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
 					}
-				}, "Usar"), K("button", {
+				}, "Usar"), q("button", {
 					class: "cp-btn cp-ghost",
 					title: "Apagar",
-					html: Y.trash,
+					html: X.trash,
 					onclick: async () => {
 						if (await vtConfirm(`Apagar "${a.name}"? Não dá pra desfazer.`, { title: "Apagar personagem", tone: "danger", confirmLabel: "Apagar" })) {
 							try {
@@ -50526,34 +50532,34 @@ var tl = {
 			this.modals = this.modals.filter((e) => e !== r), i.remove();
 		};
 		this.modals.push(r);
-		let i = K("div", {
+		let i = q("div", {
 			class: "cp-modal-bg",
 			onmousedown: (e) => {
 				e.target === i && r();
 			}
-		}, K("div", { class: "cp-modal" }, K("h3", {}, e), ...t, K("div", { class: "cp-modal-foot" }, ...n)));
+		}, q("div", { class: "cp-modal" }, q("h3", {}, e), ...t, q("div", { class: "cp-modal-foot" }, ...n)));
 		return this.root.append(i), r;
 	}
 	toast(e, t = !1) {
-		let n = K("div", { class: `cp-toast${t ? " cp-error" : ""}` }, e);
+		let n = q("div", { class: `cp-toast${t ? " cp-error" : ""}` }, e);
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function pl(e, t) {
+function ml(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
 }
-function ml(e, t, n, r, i, a, o, s, c, l) {
+function hl(e, t, n, r, i, a, o, s, c, l) {
 	let u = c / i, d = l / a, f = Math.max(0, n), p = Math.max(0, r), m = Math.min(t.width, n + i), h = Math.min(t.height, r + a);
 	m <= f || h <= p || e.drawImage(t, f, p, m - f, h - p, o + (f - n) * u, s + (p - r) * d, (m - f) * u, (h - p) * d);
 }
 //#endregion
 //#region src/engine/editor/NpcPanel.ts
-var hl = 6, gl = [
+var gl = 6, _l = [
 	"down",
 	"left",
 	"up",
 	"right"
-], _l = class {
+], vl = class {
 	state;
 	hooks;
 	el;
@@ -50568,17 +50574,17 @@ var hl = 6, gl = [
 	opened = !1;
 	off;
 	constructor(e, t) {
-		this.state = e, this.hooks = t, this.body = K("div", { class: "vt-npc-body" }), this.el = K("aside", {
+		this.state = e, this.hooks = t, this.body = q("div", { class: "vt-npc-body" }), this.el = q("aside", {
 			class: "vt-npc",
 			hidden: !0,
 			"aria-label": "Gerador de NPCs"
-		}, K("header", { class: "vt-npc-head" }, K("span", {
+		}, q("header", { class: "vt-npc-head" }, q("span", {
 			class: "vt-npc-title",
-			html: `${Y.npc}<b>Gerador de NPCs</b>`
-		}), K("button", {
+			html: `${X.npc}<b>Gerador de NPCs</b>`
+		}), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Fechar",
-			html: Y.close,
+			html: X.close,
 			onclick: () => this.close()
 		})), this.body), this.off = e.on((t) => {
 			this.opened && (t === "zone" ? (this.refreshAnalysis(!0), this.syncLinked()) : (t === "npcs" || t === "edit" || t === "ui" && e.tool !== "npc") && this.renderList());
@@ -50592,14 +50598,14 @@ var hl = 6, gl = [
 	}
 	async open() {
 		if (this.opened = !0, this.el.hidden = !1, !this.data) {
-			this.body.replaceChildren(K("div", {
+			this.body.replaceChildren(q("div", {
 				class: "vt-npc-note",
 				style: "display:flex;justify-content:center"
 			}, pt(this.hooks.assetBase, !0)));
 			try {
 				this.data = await Bt(this.hooks.assetBase);
 			} catch (e) {
-				this.body.replaceChildren(K("p", { class: "vt-npc-note vt-error" }, `Não deu pra carregar o catálogo: ${e.message}`));
+				this.body.replaceChildren(q("p", { class: "vt-npc-note vt-error" }, `Não deu pra carregar o catálogo: ${e.message}`));
 				return;
 			}
 		}
@@ -50625,29 +50631,29 @@ var hl = 6, gl = [
 		return this.style === "auto" ? this.analysis?.profile ?? "geral" : this.style;
 	}
 	newBatch() {
-		this.data && (this.drafts = Rc(this.data, this.profile, hl), this.render());
+		this.data && (this.drafts = zc(this.data, this.profile, gl), this.render());
 	}
 	render() {
 		if (!this.analysis) return;
-		let e = this.analysis, t = K("select", {
+		let e = this.analysis, t = q("select", {
 			class: "vt-select",
 			title: "Estilo dos NPCs",
 			onchange: (e) => {
 				this.style = e.target.value, this.newBatch();
 			}
-		}, K("option", { value: "auto" }, `Automático (${e.label})`), ...Object.keys(As).map((e) => K("option", { value: e }, As[e])));
+		}, q("option", { value: "auto" }, `Automático (${e.label})`), ...Object.keys(As).map((e) => q("option", { value: e }, As[e])));
 		t.value = this.style;
-		let n = K("div", { class: "vt-npc-grid" });
-		this.drafts.forEach((e, t) => n.append(this.card(e, t))), this.listEl = K("div", { class: "vt-npc-list" }), this.specialsEl = this.hooks.specials ? K("div", { class: "vt-npc-specials" }) : null, this.body.replaceChildren(K("div", { class: "vt-npc-analysis" }, K("b", {}, `Zona: ${e.label}`), e.reasons.length ? K("small", {}, `Por causa de: ${e.reasons.join(", ")}`) : null, t), K("div", { class: "vt-npc-actions" }, K("button", {
+		let n = q("div", { class: "vt-npc-grid" });
+		this.drafts.forEach((e, t) => n.append(this.card(e, t))), this.listEl = q("div", { class: "vt-npc-list" }), this.specialsEl = this.hooks.specials ? q("div", { class: "vt-npc-specials" }) : null, this.body.replaceChildren(q("div", { class: "vt-npc-analysis" }, q("b", {}, `Zona: ${e.label}`), e.reasons.length ? q("small", {}, `Por causa de: ${e.reasons.join(", ")}`) : null, t), q("div", { class: "vt-npc-actions" }, q("button", {
 			class: "vt-btn vt-primary",
-			html: `${Y.star}<span>Gerar novos</span>`,
+			html: `${X.star}<span>Gerar novos</span>`,
 			onclick: () => this.newBatch()
-		}), K("button", {
+		}), q("button", {
 			class: "vt-btn",
 			title: "Usar um personagem salvo (arquivo) como NPC",
-			html: `${Y.upload}<span>Importar personagem</span>`,
+			html: `${X.upload}<span>Importar personagem</span>`,
 			onclick: () => void this.importCharacter()
-		})), n, ...this.specialsEl ? [this.specialsEl] : [], K("h4", {}, "NPCs desta zona"), this.listEl), this.renderSpecials(), this.renderList();
+		})), n, ...this.specialsEl ? [this.specialsEl] : [], q("h4", {}, "NPCs desta zona"), this.listEl), this.renderSpecials(), this.renderList();
 	}
 	async loadSpecials() {
 		if (this.hooks.specials) {
@@ -50671,14 +50677,14 @@ var hl = 6, gl = [
 	renderSpecials() {
 		let e = this.specialsEl;
 		if (!e) return;
-		let t = this.specials, n = K("button", {
+		let t = this.specials, n = q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Ler de novo as fichas",
-			html: Y.undo,
+			html: X.undo,
 			onclick: () => void this.loadSpecials()
 		}), r = new Set((this.state.zone.npcs ?? []).map((e) => e.sheet).filter(Boolean));
-		e.replaceChildren(K("h4", {}, "NPCs especiais (com ficha)", n), t ? t.length === 0 ? K("p", { class: "vt-npc-note" }, "Nenhum ainda. Na aba Ficha, em NPCs, crie o personagem de um NPC.") : K("div", { class: "vt-npc-specials-list" }, ...t.map((e) => {
-			let t = K("canvas", {
+		e.replaceChildren(q("h4", {}, "NPCs especiais (com ficha)", n), t ? t.length === 0 ? q("p", { class: "vt-npc-note" }, "Nenhum ainda. Na aba Ficha, em NPCs, crie o personagem de um NPC.") : q("div", { class: "vt-npc-specials-list" }, ...t.map((e) => {
+			let t = q("canvas", {
 				class: "vt-npc-mini",
 				width: 64,
 				height: 64
@@ -50689,13 +50695,13 @@ var hl = 6, gl = [
 				appearance: e.appearance
 			});
 			let n = r.has(e.key);
-			return K("div", { class: "vt-npc-item" }, t, K("div", { class: "vt-npc-info" }, K("b", { title: e.name }, e.name), K("small", {}, n ? "já está nesta zona" : "com ficha")), K("button", {
+			return q("div", { class: "vt-npc-item" }, t, q("div", { class: "vt-npc-info" }, q("b", { title: e.name }, e.name), q("small", {}, n ? "já está nesta zona" : "com ficha")), q("button", {
 				class: "vt-btn vt-primary",
 				title: "Escolher e clicar no mapa pra posicionar",
-				html: `${Y.plus}<span>Adicionar</span>`,
+				html: `${X.plus}<span>Adicionar</span>`,
 				onclick: () => this.pickSpecial(e)
 			}));
-		})) : K("p", { class: "vt-npc-note" }, "Lendo as fichas…"));
+		})) : q("p", { class: "vt-npc-note" }, "Lendo as fichas…"));
 	}
 	pickSpecial(e) {
 		let t = (this.state.zone.npcs ?? []).find((t) => t.sheet === e.key);
@@ -50712,23 +50718,23 @@ var hl = 6, gl = [
 	}
 	listEl = null;
 	card(e, t) {
-		let n = K("canvas", {
+		let n = q("canvas", {
 			class: "vt-npc-thumb",
 			width: 64,
 			height: 64
 		});
-		return this.paint(n, e), K("div", { class: "vt-npc-card" }, K("button", {
+		return this.paint(n, e), q("div", { class: "vt-npc-card" }, q("button", {
 			class: "vt-btn vt-icononly vt-npc-reroll",
 			title: "Sortear outro com o mesmo estilo",
-			html: Y.star,
+			html: X.star,
 			onclick: () => this.reroll(t)
-		}), n, K("b", {
+		}), n, q("b", {
 			class: "vt-npc-name",
 			title: e.name
-		}, e.name), K("small", {}, e.role), K("div", { class: "vt-npc-row" }, K("button", {
+		}, e.name), q("small", {}, e.role), q("div", { class: "vt-npc-row" }, q("button", {
 			class: "vt-btn vt-primary",
 			title: "Escolher e clicar no mapa pra posicionar",
-			html: `${Y.plus}<span>Adicionar</span>`,
+			html: `${X.plus}<span>Adicionar</span>`,
 			onclick: () => this.pick(e)
 		})));
 	}
@@ -50739,13 +50745,13 @@ var hl = 6, gl = [
 		} catch {}
 	}
 	reroll(e) {
-		this.data && (this.drafts[e] = Mc(this.data, { profile: this.profile }), this.render());
+		this.data && (this.drafts[e] = Nc(this.data, { profile: this.profile }), this.render());
 	}
 	async importCharacter() {
 		if (this.data) try {
-			let e = await Jc();
+			let e = await Yc();
 			if (e == null) return;
-			let [t] = Kc(e, this.data);
+			let [t] = qc(e, this.data);
 			this.pick({
 				name: t.name,
 				role: "",
@@ -50769,51 +50775,51 @@ var hl = 6, gl = [
 		if (!e) return;
 		let t = this.state.zone.npcs ?? [];
 		if (!t.length) {
-			e.replaceChildren(K("p", { class: "vt-npc-note" }, "Nenhum NPC aqui ainda."));
+			e.replaceChildren(q("p", { class: "vt-npc-note" }, "Nenhum NPC aqui ainda."));
 			return;
 		}
 		e.replaceChildren(...t.map((e) => this.row(e)));
 	}
 	row(e) {
-		let t = K("canvas", {
+		let t = q("canvas", {
 			class: "vt-npc-mini",
 			width: 64,
 			height: 64
 		});
-		return this.paint(t, e), K("div", { class: `vt-npc-item${this.state.npcDraft?.id === e.id ? " vt-on" : ""}` }, t, K("div", { class: "vt-npc-info" }, K("b", { title: e.name }, e.name), K("small", {}, e.role)), K("button", {
+		return this.paint(t, e), q("div", { class: `vt-npc-item${this.state.npcDraft?.id === e.id ? " vt-on" : ""}` }, t, q("div", { class: "vt-npc-info" }, q("b", { title: e.name }, e.name), q("small", {}, e.role)), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Ver no mapa",
-			html: Y.center,
+			html: X.center,
 			onclick: () => this.hooks.focus(e.x, e.y - 20)
-		}), K("button", {
+		}), q("button", {
 			class: `vt-btn vt-icononly${e.showName ? " vt-on" : ""}`,
 			title: e.showName ? "Nome em cima da cabeça: ligado" : "Nome em cima da cabeça: desligado",
-			html: Y.nametag,
+			html: X.nametag,
 			onclick: () => this.toggleName(e)
-		}), e.sheet ? K("span", {
+		}), e.sheet ? q("span", {
 			class: "vt-btn vt-icononly vt-on",
 			title: "NPC especial: a aparência vem da ficha dele",
 			style: "cursor:default",
-			html: Y.star
-		}) : K("button", {
+			html: X.star
+		}) : q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Alterar a aparência (o mesmo criador do personagem)",
-			html: Y.person,
+			html: X.person,
 			onclick: () => this.editLook(e)
-		}), K("button", {
+		}), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Virar (muda pra onde ele olha)",
-			html: Y.flip,
+			html: X.flip,
 			onclick: () => this.turn(e)
-		}), K("button", {
+		}), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Mover: clique no novo lugar",
-			html: Y.select,
+			html: X.select,
 			onclick: () => this.move(e)
-		}), K("button", {
+		}), q("button", {
 			class: "vt-btn vt-icononly vt-danger",
 			title: "Remover da zona",
-			html: Y.trash,
+			html: X.trash,
 			onclick: () => this.remove(e)
 		}));
 	}
@@ -50833,11 +50839,11 @@ var hl = 6, gl = [
 			remove: async () => {},
 			getActive: async () => e.id,
 			setActive: async () => {}
-		}, r = K("div", { class: "vt-npc-look" });
+		}, r = q("div", { class: "vt-npc-look" });
 		document.body.append(r);
 		let i = () => {
 			a.destroy(), r.remove(), this.look = null;
-		}, a = new fl(r, {
+		}, a = new pl(r, {
 			assetBase: this.hooks.assetBase,
 			storage: n,
 			single: !0,
@@ -50860,7 +50866,7 @@ var hl = 6, gl = [
 		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
 	}
 	turn(e) {
-		this.state.checkpoint(), e.dir = gl[(gl.indexOf(e.dir) + 1) % gl.length], this.state.emit("npcs"), this.state.edited();
+		this.state.checkpoint(), e.dir = _l[(_l.indexOf(e.dir) + 1) % _l.length], this.state.emit("npcs"), this.state.edited();
 	}
 	move(e) {
 		this.state.set({
@@ -50882,7 +50888,7 @@ var hl = 6, gl = [
 			npcDraft: null
 		}), this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${e.name}" removido.`);
 	}
-}, vl = {
+}, yl = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -50890,8 +50896,8 @@ var hl = 6, gl = [
 	intensity: 1,
 	flicker: .2
 };
-function yl(e, t, n) {
-	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = K("canvas", {
+function bl(e, t, n) {
+	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = q("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
 		height: e.h * l + 24
@@ -50923,7 +50929,7 @@ function yl(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? vl,
+			...o ?? yl,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -50950,21 +50956,21 @@ function yl(e, t, n) {
 		};
 		h = null, n.w >= 2 && n.h >= 2 && (r.push(n), c = r.length - 1, a = !1), I(), m();
 	});
-	let v = (e, t) => K("div", { class: "vt-row" }, K("label", {}, e), t), y = K("input", {
+	let v = (e, t) => q("div", { class: "vt-row" }, q("label", {}, e), t), y = q("input", {
 		class: "vt-input",
 		value: e.label
-	}), b = `vt-cats-${Math.random().toString(36).slice(2)}`, x = K("input", {
+	}), b = `vt-cats-${Math.random().toString(36).slice(2)}`, x = q("input", {
 		class: "vt-input",
 		value: e.category,
 		list: b
-	}), S = K("datalist", { id: b }, ...n.map((e) => K("option", { value: e }))), C = K("input", {
+	}), S = q("datalist", { id: b }, ...n.map((e) => q("option", { value: e }))), C = q("input", {
 		class: "vt-input",
 		value: e.tags.join(", "),
 		placeholder: "madeira, interior, ..."
-	}), w = K("select", { class: "vt-select" }, ...Object.keys(Le).map((t) => K("option", {
+	}), w = q("select", { class: "vt-select" }, ...Object.keys(Le).map((t) => q("option", {
 		value: t,
 		selected: t === e.kind
-	}, Le[t]))), T = K("input", {
+	}, Le[t]))), T = q("input", {
 		class: "vt-input vt-num",
 		type: "number",
 		min: 0,
@@ -50972,39 +50978,39 @@ function yl(e, t, n) {
 		oninput: () => {
 			i = Math.max(0, Number(T.value) || 0), a = !1, m();
 		}
-	}), E = e.anim ? K("input", {
+	}), E = e.anim ? q("input", {
 		class: "vt-input vt-num",
 		type: "number",
 		min: 1,
 		max: 30,
 		value: e.anim.fps
-	}) : null, D = K("input", { type: "checkbox" }), O = K("small", { class: "vt-note" }), k = K("input", {
+	}) : null, D = q("input", { type: "checkbox" }), O = q("small", { class: "vt-note" }), k = q("input", {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? vl } : null, F(), m();
+			o = k.checked ? { ...o ?? yl } : null, F(), m();
 		}
-	}), A = K("input", {
+	}), A = q("input", {
 		class: "vt-input vt-num",
 		type: "number",
 		min: 8,
 		max: 512
-	}), j = K("input", {
+	}), j = q("input", {
 		class: "vt-color",
 		type: "color"
-	}), M = K("input", {
+	}), M = q("input", {
 		class: "vt-input vt-num",
 		type: "number",
 		min: .1,
 		max: 2,
 		step: .1
-	}), N = K("input", {
+	}), N = q("input", {
 		class: "vt-input vt-num",
 		type: "number",
 		min: 0,
 		max: 1,
 		step: .05
-	}), P = K("div", { class: "vt-curate-light" }, v("Raio", A), v("Cor", j), v("Força", M), v("Tremor", N));
+	}), P = q("div", { class: "vt-curate-light" }, v("Raio", A), v("Cor", j), v("Força", M), v("Tremor", N));
 	for (let e of [
 		A,
 		j,
@@ -51025,7 +51031,7 @@ function yl(e, t, n) {
 	function I() {
 		T.value = String(i), O.textContent = a ? "Colisão automática (calculada pela arte)." : "";
 	}
-	let L = /* @__PURE__ */ new Map(), R = K("div", { class: "vt-curate-modes" });
+	let L = /* @__PURE__ */ new Map(), R = q("div", { class: "vt-curate-modes" });
 	for (let [e, t, n] of [
 		[
 			"solid",
@@ -51043,7 +51049,7 @@ function yl(e, t, n) {
 			"Clique onde a luz nasce"
 		]
 	]) {
-		let r = K("button", {
+		let r = q("button", {
 			class: "vt-chip",
 			title: n,
 			onclick: () => {
@@ -51054,18 +51060,18 @@ function yl(e, t, n) {
 		L.set(e, r), R.append(r);
 	}
 	L.get("solid").classList.add("vt-on");
-	let z = Je(e).length, B = [K("div", { class: "vt-curate" }, K("div", { class: "vt-curate-art" }, R, u, K("div", { class: "vt-row" }, K("button", {
+	let z = Je(e).length, B = [q("div", { class: "vt-curate" }, q("div", { class: "vt-curate-art" }, R, u, q("div", { class: "vt-row" }, q("button", {
 		class: "vt-btn",
 		onclick: () => {
 			r = [], c = -1, a = !1, I(), m();
 		}
-	}, "Sem colisão"), K("button", {
+	}, "Sem colisão"), q("button", {
 		class: "vt-btn",
 		title: "Volta a colisão e a linha do pé calculadas pela arte (vale ao salvar)",
 		onclick: () => {
 			a = !0, I();
 		}
-	}, "Automática")), O), K("div", { class: "vt-curate-fields" }, v("Nome", y), v("Categoria", x), S, v("Tags", C), v("Tipo", w), v("Linha do pé", K("span", { class: "vt-row" }, T, K("small", { class: "vt-note" }, "px acima da base"))), E ? v("Quadros/s", E) : null, K("label", { class: "vt-check" }, k, " Emite luz"), P, K("label", { class: "vt-check" }, D, " Esconder do catálogo (peça ruim ou repetida)"), K("small", { class: "vt-note" }, `${e.id} · pacote ${e.pack}${z > 1 ? ` · vale para as ${z} variantes` : ""}`)))];
+	}, "Automática")), O), q("div", { class: "vt-curate-fields" }, v("Nome", y), v("Categoria", x), S, v("Tags", C), v("Tipo", w), v("Linha do pé", q("span", { class: "vt-row" }, T, q("small", { class: "vt-note" }, "px acima da base"))), E ? v("Quadros/s", E) : null, q("label", { class: "vt-check" }, k, " Emite luz"), P, q("label", { class: "vt-check" }, D, " Esconder do catálogo (peça ruim ou repetida)"), q("small", { class: "vt-note" }, `${e.id} · pacote ${e.pack}${z > 1 ? ` · vale para as ${z} variantes` : ""}`)))];
 	return F(), I(), m(), {
 		body: B,
 		value() {
@@ -51082,7 +51088,7 @@ function yl(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function bl(e) {
+function xl(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -51090,14 +51096,14 @@ function bl(e) {
 		return [];
 	}
 }
-function xl(e, t) {
+function Sl(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
 //#region src/engine/storage.ts
-function Sl(e, t = Date.now()) {
+function Cl(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -51111,7 +51117,7 @@ function Sl(e, t = Date.now()) {
 		}))
 	};
 }
-function Cl(e = "Meu mundo") {
+function wl(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: F("mundo"),
@@ -51120,7 +51126,7 @@ function Cl(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var wl = class {
+var Tl = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -51145,9 +51151,9 @@ var wl = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Fl(JSON.parse(e));
+			if (e) return Il(JSON.parse(e));
 		} catch {}
-		return Cl();
+		return wl();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -51158,19 +51164,19 @@ var wl = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? Dl(JSON.parse(t)) : null;
+			return t ? Ol(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Sl(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Cl(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function Tl() {
+function El() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -51178,14 +51184,14 @@ function Tl() {
 		return !1;
 	}
 }
-var El = (e) => typeof e == "number" && Number.isFinite(e);
-function Dl(e) {
+var Dl = (e) => typeof e == "number" && Number.isFinite(e);
+function Ol(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
 	if (!i(n) || !i(r)) throw Error("Tamanho de zona inválido (precisa ser de 8 a 128 tiles).");
 	if (!Array.isArray(t.corners) || t.corners.length !== (n + 1) * (r + 1)) throw Error("Zona corrompida: a grade de terrenos não bate com o tamanho.");
-	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && El(e.x) && El(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && El(e.x) && El(e.y) && El(e.w) && El(e.h) && e.w > 0 && e.h > 0), l = t.spawn && El(t.spawn.x) && El(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
+	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && Dl(e.x) && Dl(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && Dl(e.x) && Dl(e.y) && Dl(e.w) && Dl(e.h) && e.w > 0 && e.h > 0), l = t.spawn && Dl(t.spawn.x) && Dl(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
 		x: a / 2,
 		y: o / 2
 	};
@@ -51205,12 +51211,12 @@ function Dl(e) {
 			x: Math.round(e.x),
 			y: Math.round(e.y),
 			...e.flip === !0 ? { flip: !0 } : {},
-			...El(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
+			...Dl(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...jl(t.lighting),
-		...Nl(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: Pl(t.lights, a, o) } : {},
-		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: Ol(t.npcs, a, o) } : {},
+		...Ml(t.lighting),
+		...Pl(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: Fl(t.lights, a, o) } : {},
+		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: kl(t.npcs, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -51229,12 +51235,12 @@ function Dl(e) {
 		}
 	};
 }
-function Ol(e, t, n) {
+function kl(e, t, n) {
 	let r = [];
 	for (let i of e) {
 		let e = i;
-		if (!e || typeof e != "object" || !El(e.x) || !El(e.y)) continue;
-		let a = Vc({
+		if (!e || typeof e != "object" || !Dl(e.x) || !Dl(e.y)) continue;
+		let a = Hc({
 			id: "x",
 			name: e.name,
 			appearance: e.appearance
@@ -51244,8 +51250,8 @@ function Ol(e, t, n) {
 			name: typeof e.name == "string" && e.name.trim() ? e.name.trim().slice(0, 60) : "NPC",
 			role: typeof e.role == "string" ? e.role.slice(0, 60) : "",
 			appearance: a.appearance,
-			x: Al(Math.round(e.x), 0, t),
-			y: Al(Math.round(e.y), 0, n),
+			x: jl(Math.round(e.x), 0, t),
+			y: jl(Math.round(e.y), 0, n),
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {},
 			...typeof e.sheet == "string" && e.sheet ? { sheet: e.sheet.slice(0, 120) } : {}
@@ -51253,29 +51259,29 @@ function Ol(e, t, n) {
 	}
 	return r;
 }
-var kl = /^#[0-9a-f]{6}$/i, Al = (e, t, n) => Math.max(t, Math.min(n, e));
-function jl(e) {
+var Al = /^#[0-9a-f]{6}$/i, jl = (e, t, n) => Math.max(t, Math.min(n, e));
+function Ml(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		...typeof t.tint == "string" && kl.test(t.tint) ? { tint: t.tint } : {},
+		...typeof t.tint == "string" && Al.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...El(t.wind) ? { wind: Al(t.wind, 0, 1) } : {},
+		...Dl(t.wind) ? { wind: jl(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {}
 	} };
 }
-function Ml(e) {
+function Nl(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {
-		hour: El(t.hour) ? Al(t.hour, 0, 24) % 24 : null,
-		...El(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Al(t.dayMinutes, 1, 1440) } : {},
+		hour: Dl(t.hour) ? jl(t.hour, 0, 24) % 24 : null,
+		...Dl(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: jl(t.dayMinutes, 1, 1440) } : {},
 		...typeof t.weather == "string" && t.weather in Xi && t.weather !== "clear" ? { weather: t.weather } : {}
 	};
 	return n.hour === null && n.dayMinutes === void 0 && n.weather === void 0 ? {} : { sky: n };
 }
-function Nl(e) {
+function Pl(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -51297,7 +51303,7 @@ function Nl(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && El(i) && i > 0 && (n[t] = Al(i, 0, 1));
+		r.includes(t) && Dl(i) && i > 0 && (n[t] = jl(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -51305,22 +51311,22 @@ function Nl(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function Pl(e, t, n) {
-	return e.filter((e) => !!e && typeof e == "object" && El(e.x) && El(e.y)).map((e) => ({
+function Fl(e, t, n) {
+	return e.filter((e) => !!e && typeof e == "object" && Dl(e.x) && Dl(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : F("luz"),
-		x: Al(Math.round(e.x), 0, t),
-		y: Al(Math.round(e.y), 0, n),
-		radius: El(e.radius) ? Al(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && kl.test(e.color) ? e.color : "#ffb060",
-		intensity: El(e.intensity) ? Al(e.intensity, 0, 1) : 1,
-		flicker: El(e.flicker) ? Al(e.flicker, 0, 1) : 0
+		x: jl(Math.round(e.x), 0, t),
+		y: jl(Math.round(e.y), 0, n),
+		radius: Dl(e.radius) ? jl(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && Al.test(e.color) ? e.color : "#ffb060",
+		intensity: Dl(e.intensity) ? jl(e.intensity, 0, 1) : 1,
+		flicker: Dl(e.flicker) ? jl(e.flicker, 0, 1) : 0
 	}));
 }
-function Fl(e) {
+function Il(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
-	for (let [e, r] of Object.entries(t.layout ?? {})) r && El(r.x) && El(r.y) && (n[e] = {
+	for (let [e, r] of Object.entries(t.layout ?? {})) r && Dl(r.x) && Dl(r.y) && (n[e] = {
 		x: r.x,
 		y: r.y
 	});
@@ -51330,12 +51336,12 @@ function Fl(e) {
 		name: typeof t.name == "string" ? t.name : "Meu mundo",
 		start: typeof t.start == "string" ? t.start : null,
 		layout: n,
-		...Ml(t.sky)
+		...Nl(t.sky)
 	};
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var Il = [
+var Ll = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -51386,16 +51392,16 @@ var Il = [
 		label: "Régua: segure e arraste pra medir em metros (1 tile = 1 m)",
 		key: "R"
 	}
-], Ll = 8, Rl = "vortable:objects:favorites", zl = "vortable:editor:drawer";
-function Bl(e) {
+], Rl = 8, zl = "vortable:objects:favorites", Bl = "vortable:editor:drawer";
+function Vl(e) {
 	try {
-		let t = localStorage.getItem(zl);
+		let t = localStorage.getItem(Bl);
 		return e ? t !== "0" : t === "1";
 	} catch {
 		return e;
 	}
 }
-var Vl = "vortable:objects:recent", Hl = 24, Ul = [
+var Hl = "vortable:objects:recent", Ul = 24, Wl = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -51436,7 +51442,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		"#8ae8ff",
 		0
 	]
-], Wl = "★", Gl = "⟲", Kl = class {
+], Gl = "★", Kl = "⟲", ql = class {
 	state;
 	storage;
 	hooks;
@@ -51471,8 +51477,8 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = bl(Rl);
-	recents = bl(Vl);
+	favorites = xl(zl);
+	recents = xl(Hl);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
@@ -51491,18 +51497,18 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, dt("editor", Ds), this.npcPanel = new _l(t, {
+		this.state = t, this.storage = n, this.hooks = r, dt("editor", Ds), this.npcPanel = new vl(t, {
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t),
 			specials: r.npcLibrary
-		}), this.stage = K("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildRulerBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = K("div", { class: `vt-root${Bl(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), K("div", { class: "vt-testbar" }, this.testZoneEl = K("b", { class: "vt-testzone" }), this.testClockEl = K("span", { class: "vt-testclock" }), this.muteBtn = K("button", {
+		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildRulerBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Vl(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
-		}), K("span", {}, K("kbd", {}, "WASD"), " anda, ", K("kbd", {}, "Shift"), " corre, ", K("kbd", {}, "C"), " colisões, ", K("kbd", {}, "M"), " som"), K("button", {
+		}), q("span", {}, q("kbd", {}, "WASD"), " anda, ", q("kbd", {}, "Shift"), " corre, ", q("kbd", {}, "C"), " colisões, ", q("kbd", {}, "M"), " som"), q("button", {
 			class: "vt-btn vt-primary",
-			html: `${Y.stop}<span>Voltar ao editor</span>`,
+			html: `${X.stop}<span>Voltar ao editor</span>`,
 			onclick: () => this.stopTest()
 		}))), getComputedStyle(e).position === "static" && (e.style.position = "relative"), e.append(this.root), this.root.addEventListener("click", (e) => e.target.closest("button")?.blur()), this.offState = t.on((e) => {
 			if (e === "view") return this.updateZoomBar();
@@ -51526,13 +51532,13 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 	}
 	showTestClock(e) {
 		let t = Qr(e) > .5;
-		this.testClockEl.innerHTML = `${t ? Y.sun : Y.moon}<span>${_i(e)}</span>`;
+		this.testClockEl.innerHTML = `${t ? X.sun : X.moon}<span>${_i(e)}</span>`;
 	}
 	destroy() {
 		this.offState(), this.npcPanel.destroy(), window.removeEventListener("keydown", this.onKey), window.removeEventListener("beforeunload", this.onBeforeUnload), this.root.remove();
 	}
 	iconBtn(e, t, n, r = "") {
-		return K("button", {
+		return q("button", {
 			class: `vt-btn ${r}`,
 			title: t,
 			html: `${e}<span class="vt-label">${t}</span>`,
@@ -51540,53 +51546,53 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		});
 	}
 	buildTop() {
-		this.nameInput = K("input", {
+		this.nameInput = q("input", {
 			class: "vt-name",
 			value: this.state.zone.name,
 			title: "Nome da zona",
 			oninput: () => this.setName(this.nameInput.value)
-		}), this.undoBtn = K("button", {
+		}), this.undoBtn = q("button", {
 			class: "vt-btn",
 			title: "Desfazer (Ctrl+Z)",
-			html: Y.undo,
+			html: X.undo,
 			onclick: () => this.state.undo()
-		}), this.redoBtn = K("button", {
+		}), this.redoBtn = q("button", {
 			class: "vt-btn",
 			title: "Refazer (Ctrl+Y)",
-			html: Y.redo,
+			html: X.redo,
 			onclick: () => this.state.redo()
 		});
-		let e = K("input", {
+		let e = q("input", {
 			type: "file",
 			accept: ".json,application/json",
 			style: "display:none",
 			onchange: (e) => this.importFile(e)
 		});
-		return K("header", { class: "vt-drawer-head" }, K("div", { class: "vt-drawer-title" }, K("span", { class: "vt-brand" }, "Vortable"), K("button", {
+		return q("header", { class: "vt-drawer-head" }, q("div", { class: "vt-drawer-title" }, q("span", { class: "vt-brand" }, "Vortable"), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Fechar o painel",
-			html: Y.close,
+			html: X.close,
 			onclick: () => this.setDrawer(!1)
-		})), this.nameInput, K("div", { class: "vt-drawer-actions" }, this.iconBtn(Y.plus, "Nova", () => this.openNewModal()), this.iconBtn(Y.open, "Abrir", () => this.openOpenModal()), this.iconBtn(Y.world, "Mundo", () => this.openWorldModal()), this.iconBtn(Y.save, "Salvar", () => this.save()), this.iconBtn(Y.download, "Exportar", () => this.exportZone()), this.iconBtn(Y.upload, "Importar", () => e.click()), e, this.undoBtn, this.redoBtn, this.hooks.editCharacter ? this.iconBtn(Y.person, "Personagem", () => this.openCharacter()) : null, this.iconBtn(Y.play, "Testar", () => this.startTest(), "vt-primary")));
+		})), this.nameInput, q("div", { class: "vt-drawer-actions" }, this.iconBtn(X.plus, "Nova", () => this.openNewModal()), this.iconBtn(X.open, "Abrir", () => this.openOpenModal()), this.iconBtn(X.world, "Mundo", () => this.openWorldModal()), this.iconBtn(X.save, "Salvar", () => this.save()), this.iconBtn(X.download, "Exportar", () => this.exportZone()), this.iconBtn(X.upload, "Importar", () => e.click()), e, this.undoBtn, this.redoBtn, this.hooks.editCharacter ? this.iconBtn(X.person, "Personagem", () => this.openCharacter()) : null, this.iconBtn(X.play, "Testar", () => this.startTest(), "vt-primary")));
 	}
 	buildDrawer() {
-		return K("aside", { class: "vt-drawer" }, this.hooks.externalBar ? null : this.buildTop(), this.buildPanel());
+		return q("aside", { class: "vt-drawer" }, this.hooks.externalBar ? null : this.buildTop(), this.buildPanel());
 	}
 	buildQuick() {
-		return K("div", { class: "vt-quick" }, K("button", {
+		return q("div", { class: "vt-quick" }, q("button", {
 			class: "vt-btn",
 			title: "Abrir o painel",
-			html: `${Y.menu}<span class="vt-label">Vortable</span>`,
+			html: `${X.menu}<span class="vt-label">Vortable</span>`,
 			onclick: () => this.setDrawer(!0)
-		}), K("button", {
+		}), q("button", {
 			class: "vt-btn vt-icononly",
 			title: "Salvar (Ctrl+S)",
-			html: Y.save,
+			html: X.save,
 			onclick: () => this.save()
-		}), K("button", {
+		}), q("button", {
 			class: "vt-btn vt-primary",
 			title: "Testar",
-			html: `${Y.play}<span class="vt-label">Testar</span>`,
+			html: `${X.play}<span class="vt-label">Testar</span>`,
 			onclick: () => this.startTest()
 		}));
 	}
@@ -51630,33 +51636,33 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e), this.notifyBar();
 		try {
-			localStorage.setItem(zl, e ? "1" : "0");
+			localStorage.setItem(Bl, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
-		let e = K("aside", { class: "vt-tools" });
-		for (let t of Il) {
-			let n = K("button", {
+		let e = q("aside", { class: "vt-tools" });
+		for (let t of Ll) {
+			let n = q("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
-				html: Y[t.id],
+				html: X[t.id],
 				onclick: () => this.setTool(t.id)
 			});
 			this.toolButtons.set(t.id, n), e.append(n);
 		}
-		e.append(K("hr")), this.brushLabel = K("b", {}, String(this.state.brush)), e.append(K("div", {
+		e.append(q("hr")), this.brushLabel = q("b", {}, String(this.state.brush)), e.append(q("div", {
 			class: "vt-size",
 			title: "Tamanho do pincel ([ e ])"
-		}, K("button", {
+		}, q("button", {
 			class: "vt-btn",
 			onclick: () => this.setBrush(this.state.brush + 1)
-		}, "+"), this.brushLabel, K("button", {
+		}, "+"), this.brushLabel, q("button", {
 			class: "vt-btn",
 			onclick: () => this.setBrush(this.state.brush - 1)
-		}, "−"), "pincel")), e.append(K("hr"));
+		}, "−"), "pincel")), e.append(q("hr"));
 		let t = (t, n, r, i) => {
-			let a = K("button", {
+			let a = q("button", {
 				class: "vt-tool",
 				title: n,
 				html: t,
@@ -51667,15 +51673,15 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				on: r
 			}), e.append(a);
 		};
-		return t(Y.grid, "Mostrar grade (H)", () => this.state.showGrid, () => this.state.set({ showGrid: !this.state.showGrid })), t(Y.collision, "Mostrar colisões (K)", () => this.state.showCollision, () => this.state.set({ showCollision: !this.state.showCollision })), t(Y.sun, "Ver iluminação: hora, luzes e sombras (I)", () => this.state.lightPreview, () => this.state.set({ lightPreview: !this.state.lightPreview })), t(Y.sound, "Ouvir os sons da zona no editor (U)", () => wo().editor, () => this.toggleEditorSound()), t(Y.snap, "Encaixar objetos na grade (N)", () => this.state.snap, () => this.state.set({ snap: !this.state.snap })), e.append(K("button", {
+		return t(X.grid, "Mostrar grade (H)", () => this.state.showGrid, () => this.state.set({ showGrid: !this.state.showGrid })), t(X.collision, "Mostrar colisões (K)", () => this.state.showCollision, () => this.state.set({ showCollision: !this.state.showCollision })), t(X.sun, "Ver iluminação: hora, luzes e sombras (I)", () => this.state.lightPreview, () => this.state.set({ lightPreview: !this.state.lightPreview })), t(X.sound, "Ouvir os sons da zona no editor (U)", () => wo().editor, () => this.toggleEditorSound()), t(X.snap, "Encaixar objetos na grade (N)", () => this.state.snap, () => this.state.set({ snap: !this.state.snap })), e.append(q("button", {
 			class: "vt-tool",
 			title: "Centralizar a zona (Home)",
-			html: Y.center,
+			html: X.center,
 			onclick: () => this.hooks.centerOnZone()
-		})), this.npcButton = K("button", {
+		})), this.npcButton = q("button", {
 			class: "vt-tool",
 			title: "Gerador de NPCs",
-			html: Y.npc,
+			html: X.npc,
 			onclick: () => {
 				this.npcPanel.toggle(), this.refresh();
 			}
@@ -51686,30 +51692,30 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			{
 				id: "line",
 				label: "Linha",
-				icon: Y.ruler,
+				icon: X.ruler,
 				tip: "Linha: distância e direção (Shift: ângulos de 45°)"
 			},
 			{
 				id: "rect",
 				label: "Área",
-				icon: Y.rulerRect,
+				icon: X.rulerRect,
 				tip: "Área: retângulo com largura, altura, perímetro e m² (Shift: quadrado)"
 			},
 			{
 				id: "circle",
 				label: "Círculo",
-				icon: Y.rulerCircle,
+				icon: X.rulerCircle,
 				tip: "Círculo: arraste do centro até a borda e veja raio, diâmetro e m²"
 			},
 			{
 				id: "cone",
 				label: "Cone",
-				icon: Y.rulerCone,
+				icon: X.rulerCone,
 				tip: "Cone: arraste da ponta até o alcance e veja o tamanho, a abertura e os m² (Shift: ângulos de 45°)"
 			}
 		], t = [];
 		for (let n of e) {
-			let e = K("button", {
+			let e = q("button", {
 				class: "vt-seg vt-rulerbar-btn",
 				title: n.tip,
 				"aria-label": n.tip,
@@ -51717,33 +51723,33 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 					rulerMode: n.id,
 					tool: "ruler"
 				})
-			}, K("span", {
+			}, q("span", {
 				class: "vt-rulerbar-ico",
 				html: n.icon
-			}), K("span", {}, n.label));
+			}), q("span", {}, n.label));
 			this.rulerModeButtons.set(n.id, e), t.push(e);
 		}
 		let n = us.map((e) => {
-			let t = K("button", {
+			let t = q("button", {
 				class: "vt-seg vt-rulerbar-angle-btn",
 				title: `Abertura do cone: ${e}°`,
 				onclick: () => this.state.set({ coneAngle: e })
 			}, `${e}°`);
 			return this.coneAngleButtons.set(e, t), t;
 		});
-		return this.coneAngleEl = K("div", {
+		return this.coneAngleEl = q("div", {
 			class: "vt-segmented vt-rulerbar-angles",
 			hidden: !0
-		}, K("span", { class: "vt-rulerbar-lbl" }, "Abertura"), ...n), this.rulerBar = K("div", {
+		}, q("span", { class: "vt-rulerbar-lbl" }, "Abertura"), ...n), this.rulerBar = q("div", {
 			class: "vt-rulerbar",
 			hidden: !0,
 			role: "toolbar",
 			"aria-label": "Tipo de régua"
-		}, K("div", { class: "vt-segmented" }, ...t), this.coneAngleEl), this.rulerBar;
+		}, q("div", { class: "vt-segmented" }, ...t), this.coneAngleEl), this.rulerBar;
 	}
 	buildZoomBar() {
 		let e = 1e3, t = (t) => String(Math.round(Math.log(t / vs) / Math.log(8 / vs) * e)), n = (t) => vs * (8 / vs) ** (t / e);
-		return this.zoomSlider = K("input", {
+		return this.zoomSlider = q("input", {
 			class: "vt-zoom-range",
 			type: "range",
 			min: 0,
@@ -51751,22 +51757,22 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			value: t(this.state.zoom),
 			title: "Zoom (roda do mouse, Ctrl + / Ctrl −)",
 			oninput: () => this.hooks.scene()?.zoomTo(n(Number(this.zoomSlider.value)))
-		}), this.zoomSlider.dataset.toSlider = "1", this.zoomLabel = K("button", {
+		}), this.zoomSlider.dataset.toSlider = "1", this.zoomLabel = q("button", {
 			class: "vt-zoom-label",
 			title: "Voltar a 100% (Ctrl 1)",
 			onclick: () => this.hooks.scene()?.zoomTo(1)
-		}, ""), this.toSlider = t, K("div", { class: "vt-zoombar" }, K("button", {
+		}, ""), this.toSlider = t, q("div", { class: "vt-zoombar" }, q("button", {
 			class: "vt-btn",
 			title: "Menos zoom (Ctrl −)",
 			onclick: () => this.hooks.scene()?.zoomBy(1 / 1.25)
-		}, "−"), this.zoomSlider, K("button", {
+		}, "−"), this.zoomSlider, q("button", {
 			class: "vt-btn",
 			title: "Mais zoom (Ctrl +)",
 			onclick: () => this.hooks.scene()?.zoomBy(1.25)
-		}, "+"), this.zoomLabel, K("button", {
+		}, "+"), this.zoomLabel, q("button", {
 			class: "vt-btn",
 			title: "Enquadrar a zona (Ctrl 0)",
-			html: Y.center,
+			html: X.center,
 			onclick: () => this.hooks.scene()?.fitZone()
 		}));
 	}
@@ -51775,7 +51781,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		this.zoomLabel && (this.zoomLabel.textContent = `${Math.round(this.state.zoom * 100)}%`, document.activeElement !== this.zoomSlider && (this.zoomSlider.value = this.toSlider(this.state.zoom)));
 	}
 	buildPanel() {
-		let e = K("div", { class: "vt-tabs" });
+		let e = q("div", { class: "vt-tabs" });
 		for (let [t, n] of [
 			["terrains", "Terrenos"],
 			["objects", "Objetos"],
@@ -51783,7 +51789,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			["light", "Clima"],
 			["sound", "Sons"]
 		]) {
-			let r = K("button", {
+			let r = q("button", {
 				class: "vt-tab",
 				onclick: () => {
 					this.tab = t, t === "rooms" && this.state.set({ tool: "room" }), t === "light" && this.state.set({ tool: "light" }), t === "sound" && (wo().editor || To({ editor: !0 }), (this.state.tool === "light" || this.state.tool === "room") && this.state.set({ tool: "select" })), this.renderPane(), this.refresh();
@@ -51791,22 +51797,22 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			}, n);
 			this.tabButtons.set(t, r), e.append(r);
 		}
-		return this.paneEl = K("div", { class: "vt-pane" }), this.zonePropsEl = K("div", { class: "vt-zoneprops" }), this.portalEl = K("div", { class: "vt-zoneprops vt-portalprops" }), this.objectEl = K("div", {
+		return this.paneEl = q("div", { class: "vt-pane" }), this.zonePropsEl = q("div", { class: "vt-zoneprops" }), this.portalEl = q("div", { class: "vt-zoneprops vt-portalprops" }), this.objectEl = q("div", {
 			class: "vt-zoneprops vt-objinfo",
 			hidden: !0
-		}), K("aside", { class: "vt-panel" }, e, this.paneEl, this.objectEl, this.portalEl, this.zonePropsEl);
+		}), q("aside", { class: "vt-panel" }, e, this.paneEl, this.objectEl, this.portalEl, this.zonePropsEl);
 	}
 	buildStatus() {
-		return this.statusEl = K("footer", { class: "vt-status" }), this.statusEl;
+		return this.statusEl = q("footer", { class: "vt-status" }), this.statusEl;
 	}
 	renderPane() {
 		clearInterval(this.meterTimer), this.paneEl.replaceChildren(), this.terrainCells.clear(), this.objectCells.clear(), this.tab === "terrains" ? this.renderTerrains() : this.tab === "objects" ? this.renderObjects() : this.tab === "light" ? this.renderLight() : this.tab === "sound" ? this.renderSound() : this.renderRooms();
 	}
 	accordion(e, t, n) {
-		let r = K("div", { class: "vt-acc-list" });
-		t.length || r.append(K("div", { class: "vt-empty" }, "Nada encontrado."));
+		let r = q("div", { class: "vt-acc-list" });
+		t.length || r.append(q("div", { class: "vt-empty" }, "Nada encontrado."));
 		for (let i of t) {
-			let t = n || this.openSection[e] === i.id, a = K("button", {
+			let t = n || this.openSection[e] === i.id, a = q("button", {
 				class: `vt-acc${t ? " vt-open" : ""}`,
 				"aria-expanded": t ? "true" : "false",
 				onclick: () => {
@@ -51817,39 +51823,39 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 						behavior: "smooth"
 					});
 				}
-			}, K("span", {
+			}, q("span", {
 				class: "vt-acc-chev",
-				html: Y.chevron
-			}), i.icon ? K("span", {
+				html: X.chevron
+			}), i.icon ? q("span", {
 				class: "vt-acc-icon",
 				html: i.icon
-			}) : null, K("span", { class: "vt-acc-title" }, i.title), K("span", { class: "vt-acc-count" }, String(i.count)));
-			r.append(a), t && r.append(K("div", { class: "vt-acc-body" }, ...i.content()));
+			}) : null, q("span", { class: "vt-acc-title" }, i.title), q("span", { class: "vt-acc-count" }, String(i.count)));
+			r.append(a), t && r.append(q("div", { class: "vt-acc-body" }, ...i.content()));
 		}
 		return r;
 	}
 	searchBox(e, t, n) {
-		let r = K("input", {
+		let r = q("input", {
 			class: "vt-search",
 			placeholder: t,
 			value: e,
 			type: "search"
 		});
-		return r.addEventListener("input", () => n(r.value)), K("div", { class: "vt-searchwrap" }, K("span", {
+		return r.addEventListener("input", () => n(r.value)), q("div", { class: "vt-searchwrap" }, q("span", {
 			class: "vt-search-icon",
-			html: Y.search
+			html: X.search
 		}), r);
 	}
 	terrainCell(e, t, n = !1) {
-		let r = K("canvas", {
+		let r = q("canvas", {
 			width: 32,
 			height: 32
 		}), i = k(e);
-		return r.getContext("2d").drawImage(this.hooks.textureImage(w(e)), i.x, i.y, 32, 32, 0, 0, 32, 32), K("button", {
+		return r.getContext("2d").drawImage(this.hooks.textureImage(w(e)), i.x, i.y, 32, 32, 0, 0, 32, 32), q("button", {
 			class: `vt-cell${n ? " vt-on" : ""}`,
 			title: e.label + (e.solid ? " (não dá pra andar)" : "") + (S(e) ? " (camada de cima: pinta por cima do chão)" : "") + (C(e) ? " (cerca: pinta tiles e liga sozinha)" : ""),
 			onclick: t
-		}, r, K("span", {}, e.label));
+		}, r, q("span", {}, e.label));
 	}
 	terrainSections(e, t, n) {
 		let r = /* @__PURE__ */ new Map();
@@ -51884,19 +51890,19 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 					let e = /* @__PURE__ */ new Map();
 					for (let t of i) e.set(t.category, [...e.get(t.category) ?? [], t]);
 					return [...e].map(([r, i]) => {
-						let a = K("div", { class: "vt-grid vt-terrains" });
+						let a = q("div", { class: "vt-grid vt-terrains" });
 						for (let e of i) {
 							let r = this.terrainCell(e, () => t(e));
 							n?.set(e.id, r), a.append(r);
 						}
-						return e.size > 1 ? K("div", { class: "vt-subgroup" }, K("h5", {}, r.replace("Paredes: ", "")), a) : a;
+						return e.size > 1 ? q("div", { class: "vt-subgroup" }, q("h5", {}, r.replace("Paredes: ", "")), a) : a;
 					});
 				}
 			};
 		});
 	}
 	renderTerrains() {
-		let e = ql(this.terrainFilter.trim()), t = _.filter((t) => !e || ql(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = Jl(this.terrainFilter.trim()), t = _.filter((t) => !e || Jl(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -51907,21 +51913,21 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		this.paneEl.append(n, this.accordion("terrains", r, !!e));
 	}
 	objectCell(e) {
-		let t = Je(e).length, n = K("button", {
+		let t = Je(e).length, n = q("button", {
 			class: "vt-cell",
 			title: `${e.label} — ${Le[e.kind]}, ${e.w}×${e.h}px${e.solids.length ? "" : ", atravessável"}${t > 1 ? `, ${t} variantes` : ""}${e.anim ? ", animado" : ""}`,
 			onclick: () => this.pick(e.id)
-		}, this.thumb(e, 64), t > 1 ? K("i", { class: "vt-badge" }, `${t}`) : null, e.anim ? K("i", { class: "vt-badge vt-badge-anim" }, "▶") : null);
+		}, this.thumb(e, 64), t > 1 ? q("i", { class: "vt-badge" }, `${t}`) : null, e.anim ? q("i", { class: "vt-badge vt-badge-anim" }, "▶") : null);
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = Ye(), t = ql(this.objectFilter.trim()), n = (e) => !t || ql(Jl(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = Ye(), t = Jl(this.objectFilter.trim()), n = (e) => !t || Jl(Yl(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
 		}), i = (e) => e.map((e) => qe(e)).filter((e) => !!e).filter(n), a = (e, t) => {
-			let n = K("div", { class: "vt-grid vt-objects" });
-			e.length || n.append(K("div", {
+			let n = q("div", { class: "vt-grid vt-objects" });
+			e.length || n.append(q("div", {
 				class: "vt-empty",
 				style: "grid-column: 1 / -1"
 			}, t));
@@ -51955,16 +51961,16 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: Wl,
+				id: Gl,
 				title: "Favoritos",
-				icon: Y.star,
+				icon: X.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: Gl,
+				id: Kl,
 				title: "Recentes",
-				icon: Y.clock,
+				icon: X.clock,
 				count: u.length,
 				content: () => a(u, "As peças que você usar aparecem aqui.")
 			}] : [],
@@ -51978,7 +51984,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		this.paneEl.append(r, this.accordion("objects", d, !!t));
 	}
 	swatch(e) {
-		let t = K("canvas", {
+		let t = q("canvas", {
 			class: "vt-swatch",
 			width: 32,
 			height: 32
@@ -51998,28 +52004,28 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				},
 				tool: "room"
 			}), this.renderPane();
-		}, r = U(t), i = K("div", { class: "vt-presets" }, ...W.map((e) => K("button", {
-			class: `vt-preset${U(e.style) === r ? " vt-on" : ""}`,
+		}, r = ee(t), i = q("div", { class: "vt-presets" }, ...te.map((e) => q("button", {
+			class: `vt-preset${ee(e.style) === r ? " vt-on" : ""}`,
 			onclick: () => n(e.style)
-		}, K("span", { class: "vt-preset-sw" }, this.swatch(e.style.wall), this.swatch(e.style.floor), this.swatch(e.style.trim)), K("span", {}, e.name)))), a = (e, t, r) => K("button", {
+		}, q("span", { class: "vt-preset-sw" }, this.swatch(e.style.wall), this.swatch(e.style.floor), this.swatch(e.style.trim)), q("span", {}, e.name)))), a = (e, t, r) => q("button", {
 			class: "vt-stylepart",
 			title: `Trocar ${e.toLowerCase()}`,
 			onclick: () => this.openTerrainPicker(r, (e) => n({ [r]: e.id }))
-		}, this.swatch(t), K("span", {}, K("b", {}, e), K("small", {}, v.get(t)?.label ?? "(não encontrado)")), K("span", {
+		}, this.swatch(t), q("span", {}, q("b", {}, e), q("small", {}, v.get(t)?.label ?? "(não encontrado)")), q("span", {
 			class: "vt-stylepart-chev",
-			html: Y.chevron
-		})), o = K("input", {
+			html: X.chevron
+		})), o = q("input", {
 			type: "range",
 			min: 0,
 			max: 4,
 			step: 1,
 			value: t.height,
 			class: "vt-range"
-		}), s = K("b", {}, String(t.height));
+		}), s = q("b", {}, String(t.height));
 		o.addEventListener("input", () => {
 			s.textContent = o.value;
 		}), o.addEventListener("change", () => n({ height: Number(o.value) }));
-		let c = K("div", { class: "vt-segmented" }, ...[
+		let c = q("div", { class: "vt-segmented" }, ...[
 			[
 				"room",
 				"Cômodo",
@@ -52035,7 +52041,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				"Porta",
 				"Arraste sobre uma parede entre cômodos pra abrir um vão"
 			]
-		].map(([t, n, r]) => K("button", {
+		].map(([t, n, r]) => q("button", {
 			class: `vt-seg${e.roomMode === t ? " vt-on" : ""}`,
 			title: r,
 			onclick: () => {
@@ -52049,7 +52055,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			wall: "Risque uma linha pra dividir.",
 			door: "Arraste sobre uma parede pra abrir."
 		}[e.roomMode];
-		this.paneEl.append(K("div", { class: "vt-group" }, c, K("small", { class: "vt-note vt-modehelp" }, l)), K("div", { class: "vt-group" }, K("h4", {}, "Estilos prontos"), i), K("div", { class: "vt-group" }, K("h4", {}, "Estilo do cômodo"), K("div", { class: "vt-styleparts" }, a("Parede", t.wall, "wall"), a("Piso", t.floor, "floor"), a("Moldura", t.trim, "trim")), K("div", { class: "vt-row vt-heightrow" }, K("label", {}, "Altura da parede"), o, s)), K("small", { class: "vt-note" }, "Alt + clique copia um estilo; Ctrl + arrastar apaga."));
+		this.paneEl.append(q("div", { class: "vt-group" }, c, q("small", { class: "vt-note vt-modehelp" }, l)), q("div", { class: "vt-group" }, q("h4", {}, "Estilos prontos"), i), q("div", { class: "vt-group" }, q("h4", {}, "Estilo do cômodo"), q("div", { class: "vt-styleparts" }, a("Parede", t.wall, "wall"), a("Piso", t.floor, "floor"), a("Moldura", t.trim, "trim")), q("div", { class: "vt-row vt-heightrow" }, q("label", {}, "Altura da parede"), o, s)), q("small", { class: "vt-note" }, "Alt + clique copia um estilo; Ctrl + arrastar apaga."));
 	}
 	renderLight() {
 		let e = this.state, t = e.zone, n = Ur(t);
@@ -52071,22 +52077,22 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			};
 			for (let e of Object.keys(n)) n[e] === void 0 && delete n[e];
 			i.sky = n, t && (o(), this.renderPane());
-		}, c = (e, t) => `#${Kr(ei(e, t)).toString(16).padStart(6, "0")}`, l = (e, t) => t === null && e.place !== "underground" ? `linear-gradient(135deg, ${c(e, 12)} 0 50%, ${c(e, 23)} 50% 100%)` : c(e, t ?? 12), u = (e, t) => e.place === t.place && (e.place !== "underground" || (e.tint ?? "#2a2e3c") === (t.tint ?? "#2a2e3c")), d = K("div", { class: "vt-climates" }, ...vi.map((e) => K("button", {
+		}, c = (e, t) => `#${Kr(ei(e, t)).toString(16).padStart(6, "0")}`, l = (e, t) => t === null && e.place !== "underground" ? `linear-gradient(135deg, ${c(e, 12)} 0 50%, ${c(e, 23)} 50% 100%)` : c(e, t ?? 12), u = (e, t) => e.place === t.place && (e.place !== "underground" || (e.tint ?? "#2a2e3c") === (t.tint ?? "#2a2e3c")), d = q("div", { class: "vt-climates" }, ...vi.map((e) => q("button", {
 			class: `vt-climate${u(n, e.lighting) ? " vt-on" : ""}`,
 			onclick: () => r({
 				...e.lighting,
 				tint: e.lighting.tint
 			})
-		}, K("span", {
+		}, q("span", {
 			class: "vt-climate-sw",
 			style: `background:${l(e.lighting, a.hour)}`
-		}), K("span", {}, e.label)))), f = K("div", { class: "vt-climates" }, ...xi.map((e) => K("button", {
+		}), q("span", {}, e.label)))), f = q("div", { class: "vt-climates" }, ...xi.map((e) => q("button", {
 			class: `vt-climate${a.hour === e.hour ? " vt-on" : ""}`,
 			onclick: () => a.hour !== e.hour && s({ hour: e.hour })
-		}, K("span", {
+		}, q("span", {
 			class: "vt-climate-sw",
 			style: `background:${l({ place: "outdoor" }, e.hour)}`
-		}), K("span", {}, e.label)))), p = (e, t, n) => K("div", { class: "vt-segmented" }, ...e.map(([e, r, i]) => K("button", {
+		}), q("span", {}, e.label)))), p = (e, t, n) => q("div", { class: "vt-segmented" }, ...e.map(([e, r, i]) => q("button", {
 			class: `vt-seg${t === e ? " vt-on" : ""}`,
 			title: i,
 			onclick: () => t !== e && n(e)
@@ -52107,9 +52113,9 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				"Nunca vê o sol: só as luzes clareiam"
 			]
 		], n.place, (e) => r({ place: e })), h = (e, t, n) => {
-			let r = K("b", { class: "vt-hourout" }), i = (e) => {
-				r.innerHTML = `${Qr(e) > .5 ? Y.sun : Y.moon}<span>${_i(e)}</span>`;
-			}, a = K("input", {
+			let r = q("b", { class: "vt-hourout" }), i = (e) => {
+				r.innerHTML = `${Qr(e) > .5 ? X.sun : X.moon}<span>${_i(e)}</span>`;
+			}, a = q("input", {
 				type: "range",
 				min: 0,
 				max: 23.9,
@@ -52119,10 +52125,10 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			});
 			return a.addEventListener("input", () => {
 				i(Number(a.value)), t(Number(a.value));
-			}), n && a.addEventListener("change", n), i(e), K("div", { class: "vt-row vt-hourrow" }, a, r);
+			}), n && a.addEventListener("change", n), i(e), q("div", { class: "vt-row vt-hourrow" }, a, r);
 		}, g = [];
 		if (n.place === "underground") {
-			let r = K("input", {
+			let r = q("input", {
 				type: "color",
 				value: n.tint ?? "#2a2e3c",
 				class: "vt-color"
@@ -52134,7 +52140,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				}, e.edited();
 			}), r.addEventListener("change", () => {
 				i = !1, this.renderPane();
-			}), g.push(K("div", { class: "vt-row" }, K("label", {}, "Cor do escuro"), r), K("small", { class: "vt-note" }, "Sem sol: só tochas e velas clareiam."));
+			}), g.push(q("div", { class: "vt-row" }, q("label", {}, "Cor do escuro"), r), q("small", { class: "vt-note" }, "Sem sol: só tochas e velas clareiam."));
 		}
 		let _ = [p([[
 			"cycle",
@@ -52146,35 +52152,35 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			"Todas as zonas ficam sempre na mesma hora"
 		]], a.hour === null ? "cycle" : "fixed", (t) => s({ hour: t === "cycle" ? null : e.previewHour }))];
 		if (a.hour === null) {
-			let t = K("select", { class: "vt-select" }, ...yi.map((e) => K("option", {
+			let t = q("select", { class: "vt-select" }, ...yi.map((e) => q("option", {
 				value: e,
 				selected: (a.dayMinutes ?? 24) === e
 			}, e >= 120 ? `${e / 60} h` : `${e} min`)));
-			t.addEventListener("change", () => s({ dayMinutes: Number(t.value) === 24 ? void 0 : Number(t.value) })), _.push(K("div", { class: "vt-row" }, K("label", {}, "Um dia dura"), t), K("label", { class: "vt-sublabel" }, "Ver no editor às"), h(e.previewHour, (t) => e.set({ previewHour: t })));
+			t.addEventListener("change", () => s({ dayMinutes: Number(t.value) === 24 ? void 0 : Number(t.value) })), _.push(q("div", { class: "vt-row" }, q("label", {}, "Um dia dura"), t), q("label", { class: "vt-sublabel" }, "Ver no editor às"), h(e.previewHour, (t) => e.set({ previewHour: t })));
 		} else _.push(h(a.hour, (t) => {
 			s({ hour: t }, !1), e.previewHour = t;
 		}, () => {
 			o(), this.renderPane();
 		}));
 		let v = (e, t, n, r = "") => {
-			let i = K("input", {
+			let i = q("input", {
 				type: "checkbox",
 				checked: t
 			});
-			return i.addEventListener("change", () => n(i.checked)), K("label", {
+			return i.addEventListener("change", () => n(i.checked)), q("label", {
 				class: "vt-check",
 				title: r
-			}, i, K("span", {}, e));
-		}, y = K("div", { class: "vt-checks" }, n.place === "outdoor" ? v("Sombras do sol", n.sunShadows !== !1, (e) => r({ sunShadows: e ? void 0 : !1 }), "Árvores e bonecos fazem sombra; o tamanho e a direção mudam com a hora") : null, n.place === "outdoor" ? v("Sombra de nuvens", n.clouds !== !1, (e) => r({ clouds: e ? void 0 : !1 }), "Manchas de sombra passando pelo chão, levadas pelo vento") : null, v("Partículas", n.particles !== !1, (e) => r({ particles: e ? void 0 : !1 }), "Folhas caindo, chamas, faíscas e fumaça, vaga-lumes, poeira, reflexos na água")), b = a.weather && a.weather in Xi ? a.weather : "clear", x = K("div", { class: "vt-weathers" }, ...Zi.map((e) => K("button", {
+			}, i, q("span", {}, e));
+		}, y = q("div", { class: "vt-checks" }, n.place === "outdoor" ? v("Sombras do sol", n.sunShadows !== !1, (e) => r({ sunShadows: e ? void 0 : !1 }), "Árvores e bonecos fazem sombra; o tamanho e a direção mudam com a hora") : null, n.place === "outdoor" ? v("Sombra de nuvens", n.clouds !== !1, (e) => r({ clouds: e ? void 0 : !1 }), "Manchas de sombra passando pelo chão, levadas pelo vento") : null, v("Partículas", n.particles !== !1, (e) => r({ particles: e ? void 0 : !1 }), "Folhas caindo, chamas, faíscas e fumaça, vaga-lumes, poeira, reflexos na água")), b = a.weather && a.weather in Xi ? a.weather : "clear", x = q("div", { class: "vt-weathers" }, ...Zi.map((e) => q("button", {
 			class: `vt-weather${b === e ? " vt-on" : ""}`,
 			title: Xi[e].label,
 			onclick: () => b !== e && s({ weather: e === "clear" ? void 0 : e })
-		}, K("span", { html: e === "clear" ? Y.sun : e === "cloudy" ? Y.cloud : Y[e] }), K("span", {}, Xi[e].label)))), S = n.place === "indoor" ? "Dentro, o tempo só aparece nas janelas." : n.place === "underground" ? "Esta zona não vê o céu." : "", C = n.wind ?? .45, w = ie.reduce((e, t) => Math.abs(t[0] - C) < Math.abs(e[0] - C) ? t : e)[0], T = K("div", { class: "vt-segmented" }, ...ie.map(([e, t, n]) => K("button", {
+		}, q("span", { html: e === "clear" ? X.sun : e === "cloudy" ? X.cloud : X[e] }), q("span", {}, Xi[e].label)))), S = n.place === "indoor" ? "Dentro, o tempo só aparece nas janelas." : n.place === "underground" ? "Esta zona não vê o céu." : "", C = n.wind ?? .45, w = ie.reduce((e, t) => Math.abs(t[0] - C) < Math.abs(e[0] - C) ? t : e)[0], T = q("div", { class: "vt-segmented" }, ...ie.map(([e, t, n]) => q("button", {
 			class: `vt-seg${w === e ? " vt-on" : ""}`,
 			title: n,
 			onclick: () => w !== e && r({ wind: e === .45 ? void 0 : e })
 		}, t)));
-		this.paneEl.append(K("div", { class: "vt-group" }, K("h4", {}, "Hora (todas as zonas)"), f, ..._), K("div", { class: "vt-group" }, K("h4", {}, "Tempo (todas as zonas)"), x, S ? K("small", { class: "vt-note vt-modehelp" }, S) : null), K("div", { class: "vt-group" }, K("h4", {}, "Ambientes prontos (esta zona)"), d), K("div", { class: "vt-group" }, K("h4", {}, "Onde fica"), m), ...n.place === "outdoor" ? [K("div", { class: "vt-group" }, K("h4", {}, "Vento"), T)] : [], ...g.length ? [K("div", { class: "vt-group" }, K("h4", {}, "Escuridão"), ...g)] : [], K("div", { class: "vt-group" }, y), this.lightLookGroup(), ...e.lightPreview ? [] : [K("small", { class: "vt-note" }, "Prévia desligada (I).")]);
+		this.paneEl.append(q("div", { class: "vt-group" }, q("h4", {}, "Hora (todas as zonas)"), f, ..._), q("div", { class: "vt-group" }, q("h4", {}, "Tempo (todas as zonas)"), x, S ? q("small", { class: "vt-note vt-modehelp" }, S) : null), q("div", { class: "vt-group" }, q("h4", {}, "Ambientes prontos (esta zona)"), d), q("div", { class: "vt-group" }, q("h4", {}, "Onde fica"), m), ...n.place === "outdoor" ? [q("div", { class: "vt-group" }, q("h4", {}, "Vento"), T)] : [], ...g.length ? [q("div", { class: "vt-group" }, q("h4", {}, "Escuridão"), ...g)] : [], q("div", { class: "vt-group" }, y), this.lightLookGroup(), ...e.lightPreview ? [] : [q("small", { class: "vt-note" }, "Prévia desligada (I).")]);
 	}
 	lightLookGroup() {
 		let e = this.state, t = e.light, n = t ?? e.lightLook, r = e.zone.objects.filter((e) => qe(e.kind)?.light).length, i = e.zone.lights?.length ?? 0, a = !1, o = (r, i = !1) => {
@@ -52186,7 +52192,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				...r
 			}, i || (a = !1, this.renderPane());
 		}, s = (e, t, n, r, i, a, s, c = 1) => {
-			let l = K("b", {}, a(i)), u = K("input", {
+			let l = q("b", {}, a(i)), u = q("input", {
 				type: "range",
 				min: t,
 				max: n,
@@ -52196,15 +52202,15 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			});
 			return u.addEventListener("input", () => {
 				l.textContent = a(Number(u.value) / c), o({ [s]: Number(u.value) / c }, !0);
-			}), u.addEventListener("change", () => o({ [s]: Number(u.value) / c })), K("div", { class: "vt-row vt-lightrow" }, K("label", {}, e), u, l);
-		}, c = K("input", {
+			}), u.addEventListener("change", () => o({ [s]: Number(u.value) / c })), q("div", { class: "vt-row vt-lightrow" }, q("label", {}, e), u, l);
+		}, c = q("input", {
 			type: "color",
 			value: n.color,
 			class: "vt-color",
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = K("div", { class: "vt-lightcolors" }, ...Ul.map(([e, t, r]) => K("button", {
+		let l = q("div", { class: "vt-lightcolors" }, ...Wl.map(([e, t, r]) => q("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -52213,14 +52219,14 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				flicker: r
 			})
 		})), c);
-		return K("div", { class: "vt-group" }, K("h4", {}, t ? "Luz selecionada" : "Luzes soltas", K("span", { class: "vt-acc-count" }, ` ${i} solta${i === 1 ? "" : "s"} · ${r} em objetos`)), K("small", { class: "vt-note vt-modehelp" }, t ? "Arraste pra mover; Del apaga." : "Clique no mapa pra pôr uma luz (L)."), l, s("Alcance", 16, 512, 8, n.radius, (e) => `${(e / 32).toFixed(1).replace(".0", "")} tiles`, "radius"), s("Força", 0, 100, 5, n.intensity, (e) => `${Math.round(e * 100)}%`, "intensity", 100), s("Tremor", 0, 100, 5, n.flicker, (e) => e === 0 ? "parada" : `${Math.round(e * 100)}%`, "flicker", 100), t ? K("div", { class: "vt-row" }, K("button", {
+		return q("div", { class: "vt-group" }, q("h4", {}, t ? "Luz selecionada" : "Luzes soltas", q("span", { class: "vt-acc-count" }, ` ${i} solta${i === 1 ? "" : "s"} · ${r} em objetos`)), q("small", { class: "vt-note vt-modehelp" }, t ? "Arraste pra mover; Del apaga." : "Clique no mapa pra pôr uma luz (L)."), l, s("Alcance", 16, 512, 8, n.radius, (e) => `${(e / 32).toFixed(1).replace(".0", "")} tiles`, "radius"), s("Força", 0, 100, 5, n.intensity, (e) => `${Math.round(e * 100)}%`, "intensity", 100), s("Tremor", 0, 100, 5, n.flicker, (e) => e === 0 ? "parada" : `${Math.round(e * 100)}%`, "flicker", 100), t ? q("div", { class: "vt-row" }, q("button", {
 			class: "vt-btn",
 			style: "flex:1",
 			onclick: () => e.set({ selectedLight: null })
-		}, "Soltar seleção"), K("button", {
+		}, "Soltar seleção"), q("button", {
 			class: "vt-btn vt-danger",
 			title: "Apagar luz (Del)",
-			html: Y.trash,
+			html: X.trash,
 			onclick: () => this.hooks.deleteSelected()
 		})) : null);
 	}
@@ -52233,10 +52239,10 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 	applySound() {
 		this.hooks.applySound?.();
 		let e = wo().muted;
-		this.muteBtn.innerHTML = e ? Y.mute : Y.sound, this.muteBtn.classList.toggle("vt-on", !e);
+		this.muteBtn.innerHTML = e ? X.mute : X.sound, this.muteBtn.classList.toggle("vt-on", !e);
 	}
 	switchEl(e, t, n = "") {
-		let r = K("input", {
+		let r = q("input", {
 			type: "checkbox",
 			checked: e,
 			class: "vt-switch",
@@ -52261,7 +52267,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			let r = { ...Go(t) };
 			n ? delete r.auto : r.auto = !1, Object.keys(r).length ? t.sound = r : delete t.sound, e.edited(), this.renderPane();
 		}, s = (e, t, n, r = "") => {
-			let i = K("input", {
+			let i = q("input", {
 				type: "range",
 				min: 0,
 				max: 100,
@@ -52271,30 +52277,30 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				title: r
 			});
 			return i.addEventListener("input", () => t(Number(i.value) / 100)), i.addEventListener("change", () => n(Number(i.value) / 100)), i;
-		}, c = K("div", { class: "vt-soundbar" }, K("label", {
+		}, c = q("div", { class: "vt-soundbar" }, q("label", {
 			class: "vt-switchrow",
 			title: "Tocar os sons enquanto edita (U)"
-		}, this.switchEl(r.editor, () => this.toggleEditorSound()), K("span", {}, "Ouvir")), s(r.master, (e) => {
+		}, this.switchEl(r.editor, () => this.toggleEditorSound()), q("span", {}, "Ouvir")), s(r.master, (e) => {
 			To({ master: e }), this.applySound();
-		}, () => this.applySound(), "Volume geral"), K("button", {
+		}, () => this.applySound(), "Volume geral"), q("button", {
 			class: `vt-iconbtn${r.muted ? " vt-on" : ""}`,
 			title: r.muted ? "Ligar o som" : "Mudo",
-			html: r.muted ? Y.mute : Y.sound,
+			html: r.muted ? X.mute : X.sound,
 			onclick: () => {
 				this.toggleMute(), this.renderPane();
 			}
 		})), l = n.layers ?? {}, u = this.soundPick && jo.some((e) => e.id === this.soundPick) ? this.soundPick : null, d = /* @__PURE__ */ new Map(), f = jo.map((e) => {
-			let t = (l[e.id] ?? 0) > 0, n = K("span", { class: "vt-soundtile-meter" });
-			return d.set(e.id, n), K("button", {
+			let t = (l[e.id] ?? 0) > 0, n = q("span", { class: "vt-soundtile-meter" });
+			return d.set(e.id, n), q("button", {
 				class: `vt-soundtile${t ? " vt-on" : ""}${u === e.id ? " vt-picked" : ""}`,
 				title: e.label,
 				onclick: () => {
 					this.soundPick = e.id, wo().editor || To({ editor: !0 }), u === e.id || !t ? a({ [e.id]: t ? 0 : .7 }) : this.renderPane();
 				}
-			}, K("span", {
+			}, q("span", {
 				class: "vt-soundtile-icon",
-				html: Y[e.icon] ?? Y.sound
-			}), K("span", {}, e.label), n);
+				html: X[e.icon] ?? X.sound
+			}), q("span", {}, e.label), n);
 		}), p = () => {
 			let e = this.hooks.scene()?.audio?.levels() ?? {};
 			for (let [t, n] of d) n.style.width = `${Math.round(Math.min(1, e[t] ?? 0) * 100)}%`;
@@ -52302,28 +52308,28 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		p(), this.meterTimer = window.setInterval(p, 200);
 		let m = null;
 		if (u) {
-			let e = jo.find((e) => e.id === u), t = l[u] ?? 0, n = K("b", {}, t ? `${Math.round(t * 100)}%` : "auto");
-			m = K("div", { class: "vt-soundpick" }, K("span", {
+			let e = jo.find((e) => e.id === u), t = l[u] ?? 0, n = q("b", {}, t ? `${Math.round(t * 100)}%` : "auto");
+			m = q("div", { class: "vt-soundpick" }, q("span", {
 				class: "vt-soundtile-icon",
-				html: Y[e.icon] ?? Y.sound
-			}), K("label", {}, e.label), s(t, (e) => {
+				html: X[e.icon] ?? X.sound
+			}), q("label", {}, e.label), s(t, (e) => {
 				n.textContent = e ? `${Math.round(e * 100)}%` : "auto", a({ [u]: e }, !0);
-			}, (e) => a({ [u]: e })), n, u === "thunder" ? K("button", {
+			}, (e) => a({ [u]: e })), n, u === "thunder" ? q("button", {
 				class: "vt-iconbtn",
 				title: "Ouvir um trovão",
-				html: Y.play,
+				html: X.play,
 				onclick: () => this.hooks.scene()?.audio?.thunderNow()
 			}) : null);
 		}
-		let h = Object.keys(zo).map((e) => K("button", {
+		let h = Object.keys(zo).map((e) => q("button", {
 			class: "vt-chipbtn",
 			title: "Ouvir",
 			onclick: () => this.hooks.scene()?.audio?.previewStep(e)
 		}, zo[e]));
-		this.paneEl.append(K("div", { class: "vt-group" }, c), K("div", { class: "vt-group" }, K("div", { class: "vt-grouphead" }, K("h4", {}, "Ambiente"), K("label", {
+		this.paneEl.append(q("div", { class: "vt-group" }, c), q("div", { class: "vt-group" }, q("div", { class: "vt-grouphead" }, q("h4", {}, "Ambiente"), q("label", {
 			class: "vt-switchrow",
 			title: "Segue o tempo, a hora e o que há perto"
-		}, K("span", {}, "Automático"), this.switchEl(n.auto !== !1, o))), K("div", { class: "vt-soundtiles" }, ...f), m ?? K("small", { class: "vt-note" }, "Clique numa camada pra ligar e ajustar.")), K("div", { class: "vt-group" }, K("div", { class: "vt-grouphead" }, K("h4", {}, "Passos"), s(r.steps, (e) => To({ steps: e }), () => void 0, "Volume dos passos")), K("div", { class: "vt-chips" }, ...h)));
+		}, q("span", {}, "Automático"), this.switchEl(n.auto !== !1, o))), q("div", { class: "vt-soundtiles" }, ...f), m ?? q("small", { class: "vt-note" }, "Clique numa camada pra ligar e ajustar.")), q("div", { class: "vt-group" }, q("div", { class: "vt-grouphead" }, q("h4", {}, "Passos"), s(r.steps, (e) => To({ steps: e }), () => void 0, "Volume dos passos")), q("div", { class: "vt-chips" }, ...h)));
 	}
 	openTerrainPicker(e, t) {
 		let n = [
@@ -52339,31 +52345,31 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			floor: "Escolher o piso",
 			wall: "Escolher a parede",
 			trim: "Escolher a moldura"
-		}[e], a = K("div", { class: "vt-picker" }), o = "", s = () => {
+		}[e], a = q("div", { class: "vt-picker" }), o = "", s = () => {
 			let e = this.terrainSections(r, (e) => {
 				c(), t(e);
-			}, null), n = K("div", { class: "vt-acc-list" });
+			}, null), n = q("div", { class: "vt-acc-list" });
 			for (let t of e) {
 				let r = e.length === 1 || o === t.id || !o && t === e[0];
-				n.append(K("button", {
+				n.append(q("button", {
 					class: `vt-acc${r ? " vt-open" : ""}`,
 					onclick: () => {
 						o = r ? "-" : t.id, s();
 					}
-				}, K("span", {
+				}, q("span", {
 					class: "vt-acc-chev",
-					html: Y.chevron
-				}), K("span", { class: "vt-acc-title" }, t.title), K("span", { class: "vt-acc-count" }, String(t.count)))), r && n.append(K("div", { class: "vt-acc-body" }, ...t.content()));
+					html: X.chevron
+				}), q("span", { class: "vt-acc-title" }, t.title), q("span", { class: "vt-acc-count" }, String(t.count)))), r && n.append(q("div", { class: "vt-acc-body" }, ...t.content()));
 			}
 			a.replaceChildren(n);
-		}, c = this.modal(i, [a], [K("button", {
+		}, c = this.modal(i, [a], [q("button", {
 			class: "vt-btn",
 			onclick: () => c()
 		}, "Fechar")], void 0, !0);
 		s();
 	}
 	thumb(e, t, n = 2) {
-		let r = K("canvas", {
+		let r = q("canvas", {
 			width: t,
 			height: t
 		}), i = r.getContext("2d");
@@ -52378,14 +52384,14 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		let t = qe(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Hl), xl(Vl, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Ul), Sl(Hl, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], xl(Rl, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], Sl(zl, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -52415,41 +52421,41 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			if (!n) return this.pick(t.id);
 			n.kind !== t.id && (e.checkpoint(), n.kind = t.id, e.edited(), e.emit("objects"));
 		};
-		this.objectEl.replaceChildren(K("h4", { class: "vt-subtitle" }, n ? "Objeto selecionado" : "Peça pra colocar"), K("div", { class: "vt-objhead" }, this.thumb(o, 56), K("div", {}, K("b", {}, o.label), K("small", {}, `${Le[o.kind]} · ${o.w}×${o.h}px${o.solids.length ? "" : " · atravessável"}${o.light ? " · ilumina" : ""}`), K("small", { title: s?.license ?? "" }, s?.name ?? o.pack))), K("div", {
+		this.objectEl.replaceChildren(q("h4", { class: "vt-subtitle" }, n ? "Objeto selecionado" : "Peça pra colocar"), q("div", { class: "vt-objhead" }, this.thumb(o, 56), q("div", {}, q("b", {}, o.label), q("small", {}, `${Le[o.kind]} · ${o.w}×${o.h}px${o.solids.length ? "" : " · atravessável"}${o.light ? " · ilumina" : ""}`), q("small", { title: s?.license ?? "" }, s?.name ?? o.pack))), q("div", {
 			class: "vt-variants",
 			hidden: c.length < 2
-		}, ...c.map((e) => K("button", {
+		}, ...c.map((e) => q("button", {
 			class: `vt-cell${e.id === o.id ? " vt-on" : ""}`,
 			title: e.variant ?? e.label,
 			onclick: () => l(e)
-		}, this.thumb(e, 36)))), ...n ? [K("div", {
+		}, this.thumb(e, 36)))), ...n ? [q("div", {
 			class: "vt-row vt-objheight",
 			title: "Altura (em cima de mesa, balcão, prateleira). O ponto no chão decide quem fica na frente."
-		}, K("label", {}, "Altura"), K("button", {
+		}, q("label", {}, "Altura"), q("button", {
 			class: "vt-btn",
 			title: "Baixar (Shift: 16px)",
 			onclick: (e) => this.lift(n, e.shiftKey ? -16 : -4)
-		}, "▼"), K("b", {}, `${n.z ?? 0}px`), K("button", {
+		}, "▼"), q("b", {}, `${n.z ?? 0}px`), q("button", {
 			class: "vt-btn",
 			title: "Elevar (Shift: 16px)",
 			onclick: (e) => this.lift(n, e.shiftKey ? 16 : 4)
-		}, "▲"))] : [], K("div", { class: "vt-row vt-objactions" }, K("button", {
+		}, "▲"))] : [], q("div", { class: "vt-row vt-objactions" }, q("button", {
 			class: `vt-btn${i ? " vt-on" : ""}`,
 			title: i ? "Tirar dos favoritos" : "Favoritar",
-			html: `${Y.star}<span>${i ? "Favorito" : "Favoritar"}</span>`,
+			html: `${X.star}<span>${i ? "Favorito" : "Favoritar"}</span>`,
 			onclick: () => this.toggleFavorite(o)
-		}), K("button", {
+		}), q("button", {
 			class: `vt-btn${r ? " vt-on" : ""}`,
 			title: "Espelhar (F)",
 			onclick: () => this.flip()
-		}, "Espelhar"), this.hooks.curate ? K("button", {
+		}, "Espelhar"), this.hooks.curate ? q("button", {
 			class: "vt-btn",
 			title: "Ajustar nome, colisão, tipo e luz da peça no pacote (desenvolvimento)",
 			onclick: () => this.openCurate(o)
-		}, "Curar") : null, n ? K("button", {
+		}, "Curar") : null, n ? q("button", {
 			class: "vt-btn vt-danger",
 			title: "Apagar (Del)",
-			html: Y.trash,
+			html: X.trash,
 			onclick: () => this.hooks.deleteSelected()
 		}) : null));
 	}
@@ -52457,17 +52463,17 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		let e = this.state.selected.length, t = `multi|${e}|${this.state.selected.join(",")}`;
 		if (t === this.shownObject) return;
 		this.shownObject = t, this.objectEl.hidden = !1;
-		let n = (e, t, n, r = "") => K("button", {
+		let n = (e, t, n, r = "") => q("button", {
 			class: `vt-btn ${r}`,
 			title: t,
 			onclick: n
 		}, e);
-		this.objectEl.replaceChildren(K("h4", { class: "vt-subtitle" }, `${e} objetos selecionados`), K("div", { class: "vt-row vt-objactions" }, n("Espelhar", "Espelhar todos (F)", () => this.flip()), n("Variante", "Próxima variante de cada um (.)", () => this.hooks.scene()?.cycleVariant(1)), n("Duplicar", "Duplicar (Ctrl D)", () => this.hooks.scene()?.duplicate()), K("button", {
+		this.objectEl.replaceChildren(q("h4", { class: "vt-subtitle" }, `${e} objetos selecionados`), q("div", { class: "vt-row vt-objactions" }, n("Espelhar", "Espelhar todos (F)", () => this.flip()), n("Variante", "Próxima variante de cada um (.)", () => this.hooks.scene()?.cycleVariant(1)), n("Duplicar", "Duplicar (Ctrl D)", () => this.hooks.scene()?.duplicate()), q("button", {
 			class: "vt-btn vt-danger",
 			title: "Apagar todos (Del)",
-			html: Y.trash,
+			html: X.trash,
 			onclick: () => this.hooks.deleteSelected()
-		})), K("small", { class: "vt-note" }, "Arraste um deles pra mover o grupo · setas empurram 1px (Shift: 8px)"));
+		})), q("small", { class: "vt-note" }, "Arraste um deles pra mover o grupo · setas empurram 1px (Shift: 8px)"));
 	}
 	lift(e, t) {
 		let n = Math.max(0, Math.min(160, (e.z ?? 0) + t));
@@ -52476,7 +52482,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(Ke().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = yl(t, this.hooks.textureImage(ze(t.sheet)), n), i = K("button", {
+		let t = this.primary(e), n = [...new Set(Ke().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = bl(t, this.hooks.textureImage(ze(t.sheet)), n), i = q("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -52486,36 +52492,36 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 					this.toast(`Não deu pra gravar: ${e.message}`, !0), i.disabled = !1;
 				}
 			}
-		}, "Gravar no pacote"), a = this.modal(`Curar peça: ${t.label}`, r.body, [K("button", {
+		}, "Gravar no pacote"), a = this.modal(`Curar peça: ${t.label}`, r.body, [q("button", {
 			class: "vt-btn",
 			onclick: () => a()
 		}, "Cancelar"), i], void 0, !0);
 	}
 	renderZoneProps() {
-		let e = this.state.zone, t = K("select", {
+		let e = this.state.zone, t = q("select", {
 			class: "vt-select",
 			onchange: () => {
 				this.state.checkpoint(), this.state.zone.base = t.value, this.state.emit("zone");
 			}
 		});
-		for (let n of _.filter(T)) t.append(K("option", {
+		for (let n of _.filter(T)) t.append(q("option", {
 			value: n.id,
 			selected: n.id === e.base
 		}, n.label));
-		let n = K("input", {
+		let n = q("input", {
 			class: "vt-input vt-num",
 			type: "number",
 			min: 8,
 			max: 128,
 			value: e.width
-		}), r = K("input", {
+		}), r = q("input", {
 			class: "vt-input vt-num",
 			type: "number",
 			min: 8,
 			max: 128,
 			value: e.height
 		});
-		this.zonePropsEl.replaceChildren(K("div", { class: "vt-row" }, K("label", {}, "Fundo"), t), K("div", { class: "vt-row" }, K("label", {}, "Tamanho"), n, "×", r, K("button", {
+		this.zonePropsEl.replaceChildren(q("div", { class: "vt-row" }, q("label", {}, "Fundo"), t), q("div", { class: "vt-row" }, q("label", {}, "Tamanho"), n, "×", r, q("button", {
 			class: "vt-btn",
 			onclick: () => this.resizeZone(Number(n.value), Number(r.value))
 		}, "Aplicar")));
@@ -52526,7 +52532,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			this.portalEl.replaceChildren();
 			return;
 		}
-		let n = K("input", {
+		let n = q("input", {
 			class: "vt-input",
 			value: t.name,
 			oninput: () => {
@@ -52535,15 +52541,15 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		}), r = [{
 			id: e.zone.id,
 			name: `${e.zone.name} (esta zona)`
-		}, ...e.zones.filter((t) => t.id !== e.zone.id)], i = K("select", { class: "vt-select" }, K("option", { value: "" }, "— nenhuma —"), ...r.map((e) => K("option", {
+		}, ...e.zones.filter((t) => t.id !== e.zone.id)], i = q("select", { class: "vt-select" }, q("option", { value: "" }, "— nenhuma —"), ...r.map((e) => q("option", {
 			value: e.id,
 			selected: t.to?.zone === e.id
 		}, e.name))), a = (n) => n === e.zone.id ? e.zone.portals.filter((e) => e.id !== t.id).map((e) => ({
 			id: e.id,
 			name: e.name
-		})) : e.zones.find((e) => e.id === n)?.portals ?? [], o = K("select", { class: "vt-select" }), s = () => {
+		})) : e.zones.find((e) => e.id === n)?.portals ?? [], o = q("select", { class: "vt-select" }), s = () => {
 			let e = a(i.value);
-			o.replaceChildren(K("option", { value: "" }, i.value ? e.length ? "— escolha —" : "(nenhuma saída lá)" : "—"), ...e.map((e) => K("option", {
+			o.replaceChildren(q("option", { value: "" }, i.value ? e.length ? "— escolha —" : "(nenhuma saída lá)" : "—"), ...e.map((e) => q("option", {
 				value: e.id,
 				selected: t.to?.portal === e.id
 			}, e.name))), o.disabled = !i.value || !e.length;
@@ -52560,17 +52566,17 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			s(), o.options.length === 2 && (o.selectedIndex = 1), c();
 		}), o.addEventListener("change", c);
 		let l = e.zones.some((t) => t.id === e.zone.id);
-		this.portalEl.replaceChildren(K("h4", { class: "vt-subtitle" }, "Saída selecionada"), K("div", { class: "vt-row" }, K("label", {}, "Nome"), n), K("div", { class: "vt-row" }, K("label", {}, "Leva para"), i), K("div", { class: "vt-row" }, K("label", {}, "Chega em"), o), K("div", { class: "vt-row" }, K("button", {
+		this.portalEl.replaceChildren(q("h4", { class: "vt-subtitle" }, "Saída selecionada"), q("div", { class: "vt-row" }, q("label", {}, "Nome"), n), q("div", { class: "vt-row" }, q("label", {}, "Leva para"), i), q("div", { class: "vt-row" }, q("label", {}, "Chega em"), o), q("div", { class: "vt-row" }, q("button", {
 			class: "vt-btn",
 			style: "flex:1",
 			title: "A saída de lá passa a trazer de volta pra cá (se não houver uma, cria)",
 			onclick: () => this.linkBack(t, i.value, o.value)
-		}, "Ligar ida e volta"), K("button", {
+		}, "Ligar ida e volta"), q("button", {
 			class: "vt-btn vt-danger",
 			title: "Apagar saída (Del)",
-			html: Y.trash,
+			html: X.trash,
 			onclick: () => this.hooks.deleteSelected()
-		})), ...l ? [] : [K("small", { class: "vt-note" }, "Salve esta zona pra que outras zonas possam trazer o jogador até aqui.")]);
+		})), ...l ? [] : [q("small", { class: "vt-note" }, "Salve esta zona pra que outras zonas possam trazer o jogador até aqui.")]);
 	}
 	async linkBack(e, t, n) {
 		let r = this.state;
@@ -52623,7 +52629,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		for (let [e, t] of this.objectCells) t.classList.toggle("vt-on", n === e);
 		this.renderObjectInfo(), this.brushLabel.textContent = String(e.brush), this.undoBtn && (this.undoBtn.disabled = !e.canUndo), this.redoBtn && (this.redoBtn.disabled = !e.canRedo), this.notifyBar();
 		let r = e.zone, i = [];
-		e.cursor && i.push(K("span", {}, `Tile ${e.cursor.tx}, ${e.cursor.ty}`)), i.push(K("span", {}, `${r.width}×${r.height} tiles`)), i.push(K("span", {}, `${r.objects.length} objetos`)), i.push(e.dirty ? K("span", { class: "vt-dirty" }, "● não salvo") : K("span", {}, "salvo"));
+		e.cursor && i.push(q("span", {}, `Tile ${e.cursor.tx}, ${e.cursor.ty}`)), i.push(q("span", {}, `${r.width}×${r.height} tiles`)), i.push(q("span", {}, `${r.objects.length} objetos`)), i.push(e.dirty ? q("span", { class: "vt-dirty" }, "● não salvo") : q("span", {}, "salvo"));
 		let a = v.get(e.terrain), o = !!a && S(a), s = !!a && C(a), c = o ? " (camada de cima)" : s ? " (cerca: pinta tiles e liga sozinha)" : "", l = {
 			brush: `Pincel: ${a?.label ?? ""}${c} — arraste pra pintar · Shift + clique: linha reta · Alt + roda: tamanho`,
 			fill: s ? "Balde não vale pra cercas — use o pincel" : `Balde: ${a?.label ?? ""}${c} — clique pra preencher a área`,
@@ -52646,11 +52652,11 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				door: "Porta: arraste sobre uma parede pra abrir um vão"
 			}[e.roomMode]
 		}[e.tool];
-		i.push(K("span", { class: "vt-hint" }, `${l} · Espaço + arrastar move a tela · roda dá zoom`)), i.push(K("button", {
+		i.push(q("span", { class: "vt-hint" }, `${l} · Espaço + arrastar move a tela · roda dá zoom`)), i.push(q("button", {
 			class: "vt-link",
 			title: "Todos os atalhos (?)",
 			onclick: () => this.openShortcuts()
-		}, "Atalhos")), i.push(K("button", {
+		}, "Atalhos")), i.push(q("button", {
 			class: "vt-link",
 			onclick: () => this.openCredits()
 		}, "Créditos")), this.statusEl.replaceChildren(...i);
@@ -52659,7 +52665,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Ll, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(Rl, e)) });
 	}
 	async save() {
 		try {
@@ -52671,9 +52677,9 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		}
 	}
 	exportZone() {
-		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = K("a", {
+		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = q("a", {
 			href: URL.createObjectURL(t),
-			download: `${Yl(e.name) || "zona"}.vortable.json`
+			download: `${Xl(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
@@ -52683,7 +52689,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 	}
 	async importZone(e) {
 		try {
-			let t = Dl(JSON.parse(await e.text()));
+			let t = Ol(JSON.parse(await e.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(t), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${t.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -52694,16 +52700,16 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		return this.state.dirty ? new Promise((e) => {
 			let t = (t) => {
 				n(), e(t);
-			}, n = this.modal("Mudanças não salvas", [K("p", { style: "margin:0" }, `"${this.state.zone.name}" tem mudanças que ainda não foram salvas.`)], [
-				K("button", {
+			}, n = this.modal("Mudanças não salvas", [q("p", { style: "margin:0" }, `"${this.state.zone.name}" tem mudanças que ainda não foram salvas.`)], [
+				q("button", {
 					class: "vt-btn",
 					onclick: () => t(!1)
 				}, "Cancelar"),
-				K("button", {
+				q("button", {
 					class: "vt-btn vt-danger",
 					onclick: () => t(!0)
 				}, "Descartar"),
-				K("button", {
+				q("button", {
 					class: "vt-btn vt-primary",
 					onclick: async () => t(await this.save())
 				}, "Salvar e continuar")
@@ -52801,13 +52807,13 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			"Ferramentas",
 			"Objetos",
 			"Geral"
-		], n = e.map((e, n) => K("div", { class: "vt-keys" }, K("h4", {}, t[n]), ...e.map(([e, t]) => K("div", { class: "vt-keyrow" }, K("kbd", {}, e), K("span", {}, t))))), r = this.modal("Atalhos", [K("div", { class: "vt-keys-grid" }, ...n)], [K("button", {
+		], n = e.map((e, n) => q("div", { class: "vt-keys" }, q("h4", {}, t[n]), ...e.map(([e, t]) => q("div", { class: "vt-keyrow" }, q("kbd", {}, e), q("span", {}, t))))), r = this.modal("Atalhos", [q("div", { class: "vt-keys-grid" }, ...n)], [q("button", {
 			class: "vt-btn",
 			onclick: () => r()
 		}, "Fechar")], void 0, !0);
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", ks(this.hooks.assetBase), [K("button", {
+		let e = this.modal("Créditos da arte", ks(this.hooks.assetBase), [q("button", {
 			class: "vt-btn",
 			onclick: () => e()
 		}, "Fechar")]);
@@ -52840,33 +52846,33 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			a(), r?.();
 		};
 		this.modals.push(o), this.state.modalOpen = !0;
-		let s = K("div", {
+		let s = q("div", {
 			class: "vt-modal-bg",
 			onmousedown: (e) => {
 				e.target === s && o();
 			}
-		}, K("div", { class: `vt-modal${i ? " vt-modal-wide" : ""}` }, K("h3", {}, e), K("div", { class: "vt-modal-body" }, ...t), K("div", { class: "vt-modal-foot" }, ...n)));
+		}, q("div", { class: `vt-modal${i ? " vt-modal-wide" : ""}` }, q("h3", {}, e), q("div", { class: "vt-modal-body" }, ...t), q("div", { class: "vt-modal-foot" }, ...n)));
 		return this.root.append(s), a;
 	}
 	openNewModal() {
-		let e = K("input", {
+		let e = q("input", {
 			class: "vt-input",
 			value: "Nova zona"
-		}), t = K("input", {
+		}), t = q("input", {
 			class: "vt-input vt-num",
 			type: "number",
 			min: 8,
 			max: 128,
 			value: 40
-		}), n = K("input", {
+		}), n = q("input", {
 			class: "vt-input vt-num",
 			type: "number",
 			min: 8,
 			max: 128,
 			value: 30
-		}), r = K("select", { class: "vt-select" });
-		for (let e of _.filter(T)) r.append(K("option", { value: e.id }, e.label));
-		let i = K("select", { class: "vt-select" }, K("option", { value: "out" }, "Exterior (40×30, grama)"), K("option", { value: "in" }, "Interior (16×12, vazio escuro)"));
+		}), r = q("select", { class: "vt-select" });
+		for (let e of _.filter(T)) r.append(q("option", { value: e.id }, e.label));
+		let i = q("select", { class: "vt-select" }, q("option", { value: "out" }, "Exterior (40×30, grama)"), q("option", { value: "in" }, "Interior (16×12, vazio escuro)"));
 		i.addEventListener("change", () => {
 			let e = i.value === "in";
 			t.value = e ? "16" : "40", n.value = e ? "12" : "30", r.value = e ? "void" : "grass";
@@ -52874,14 +52880,14 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		let a = async () => {
 			o(), await this.resolveUnsaved() && (this.state.load(B(e.value.trim() || "Nova zona", Number(t.value), Number(n.value), r.value)), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone());
 		}, o = this.modal("Nova zona", [
-			K("div", { class: "vt-row" }, K("label", {}, "Nome"), e),
-			K("div", { class: "vt-row" }, K("label", {}, "Tipo"), i),
-			K("div", { class: "vt-row" }, K("label", {}, "Tamanho"), t, "×", n, K("small", { style: "color:var(--vt-muted)" }, "tiles (8–128)")),
-			K("div", { class: "vt-row" }, K("label", {}, "Fundo"), r)
-		], [K("button", {
+			q("div", { class: "vt-row" }, q("label", {}, "Nome"), e),
+			q("div", { class: "vt-row" }, q("label", {}, "Tipo"), i),
+			q("div", { class: "vt-row" }, q("label", {}, "Tamanho"), t, "×", n, q("small", { style: "color:var(--vt-muted)" }, "tiles (8–128)")),
+			q("div", { class: "vt-row" }, q("label", {}, "Fundo"), r)
+		], [q("button", {
 			class: "vt-btn",
 			onclick: () => o()
-		}, "Cancelar"), K("button", {
+		}, "Cancelar"), q("button", {
 			class: "vt-btn vt-primary",
 			onclick: a
 		}, "Criar")]);
@@ -52895,7 +52901,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		setTimeout(() => e.select(), 0);
 	}
 	async openOpenModal() {
-		let e = K("div", { class: "vt-list" }), t = this.modal("Abrir zona", [e], [K("button", {
+		let e = q("div", { class: "vt-list" }), t = this.modal("Abrir zona", [e], [q("button", {
 			class: "vt-btn",
 			onclick: () => t()
 		}, "Fechar")]), n = async () => {
@@ -52903,19 +52909,19 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			try {
 				r = await this.storage.list();
 			} catch (t) {
-				e.replaceChildren(K("div", { class: "vt-empty" }, `Não deu pra ler as zonas: ${t.message}`));
+				e.replaceChildren(q("div", { class: "vt-empty" }, `Não deu pra ler as zonas: ${t.message}`));
 				return;
 			}
-			e.replaceChildren(), r.length || e.append(K("div", { class: "vt-empty" }, "Nenhuma zona salva ainda."));
-			for (let i of r) e.append(K("div", { class: "vt-item" }, K("div", {}, K("b", {}, i.name || "(sem nome)"), K("small", {}, `${i.width}×${i.height} tiles · ${new Date(i.updatedAt).toLocaleString("pt-BR")}`)), K("button", {
+			e.replaceChildren(), r.length || e.append(q("div", { class: "vt-empty" }, "Nenhuma zona salva ainda."));
+			for (let i of r) e.append(q("div", { class: "vt-item" }, q("div", {}, q("b", {}, i.name || "(sem nome)"), q("small", {}, `${i.width}×${i.height} tiles · ${new Date(i.updatedAt).toLocaleString("pt-BR")}`)), q("button", {
 				class: "vt-btn vt-primary",
 				onclick: async () => {
 					t(), await this.openZone(i.id);
 				}
-			}, "Abrir"), K("button", {
+			}, "Abrir"), q("button", {
 				class: "vt-btn vt-danger",
 				title: "Apagar",
-				html: Y.trash,
+				html: X.trash,
 				onclick: async () => {
 					if (await vtConfirm(`Apagar "${i.name}"? Não dá pra desfazer.`, { title: "Apagar zona", tone: "danger", confirmLabel: "Apagar" })) {
 						try {
@@ -52936,8 +52942,8 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? Sl(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(Sl(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? Cl(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(Cl(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -52949,7 +52955,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				break;
 			}
 		}
-		let a = K("div", { class: "vt-world-inner" }), o = K("div", { class: "vt-world" }, a), s = "http://www.w3.org/2000/svg", c = document.createElementNS(s, "svg");
+		let a = q("div", { class: "vt-world-inner" }), o = q("div", { class: "vt-world" }, a), s = "http://www.w3.org/2000/svg", c = document.createElementNS(s, "svg");
 		c.classList.add("vt-world-links"), a.append(c);
 		let l = () => {
 			let e = Object.values(t.layout), n = Math.max(...e.map((e) => e.x), 0) + 190 + 40, r = Math.max(...e.map((e) => e.y), 0) + 84 + 40;
@@ -52980,19 +52986,19 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		}, p = () => {
 			for (let e of a.querySelectorAll(".vt-node")) e.remove();
 			for (let r of n) {
-				let n = t.layout[r.id], i = t.start === r.id, o = K("div", {
+				let n = t.layout[r.id], i = t.start === r.id, o = q("div", {
 					class: `vt-node${r.id === e.zone.id ? " vt-current" : ""}${i ? " vt-start" : ""}`,
 					style: `left:${n.x}px;top:${n.y}px;width:190px;height:84px`
-				}, K("div", { class: "vt-node-title" }, i ? K("span", {
+				}, q("div", { class: "vt-node-title" }, i ? q("span", {
 					class: "vt-star",
-					html: Y.star,
+					html: X.star,
 					title: "Os jogadores começam aqui"
-				}) : null, K("b", {}, r.name || "(sem nome)")), K("small", {}, `${r.width}×${r.height} · ${r.portals.length} saída${r.portals.length === 1 ? "" : "s"}${r.updatedAt ? "" : " · não salva"}`), K("div", { class: "vt-node-actions" }, r.id === e.zone.id ? K("span", { class: "vt-tag" }, "aberta") : K("button", {
+				}) : null, q("b", {}, r.name || "(sem nome)")), q("small", {}, `${r.width}×${r.height} · ${r.portals.length} saída${r.portals.length === 1 ? "" : "s"}${r.updatedAt ? "" : " · não salva"}`), q("div", { class: "vt-node-actions" }, r.id === e.zone.id ? q("span", { class: "vt-tag" }, "aberta") : q("button", {
 					class: "vt-btn",
 					onclick: async () => {
 						await this.openZone(r.id) && h();
 					}
-				}, "Abrir"), !i && K("button", {
+				}, "Abrir"), !i && q("button", {
 					class: "vt-btn",
 					title: "Os jogadores começam nesta zona",
 					onclick: () => {
@@ -53017,24 +53023,24 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 				}), a.append(o);
 			}
 			d();
-		}, m = K("input", {
+		}, m = q("input", {
 			class: "vt-input",
 			value: t.name,
 			oninput: () => {
 				t.name = m.value, f();
 			}
 		}), h = this.modal("Mapa do mundo", [
-			K("div", { class: "vt-row" }, K("label", {}, "Mundo"), m),
+			q("div", { class: "vt-row" }, q("label", {}, "Mundo"), m),
 			o,
-			K("small", { class: "vt-note" }, "Arraste os cartões pra organizar. As setas são as saídas entre zonas. A estrela marca onde os jogadores começam.")
-		], [K("button", {
+			q("small", { class: "vt-note" }, "Arraste os cartões pra organizar. As setas são as saídas entre zonas. A estrela marca onde os jogadores começam.")
+		], [q("button", {
 			class: "vt-btn",
 			onclick: () => h()
 		}, "Fechar")], void 0, !0);
 		p(), i && f();
 	}
 	toast(e, t = !1) {
-		let n = K("div", { class: `vt-toast${t ? " vt-error" : ""}` }, e);
+		let n = q("div", { class: `vt-toast${t ? " vt-error" : ""}` }, e);
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 	handleKey(e) {
@@ -53117,7 +53123,7 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 			}
 			return;
 		}
-		let s = Il.find((e) => e.key.toLowerCase() === i);
+		let s = Ll.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -53128,10 +53134,10 @@ var Vl = "vortable:objects:recent", Hl = 24, Ul = [
 		}) : e.key === " " && e.preventDefault();
 	}
 };
-function ql(e) {
+function Jl(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function Jl(e) {
+function Yl(e) {
 	return [
 		e.label,
 		e.category,
@@ -53140,16 +53146,16 @@ function Jl(e) {
 		...Je(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function Yl(e) {
+function Xl(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
 //#region src/engine/index.ts
-var Xl = "/__vortable/curate";
-function Zl(e, t) {
+var Zl = "/__vortable/curate";
+function Ql(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	Oo(n);
-	let r = t.mode ?? "play", i = t.storage ?? new wl(), a = t.appearance, o = !1, s = null, l = !0, u = t.net ? new lo(t.net) : void 0, d = null, f = null, p = e, m = (e, i, c, f = 0, p) => ({
+	let r = t.mode ?? "play", i = t.storage ?? new Tl(), a = t.appearance, o = !1, s = null, l = !0, u = t.net ? new lo(t.net) : void 0, d = null, f = null, p = e, m = (e, i, c, f = 0, p) => ({
 		zone: e,
 		...p ? {
 			at: {
@@ -53196,7 +53202,7 @@ function Zl(e, t) {
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null, a = r && !r.dirty && t.zone?.id === r.zone.id;
-		f = new Es(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), f.assetBase = n, r && (f.dirty = r.dirty, f.view = r.view, f.zoom = r.zoom), d = new Kl(e, f, i, {
+		f = new Es(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), f.assetBase = n, r && (f.dirty = r.dirty, f.view = r.view, f.zoom = r.zoom), d = new ql(e, f, i, {
 			assetBase: n,
 			textureImage: (e) => _.textures.get(e).getSourceImage(),
 			startTest: () => {
@@ -53218,7 +53224,7 @@ function Zl(e, t) {
 			npcLibrary: t.npcLibrary,
 			externalBar: t.externalToolbar,
 			curate: t.curate ? async (e, t, n) => {
-				let r = await fetch(Xl, {
+				let r = await fetch(Zl, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -53433,10 +53439,10 @@ function Zl(e, t) {
 		}
 	};
 }
-function Ql(e, t = {}) {
-	let n = new fl(e, {
+function $l(e, t = {}) {
+	let n = new pl(e, {
 		assetBase: t.assetBase ?? "./assets/",
-		storage: t.storage ?? new Hc(),
+		storage: t.storage ?? new Uc(),
 		back: t.back,
 		single: t.single,
 		title: t.title,
@@ -53449,4 +53455,4 @@ function Ql(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { Uc as CHARACTER_FORMAT, yi as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, Y as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Hc as LocalCharacterStorage, wl as LocalWorldStorage, j as METERS_PER_TILE, no as REACTIONS, xi as SKY_PRESETS, jo as SOUND_LAYERS, zo as SURFACE_LABELS, _ as TERRAINS, A as TILE, Xi as WEATHERS, Zi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, Gc as characterFileName, ar as characterFrame, z as clampZoneSize, Qr as daylight, $t as defaultAppearance, qc as downloadText, Wc as exportCharacters, _i as formatHour, Bt as loadCharacterData, Tl as localStorageAvailable, Ql as mountCharacterCreator, Zl as mountVortable, Bc as newCharacter, F as newId, Cl as newWorld, B as newZone, en as normalizeAppearance, Vc as parseCharacter, Kc as parseCharacterFile, oo as parseNet, Fl as parseWorld, Dl as parseZone, Jc as pickTextFile, an as randomAppearance, hi as shiftForHour, bi as skySwatch, Sl as summarize, mi as worldHour };
+export { H as BIG_HEIGHTS, Wc as CHARACTER_FORMAT, yi as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, X as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Uc as LocalCharacterStorage, Tl as LocalWorldStorage, j as METERS_PER_TILE, no as REACTIONS, xi as SKY_PRESETS, jo as SOUND_LAYERS, zo as SURFACE_LABELS, _ as TERRAINS, A as TILE, Xi as WEATHERS, Zi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, Kc as characterFileName, ar as characterFrame, z as clampZoneSize, Qr as daylight, $t as defaultAppearance, Jc as downloadText, Gc as exportCharacters, _i as formatHour, Bt as loadCharacterData, El as localStorageAvailable, $l as mountCharacterCreator, Ql as mountVortable, Vc as newCharacter, F as newId, wl as newWorld, B as newZone, en as normalizeAppearance, Hc as parseCharacter, qc as parseCharacterFile, oo as parseNet, Il as parseWorld, Ol as parseZone, Yc as pickTextFile, an as randomAppearance, hi as shiftForHour, bi as skySwatch, Cl as summarize, mi as worldHour };

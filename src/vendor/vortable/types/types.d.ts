@@ -183,6 +183,8 @@ export declare function newZone(name: string, width: number, height: number, bas
 export type BodyType = 'male' | 'female' | 'muscular' | 'teen' | 'child';
 /** Alturas (escala do boneco no jogo): 1 = normal. */
 export declare const HEIGHTS: readonly [0.84, 0.92, 1, 1.08, 1.16];
+/** Alturas de gigante: não aparecem no criador (o seletor só vai até HEIGHTS), mas um NPC de criatura grande pode ter uma delas. */
+export declare const BIG_HEIGHTS: readonly [1.5, 1.7, 1.9, 2.2, 2.6];
 /** Um item escolhido num espaço do personagem (cabelo, camisa...). */
 export interface AppearanceItem {
     /** Id no catálogo do personagem. */

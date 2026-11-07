@@ -5,7 +5,7 @@ import { soundVolume } from '../../settings/settingsStore'
 // O mestre toca e a rede manda o mesmo comando pros jogadores (`sys: 'sfx'`), que sintetizam o som aí.
 // ────────────────────────────────────────────────────────
 
-export type SoundGroupId = 'corredor' | 'espreitador' | 'estalador' | 'tropego' | 'baiacu' | 'zumbi'
+export type SoundGroupId = 'corredor' | 'espreitador' | 'estalador' | 'tropego' | 'baiacu' | 'zumbi' | 'monstro' | 'draugr'
 
 /** Distância: 0 perto, 1 longe (abafado), 2 muito longe (bem abafado e com eco). */
 export type SoundDistance = 0 | 1 | 2
@@ -278,6 +278,27 @@ export const SOUND_GROUPS: SoundGroup[] = [
       { id: 'baiacu.grunhido', label: 'Grunhido grave', dur: 1.2, play: (c, t) => voice(c, t, { dur: 1.2, f0: [[0, 55], [0.5, 72], [1, 50]], noise: 0.45, formants: FORM_DEEP, drive: 5, gain: 0.6, attack: 0.1, release: 0.5, sub: 0.5 }) },
       { id: 'baiacu.passos', label: 'Passos pesados', dur: 2.2, play: (c, t) => { for (let i = 0; i < 4; i++) thud(c, t + i * 0.55, rnd(70, 90), 0.85, 0.5) } },
       { id: 'baiacu.arremesso', label: 'Arremesso de esporos', dur: 1.3, play: (c, t) => { breath(c, t, 0.6, [300, 3500], 0.8, 0.7); thud(c, t + 0.6, 80, 0.8, 0.5); breath(c, t + 0.62, 0.7, [3000, 200], 0.7, 0.6) } },
+    ],
+  },
+  {
+    id: 'monstro', label: 'Monstro de Cabeças',
+    sounds: [
+      { id: 'monstro.rugido', label: 'Rugido de muitas bocas', dur: 3.0, play: (c, t) => {
+        voice(c, t, { dur: 3.0, f0: [[0, 38], [0.25, 56 * rnd(0.92, 1.08)], [1, 32]], noise: 0.45, formants: FORM_DEEP, drive: 7, vib: { rate: 14, depth: 5 }, trem: { rate: 9, depth: 0.25 }, gain: 0.75, attack: 0.2, release: 1.2, sub: 0.7, detune: 11 })
+        voice(c, t + 0.15, { dur: 2.6, f0: [[0, 90], [0.3, 130 * rnd(0.9, 1.1)], [1, 70]], noise: 0.6, formants: [{ f: 420, q: 3, g: 1 }, { f: 1100, q: 4, g: 0.6 }], drive: 5, trem: { rate: 16, depth: 0.3 }, gain: 0.4, attack: 0.15, release: 1.0 })
+        voice(c, t + 0.35, { dur: 2.0, f0: [[0, 170], [0.4, 240 * rnd(0.9, 1.1)], [1, 140]], noise: 0.7, formants: [{ f: 900, q: 3, g: 1 }, { f: 2100, q: 4, g: 0.5 }], drive: 4, gain: 0.28, attack: 0.1, release: 0.9 }) } },
+      { id: 'monstro.chiado', label: 'Chiado de jacaré', dur: 1.8, play: (c, t) => { breath(c, t, 1.4, [2600, 900], 1.4, 0.7, 0.2); voice(c, t + 0.1, { dur: 1.5, f0: [[0, 60], [0.5, 84], [1, 55]], noise: 0.5, formants: FORM_DEEP, drive: 5, gain: 0.4, attack: 0.2, release: 0.7, sub: 0.4 }) } },
+      { id: 'monstro.mordida', label: 'Mandíbulas estalando', dur: 1.4, play: (c, t) => { for (let i = 0; i < 3; i++) { thud(c, t + i * 0.32, rnd(120, 160), 0.6, 0.18); click(c, t + i * 0.32 + 0.02, rnd(1500, 2200), 0.55); click(c, t + i * 0.32 + 0.06, rnd(900, 1400), 0.4) } } },
+      { id: 'monstro.passos', label: 'Passos de gigante', dur: 2.6, play: (c, t) => { for (let i = 0; i < 3; i++) { thud(c, t + i * 0.85, rnd(48, 62), 1.0, 0.7); breath(c, t + i * 0.85, 0.5, [260, 90], 0.8, 0.5) } } },
+    ],
+  },
+  {
+    id: 'draugr', label: 'Draugr',
+    sounds: [
+      { id: 'draugr.sussurro', label: 'Sussurro de além-túmulo', dur: 2.4, play: (c, t) => { breath(c, t, 1.9, [1800, 500], 1.1, 0.5, 0.3); voice(c, t + 0.2, { dur: 2.0, f0: [[0, 92], [0.5, 118 * rnd(0.92, 1.08)], [1, 80]], noise: 0.55, formants: [{ f: 480, q: 4, g: 1 }, { f: 1500, q: 5, g: 0.5 }], drive: 2.5, vib: { rate: 5.5, depth: 7 }, gain: 0.35, attack: 0.4, release: 1.0 }) } },
+      { id: 'draugr.rugido', label: 'Rugido seco', dur: 1.8, play: (c, t) => voice(c, t, { dur: 1.8, f0: [[0, 70], [0.3, 110 * rnd(0.9, 1.1)], [1, 60]], noise: 0.55, formants: FORM_DEEP, drive: 4.5, trem: { rate: 14, depth: 0.25 }, gain: 0.6, attack: 0.1, release: 0.7, sub: 0.4 }) },
+      { id: 'draugr.armadura', label: 'Armadura rangendo', dur: 1.6, play: (c, t) => { for (let i = 0; i < 6; i++) { click(c, t + i * 0.2 + rnd(0, 0.06), rnd(1200, 2600), 0.35); breath(c, t + i * 0.2, 0.12, [3000, 1500], 2, 0.25) } } },
+      { id: 'draugr.passos', label: 'Passos ocos', dur: 2.0, play: (c, t) => { for (let i = 0; i < 4; i++) { thud(c, t + i * 0.5, rnd(95, 120), 0.55, 0.22); click(c, t + i * 0.5 + 0.02, rnd(900, 1300), 0.25) } } },
     ],
   },
   {
