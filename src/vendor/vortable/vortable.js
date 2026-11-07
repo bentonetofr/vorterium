@@ -42599,61 +42599,63 @@ function kn(e, t) {
 	return t === 2 ? e === "right" ? "l" : "r" : t === 0 ? e === "right" ? "r" : "l" : t === 3 ? e === "right" ? "l" : null : t === 1 && e === "left" ? "r" : null;
 }
 var An = (e, t) => e[t] * .299 + e[t + 1] * .587 + e[t + 2] * .114;
-function jn(e, t, n, r) {
-	let i = e.width, a = e.getContext("2d", { willReadFrequently: !0 }), o = a.getImageData(0, 0, e.width, e.height), s = t.getContext("2d", { willReadFrequently: !0 }).getImageData(0, 0, t.width, t.height).data, c = !1;
+function jn(e, t, n, r, i) {
+	let a = e.width, o = e.getContext("2d", { willReadFrequently: !0 }), s = o.getImageData(0, 0, e.width, e.height), c = t.getContext("2d", { willReadFrequently: !0 }).getImageData(0, 0, t.width, t.height).data, l = i?.getContext("2d", { willReadFrequently: !0 }).getImageData(0, 0, i.width, i.height).data, u = !1, d = (e) => {
+		l && l[e + 3] > 0 ? (s.data[e] = l[e], s.data[e + 1] = l[e + 1], s.data[e + 2] = l[e + 2], s.data[e + 3] = l[e + 3]) : s.data[e + 3] = 0, u = !0;
+	};
 	for (let e = 0; e < 4; e++) {
 		let t = kn(n, e);
 		if (!t) continue;
-		let a = t === "l" ? 1 : -1;
+		let i = t === "l" ? 1 : -1;
 		for (let n = 0; n < r; n++) {
-			let r = n * hn, l = e * hn, u = (e, t) => ((l + t) * i + r + e) * 4;
+			let r = n * hn, o = e * hn, l = (e, t) => ((o + t) * a + r + e) * 4;
 			if (e === 0 || e === 2) {
 				let e = hn, n = -1;
-				for (let t = vn; t <= yn; t++) for (let r = 0; r < hn; r++) s[u(r, t) + 3] > 0 && (r < e && (e = r), r > n && (n = r));
+				for (let t = vn; t <= yn; t++) for (let r = 0; r < hn; r++) c[l(r, t) + 3] > 0 && (r < e && (e = r), r > n && (n = r));
 				if (n >= e) {
 					for (let r = xn; r <= Cn; r++) {
-						let i = r < bn ? Sn : 0, a = t === "l" ? 0 : n + 1 + i, s = t === "l" ? e - 1 - i : 63;
-						for (let e = a; e <= s; e++) o.data[u(e, r) + 3] !== 0 && (o.data[u(e, r) + 3] = 0, c = !0);
+						let i = r < bn ? Sn : 0, a = t === "l" ? 0 : n + 1 + i, o = t === "l" ? e - 1 - i : 63;
+						for (let e = a; e <= o; e++) s.data[l(e, r) + 3] !== 0 && d(l(e, r));
 					}
 					continue;
 				}
 			}
-			let d = -1, f = -1, p = 0;
+			let u = -1, f = -1, p = 0;
 			for (let e = gn; e <= _n; e++) {
 				let n = t === "l" ? 0 : 63;
-				for (; n >= 0 && n < hn && s[u(n, e) + 3] === 0;) n += a;
+				for (; n >= 0 && n < hn && c[l(n, e) + 3] === 0;) n += i;
 				if (n < 0 || n >= hn) {
-					if (d >= 0 && ++p > En) break;
+					if (u >= 0 && ++p > En) break;
 					continue;
 				}
 				let r = n;
 				if (f >= 0 && Math.abs(r - f) > Dn) {
-					if (d >= 0 && ++p > En) break;
+					if (u >= 0 && ++p > En) break;
 					continue;
 				}
-				let i = An(s, u(r, e)) + On, l = (t) => s[u(t, e) + 3] > 0 && An(s, u(t, e)) <= i;
-				for (; n >= 0 && n < hn && l(n);) n += a;
-				let m = 0;
-				for (; n >= 0 && n < hn && s[u(n, e) + 3] > 0 && !l(n) && m <= wn;) n += a, m++;
-				if (m < Tn || m > wn || n < 0 || n >= hn) {
-					if (d >= 0 && ++p > En) break;
+				let a = An(c, l(r, e)) + On, o = (t) => c[l(t, e) + 3] > 0 && An(c, l(t, e)) <= a;
+				for (; n >= 0 && n < hn && o(n);) n += i;
+				let s = 0;
+				for (; n >= 0 && n < hn && c[l(n, e) + 3] > 0 && !o(n) && s <= wn;) n += i, s++;
+				if (s < Tn || s > wn || n < 0 || n >= hn) {
+					if (u >= 0 && ++p > En) break;
 					continue;
 				}
 				f < 0 && (f = r), p = 0;
-				for (let t = r; t !== n; t += a) o.data[u(t, e) + 3] = 0, c = !0;
-				d = e;
+				for (let t = r; t !== n; t += i) d(l(t, e));
+				u = e;
 			}
-			for (let e = d + 1; d >= 0 && e <= d + 2 && e < hn; e++) {
+			for (let e = u + 1; u >= 0 && e <= u + 2 && e < hn; e++) {
 				let n = t === "l" ? 0 : 63;
-				for (; n >= 0 && n < hn && s[u(n, e) + 3] === 0;) n += a;
+				for (; n >= 0 && n < hn && c[l(n, e) + 3] === 0;) n += i;
 				if (n < 0 || n >= hn || Math.abs(n - f) > Dn) continue;
-				let r = n, i = An(s, u(r, e)) + On, l = 0;
-				for (; n >= 0 && n < hn && s[u(n, e) + 3] > 0 && An(s, u(n, e)) <= i && l <= wn;) n += a, l++;
-				if (!(l < 1 || l > wn || n < 0 || n >= hn || s[u(n, e) + 3] !== 0)) for (let t = r; t !== n; t += a) o.data[u(t, e) + 3] = 0, c = !0;
+				let r = n, a = An(c, l(r, e)) + On, o = 0;
+				for (; n >= 0 && n < hn && c[l(n, e) + 3] > 0 && An(c, l(n, e)) <= a && o <= wn;) n += i, o++;
+				if (!(o < 1 || o > wn || n < 0 || n >= hn || c[l(n, e) + 3] !== 0)) for (let t = r; t !== n; t += i) d(l(t, e));
 			}
 		}
 	}
-	c && a.putImageData(o, 0, 0);
+	u && o.putImageData(s, 0, 0);
 }
 //#endregion
 //#region src/engine/character/pose.ts
@@ -42846,7 +42848,7 @@ async function nr(e, t, n, r) {
 	let i = await Bt(e), { frames: a } = Gn[n], o = document.createElement("canvas");
 	o.width = a * 64, o.height = 256;
 	let s = o.getContext("2d"), c = er(i, e, t, n, r), l = await Promise.all(c.map((e) => e.proc ? null : qn(e.url).catch((e) => (console.warn("[vortable] camada do boneco não carregou:", e.message), null)))), u = await Promise.all(c.map((e) => e.alt ? qn(e.alt).catch(() => null) : null)), d = $n(t), f = null;
-	return c.forEach((e, t) => {
+	if (c.forEach((e, t) => {
 		if (e.proc) {
 			if (!f) return;
 			for (let t = 0; t < 4; t++) for (let n = 0; n < a; n++) Ot(s, n * 64, t * 64, f, n * 64, t * 64, t, e.proc.def, e.proc.color);
@@ -42883,12 +42885,29 @@ async function nr(e, t, n, r) {
 			}
 		} else s.drawImage(i, 0, 0);
 		e.slot === "head" && (f = i.getContext("2d", { willReadFrequently: !0 }).getImageData(0, 0, i.width, i.height));
-	}), !r && t.missingArm && t.slots.body && jn(o, await nr(e, {
-		version: 2,
-		body: t.body,
-		skin: t.skin,
-		slots: { body: t.slots.body }
-	}, n, "body"), t.missingArm, a), r || mn(o, t, a), o;
+	}), !r && t.missingArm && t.slots.body) {
+		let r = await nr(e, {
+			version: 2,
+			body: t.body,
+			skin: t.skin,
+			slots: { body: t.slots.body }
+		}, n, "body"), i = Object.fromEntries([
+			"legs",
+			"shoes",
+			"socks",
+			"apron",
+			"sash",
+			"belt",
+			"dress"
+		].filter((e) => t.slots[e]).map((e) => [e, t.slots[e]])), s = Object.keys(i).length ? await nr(e, {
+			version: 2,
+			body: t.body,
+			skin: t.skin,
+			slots: i
+		}, n) : void 0;
+		jn(o, r, t.missingArm, a, s);
+	}
+	return r || mn(o, t, a), o;
 }
 async function rr(e, t, n = 2, r = 0) {
 	let i = await Bt(e), a = document.createElement("canvas");
