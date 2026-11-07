@@ -12,6 +12,8 @@ import { SoundPanel } from './SoundPanel'
 import { EnemiesPane } from '../enemies/EnemiesPane'
 import { PeoplePane } from '../people/PeoplePane'
 import { AnimalsPane } from '../animals/AnimalsPane'
+import { FollowPane } from '../follow/FollowPane'
+import { FollowCrew, npcKind, type FollowKind } from '../follow/follow'
 import { setLocalZone } from '../enemies/localZone'
 import { removeEnemies } from '../enemies/enemies'
 import { mapPoint } from '../enemies/useMapDrop'
@@ -21,8 +23,8 @@ import { alertDialog, ask, confirmDialog } from '../../../shared/components/dial
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type Pane = 'zonas' | 'jogadores' | 'conversa' | 'npcs' | 'gerador' | 'inimigos' | 'animais' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
-const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', conversa: 'Câmera de conversa', npcs: 'NPCs desta zona', gerador: 'Gerador de NPCs', inimigos: 'Inimigos', animais: 'Animais', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
+type Pane = 'zonas' | 'jogadores' | 'conversa' | 'npcs' | 'seguir' | 'gerador' | 'inimigos' | 'animais' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
+const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', conversa: 'Câmera de conversa', npcs: 'NPCs desta zona', seguir: 'Seguir jogador', gerador: 'Gerador de NPCs', inimigos: 'Inimigos', animais: 'Animais', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
 type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null; timeShift?: number | null }
 
 /**
@@ -41,6 +43,9 @@ const SPEECH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 
 /** Uma pata (o botão e o painel de animais). */
 const PAW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="10" r="1.8"/><circle cx="10" cy="6" r="1.8"/><circle cx="14" cy="6" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M12 12c-3 0-5.5 3-5.5 5.2 0 1.6 1.5 2.3 3 2.3 1 0 1.6-.4 2.5-.4s1.5.4 2.5.4c1.5 0 3-.7 3-2.3C17.5 15 15 12 12 12z"/></svg>'
+
+/** Uma pessoa com pegadas atrás (o botão e o painel de seguir). */
+const FOLLOW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="6.500" r="2.600"/><path d="M11.500 20c.4-3.400 2.200-5.200 4.500-5.200s4.100 1.800 4.500 5.200"/><circle cx="6" cy="14" r="1.200"/><circle cx="3.500" cy="19" r="1.200"/><path d="M8.500 18.500h.01"/></svg>'
 
 /** Uma tevê (o botão e o painel de espectadores). */
 const TV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="m8 3 4 4 4-4"/><path d="M7 16.5h.01M17 12.5v4"/></svg>'
@@ -78,6 +83,13 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   const [npcMenu, setNpcMenu] = useState<{ id: string; name: string; role: string; left: number; top: number } | null>(null)
   const [removing, setRemoving] = useState(false)
   const npcsRef = useRef<Npc[]>([])
+  // NPCs andando atrás de um jogador (botão Seguir)
+  const crewRef = useRef<FollowCrew | null>(null)
+  const [followKinds, setFollowKinds] = useState<Record<FollowKind, boolean>>({ pessoa: true, animal: true, inimigo: true })
+  const [startingFollow, setStartingFollow] = useState(false)
+
+  // trocar de mundo ou sair do controle: os NPCs que seguiam ficam parados onde estão
+  useEffect(() => () => { const c = crewRef.current; crewRef.current = null; void c?.stop() }, [active?.id])
 
   // clicar fora (na cena, por exemplo) ou Esc fecha o painel
   useEffect(() => {
@@ -168,6 +180,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     setRemoving(true)
     try {
       if (watch.current?.controllingNpc() === id) await watch.current.releaseNpc()
+      crewRef.current?.drop(id)
       await removeEnemies({ campaignId: campaign.id, worldId: active.id, worldName: active.name, zoneId, net: vnet.net, ids: [id] })
     } catch (err) {
       void alertDialog(err instanceof Error ? err.message : 'Não deu pra tirar o NPC.')
@@ -196,6 +209,8 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
   async function control(id: string) {
     const w = watch.current
     if (!w) return
+    // um NPC que está seguindo um jogador para onde está antes de o mestre assumir
+    await crewRef.current?.release(id)
     const now = w.controllingNpc()
     if (now) await w.releaseNpc()
     if (now !== id) {
@@ -243,9 +258,48 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     setFollowing(peer.id)
   }
 
-  const here = peers.filter((p) => p.zone === zoneId)
-  const elsewhere = peers.filter((p) => p.zone !== zoneId)
+  // NPCs andando (controlados ou seguindo alguém) aparecem na sala como jogadores de id `npc:…`: não são gente
+  const humans = peers.filter((p) => !p.id.startsWith('npc:'))
+  const here = humans.filter((p) => p.zone === zoneId)
+  const elsewhere = humans.filter((p) => p.zone !== zoneId)
   const zoneName = (id: string | null) => zones.find((z) => z.id === id)?.name ?? 'outra zona'
+
+  // ── Seguir: os NPCs da zona andam atrás de um jogador ──
+  if (crewRef.current && !crewRef.current.running) crewRef.current = null
+  const crewInfo = crewRef.current?.info() ?? null
+  const followCounts: Record<FollowKind, number> = { pessoa: 0, animal: 0, inimigo: 0 }
+  for (const n of npcs) followCounts[npcKind(n.id)]++
+
+  async function startFollow(peer: { id: string; name: string }) {
+    if (!active || !zoneId || startingFollow) return
+    const running = crewRef.current
+    if (running) {
+      // clicar no mesmo jogador de novo para de seguir; em outro, passa a seguir ele
+      if (running.info().targetId === peer.id) await stopFollow()
+      else running.retarget(peer.id, peer.name)
+      return
+    }
+    setStartingFollow(true)
+    try {
+      const crew = await FollowCrew.create({
+        campaignId: campaign.id, worldId: active.id, worldName: active.name, zoneId, net: vnet.net,
+        kinds: followKinds, skip: controlling ? [controlling] : [], target: peer, peers: () => watch.current?.peers() ?? [],
+      })
+      if (crew.count === 0) { await crew.stop(); void alertDialog('Não há NPCs desses tipos nesta zona.'); return }
+      crewRef.current = crew
+    } catch (err) {
+      void alertDialog(err instanceof Error ? err.message : 'Não deu pra fazer os NPCs seguirem.')
+    } finally {
+      setStartingFollow(false)
+    }
+  }
+
+  async function stopFollow() {
+    const crew = crewRef.current
+    crewRef.current = null
+    if (crew) await crew.stop()
+    tick((n) => n + 1)
+  }
 
   // ── Câmera de conversa ──
   const talk = mesa.stage.scene.kind === 'talk' ? mesa.stage.scene : null
@@ -363,9 +417,10 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
       <div className="live__menu" ref={menuRef}>
         <div className="live__bar" role="toolbar" aria-label="Controle ao vivo">
           {tool('zonas', 'world', 'Zonas e câmera')}
-          {tool('jogadores', 'person', 'Jogadores', { badge: peers.length || undefined })}
+          {tool('jogadores', 'person', 'Jogadores', { badge: humans.length || undefined })}
           {tool('conversa', SPEECH_ICON, 'Câmera de conversa: todos veem de perto o rosto de quem fala', { dot: talk != null })}
           {tool('npcs', 'npc', 'NPCs desta zona', { dot: controlling != null })}
+          {tool('seguir', FOLLOW_ICON, 'Seguir: os NPCs andam atrás de um jogador', { dot: crewInfo != null })}
           {tool('gerador', PERSON_PLUS_ICON, 'Gerador de NPCs (pessoas, soldados, sobreviventes...)', { badge: npcs.filter((n) => n.id.startsWith('pess-')).length || undefined })}
           {tool('inimigos', SKULL_ICON, 'Inimigos e sons de criaturas', { badge: npcs.filter((n) => n.id.startsWith('inim-')).length || undefined })}
           {tool('animais', PAW_ICON, 'Animais (cavalos, cachorros)', { badge: npcs.filter((n) => n.id.startsWith('anim-')).length || undefined })}
@@ -496,6 +551,13 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
                 )}
               </section>
               </>
+            )}
+            {open === 'seguir' && (
+              <FollowPane
+                players={humans} zoneId={zoneId} zoneName={zoneName} counts={followCounts}
+                kinds={followKinds} onKinds={setFollowKinds} info={crewInfo} busy={startingFollow}
+                onFollow={(p) => void startFollow(p)} onStop={() => void stopFollow()}
+              />
             )}
             {open === 'gerador' && (
               <PeoplePane

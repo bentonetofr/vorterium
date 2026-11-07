@@ -141,7 +141,7 @@ export function zoneStorage(o: { campaignId: string; worldId: string; worldName:
 
 type Net = VortableNet | null
 
-function broadcast(net: Net, msg: unknown) {
+export function broadcast(net: Net, msg: unknown) {
   net?.send(msg)          // os jogadores
   net?.sink?.(msg)        // e a câmera do mestre (a rede não devolve o que o mestre manda)
 }

@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.19',
+    date:    '2026-11-07',
+    title:   'Vortable: NPCs seguem um jogador',
+    items: [
+      'Novo botão no controle ao vivo do mestre, ao lado de NPCs desta zona: Seguir. Escolha um jogador e todos os NPCs da zona passam a andar atrás dele, ocupando lugares diferentes em volta (anéis cada vez maiores se forem muitos), andando e correndo se ele se afastar, e todos os jogadores os veem se movendo. Dá pra marcar quem segue: Pessoas, Animais e Inimigos (cada um com a contagem da zona). Clicar em outro jogador troca quem é seguido; Parar de seguir (ou clicar no mesmo jogador) deixa cada NPC parado onde está, pra todos, e a zona grava as posições.',
+      'Como é feito: o navegador do mestre move os NPCs e conta a posição pela rede, do mesmo jeito que já funciona com o NPC que você controla. Por isso só anda com o controle aberto (fechou ou trocou de mundo, eles ficam parados onde estavam) e, por enquanto, os NPCs não desviam de paredes, água nem objetos. Se o jogador for pra outra zona, eles esperam. Controlar um NPC que está seguindo o solta primeiro, no lugar dele.',
+      'A lista de Jogadores do controle deixou de contar os NPCs que andam como se fossem gente.',
+    ],
+  },
+  {
     version: '2.18',
     date:    '2026-11-07',
     title:   'Vortable: Monstro de Cabeças e dois Draugr',
