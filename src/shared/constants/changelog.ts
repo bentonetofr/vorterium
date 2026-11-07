@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.23',
+    date:    '2026-11-07',
+    title:   'Vortable: lobo gigante',
+    items: [
+      'Novo corpo no criador de personagem: o Lobo gigante (aba Corpo, grupo Pós-apocalipse), feito a partir do desenho do lobo branco de olhos de gelo. Pelo branco farto e arrepiado, mancha cinza no olho e no focinho, cicatriz rosa no rosto, rabo cinza peludo e o amuleto redondo no cordão do peito. Anda, corre e fica parado nas quatro direções, e vem em três pelagens: Ártico (a do desenho), Cinzento e Negro.',
+      'Ele é grande de propósito: usa a altura de gigante (1,5), então fica bem maior que uma pessoa (perto de 2,5 m).',
+      'No controle ao vivo, o painel Animais ganhou o Lobo gigante ao lado de Cavalo e Cachorro: o mestre põe na cena (já no tamanho certo), arrasta pro mapa e controla como um NPC.',
+    ],
+  },
+  {
     version: '2.22',
     date:    '2026-11-07',
     title:   'Dados 3D: modo leve no celular',

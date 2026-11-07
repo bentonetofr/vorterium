@@ -4,12 +4,12 @@ import type { VortableNet } from '../net/VortableNet'
 import { announceAdd, announceRemove, zoneStorage } from '../enemies/enemies'
 
 // ────────────────────────────────────────────────────────
-// Animais do Vortable: cavalos (6 pelagens) e cachorros (4). O mestre põe na cena pelo painel "Animais" do controle ao vivo;
+// Animais do Vortable: cavalos (6 pelagens), cachorros (4) e lobos gigantes (3). O mestre põe na cena pelo painel "Animais" do controle ao vivo;
 // cada um vira um NPC fixo da zona (id `anim-<bicho>-<pelagem>-<código>`) com o corpo de animal no lugar do corpo humano
-// (peças `tlou/body/cavalo` e `tlou/body/cachorro`, desenhadas em scripts/tlou_art). Dá pra controlar como um NPC.
+// (peças `tlou/body/cavalo`, `tlou/body/cachorro` e `tlou/body/lobo`, desenhadas em scripts/tlou_art). Dá pra controlar como um NPC.
 // ────────────────────────────────────────────────────────
 
-export type SpeciesId = 'cavalo' | 'cachorro'
+export type SpeciesId = 'cavalo' | 'cachorro' | 'lobo'
 
 export interface Coat {
   id: string
@@ -24,6 +24,8 @@ export interface Species {
   /** Id da peça de corpo no catálogo do personagem. */
   body: string
   role: string
+  /** Escala do bicho (aparência.height): o lobo é gigante. */
+  height?: number
   coats: Coat[]
   names: string[]
 }
@@ -51,6 +53,15 @@ export const SPECIES: Species[] = [
     ],
     names: ['Rex', 'Thor', 'Duque', 'Luna', 'Nina', 'Max', 'Bolt', 'Zeus', 'Mel', 'Trovão', 'Sombra', 'Fera', 'Apolo', 'Kira', 'Hugo', 'Bella', 'Rocky', 'Lobo'],
   },
+  {
+    id: 'lobo', label: 'Lobo gigante', body: 'tlou/body/lobo', role: 'Lobo gigante (2,5 m)', height: 1.5,
+    coats: [
+      { id: 'artico', label: 'Ártico', blurb: 'Branco farto, olhos de gelo, cicatriz no rosto e amuleto no peito.' },
+      { id: 'cinzento', label: 'Cinzento', blurb: 'Lobo cinza, de olhos de gelo e cicatriz.' },
+      { id: 'negro', label: 'Negro', blurb: 'Preto como a noite, olhos de gelo e cicatriz.' },
+    ],
+    names: ['Gelo', 'Presa', 'Fenrir', 'Geada', 'Neve', 'Garra', 'Inverno', 'Aurora', 'Uivo', 'Fantasma', 'Skoll', 'Hati', 'Lâmina', 'Nevasca'],
+  },
 ]
 
 export const speciesById = (id: string): Species | undefined => SPECIES.find((s) => s.id === id)
@@ -63,7 +74,7 @@ export async function animalAppearance(species: Species, coat: Coat): Promise<Ap
   const engine = await loadEngine()
   const data = await engine.loadCharacterData(VORTABLE_ASSETS)
   const base = engine.defaultAppearance('male')
-  const look = engine.normalizeAppearance(data, { ...base, slots: { body: { id: species.body, variant: coat.id }, head: { id: 'tlou/head/nenhuma' } } })
+  const look = engine.normalizeAppearance(data, { ...base, slots: { body: { id: species.body, variant: coat.id }, head: { id: 'tlou/head/nenhuma' } }, ...(species.height ? { height: species.height } : {}) })
   // catálogo sem a arte do bicho (site desatualizado): o motor trocaria pelo corpo humano; melhor avisar
   if (look.slots.body?.id !== species.body) throw new Error(`Este site ainda não tem a arte de ${species.label.toLowerCase()} (catálogo de personagem desatualizado). Atualize o site e tente de novo.`)
   return look

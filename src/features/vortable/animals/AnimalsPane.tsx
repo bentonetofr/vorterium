@@ -43,7 +43,7 @@ function Portrait({ species, coat, size = 56 }: { species: Species; coat: Coat; 
 }
 
 /**
- * Painel "Animais" do controle ao vivo: o mestre põe cavalos e cachorros na cena (clicando em Colocar ou arrastando pro mapa),
+ * Painel "Animais" do controle ao vivo: o mestre põe cavalos, cachorros e lobos gigantes na cena (clicando em Colocar ou arrastando pro mapa),
  * vê os que já estão na zona e pode controlar um deles como se fosse um jogador.
  */
 export function AnimalsPane({ viewEl, watch, campaignId, worldId, worldName, zoneId, net, peers, npcs, controlling, onControl }: Props) {

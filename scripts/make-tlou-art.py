@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from tlou_art import objects_city, objects_infection, objects_interior, objects_nature, objects_quarantine, objects_roads, objects_ruins, objects_survival  # noqa: E402
-from tlou_art import chars, creatures, dog, faces, horse, garments, draugr, hats, monstro, streak, terrains, weapons, worlds, world_nyc  # noqa: E402
+from tlou_art import chars, creatures, dog, faces, horse, garments, draugr, hats, monstro, streak, terrains, weapons, wolf, worlds, world_nyc  # noqa: E402
 from tlou_art.preview import contact  # noqa: E402
 from tlou_art.sheet import Sheet, merge_objects, write_credits  # noqa: E402
 
@@ -90,6 +90,10 @@ def main() -> None:
         draugr.preview(args[args.index('--draugr-preview') + 1])
         print('draugr: folha de contato pronta')
         return
+    if '--wolf-preview' in args:
+        wolf.preview(ASSETS, args[args.index('--wolf-preview') + 1])
+        print('lobo: folha de contato pronta')
+        return
     if '--monstro-preview' in args:
         monstro.preview(ASSETS, args[args.index('--monstro-preview') + 1])
         print('monstro: folha de contato pronta')
@@ -116,7 +120,7 @@ def main() -> None:
     merge_objects(ASSETS, built)
     write_credits(ASSETS)
     char_slots, char_items = [], []
-    for module in (weapons, faces, garments, creatures, hats, dog, horse, streak, monstro, draugr):
+    for module in (weapons, faces, garments, creatures, hats, dog, horse, streak, monstro, draugr, wolf):
         slots, items = module.generate(ASSETS)
         char_slots += slots
         char_items += items
