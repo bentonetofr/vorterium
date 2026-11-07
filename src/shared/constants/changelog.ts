@@ -20,6 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-11-06',
     title:   'Vortable: novo mundo Midfold',
     items: [
+      'Controle ao vivo: ao controlar um NPC ou inimigo, o foco sai de qualquer campo do painel (quantidade, volume, lista) pra que as setas e o WASD movam o boneco, e se não der pra controlar aparece um aviso em vez de não acontecer nada.',
       'Midfold, um mundo pronto de seis zonas de campo para importar no Vortable (Mundos → Importar mundo, arquivo midfold.mundo.json): campos planos de grama clara e viva, trilha de terra que atravessa quatro zonas da esquerda pra direita, desce e encontra uma estrada de lajotas cinzas de pedra, de beira natural (terra, musgo e ervinhas se misturando à grama), que segue pra baixo por mais duas zonas, até um acampamento no fim. Árvores imensas de troncos colados e copas fundidas, pinheirinhos lá longe e nenhum outro objeto solto.',
       'Midfold ganhou uma cabana abandonada à beira da trilha da segunda zona (a porta leva a uma zona nova, o interior da cabana) e, na quinta zona, do lado direito da estrada, um grande pasto plano de campo de batalha: soldados tombados de dois exércitos, espadas cravadas e caídas, escudos, elmos, flechas, manchas de sangue e estandartes caídos. Para isso entrou um pacote novo de objetos, o Campo de batalha, no catálogo do Vortable.',
     ],

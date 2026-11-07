@@ -191,7 +191,12 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     if (!w) return
     const now = w.controllingNpc()
     if (now) await w.releaseNpc()
-    if (now !== id) await w.controlNpc(id)
+    if (now !== id) {
+      const ok = await w.controlNpc(id)
+      if (!ok) void alertDialog('Não deu pra controlar este NPC. Ele pode ter saído da zona ou a arte dele não carregou: tente de novo ou recarregue o controle.')
+      // o boneco só obedece às setas se nenhum campo estiver com o foco (o motor trata campo, controle deslizante e lista como digitação)
+      else (document.activeElement as HTMLElement | null)?.blur?.()
+    }
     setFollowing(null)
     setControlling(w.controllingNpc())
   }
