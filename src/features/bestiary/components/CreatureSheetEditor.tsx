@@ -1,4 +1,3 @@
-import { Select } from '../../../shared/components/Select'
 import { ABILITY_KINDS, SHEET_LIMITS, STRIKE_TYPES, emptyAbility, emptyStrike } from '../utils/creatureSheet'
 import type { CreatureAbility, CreatureAbilityKind, CreatureSheet, CreatureStrike } from '../../../shared/types'
 import './CreatureSheet.css'
@@ -9,12 +8,6 @@ import './CreatureSheet.css'
 // ────────────────────────────────────────────────────────
 
 const TIER_SUGGESTIONS = ['Inimigo Fraco', 'Inimigo Comum', 'Inimigo Forte', 'Inimigo Extremamente Forte', 'Chefe', 'Chefe Lendário']
-
-/** Opções do tipo de dano: as sugestões, mais o que já estiver escrito (um tipo de uma ficha antiga, por exemplo). */
-function strikeTypeOptions(current: string) {
-  const base = [{ value: '', label: 'Tipo' }, ...STRIKE_TYPES.map((t) => ({ value: t, label: t }))]
-  return current && !STRIKE_TYPES.includes(current) ? [...base, { value: current, label: current }] : base
-}
 
 interface Props {
   value:     CreatureSheet
@@ -53,18 +46,10 @@ export function CreatureSheetEditor({ value, onChange, disabled, part }: Props) 
         <div className="cs-field">
           <label className="cs-label" htmlFor="cs-tier">Classificação</label>
           <input
-            id="cs-tier" className="input" value={value.tier ?? ''} maxLength={SHEET_LIMITS.tier}
+            id="cs-tier" className="input" list="cs-tier-list" value={value.tier ?? ''} maxLength={SHEET_LIMITS.tier}
             placeholder="Inimigo Extremamente Forte" onChange={(e) => set({ tier: e.target.value })}
           />
-          <div className="cs-chips" role="group" aria-label="Sugestões de classificação">
-            {TIER_SUGGESTIONS.map((t) => (
-              <button
-                key={t} type="button" aria-pressed={value.tier === t}
-                className={`cs-chip${value.tier === t ? ' cs-chip--on' : ''}`}
-                onClick={() => set({ tier: value.tier === t ? '' : t })}
-              >{t}</button>
-            ))}
-          </div>
+          <datalist id="cs-tier-list">{TIER_SUGGESTIONS.map((t) => <option key={t} value={t} />)}</datalist>
         </div>
         <div className="cs-field">
           <label className="cs-label" htmlFor="cs-lore">Descrição</label>
@@ -108,13 +93,11 @@ export function CreatureSheetEditor({ value, onChange, disabled, part }: Props) 
           <div key={i} className="cs-row">
             <input className="input cs-row__name" aria-label={`Nome do golpe ${i + 1}`} value={s.name} maxLength={SHEET_LIMITS.strikeName} placeholder="Garras" onChange={(e) => setStrike(i, { name: e.target.value })} />
             <input className="input cs-row__dice cs-mono" aria-label={`Dados do golpe ${i + 1}`} value={s.dice} maxLength={SHEET_LIMITS.strikeDice} placeholder="2d8" onChange={(e) => setStrike(i, { dice: e.target.value })} />
-            <Select
-              className="cs-row__type" aria-label={`Tipo de dano do golpe ${i + 1}`} value={s.type}
-              options={strikeTypeOptions(s.type)} onChange={(v) => setStrike(i, { type: v })}
-            />
+            <input className="input cs-row__type" aria-label={`Tipo do golpe ${i + 1}`} list="cs-type-list" value={s.type} maxLength={SHEET_LIMITS.strikeType} placeholder="C" onChange={(e) => setStrike(i, { type: e.target.value })} />
             <button type="button" className="cs-icon-btn" aria-label={`Tirar o golpe ${i + 1}`} onClick={() => set({ strikes: strikes.filter((_, k) => k !== i) })}>✕</button>
           </div>
         ))}
+        <datalist id="cs-type-list">{STRIKE_TYPES.map((t) => <option key={t} value={t} />)}</datalist>
         {strikes.length < SHEET_LIMITS.strikes && (
           <button type="button" className="btn btn-ghost cs-add" onClick={() => set({ strikes: [...strikes, emptyStrike()] })}>+ Golpe</button>
         )}
@@ -127,10 +110,9 @@ export function CreatureSheetEditor({ value, onChange, disabled, part }: Props) 
         {abilities.map((a, i) => (
           <div key={i} className={`cs-ability cs-ability--${a.kind}`}>
             <div className="cs-ability__top">
-              <Select
-                className="cs-ability__kind" aria-label={`Tipo da habilidade ${i + 1}`} value={a.kind}
-                options={ABILITY_KINDS.map((k) => ({ value: k.id, label: k.label }))} onChange={(v) => setAbility(i, { kind: v as CreatureAbilityKind })}
-              />
+              <select className="input cs-ability__kind" aria-label={`Tipo da habilidade ${i + 1}`} value={a.kind} onChange={(e) => setAbility(i, { kind: e.target.value as CreatureAbilityKind })}>
+                {ABILITY_KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
+              </select>
               <input className="input cs-ability__name" aria-label={`Nome da habilidade ${i + 1}`} value={a.name} maxLength={SHEET_LIMITS.abilityName} placeholder="Agarrar" onChange={(e) => setAbility(i, { name: e.target.value })} />
               <input className="input cs-ability__uses" aria-label={`Limite de uso da habilidade ${i + 1}`} value={a.uses} maxLength={SHEET_LIMITS.abilityUses} placeholder="1x por cena" onChange={(e) => setAbility(i, { uses: e.target.value })} />
               <span className="cs-ability__tools">
