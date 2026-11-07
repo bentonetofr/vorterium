@@ -9,7 +9,8 @@ export type NpcForm = 'rat';
 /** Quem está montado: o desenho do cavalo e o id do NPC-cavalo (que some do chão enquanto alguém monta nele). */
 export interface NetMount {
     appearance: Appearance;
-    npc: string;
+    npc: string; /** 'back' = na garupa (atrás de quem conduz o cavalo). Sem ele, quem conduz. */
+    seat?: 'back';
 }
 export interface NetHello {
     t: 'hello';
@@ -131,6 +132,7 @@ export declare class NetHub {
         appearance: Appearance;
         showName: boolean;
         form?: NpcForm;
+        mount?: NetMount;
     }): void;
     /** Mestre: largou o NPC (some da sala como jogador). */
     unhostNpc(peerId: string): void;

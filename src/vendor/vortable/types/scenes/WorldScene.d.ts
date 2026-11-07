@@ -90,6 +90,12 @@ export declare class WorldScene extends Phaser.Scene {
     private mount;
     private mounting;
     private mountBtn?;
+    /** O aviso "Montar" em cima do cavalo (clicável), no mundo: aparece mesmo se o botão da tela ficar escondido. */
+    private mountTip?;
+    /** O NPC que o mestre controla, montado num cavalo. */
+    private npcMount;
+    /** Na garupa do cavalo de outro jogador: o cavalo (id e desenho), o cavaleiro parado e há quanto tempo o condutor sumiu. */
+    private pillion;
     /** Quanto andou desde o último passo, e onde estava no quadro anterior. */
     constructor();
     init(data: WorldSceneData): void;
@@ -217,12 +223,32 @@ export declare class WorldScene extends Phaser.Scene {
     private mountInfo;
     /** Cavalos que alguém está montando agora (eu e os outros jogadores): somem do chão. */
     private mountedNpcIds;
+    /** Cavalos que não dá pra montar agora: os já montados e os que o mestre está controlando. */
+    private busyNpcIds;
     /** Monta no cavalo mais perto, ou desce se já está montado. */
     private toggleMount;
     private mountOn;
     /** Desce: o cavalo fica onde estou (todos veem) e o boneco dá uns passos à frente. */
     private dismount;
+    /** Botão de montar (tela) e tecla E: valem pro jogador e, na câmera do mestre, pro NPC que ele controla. */
+    private setupMountUi;
+    /** O botão da tela e o aviso em cima do cavalo: mostra "Montar" / "Desmontar" quando faz sentido. */
+    private showMountUi;
     /** Cada quadro: o cavaleiro acompanha o cavalo, e o botão de montar/desmontar aparece quando faz sentido. */
     private updateMount;
+    /** Onde está o boneco local, se ele é quem conduz o cavalo `npcId` (pra Remotes pôr o da garupa atrás dele). */
+    private localDriverInfo;
+    /** Um cavalo que alguém conduz, perto de (x, y) e com a garupa livre. */
+    private nearestRidden;
+    private mountPillion;
+    /** Desce da garupa: fica ao lado do cavalo. */
+    private dismountPillion;
+    /** Cada quadro, na garupa: segue o condutor; se ele desce ou some, desce junto. */
+    private updatePillion;
+    private toggleNpcMount;
+    private mountNpcOn;
+    /** O NPC desce: o cavalo fica onde ele está (todos veem) e o NPC dá uns passos à frente. */
+    private dismountNpc;
+    private updateNpcMount;
     private toast;
 }
