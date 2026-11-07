@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.20',
+    date:    '2026-11-07',
+    title:   'Vortable: Ventania bem mais forte',
+    items: [
+      'A força Ventania do vento (no controle do mestre e no editor) ficou muito mais potente. Árvores, arbustos, plantas e a grama entortam mais de duas vezes o que antes, as rajadas atravessam o mapa mais rápidas e quase sem pausa, saem muito mais folhas das copas e entram folhas soltas pelo lado de onde vem o vento (que também correm mais pelo chão), as nuvens e as manchas de sol andam mais depressa e o som do vento sobe. Parado e Brisa continuam exatamente como eram, e o efeito cresce aos poucos conforme o controle de vento passa da metade.',
+    ],
+  },
+  {
     version: '2.19',
     date:    '2026-11-07',
     title:   'Vortable: montaria pro NPC do mestre e dois no cavalo',

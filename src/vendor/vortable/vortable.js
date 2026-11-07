@@ -40605,13 +40605,17 @@ var le = class {
 	update(e, t) {
 		this.time += e, this.strength += (t - this.strength) * Math.min(1, e * 2);
 	}
+	get gale() {
+		let e = Math.max(0, Math.min(1, (this.strength - .5) / .5));
+		return e * e * (3 - 2 * e);
+	}
 	gust(e, t) {
-		let n = e * this.dx + t * this.dy, r = 110 + 160 * this.strength, i = Math.sin(n * .012 - this.time * r * .012), a = Math.sin(n * .0047 - this.time * r * .0047 * .8 + 1.7), o = .5 + .5 * (i * .6 + a * .4), s = Math.max(0, Math.min(1, (o - .3) / .7));
-		return s * s * (3 - 2 * s);
+		let n = e * this.dx + t * this.dy, r = this.gale, i = 110 + 160 * this.strength + 190 * r, a = Math.sin(n * .012 - this.time * i * .012), o = Math.sin(n * .0047 - this.time * i * .0047 * .8 + 1.7), s = .5 + .5 * (a * .6 + o * .4), c = Math.max(0, Math.min(1, (s - .3 + .2 * r) / (.7 - .1 * r)));
+		return c * c * (3 - 2 * c);
 	}
 	sway(e) {
-		let t = this.strength, n = this.gust(e.x, e.y), r = Math.sin(this.time * e.freq * Math.PI * 2 * (.75 + .5 * t) + e.phase);
-		return e.anchor === "top" ? e.amp * (r * (.15 + .6 * t * (.5 + n)) + t * n * .4) : e.amp * (t * (.2 + .8 * n) + r * (.12 + .3 * t) * (.6 + .8 * n));
+		let t = this.strength, n = this.gale, r = this.gust(e.x, e.y), i = 1 + 1.35 * n, a = Math.sin(this.time * e.freq * Math.PI * 2 * (.75 + .5 * t + .5 * n) + e.phase);
+		return e.anchor === "top" ? e.amp * i * (a * (.15 + .6 * t * (.5 + r)) + t * r * .4) : e.amp * i * (t * (.2 + .8 * r) + a * (.12 + .3 * t) * (.6 + .8 * r));
 	}
 }, K = null;
 function ue(e) {
@@ -43635,7 +43639,7 @@ function ki(e, t, n, r, i, a) {
 }
 //#endregion
 //#region src/engine/world/particles.ts
-var Ai = "light:dot", ji = "light:puff", Mi = "fx:leaf", Ni = "fx:glint", Pi = ["fx:bird0", "fx:bird1"], Fi = 900010, Ii = 8e5, Li = 7e5, Ri = -399e3, zi = -449e3, Bi = 18, Vi = 30, Hi = 160, Ui = 5, Wi = 11, Gi = 1.4, Ki = [
+var Ai = "light:dot", ji = "light:puff", Mi = "fx:leaf", Ni = "fx:glint", Pi = ["fx:bird0", "fx:bird1"], Fi = 900010, Ii = 8e5, Li = 7e5, Ri = -399e3, zi = -449e3, Bi = 18, Vi = 30, Hi = 260, Ui = 5, Wi = 11, Gi = 1.4, Ki = [
 	9416762,
 	14262322,
 	12871210,
@@ -43738,16 +43742,16 @@ var Ji = class {
 		for (let t of n.trees) {
 			if (c >= Hi) break;
 			if (!o((t.x0 + t.x1) / 2, t.foot, 96)) continue;
-			let n = (.03 + .4 * a * a) * Math.max(.5, (t.x1 - t.x0) / 64);
+			let n = (.03 + .4 * a * a + 1.6 * i.gale) * Math.max(.5, (t.x1 - t.x0) / 64);
 			for (let r = this.emit(`${t.x0},${t.foot}`, n, e); r > 0 && c < Hi; r--, c++) {
 				let e = this.take("leaf", t.x0 + Math.random() * (t.x1 - t.x0), t.y0 + Math.random() * (t.y1 - t.y0));
 				e.falling = !0, e.groundY = t.foot - 6 + Math.random() * 28, e.max = 10 + Math.random() * 8, e.img.setTint(t.colors[Math.floor(Math.random() * t.colors.length)] ?? Ki[0]);
 			}
 		}
 		let l = Math.max(0, r.x), u = Math.max(0, r.y), d = Math.min(n.bounds.h, r.y + r.h);
-		if (a > .6 && c < Hi && l < n.bounds.w && u < d) for (let t = this.emit("stray", (a - .6) * 10, e); t > 0; t--) {
+		if (a > .5 && c < Hi && l < n.bounds.w && u < d) for (let t = this.emit("stray", (a - .5) * 12 + 22 * i.gale, e); t > 0; t--) {
 			let e = this.take("leaf", l + Math.random() * 40, u + Math.random() * (d - u));
-			e.falling = !1, e.vx = 40 * a, e.max = 8 + Math.random() * 6, e.img.setTint(Ki[Math.floor(Math.random() * Ki.length)]).setDepth(Ri);
+			e.falling = !1, e.vx = 40 * a + 80 * i.gale, e.max = 8 + Math.random() * 6, e.img.setTint(Ki[Math.floor(Math.random() * Ki.length)]).setDepth(Ri);
 		}
 		if (n.water.length) {
 			let t = Math.min(14, n.water.length * .02) * (.25 + .75 * n.day) * (1 + 1.6 * n.warm);
@@ -43808,7 +43812,7 @@ var Ji = class {
 			else if (s.kind === "bird") s.vy += Math.sin(t * 1.3 + s.phase) * 2 * e, s.img.setTexture(Pi[Math.floor(t * 5 + s.phase * 2) % 2]), d = .85 * Math.min(1, u * 6, (1 - u) * 6);
 			else if (s.kind === "glint") d = Math.sin(u * Math.PI), f = p = s.size * (.6 + .4 * Math.sin(u * Math.PI));
 			else {
-				let n = a * (.25 + i.gust(s.x, s.y));
+				let n = a * (.25 + i.gust(s.x, s.y)) * (1 + .9 * i.gale);
 				if (s.falling) s.vy = 12 + 6 * Math.sin(s.phase), s.vx = i.dx * n * 45 + Math.sin(t * 2.6 + s.phase) * 14, s.rot = Math.sin(t * 3 + s.phase) * .9, p = Math.cos(t * 5 + s.phase), s.y >= s.groundY && (s.falling = !1, s.img.setDepth(Ri));
 				else {
 					let r = n > .35 ? n * 80 : 0;
@@ -44382,7 +44386,7 @@ var ga = class {
 			wind: i.wind
 		}, o = i?.weather == null ? this.sky.weather : i.weather === "clear" ? void 0 : i.weather, s = Date.now() + this.timeOffset, l = this.hour = this.hourOverride ?? i?.hour ?? (i ? mi(i.dayMinutes ?? this.sky.dayMinutes, s + (i.timeShift ?? 0)) : gi(this.sky, s)), u = this.view(), d = this.time, f = a.place === "outdoor", p = this.weatherNow = Qi(a.place === "underground" ? void 0 : o), m = si(l), h = oi(l), g = Math.max(0, 1 - p.rain * .9 - p.snow * .6 - p.cover * .3), _ = f ? h * g : 0, v = l < 12, y = f ? ri(l) * g : 0, b = f ? ii(l) * g : 0, x = ai(l), S = Math.max(0, 1 - p.rain - p.snow), C = f && v ? h * .38 * S : 0, w = y * .2 * S;
 		this.wind.update(t, f ? Math.max(a.wind ?? .45, p.minWind) : 0), ue(this.wind);
-		let T = f && (p.cover >= .5 || a.clouds !== !1) ? p.cover : 0, E = 10 + 45 * this.wind.strength, D = d * E * this.wind.dx, O = d * E * this.wind.dy;
+		let T = f && (p.cover >= .5 || a.clouds !== !1) ? p.cover : 0, E = 10 + 45 * this.wind.strength + 55 * this.wind.gale, D = d * E * this.wind.dx, O = d * E * this.wind.dy;
 		this.weather.update(t, {
 			view: {
 				x: u.x - 32,
@@ -44417,7 +44421,7 @@ var ga = class {
 			n.texture.key !== e && n.setTexture(e), n.setVisible(!0).setPosition(u.x, u.y).setSize(u.w, u.h).setTileScale(t).setAlpha(L * .9), n.tilePositionX = (u.x - D) / t, n.tilePositionY = (u.y - O) / t;
 		} else this.cloudShade.setVisible(!1);
 		if (b > .02) {
-			let e = 2.2, t = d * (3 + 10 * this.wind.strength);
+			let e = 2.2, t = d * (3 + 10 * this.wind.strength + 14 * this.wind.gale);
 			this.dapple.setVisible(!0).setPosition(u.x, u.y).setSize(u.w, u.h).setTileScale(e).setAlpha(Math.min(1, b * .75)), this.dapple.tilePositionX = (u.x - t * this.wind.dx - Math.sin(d * .2) * 6) / e, this.dapple.tilePositionY = (u.y - t * this.wind.dy) / e;
 		} else this.dapple.setVisible(!1);
 		let R = f ? ni(l) * Math.max(0, 1 - p.rain * .8 - p.snow * .5 - p.cover * .3) : 0;
@@ -45979,7 +45983,14 @@ var qo = class e {
 		let n = this.engine, r = Ur(this.zone).place;
 		n.setRoom(r === "outdoor" ? "none" : r === "indoor" ? "room" : "cave");
 		let i = r === "underground" ? 0 : Qr(t.hour), a = t.weather, o = r === "outdoor", s = r === "indoor", c = this.live ?? Ko(this.zone), l = c.auto !== !1 && this.enabled, u = this.near(t.x, t.y), d = Object.fromEntries(Mo.map((e) => [e.id, 0])), f = a.lightning ? 0 : a.rain, p = a.lightning ? a.rain : 0;
-		l && (o ? (d.forest = this.trees >= 3 ? .6 : this.trees ? .4 : .2, (a.rain > .5 || a.snow > .5) && (d.forest *= .25), d.wind = .1 + .5 * t.wind, d.rain = f, d.storm = p, d.snow = a.snow * .9) : s ? (d.wind = a.minWind >= .9 ? .4 : 0, d.rain = f * .9, d.storm = p * .9, d.snow = a.snow * .4) : d.cave = .6, d.fire = u.fire.level, d.torch = u.torch.level * .6, d.lake = u.lake.level * .7, d.swamp = u.swamp.level * .8);
+		if (l) {
+			if (o) {
+				d.forest = this.trees >= 3 ? .6 : this.trees ? .4 : .2, (a.rain > .5 || a.snow > .5) && (d.forest *= .25);
+				let e = Math.max(0, Math.min(1, (t.wind - .5) / .5));
+				d.wind = Math.min(1, .1 + .5 * t.wind + .4 * e * e * (3 - 2 * e)), d.rain = f, d.storm = p, d.snow = a.snow * .9;
+			} else s ? (d.wind = a.minWind >= .9 ? .4 : 0, d.rain = f * .9, d.storm = p * .9, d.snow = a.snow * .4) : d.cave = .6;
+			d.fire = u.fire.level, d.torch = u.torch.level * .6, d.lake = u.lake.level * .7, d.swamp = u.swamp.level * .8;
+		}
 		let m = this.enabled && c.layers || {}, h = s;
 		for (let [t, n] of this.layers) {
 			let r = this.enabled ? Math.max(d[t], m[t] ?? 0) : 0, a = t === "rain" || t === "storm" || t === "thunder" || t === "wind" || t === "snow", o = t === "fire" || t === "torch" || t === "lake" || t === "swamp" ? u[t] : null;

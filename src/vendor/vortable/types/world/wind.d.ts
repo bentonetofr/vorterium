@@ -29,6 +29,11 @@ export declare class Wind {
     readonly dx = 0.97;
     readonly dy = 0.24;
     update(dt: number, strength: number): void;
+    /**
+     * Quanto é ventania de verdade (0–1): zero até o meio da escala (brisa e vento moderado ficam como sempre foram) e sobe até 1 no
+     * máximo. É o que dá a força extra da Ventania: balanço bem maior, rajadas mais rápidas e constantes, mais folhas voando.
+     */
+    get gale(): number;
     /** Rajada neste ponto agora (0–1): duas ondas de tamanhos diferentes andando juntas. */
     gust(x: number, y: number): number;
     /** Deslocamento (px) do topo (ou da ponta, se pendurado) agora. */
