@@ -42830,7 +42830,11 @@ function er(e) {
 	return e.shape?.bust === -2 && t.push([36, 46]), e.shape?.hips === -2 && t.push([46, 56]), t;
 }
 function tr(e, t, n, r, i) {
-	let a = [], o = 0, s = er(n).length > 0;
+	let a = [], o = 0, s = er(n).length > 0, miss = r !== "walk" && Object.entries(n.slots).some(([k, v]) => {
+		if (i && k !== i) return !1;
+		let w = e.byId.get(v.id);
+		return !!w && !w.proc && !w.anims.includes(r);
+	});
 	for (let [c, l] of Object.entries(n.slots)) {
 		if (i && c !== i) continue;
 		let u = e.byId.get(l.id);
@@ -42851,7 +42855,7 @@ function tr(e, t, n, r, i) {
 			});
 			continue;
 		}
-		let d = u.anims.includes(r) && !(n.missingArm && r === "run"), f = d ? r : "walk", p = Yn(e, u, l, n.skin), m = c === "hair" && !i ? n.slots[kt] : void 0, h = Ft(m?.id), g = h && m?.colors?.color ? {
+		let d = !miss && u.anims.includes(r) && !(n.missingArm && r === "run"), f = d ? r : "walk", p = Yn(e, u, l, n.skin), m = c === "hair" && !i ? n.slots[kt] : void 0, h = Ft(m?.id), g = h && m?.colors?.color ? {
 			map: Yn(e, u, {
 				...l,
 				colors: Object.fromEntries((u.colors ?? []).filter((e) => e.material === "hair").map((e) => [e.key, m.colors.color]))
@@ -43420,7 +43424,9 @@ var _i = [
 	12,
 	24,
 	48,
-	96
+	96,
+	180,
+	300
 ];
 function yi(e) {
 	let t = (e) => `#${Gr($r({ place: "outdoor" }, e)).toString(16).padStart(6, "0")}`;
@@ -45919,7 +45925,8 @@ var zo = "char:me", Bo = 220, Vo = .15, Ho = 500, Uo = {
 		for (let t of e.npcs ?? []) this.addNpcBlock(t);
 		this.npcs = new lo(this, t, this.cfg.watch ? "always" : "near"), this.npcs.set(e.npcs ?? []), this.physics.world.setBounds(0, 0, i, a);
 		let l = this.cameras.main;
-		if (l.setBounds(0, 0, i, a).setZoom(2).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * 2 < l.width || a * 2 < l.height) && l.removeBounds(), r && l.fadeIn(Bo), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
+		let vz = this.cfg.watch ? 2 : window.__vtPlayZoom ?? 2;
+		if (l.setBounds(0, 0, i, a).setZoom(vz).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * vz < l.width || a * vz < l.height) && l.removeBounds(), r && l.fadeIn(Bo), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
 			let t = this.cfg.hub.onZoneChanged((t) => {
 				t === e.id && this.reloadZone();
 			});
@@ -46063,6 +46070,11 @@ var zo = "char:me", Bo = 220, Vo = .15, Ho = 500, Uo = {
 	setInputLocked(e) {
 		this.inputLocked = e, this.player && (this.player.locked = e), this.npcCtl && (this.npcCtl.player.locked = e);
 	}
+	setPlayZoom(e) {
+		if (this.cfg.watch) return;
+		let t = this.cameras.main, n = this.cfg.zone.width * 32, r = this.cfg.zone.height * 32;
+		t.setZoom(e), n * e < t.width || r * e < t.height ? t.removeBounds() : t.setBounds(0, 0, n, r);
+	}
 	following = null;
 	switching = !1;
 	followZoom = 2;
@@ -46074,10 +46086,10 @@ var zo = "char:me", Bo = 220, Vo = .15, Ho = 500, Uo = {
 		i.on("pointermove", (e) => {
 			e.isDown && (this.following = null, r.scrollX -= (e.x - e.prevPosition.x) / r.zoom, r.scrollY -= (e.y - e.prevPosition.y) / r.zoom);
 		}), i.on("wheel", (e, t, n, i) => {
-			let a = r.getWorldPoint(e.x, e.y);
-			r.setZoom(c.default.Math.Clamp(r.zoom * (i < 0 ? 1.15 : 1 / 1.15), .2, 6));
-			let o = r.getWorldPoint(e.x, e.y);
-			r.scrollX += a.x - o.x, r.scrollY += a.y - o.y;
+			let wheelZoom = r.zoom, nz = c.default.Math.Clamp(wheelZoom * Math.exp(-c.default.Math.Clamp(i, -300, 300) * .0032), .2, 6);
+			if (nz === wheelZoom) return;
+			let w = r.width, h = r.height, sx = e.x - r.x - w / 2, sy = e.y - r.y - h / 2, wx = sx / wheelZoom + r.scrollX + w / 2, wy = sy / wheelZoom + r.scrollY + h / 2;
+			r.setZoom(nz), this.following || (r.scrollX = wx - w / 2 - sx / nz, r.scrollY = wy - h / 2 - sy / nz);
 		});
 		let a = this.cfg.hub;
 		a && (this.remotes = new Wa(this, a, this.cfg.assetBase, e.id), a.observe());
@@ -49477,6 +49489,9 @@ function Mc(e) {
 function Nc(e) {
 	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
 }
+function vtConfirm(message, options) {
+	return typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));
+}
 function Pc(e, t) {
 	let n = e;
 	if (typeof e == "string") try {
@@ -50244,7 +50259,7 @@ var Uc = {
 		let e = await Ic();
 		if (e !== null) try {
 			let [t] = Pc(e, this.data);
-			if (this.dirty && !confirm("O personagem atual tem mudanças não salvas. Descartar?")) return;
+			if (this.dirty && !await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) return;
 			this.character = this.opts.single ? {
 				...t,
 				id: this.character.id
@@ -50254,7 +50269,7 @@ var Uc = {
 		}
 	}
 	async goBack() {
-		this.dirty && confirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?\n\nOK = salvar · Cancelar = sair sem salvar`) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
+		this.dirty && await vtConfirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?`, { title: "Salvar antes de sair?", confirmLabel: "Salvar e sair", cancelLabel: "Sair sem salvar" }) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
 		let e = this.modal("Créditos da arte", _s(this.opts.assetBase), [K("button", {
@@ -50262,8 +50277,8 @@ var Uc = {
 			onclick: () => e()
 		}, "Fechar")]);
 	}
-	newCharacter() {
-		(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = Oc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+	async newCharacter() {
+		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Oc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = en(this.data, this.character.appearance), this.baseThumb = null, this.renderTabs(), this.renderRows(), this.recompose();
@@ -50290,14 +50305,14 @@ var Uc = {
 				ir(this.opts.assetBase, a.appearance).then((e) => r.getContext("2d").drawImage(e, 0, 0)).catch(() => {}), e.append(K("div", { class: "cp-item" }, r, K("div", {}, K("b", {}, a.name), K("small", {}, a.id === i ? "em uso no jogo" : new Date(a.updatedAt).toLocaleString("pt-BR"))), K("button", {
 					class: "cp-btn cp-primary",
 					onclick: async () => {
-						(!this.dirty || confirm("O personagem atual tem mudanças não salvas. Descartar?")) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
+						(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = structuredClone(a), this.nameInput.value = a.name, this.dirty = !1, await this.opts.storage.setActive(a.id), this.afterLoad(), t());
 					}
 				}, "Usar"), K("button", {
 					class: "cp-btn cp-ghost",
 					title: "Apagar",
 					html: Y.trash,
 					onclick: async () => {
-						if (confirm(`Apagar "${a.name}"? Não dá pra desfazer.`)) {
+						if (await vtConfirm(`Apagar "${a.name}"? Não dá pra desfazer.`, { title: "Apagar personagem", tone: "danger", confirmLabel: "Apagar" })) {
 							try {
 								await this.opts.storage.remove(a.id);
 							} catch (e) {
@@ -51939,7 +51954,7 @@ var kl = "vortable:objects:recent", Al = 24, jl = [
 			let t = K("select", { class: "vt-select" }, ...vi.map((e) => K("option", {
 				value: e,
 				selected: (a.dayMinutes ?? 24) === e
-			}, `${e} min`)));
+			}, e >= 120 ? `${e / 60} h` : `${e} min`)));
 			t.addEventListener("change", () => s({ dayMinutes: Number(t.value) === 24 ? void 0 : Number(t.value) })), _.push(K("div", { class: "vt-row" }, K("label", {}, "Um dia dura"), t), K("label", { class: "vt-sublabel" }, "Ver no editor às"), h(e.previewHour, (t) => e.set({ previewHour: t })));
 		} else _.push(h(a.hour, (t) => {
 			s({ hour: t }, !1), e.previewHour = t;
@@ -52707,7 +52722,7 @@ var kl = "vortable:objects:recent", Al = 24, jl = [
 				title: "Apagar",
 				html: Y.trash,
 				onclick: async () => {
-					if (confirm(`Apagar "${i.name}"? Não dá pra desfazer.`)) {
+					if (await vtConfirm(`Apagar "${i.name}"? Não dá pra desfazer.`, { title: "Apagar zona", tone: "danger", confirmLabel: "Apagar" })) {
 						try {
 							await this.storage.remove(i.id);
 							let e = await this.storage.loadWorld();
@@ -53214,6 +53229,9 @@ function zl(e, t) {
 		},
 		setInputLocked(e) {
 			o = e, _.scene.isActive("world") && _.scene.getScene("world").setInputLocked(e);
+		},
+		setZoom(e) {
+			window.__vtPlayZoom = e, _.scene.isActive("world") && _.scene.getScene("world").setPlayZoom?.(e);
 		},
 		destroy() {
 			r === "watch" && v()?.releaseNpc(x), u?.leave(), d?.destroy(), _.destroy(!0);

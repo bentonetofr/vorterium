@@ -181,8 +181,11 @@ if (code.includes('miss = r !== "walk"')) {
   console.log('motor: roupa ao correr já remendada')
 } else {
   const mnName = ident(code, /\tlet a = \[\], o = 0, s = ([\w$]+)\(n\)\.length > 0;\n\tfor \(let \[c, l\] of Object\.entries\(n\.slots\)\) \{/, 'a função do porte')
-  const a = '\t\tlet d = u.anims.includes(r), f = d ? r : "walk", p = '
-  const b = '\t\tlet d = !miss && u.anims.includes(r), f = d ? r : "walk", p = '
+  // o nome curto do item (`u`...) muda a cada build, e o motor também pode ter a própria regra extra (braço faltando) nessa linha
+  const am = code.match(/\t\tlet d = ([\w$]+)\.anims\.includes\(r\)((?: && !\(n\.missingArm && r === "run"\))?), f = d \? r : "walk", p = /)
+  if (!am) throw new Error('motor: não achei onde remendar a roupa ao correr (o motor mudou?): let d = ….anims.includes(r)')
+  const a = am[0]
+  const b = `\t\tlet d = !miss && ${am[1]}.anims.includes(r)${am[2]}, f = d ? r : "walk", p = `
   const head = `\tlet a = [], o = 0, s = ${mnName}(n).length > 0;\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;`
   const headNew = `\tlet a = [], o = 0, s = ${mnName}(n).length > 0, miss = r !== "walk" && Object.entries(n.slots).some(([k, v]) => {\n\t\tif (i && k !== i) return !1;\n\t\tlet w = e.byId.get(v.id);\n\t\treturn !!w && !w.proc && !w.anims.includes(r);\n\t});\n\tfor (let [c, l] of Object.entries(n.slots)) {\n\t\tif (i && c !== i) continue;`
   for (const x of [a, head]) if (!code.includes(x)) throw new Error('motor: não achei onde remendar a roupa ao correr (o motor mudou?): ' + x.slice(0, 50))
