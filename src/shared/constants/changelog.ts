@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.16',
+    date:    '2026-11-07',
+    title:   'Altherium: armadura por parte do corpo',
+    items: [
+      'Seguindo o livro (toda parte de armadura tem Integridade), cada parte do corpo agora tem a sua peça com Integridade própria. Em Meus itens, a armadura vira Vestir: você escolhe a parte (cabeça, braços, tronco ou pernas), e cada peça vestida mostra a própria barra de Integridade, com um botão tirar. Com 2 ou mais da mesma armadura dá pra vestir várias partes, cada uma com o seu desgaste. Vestir numa parte que já tem peça manda a antiga de volta pra mochila.',
+      'O DB de cada parte da ficha agora é calculado sozinho: a peça vestida ali (já com a Integridade gasta e as Placas Costuradas) mais os escudos mais o bônus. O campo que você digitava virou Extra, só para o que não vem de armadura (Robusto e afins); vestir e tirar não mexe mais nele, então acabou o DB que ficava sobrando ao tirar uma peça. As fichas existentes não mudam de DB: a migration separa o que era armadura do que sobra como Extra.',
+      'No combate, o dano que não passa do DB desgasta só a peça da parte atingida (10%), e o Reparo do Ofício lista cada peça vestida separada, repondo só a Integridade daquela parte. O histórico do mestre e o texto exportado da ficha mostram as partes vestidas. Precisa rodar a migration 20240228 no Supabase.',
+    ],
+  },
+  {
     version: '2.15',
     date:    '2026-11-07',
     title:   'Vortable: animais (cavalos e cachorros)',

@@ -39,6 +39,7 @@ import { Select } from '../../../../shared/components/Select'
 import type { BodyZone } from './AltheriumBodyDiagram'
 import { gearInfo } from './AltheriumCraftPanel'
 import { BAND_LABELS, integrityBand, reinforcementDef } from '../utils/altheriumCraft'
+import { BODY_ZONE_LABELS, armorName, readWorn, unwornCount, type BodyZoneId } from '../utils/altheriumArmor'
 
 interface AltheriumInventoryCardProps {
   inventory:        AltheriumInventoryItem[]
@@ -173,23 +174,30 @@ interface OwnedCardProps {
   onRemove:         (id: string) => Promise<void>
   onToggleEquip:    AltheriumInventoryCardProps['onToggleEquip']
   onEdit:           () => void
+  /** Quem veste cada parte do corpo agora (nome da armadura), pra avisar que será trocada. */
+  zoneOccupant?:    Partial<Record<BodyZoneId, string>>
   /** Só mostra o cartão (janela do item personalizado): sem remover, quantidade nem equipar. */
   preview?:         boolean
 }
 
-function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEquip, onEdit, preview = false }: OwnedCardProps) {
+function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEquip, onEdit, zoneOccupant, preview = false }: OwnedCardProps) {
   const [choosingZone, setChoosingZone] = useState(false)
   const [open, setOpen] = useState(false)
   const armor = inventoryArmor(inv)
   const custom = isCustom(inv)
   const gear = gearInfo(inv)
   const band = gear ? integrityBand(gear.integrity) : null
-  const zoneLabel = inv.equipped && inv.equipped_zone ? BODY_PARTS.find((p) => p.id === inv.equipped_zone)?.label : null
+  // Armadura vai peça por peça: cada parte do corpo tem a sua, com Integridade própria.
+  const isArmorPiece = inv.item_type === 'armadura'
+  const worn = readWorn(inv)
+  const inBag = isArmorPiece ? unwornCount(inv) : 0
+  const equippedNow = isArmorPiece ? worn.length > 0 : inv.equipped
+  const zoneLabel = worn.map((w) => BODY_ZONE_LABELS[w.zone]).join(', ')
   const note = info.note ?? ''
   const longNote = note.length > NOTE_LIMIT
 
   return (
-    <article className={`alth-icard${inv.equipped ? ' is-equipped' : ''}`}>
+    <article className={`alth-icard${equippedNow ? ' is-equipped' : ''}`}>
       <header className="alth-icard__head">
         <h5 className="alth-icard__name">{info.name}</h5>
         {!preview && (
@@ -200,7 +208,7 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
 
       <div className="alth-icard__badges">
         <span className="alth-icard__kind">{ITEM_TYPE_LABELS[inv.item_type]}</span>
-        {inv.equipped && <span className="alth-icard__badge alth-icard__badge--on">Equipada{zoneLabel ? ` · ${zoneLabel}` : ''}</span>}
+        {equippedNow && <span className="alth-icard__badge alth-icard__badge--on">{isArmorPiece ? `Vestida · ${zoneLabel}` : 'Equipada'}</span>}
         {custom && <span className="alth-icard__badge">Personalizado</span>}
         {info.price != null && <span className="alth-icard__kind">¤{info.price}</span>}
       </div>
@@ -217,8 +225,27 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
 
       {info.traits && <ItemTraitsView {...info.traits} />}
 
-      {gear && band && (
+      {isArmorPiece && worn.map((w) => {
+        const wBand = integrityBand(w.integrity)
+        return (
+          <div key={w.zone} className="alth-icard__integrity" title="Integridade desta parte (repare na aba Ofício)">
+            <span className="alth-icard__zone">{BODY_ZONE_LABELS[w.zone]}</span>
+            <span className="alth-icard__bar"><i className={`alth-icard__fill alth-icard__fill--${wBand}`} style={{ width: `${w.integrity}%` }} /></span>
+            <span className={`alth-integrity alth-integrity--${wBand}`}>
+              {w.integrity}%{wBand !== 'normal' ? ` · ${BAND_LABELS[wBand]}` : ''}
+            </span>
+            {!preview && (
+              <button type="button" className="alth-icard__takeoff" disabled={disabled}
+                onClick={() => onToggleEquip(inv, 'unequip', w.zone)} aria-label={`Tirar ${armorName(inv)} de ${BODY_ZONE_LABELS[w.zone]}`}>
+                tirar
+              </button>
+            )}
+          </div>
+        )
+      })}
+      {gear && band && (!isArmorPiece || inBag > 0) && (
         <div className="alth-icard__integrity" title="Integridade (repare na aba Ofício)">
+          {isArmorPiece && worn.length > 0 && <span className="alth-icard__zone">{inBag > 1 ? `Na mochila (${inBag})` : 'Na mochila'}</span>}
           <span className="alth-icard__bar"><i className={`alth-icard__fill alth-icard__fill--${band}`} style={{ width: `${Math.max(0, Math.min(100, gear.integrity))}%` }} /></span>
           <span className={`alth-integrity alth-integrity--${band}`}>
             {gear.integrity}%{band !== 'normal' ? ` · ${BAND_LABELS[band]}` : ''}
@@ -236,12 +263,16 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
       {preview ? null : choosingZone && armor ? (
         <div className="alth-inventory__zone-picker">
           <span className="alth-inventory__zone-hint">Onde?</span>
-          {BODY_PARTS.map((part) => (
-            <button key={part.id} type="button" className="alth-inventory__zone-btn"
-              onClick={() => { onToggleEquip(inv, 'equip', part.id as BodyZone); setChoosingZone(false) }}>
-              {part.label}
-            </button>
-          ))}
+          {BODY_PARTS.map((part) => {
+            const there = zoneOccupant?.[part.id as BodyZoneId]
+            return (
+              <button key={part.id} type="button" className="alth-inventory__zone-btn"
+                title={there ? `${there} está nessa parte e volta pra mochila` : undefined}
+                onClick={() => { onToggleEquip(inv, 'equip', part.id as BodyZone); setChoosingZone(false) }}>
+                {part.label}{there ? ' ↺' : ''}
+              </button>
+            )
+          })}
           <button type="button" className="alth-inventory__zone-cancel" onClick={() => setChoosingZone(false)}>Cancelar</button>
         </div>
       ) : (
@@ -256,14 +287,16 @@ function OwnedCard({ inv, info, disabled, onUpdateQuantity, onRemove, onToggleEq
               aria-label={`Aumentar quantidade de ${info.name}`}>+</button>
           </div>
           <span className="alth-icard__spacer" />
-          {armor && (
+          {armor && armor.coverage === 'todas' && (
             <button type="button" className={`alth-icard__act${inv.equipped ? ' is-on' : ''}`} disabled={disabled} aria-pressed={inv.equipped}
-              onClick={() => {
-                if (inv.equipped) { onToggleEquip(inv, 'unequip'); return }
-                if (armor.coverage === 'todas') onToggleEquip(inv, 'equip')
-                else setChoosingZone(true)
-              }}>
+              onClick={() => onToggleEquip(inv, inv.equipped ? 'unequip' : 'equip')}>
               {inv.equipped ? 'Desequipar' : 'Equipar'}
+            </button>
+          )}
+          {armor && armor.coverage !== 'todas' && (
+            <button type="button" className="alth-icard__act" disabled={disabled} onClick={() => setChoosingZone(true)}
+              title="Cada parte do corpo recebe uma peça, com Integridade própria">
+              {worn.length >= Math.max(1, inv.quantity) ? 'Trocar de parte' : worn.length > 0 ? 'Vestir outra parte' : 'Vestir'}
             </button>
           )}
           {custom && (
@@ -292,6 +325,11 @@ export function AltheriumInventoryCard({
     for (const e of entries) c[ownedFilterOf(e.inv)] += 1
     return c
   }, [entries])
+  const zoneOccupant = useMemo(() => {
+    const m: Partial<Record<BodyZoneId, string>> = {}
+    for (const inv of inventory) for (const w of readWorn(inv)) m[w.zone] = armorName(inv)
+    return m
+  }, [inventory])
   const activeFilter = filter !== 'todos' && counts[filter] === 0 ? 'todos' : filter
   const shown = activeFilter === 'todos' ? entries : entries.filter((e) => ownedFilterOf(e.inv) === activeFilter)
 
@@ -328,6 +366,7 @@ export function AltheriumInventoryCard({
             <OwnedCard
               key={inv.id} inv={inv} info={info} disabled={disabled}
               onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onToggleEquip={onToggleEquip}
+              zoneOccupant={zoneOccupant}
               onEdit={() => setEditor({ item: inv })}
             />
           ))}
@@ -335,8 +374,9 @@ export function AltheriumInventoryCard({
       )}
 
       <p className="alth-hint">
-        Equipar soma o DB da peça à zona escolhida (escudo cobre as 4 zonas de uma vez). Desequipar
-        só desmarca: os campos de DB continuam manuais, ajuste-os se remover a peça.
+        A armadura é vestida peça por peça: cada parte do corpo recebe uma, com Integridade própria, e só
+        a peça da parte atingida se desgasta. Com 2 ou mais da mesma armadura dá pra vestir várias partes.
+        O escudo cobre todas as partes. O DB de cada parte entra e sai sozinho ao vestir e tirar.
       </p>
 
       <Presence show={catalogOpen} exitMs={220}>

@@ -1,7 +1,6 @@
 import {
   WEAPON_PROPERTIES,
   readWeaponProperties,
-  findArmor,
   findWeapon,
   type DamageType,
   type WeaponAttribute,
@@ -12,7 +11,8 @@ import {
 } from '../constants/altheriumItems'
 import type { AltheriumInventoryItem } from '../../../../shared/types'
 import { readDying, type DyingState } from './altheriumDeath'
-import { armorDbWithIntegrity, readReinforcements, wearAmount, weaponIntegrity, type ReinforcementId } from './altheriumCraft'
+import { readReinforcements, wearAmount, weaponIntegrity, type ReinforcementId } from './altheriumCraft'
+import { BODY_ZONE_LABELS, type BodyZoneId } from './altheriumArmor'
 
 // ────────────────────────────────────────────────────────
 // Combate de Altherium ("Crepúsculo Vermelho", livro 2.0). Só contas: a
@@ -21,7 +21,7 @@ import { armorDbWithIntegrity, readReinforcements, wearAmount, weaponIntegrity, 
 
 // ── Local atingido ───────────────────────────────────────
 
-export type BodyZoneId = 'db_pernas' | 'db_bracos' | 'db_tronco' | 'db_cabeca'
+export type { BodyZoneId }
 
 /** 1d10: 1-3 pernas, 4-6 braços, 7-9 tronco, 10 cabeça. */
 export function zoneForRoll(n: number): BodyZoneId {
@@ -31,12 +31,7 @@ export function zoneForRoll(n: number): BodyZoneId {
   return 'db_cabeca'
 }
 
-export const ZONE_LABELS: Record<BodyZoneId, string> = {
-  db_pernas: 'Pernas',
-  db_bracos: 'Braços',
-  db_tronco: 'Tronco',
-  db_cabeca: 'Cabeça',
-}
+export const ZONE_LABELS: Record<BodyZoneId, string> = BODY_ZONE_LABELS
 
 // ── Armas do inventário ──────────────────────────────────
 
@@ -265,45 +260,8 @@ export function applyDamage(input: DamageInput): DamageResult {
   return { final: dmg, steps, armorWear }
 }
 
-/** DB que cada peça equipada dá (catálogo ou personalizada). */
-function pieceDb(i: AltheriumInventoryItem): number {
-  return i.custom_name !== null ? (i.custom_db ?? 0) : (findArmor(i.item_id)?.db ?? 0)
-}
-
-export interface ZoneArmor {
-  /** Ajuste no DB da parte: Placas Costuradas (+2) e a Integridade gasta das peças. */
-  delta:   number
-  notes:   string[]
-  /** A armadura daquela parte (a que se desgasta quando o dano não passa do DB). */
-  armorId: string | null
-}
-
-/**
- * Os campos de DB da ficha somam as peças inteiras. Aqui entra o que muda
- * com o Ofício: Placas Costuradas dão +2 naquela parte, e a peça gasta
- * protege menos (−2, metade ou nada). O escudo cobre todas as partes.
- */
-export function zoneArmor(inventory: AltheriumInventoryItem[], zone: BodyZoneId): ZoneArmor {
-  let delta = 0
-  const notes: string[] = []
-  let armorId: string | null = null
-  for (const i of inventory) {
-    if (!i.equipped) continue
-    const inZone = i.item_type === 'escudo' || (i.item_type === 'armadura' && i.equipped_zone === zone)
-    if (!inZone) continue
-    if (i.item_type === 'armadura' && !armorId) armorId = i.id
-    const db = pieceDb(i)
-    const loss = db - armorDbWithIntegrity(db, i.integrity ?? 100)
-    if (loss) { delta -= loss; notes.push(`Integridade −${loss}`) }
-    if (readReinforcements(i.reinforcements).includes('placas_costuradas') && i.item_type === 'armadura') { delta += 2; notes.push('Placas Costuradas +2') }
-  }
-  return { delta, notes, armorId }
-}
-
-/** O DB da parte vem de uma Armadura do guardião de Eryndor equipada ali? */
-export function zoneHasEryndorArmor(inventory: AltheriumInventoryItem[], zone: BodyZoneId): boolean {
-  return inventory.some((i) => i.equipped && i.equipped_zone === zone && findArmor(i.item_id)?.id === 'armadura_guardiao_eryndor')
-}
+// O DB de cada parte (peças vestidas, Integridade, Placas Costuradas, escudo e
+// bônus da ficha) é calculado em altheriumArmor.ts: zoneDefense().
 
 // ── Tabela de Punição (falha crítica na Defesa) ──────────
 

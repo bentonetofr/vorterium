@@ -11,6 +11,7 @@ import { ATTRIBUTES, DOMAINS, GENESIS, raizLabel } from '../constants/altherium'
 import { DAMAGE_TYPE_LABELS, findArmor, findItem, findWeapon, WEAPON_RANGE_LABELS } from '../constants/altheriumItems'
 import { RUNASKIN_TRAILS, TRIUMPH_ACTION_LABELS, findBerserkerTriumph, type TriumphAction } from '../constants/altheriumTriumphs'
 import { QUALITIES, RESOURCES, formatAmount, type ResourceStock } from './altheriumCraft'
+import { readWorn, zoneDefense, armorName, type BodyZoneId } from './altheriumArmor'
 import type { Survival } from './altheriumSurvival'
 
 /** O que a ficha (ou o formulário, com o que ainda não salvou) já tem na tela. */
@@ -75,7 +76,10 @@ function itemDetail(i: AltheriumInventoryItem): string {
   }
   if (i.custom_detail) parts.push(i.custom_detail)
   if (typeof i.integrity === 'number' && i.integrity < 100) parts.push(`integridade ${i.integrity}%`)
-  if (i.equipped) parts.push(i.equipped_zone ? `equipado (${ZONE_LABEL[i.equipped_zone] ?? i.equipped_zone})` : 'equipado')
+  if (i.item_type === 'armadura') {
+    const worn = readWorn(i)
+    if (worn.length) parts.push(`vestida (${worn.map((w) => `${ZONE_LABEL[w.zone] ?? w.zone} ${w.integrity}%`).join(', ')})`)
+  } else if (i.equipped) parts.push('equipado')
   return parts.join('; ')
 }
 
@@ -93,7 +97,13 @@ export function altheriumSheetText(
     .filter((a) => a.id !== 'runico' || s.raiz === 'runaskin' || s.attr_runico > 0)
     .map((a) => kv(a.label, (s as unknown as Record<string, number>)[`attr_${a.id}`]))
 
-  const body = ZONES.map(([label, z]) => kv(label, `DB ${s[`db_${z}`]}, dano sofrido ${s[`dano_${z}`]}`))
+  // O campo db_* da ficha é só o bônus: o DB da parte soma as peças vestidas.
+  const body = ZONES.map(([label, z]) => {
+    const id = `db_${z}` as BodyZoneId
+    const d = zoneDefense(inventory, id, s[id])
+    const armor = d.piece ? `, ${armorName(d.piece.inv)} ${d.piece.integrity}%` : ''
+    return kv(label, `DB ${d.total}${armor}, dano sofrido ${s[`dano_${z}`]}`)
+  })
 
   const pointed = domains.filter((d) => d.points !== 0 || d.bonus_die)
   const berserker = (s.berserker_triumphs ?? []).map((id) => {

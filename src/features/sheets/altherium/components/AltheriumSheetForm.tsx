@@ -81,6 +81,7 @@ import { AltheriumRestWindow } from './AltheriumRestWindow'
 import { AltheriumStealthWindow } from './AltheriumStealthWindow'
 import { AltheriumMindWindow } from './AltheriumMindWindow'
 import { readResources, removeResource, resourceTotal, readSagas, type ResourceStock, type SagaId } from '../utils/altheriumCraft'
+import { zoneDefense, zoneDbTotals, armorName, type InventoryPatch } from '../utils/altheriumArmor'
 import { NEW_DYING } from '../utils/altheriumDeath'
 import { addCondition, conditionDef, endScene, reactionAvailable, readCombatState, startTurn, type BodyZoneId, type CombatState, type ConditionId } from '../utils/altheriumCombat'
 import { hungerPenalty, readSurvival, type Survival } from '../utils/altheriumSurvival'
@@ -118,11 +119,11 @@ interface AltheriumSheetFormProps {
   onInventoryAdd:           (itemType: AltheriumInventoryItem['item_type'], itemId: string) => Promise<void>
   onInventoryUpdateQuantity: (id: string, quantity: number) => Promise<void>
   onInventoryRemove:        (id: string) => Promise<void>
-  onInventoryEquip:         (id: string, equipped: boolean, zone: BodyZone | null) => Promise<void>
+  onInventoryEquip:         (item: AltheriumInventoryItem, action: 'equip' | 'unequip', zone: BodyZone | null) => Promise<void>
   onInventoryAddCustom:     (input: AltheriumCustomItemInput) => Promise<void>
   onInventoryUpdateCustom:  (item: AltheriumInventoryItem, input: AltheriumCustomItemInput) => Promise<void>
   /** Integridade e Reforços de um item — lança erro se falhar. */
-  onInventoryPatch:         (id: string, patch: { integrity?: number; reinforcements?: string[] }) => Promise<void>
+  onInventoryPatch:         (id: string, patch: InventoryPatch) => Promise<void>
   /** Item feito com receita (Ofício) — lança erro se falhar. */
   onInventoryCraft:         (input: AltheriumCustomItemInput, materials: Record<string, number>) => Promise<void>
   runes:                    AltheriumRune[]
@@ -574,24 +575,15 @@ export function AltheriumSheetForm({
     setPortraitDraft(null)
   }
 
+  // O DB de cada parte vem das peças vestidas; os campos da ficha guardam só o bônus.
   function handleToggleEquip(item: AltheriumInventoryItem, action: 'equip' | 'unequip', zone?: BodyZone) {
-    if (action === 'unequip') {
-      void onInventoryEquip(item.id, false, null)
-      return
-    }
-    const armor = inventoryArmor(item)
-    if (!armor) return
-
-    if (armor.coverage === 'todas') {
-      (['db_cabeca', 'db_bracos', 'db_tronco', 'db_pernas'] as const).forEach((z) => {
-        set(z, Math.min(999, form[z] + armor.db))
-      })
-      void onInventoryEquip(item.id, true, null)
-    } else if (zone) {
-      set(zone, Math.min(999, form[zone] + armor.db))
-      void onInventoryEquip(item.id, true, zone)
-    }
+    if (!inventoryArmor(item)) return
+    void onInventoryEquip(item, action, zone ?? null)
   }
+
+  /** DB de cada parte: peças vestidas (com a Integridade de cada uma) + escudos + bônus da ficha. */
+  const zoneBonus = { db_cabeca: form.db_cabeca, db_bracos: form.db_bracos, db_tronco: form.db_tronco, db_pernas: form.db_pernas }
+  const zoneTotals = zoneDbTotals(inventory, zoneBonus)
 
   // Estado projetado: o máximo de Cartas (do nível) e os domínios acompanham
   // o que está sendo editado agora. PV/PE/FV/PR não são derivados — o
@@ -1394,30 +1386,31 @@ export function AltheriumSheetForm({
               legless={legless}
               weapons={weapons}
               quiver={quiver}
-              values={{
-                db_cabeca: form.db_cabeca,
-                db_bracos: form.db_bracos,
-                db_tronco: form.db_tronco,
-                db_pernas: form.db_pernas,
-              }}
+              values={zoneTotals}
               onZoneClick={handleZoneClick}
             />
 
             <div className="alth-anatomy__fields">
               {BODY_PARTS.map((part) => {
                 const woundField = (`dano_${part.id.slice(3)}` as const) as keyof typeof woundInputRefs
+                const defense = zoneDefense(inventory, part.id, form[part.id] as number)
+                const piece = defense.piece
                 return (
                   <div key={part.id} className="alth-anatomy__field">
                     <span className="label">{part.label} <span className="alth-table__range">({part.range})</span></span>
+                    <span className="alth-anatomy__total" title={defense.notes.join(', ') || undefined}>DB {defense.total}</span>
+                    <span className={`alth-anatomy__piece${piece && piece.integrity <= 50 ? ' is-worn' : ''}`}>
+                      {piece ? `${armorName(piece.inv)} · ${piece.integrity}%` : 'sem armadura'}
+                    </span>
                     <div className="alth-anatomy__field-inputs">
-                      <label className="alth-anatomy__field-input">
-                        <span className="alth-anatomy__field-input-tag">DB</span>
+                      <label className="alth-anatomy__field-input" title="Bônus de DB que não vem de armadura (Robusto e outros). O DB das peças vestidas entra sozinho.">
+                        <span className="alth-anatomy__field-input-tag">Extra</span>
                         <input
                           ref={dbInputRefs[part.id]}
                           type="number" className="input" min={0}
                           value={form[part.id] as number}
                           onChange={(e) => set(part.id, clamp(e.target.value, 0, 999) as never)}
-                          aria-label={`DB em ${part.label}`}
+                          aria-label={`Bônus de DB em ${part.label}`}
                         />
                       </label>
                       <label className="alth-anatomy__field-input alth-anatomy__field-input--wound">
@@ -1473,7 +1466,7 @@ export function AltheriumSheetForm({
         campaignId={sheet.campaign_id} sheetId={sheet.id} character={who} genesis={form.genesis}
         inventory={inventory} state={form.combat_state} onState={(next) => set('combat_state', next)}
         domainCheck={domainCheck}
-        zoneDb={{ db_pernas: form.db_pernas, db_bracos: form.db_bracos, db_tronco: form.db_tronco, db_cabeca: form.db_cabeca }}
+        zoneDb={zoneBonus}
         vitality={form.vitality_current} onDamage={takeDamage}
         espirito={form.attr_espirito} determinationPoints={domainMap.get('determinacao') ?? 0}
         onPatch={onInventoryPatch}

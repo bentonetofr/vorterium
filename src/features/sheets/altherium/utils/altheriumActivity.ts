@@ -65,7 +65,7 @@ const NUMBER_LABELS: Record<string, string> = {
   fv_roll:             'd10 de FV',
   pr_roll:             'd10 de PR',
   ...ATTR_LABELS,
-  ...Object.fromEntries(BODY_PARTS.map((b) => [b.id, `DB ${b.label}`])),
+  ...Object.fromEntries(BODY_PARTS.map((b) => [b.id, `Bônus de DB ${b.label}`])),
   ...Object.fromEntries(BODY_PARTS.map((b) => [`dano_${b.id.slice(3)}`, `Dano ${b.label}`])),
 }
 
@@ -201,8 +201,10 @@ export function describeChange(c: RawSheetChange): SheetChangeLine[] {
 
     case 'equip': {
       const name = itemName(c.meta)
-      const zone = (v: unknown) => (str(v) === 'sim' ? 'equipado' : ZONE_LABELS[str(v) ?? ''] ?? str(v))
-      if (c.from == null) return [{ key, label: name, note: `equipado${ZONE_LABELS[str(c.to) ?? ''] ? ` em ${ZONE_LABELS[str(c.to)!]}` : ''}`, tone: 'added' }]
+      // Armadura vestida: 'from'/'to' trazem as partes separadas por vírgula ("db_tronco,db_bracos").
+      const zones = (v: unknown) => (str(v) ?? '').split(',').map((z) => ZONE_LABELS[z] ?? z).join(', ')
+      const zone = (v: unknown) => (str(v) === 'sim' ? 'equipado' : zones(v))
+      if (c.from == null) return [{ key, label: name, note: `equipado${str(c.to) && str(c.to) !== 'sim' ? ` em ${zones(c.to)}` : ''}`, tone: 'added' }]
       if (c.to == null) return [{ key, label: name, note: 'desequipado', tone: 'removed' }]
       return [{ key, label: name, from: zone(c.from), to: zone(c.to), tone: 'neutral' }]
     }

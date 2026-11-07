@@ -24,7 +24,6 @@ import {
   weaponDamageFormula,
   weaponDamageType,
   weaponWear,
-  zoneArmor,
   hasProperty,
   parryResult,
   propertyValue,
@@ -32,7 +31,6 @@ import {
   reactionAvailable,
   surroundBonus,
   zoneForRoll,
-  zoneHasEryndorArmor,
   type AttackMode,
   type BodyZoneId,
   type CombatState,
@@ -49,6 +47,7 @@ import {
 } from '../../../initiative/services/initiativeService'
 import { AltheriumDyingPanel } from './AltheriumDyingPanel'
 import { applyWear, integrityBand, weaponIntegrity, BAND_LABELS } from '../utils/altheriumCraft'
+import { ARMOR_WEAR_PERCENT, armorName, planArmorWear, zoneDefense, type InventoryPatch } from '../utils/altheriumArmor'
 import {
   DEATH_DT,
   NEW_DYING,
@@ -93,6 +92,7 @@ interface Props {
   state:        CombatState
   onState:      (next: CombatState) => void
   domainCheck:  (domain: AltheriumDomain, attribute?: AltheriumAttribute) => DomainCheck
+  /** Bônus de DB de cada parte (campo da ficha). O DB de verdade soma as peças vestidas (zoneDefense). */
   zoneDb:       Record<BodyZoneId, number>
   vitality:     number
   /** Tira PV e marca o ferimento na parte do corpo. */
@@ -101,7 +101,7 @@ interface Props {
   /** Pontos no domínio Determinação (bônus do Teste de Morte). */
   determinationPoints: number
   /** Integridade de um item do inventário (desgaste no combate). */
-  onPatch:      (id: string, patch: { integrity?: number }) => Promise<void>
+  onPatch:      (id: string, patch: InventoryPatch) => Promise<void>
   /** Janela aberta (null = nenhuma). */
   action:       CombatAction | null
   onClose:      () => void
@@ -491,7 +491,7 @@ export function AltheriumCombatActions({
     return (
       <Win title="Receber dano" subtitle={`PV ${vitality}`} onClose={onClose}>
         <DamageCalculator inventory={inventory} zoneDb={zoneDb} dbMod={conditionDbMod(state)} vitality={vitality} onApply={onDamage}
-          onArmorWear={(id) => { const i = inventory.find((x) => x.id === id); if (i) void onPatch(id, { integrity: applyWear(i.integrity ?? 100, 10) }).catch(() => {}) }} />
+          onArmorWear={(z) => { const wear = planArmorWear(inventory, z); if (wear) void onPatch(wear.id, wear.patch).catch(() => {}) }} />
       </Win>
     )
   }
@@ -706,7 +706,7 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
   dbMod: number
   vitality: number
   onApply: (amount: number, zone: BodyZoneId | null) => void
-  onArmorWear: (inventoryId: string) => void
+  onArmorWear: (zone: BodyZoneId) => void
 }) {
   const [damage, setDamage] = useState('')
   const [type, setType] = useState<FullDamageType>('corte')
@@ -717,13 +717,17 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
   const [immune, setImmune] = useState(false)
   const [applied, setApplied] = useState<string | null>(null)
 
-  const piece = zoneArmor(inventory, zone)
-  const dbNotes = [...(dbMod ? [`Arma Exposta ${dbMod}`] : []), ...piece.notes]
-  const db = Math.max(0, zoneDb[zone] + dbMod + piece.delta)
+  const defense = zoneDefense(inventory, zone, zoneDb[zone])
+  const dbNotes = [
+    ...(defense.piece ? [`${armorName(defense.piece.inv)} (${defense.piece.integrity}%)`] : []),
+    ...(dbMod ? [`Arma Exposta ${dbMod}`] : []),
+    ...defense.notes,
+  ]
+  const db = Math.max(0, defense.total + dbMod)
   const value = Math.max(0, Math.trunc(Number(damage) || 0))
   const result = damage.trim() === '' ? null : applyDamage({
     damage: value, type, db, ignoreDb: ignore, vulnerable, resistance, immune,
-    eryndorArmor: zoneHasEryndorArmor(inventory, zone),
+    eryndorArmor: defense.eryndor,
   })
 
   const setDamageValue = (n: number) => { setDamage(String(Math.max(0, Math.min(999, n)))); setApplied(null) }
@@ -731,7 +735,7 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
   const zoneRows: { id: BodyZoneId; label: string }[] = [
     { id: 'db_cabeca', label: 'Cabeça' }, { id: 'db_bracos', label: 'Braços' }, { id: 'db_tronco', label: 'Tronco' }, { id: 'db_pernas', label: 'Pernas' },
   ]
-  const zoneDbOf = (z: BodyZoneId) => Math.max(0, zoneDb[z] + dbMod + zoneArmor(inventory, z).delta)
+  const zoneDbOf = (z: BodyZoneId) => Math.max(0, zoneDefense(inventory, z, zoneDb[z]).total + dbMod)
   const pick = (z: BodyZoneId) => { setZone(z); setApplied(null) }
   const part = (z: BodyZoneId, label: string, shape: ReactNode) => (
     <g className={`alth-dmg__part${zone === z ? ' is-on' : ''}`} role="button" tabIndex={0} aria-label={`${label}, DB ${zoneDbOf(z)}`} aria-pressed={zone === z}
@@ -814,13 +818,19 @@ function DamageCalculator({ inventory, zoneDb, dbMod, vitality, onApply, onArmor
           <ol className="alth-combat__steps">
             {result.steps.map((st, i) => <li key={i}>{st.label}: <strong>{st.value}</strong></li>)}
           </ol>
-          {result.armorWear && <p className="alth-hint">O dano não passou do DB: a armadura de {ZONE_LABELS[zone]} perde 10% de Integridade.</p>}
+          {result.armorWear && (
+            <p className="alth-hint">
+              {defense.piece
+                ? `O dano não passou do DB: a armadura de ${ZONE_LABELS[zone]} (${armorName(defense.piece.inv)}) perde ${ARMOR_WEAR_PERCENT}% de Integridade.`
+                : `O dano não passou do DB, mas não há armadura em ${ZONE_LABELS[zone]} para se desgastar.`}
+            </p>
+          )}
           <div className="alth-dmg__final">
             <span>Dano final <strong key={result.final} className="anim-bump">{result.final}</strong> · PV {vitality} → <strong key={`pv${result.final}`} className="anim-bump">{Math.max(0, vitality - result.final)}</strong></span>
             <button type="button" className="btn btn-primary" disabled={applied !== null}
               onClick={() => {
                 onApply(result.final, zone)
-                if (result.armorWear && piece.armorId) onArmorWear(piece.armorId)
+                if (result.armorWear && defense.piece) onArmorWear(zone)
                 setApplied(vitality - result.final <= 0 ? 'PV chegou a 0: Estado Caído.' : 'Dano aplicado.')
               }}>
               {applied ? 'Aplicado' : `Receber ${result.final} de dano`}

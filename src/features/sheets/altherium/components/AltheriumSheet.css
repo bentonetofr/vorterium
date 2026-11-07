@@ -863,6 +863,20 @@
 }
 .alth-anatomy__field:last-child { border-bottom: none; }
 .alth-anatomy__field .label { margin-bottom: 0; }
+/* DB da parte (calculado das peças vestidas) e a peça que está ali. */
+.alth-anatomy__total {
+  font-family: var(--font-label);
+  font-size: var(--text-lg, 18px);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.alth-anatomy__piece {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.alth-anatomy__piece.is-worn { color: var(--danger); }
 
 /* DB [caixa] [caixa] DANO — as etiquetas ficam por fora e têm a mesma
    largura (DB alinhado à direita, Dano à esquerda), então as duas caixas
@@ -2526,6 +2540,12 @@
   color: var(--accent-bright); cursor: var(--cursor-hand, pointer);
 }
 .alth-icard__integrity { display: flex; align-items: center; gap: var(--space-2); }
+.alth-icard__zone { min-width: 52px; font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.alth-icard__takeoff {
+  padding: 1px 8px; background: transparent; border: 1px solid var(--border-base); border-radius: var(--radius-sm);
+  font-family: var(--font-label); font-size: var(--text-xs); color: var(--text-secondary); cursor: var(--cursor-hand, pointer);
+}
+.alth-icard__takeoff:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); }
 .alth-icard__bar { flex: 1; height: 5px; border-radius: 3px; background: var(--bg-void); overflow: hidden; }
 .alth-icard__fill { display: block; height: 100%; background: var(--accent-bright); }
 .alth-icard__fill--gasta { background: var(--gilded-bright); }

@@ -384,6 +384,9 @@ export interface AltheriumInventoryItem {
   reinforcements?: unknown
   /** Materiais usados na receita (para desmontar); null nos outros itens. */
   crafted?:        unknown
+  /** Armadura: as peças no corpo, uma por parte, cada uma com a própria
+   *  Integridade — [{ zone, integrity }] (migration 20240228; sem ela, fica de fora). */
+  worn?:           unknown
   created_at:    string
 }
 

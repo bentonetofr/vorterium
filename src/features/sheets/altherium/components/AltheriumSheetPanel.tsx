@@ -26,6 +26,7 @@ import { AltheriumSheetForm } from './AltheriumSheetForm'
 import { NpcSection } from '../../components/NpcSection'
 import { raizLabel } from '../constants/altherium'
 import { cardsMax } from '../utils/altheriumCalculations'
+import { planEquipPiece, planTrimWorn, planUnequipPiece, type InventoryPatch } from '../utils/altheriumArmor'
 import type { BodyZone } from './AltheriumBodyDiagram'
 import type {
   AltheriumSheet,
@@ -193,7 +194,10 @@ export function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated
   async function handleInventoryUpdateQuantity(id: string, quantity: number) {
     setSaveError(null)
     try {
-      await updateAltheriumInventoryItem(id, { quantity })
+      // Menos unidades que peças no corpo: as que sobram saem das partes.
+      const row = inventory.find((i) => i.id === id)
+      const trim = row ? planTrimWorn(row, quantity) : null
+      await updateAltheriumInventoryItem(id, { quantity, ...(trim ?? {}) })
       loadInventory()
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Não foi possível atualizar o item.')
@@ -211,7 +215,7 @@ export function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated
   }
 
   /** Integridade e Reforços (Ofício e combate). Deixa o erro subir pra quem chamou mostrar. */
-  async function handleInventoryPatch(id: string, patch: { integrity?: number; reinforcements?: string[] }) {
+  async function handleInventoryPatch(id: string, patch: InventoryPatch) {
     await updateAltheriumInventoryItem(id, patch)
     loadInventory()
   }
@@ -222,10 +226,21 @@ export function SheetEditor({ sheet, ownerName, readOnly = false, onSheetUpdated
     loadInventory()
   }
 
-  async function handleInventoryEquip(id: string, equipped: boolean, zone: BodyZone | null) {
+  /**
+   * Equipar/tirar. Armadura vai peça por peça numa parte do corpo (cada uma
+   * com a própria Integridade); escudo é um liga/desliga que cobre tudo.
+   */
+  async function handleInventoryEquip(item: AltheriumInventoryItem, action: 'equip' | 'unequip', zone: BodyZone | null) {
     setSaveError(null)
     try {
-      await updateAltheriumInventoryItem(id, { equipped, equipped_zone: zone })
+      if (item.item_type === 'armadura') {
+        if (!zone) return
+        const plan = action === 'equip' ? planEquipPiece(inventory, item, zone) : planUnequipPiece(item, zone)
+        if (typeof plan === 'string') { setSaveError(plan); return }
+        for (const { id, patch } of plan) await updateAltheriumInventoryItem(id, patch)
+      } else {
+        await updateAltheriumInventoryItem(item.id, { equipped: action === 'equip', equipped_zone: null })
+      }
       loadInventory()
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Não foi possível atualizar o equipamento.')

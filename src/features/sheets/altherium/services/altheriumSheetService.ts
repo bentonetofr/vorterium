@@ -389,8 +389,8 @@ export async function addAltheriumCustomInventoryItem(
 }
 
 /**
- * Edita um item personalizado. Trocar o tipo desequipa a peça — o DB
- * que ela somou continua nos campos manuais, como ao desequipar.
+ * Edita um item personalizado. Trocar o tipo desequipa a peça (e tira
+ * ela de todas as partes do corpo).
  */
 export async function updateAltheriumCustomInventoryItem(
   item: AltheriumInventoryItem,
@@ -399,15 +399,15 @@ export async function updateAltheriumCustomInventoryItem(
   const typeChanged = input.item_type !== item.item_type
   return updateAltheriumInventoryItem(item.id, {
     ...customItemColumns(input),
-    ...(typeChanged ? { equipped: false, equipped_zone: null } : {}),
+    ...(typeChanged ? { equipped: false, equipped_zone: null, worn: [] } : {}),
   })
 }
 
-/** Atualiza quantidade, equipado ou (nos personalizados) os dados do item. */
+/** Atualiza quantidade, equipado, peças vestidas ou (nos personalizados) os dados do item. */
 export async function updateAltheriumInventoryItem(
   id: string,
   data: Partial<Pick<AltheriumInventoryItem,
-    'quantity' | 'equipped' | 'equipped_zone' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'
+    'quantity' | 'equipped' | 'equipped_zone' | 'worn' | 'item_type' | 'custom_name' | 'custom_detail' | 'custom_db'
     | 'custom_damage_dice' | 'custom_damage_type' | 'custom_attribute' | 'custom_range' | 'integrity' | 'reinforcements'
     | 'custom_price' | 'custom_category' | 'custom_repair' | 'custom_properties'>>,
 ): Promise<AltheriumInventoryItem> {

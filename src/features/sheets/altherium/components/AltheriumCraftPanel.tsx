@@ -40,6 +40,7 @@ import {
   type ResourceStock,
   type SagaId,
 } from '../utils/altheriumCraft'
+import { BODY_ZONE_LABELS, planRepairPiece, readWorn, unwornCount, type BodyZoneId, type InventoryPatch } from '../utils/altheriumArmor'
 
 // ────────────────────────────────────────────────────────
 // Aba Ofício (livro 2.0), no jeito da aba Suprimentos da Terra Devastada:
@@ -61,6 +62,22 @@ export interface GearInfo {
   fragil:   boolean
   integrity: number
   reinforcements: string[]
+  /** Armadura vestida: a parte do corpo desta peça (cada parte tem a própria Integridade). */
+  zone?:    BodyZoneId
+}
+
+/**
+ * As peças que o reparo mostra: armadura vestida vira uma entrada por parte
+ * do corpo, e o que ficou na mochila uma só; o resto, uma entrada por item.
+ */
+export function repairPieces(inv: AltheriumInventoryItem): GearInfo[] {
+  const g = gearInfo(inv)
+  if (!g) return []
+  const worn = readWorn(inv)
+  if (inv.item_type !== 'armadura' || worn.length === 0) return [g]
+  const pieces = worn.map((w): GearInfo => ({ ...g, name: `${g.name} · ${BODY_ZONE_LABELS[w.zone]}`, integrity: w.integrity, zone: w.zone }))
+  const bag = unwornCount(inv)
+  return bag > 0 ? [...pieces, { ...g, name: `${g.name} · na mochila${bag > 1 ? ` (${bag})` : ''}` }] : pieces
 }
 
 export function gearInfo(inv: AltheriumInventoryItem): GearInfo | null {
@@ -96,7 +113,7 @@ interface Props {
   onStock:        (next: ResourceStock) => void
   /** O banco já guarda recursos e Integridade (migration 20240217)? */
   known:          boolean
-  onPatch:        (id: string, patch: { integrity?: number; reinforcements?: string[] }) => Promise<void>
+  onPatch:        (id: string, patch: InventoryPatch) => Promise<void>
   /** Nível de Fome e o que fazer ao comer 1 Ração inteira (tira 1 nível). */
   hunger:         number
   rationPct:      number
@@ -122,6 +139,7 @@ export function AltheriumCraftPanel({
   inventory, stock, onStock, known, onPatch, hunger, rationPct, onEat, onCraft, onAddCatalog, onUpdateQuantity, onRemove,
 }: Props) {
   const gear = useMemo(() => inventory.map(gearInfo).filter((g): g is GearInfo => g !== null), [inventory])
+  const repairList = useMemo(() => inventory.flatMap(repairPieces), [inventory])
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   // Sagas de Ofício ficaram para o futuro: por enquanto todas as receitas e Reforços estão liberados.
@@ -167,7 +185,7 @@ export function AltheriumCraftPanel({
     if (plan.amount <= 0) return
     const next = pay({ [g.repair]: plan.amount })
     if (!next) return
-    await run(async () => { await onPatch(g.inv.id, { integrity: plan.to }); onStock(next) },
+    await run(async () => { await onPatch(g.inv.id, g.zone ? planRepairPiece(g.inv, g.zone, plan.to) : { integrity: plan.to }); onStock(next) },
       `${g.name} reparada para ${plan.to}% (−${plan.amount}% ${resourceLabel(g.repair)}).`)
   }
 
@@ -352,13 +370,13 @@ export function AltheriumCraftPanel({
             <h4 className="alth-card__title">Integridade <span className="alth-card__subtitle">e reparo</span></h4>
           </div>
           {pick<RepairPlace>('Onde repara', place, [{ id: 'campo', label: 'Campo · até 75%' }, { id: 'forja', label: 'Forja · até 100%' }], setPlace)}
-          {gear.length === 0 && <p className="alth-hint">Nenhuma arma, armadura ou escudo no inventário.</p>}
+          {repairList.length === 0 && <p className="alth-hint">Nenhuma arma, armadura ou escudo no inventário.</p>}
           <ul className="alth-list">
-            {gear.map((g) => {
+            {repairList.map((g) => {
               const band = integrityBand(g.integrity)
               const plan = planFor(g)
               return (
-                <li key={g.inv.id} className="alth-recipe">
+                <li key={`${g.inv.id}:${g.zone ?? 'monte'}`} className="alth-recipe">
                   <div className="alth-recipe__info">
                     <strong>{g.name}</strong>
                     <span className={`alth-integrity alth-integrity--${band}`}>{g.integrity}% · {BAND_LABELS[band]}</span>

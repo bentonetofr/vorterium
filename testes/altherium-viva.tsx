@@ -51,7 +51,7 @@ const sheet: AltheriumSheet = {
   vitality_roll: 6, vitality_current: 32, vitality_max: 45, equilibrio_roll: 5, equilibrio_current: 12, equilibrio_max: 15,
   fv_roll: null, fv_current: 14, fv_max: 24, pr_roll: null, pr_current: 8, pr_max: 24, cards_current: 20, hacksilvers: 1500,
   movement_override: null,
-  db_pernas: 0, db_bracos: 0, db_tronco: 8, db_cabeca: 0, dano_pernas: 0, dano_bracos: 0, dano_tronco: 0, dano_cabeca: 0,
+  db_pernas: 0, db_bracos: 0, db_tronco: 0, db_cabeca: 0, dano_pernas: 0, dano_bracos: 0, dano_tronco: 0, dano_cabeca: 0,
   berserker_triumphs: [], runaskin_trail: raiz === 'runaskin' ? 'regente' : null, runaskin_scene_uses: 0, runaskin_trail_overrides: {},
   pilar_card_mode: 'virtual', pilar_deck: null, recent_triumphs: [], genesis_abilities: [], skald_inspirations: [], notes: null,
   combat_state: {}, resources: {}, survival: {}, companion: {}, created_at: now, updated_at: now,
@@ -73,7 +73,7 @@ seedFakeDb({
   altherium_character_inventory: [
     { id: 'i1', sheet_id: 'sheet-1', item_type: 'arma', item_id: 'machado_duas_laminas', quantity: 1, equipped: true, equipped_zone: null, custom_name: null, custom_detail: null, custom_db: null, custom_damage_dice: null, custom_damage_type: null, custom_attribute: null, custom_range: null, integrity: 100, reinforcements: [], crafted: null, created_at: now },
     { id: 'i2', sheet_id: 'sheet-1', item_type: 'arma', item_id: 'adaga_serrilhada', quantity: 1, equipped: false, equipped_zone: null, custom_name: null, custom_detail: null, custom_db: null, custom_damage_dice: null, custom_damage_type: null, custom_attribute: null, custom_range: null, integrity: 45, reinforcements: [], crafted: null, created_at: now },
-    { id: 'i3', sheet_id: 'sheet-1', item_type: 'armadura', item_id: 'cota_malha_norte', quantity: 1, equipped: true, equipped_zone: 'db_tronco', custom_name: null, custom_detail: null, custom_db: null, custom_damage_dice: null, custom_damage_type: null, custom_attribute: null, custom_range: null, integrity: 70, reinforcements: [], crafted: null, created_at: now },
+    { id: 'i3', sheet_id: 'sheet-1', item_type: 'armadura', item_id: 'cota_malha_norte', quantity: 2, equipped: true, equipped_zone: 'db_tronco', custom_name: null, custom_detail: null, custom_db: null, custom_damage_dice: null, custom_damage_type: null, custom_attribute: null, custom_range: null, integrity: 100, worn: [{ zone: 'db_tronco', integrity: 70 }], reinforcements: [], crafted: null, created_at: now },
   ],
   altherium_runes: [],
   altherium_check_requests: [

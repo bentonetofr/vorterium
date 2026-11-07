@@ -16,9 +16,9 @@ import {
   startTurn,
   surroundBonus,
   weaponDamageFormula,
-  zoneArmor,
   zoneForRoll,
 } from './altheriumCombat'
+import { zoneDefense } from './altheriumArmor'
 
 const item = (id: string, item_id: string): AltheriumInventoryItem => ({
   id, sheet_id: 's', item_type: 'arma', item_id, quantity: 1, equipped: false, equipped_zone: null,
@@ -92,8 +92,8 @@ describe('combate de Altherium', () => {
     const [sabre] = combatWeapons([{ ...item('a', 'sabre'), integrity: 40, reinforcements: ['fio_temperado'] }])
     expect(weaponDamageFormula(sabre, false).formula).toBe('2d10+3')
     expect(weaponDamageFormula(sabre, true).formula).toBe('4d10+3')
-    const cota = { ...item('c', 'cota_malha_norte'), item_type: 'armadura' as const, equipped: true, equipped_zone: 'db_tronco' as const, integrity: 20, reinforcements: ['placas_costuradas'] }
-    expect(zoneArmor([cota], 'db_tronco')).toMatchObject({ delta: -2, armorId: 'c' })   // metade de 8 (−4) e Placas +2
-    expect(zoneArmor([cota], 'db_pernas').delta).toBe(0)
+    const cota = { ...item('c', 'cota_malha_norte'), item_type: 'armadura' as const, equipped: true, worn: [{ zone: 'db_tronco', integrity: 20 }], reinforcements: ['placas_costuradas'] }
+    expect(zoneDefense([cota], 'db_tronco', 0)).toMatchObject({ total: 6, piece: { inv: { id: 'c' } } })   // metade de 8 (4) e Placas +2
+    expect(zoneDefense([cota], 'db_pernas', 0).total).toBe(0)
   })
 })
