@@ -54,7 +54,7 @@ export const SPECIES: Species[] = [
     names: ['Rex', 'Thor', 'Duque', 'Luna', 'Nina', 'Max', 'Bolt', 'Zeus', 'Mel', 'Trovão', 'Sombra', 'Fera', 'Apolo', 'Kira', 'Hugo', 'Bella', 'Rocky', 'Lobo'],
   },
   {
-    id: 'lobo', label: 'Lobo gigante', body: 'tlou/body/lobo', role: 'Lobo gigante (2,5 m)', height: 1.5,
+    id: 'lobo', label: 'Lobo gigante', body: 'tlou/body/lobo', role: 'Lobo gigante (2,5 m)', height: 1.9,
     coats: [
       { id: 'artico', label: 'Ártico', blurb: 'Branco farto, olhos de gelo, cicatriz no rosto e amuleto no peito.' },
       { id: 'cinzento', label: 'Cinzento', blurb: 'Lobo cinza, de olhos de gelo e cicatriz.' },

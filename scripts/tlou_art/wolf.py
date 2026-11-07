@@ -2,8 +2,8 @@
 
 O lobo (do desenho do usuário): pelo branco muito farto e arrepiado, mancha cinza em volta de um olho e no focinho, olhos de gelo
 (azul claro), uma cicatriz rosa riscando o outro olho, rabo cinza peludo e um amuleto redondo preso num cordão marrom no peito.
-O desenho ocupa o quadro de 64x64 (pés na linha 61), com a cabeça na altura de uma pessoa; o motor amplia (aparência.height = 1.5,
-a maior altura de gigante que o motor aceita perto de 2,5 m), então ele fica bem maior que as pessoas. Mesmo esquema do cachorro: linhas 0 = de costas, 1 = olhando pra esquerda, 2 = de frente,
+O desenho ocupa o quadro de 64x64 (pés na linha 61), com a cabeça na altura de uma pessoa; o motor amplia (aparência.height = 1.9),
+então ele, de quatro patas, fica umas 2 vezes maior que uma pessoa. Mesmo esquema do cachorro: linhas 0 = de costas, 1 = olhando pra esquerda, 2 = de frente,
 3 = olhando pra direita; colunas = quadros (caminhar 9, correr 8, parado 2). Usa a cabeça vazia `tlou/head/nenhuma`.
 Variantes de pelo: ártico (o do desenho), cinzento e negro.
 """
@@ -18,7 +18,7 @@ from .dog import ANIMS, BASE, BODIES, SHEETS, _ell, _fill, _gait, _mask, _union
 from .px import Cv, RGBA, mix, ramp, rgb
 
 SEED = 913
-LOBO_ESCALA = 1.5             # aparência.height do lobo (de cabeça erguida passa de 2,5 m: bem maior que uma pessoa)
+LOBO_ESCALA = 1.9             # aparência.height do lobo (de quatro patas, o dobro de uma pessoa)
 
 # ── Pelagens ──────────────────────────────────────────────
 #   fur = o pelo principal; mask = a mancha do olho/focinho, o rabo e as pontas; ear = o rosa de dentro da orelha.
