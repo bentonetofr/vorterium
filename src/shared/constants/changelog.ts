@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.12',
+    date:    '2026-11-06',
+    title:   'Vortable: novo mundo Midfold',
+    items: [
+      'Midfold, um mundo pronto de seis zonas para importar no Vortable (Mundos → Importar mundo, arquivo midfold.mundo.json): campos planos de grama clara e viva, trilha de terra que atravessa quatro zonas da esquerda pra direita, desce e encontra uma estrada de lajotas de pedra que segue pra baixo por mais duas zonas, até um acampamento no fim. Árvores imensas de troncos colados e copas fundidas, pinheirinhos lá longe e nenhum outro objeto solto.',
+    ],
+  },
+  {
     version: '2.11',
     date:    '2026-11-06',
     title:   'Vortable: tela Mundos mais limpa, réguas novas e grama corrigida',
