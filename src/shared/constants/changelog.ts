@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.17',
+    date:    '2026-11-07',
+    title:   'Lore: imagens',
+    items: [
+      'Na aba Lore dos jogadores dá pra enviar imagens junto com os documentos: JPG, PNG, GIF, WebP, AVIF, BMP, SVG, ICO, TIFF e HEIC, até 20 MB cada, em vários de uma vez (no celular o seletor abre a galeria). Clicar na imagem abre o leitor com ela em tela cheia; TIFF e HEIC, que o navegador não desenha, ficam pra baixar. O mestre vê as imagens na Lore de cada ficha do mesmo jeito. Não precisa de migration.',
+    ],
+  },
+  {
     version: '2.16',
     date:    '2026-11-07',
     title:   'Altherium: armadura por parte do corpo',

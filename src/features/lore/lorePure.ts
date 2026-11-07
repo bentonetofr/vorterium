@@ -6,10 +6,14 @@ export const LORE_BODY_MAX = 60000
 export const LORE_FILE_MAX_BYTES = 20 * 1024 * 1024
 export const LORE_FILES_MAX = 25
 
-export type LoreFileKind = 'pdf' | 'docx' | 'text' | 'other'
+export type LoreFileKind = 'pdf' | 'docx' | 'text' | 'image' | 'other'
 
 const TEXT_EXT = ['txt', 'md', 'markdown', 'json', 'csv', 'log']
 const OTHER_EXT = ['doc', 'odt', 'rtf']
+/** Imagens: os navegadores abrem as da frente; TIFF e HEIC/HEIF ficam pra baixar. */
+const IMAGE_EXT = ['jpg', 'jpeg', 'jfif', 'png', 'apng', 'gif', 'webp', 'avif', 'bmp', 'svg', 'ico', 'tif', 'tiff', 'heic', 'heif']
+/** Imagens que o navegador desenha no leitor. */
+const IMAGE_VIEWABLE = ['jpg', 'jpeg', 'jfif', 'png', 'apng', 'gif', 'webp', 'avif', 'bmp', 'svg', 'ico']
 
 export function loreFileExt(name: string): string {
   const i = name.lastIndexOf('.')
@@ -22,16 +26,23 @@ export function loreFileKind(name: string): LoreFileKind | null {
   if (ext === 'pdf') return 'pdf'
   if (ext === 'docx') return 'docx'
   if (TEXT_EXT.includes(ext)) return 'text'
+  if (IMAGE_EXT.includes(ext)) return 'image'
   if (OTHER_EXT.includes(ext)) return 'other'
   return null
 }
 
-export const LORE_ACCEPT = ['pdf', 'docx', ...OTHER_EXT, ...TEXT_EXT].map((e) => `.${e}`).join(',')
+/** O navegador consegue desenhar essa imagem no leitor? */
+export function loreImageViewable(name: string): boolean {
+  return IMAGE_VIEWABLE.includes(loreFileExt(name))
+}
+
+// "image/*" faz a galeria do celular aparecer; as extensões cobrem o resto.
+export const LORE_ACCEPT = ['pdf', 'docx', ...OTHER_EXT, ...TEXT_EXT, ...IMAGE_EXT].map((e) => `.${e}`).join(',') + ',image/*'
 
 /** Mensagem de erro se o arquivo não pode ser enviado; null se está tudo certo. */
 export function checkLoreFile(file: { name: string; size: number }, alreadyHave = 0): string | null {
   if (alreadyHave >= LORE_FILES_MAX) return `Você já tem ${LORE_FILES_MAX} arquivos. Remova algum para enviar outro.`
-  if (!loreFileKind(file.name)) return `“${file.name}”: tipo não aceito. Use PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON ou CSV.`
+  if (!loreFileKind(file.name)) return `“${file.name}”: tipo não aceito. Use PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON, CSV ou imagem (JPG, PNG, GIF, WebP, AVIF, BMP, SVG, ICO, TIFF, HEIC).`
   if (file.size <= 0) return `“${file.name}” está vazio.`
   if (file.size > LORE_FILE_MAX_BYTES) return `“${file.name}” passa de 20 MB.`
   return null

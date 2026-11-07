@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkLoreFile, countWords, formatBytes, loreFileKind, relativeTime, safeLoreFileName } from './lorePure'
+import { checkLoreFile, countWords, formatBytes, loreFileKind, loreImageViewable, relativeTime, safeLoreFileName } from './lorePure'
 import { docxToBlocks, docxXmlToBlocks } from './docxText'
 
 describe('arquivos da lore', () => {
@@ -10,6 +10,16 @@ describe('arquivos da lore', () => {
     expect(loreFileKind('velho.doc')).toBe('other')
     expect(loreFileKind('programa.exe')).toBeNull()
     expect(loreFileKind('semextensao')).toBeNull()
+  })
+
+  it('aceita as imagens dos formatos padrões e só desenha as que o navegador abre', () => {
+    for (const ext of ['jpg', 'JPEG', 'png', 'gif', 'webp', 'avif', 'bmp', 'svg', 'ico', 'tiff', 'heic']) {
+      expect(loreFileKind(`arte.${ext}`)).toBe('image')
+      expect(checkLoreFile({ name: `arte.${ext}`, size: 1000 })).toBeNull()
+    }
+    expect(loreImageViewable('arte.PNG')).toBe(true)
+    expect(loreImageViewable('arte.heic')).toBe(false)
+    expect(loreImageViewable('arte.tiff')).toBe(false)
   })
 
   it('barra tipo errado, vazio, grande demais e excesso de arquivos', () => {

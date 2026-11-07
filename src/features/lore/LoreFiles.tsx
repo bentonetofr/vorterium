@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ModalOverlay } from '../../shared/components/ModalOverlay'
 import { docxToBlocks, type DocxBlock } from './docxText'
-import { formatBytes, loreFileExt, loreFileKind, relativeTime, type LoreFileKind } from './lorePure'
+import { formatBytes, loreFileExt, loreFileKind, loreImageViewable, relativeTime, type LoreFileKind } from './lorePure'
 import { downloadLoreFile, loreFileUrl, type CharacterLoreFile } from './loreService'
 
 // ────────────────────────────────────────────────────────
@@ -9,7 +9,7 @@ import { downloadLoreFile, loreFileUrl, type CharacterLoreFile } from './loreSer
 // PDF, DOCX e arquivos de texto sem sair do site.
 // ────────────────────────────────────────────────────────
 
-const KIND_TONE: Record<LoreFileKind, string> = { pdf: 'pdf', docx: 'doc', text: 'txt', other: 'doc' }
+const KIND_TONE: Record<LoreFileKind, string> = { pdf: 'pdf', docx: 'doc', text: 'txt', image: 'img', other: 'doc' }
 
 /** Quadradinho com a extensão, na cor do tipo. */
 export function LoreFileBadge({ name }: { name: string }) {
@@ -70,6 +70,7 @@ type Loaded =
   | { state: 'pdf'; url: string }
   | { state: 'docx'; blocks: DocxBlock[] }
   | { state: 'text'; text: string }
+  | { state: 'image'; url: string }
   | { state: 'other' }
 
 export function LoreViewer({ file, onClose }: { file: CharacterLoreFile; onClose: () => void }) {
@@ -93,6 +94,9 @@ export function LoreViewer({ file, onClose }: { file: CharacterLoreFile; onClose
           const blob = await downloadLoreFile(file)
           const text = await blob.text()
           if (alive) setLoaded({ state: 'text', text })
+        } else if (kind === 'image' && loreImageViewable(file.name)) {
+          const url = await loreFileUrl(file)
+          if (alive) setLoaded({ state: 'image', url })
         } else if (alive) setLoaded({ state: 'other' })
       } catch (e) {
         if (alive) setLoaded({ state: 'error', message: e instanceof Error ? e.message : 'Não foi possível abrir o arquivo.' })
@@ -132,6 +136,11 @@ export function LoreViewer({ file, onClose }: { file: CharacterLoreFile; onClose
             </article>
           )}
           {loaded.state === 'text' && <pre className="lore-text">{loaded.text}</pre>}
+          {loaded.state === 'image' && (
+            <div className="lore-viewer__image">
+              <img src={loaded.url} alt={file.name} onError={() => setLoaded({ state: 'other' })} />
+            </div>
+          )}
           {loaded.state === 'other' && (
             <div className="lore-viewer__center">
               Este formato (.{loreFileExt(file.name)}) não abre aqui. Use o botão Baixar para ler no seu programa.

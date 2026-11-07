@@ -114,6 +114,7 @@
 .lore-badge--pdf { color: #f0877a; }
 .lore-badge--doc { color: #7db4f0; }
 .lore-badge--txt { color: #8fd6a8; }
+.lore-badge--img { color: #d9a8f0; }
 
 /* Leitor de arquivo (janela) */
 .lore-viewer {
@@ -126,6 +127,8 @@
 .lore-viewer__title small { color: var(--text-muted); font-size: 11px; }
 .lore-viewer__body { flex: 1; min-height: 0; overflow: auto; background: var(--bg-void); }
 .lore-viewer__pdf { width: 100%; height: 100%; border: none; background: #fff; }
+.lore-viewer__image { height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--space-3); background: var(--bg-void); overflow: auto; }
+.lore-viewer__image img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius-sm); }
 .lore-viewer__center { height: 100%; display: flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-6); color: var(--text-secondary); text-align: center; }
 .lore-paper { max-width: 740px; margin: 0 auto; padding: var(--space-8) var(--space-6); font-family: var(--font-display); font-size: 1.12rem; line-height: 1.75; color: var(--text-primary); }
 .lore-paper p { margin: 0 0 0.9em; white-space: pre-wrap; }

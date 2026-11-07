@@ -201,7 +201,7 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
               <button type="button" className="lore-btn lore-btn--primary" disabled={uploading !== null} onClick={() => inputRef.current?.click()}>
                 Escolher arquivos
               </button>
-              <small>Pode mandar vários de uma vez (segure Ctrl ou Shift para marcar mais de um) e quantos documentos separados quiser, até {LORE_FILES_MAX}. PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON ou CSV, até 20 MB cada.</small>
+              <small>Pode mandar vários de uma vez (segure Ctrl ou Shift para marcar mais de um) e quantos documentos separados quiser, até {LORE_FILES_MAX}. Documentos (PDF, DOCX, DOC, ODT, RTF, TXT, MD, JSON, CSV) e imagens (JPG, PNG, GIF, WebP, AVIF, BMP, SVG, ICO, TIFF, HEIC), até 20 MB cada.</small>
               <input ref={inputRef} type="file" multiple accept={LORE_ACCEPT} hidden
                 onChange={(e) => { if (e.target.files) void upload(e.target.files); e.target.value = '' }} />
             </div>
@@ -213,7 +213,7 @@ export function LoreEditor({ campaignId, sheetId, ownerId, system, characterName
           )}
 
           {files.length === 0
-            ? <p className="lore__empty">{canEdit ? 'Nenhum arquivo ainda. Guarde aqui o PDF ou o documento da história do personagem.' : 'Nenhum arquivo.'}</p>
+            ? <p className="lore__empty">{canEdit ? 'Nenhum arquivo ainda. Guarde aqui o PDF, o documento ou as imagens da história do personagem.' : 'Nenhum arquivo.'}</p>
             : (
               <ul className="lore-files">
                 {files.map((f) => <LoreFileCard key={f.id} file={f} onOpen={setOpened} onRemove={canEdit ? remove : undefined} busy={removing} />)}
