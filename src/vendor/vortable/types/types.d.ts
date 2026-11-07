@@ -210,6 +210,8 @@ export interface Appearance {
     };
     /** Pose: 'sitting' = sentado no chão (quem não anda: o desenho em pé vira sentado em todas as animações). Sem ela, em pé. */
     pose?: 'sitting';
+    /** Braço que o personagem não tem ('left' = o esquerdo dele, 'right' = o direito). Sem ele, os dois. */
+    missingArm?: 'left' | 'right';
 }
 /** Um personagem salvo. */
 export interface CharacterSave {

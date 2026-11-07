@@ -95,6 +95,8 @@ export declare class CreatorUI {
     private heightRow;
     /** Pose: em pé ou sentado no chão (pra quem não anda). */
     private poseRow;
+    /** Braço: os dois, ou sem o direito, ou sem o esquerdo (do personagem, não da tela). */
+    private armRow;
     private skinRow;
     private slotRow;
     /** Cores e variantes da peça escolhida. */
