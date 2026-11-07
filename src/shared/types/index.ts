@@ -702,38 +702,6 @@ export interface VtmSheetWithProfile extends VtmSheet {
   profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
-/** Ficha detalhada de uma criatura (como o livro apresenta os inimigos). Tudo é opcional; vai no jsonb `sheet` das duas tabelas. */
-export type CreatureAbilityKind = 'passiva' | 'padrao' | 'bonus' | 'reacao' | 'livre' | 'especial'
-
-export interface CreatureStrike {
-  name: string
-  /** Dados do golpe (ex.: 2d8). */
-  dice: string
-  /** Tipo de dano, em poucas letras (C, P...). */
-  type: string
-}
-
-export interface CreatureAbility {
-  kind: CreatureAbilityKind
-  name: string
-  /** Limite de uso (ex.: 1x por cena). */
-  uses: string
-  text: string
-}
-
-export interface CreatureSheet {
-  /** Classificação (ex.: Inimigo Extremamente Forte). */
-  tier?: string
-  /** Descrição de apresentação. */
-  lore?: string
-  attack?: string
-  defense?: string
-  db?: string
-  movement?: string
-  strikes?: CreatureStrike[]
-  abilities?: CreatureAbility[]
-}
-
 /** Inimigo do bestiário do mestre (campanhas Altherium). HP e dano são o
  *  valor final; rounds/danger_pct/party_* guardam como ele foi calculado. */
 export interface AltheriumCreature {
@@ -747,8 +715,6 @@ export interface AltheriumCreature {
   party_damage: number | null
   party_avg_hp: number | null
   notes:        string | null
-  /** Ficha detalhada (nula nas criaturas antigas). */
-  sheet?:       CreatureSheet | null
   created_at:   string
   updated_at:   string
 }
@@ -766,7 +732,6 @@ export interface PersonalCreature {
   party_damage: number | null
   party_avg_hp: number | null
   notes:        string | null
-  sheet?:       CreatureSheet | null
   created_at:   string
   updated_at:   string
 }

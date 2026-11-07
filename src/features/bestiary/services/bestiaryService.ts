@@ -1,7 +1,7 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { getCampaignAltheriumSheets } from '../../sheets/altherium/services/altheriumSheetService'
 import { bestWeapon, type WeaponPick } from '../utils/bestiaryCalculations'
-import type { AltheriumCreature, AltheriumInventoryItem, CreatureSheet } from '../../../shared/types'
+import type { AltheriumCreature, AltheriumInventoryItem } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
 // Bestiário do mestre — tabela altherium_bestiary (RLS: só o mestre).
@@ -10,17 +10,7 @@ import type { AltheriumCreature, AltheriumInventoryItem, CreatureSheet } from '.
 export type CreatureInput = Pick<
   AltheriumCreature,
   'name' | 'hp' | 'damage_dice' | 'rounds' | 'danger_pct' | 'party_damage' | 'party_avg_hp' | 'notes'
-> & {
-  /** Ficha detalhada. undefined = não mexe; null = apaga a que existia; um objeto = guarda. */
-  sheet?: CreatureSheet | null
-}
-
-/** A coluna `sheet` ainda não existe no banco (falta rodar a migration 20240229)? */
-export function sheetColumnMissing(error: { message?: string; code?: string } | null): boolean {
-  return !!error && (error.code === 'PGRST204' || error.code === '42703' || /\bsheet\b/i.test(error.message ?? ''))
-}
-
-export const SHEET_MIGRATION_MESSAGE = 'Falta rodar a migration 20240229 no Supabase pra guardar a ficha detalhada (classificação, golpes, habilidades). Sem ela, só dá pra salvar vida, dano e anotações.'
+>
 
 function normalize(row: AltheriumCreature): AltheriumCreature {
   // numeric chega do PostgREST como número ou texto, conforme a versão.
@@ -49,7 +39,6 @@ export async function createCreature(campaignId: string, input: CreatureInput): 
     .select('*')
     .single()
 
-  if (sheetColumnMissing(error) && input.sheet) throw new Error(SHEET_MIGRATION_MESSAGE)
   if (error || !data) throw new Error('Não foi possível salvar a criatura.')
   return normalize(data as AltheriumCreature)
 }
@@ -62,7 +51,6 @@ export async function updateCreature(id: string, input: CreatureInput): Promise<
     .select('*')
     .single()
 
-  if (sheetColumnMissing(error) && input.sheet !== undefined) throw new Error(SHEET_MIGRATION_MESSAGE)
   if (error || !data) throw new Error('Não foi possível salvar a criatura.')
   return normalize(data as AltheriumCreature)
 }

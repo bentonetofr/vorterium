@@ -28,10 +28,7 @@ import {
   suggestHp,
   targetDamage,
 } from '../utils/bestiaryCalculations'
-import { CreatureSheetEditor } from './CreatureSheetEditor'
-import { CreatureStatBlock } from './CreatureStatBlock'
-import { cleanSheet } from '../utils/creatureSheet'
-import type { AltheriumCreature, CampaignWithRole, CreatureSheet } from '../../../shared/types'
+import type { AltheriumCreature, CampaignWithRole } from '../../../shared/types'
 import './BestiaryPanel.css'
 import { Loader } from '../../../shared/components/Loader'
 
@@ -73,7 +70,6 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
   const [rounds, setRounds]     = useState(initial?.rounds ?? DEFAULT_ROUNDS)
   const [dangerPct, setDanger]  = useState(initial?.danger_pct ?? 25)
   const [notes, setNotes]       = useState(initial?.notes ?? '')
-  const [sheet, setSheet]       = useState<CreatureSheet>(initial?.sheet ?? {})
   // Vida e dano seguem a sugestão até a pessoa digitar por cima. Ao editar
   // uma criatura salva, começam com o valor salvo (manual).
   const [hpText, setHpText]     = useState(initial ? String(initial.hp) : '')
@@ -112,8 +108,6 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
         party_damage: party.damage > 0 ? Math.round(party.damage * 100) / 100 : null,
         party_avg_hp: party.avgHp  > 0 ? Math.round(party.avgHp  * 100) / 100 : null,
         notes:        notes.trim() || null,
-        // ficha detalhada: vazia não vai (a não ser pra apagar a que existia)
-        sheet:        cleanSheet(sheet) ?? (initial?.sheet ? null : undefined),
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível salvar a criatura.')
@@ -139,10 +133,6 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
         />
       </div>
 
-      <CreatureSheetEditor value={sheet} onChange={setSheet} disabled={saving} part="intro" />
-
-      <fieldset className="cs-section creature-numbers" disabled={saving}>
-      <legend className="cs-section__title">Vida e dano (a conta do grupo)</legend>
       <div className="creature-form__grid">
         {/* Rodadas → HP */}
         <div className="creature-form__field">
@@ -273,12 +263,9 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
           {diceAvg != null && <p className="creature-form__hint">média {formatNumber(diceAvg)} por ataque</p>}
         </div>
       </div>
-      </fieldset>
-
-      <CreatureSheetEditor value={sheet} onChange={setSheet} disabled={saving} part="rest" />
 
       <div className="creature-form__field">
-        <label className="creature-form__label" htmlFor="creature-notes">Anotações do mestre</label>
+        <label className="creature-form__label" htmlFor="creature-notes">Anotações</label>
         <textarea
           id="creature-notes"
           className="input creature-form__notes"
@@ -404,7 +391,17 @@ function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConf
         </div>
       )}
 
-      <CreatureStatBlock hp={creature.hp} damageDice={creature.damage_dice} damageAvg={average} sheet={creature.sheet} />
+      <div className="creature-card__stats">
+        <div className="creature-stat">
+          <span className="creature-stat__label">Vida</span>
+          <span className="creature-stat__value">{creature.hp}</span>
+        </div>
+        <div className="creature-stat">
+          <span className="creature-stat__label">Dano</span>
+          <span className="creature-stat__value">{creature.damage_dice}</span>
+          {average != null && <span className="creature-stat__sub">média {formatNumber(average)}</span>}
+        </div>
+      </div>
 
       <p className="creature-card__meta">
         {creature.rounds} {creature.rounds === 1 ? 'rodada' : 'rodadas'} ({roundsLabel(creature.rounds).toLowerCase()})

@@ -9,14 +9,11 @@ import {
   type PersonalCreatureInput,
 } from '../services/personalBestiaryService'
 import { getMyCampaigns } from '../../campaigns/services/campaignService'
-import { challengeRating, diceAverage } from '../utils/bestiaryCalculations'
+import { challengeRating, diceAverage, formatNumber } from '../utils/bestiaryCalculations'
 import { DAMAGE_DICE_PATTERN } from '../../sheets/altherium/services/altheriumSheetService'
 import { Collapse } from '../../../shared/components/Collapse'
 import { Select } from '../../../shared/components/Select'
-import { CreatureSheetEditor } from '../components/CreatureSheetEditor'
-import { CreatureStatBlock } from '../components/CreatureStatBlock'
-import { cleanSheet } from '../utils/creatureSheet'
-import type { CampaignWithRole, CreatureSheet, PersonalCreature } from '../../../shared/types'
+import type { CampaignWithRole, PersonalCreature } from '../../../shared/types'
 import '../../../shared/theme/toolPage.css'
 import './MyBestiaryPage.css'
 import { Loader } from '../../../shared/components/Loader'
@@ -183,7 +180,17 @@ function PersonalCreatureCard({
         <span className="my-creature__cr">{challengeRating(creature.hp)}</span>
       </header>
 
-      <CreatureStatBlock hp={creature.hp} damageDice={creature.damage_dice} damageAvg={average} sheet={creature.sheet} />
+      <div className="my-creature__stats">
+        <div className="my-creature__stat">
+          <span className="tool-label">Vida</span>
+          <strong>{creature.hp}</strong>
+        </div>
+        <div className="my-creature__stat">
+          <span className="tool-label">Dano</span>
+          <strong>{creature.damage_dice}</strong>
+          {average != null && <span className="tool-card__meta">média {formatNumber(average)}</span>}
+        </div>
+      </div>
 
       {creature.notes && <p className="my-creature__notes">{creature.notes}</p>}
 
@@ -241,7 +248,6 @@ function PersonalCreatureForm({ initial, onSave, onCancel }: FormProps) {
   const [hp, setHp]         = useState(String(initial?.hp ?? ''))
   const [damage, setDamage] = useState(initial?.damage_dice ?? '')
   const [notes, setNotes]   = useState(initial?.notes ?? '')
-  const [sheet, setSheet]   = useState<CreatureSheet>(initial?.sheet ?? {})
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState<string | null>(null)
 
@@ -255,7 +261,7 @@ function PersonalCreatureForm({ initial, onSave, onCancel }: FormProps) {
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name: name.trim(), hp: hpNumber, damage_dice: dice, notes: notes.trim() || null, sheet: cleanSheet(sheet) ?? (initial?.sheet ? null : undefined) })
+      await onSave({ name: name.trim(), hp: hpNumber, damage_dice: dice, notes: notes.trim() || null })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível salvar.')
       setSaving(false)
@@ -269,7 +275,6 @@ function PersonalCreatureForm({ initial, onSave, onCancel }: FormProps) {
         <span className="tool-label">Nome</span>
         <input type="text" className="input" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} disabled={saving} />
       </label>
-      <CreatureSheetEditor value={sheet} onChange={setSheet} disabled={saving} part="intro" />
       <div className="my-creature-form__row">
         <label>
           <span className="tool-label">Vida</span>
@@ -280,9 +285,8 @@ function PersonalCreatureForm({ initial, onSave, onCancel }: FormProps) {
           <input type="text" className="input" maxLength={12} placeholder="2d6+3" value={damage} onChange={(e) => setDamage(e.target.value)} disabled={saving} />
         </label>
       </div>
-      <CreatureSheetEditor value={sheet} onChange={setSheet} disabled={saving} part="rest" />
       <label>
-        <span className="tool-label">Anotações do mestre</span>
+        <span className="tool-label">Anotações</span>
         <textarea className="input my-creature-form__notes" rows={3} maxLength={2000} value={notes} onChange={(e) => setNotes(e.target.value)} disabled={saving} />
       </label>
       <p className="tool-hint">Pra calcular vida e dano pelas fichas do grupo, crie no Bestiário da campanha e use "Guardar".</p>

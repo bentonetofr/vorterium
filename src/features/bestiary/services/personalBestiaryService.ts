@@ -1,5 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
-import { createCreature, SHEET_MIGRATION_MESSAGE, sheetColumnMissing } from './bestiaryService'
+import { createCreature } from './bestiaryService'
 import type { AltheriumCreature, PersonalCreature } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -7,10 +7,7 @@ import type { AltheriumCreature, PersonalCreature } from '../../../shared/types'
 // guardadas fora das campanhas, pra levar pro bestiário de qualquer uma.
 // ────────────────────────────────────────────────────────
 
-export type PersonalCreatureInput = Pick<PersonalCreature, 'name' | 'hp' | 'damage_dice' | 'notes'> & {
-  /** Ficha detalhada. undefined = não mexe; null = apaga a que existia; um objeto = guarda. */
-  sheet?: PersonalCreature['sheet']
-}
+export type PersonalCreatureInput = Pick<PersonalCreature, 'name' | 'hp' | 'damage_dice' | 'notes'>
 
 /** Padrões do bestiário da campanha pra criatura escrita à mão. */
 const DEFAULT_ROUNDS = 4
@@ -41,7 +38,6 @@ export async function createMyCreature(input: PersonalCreatureInput): Promise<Pe
     .select('*')
     .single()
 
-  if (sheetColumnMissing(error) && input.sheet) throw new Error(SHEET_MIGRATION_MESSAGE)
   if (error || !data) throw new Error('Não foi possível salvar a criatura.')
   return normalize(data as PersonalCreature)
 }
@@ -54,7 +50,6 @@ export async function updateMyCreature(id: string, input: PersonalCreatureInput)
     .select('*')
     .single()
 
-  if (sheetColumnMissing(error) && input.sheet !== undefined) throw new Error(SHEET_MIGRATION_MESSAGE)
   if (error || !data) throw new Error('Não foi possível salvar a criatura.')
   return normalize(data as PersonalCreature)
 }
@@ -77,12 +72,10 @@ export async function saveCampaignCreatureToMine(creature: AltheriumCreature): P
       party_damage: creature.party_damage,
       party_avg_hp: creature.party_avg_hp,
       notes:        creature.notes,
-      ...(creature.sheet ? { sheet: creature.sheet } : {}),
     })
     .select('*')
     .single()
 
-  if (sheetColumnMissing(error) && creature.sheet) throw new Error(SHEET_MIGRATION_MESSAGE)
   if (error || !data) throw new Error('Não foi possível guardar a criatura.')
   return normalize(data as PersonalCreature)
 }
@@ -98,6 +91,5 @@ export async function copyMyCreatureToCampaign(creature: PersonalCreature, campa
     party_damage: creature.party_damage,
     party_avg_hp: creature.party_avg_hp,
     notes:        creature.notes,
-    ...(creature.sheet ? { sheet: creature.sheet } : {}),
   })
 }
