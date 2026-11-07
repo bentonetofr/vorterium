@@ -5,4 +5,4 @@ export declare function armEdge(missing: MissingArm, row: number): 'l' | 'r' | n
  * Apaga o braço de `sheet` (frames colunas × 4 linhas de quadros de 64), no lugar. `body` é a folha do corpo
  * sozinho, do mesmo tamanho, que diz onde o braço está.
  */
-export declare function removeArm(sheet: HTMLCanvasElement, body: HTMLCanvasElement, missing: MissingArm, frames: number, lower?: HTMLCanvasElement): void;
+export declare function removeArm(sheet: HTMLCanvasElement, body: HTMLCanvasElement, missing: MissingArm, frames: number, keep?: HTMLCanvasElement): void;

@@ -199,8 +199,6 @@ export interface VortableHandle {
     portrait(id: string): HTMLCanvasElement | null;
     /** Trava o teclado do boneco (o mestre cobriu a tela com uma cena). */
     setInputLocked(locked: boolean): void;
-    /** Jogo: muda o zoom da câmera (1 = um bloco de 32 px vira 32 px na tela; o padrão é 2). (remenda do Vorterium) */
-    setZoom(zoom: number): void;
     destroy(): void;
 }
 export declare function mountVortable(parent: HTMLElement, opts: VortableOptions): VortableHandle;
