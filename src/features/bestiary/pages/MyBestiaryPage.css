@@ -1,6 +1,6 @@
 .my-bestiary__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
   align-items: start;
 }
@@ -50,7 +50,7 @@
 .my-creature__primary { color: var(--accent-bright); border-color: var(--gilded); }
 .my-creature__danger { color: var(--danger); border-color: rgba(255, 180, 171, 0.4); }
 
-.my-creature-form { max-width: 640px; }
+.my-creature-form { max-width: 560px; }
 .my-creature-form label { display: flex; flex-direction: column; }
 .my-creature-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .my-creature-form__notes { resize: vertical; min-height: 72px; }

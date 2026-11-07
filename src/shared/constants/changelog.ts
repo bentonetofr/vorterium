@@ -16,16 +16,6 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '2.23',
-    date:    '2026-11-07',
-    title:   'Bestiário do Altherium: ficha da criatura',
-    items: [
-      'As criaturas do Bestiário (da campanha e do Meu bestiário) agora aparecem como uma ficha: título (Inimigo Extremamente Forte…), marcas, descrição em citação, e uma faixa com PV, Ataque, Defesa, Dano, DB e Movimento. Os golpes viram etiquetas com o dado e o tipo de dano (Garras 2d8 C), e as habilidades viram cartões com cor pelo uso (Passiva, Ação Padrão, Ação Bônus, Reação, Ação Livre, Especial), a frequência (1x por cena) e destaque nos dados e nas DT. Linhas começadas com "-" viram lista.',
-      'No formulário, o bloco novo "Ficha da criatura" (abre sozinho quando já há ficha) tem título com sugestões, descrição, marcas, Ataque, Defesa, DB, Movimento, lista de golpes, lista de habilidades (dá pra subir, descer e remover), Táticas (como a criatura joga) e Fraquezas e resistências. As Anotações viraram "Anotações do mestre".',
-      'As contas continuam as mesmas: Vida e Dano seguem calculados pelas fichas do grupo, e os campos novos são só texto da ficha. Guardar no Meu bestiário e Copiar pra campanha levam a ficha junto. Rode a migration 20240229000000_bestiary_sheet.sql no Supabase pra salvar as fichas; as criaturas que já existem ficam como estão.',
-    ],
-  },
-  {
     version: '2.22',
     date:    '2026-11-07',
     title:   'Dados 3D: modo leve no celular',

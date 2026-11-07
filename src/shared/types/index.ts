@@ -704,27 +704,6 @@ export interface VtmSheetWithProfile extends VtmSheet {
 
 /** Inimigo do bestiário do mestre (campanhas Altherium). HP e dano são o
  *  valor final; rounds/danger_pct/party_* guardam como ele foi calculado. */
-/** Tipos de uso de uma habilidade na ficha de criatura (bestiário do Altherium). */
-export type CreatureAbilityKind = 'passiva' | 'padrao' | 'bonus' | 'reacao' | 'livre' | 'especial'
-
-export interface CreatureAttack  { name: string; dice: string; kind: string }
-export interface CreatureAbility { name: string; kind: CreatureAbilityKind; freq: string; text: string }
-
-/** Campos de descrição da criatura. Só texto pro mestre: não entra em nenhuma conta. */
-export interface CreatureSheet {
-  tier:      string
-  lore:      string
-  tags:      string[]
-  attack:    string
-  defense:   string
-  db:        string
-  movement:  string
-  attacks:   CreatureAttack[]
-  abilities: CreatureAbility[]
-  tactics:   string
-  weak:      string
-}
-
 export interface AltheriumCreature {
   id:           string
   campaign_id:  string
@@ -736,7 +715,6 @@ export interface AltheriumCreature {
   party_damage: number | null
   party_avg_hp: number | null
   notes:        string | null
-  sheet?:       CreatureSheet | null
   created_at:   string
   updated_at:   string
 }
@@ -754,7 +732,6 @@ export interface PersonalCreature {
   party_damage: number | null
   party_avg_hp: number | null
   notes:        string | null
-  sheet?:       CreatureSheet | null
   created_at:   string
   updated_at:   string
 }

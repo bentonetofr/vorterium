@@ -28,12 +28,9 @@ import {
   suggestHp,
   targetDamage,
 } from '../utils/bestiaryCalculations'
-import type { AltheriumCreature, CampaignWithRole, CreatureSheet } from '../../../shared/types'
+import type { AltheriumCreature, CampaignWithRole } from '../../../shared/types'
 import './BestiaryPanel.css'
 import { Loader } from '../../../shared/components/Loader'
-import { CreatureSheetEditor } from './CreatureSheetEditor'
-import { CreatureSheetView } from './CreatureSheetView'
-import { cleanSheet, readSheet } from '../utils/creatureSheet'
 
 // ────────────────────────────────────────────────────────
 // Bestiário — aba da Mesa da Sessão só do mestre (campanhas Altherium).
@@ -73,7 +70,6 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
   const [rounds, setRounds]     = useState(initial?.rounds ?? DEFAULT_ROUNDS)
   const [dangerPct, setDanger]  = useState(initial?.danger_pct ?? 25)
   const [notes, setNotes]       = useState(initial?.notes ?? '')
-  const [sheet, setSheet]       = useState<CreatureSheet>(() => readSheet(initial?.sheet))
   // Vida e dano seguem a sugestão até a pessoa digitar por cima. Ao editar
   // uma criatura salva, começam com o valor salvo (manual).
   const [hpText, setHpText]     = useState(initial ? String(initial.hp) : '')
@@ -102,7 +98,6 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
     if (!cleanName) { setError('Dê um nome à criatura.'); return }
     if (!hpValid) { setError(`A vida deve ser um número inteiro de 1 a ${HP_MAX}.`); return }
     if (diceAvg == null) { setError('Escreva o dano como dados, por exemplo 1d8, 2d6+1 ou d12.'); return }
-    const cleanedSheet = cleanSheet(sheet)
     try {
       await onSave({
         name:         cleanName,
@@ -113,8 +108,6 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
         party_damage: party.damage > 0 ? Math.round(party.damage * 100) / 100 : null,
         party_avg_hp: party.avgHp  > 0 ? Math.round(party.avgHp  * 100) / 100 : null,
         notes:        notes.trim() || null,
-        // Sem ficha (e sem ter tido uma), o campo nem vai no pedido.
-        ...(cleanedSheet || initial?.sheet ? { sheet: cleanedSheet } : {}),
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível salvar a criatura.')
@@ -271,10 +264,8 @@ function CreatureForm({ initial, party, saving, onSave, onCancel }: CreatureForm
         </div>
       </div>
 
-      <CreatureSheetEditor value={sheet} onChange={setSheet} disabled={saving} />
-
       <div className="creature-form__field">
-        <label className="creature-form__label" htmlFor="creature-notes">Anotações do mestre</label>
+        <label className="creature-form__label" htmlFor="creature-notes">Anotações</label>
         <textarea
           id="creature-notes"
           className="input creature-form__notes"
@@ -315,6 +306,7 @@ interface CreatureCardProps {
 }
 
 function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConfirmDelete, onCancelDelete, onAddToInitiative, onSaveToMine }: CreatureCardProps) {
+  const average = diceAverage(creature.damage_dice)
   const [savingToMine, setSavingToMine] = useState(false)
   const [picking, setPicking] = useState(false)
   const [quantity, setQuantity] = useState(1)
@@ -399,7 +391,17 @@ function CreatureCard({ creature, confirming, deleting, onEdit, onDelete, onConf
         </div>
       )}
 
-      <CreatureSheetView hp={creature.hp} damageDice={creature.damage_dice} sheet={creature.sheet} />
+      <div className="creature-card__stats">
+        <div className="creature-stat">
+          <span className="creature-stat__label">Vida</span>
+          <span className="creature-stat__value">{creature.hp}</span>
+        </div>
+        <div className="creature-stat">
+          <span className="creature-stat__label">Dano</span>
+          <span className="creature-stat__value">{creature.damage_dice}</span>
+          {average != null && <span className="creature-stat__sub">média {formatNumber(average)}</span>}
+        </div>
+      </div>
 
       <p className="creature-card__meta">
         {creature.rounds} {creature.rounds === 1 ? 'rodada' : 'rodadas'} ({roundsLabel(creature.rounds).toLowerCase()})
