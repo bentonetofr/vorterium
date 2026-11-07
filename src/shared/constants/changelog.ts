@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.23',
+    date:    '2026-11-07',
+    title:   'Altherium: ficha de mesa das criaturas do bestiário',
+    items: [
+      'O bestiário de Altherium (o da campanha e o Meu bestiário) ganhou a ficha de mesa completa, como o livro apresenta os inimigos. Cada criatura agora pode ter: classificação (Inimigo Extremamente Forte, Chefe...), descrição de apresentação, Ataque, Defesa, DB e Movimento, uma lista de Golpes (nome, dados e tipo de dano) e uma lista de Habilidades com tipo (Passiva, Ação Padrão, Ação Bônus, Reação, Ação Livre ou Especial), limite de uso (1x por cena) e texto, na ordem que você quiser. Tudo é opcional: criaturas antigas continuam como estavam.',
+      'O card ficou no estilo de ficha de bicho: classificação em destaque, descrição em citação, faixa de números (PV, Dano, Ataque, Defesa, DB, Movimento), golpes como etiquetas e habilidades em blocos com uma cor por tipo. O formulário foi organizado em seções (Apresentação, Vida e dano, Combate, Golpes, Habilidades, Anotações do mestre). As contas de vida e dano pelo grupo não mudaram. Guardar no Meu bestiário e copiar pra campanha levam a ficha junto. Precisa rodar a migration 20240229 no Supabase pra guardar a ficha detalhada; sem ela, só vida, dano e anotações salvam, e o site avisa.',
+    ],
+  },
+  {
     version: '2.22',
     date:    '2026-11-07',
     title:   'Dados 3D: modo leve no celular',
