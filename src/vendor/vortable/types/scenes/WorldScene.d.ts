@@ -96,6 +96,8 @@ export declare class WorldScene extends Phaser.Scene {
     private npcMount;
     /** Na garupa do cavalo de outro jogador: o cavalo (id e desenho), o cavaleiro parado e há quanto tempo o condutor sumiu. */
     private pillion;
+    /** O NPC que o mestre controla, na garupa do cavalo de outro. */
+    private npcPillion;
     /** Quanto andou desde o último passo, e onde estava no quadro anterior. */
     constructor();
     init(data: WorldSceneData): void;
@@ -250,5 +252,11 @@ export declare class WorldScene extends Phaser.Scene {
     /** O NPC desce: o cavalo fica onde ele está (todos veem) e o NPC dá uns passos à frente. */
     private dismountNpc;
     private updateNpcMount;
+    /** O NPC do mestre vai na garupa do cavalo de outro: fica escondido, parado, e segue quem conduz. */
+    private mountNpcPillion;
+    /** O NPC desce da garupa: fica ao lado do cavalo. */
+    private dismountNpcPillion;
+    /** Cada quadro, na garupa: segue o condutor; se ele desce ou some, o NPC desce junto. */
+    private updateNpcPillion;
     private toast;
 }

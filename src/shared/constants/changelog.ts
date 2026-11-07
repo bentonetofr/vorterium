@@ -31,6 +31,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'O mestre controlando um NPC agora também monta: chegando perto de um cavalo aparece o botão Montar (e a tecla E), o NPC vai por cima do cavalo, mais rápido, e os jogadores o veem montado. Antes só o jogador comum conseguia, e na câmera do mestre o botão nem existia. Desmontar, passar por uma saída, soltar o NPC ou transformá-lo em rato também descem do cavalo.',
       'Perto do cavalo agora aparece também um aviso Montar (E) em cima dele, no próprio mapa, que dá pra clicar ou tocar; assim ele não depende do botão da tela, que podia ficar escondido atrás de outros elementos.',
       'Dois no cavalo: quem monta primeiro conduz. Outro jogador (ou um NPC do mestre, no caso do condutor ser um NPC) chega perto de um cavalo já montado e vê Montar na garupa: ele vai sentado atrás, sem controlar, e anda junto. A garupa tem um lugar só. Se o condutor desce, o da garupa desce junto; ele também pode descer sozinho (Descer ou E).',
+      'O NPC que o mestre controla também pode ir na garupa: perto de um cavalo que um jogador está conduzindo aparece Montar na garupa, ele vai sentado atrás, sem andar por conta própria, e os jogadores o veem no cavalo. Desce com Descer (ou E), ao soltar o NPC, ao passar por uma saída ou se o condutor desce. Também corrigi a ordem do desenho de frente: o condutor fica na frente e quem vai atrás aparece por trás dele.',
     ],
   },
   {

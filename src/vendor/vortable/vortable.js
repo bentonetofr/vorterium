@@ -44873,8 +44873,8 @@ function eo(e) {
 	switch (e) {
 		case "down": return [
 			0,
-			-4,
-			-.1
+			-5,
+			-.3
 		];
 		case "up": return [
 			0,
@@ -46083,11 +46083,12 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	mountTip;
 	npcMount = null;
 	pillion = null;
+	npcPillion = null;
 	constructor() {
 		super("world");
 	}
 	init(e) {
-		this.npcCtl && !e.carryNpc && this.cfg?.hub?.unhostNpc(no + this.npcCtl.id), this.npcCtl = null, this.mount = null, this.npcMount = null, this.pillion = null, this.mounting = !1, this.mountBtn?.destroy(), this.mountBtn = void 0, this.mountTip = void 0, this.npcSolids = /* @__PURE__ */ new Map(), this.solids = void 0, this.hiddenNpcs = "", this.cfg = e, this.cin = null, this.wantCinema = e.cinemaId?.() ?? null, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new lt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.switching = !1, this.reactions = 0, this.remotes = void 0, this.npcs = void 0, this.netAt = 0, this.netSent = "";
+		this.npcCtl && !e.carryNpc && this.cfg?.hub?.unhostNpc(no + this.npcCtl.id), this.npcCtl = null, this.mount = null, this.npcMount = null, this.pillion = null, this.npcPillion = null, this.mounting = !1, this.mountBtn?.destroy(), this.mountBtn = void 0, this.mountTip = void 0, this.npcSolids = /* @__PURE__ */ new Map(), this.solids = void 0, this.hiddenNpcs = "", this.cfg = e, this.cin = null, this.wantCinema = e.cinemaId?.() ?? null, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new lt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.switching = !1, this.reactions = 0, this.remotes = void 0, this.npcs = void 0, this.netAt = 0, this.netSent = "";
 	}
 	async create() {
 		let { zone: e, assetBase: t, appearance: n, arrival: r } = this.cfg, i = e.width * 32, a = e.height * 32;
@@ -46470,9 +46471,9 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	}
 	update() {
 		let e = this.npcCtl;
-		if (e && (e.player.update(), this.publishNpc(e), this.updateNpcMount(e), this.occluders.update(e.player.sprite.x, e.player.sprite.y), !this.travelling)) {
+		if (e && (e.player.update(), this.publishNpc(e), this.updateNpcMount(e), this.updateNpcPillion(e), this.occluders.update(e.player.sprite.x, e.player.sprite.y), !this.travelling)) {
 			let t = this.portalUnder(e.player.foot);
-			t ? this.armed && t.to && (this.npcMount && this.dismountNpc(), this.travelNpc(t)) : this.armed = !0;
+			t ? this.armed && t.to && (this.npcMount && this.dismountNpc(), this.npcPillion && this.dismountNpcPillion(), this.travelNpc(t)) : this.armed = !0;
 		}
 		let t = this.player;
 		if (!t || (t.update(), this.updateMount(t), this.updatePillion(t), this.publish(t), this.occluders.update(t.sprite.x, t.sprite.y), this.travelling)) return;
@@ -46560,7 +46561,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	async releaseNpc(e) {
 		let t = this.npcCtl;
 		if (!t) return;
-		this.npcMount && this.dismountNpc(), this.npcCtl = null, window.removeEventListener("keydown", this.npcNoScroll);
+		this.npcMount && this.dismountNpc(), this.npcPillion && this.dismountNpcPillion(), this.npcCtl = null, window.removeEventListener("keydown", this.npcNoScroll);
 		let n = t.player.sprite, r = {
 			id: t.id,
 			zone: this.cfg.zone.id,
@@ -46583,7 +46584,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	async transformNpc(e) {
 		let t = this.npcCtl;
 		if (!t || t.form === e) return;
-		this.npcMount && this.dismountNpc();
+		this.npcMount && this.dismountNpc(), this.npcPillion && this.dismountNpcPillion();
 		let n = (this.cfg.zone.npcs ?? []).find((e) => e.id === t.id);
 		if (n) {
 			if (e === "rat") Hr(this), t.player.setSkin(Dr), t.player.setHeight(1), t.player.setFeetBox(8, 5), t.player.speedScale = 1.15, t.blob.setScale(.38, .3);
@@ -46971,6 +46972,10 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	}
 	async toggleNpcMount() {
 		let e = this.npcCtl;
+		if (e && this.npcPillion && !this.travelling) {
+			this.dismountNpcPillion();
+			return;
+		}
 		if (!e || this.travelling || this.mounting || e.player.frozen || e.player.locked) return;
 		if (this.npcMount) {
 			this.dismountNpc();
@@ -46978,7 +46983,12 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		}
 		if (e.form) return;
 		let t = Ja(this.cfg.zone.npcs ?? [], e.player.sprite.x, e.player.sprite.y, this.busyNpcIds());
-		t && await this.mountNpcOn(e, t);
+		if (t) {
+			await this.mountNpcOn(e, t);
+			return;
+		}
+		let n = this.nearestRidden(e.player.sprite.x, e.player.sprite.y);
+		n && await this.mountNpcPillion(e, n);
 	}
 	async mountNpcOn(e, t) {
 		let n = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id);
@@ -47059,8 +47069,74 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			this.showMountUi("Desmontar", n.sprite);
 			return;
 		}
+		if (this.npcPillion) return;
 		let r = Ja(this.cfg.zone.npcs ?? [], n.sprite.x, n.sprite.y, this.busyNpcIds());
-		this.showMountUi(r ? "Montar" : null, r);
+		if (r) {
+			this.showMountUi("Montar", r);
+			return;
+		}
+		let i = this.nearestRidden(n.sprite.x, n.sprite.y);
+		this.showMountUi(i ? "Montar na garupa" : null, i);
+	}
+	async mountNpcPillion(e, t) {
+		let n = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id);
+		if (!n) return;
+		this.mounting = !0;
+		try {
+			await cr(this, Qo, this.cfg.assetBase, {
+				...n.appearance,
+				pose: "riding"
+			});
+		} catch (e) {
+			console.error("[vortable] cavaleiro da garupa não carregou", e), this.mounting = !1;
+			return;
+		}
+		if (this.mounting = !1, !this.sys.isActive() || this.npcCtl !== e || this.npcMount || this.npcPillion) return;
+		let r = this.add.sprite(e.player.sprite.x, e.player.sprite.y, `${Qo}:idle`, 0).setOrigin(.5, 62 / 64);
+		this.npcPillion = {
+			npc: t.npc,
+			horse: t.horse,
+			rider: r,
+			lost: 0
+		}, e.player.locked = !0, e.player.sprite.setVisible(!1), e.player.sprite.body.enable = !1, e.blob.setVisible(!1), this.cfg.hub?.hostNpc({
+			id: e.id,
+			name: n.name,
+			appearance: n.appearance,
+			showName: !!n.showName,
+			mount: {
+				appearance: t.horse,
+				npc: t.npc,
+				seat: "back"
+			}
+		});
+	}
+	dismountNpcPillion() {
+		let e = this.npcPillion, t = this.npcCtl;
+		if (!e || !t) return;
+		this.npcPillion = null, e.rider.destroy();
+		let n = t.player.sprite;
+		n.setPosition(n.x + 24, n.y + 4), n.body.enable = !0, n.setVisible(!0), t.blob.setVisible(!0), t.player.locked = this.inputLocked;
+		let r = (this.cfg.zone.npcs ?? []).find((e) => e.id === t.id);
+		r && this.cfg.hub?.hostNpc({
+			id: t.id,
+			name: r.name,
+			appearance: r.appearance,
+			showName: !!r.showName
+		});
+	}
+	updateNpcPillion(e) {
+		let t = this.npcPillion;
+		if (!t) return;
+		let n = this.remotes?.driverOf(t.npc) ?? null;
+		if (!n) {
+			t.lost += this.game.loop.delta, t.lost > 700 && this.dismountNpcPillion();
+			return;
+		}
+		t.lost = 0, e.player.sprite.setPosition(n.x, n.y);
+		let [r, i, a] = eo(n.dir), o = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id);
+		t.rider.setScale(o?.appearance.height ?? 1).setPosition(n.x + r, n.y - 17 + i).setDepth(n.depth + a);
+		let s = `${Qo}:idle:${n.dir}`;
+		this.anims.exists(s) && t.rider.anims.play(s, !0), this.showMountUi("Descer", n);
 	}
 	toast(e) {
 		let t = this.cameras.main, n = this.add.text(t.midPoint.x, t.midPoint.y - t.height / (2 * t.zoom) + 16, e, {
