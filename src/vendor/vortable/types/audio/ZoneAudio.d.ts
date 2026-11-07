@@ -49,6 +49,8 @@ export declare class ZoneAudio {
     private near;
     /** Um passo em (x, y): o chão decide o timbre; chuva molha, neve cobre. */
     step(x: number, y: number, running: boolean, weather: WeatherDef): void;
+    /** Um passo de casco (cavalo): como `step`, mas grave e pesado. `vol` abaixa o som com a distância. */
+    hoofStep(x: number, y: number, running: boolean, weather: WeatherDef, vol?: number): void;
     destroy(): void;
 }
 /** Que chão está sob os pés: tapete/moldura por cima, senão o terreno do vértice mais perto. */

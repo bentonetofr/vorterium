@@ -209,7 +209,8 @@ export interface Appearance {
         weight?: number;
     };
     /** Pose: 'sitting' = sentado no chão (quem não anda: o desenho em pé vira sentado em todas as animações). Sem ela, em pé. */
-    pose?: 'sitting';
+    /** Sentado (pra quem não anda) ou "cavalgando" (uso interno da montaria: parado em cima do cavalo, sem mexer as pernas). */
+    pose?: 'sitting' | 'riding';
     /** Braço que o personagem não tem ('left' = o esquerdo dele, 'right' = o direito). Sem ele, os dois. */
     missingArm?: 'left' | 'right';
 }

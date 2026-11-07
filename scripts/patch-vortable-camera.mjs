@@ -59,7 +59,7 @@ if (code.includes('hookSteps(')) {
   console.log('motor: passos já remendados')
 } else {
   const vaName = ident(code, /step\(e, t, n, r\) \{\n\t\tlet i = ([\w$]+)\(\);\n\t\tif \(!i\.steps \|\| !this\.engine\.running\) return;/, 'as opções de som')
-  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = ([\w$]+)\[r\];/, 'a tabela de quadros dos passos')
+  const qaName = ident(code, /([\w$]+) = \{\n\twalk: \[2, 6\],\n\trun: \[0, 4\]\n\}/, 'a tabela de quadros dos passos')
   const stepOld = `step(e, t, n, r) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
   const stepNew = `step(e, t, n, r, g = 1) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
   const playOld = 'this.steps.play(o, i.steps * (n ? .9 : .7), this.stepSide * .08'
@@ -72,10 +72,10 @@ if (code.includes('hookSteps(')) {
     '\t\tif (e.stepsFor === t || !this.scene.cfg?.watch) return;',
     '\t\te.stepsFor = t;',
     '\t\tlet n = (n, r) => {',
-    `\t\t\tlet i = this.scene, a = n.key.split(":"), o = a[a.length - 2], s = ${qaName}[o];`,
+    `\t\t\tlet i = this.scene, a = n.key.split(":"), o = a[a.length - 2], h = /:(rm|mount):|anim-cavalo/.test(n.key), s = h ? { walk: [3, 7], run: [2, 6] }[o] : ${qaName}[o];`,
     '\t\t\tif (!s || !i.audio || !t.visible || !s.includes(Number(r.textureFrame) % (o === "walk" ? 9 : 8))) return;',
     '\t\t\tlet l = i.cameras.main, u = Math.max(l.width, l.height) / (2 * l.zoom) * 1.15, d = Math.max(0, 1 - c.default.Math.Distance.Between(t.x, t.y, l.midPoint.x, l.midPoint.y) / u);',
-    '\t\t\td > .04 && i.audio.step(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d));',
+    '\t\t\td > .04 && (h ? i.audio.hoofStep(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d)) : i.audio.step(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d)));',
     '\t\t};',
     '\t\tt.on(c.default.Animations.Events.ANIMATION_START, n), t.on(c.default.Animations.Events.ANIMATION_UPDATE, n);',
     '\t}',
@@ -114,13 +114,13 @@ code = readFileSync(js, 'utf8')
 if (code.includes('stepsFor(e) {')) {
   console.log('motor: passos do NPC controlado já remendados')
 } else {
-  const qaName = ident(code, /let r = t\.key\.split\(":"\)\[2\], i = ([\w$]+)\[r\];/, 'a tabela de quadros dos passos')
+  const qaName = ident(code, /([\w$]+) = \{\n\twalk: \[2, 6\],\n\trun: \[0, 4\]\n\}/, 'a tabela de quadros dos passos')
   const syncOld = '\tsyncFootsteps(e) {'
   const method = [
     '\tstepsFor(e) {',
     '\t\tlet t = (t, n) => {',
-    `\t\t\tlet a = t.key.split(":"), r = a[a.length - 2], i = ${qaName}[r];`,
-    '\t\t\ti && this.audio && i.includes(Number(n.textureFrame) % (r === "walk" ? 9 : 8)) && this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow);',
+    `\t\t\tlet a = t.key.split(":"), r = a[a.length - 2], h = /:(rm|mount):|anim-cavalo/.test(t.key), i = h ? { walk: [3, 7], run: [2, 6] }[r] : ${qaName}[r];`,
+    '\t\t\ti && this.audio && i.includes(Number(n.textureFrame) % (r === "walk" ? 9 : 8)) && (h ? this.audio.hoofStep(e.x, e.y - 2, r === "run", this.lighting.weatherNow) : this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow));',
     '\t\t};',
     '\t\te.on(c.default.Animations.Events.ANIMATION_START, t), e.on(c.default.Animations.Events.ANIMATION_UPDATE, t);',
     '\t}',
