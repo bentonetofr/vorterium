@@ -11,6 +11,7 @@ import { EngineStage, type Engine } from './EngineStage'
 import { SoundPanel } from './SoundPanel'
 import { EnemiesPane } from '../enemies/EnemiesPane'
 import { PeoplePane } from '../people/PeoplePane'
+import { AnimalsPane } from '../animals/AnimalsPane'
 import { setLocalZone } from '../enemies/localZone'
 import { removeEnemies } from '../enemies/enemies'
 import { mapPoint } from '../enemies/useMapDrop'
@@ -20,8 +21,8 @@ import { alertDialog, ask, confirmDialog } from '../../../shared/components/dial
 
 type Peer = ReturnType<WatchControls['peers']>[number]
 type Npc = ReturnType<WatchControls['npcs']>[number]
-type Pane = 'zonas' | 'jogadores' | 'conversa' | 'npcs' | 'gerador' | 'inimigos' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
-const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', conversa: 'Câmera de conversa', npcs: 'NPCs desta zona', gerador: 'Gerador de NPCs', inimigos: 'Inimigos', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
+type Pane = 'zonas' | 'jogadores' | 'conversa' | 'npcs' | 'gerador' | 'inimigos' | 'animais' | 'espectadores' | 'hora' | 'tempo' | 'vento' | 'sons'
+const OPEN_TITLE: Record<Pane, string> = { zonas: 'Zonas e câmera', jogadores: 'Jogadores', conversa: 'Câmera de conversa', npcs: 'NPCs desta zona', gerador: 'Gerador de NPCs', inimigos: 'Inimigos', animais: 'Animais', espectadores: 'Espectadores', hora: 'Hora', tempo: 'Tempo', vento: 'Vento', sons: 'Sons' }
 type EnvPatch = { hour?: number | null; weather?: string | null; wind?: number | null; sound?: LiveSound | null; dayMinutes?: number | null; timeShift?: number | null }
 
 /**
@@ -37,6 +38,9 @@ const SKULL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 
 /** Um balão de fala (o botão e o painel da câmera de conversa). */
 const SPEECH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.500l1.500-4.800A8 8 0 1 1 21 12Z"/><path d="M8.500 11h.01M12 11h.01M15.500 11h.01"/></svg>'
+
+/** Uma pata (o botão e o painel de animais). */
+const PAW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="10" r="1.8"/><circle cx="10" cy="6" r="1.8"/><circle cx="14" cy="6" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M12 12c-3 0-5.5 3-5.5 5.2 0 1.6 1.5 2.3 3 2.3 1 0 1.6-.4 2.5-.4s1.5.4 2.5.4c1.5 0 3-.7 3-2.3C17.5 15 15 12 12 12z"/></svg>'
 
 /** Uma tevê (o botão e o painel de espectadores). */
 const TV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="m8 3 4 4 4-4"/><path d="M7 16.5h.01M17 12.5v4"/></svg>'
@@ -364,6 +368,7 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
           {tool('npcs', 'npc', 'NPCs desta zona', { dot: controlling != null })}
           {tool('gerador', PERSON_PLUS_ICON, 'Gerador de NPCs (pessoas, soldados, sobreviventes...)', { badge: npcs.filter((n) => n.id.startsWith('pess-')).length || undefined })}
           {tool('inimigos', SKULL_ICON, 'Inimigos e sons de criaturas', { badge: npcs.filter((n) => n.id.startsWith('inim-')).length || undefined })}
+          {tool('animais', PAW_ICON, 'Animais (cavalos, cachorros)', { badge: npcs.filter((n) => n.id.startsWith('anim-')).length || undefined })}
           {tool('espectadores', TV_ICON, 'Espectadores', { badge: vnet.peers.filter((p) => p.connected && p.role === 'spectator').length || undefined })}
           <span className="live__bar-sep" aria-hidden="true" />
           <button
@@ -494,6 +499,13 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
             )}
             {open === 'gerador' && (
               <PeoplePane
+                campaignId={campaign.id} worldId={active.id} worldName={active.name} zoneId={zoneId} net={vnet.net}
+                viewEl={viewRef.current} watch={watch.current}
+                peers={peers} npcs={npcs} controlling={controlling} onControl={(id) => void control(id)}
+              />
+            )}
+            {open === 'animais' && (
+              <AnimalsPane
                 campaignId={campaign.id} worldId={active.id} worldName={active.name} zoneId={zoneId} net={vnet.net}
                 viewEl={viewRef.current} watch={watch.current}
                 peers={peers} npcs={npcs} controlling={controlling} onControl={(id) => void control(id)}

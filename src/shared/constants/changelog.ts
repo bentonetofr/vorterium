@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.15',
+    date:    '2026-11-07',
+    title:   'Vortable: animais (cavalos e cachorros)',
+    items: [
+      'Novo botão de pata no controle ao vivo do mestre: o painel Animais põe cavalos (preto, branco malhado de laranja, alazão, palomino, tordilho e castanho de meias brancas) e cachorros (pastor alemão clássico, preto, sable e branco) na cena, clicando em Colocar ou arrastando pro mapa, com Onde, Quantos, espalhamento e nome sobre a cabeça. A aba Na zona lista os animais colocados, com Controlar (o mestre anda com o bicho como um jogador) e Tirar.',
+      'Cavalo agora é uma peça de corpo do criador de personagem (`tlou/body/cavalo`, seis pelagens), desenhada por código como o cachorro: anda, corre e fica parado nas quatro direções. Se o catálogo do site estiver desatualizado e não tiver a arte do animal, o painel avisa em vez de colocar um corpo humano sem cabeça.',
+    ],
+  },
+  {
     version: '2.14',
     date:    '2026-11-07',
     title:   'Vortable: biblioteca de NPCs do mestre',
