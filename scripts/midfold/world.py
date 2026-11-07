@@ -1,6 +1,6 @@
-"""MIDFOLD: seis zonas de campos planos, trilha de terra, estrada de terra com pedrinhas e árvores imensas.
+"""MIDFOLD: seis zonas de campos planos, trilha de terra, estrada de lajotas cinzas e árvores imensas.
 
-Z1 → Z2 → Z3 → Z4 da esquerda pra direita (terra); em Z4 a trilha vira pra baixo e encontra a estrada de pedrinhas que corta a zona de
+Z1 → Z2 → Z3 → Z4 da esquerda pra direita (terra); em Z4 a trilha vira pra baixo e encontra a estrada de lajotas que corta a zona de
 cima a baixo; Z5 e Z6 seguem pra baixo pela estrada; Z6 termina num acampamento (a estrada segue pro sul, sem saída).
 """
 from __future__ import annotations
@@ -8,8 +8,7 @@ from __future__ import annotations
 import math
 import os
 
-from saltmore.kit import R_SAND
-from saltmore.lib import OBJ, ROOT, TILE, Path, Zone, fbm, link, write_world
+from saltmore.lib import ROOT, TILE, Path, Zone, fbm, link, write_world
 from saltmore.world import validate
 
 from . import trees
@@ -17,7 +16,7 @@ from . import trees
 MAP = os.path.join(ROOT, 'public', 'vortable', 'maps', 'midfold.mundo.json')
 
 GRASS = 'grass-light'
-PEBBLE_SET = [i for i in R_SAND['flat'] if OBJ[i]['w'] <= 20 and OBJ[i]['h'] <= 18]   # pedrinhas soltas cor de areia
+PAVER = 'floor-75'                       # lajotas cinzas de pedra
 W, H_ROW, H_COL = 112, 72, 88          # zonas da fileira (Z1–Z4) e da descida (Z5–Z6)
 EXIT_HALF = 4.5                          # meia-altura/largura das saídas
 PORTAL = 2.6
@@ -34,17 +33,10 @@ def _trail(z: Zone, path: Path, width: float, seed: int) -> None:
 
 
 def _road(z: Zone, path: Path, width: float, seed: int) -> None:
-    """A estrada boa: terra batida com pedrinhas soltas espalhadas (objetos rasteiros, sem laje nem cascalho em manchas)."""
-    z.brush('dirt', path.pts, width / 2 + 1.0, 0.3, seed, only={GRASS, 'grass'})
-    z.brush('dirt-light', path.pts[::2], width / 2 - 0.2, 0.3, seed + 1, only={'dirt'})
-    rng = z.rng
-    n = int(len(path.pts) * 0.4 * 3.6)                                # ~3,6 pedrinhas por tile de estrada
-    for _ in range(n):
-        px, py = path.pts[rng.randrange(len(path.pts))]
-        off = rng.gauss(0, width / 5.0)                               # mais pedrinhas no meio do que nas beiradas
-        if abs(off) > width / 2 - 0.3:
-            continue
-        z.put(rng.choice(PEBBLE_SET), px + off + rng.uniform(-0.3, 0.3), py + rng.uniform(-0.6, 0.6), rng.random() < 0.5)
+    """A estrada principal: lajotas cinzas de pedra, com uma beira estreita de terra pra encontrar a grama."""
+    z.brush('dirt', path.pts, width / 2 + 1.3, 0.3, seed, only={GRASS, 'grass'})
+    z.brush('dirt-light', path.pts[::2], width / 2 + 0.6, 0.3, seed + 1, only={'dirt'})
+    z.brush(PAVER, path.pts, width / 2, 0.0, seed + 3)
     z.reserve_path(path, width / 2 + 3.0)
 
 
@@ -79,7 +71,7 @@ def build() -> list[Zone]:
     for z, p in ((z1, p1), (z2, p2), (z3, p3)):
         _trail(z, p, 4.2, 50 + z.seed)
     _trail(z4, p4, 4.2, 70)
-    # a trilha desemboca na estrada: um alargamento de terra na junção
+    # a trilha desemboca na estrada: um alargamento de terra na junção (a pedra vem por cima)
     jx, jy = p4.pts[-1]
     z4.brush('dirt-light', [(jx - 3, jy - 0.5), (jx - 1, jy)], 3.4, 0.3, 77)
     for z, p in ((z4, road4), (z5, road5), (z6, road6)):

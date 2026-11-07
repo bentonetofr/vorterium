@@ -1,6 +1,6 @@
 # Vortable: mundo pronto MIDFOLD
 
-Planícies de grama clara e viva, com pastos enormes e muito planos, trilhas de terra, uma estrada de terra batida com pedrinhas soltas e árvores
+Planícies de grama clara e viva, com pastos enormes e muito planos, trilhas de terra, uma estrada de lajotas cinzas de pedra e árvores
 imensas. É um mundo do Vortable (formato `vortable-world`) gerado por código com **só o que já existe nos catálogos** do motor.
 Não há objetos soltos de enfeite: só as árvores (e pinheirinhos lá longe, como na referência), os caminhos e o acampamento do fim.
 
@@ -18,7 +18,7 @@ Não há objetos soltos de enfeite: só as árvores (e pinheirinhos lá longe, c
 | 1 | Campos: a trilha começa | 112×72 | Início do mundo, à esquerda. Trilha de terra de esquerda a direita, com curvas |
 | 2 | Campos: pasto aberto | 112×72 | A trilha segue da esquerda pra direita |
 | 3 | Campos: as árvores imensas | 112×72 | Idem |
-| 4 | A estrada | 112×72 | A trilha vem da esquerda e vira pra baixo, desembocando na estrada de pedrinhas que corta a zona de cima a baixo |
+| 4 | A estrada | 112×72 | A trilha vem da esquerda e vira pra baixo, desembocando na estrada de lajotas que corta a zona de cima a baixo |
 | 5 | A descida | 112×88 | A estrada desce, com curvas |
 | 6 | O acampamento | 112×88 | A estrada continua pro sul (sem saída), com um ramal de terra até o acampamento: três tendas, fogueira, lenha, tronco e banco |
 
