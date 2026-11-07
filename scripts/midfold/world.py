@@ -9,10 +9,11 @@ import math
 import os
 
 from saltmore.kit import R_GRAY
+from saltmore.kit import Building
 from saltmore.lib import OBJ, ROOT, TILE, Path, Zone, fbm, link, write_world
 from saltmore.world import validate
 
-from . import trees
+from . import battle, cabana, trees
 
 MAP = os.path.join(ROOT, 'public', 'vortable', 'maps', 'midfold.mundo.json')
 
@@ -87,6 +88,7 @@ def build() -> list[Zone]:
     road6 = Path([(X_56, 0), (X_56 + 3, 12), (X_56 - 2, 26), (X_56 - 6, 40), (X_56 - 4, 54), (X_END - 1, 70), (X_END, H_COL)])
     z6 = Zone('midfold-acampamento', 'Campos de Midfold: o acampamento', W, H_COL, GRASS, 16)
 
+    cabin = cabana.build()
     for z in (z1, z2, z3, z4, z5, z6):
         z.lighting = {'place': 'outdoor', 'particles': True, 'clouds': True, 'sunShadows': True, 'wind': 0.35}
         z.sound = {'auto': True, 'layers': {'wind': 0.35}}
@@ -100,9 +102,25 @@ def build() -> list[Zone]:
     for z, p in ((z4, road4), (z5, road5), (z6, road6)):
         _road(z, p, 6.4, 90 + z.seed)
 
+    # ── a cabana abandonada, ao lado da trilha da zona 2, com a porta virada pra ela ──
+    cab = Building(z2, 54, 15, 10, roof_d=3, wall_h=3, wall='wall-227', wall_trim='ceil-3', roof='floor-7', roof_trim='ceil-3')
+    cab_door_x = cab.door(5.0, 'wd@192,768')
+    cab.window(1.8, 'wd@611,162')
+    cab.window(8.2, 'wd@130,64')
+    # o degrau da porta e um ramal de terra até a trilha
+    ty_, tx_ = min(((py, px) for px, py in p2.pts), key=lambda q: (q[1] - cab_door_x) ** 2 + (q[0] - (cab.base + 7)) ** 2)
+    spur = Path([(cab_door_x, cab.base + 0.4), (cab_door_x + 0.8, (cab.base + ty_) / 2), (tx_, ty_)])
+    z2.brush('dirt', spur.pts, 1.9, 0.35, 301, only={GRASS, 'grass'})
+    z2.brush('dirt-light', spur.pts[::2], 0.9, 0.4, 303, only={'dirt'})
+    z2.disc('dirt', cab_door_x, cab.base + 1.2, 3.0, 0.4, 305, only={GRASS, 'grass'})
+    z2.reserve_path(spur, 3.5)
+
     # ── o acampamento (primeiro, pra reservar o chão antes das árvores) ──
     from . import camp
     camp.build(z6, road6)
+
+    # ── o campo de batalha, do lado direito da estrada da zona 5 (antes das árvores, pra reservar o pasto) ──
+    battle.build(z5, road5, (64, 6, 108, 82), ((108, 22), (68, 72)))
 
     for z in (z1, z2, z3, z4, z5, z6):
         trees.populate(z)
@@ -114,17 +132,20 @@ def build() -> list[Zone]:
          z3, 'oeste', (PORTAL / 2, Y_23 - EXIT_HALF, PORTAL, EXIT_HALF * 2), 'Voltar pela trilha')
     link(z3, 'leste', (W - PORTAL / 2, Y_34 - EXIT_HALF, PORTAL, EXIT_HALF * 2), 'Seguir a trilha',
          z4, 'oeste', (PORTAL / 2, Y_34 - EXIT_HALF, PORTAL, EXIT_HALF * 2), 'Voltar pela trilha')
+    link(z2, 'porta-cabana', (cab_door_x, cab.base - 0.3, 3.0, 1.8), 'Entrar na cabana',
+         cabin, 'porta-frente', (11.5, 12.4, 4.0, 1.6), 'Sair da cabana')
     link(z4, 'sul', (X_45, H_ROW - PORTAL, 11, PORTAL), 'Seguir a estrada',
          z5, 'norte', (X_45, 0, 11, PORTAL), 'Voltar pela estrada')
     link(z5, 'sul', (X_56, H_COL - PORTAL, 11, PORTAL), 'Seguir a estrada',
          z6, 'norte', (X_56, 0, 11, PORTAL), 'Voltar pela estrada')
 
+    cabin.spawn = {'x': int(12.6 * TILE), 'y': int(9.0 * TILE)}
     z1.spawn = {'x': 5 * TILE, 'y': round(Y_START * TILE)}
-    return [z1, z2, z3, z4, z5, z6]
+    return [z1, z2, z3, z4, z5, z6, cabin]
 
 
 LAYOUT = {'midfold-campo-1': (0, 0), 'midfold-campo-2': (1, 0), 'midfold-campo-3': (2, 0), 'midfold-encruzilhada': (3, 0),
-          'midfold-descida-1': (3, 1), 'midfold-acampamento': (3, 2)}
+          'midfold-descida-1': (3, 1), 'midfold-acampamento': (3, 2), 'midfold-cabana': (1, -1)}
 
 
 def generate(check: bool = True) -> None:

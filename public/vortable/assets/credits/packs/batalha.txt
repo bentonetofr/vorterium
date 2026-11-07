@@ -1,0 +1,3 @@
+Campo de batalha: arte original gerada por scripts/make-battle-art.py do Vorterium.
+Espadas, escudos, elmos, soldados tombados, manchas de sangue e estandartes desenhados por código.
+Licença: CC0 1.0 (domínio público).
