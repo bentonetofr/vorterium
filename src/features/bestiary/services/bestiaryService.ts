@@ -10,7 +10,7 @@ import type { AltheriumCreature, AltheriumInventoryItem } from '../../../shared/
 export type CreatureInput = Pick<
   AltheriumCreature,
   'name' | 'hp' | 'damage_dice' | 'rounds' | 'danger_pct' | 'party_damage' | 'party_avg_hp' | 'notes'
->
+> & { sheet?: AltheriumCreature['sheet'] }
 
 function normalize(row: AltheriumCreature): AltheriumCreature {
   // numeric chega do PostgREST como número ou texto, conforme a versão.

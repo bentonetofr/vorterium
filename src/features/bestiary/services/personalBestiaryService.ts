@@ -7,7 +7,7 @@ import type { AltheriumCreature, PersonalCreature } from '../../../shared/types'
 // guardadas fora das campanhas, pra levar pro bestiário de qualquer uma.
 // ────────────────────────────────────────────────────────
 
-export type PersonalCreatureInput = Pick<PersonalCreature, 'name' | 'hp' | 'damage_dice' | 'notes'>
+export type PersonalCreatureInput = Pick<PersonalCreature, 'name' | 'hp' | 'damage_dice' | 'notes'> & { sheet?: PersonalCreature['sheet'] }
 
 /** Padrões do bestiário da campanha pra criatura escrita à mão. */
 const DEFAULT_ROUNDS = 4
@@ -72,6 +72,8 @@ export async function saveCampaignCreatureToMine(creature: AltheriumCreature): P
       party_damage: creature.party_damage,
       party_avg_hp: creature.party_avg_hp,
       notes:        creature.notes,
+      // Só leva a ficha se ela existe (antes da migration a coluna nem há).
+      ...(creature.sheet ? { sheet: creature.sheet } : {}),
     })
     .select('*')
     .single()
@@ -91,5 +93,6 @@ export async function copyMyCreatureToCampaign(creature: PersonalCreature, campa
     party_damage: creature.party_damage,
     party_avg_hp: creature.party_avg_hp,
     notes:        creature.notes,
+    ...(creature.sheet ? { sheet: creature.sheet } : {}),
   })
 }
