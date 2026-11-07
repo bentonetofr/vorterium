@@ -6,6 +6,7 @@ import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } f
 import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { getSkin } from './skins'
 import { playDiceHit } from './sound'
+import { LITE_DICE } from './lite'
 
 // ────────────────────────────────────────────────────────
 // O palco dos dados: uma cena 3D transparente por cima de um elemento da
@@ -93,11 +94,12 @@ export class DiceStage {
     this.host = host
     this.style = style
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LITE_DICE ? 1.5 : 2))
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1.05
-    this.renderer.shadowMap.enabled = true
+    // sombra em tempo real: só no modo completo (no celular algumas GPUs pintavam tudo de preto)
+    this.renderer.shadowMap.enabled = !LITE_DICE
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     this.renderer.setClearColor(0x000000, 0)
     const el = this.renderer.domElement

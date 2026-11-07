@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { DIE_RADIUS } from './simulate'
 import { getSkin } from './skins'
+import { LITE_DICE } from './lite'
 
 // ────────────────────────────────────────────────────────
 // A vitrine dos conjuntos de dados: UM só canvas por cima de uma grade de
@@ -48,7 +49,7 @@ export class DiceShowcase {
   constructor(host: HTMLElement) {
     this.host = host
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LITE_DICE ? 1.5 : 2))
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1.05

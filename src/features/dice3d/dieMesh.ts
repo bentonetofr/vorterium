@@ -4,6 +4,7 @@ import { DIE_RADIUS } from './simulate'
 import { SURFACES, hashString, hexToRgb, mulberry32, type FacePaint } from './dieSurfaces'
 import type { DiceSkin } from './skins'
 import { aimToy, makeToy } from './toys'
+import { LITE_DICE } from './lite'
 
 // ────────────────────────────────────────────────────────
 // Desenho de um dado: geometria com faces planas e um "atlas" (uma textura
@@ -14,6 +15,12 @@ import { aimToy, makeToy } from './toys'
 
 /** Tamanho do atlas: os conjuntos detalhados pedem mais pixels nos dados de muitas faces (cada face é pequena). */
 function atlasSize(kind: DieKind, skin: DiceSkin): number {
+  const full = fullAtlasSize(kind, skin)
+  // celular: metade do lado (um quarto da memória); o d100, que é o maior, vai a 2048
+  return LITE_DICE ? Math.max(1024, full / 2) : full
+}
+
+function fullAtlasSize(kind: DieKind, skin: DiceSkin): number {
   if (kind === 'd2') return 2048   // 26 células (as duas tampas e o friso): a tampa precisa de pixels para o número
   if (!skin.surface) return 1024
   const faces = polyhedron(kind).faces.length
@@ -124,7 +131,9 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
   const ATLAS = atlasSize(kind, skin)
   const cw = ATLAS / lay.cols, ch = ATLAS / lay.rows
   const make = () => { const c = document.createElement('canvas'); c.width = ATLAS; c.height = ATLAS; return c }
-  const color = make(), glow = make(), rm = make()
+  // a tela do brilho só existe nos conjuntos que brilham (os outros não gastam essa memória: no celular ela faz diferença)
+  const tiny = () => { const c = document.createElement('canvas'); c.width = 8; c.height = 8; return c }
+  const color = make(), glow = skin.glowPower > 0 ? make() : tiny(), rm = make()
   const cx = color.getContext('2d')!, gx = glow.getContext('2d')!, rx = rm.getContext('2d')!
   // relevo (só nos conjuntos detalhados): cinza médio é plano, claro sobe e escuro afunda
   const bump = skin.surface ? make() : null
@@ -270,6 +279,7 @@ function atlasFor(kind: DieKind, skin: DiceSkin): Atlas {
 
 export function dieMaterial(kind: DieKind, skin: DiceSkin): THREE.MeshPhysicalMaterial {
   const a = atlasFor(kind, skin)
+  if (LITE_DICE) return liteMaterial(a, skin)
   const m = new THREE.MeshPhysicalMaterial({
     map: a.map,
     ...(a.emissive ? { emissiveMap: a.emissive, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 1 } : {}),
@@ -294,6 +304,27 @@ export function dieMaterial(kind: DieKind, skin: DiceSkin): THREE.MeshPhysicalMa
     m.envMapIntensity = 1.6
   }
   return m
+}
+
+/**
+ * Material do modo leve (celular): padrão simples (cor, relevo e brilho), com rugosidade e metal fixos do conjunto no lugar dos mapas e sem
+ * verniz. É um MeshStandardMaterial; o tipo de retorno segue o do material completo só pra o resto do código (opacidade da resina etc.).
+ */
+function liteMaterial(a: Atlas, skin: DiceSkin): THREE.MeshPhysicalMaterial {
+  const m = new THREE.MeshStandardMaterial({
+    map: a.map,
+    ...(a.emissive ? { emissiveMap: a.emissive, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 1 } : {}),
+    ...(a.bump ? { bumpMap: a.bump, bumpScale: skin.bump ?? 1 } : {}),
+    roughness: Math.max(0.12, skin.roughness), metalness: Math.min(0.5, skin.metalness),
+    flatShading: true,
+  })
+  if (skin.resin && a.alpha) {
+    m.transparent = true
+    m.alphaMap = a.alpha
+    m.depthWrite = false
+    m.envMapIntensity = 1.4
+  }
+  return m as unknown as THREE.MeshPhysicalMaterial
 }
 
 /** Troca de células do bolão para a face `face` mostrar o número `label` (a face que tinha esse número fica com o dela). */

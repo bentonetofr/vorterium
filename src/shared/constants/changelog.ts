@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.22',
+    date:    '2026-11-07',
+    title:   'Dados 3D: modo leve no celular',
+    items: [
+      'Os dados 3D apareciam pretos em alguns celulares. Agora, em tela de toque (e em aparelhos com pouca memória), os dados usam um modo leve: texturas com metade do lado (um quarto da memória), material mais simples, sem sombra em tempo real e sem a tela de brilho nos conjuntos que não brilham. O visual segue o mesmo (madeira, granito, plástico e a resina), só com um pouco menos de verniz e sem a sombra projetada. No computador nada muda. Se ainda aparecer preto, dá pra testar abrindo o site com ?dados=leve (ou ?dados=completo pra forçar o modo antigo) e me dizer qual celular e navegador é.',
+    ],
+  },
+  {
     version: '2.21',
     date:    '2026-11-07',
     title:   'Vortable: personagens dos jogadores como NPC do mestre',
