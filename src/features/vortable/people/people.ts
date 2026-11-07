@@ -3,6 +3,7 @@ import { loadEngine, VORTABLE_ASSETS } from '../services/vortableService'
 import type { VortableNet } from '../net/VortableNet'
 import { applyWeaponLook, type WeaponKind, type WeaponLook } from '../../sheets/terraDevastadaAdaptada/utils/tdaWeaponLook'
 import { announceAdd, announceRemove, zoneStorage } from '../enemies/enemies'
+import type { LibraryNpc, NewLibraryNpc } from './npcLibrary'
 
 // ────────────────────────────────────────────────────────
 // Gerador de pessoas (NPCs) do Vortable no clima de The Last of Us: sobreviventes, soldados da FEDRA, Vagalumes,
@@ -258,23 +259,14 @@ export async function rollDog(): Promise<Person> {
 
 // ── Importar personagens de arquivo ──────────────────────
 
-interface SavedImport { name: string; appearance: Appearance }
-const importKey = (campaignId: string) => `vortable:importados:${campaignId}`
-
-function toPerson(s: SavedImport): Person {
-  return { key: code(), name: s.name, role: 'Importado', archetype: 'importado', appearance: s.appearance, look: {}, gear: 'do arquivo' }
+/** Uma pessoa da biblioteca do mestre (a chave é o id da biblioteca: serve pra arrastar pro mapa). */
+export function libraryPerson(n: LibraryNpc): Person {
+  return { key: n.id, name: n.name, role: n.role || 'Da biblioteca', archetype: 'importado', appearance: n.appearance, look: {}, gear: n.gear || 'da biblioteca' }
 }
 
-/** Os personagens que o mestre já importou nesta campanha (ficam guardados no navegador). */
-export function loadImported(campaignId: string): Person[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem(importKey(campaignId)) ?? '[]') as SavedImport[]
-    return Array.isArray(raw) ? raw.filter((s) => s && typeof s.name === 'string' && s.appearance).map(toPerson) : []
-  } catch { return [] }
-}
-
-function saveImported(campaignId: string, people: Person[]) {
-  try { localStorage.setItem(importKey(campaignId), JSON.stringify(people.map((p) => ({ name: p.name, appearance: p.appearance })))) } catch { /* sem storage: só não lembra */ }
+/** O que vai pra biblioteca a partir de uma pessoa (sorteada ou não). */
+export function personToLibrary(p: Person): NewLibraryNpc {
+  return { name: p.name, role: p.role, gear: p.gear, appearance: p.appearance }
 }
 
 /** Abre o seletor de arquivos (vários) e devolve o texto de cada um. */
@@ -291,30 +283,22 @@ export function pickFiles(): Promise<{ name: string; text: string }[]> {
 }
 
 /**
- * Lê arquivos de personagem do Vortable (os que o criador de personagens exporta, de um ou vários personagens) e soma aos importados.
- * Devolve a lista nova e o que deu certo ou errado.
+ * Lê arquivos de personagem do Vortable (os que o criador de personagens exporta, de um ou vários personagens).
+ * Devolve os personagens lidos (prontos pra biblioteca) e o que deu errado.
  */
-export async function importPeople(campaignId: string, files: { name: string; text: string }[]): Promise<{ all: Person[]; added: number; errors: string[] }> {
+export async function parseImportFiles(files: { name: string; text: string }[]): Promise<{ npcs: NewLibraryNpc[]; errors: string[] }> {
   const engine = await loadEngine()
   const data = await engine.loadCharacterData(VORTABLE_ASSETS)
-  const all = loadImported(campaignId)
+  const npcs: NewLibraryNpc[] = []
   const errors: string[] = []
-  let added = 0
   for (const f of files) {
     try {
-      for (const c of engine.parseCharacterFile(f.text, data)) { all.push(toPerson({ name: c.name, appearance: c.appearance })); added++ }
+      for (const c of engine.parseCharacterFile(f.text, data)) npcs.push({ name: c.name, role: 'Importado', gear: 'do arquivo', appearance: c.appearance })
     } catch (err) {
       errors.push(`${f.name}: ${err instanceof Error ? err.message : 'não deu pra ler'}`)
     }
   }
-  if (added) saveImported(campaignId, all)
-  return { all, added, errors }
-}
-
-export function removeImported(campaignId: string, all: Person[], key: string): Person[] {
-  const next = all.filter((p) => p.key !== key)
-  saveImported(campaignId, next)
-  return next
+  return { npcs, errors }
 }
 
 export async function rollPeople(arch: ArchetypeId | null, n: number, arms: ArmsMode = 'auto'): Promise<Person[]> {

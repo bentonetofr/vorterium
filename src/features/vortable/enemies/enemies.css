@@ -67,3 +67,9 @@
   pointer-events: none;
   z-index: 15;
 }
+
+/* Caixinha de marcar um NPC da biblioteca (pra colocar vários de uma vez). */
+.enemy__pick { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--accent-bright, #e9b44c); cursor: pointer; }
+.enemy__lead { display: flex; align-items: center; gap: 8px; }
+.enemy__card--lib { grid-template-columns: auto 1fr; }
+.enemy__card--lib .enemy__actions { grid-column: 1 / -1; justify-content: flex-end; }

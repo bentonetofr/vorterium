@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.14',
+    date:    '2026-11-07',
+    title:   'Vortable: biblioteca de NPCs do mestre',
+    items: [
+      'No controle ao vivo, a aba Importar do Gerador de NPCs virou Biblioteca: os personagens que você importa (arquivos .vortable-personagem.json, de um ou vários) ficam guardados na sua conta, valem em todas as campanhas e em qualquer navegador, e é só pegar da lista e colocar, sem importar de novo. Dá pra arrastar pro mapa, usar o Colocar de cada um, marcar vários e usar Colocar marcados (com Onde, espalhamento e nome sobre a cabeça), buscar por nome e tirar da biblioteca.',
+      'Na aba Gerar, cada NPC sorteado ganhou o botão Guardar, que manda ele pra biblioteca. Os importados que o navegador já guardava (por campanha) sobem sozinhos pra biblioteca na primeira vez. Precisa rodar a migration 20240227 no Supabase; enquanto isso a biblioteca funciona só neste navegador.',
+    ],
+  },
+  {
     version: '2.13',
     date:    '2026-11-07',
     title:   'Altherium: companheiro animal',

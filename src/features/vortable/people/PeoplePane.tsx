@@ -3,13 +3,14 @@ import type { WatchControls } from '../../../vendor/vortable/vortable'
 import type { VortableNet } from '../net/VortableNet'
 import { CharacterFace } from '../components/CharacterFace'
 import { mapPoint, useMapDrop } from '../enemies/useMapDrop'
-import { ARCHETYPES, importPeople, loadImported, pickFiles, placePeople, removeImported, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person } from './people'
+import { ARCHETYPES, libraryPerson, parseImportFiles, personToLibrary, pickFiles, placePeople, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person } from './people'
+import { addToLibrary, listLibrary, removeFromLibrary } from './npcLibrary'
 import '../enemies/enemies.css'
 import { ask } from '../../../shared/components/dialogs'
 
 type Npc = ReturnType<WatchControls['npcs']>[number]
 type Peer = ReturnType<WatchControls['peers']>[number]
-type Tab = 'gerar' | 'zona' | 'importar'
+type Tab = 'gerar' | 'zona' | 'biblioteca'
 
 const DRAG_TYPE = 'application/x-vortable-person'
 const ARMS: { id: ArmsMode; label: string; title: string }[] = [
@@ -45,13 +46,27 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
   const [anchor, setAnchor] = useState('spawn')
   const [showName, setShowName] = useState(false)
   const [cards, setCards] = useState<Person[]>([])
-  // personagens importados de arquivo (ficam guardados no navegador, por campanha)
-  const [imported, setImported] = useState<Person[]>(() => loadImported(campaignId))
+  // biblioteca de NPCs do mestre (na conta: vale em todas as campanhas)
+  const [library, setLibrary] = useState<Person[]>([])
+  const [libCloud, setLibCloud] = useState<boolean | null>(null)
+  const [libLoading, setLibLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [picked, setPicked] = useState<Set<string>>(new Set())
+  /** Sorteados que já foram guardados na biblioteca (pra mostrar "Guardado"). */
+  const [saved, setSaved] = useState<Set<string>>(new Set())
   const [rolling, setRolling] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const alive = useRef(true)
   useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
+  useEffect(() => {
+    let dead = false
+    listLibrary()
+      .then((lib) => { if (!dead) { setLibrary(lib.npcs.map(libraryPerson)); setLibCloud(lib.cloud) } })
+      .catch((err) => { if (!dead) setNote(err instanceof Error ? err.message : 'Não deu pra carregar a biblioteca.') })
+      .finally(() => { if (!dead) setLibLoading(false) })
+    return () => { dead = true }
+  }, [])
 
   async function roll() {
     setRolling(true); setNote(null)
@@ -79,7 +94,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
   const here0 = anchorPeer ? { x: anchorPeer.x, y: anchorPeer.y } : null
 
   useMapDrop(viewEl, DRAG_TYPE, (key, pageX, pageY) => {
-    const person = cards.find((c) => c.key === key) ?? imported.find((c) => c.key === key)
+    const person = cards.find((c) => c.key === key) ?? library.find((c) => c.key === key)
     if (!person) return
     const point = mapPoint(watch, pageX, pageY)
     if (!point) { setNote('Pra arrastar, o motor do Vortable precisa da remenda da câmera (node scripts/patch-vortable-camera.mjs). Use o botão Colocar.'); return }
@@ -103,7 +118,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
     } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra tirar.') } finally { setBusy(null) }
   }
 
-  const label = (id: string) => (id === 'importado' ? 'Importado' : ARCHETYPES.find((a) => a.id === id)?.label ?? id)
+  const label = (id: string) => (id === 'importado' ? 'Biblioteca' : ARCHETYPES.find((a) => a.id === id)?.label ?? id)
 
   async function importFiles() {
     setNote(null)
@@ -111,13 +126,63 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
     if (files.length === 0) return
     setBusy('import')
     try {
-      const res = await importPeople(campaignId, files)
+      const res = await parseImportFiles(files)
+      const lib = res.npcs.length ? await addToLibrary(res.npcs) : null
       if (alive.current) {
-        setImported(res.all)
-        setNote([res.added ? `${res.added} personagem${res.added > 1 ? 's' : ''} importado${res.added > 1 ? 's' : ''}.` : 'Nenhum personagem importado.', ...res.errors].join(' '))
+        if (lib) { setLibrary((all) => [...lib.npcs.map(libraryPerson), ...all]); setLibCloud(lib.cloud) }
+        const n = res.npcs.length
+        setNote([n ? `${n} personagem${n > 1 ? 's' : ''} na biblioteca.` : 'Nenhum personagem importado.', ...res.errors].join(' '))
       }
     } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra importar.') } finally { setBusy(null) }
   }
+
+  /** Guarda um NPC sorteado na biblioteca, pra usar de novo nesta e em outras campanhas. */
+  async function keep(p: Person) {
+    setBusy('keep'); setNote(null)
+    try {
+      const lib = await addToLibrary([personToLibrary(p)])
+      if (alive.current) {
+        setLibrary((all) => [...lib.npcs.map(libraryPerson), ...all]); setLibCloud(lib.cloud)
+        setSaved((s) => new Set(s).add(p.key))
+        setNote(`${p.name} foi pra biblioteca.`)
+      }
+    } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra guardar.') } finally { setBusy(null) }
+  }
+
+  function dropFromLibrary(p: Person) {
+    ask({ title: 'Tirar da biblioteca', message: `Tirar "${p.name}" da sua biblioteca de NPCs? Quem já está em cena continua lá.`, tone: 'danger', confirmLabel: 'Tirar' }, () => {
+      void removeFromLibrary(p.key)
+        .then(() => { if (alive.current) { setLibrary((all) => all.filter((x) => x.key !== p.key)); setPicked((s) => { const n = new Set(s); n.delete(p.key); return n }) } })
+        .catch((err) => { if (alive.current) setNote(err instanceof Error ? err.message : 'Não deu pra tirar.') })
+    })
+  }
+
+  const q = search.trim().toLowerCase()
+  const shown = q ? library.filter((p) => p.name.toLowerCase().includes(q) || p.role.toLowerCase().includes(q)) : library
+  const chosen = library.filter((p) => picked.has(p.key))
+  const togglePick = (key: string) => setPicked((s) => { const n = new Set(s); if (n.has(key)) n.delete(key); else n.add(key); return n })
+
+  /** Onde, quão espalhados e se mostra o nome: valem pra colocar do Gerar e da Biblioteca. */
+  const placementOpts = (
+    <div className="enemy__opts">
+      <div className="live__field">
+        <label htmlFor="people-anchor">Onde</label>
+        <select id="people-anchor" className="live__select" value={anchorPeer ? anchor : 'spawn'} onChange={(e) => setAnchor(e.target.value)}>
+          <option value="spawn">No ponto de partida da zona</option>
+          {here.map((p) => <option key={p.id} value={p.id}>Perto de {p.name}</option>)}
+        </select>
+      </div>
+      <div className="live__chips">
+        {SPREADS.map((s, i) => (
+          <button key={s.label} type="button" className={`live__chip${spread === i ? ' live__chip--on' : ''}`} onClick={() => setSpread(i)}>{s.label}</button>
+        ))}
+      </div>
+      <label className="live__switchrow">
+        <input type="checkbox" className="live__switch" checked={showName} onChange={(e) => setShowName(e.target.checked)} />
+        Mostrar o nome sobre a cabeça
+      </label>
+    </div>
+  )
 
   return (
     <section className="live__block enemy">
@@ -125,7 +190,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
       <div className="live__segmented" role="tablist">
         <button type="button" role="tab" aria-selected={tab === 'gerar'} className={`live__seg${tab === 'gerar' ? ' live__seg--on' : ''}`} onClick={() => setTab('gerar')}>Gerar</button>
         <button type="button" role="tab" aria-selected={tab === 'zona'} className={`live__seg${tab === 'zona' ? ' live__seg--on' : ''}`} onClick={() => setTab('zona')}>Na zona{mine.length > 0 ? ` (${mine.length})` : ''}</button>
-        <button type="button" role="tab" aria-selected={tab === 'importar'} className={`live__seg${tab === 'importar' ? ' live__seg--on' : ''}`} onClick={() => setTab('importar')}>Importar{imported.length > 0 ? ` (${imported.length})` : ''}</button>
+        <button type="button" role="tab" aria-selected={tab === 'biblioteca'} className={`live__seg${tab === 'biblioteca' ? ' live__seg--on' : ''}`} onClick={() => setTab('biblioteca')}>Biblioteca{library.length > 0 ? ` (${library.length})` : ''}</button>
       </div>
 
       {tab === 'gerar' && (
@@ -141,24 +206,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
               <button key={a.id} type="button" title={a.title} className={`live__chip${arms === a.id ? ' live__chip--on' : ''}`} onClick={() => setArms(a.id)}>{a.label}</button>
             ))}
           </div>
-          <div className="enemy__opts">
-            <div className="live__field">
-              <label htmlFor="people-anchor">Onde</label>
-              <select id="people-anchor" className="live__select" value={anchorPeer ? anchor : 'spawn'} onChange={(e) => setAnchor(e.target.value)}>
-                <option value="spawn">No ponto de partida da zona</option>
-                {here.map((p) => <option key={p.id} value={p.id}>Perto de {p.name}</option>)}
-              </select>
-            </div>
-            <div className="live__chips">
-              {SPREADS.map((s, i) => (
-                <button key={s.label} type="button" className={`live__chip${spread === i ? ' live__chip--on' : ''}`} onClick={() => setSpread(i)}>{s.label}</button>
-              ))}
-            </div>
-            <label className="live__switchrow">
-              <input type="checkbox" className="live__switch" checked={showName} onChange={(e) => setShowName(e.target.checked)} />
-              Mostrar o nome sobre a cabeça
-            </label>
-          </div>
+          {placementOpts}
           <div className="live__row">
             <button type="button" className="btn btn-ghost" disabled={rolling} onClick={() => void roll()}>{rolling ? 'Sorteando…' : 'Sortear de novo'}</button>
             <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null || cards.length === 0} onClick={() => void place(cards, here0, false)} title="Coloca todos os sorteados juntos">Colocar todos ({cards.length})</button>
@@ -173,7 +221,10 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
                   <small>{label(p.archetype)}</small>
                   <span>{p.role} · {p.gear}</span>
                 </div>
-                <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
+                <div className="enemy__actions">
+                  <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
+                  <button type="button" className="live__chip" disabled={busy != null || saved.has(p.key)} title="Guardar na sua biblioteca de NPCs (vale em todas as campanhas)" onClick={() => void keep(p)}>{saved.has(p.key) ? 'Guardado' : 'Guardar'}</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -181,30 +232,38 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
         </>
       )}
 
-      {tab === 'importar' && (
+      {tab === 'biblioteca' && (
         <>
-          <p className="live__empty">Importe personagens do criador de personagens (arquivos .vortable-personagem.json, de um ou de vários). Eles ficam guardados aqui, prontos pra arrastar pro mapa ou usar o botão Colocar.</p>
+          <p className="live__empty">Sua biblioteca de NPCs fica na sua conta: importe uma vez (arquivos .vortable-personagem.json, de um ou de vários) ou guarde os que o gerador sortear, e use em qualquer campanha sem importar de novo.</p>
+          {libCloud === false && <p className="live__empty" role="status">Por enquanto a biblioteca está só neste navegador. Falta rodar a migration 20240227 no Supabase pra ela ir pra sua conta.</p>}
           <div className="live__row">
-            <button type="button" className="btn btn-primary" disabled={busy != null} onClick={() => void importFiles()}>{busy === 'import' ? 'Importando…' : 'Importar arquivo…'}</button>
+            <button type="button" className="btn btn-primary" disabled={busy != null} onClick={() => void importFiles()}>{busy === 'import' ? 'Importando…' : 'Importar…'}</button>
+            <button type="button" className="btn btn-ghost" disabled={!zoneId || busy != null || chosen.length === 0} onClick={() => void place(chosen, here0, false)} title="Coloca juntos os NPCs marcados na lista">Colocar marcados ({chosen.length})</button>
           </div>
-          <div className="enemy__opts">
-            <label className="live__switchrow">
-              <input type="checkbox" className="live__switch" checked={showName} onChange={(e) => setShowName(e.target.checked)} />
-              Mostrar o nome sobre a cabeça
-            </label>
-          </div>
-          {imported.length === 0 && <p className="live__empty">Nenhum personagem importado ainda.</p>}
+          {placementOpts}
+          {library.length > 6 && (
+            <div className="live__field">
+              <label htmlFor="people-search">Buscar</label>
+              <input id="people-search" className="live__select" type="search" value={search} placeholder="Nome ou função" onChange={(e) => setSearch(e.target.value)} />
+            </div>
+          )}
+          {libLoading && <p className="live__empty">Carregando a biblioteca…</p>}
+          {!libLoading && library.length === 0 && <p className="live__empty">A biblioteca está vazia. Importe um arquivo ou guarde um NPC sorteado na aba Gerar.</p>}
+          {!libLoading && library.length > 0 && shown.length === 0 && <p className="live__empty">Nenhum NPC com esse nome.</p>}
           <ul className="enemy__list">
-            {imported.map((p) => (
-              <li key={p.key} className="enemy__card enemy__card--drag" draggable onDragStart={(e) => startDrag(e, p)} title="Arraste para o mapa e solte onde quiser">
-                <CharacterFace appearance={p.appearance} size={56} />
+            {shown.map((p) => (
+              <li key={p.key} className="enemy__card enemy__card--drag enemy__card--lib" draggable onDragStart={(e) => startDrag(e, p)} title="Arraste para o mapa e solte onde quiser">
+                <div className="enemy__lead">
+                  <input type="checkbox" className="enemy__pick" checked={picked.has(p.key)} onChange={() => togglePick(p.key)} aria-label={`Marcar ${p.name}`} />
+                  <CharacterFace appearance={p.appearance} size={56} />
+                </div>
                 <div className="enemy__info">
                   <strong>{p.name}</strong>
-                  <small>Importado</small>
+                  <small>{p.role}</small>
                 </div>
                 <div className="enemy__actions">
                   <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
-                  <button type="button" className="live__chip" title={`Tirar ${p.name} da lista de importados`} aria-label={`Tirar ${p.name} da lista de importados`} onClick={() => setImported((all) => removeImported(campaignId, all, p.key))}>✕</button>
+                  <button type="button" className="live__chip" title={`Tirar ${p.name} da biblioteca`} aria-label={`Tirar ${p.name} da biblioteca`} onClick={() => dropFromLibrary(p)}>✕</button>
                 </div>
               </li>
             ))}
