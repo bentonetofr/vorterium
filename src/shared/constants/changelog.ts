@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.21',
+    date:    '2026-11-07',
+    title:   'Vortable: personagens dos jogadores como NPC do mestre',
+    items: [
+      'No controle ao vivo, o Gerador de NPCs ganhou a aba Jogadores: ela lista os personagens de Vortable da campanha (os que os jogadores estão usando primeiro, com o nome de quem joga, depois os que ficaram sem jogador). Cada um tem Colocar (entra em cena como um NPC com o mesmo boneco e nome), Colocar e controlar (entra e o mestre já assume o controle) e dá pra arrastar pro mapa. Depois de em cena ele aparece na aba Na zona, com Controlar e Tirar, e o mestre anda com ele como qualquer NPC, inclusive montar em cavalo. É uma cópia: o jogador de verdade e a ficha dele não são afetados.',
+    ],
+  },
+  {
     version: '2.20',
     date:    '2026-11-07',
     title:   'Vortable: Ventania bem mais forte',

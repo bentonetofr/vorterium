@@ -3,14 +3,14 @@ import type { WatchControls } from '../../../vendor/vortable/vortable'
 import type { VortableNet } from '../net/VortableNet'
 import { CharacterFace } from '../components/CharacterFace'
 import { mapPoint, useMapDrop } from '../enemies/useMapDrop'
-import { ARCHETYPES, libraryPerson, parseImportFiles, personToLibrary, pickFiles, placePeople, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person } from './people'
+import { ARCHETYPES, libraryPerson, listPlayerCharacters, parseImportFiles, personToLibrary, pickFiles, placePeople, removePeople, rollPeople, type ArchetypeId, type ArmsMode, type Person, type PlayerCharacter } from './people'
 import { addToLibrary, listLibrary, removeFromLibrary } from './npcLibrary'
 import '../enemies/enemies.css'
 import { ask } from '../../../shared/components/dialogs'
 
 type Npc = ReturnType<WatchControls['npcs']>[number]
 type Peer = ReturnType<WatchControls['peers']>[number]
-type Tab = 'gerar' | 'zona' | 'biblioteca'
+type Tab = 'gerar' | 'zona' | 'biblioteca' | 'jogadores'
 
 const DRAG_TYPE = 'application/x-vortable-person'
 const ARMS: { id: ArmsMode; label: string; title: string }[] = [
@@ -54,6 +54,8 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
   const [picked, setPicked] = useState<Set<string>>(new Set())
   /** Sorteados que já foram guardados na biblioteca (pra mostrar "Guardado"). */
   const [saved, setSaved] = useState<Set<string>>(new Set())
+  // personagens dos jogadores da campanha
+  const [players, setPlayers] = useState<PlayerCharacter[] | null>(null)
   const [rolling, setRolling] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
@@ -67,6 +69,15 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
       .finally(() => { if (!dead) setLibLoading(false) })
     return () => { dead = true }
   }, [])
+
+  useEffect(() => {
+    if (tab !== 'jogadores') return
+    let dead = false
+    listPlayerCharacters(campaignId)
+      .then((list) => { if (!dead) setPlayers(list) })
+      .catch((err) => { if (!dead) { setPlayers([]); setNote(err instanceof Error ? err.message : 'Não deu pra carregar os personagens dos jogadores.') } })
+    return () => { dead = true }
+  }, [tab, campaignId])
 
   async function roll() {
     setRolling(true); setNote(null)
@@ -82,19 +93,21 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
   const ctx = { campaignId, worldId, worldName, zoneId: zoneId ?? '', net }
   const mine = npcs.filter((n) => n.id.startsWith('pess-'))
 
-  async function place(people: Person[], at: { x: number; y: number } | null, exact: boolean) {
+  async function place(people: Person[], at: { x: number; y: number } | null, exact: boolean, thenControl = false) {
     if (!zoneId || people.length === 0) return
     setBusy('place'); setNote(null)
     try {
-      await placePeople({ ...ctx, people, anchor: at, spread: SPREADS[spread].tiles, exact, showName })
+      const ids = await placePeople({ ...ctx, people, anchor: at, spread: SPREADS[spread].tiles, exact, showName })
       setNote(people.length === 1 ? `${people[0].name} entrou na cena.` : `${people.length} pessoas entraram na cena.`)
+      // põe e já controla: dá um instante pra cena criar o boneco que acabou de chegar
+      if (thenControl && ids[0]) window.setTimeout(() => { if (alive.current) onControl(ids[0]) }, 450)
     } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra colocar.') } finally { setBusy(null) }
   }
 
   const here0 = anchorPeer ? { x: anchorPeer.x, y: anchorPeer.y } : null
 
   useMapDrop(viewEl, DRAG_TYPE, (key, pageX, pageY) => {
-    const person = cards.find((c) => c.key === key) ?? library.find((c) => c.key === key)
+    const person = cards.find((c) => c.key === key) ?? library.find((c) => c.key === key) ?? players?.find((c) => c.key === key)
     if (!person) return
     const point = mapPoint(watch, pageX, pageY)
     if (!point) { setNote('Pra arrastar, o motor do Vortable precisa da remenda da câmera (node scripts/patch-vortable-camera.mjs). Use o botão Colocar.'); return }
@@ -118,7 +131,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
     } catch (err) { setNote(err instanceof Error ? err.message : 'Não deu pra tirar.') } finally { setBusy(null) }
   }
 
-  const label = (id: string) => (id === 'importado' ? 'Biblioteca' : ARCHETYPES.find((a) => a.id === id)?.label ?? id)
+  const label = (id: string) => (id === 'importado' ? 'Biblioteca' : id === 'jogador' ? 'Jogador' : ARCHETYPES.find((a) => a.id === id)?.label ?? id)
 
   async function importFiles() {
     setNote(null)
@@ -191,6 +204,7 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
         <button type="button" role="tab" aria-selected={tab === 'gerar'} className={`live__seg${tab === 'gerar' ? ' live__seg--on' : ''}`} onClick={() => setTab('gerar')}>Gerar</button>
         <button type="button" role="tab" aria-selected={tab === 'zona'} className={`live__seg${tab === 'zona' ? ' live__seg--on' : ''}`} onClick={() => setTab('zona')}>Na zona{mine.length > 0 ? ` (${mine.length})` : ''}</button>
         <button type="button" role="tab" aria-selected={tab === 'biblioteca'} className={`live__seg${tab === 'biblioteca' ? ' live__seg--on' : ''}`} onClick={() => setTab('biblioteca')}>Biblioteca{library.length > 0 ? ` (${library.length})` : ''}</button>
+        <button type="button" role="tab" aria-selected={tab === 'jogadores'} className={`live__seg${tab === 'jogadores' ? ' live__seg--on' : ''}`} onClick={() => setTab('jogadores')}>Jogadores</button>
       </div>
 
       {tab === 'gerar' && (
@@ -264,6 +278,31 @@ export function PeoplePane({ viewEl, watch, campaignId, worldId, worldName, zone
                 <div className="enemy__actions">
                   <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
                   <button type="button" className="live__chip" title={`Tirar ${p.name} da biblioteca`} aria-label={`Tirar ${p.name} da biblioteca`} onClick={() => dropFromLibrary(p)}>✕</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {note && <p className="live__empty" role="status">{note}</p>}
+        </>
+      )}
+
+      {tab === 'jogadores' && (
+        <>
+          <p className="live__empty">Os personagens dos jogadores da campanha. Coloque um em cena como NPC (uma cópia do boneco do jogador) e controle com as setas ou WASD, como qualquer NPC. O jogador de verdade não é afetado.</p>
+          {placementOpts}
+          {players === null && <p className="live__empty">Carregando os personagens…</p>}
+          {players !== null && players.length === 0 && <p className="live__empty">Nenhum jogador criou um personagem de Vortable nesta campanha ainda.</p>}
+          <ul className="enemy__list">
+            {(players ?? []).map((p) => (
+              <li key={p.key} className="enemy__card enemy__card--drag" draggable onDragStart={(e) => startDrag(e, p)} title="Arraste para o mapa e solte onde quiser">
+                <CharacterFace appearance={p.appearance} size={56} />
+                <div className="enemy__info">
+                  <strong>{p.name}</strong>
+                  <small>{p.player ? `de ${p.player}` : 'sem jogador'}</small>
+                </div>
+                <div className="enemy__actions">
+                  <button type="button" className="btn btn-primary" disabled={!zoneId || busy != null} onClick={() => void place([p], here0, false)}>Colocar</button>
+                  <button type="button" className="live__chip" disabled={!zoneId || busy != null || !watch} title="Coloca em cena e já assume o controle" onClick={() => void place([p], here0, false, true)}>Colocar e controlar</button>
                 </div>
               </li>
             ))}

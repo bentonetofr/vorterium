@@ -1,5 +1,6 @@
 import type { Appearance, ZoneNpc } from '../../../vendor/vortable/vortable'
-import { loadEngine, VORTABLE_ASSETS } from '../services/vortableService'
+import { listCampaignCharacters, loadEngine, VORTABLE_ASSETS } from '../services/vortableService'
+import { getCampaignMembers } from '../../members/services/memberService'
 import type { VortableNet } from '../net/VortableNet'
 import { applyWeaponLook, type WeaponKind, type WeaponLook } from '../../sheets/terraDevastadaAdaptada/utils/tdaWeaponLook'
 import { announceAdd, announceRemove, zoneStorage } from '../enemies/enemies'
@@ -13,7 +14,7 @@ import type { LibraryNpc, NewLibraryNpc } from './npcLibrary'
 
 export type HumanArchetype = 'sobrevivente' | 'soldado' | 'oficial' | 'vagalume' | 'saqueador' | 'cacador' | 'medico' | 'contrabandista'
 /** Os tipos do gerador: as pessoas, o cachorro e os personagens importados de arquivo. */
-export type ArchetypeId = HumanArchetype | 'cachorro' | 'importado'
+export type ArchetypeId = HumanArchetype | 'cachorro' | 'importado' | 'jogador'
 export type ArmsMode = 'auto' | 'none' | 'always'
 
 export interface Archetype {
@@ -215,7 +216,7 @@ function style(arch: HumanArchetype, female: boolean): Style {
 /** Sorteia uma pessoa do tipo pedido (sem tipo, qualquer uma). */
 export async function rollPerson(arch: ArchetypeId | null, arms: ArmsMode = 'auto'): Promise<Person> {
   if (arch === 'cachorro') return rollDog()
-  const type: HumanArchetype = arch && arch !== 'importado' ? arch : pickW<HumanArchetype>([['sobrevivente', 5], ['soldado', 3], ['vagalume', 2], ['saqueador', 2], ['cacador', 1], ['medico', 1], ['contrabandista', 1], ['oficial', 1]])
+  const type: HumanArchetype = arch && arch !== 'importado' && arch !== 'jogador' ? arch : pickW<HumanArchetype>([['sobrevivente', 5], ['soldado', 3], ['vagalume', 2], ['saqueador', 2], ['cacador', 1], ['medico', 1], ['contrabandista', 1], ['oficial', 1]])
   const engine = await loadEngine()
   const data = await engine.loadCharacterData(VORTABLE_ASSETS)
   const female = chance(type === 'soldado' ? 0.25 : type === 'saqueador' ? 0.3 : 0.45)
@@ -262,6 +263,34 @@ export async function rollDog(): Promise<Person> {
 /** Uma pessoa da biblioteca do mestre (a chave é o id da biblioteca: serve pra arrastar pro mapa). */
 export function libraryPerson(n: LibraryNpc): Person {
   return { key: n.id, name: n.name, role: n.role || 'Da biblioteca', archetype: 'importado', appearance: n.appearance, look: {}, gear: n.gear || 'da biblioteca' }
+}
+
+/** O personagem de um jogador da campanha, pra o mestre pôr em cena e controlar como um NPC. */
+export interface PlayerCharacter extends Person {
+  /** Quem joga com ele (null = ninguém ainda). */
+  player: string | null
+  /** Um jogador está com este boneco agora (e não é só um boneco guardado). */
+  active: boolean
+}
+
+/**
+ * Os bonecos de Vortable da campanha: os que os jogadores estão usando primeiro (com o nome de quem joga), depois os que ficaram
+ * sem jogador. A chave de cada um começa com `jog-`.
+ */
+export async function listPlayerCharacters(campaignId: string): Promise<PlayerCharacter[]> {
+  const engine = await loadEngine()
+  const [data, members, chars] = await Promise.all([
+    engine.loadCharacterData(VORTABLE_ASSETS), getCampaignMembers(campaignId), listCampaignCharacters(campaignId),
+  ])
+  const who = new Map(members.map((m) => [m.user_id, m.profile?.display_name ?? null]))
+  const list = chars.map((c): PlayerCharacter => {
+    const player = (c.controllerId && who.get(c.controllerId)) || null
+    return {
+      key: `jog-${c.id}`, name: c.name || 'Sem nome', role: player ? `Personagem de ${player}` : 'Personagem de jogador', archetype: 'jogador',
+      appearance: engine.normalizeAppearance(data, c.appearance), look: {}, gear: 'desarmado', player, active: !!c.controllerId,
+    }
+  })
+  return list.sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name))
 }
 
 /** O que vai pra biblioteca a partir de uma pessoa (sorteada ou não). */
