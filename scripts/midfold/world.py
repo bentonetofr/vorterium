@@ -8,7 +8,8 @@ from __future__ import annotations
 import math
 import os
 
-from saltmore.lib import ROOT, TILE, Path, Zone, fbm, link, write_world
+from saltmore.kit import R_GRAY
+from saltmore.lib import OBJ, ROOT, TILE, Path, Zone, fbm, link, write_world
 from saltmore.world import validate
 
 from . import trees
@@ -17,6 +18,9 @@ MAP = os.path.join(ROOT, 'public', 'vortable', 'maps', 'midfold.mundo.json')
 
 GRASS = 'grass-light'
 PAVER = 'floor-75'                       # lajotas cinzas de pedra
+EDGE_FLOOR = ['plants@11,487', 'rock-cinza@263,100']                                  # musgo e seixos com grama (rasteiros)
+EDGE_TUFTS = ['plants@46,333', 'plants@73,331', 'plants@97,333', 'plants@145,339', 'plants@174,332', 'plants@497,289']   # ervinhas
+PEBBLE_SET = [i for i in R_GRAY['flat'] if OBJ[i]['w'] <= 20 and OBJ[i]['h'] <= 18]
 W, H_ROW, H_COL = 112, 72, 88          # zonas da fileira (Z1–Z4) e da descida (Z5–Z6)
 EXIT_HALF = 4.5                          # meia-altura/largura das saídas
 PORTAL = 2.6
@@ -33,10 +37,29 @@ def _trail(z: Zone, path: Path, width: float, seed: int) -> None:
 
 
 def _road(z: Zone, path: Path, width: float, seed: int) -> None:
-    """A estrada principal: lajotas cinzas de pedra, com uma beira estreita de terra pra encontrar a grama."""
-    z.brush('dirt', path.pts, width / 2 + 1.3, 0.3, seed, only={GRASS, 'grass'})
-    z.brush('dirt-light', path.pts[::2], width / 2 + 0.6, 0.3, seed + 1, only={'dirt'})
-    z.brush(PAVER, path.pts, width / 2, 0.0, seed + 3)
+    """A estrada principal: faixa estreita de lajotas cinzas no meio de uma faixa larga de terra clara que se desmancha na grama.
+    A beira das lajotas (reta, por ser de tile inteiro) é quebrada com musgo, ervinhas e seixos com grama por cima."""
+    z.brush('dirt', path.pts[::2], width / 2 + 1.3, 0.75, seed, only={GRASS, 'grass'})
+    z.brush('dirt-light', path.pts[::2], width / 2 - 0.3, 0.6, seed + 1, only={'dirt'})
+    z.brush(PAVER, path.pts, width / 2 - 1.4, 0.0, seed + 3)
+    rng = z.rng
+    breakers = EDGE_FLOOR + EDGE_TUFTS * 2
+    for ty in range(z.h):
+        for tx in range(z.w):
+            cs = [z.terrain_at(tx + dx, ty + dy) == PAVER for dx in (0, 1) for dy in (0, 1)]
+            if 0 < sum(cs) < 4:
+                for _ in range(2 if rng.random() < 0.6 else 1):
+                    z.put(rng.choice(breakers), tx + rng.uniform(0.0, 1.0), ty + rng.uniform(0.2, 1.1), rng.random() < 0.5)
+            else:
+                ds = [z.terrain_at(tx + dx, ty + dy) in ('dirt', 'dirt-light') for dx in (0, 1) for dy in (0, 1)]
+                gs = [z.terrain_at(tx + dx, ty + dy) in (GRASS, 'grass') for dx in (0, 1) for dy in (0, 1)]
+                if any(ds) and any(gs) and rng.random() < 0.45:           # a grama entrando na terra da beira
+                    z.put(rng.choice(EDGE_TUFTS), tx + rng.uniform(0.0, 1.0), ty + rng.uniform(0.2, 1.1), rng.random() < 0.5)
+    # algumas pedrinhas soltas na terra dos lados
+    for _ in range(int(len(path.pts) * 0.4 * 0.8)):
+        px, py = path.pts[rng.randrange(len(path.pts))]
+        off = rng.choice((-1, 1)) * rng.uniform(width / 2 - 1.2, width / 2 + 0.6)
+        z.put(rng.choice(PEBBLE_SET), px + off, py + rng.uniform(-0.6, 0.6), rng.random() < 0.5)
     z.reserve_path(path, width / 2 + 3.0)
 
 

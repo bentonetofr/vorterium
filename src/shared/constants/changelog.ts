@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-11-06',
     title:   'Vortable: novo mundo Midfold',
     items: [
-      'Midfold, um mundo pronto de seis zonas para importar no Vortable (Mundos → Importar mundo, arquivo midfold.mundo.json): campos planos de grama clara e viva, trilha de terra que atravessa quatro zonas da esquerda pra direita, desce e encontra uma estrada de lajotas cinzas de pedra que segue pra baixo por mais duas zonas, até um acampamento no fim. Árvores imensas de troncos colados e copas fundidas, pinheirinhos lá longe e nenhum outro objeto solto.',
+      'Midfold, um mundo pronto de seis zonas para importar no Vortable (Mundos → Importar mundo, arquivo midfold.mundo.json): campos planos de grama clara e viva, trilha de terra que atravessa quatro zonas da esquerda pra direita, desce e encontra uma estrada de lajotas cinzas de pedra, de beira natural (terra, musgo e ervinhas se misturando à grama), que segue pra baixo por mais duas zonas, até um acampamento no fim. Árvores imensas de troncos colados e copas fundidas, pinheirinhos lá longe e nenhum outro objeto solto.',
     ],
   },
   {

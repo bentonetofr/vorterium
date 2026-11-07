@@ -1,6 +1,6 @@
 # Vortable: mundo pronto MIDFOLD
 
-Planícies de grama clara e viva, com pastos enormes e muito planos, trilhas de terra, uma estrada de lajotas cinzas de pedra e árvores
+Planícies de grama clara e viva, com pastos enormes e muito planos, trilhas de terra, uma estrada de lajotas cinzas de pedra no meio de uma faixa de terra que se desfaz na grama e árvores
 imensas. É um mundo do Vortable (formato `vortable-world`) gerado por código com **só o que já existe nos catálogos** do motor.
 Não há objetos soltos de enfeite: só as árvores (e pinheirinhos lá longe, como na referência), os caminhos e o acampamento do fim.
 
