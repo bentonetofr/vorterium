@@ -9,7 +9,7 @@ export interface DriverInfo {
     depth: number;
 }
 /** Deslocamento do cavaleiro da garupa em relação ao do cavalo, por direção: [x, y, profundidade extra]. */
-export declare function pillionOffset(dir: Dir): [number, number, number];
+export declare function pillionOffset(dir: Dir, scale?: number): [number, number, number];
 export declare class Remotes {
     private scene;
     private hub;

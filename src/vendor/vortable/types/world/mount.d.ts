@@ -12,10 +12,28 @@ export declare const HORSE_FEET: {
     w: number;
     h: number;
 };
+/** O lobo gigante também se monta (ele já é grande: a escala dele é a `height` da aparência). */
+export declare const WOLF_BODY = "tlou/body/lobo";
 export declare const isHorseAppearance: (a: Appearance | undefined | null) => boolean;
+export declare const isMountAppearance: (a: Appearance | undefined | null) => boolean;
 export declare const isHorse: (n: ZoneNpc) => boolean;
+/** As medidas da montaria: escala do bicho, altura do lombo, caixa dos pés, velocidade e sombra. */
+export interface MountSpec {
+    scale: number;
+    lift: number; /** Mais altura do cavaleiro quando o bicho vem de frente (o lombo fica atrás da cabeça dele). */
+    frontLift: number;
+    feet: {
+        w: number;
+        h: number;
+    };
+    speed: number;
+    blob: [number, number];
+}
+export declare function mountSpec(a: Appearance | undefined | null): MountSpec;
 /** O cavalo mais perto de (x, y) dentro do alcance, ignorando os que já estão montados. */
 export declare function nearestHorse(npcs: readonly ZoneNpc[], x: number, y: number, skip: ReadonlySet<string>): ZoneNpc | null;
+/** Altura do cavaleiro em cima do bicho, olhando pra `dir`. */
+export declare const riderLift: (spec: MountSpec, dir: string) => number;
 /** O cavaleiro fica atrás do cavalo só quando olha pra frente (o cavalo vem de frente, com a cabeça na frente dele). */
 export declare const riderDepthOffset: (dir: string) => -0.2 | 0.2;
 /** O botão solto por cima do jogo: Montar / Desmontar. */

@@ -23,6 +23,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Novo corpo no criador de personagem: o Lobo gigante (aba Corpo, grupo Pós-apocalipse), feito a partir do desenho do lobo branco de olhos de gelo. Pelo branco farto e arrepiado, mancha cinza no olho e no focinho, cicatriz rosa no rosto, rabo cinza peludo e o amuleto redondo no cordão do peito. Anda, corre e fica parado nas quatro direções, e vem em três pelagens: Ártico (a do desenho), Cinzento e Negro.',
       'Ele é grande de propósito: usa a altura de gigante (1,9), então, de quatro patas, fica umas 2 vezes maior que uma pessoa.',
       'No controle ao vivo, o painel Animais ganhou o Lobo gigante ao lado de Cavalo e Cachorro: o mestre põe na cena (já no tamanho certo), arrasta pro mapa e controla como um NPC.',
+      'Dá pra montar no lobo gigante igual ao cavalo: chegando perto aparece Montar (E), o cavaleiro sobe nas costas do lobo (que segue enorme e fica um pouco mais rápido que o cavalo), os outros jogadores veem, e dois cabem nele: o segundo vai na garupa. Vale pro jogador e pro NPC que o mestre controla. Desmontar, passar por uma saída ou soltar o NPC descem como no cavalo.',
     ],
   },
   {

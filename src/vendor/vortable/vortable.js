@@ -44831,26 +44831,48 @@ function Ha(e, t, n) {
 	}
 	return i.putImageData(a, 0, 0), r;
 }
-//#endregion
-//#region src/engine/world/mount.ts
-var Ua = "tlou/body/cavalo", Wa = 1.6, Ga = {
+var Ua = 1.6, Wa = {
 	w: 30,
 	h: 12
-}, Ka = (e) => e?.slots?.body?.id === Ua, qa = (e) => Ka(e.appearance);
+}, Ga = (e) => e?.slots?.body?.id === "tlou/body/cavalo" || e?.slots?.body?.id === "tlou/body/lobo", Ka = (e) => Ga(e.appearance);
+function qa(e) {
+	if (e?.slots?.body?.id === "tlou/body/lobo") {
+		let t = e.height ?? 1.9;
+		return {
+			scale: t,
+			lift: Math.round(21 * t),
+			frontLift: Math.round(19 * t),
+			feet: {
+				w: 40,
+				h: 16
+			},
+			speed: 1.7,
+			blob: [.9 * t * .75, .9 * t * .6]
+		};
+	}
+	return {
+		scale: 1,
+		lift: 17,
+		frontLift: 0,
+		feet: Wa,
+		speed: Ua,
+		blob: [1.3, .8]
+	};
+}
 function Ja(e, t, n, r) {
 	let i = null, a = 46;
 	for (let o of e) {
-		if (!qa(o) || r.has(o.id)) continue;
+		if (!Ka(o) || r.has(o.id)) continue;
 		let e = Math.hypot(o.x - t, o.y - n);
 		e <= a && (i = o, a = e);
 	}
 	return i;
 }
-var Ya = (e) => e === "down" ? -.2 : .2, Xa = "\n.vt-mount {\n  position: absolute; z-index: 40; left: 50%; bottom: 76px; transform: translateX(-50%);\n  display: none; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px;\n  border: 1px solid rgba(255, 214, 140, .75); background: rgba(24, 18, 12, .88); color: #ffe9c2;\n  font: 600 14px/1 system-ui, sans-serif; letter-spacing: .02em; cursor: pointer; user-select: none; -webkit-user-select: none;\n  touch-action: manipulation; box-shadow: 0 4px 14px rgba(0, 0, 0, .45);\n}\n.vt-mount.vt-mount--on { display: inline-flex; }\n.vt-mount:hover { background: rgba(48, 34, 20, .94); }\n.vt-mount kbd { font: 700 11px/1 system-ui, sans-serif; padding: 3px 6px; border-radius: 5px; background: rgba(255, 233, 194, .18); }\n.vt-mount--touch { left: auto; right: 16px; bottom: 150px; transform: none; padding: 14px 18px; font-size: 15px; }\n.vt-mount--touch kbd { display: none; }\n", Za = class {
+var Ya = (e, t) => e.lift + (t === "down" ? e.frontLift : 0), Xa = (e) => e === "down" ? -.2 : .2, Za = "\n.vt-mount {\n  position: absolute; z-index: 40; left: 50%; bottom: 76px; transform: translateX(-50%);\n  display: none; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px;\n  border: 1px solid rgba(255, 214, 140, .75); background: rgba(24, 18, 12, .88); color: #ffe9c2;\n  font: 600 14px/1 system-ui, sans-serif; letter-spacing: .02em; cursor: pointer; user-select: none; -webkit-user-select: none;\n  touch-action: manipulation; box-shadow: 0 4px 14px rgba(0, 0, 0, .45);\n}\n.vt-mount.vt-mount--on { display: inline-flex; }\n.vt-mount:hover { background: rgba(48, 34, 20, .94); }\n.vt-mount kbd { font: 700 11px/1 system-ui, sans-serif; padding: 3px 6px; border-radius: 5px; background: rgba(255, 233, 194, .18); }\n.vt-mount--touch { left: auto; right: 16px; bottom: 150px; transform: none; padding: 14px 18px; font-size: 15px; }\n.vt-mount--touch kbd { display: none; }\n", Qa = class {
 	el;
 	label = "";
 	constructor(e, t) {
-		dt("mount", Xa), getComputedStyle(e).position === "static" && (e.style.position = "relative");
+		dt("mount", Za), getComputedStyle(e).position === "static" && (e.style.position = "relative");
 		let n = typeof matchMedia == "function" && matchMedia("(pointer: coarse)").matches;
 		this.el = q("button", {
 			type: "button",
@@ -44868,32 +44890,32 @@ var Ya = (e) => e === "down" ? -.2 : .2, Xa = "\n.vt-mount {\n  position: absolu
 	destroy() {
 		this.el.remove();
 	}
-}, Qa = 160, $a = 8e3;
-function eo(e) {
+}, $a = 160, eo = 8e3;
+function to(e, t = 1) {
 	switch (e) {
 		case "down": return [
 			0,
-			-5,
+			-5 * t,
 			-.3
 		];
 		case "up": return [
 			0,
-			3,
+			3 * t,
 			.3
 		];
 		case "left": return [
-			6,
-			-1,
+			6 * t,
+			-1 * t,
 			.1
 		];
 		default: return [
-			-6,
-			-1,
+			-6 * t,
+			-1 * t,
 			.1
 		];
 	}
 }
-var to = class {
+var no = class {
 	scene;
 	hub;
 	assetBase;
@@ -44943,6 +44965,7 @@ var to = class {
 				placed: !1,
 				playing: "",
 				mountKey: `char:rm:${e}`,
+				mountSpec: null,
 				riderKey: `char:rr:${e}`,
 				mountSig: "",
 				mounting: !1,
@@ -44962,7 +44985,7 @@ var to = class {
 		for (let e of this.avatars.values()) {
 			let { sprite: r, shadow: i, label: a, state: o } = e;
 			if (!r || !i || !a || !o) continue;
-			let s = o.zone === this.zoneId && t - e.stateAt < $a;
+			let s = o.zone === this.zoneId && t - e.stateAt < eo;
 			if (r.setVisible(s), i.setVisible(s), a.setVisible(s && e.showLabel), e.rider?.setVisible(s), !s) {
 				e.placed = !1;
 				continue;
@@ -44971,12 +44994,12 @@ var to = class {
 				r.setVisible(!1), i.setVisible(!1), this.placePillion(e, o);
 				continue;
 			}
-			!e.placed || c.default.Math.Distance.Between(r.x, r.y, o.x, o.y) > Qa ? (r.setPosition(o.x, o.y), e.placed = !0) : r.setPosition(r.x + (o.x - r.x) * n, r.y + (o.y - r.y) * n), r.setDepth(r.y), i.setPosition(r.x, r.y - 1).setDepth(r.depth - .5), a.setPosition(r.x, r.y - (e.rat ? 22 : 66 * e.hs) - (e.mounted ? 17 : 0)).setDepth(1e8);
+			!e.placed || c.default.Math.Distance.Between(r.x, r.y, o.x, o.y) > $a ? (r.setPosition(o.x, o.y), e.placed = !0) : r.setPosition(r.x + (o.x - r.x) * n, r.y + (o.y - r.y) * n), r.setDepth(r.y), i.setPosition(r.x, r.y - 1).setDepth(r.depth - .5), a.setPosition(r.x, r.y - (e.rat ? 22 : e.mounted ? 66 * (e.appearance.height ?? 1) + (e.mountSpec ? Ya(e.mountSpec, o.dir) : 17) : 66 * e.hs)).setDepth(1e8);
 			let l = `${e.mounted ? e.mountKey : e.texKey}:${o.anim}:${o.dir}`;
 			if (e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l), this.hookSteps(e, r), e.mounted) {
 				e.rider ||= this.scene.add.sprite(0, 0, `${e.riderKey}:idle`, 0).setOrigin(.5, 62 / 64);
 				let t = e.appearance.height ?? 1;
-				e.rider.setScale(t).setPosition(r.x, r.y - 17).setDepth(r.depth + Ya(o.dir));
+				e.rider.setScale(t).setPosition(r.x, r.y - (e.mountSpec ? Ya(e.mountSpec, o.dir) : 17)).setDepth(r.depth + Xa(o.dir));
 				let n = `${e.riderKey}:idle:${o.dir}`;
 				e.riderPlaying !== n && this.scene.anims.exists(n) && (e.rider.anims.play(n, !0), e.riderPlaying = n);
 			}
@@ -44990,13 +45013,16 @@ var to = class {
 			console.error("[vortable] boneco de outro jogador não carregou", t), e.building = !1, e.sig = n;
 			return;
 		}
-		e.building = !1, this.scene.sys.isActive() && this.avatars.get(e.id) === e && (e.sig = n, e.appearance = t, e.playing = "", e.rat = r, e.sprite || (e.sprite = this.scene.add.sprite(0, 0, `${e.texKey}:idle`, 0).setOrigin(.5, 62 / 64).setVisible(!1), e.shadow = this.scene.add.image(0, 0, ba).setScale(.75, .6).setAlpha(.32).setVisible(!1), e.label = this.scene.add.text(0, 0, e.name, {
+		if (e.building = !1, !this.scene.sys.isActive() || this.avatars.get(e.id) !== e) return;
+		e.sig = n, e.appearance = t, e.playing = "", e.rat = r, e.sprite || (e.sprite = this.scene.add.sprite(0, 0, `${e.texKey}:idle`, 0).setOrigin(.5, 62 / 64).setVisible(!1), e.shadow = this.scene.add.image(0, 0, ba).setScale(.75, .6).setAlpha(.32).setVisible(!1), e.label = this.scene.add.text(0, 0, e.name, {
 			fontFamily: "system-ui",
 			fontSize: "9px",
 			color: "#ffe9c2",
 			stroke: "#000",
 			strokeThickness: 3
-		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), e.label?.setText(e.name), e.sprite.setTexture(`${e.mounted ? e.mountKey : e.texKey}:idle`, 0), e.hs = e.mounted || r ? 1 : t.height ?? 1, e.sprite.setScale(e.hs), e.shadow?.setScale(e.mounted ? 1.3 : (r ? .38 : .75) * e.hs, e.mounted ? .8 : (r ? .3 : .6) * e.hs), e.riderPlaying = "");
+		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), e.label?.setText(e.name), e.sprite.setTexture(`${e.mounted ? e.mountKey : e.texKey}:idle`, 0), e.hs = e.mounted ? e.mountSpec?.scale ?? 1 : r ? 1 : t.height ?? 1, e.sprite.setScale(e.hs);
+		let i = e.mountSpec?.blob ?? [1.3, .8];
+		e.shadow?.setScale(e.mounted ? i[0] : (r ? .38 : .75) * e.hs, e.mounted ? i[1] : (r ? .3 : .6) * e.hs), e.riderPlaying = "";
 	}
 	placePillion(e, t) {
 		let n = this.driverOf(e.mountNpc) ?? {
@@ -45006,10 +45032,10 @@ var to = class {
 			depth: t.y
 		};
 		e.rider ||= this.scene.add.sprite(0, 0, `${e.riderKey}:idle`, 0).setOrigin(.5, 62 / 64);
-		let [r, i, a] = eo(n.dir), o = e.appearance.height ?? 1;
-		e.rider.setScale(o).setPosition(n.x + r, n.y - 17 + i).setDepth(n.depth + a).setVisible(!0);
-		let s = `${e.riderKey}:idle:${n.dir}`;
-		e.riderPlaying !== s && this.scene.anims.exists(s) && (e.rider.anims.play(s, !0), e.riderPlaying = s), e.label?.setPosition(n.x + r, n.y - 66 * o - 17 + i - 2).setDepth(1e8);
+		let r = e.mountSpec, [i, a, o] = to(n.dir, r?.scale ?? 1), s = e.appearance.height ?? 1, c = r ? Ya(r, n.dir) : 17;
+		e.rider.setScale(s).setPosition(n.x + i, n.y - c + a).setDepth(n.depth + o).setVisible(!0);
+		let l = `${e.riderKey}:idle:${n.dir}`;
+		e.riderPlaying !== l && this.scene.anims.exists(l) && (e.rider.anims.play(l, !0), e.riderPlaying = l), e.label?.setPosition(n.x + i, n.y - 66 * s - c + a - 2).setDepth(1e8);
 	}
 	async buildMount(e, t, n, r, i = !1) {
 		e.mounting = !0;
@@ -45025,16 +45051,18 @@ var to = class {
 			console.error("[vortable] cavalo de outro jogador não carregou", t), e.mounting = !1, e.mountSig = r;
 			return;
 		}
-		if (e.mounting = !1, this.scene.sys.isActive() && this.avatars.get(e.id) === e && (e.mountSig = r, e.mounted = !!t, e.pillion = !!t && i, e.playing = "", e.riderPlaying = "", (!t || i) && (t || (e.rider?.destroy(), e.rider = null)), e.sprite)) {
+		if (e.mounting = !1, this.scene.sys.isActive() && this.avatars.get(e.id) === e && (e.mountSig = r, e.mounted = !!t, e.mountSpec = t ? qa(t) : null, e.pillion = !!t && i, e.playing = "", e.riderPlaying = "", (!t || i) && (t || (e.rider?.destroy(), e.rider = null)), e.sprite)) {
 			let t = e.mounted && !e.pillion;
-			e.sprite.setTexture(`${t ? e.mountKey : e.texKey}:idle`, 0), e.hs = t ? 1 : e.appearance.height ?? 1, e.sprite.setScale(e.hs), e.shadow?.setScale(t ? 1.3 : .75 * e.hs, t ? .8 : .6 * e.hs);
+			e.sprite.setTexture(`${t ? e.mountKey : e.texKey}:idle`, 0), e.hs = t ? e.mountSpec?.scale ?? 1 : e.appearance.height ?? 1, e.sprite.setScale(e.hs);
+			let n = e.mountSpec?.blob ?? [1.3, .8];
+			e.shadow?.setScale(t ? n[0] : .75 * e.hs, t ? n[1] : .6 * e.hs);
 		}
 	}
 	hookSteps(e, t) {
 		if (e.stepsFor === t || !this.scene.cfg?.watch) return;
 		e.stepsFor = t;
 		let n = (n, r) => {
-			let i = this.scene, a = n.key.split(":"), o = a[a.length - 2], h = /:(rm|mount):|anim-cavalo/.test(n.key), s = h ? { walk: [3, 7], run: [2, 6] }[o] : ns[o];
+			let i = this.scene, a = n.key.split(":"), o = a[a.length - 2], h = /:(rm|mount):|anim-cavalo/.test(n.key), s = h ? { walk: [3, 7], run: [2, 6] }[o] : rs[o];
 			if (!s || !i.audio || !t.visible || !s.includes(Number(r.textureFrame) % (o === "walk" ? 9 : 8))) return;
 			let l = i.cameras.main, u = Math.max(l.width, l.height) / (2 * l.zoom) * 1.15, d = Math.max(0, 1 - c.default.Math.Distance.Between(t.x, t.y, l.midPoint.x, l.midPoint.y) / u);
 			d > .04 && (h ? i.audio.hoofStep(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d)) : i.audio.step(t.x, t.y - 2, o === "run", i.lighting.weatherNow, d * Math.sqrt(d)));
@@ -45048,7 +45076,7 @@ var to = class {
 		for (let e of this.avatars.values()) this.drop(e);
 		this.avatars.clear();
 	}
-}, no = "npc:", ro = [
+}, ro = "npc:", io = [
 	"👏",
 	"😮",
 	"😂",
@@ -45057,17 +45085,17 @@ var to = class {
 	"🎉",
 	"😱",
 	"🤔"
-], io = [
+], ao = [
 	"up",
 	"left",
 	"down",
 	"right"
-], ao = [
+], oo = [
 	"idle",
 	"walk",
 	"run"
-], oo = (e) => typeof e == "number" && Number.isFinite(e);
-function so(e) {
+], so = (e) => typeof e == "number" && Number.isFinite(e);
+function co(e) {
 	let t = e;
 	if (!t || typeof t != "object") return null;
 	switch (t.t) {
@@ -45093,14 +45121,14 @@ function so(e) {
 			};
 		}
 		case "who": return { t: "who" };
-		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !oo(t.x) || !oo(t.y) ? null : {
+		case "state": return typeof t.id != "string" || typeof t.zone != "string" || !so(t.x) || !so(t.y) ? null : {
 			t: "state",
 			id: t.id,
 			zone: t.zone,
 			x: t.x,
 			y: t.y,
-			dir: io.includes(t.dir) ? t.dir : "down",
-			anim: ao.includes(t.anim) ? t.anim : "idle"
+			dir: ao.includes(t.dir) ? t.dir : "down",
+			anim: oo.includes(t.anim) ? t.anim : "idle"
 		};
 		case "bye": return typeof t.id == "string" ? {
 			t: "bye",
@@ -45113,14 +45141,14 @@ function so(e) {
 		case "env": return typeof t.zone != "string" || !t.zone ? null : {
 			t: "env",
 			zone: t.zone.slice(0, 80),
-			hour: oo(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
+			hour: so(t.hour) ? Math.min(24, Math.max(0, t.hour)) : null,
 			weather: typeof t.weather == "string" ? t.weather.slice(0, 20) : null,
-			wind: oo(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null,
-			sound: lo(t.sound),
-			dayMinutes: oo(t.dayMinutes) && t.dayMinutes >= 1 && t.dayMinutes <= 1440 ? t.dayMinutes : null,
-			timeShift: oo(t.timeShift) && Math.abs(t.timeShift) < 1e11 ? t.timeShift : null
+			wind: so(t.wind) ? Math.min(1, Math.max(0, t.wind)) : null,
+			sound: uo(t.sound),
+			dayMinutes: so(t.dayMinutes) && t.dayMinutes >= 1 && t.dayMinutes <= 1440 ? t.dayMinutes : null,
+			timeShift: so(t.timeShift) && Math.abs(t.timeShift) < 1e11 ? t.timeShift : null
 		};
-		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !oo(t.x) || !oo(t.y) || typeof t.emoji != "string" || !ro.includes(t.emoji) ? null : {
+		case "react": return typeof t.id != "string" || typeof t.zone != "string" || !so(t.x) || !so(t.y) || typeof t.emoji != "string" || !io.includes(t.emoji) ? null : {
 			t: "react",
 			id: t.id,
 			name: typeof t.name == "string" ? t.name.slice(0, 60) : "",
@@ -45129,17 +45157,17 @@ function so(e) {
 			x: t.x,
 			y: t.y
 		};
-		case "npcmove": return typeof t.zone != "string" || typeof t.id != "string" || !oo(t.x) || !oo(t.y) ? null : {
+		case "npcmove": return typeof t.zone != "string" || typeof t.id != "string" || !so(t.x) || !so(t.y) ? null : {
 			t: "npcmove",
 			zone: t.zone.slice(0, 80),
 			id: t.id.slice(0, 80),
 			x: t.x,
 			y: t.y,
-			dir: io.includes(t.dir) ? t.dir : "down",
+			dir: ao.includes(t.dir) ? t.dir : "down",
 			...typeof t.from == "string" && t.from ? { from: t.from.slice(0, 80) } : {},
-			...co(t.npc)
+			...lo(t.npc)
 		};
-		case "teleport": return typeof t.zone == "string" && oo(t.x) && oo(t.y) ? {
+		case "teleport": return typeof t.zone == "string" && so(t.x) && so(t.y) ? {
 			t: "teleport",
 			zone: t.zone,
 			x: t.x,
@@ -45148,7 +45176,7 @@ function so(e) {
 		default: return null;
 	}
 }
-function co(e) {
+function lo(e) {
 	let t = e, n = t?.appearance;
 	return !t || typeof t != "object" || !n || n.version !== 2 || typeof n.slots != "object" ? {} : { npc: {
 		name: typeof t.name == "string" ? t.name.slice(0, 60) : "NPC",
@@ -45157,17 +45185,17 @@ function co(e) {
 		showName: t.showName === !0
 	} };
 }
-function lo(e) {
+function uo(e) {
 	let t = e;
 	if (!t || typeof t != "object") return null;
 	let n = {};
-	if (t.layers && typeof t.layers == "object") for (let [e, r] of Object.entries(t.layers).slice(0, 24)) /^[a-z]{2,16}$/.test(e) && oo(r) && r > 0 && (n[e] = Math.min(1, r));
+	if (t.layers && typeof t.layers == "object") for (let [e, r] of Object.entries(t.layers).slice(0, 24)) /^[a-z]{2,16}$/.test(e) && so(r) && r > 0 && (n[e] = Math.min(1, r));
 	return {
 		auto: t.auto !== !1,
 		layers: n
 	};
 }
-var uo = class {
+var fo = class {
 	link;
 	peers = /* @__PURE__ */ new Map();
 	envs = /* @__PURE__ */ new Map();
@@ -45197,7 +45225,7 @@ var uo = class {
 	hostNpc(e) {
 		let t = {
 			t: "hello",
-			id: no + e.id,
+			id: ro + e.id,
 			name: e.name,
 			appearance: e.appearance,
 			npc: !0,
@@ -45248,7 +45276,7 @@ var uo = class {
 		}), this.peers.clear(), this.envs.clear(), this.roster.clear(), this.teleports.clear(), this.zoneChanges.clear(), this.reactions.clear(), this.npcMoves.clear();
 	}
 	receive(e) {
-		let t = so(e);
+		let t = co(e);
 		if (t) switch (t.t) {
 			case "who":
 				this.hello && this.link.send(this.hello);
@@ -45312,7 +45340,7 @@ var uo = class {
 		};
 	}
 	react(e, t, n, r) {
-		if (!ro.includes(e)) return;
+		if (!io.includes(e)) return;
 		let i = {
 			t: "react",
 			id: this.link.selfId,
@@ -45332,7 +45360,7 @@ var uo = class {
 };
 //#endregion
 //#region src/engine/ui/scale2x.ts
-function fo(e, t, n) {
+function po(e, t, n) {
 	let r = new Uint32Array(t * 2 * n * 2), i = t * 2;
 	for (let a = 0; a < n; a++) {
 		let o = (a > 0 ? a - 1 : a) * t, s = (a < n - 1 ? a + 1 : a) * t, c = a * t;
@@ -45345,14 +45373,14 @@ function fo(e, t, n) {
 	}
 	return r;
 }
-function po(e, t) {
+function mo(e, t) {
 	let n = e.width, r = e.height, i = document.createElement("canvas");
 	i.width = n, i.height = r;
 	let a = i.getContext("2d", { willReadFrequently: !0 });
 	a.drawImage(e, 0, 0);
 	let o = a.getImageData(0, 0, n, r), s = new Uint32Array(o.data.buffer.slice(0));
 	for (let e = 0; e < s.length; e++) s[e] >>> 24 || (s[e] = 0);
-	for (let e = 0; e < t; e++) s = fo(s, n, r), n *= 2, r *= 2;
+	for (let e = 0; e < t; e++) s = po(s, n, r), n *= 2, r *= 2;
 	let c = document.createElement("canvas");
 	c.width = n, c.height = r;
 	let l = new ImageData(new Uint8ClampedArray(s.buffer), n, r);
@@ -45360,33 +45388,33 @@ function po(e, t) {
 }
 //#endregion
 //#region src/engine/world/cinema.ts
-var mo = 2;
-2 ** mo;
-var ho = 2, go = /* @__PURE__ */ new WeakMap();
-function _o(e) {
+var ho = 2;
+2 ** ho;
+var go = 2, _o = /* @__PURE__ */ new WeakMap();
+function vo(e) {
 	return e.replace(/:(walk|idle|run)$/, "");
 }
-function vo(e, t) {
+function yo(e, t) {
 	let n = `${t}:idle`;
 	if (!e.textures.exists(n)) return null;
 	let r = e.textures.get(n).getSourceImage();
 	if (!r || !r.width) return null;
-	let i = `${t}:hi`, a = `${i}:down`, o = go.get(e.textures);
-	if (o || go.set(e.textures, o = /* @__PURE__ */ new Map()), o.get(i) === r && e.textures.exists(i) && e.anims.exists(a)) return {
+	let i = `${t}:hi`, a = `${i}:down`, o = _o.get(e.textures);
+	if (o || _o.set(e.textures, o = /* @__PURE__ */ new Map()), o.get(i) === r && e.textures.exists(i) && e.anims.exists(a)) return {
 		texture: i,
 		anim: a
 	};
 	let s = Gn.indexOf("down"), l = document.createElement("canvas");
-	l.width = 64 * ho, l.height = 64, l.getContext("2d").drawImage(r, 0, s * 64, 64 * ho, 64, 0, 0, 64 * ho, 64);
-	let u = po(l, mo);
+	l.width = 64 * go, l.height = 64, l.getContext("2d").drawImage(r, 0, s * 64, 64 * go, 64, 0, 0, 64 * go, 64);
+	let u = mo(l, ho);
 	e.anims.remove(a), e.textures.exists(i) && e.textures.remove(i);
 	let d = e.textures.addCanvas(i, u);
 	if (!d) return null;
 	d.setFilter(c.default.Textures.FilterMode.LINEAR);
-	for (let e = 0; e < ho; e++) d.add(e, 0, e * 256, 0, 256, 256);
+	for (let e = 0; e < go; e++) d.add(e, 0, e * 256, 0, 256, 256);
 	return e.anims.create({
 		key: a,
-		frames: Array.from({ length: ho }, (e, t) => ({
+		frames: Array.from({ length: go }, (e, t) => ({
 			key: i,
 			frame: t
 		})),
@@ -45397,12 +45425,12 @@ function vo(e, t) {
 		anim: a
 	};
 }
-var yo = {
+var bo = {
 	padX: 150,
 	padY: 110,
 	minZoom: 3,
 	maxZoom: 10
-}, bo = 96, xo = class {
+}, xo = 96, So = class {
 	scene;
 	assetBase;
 	names;
@@ -45472,7 +45500,7 @@ var yo = {
 				t.label.setVisible(!1);
 				continue;
 			}
-			let n = !!e && c.default.Math.Distance.Between(e.x, e.y, t.npc.x, t.npc.y) < bo;
+			let n = !!e && c.default.Math.Distance.Between(e.x, e.y, t.npc.x, t.npc.y) < xo;
 			t.label.setVisible(n);
 		}
 	}
@@ -45491,41 +45519,41 @@ var yo = {
 		for (let e of this.items.values()) this.drop(e);
 		this.items.clear();
 	}
-}, So = "vortable:sound", Co = {
+}, Co = "vortable:sound", wo = {
 	master: .8,
 	muted: !1,
 	steps: .7,
 	editor: !1
-}, wo = null;
-function To() {
-	if (wo) return wo;
+}, To = null;
+function Eo() {
+	if (To) return To;
 	try {
-		wo = {
-			...Co,
-			...JSON.parse(localStorage.getItem(So) ?? "{}")
+		To = {
+			...wo,
+			...JSON.parse(localStorage.getItem(Co) ?? "{}")
 		};
 	} catch {
-		wo = { ...Co };
+		To = { ...wo };
 	}
-	return wo;
+	return To;
 }
-function Eo(e) {
-	wo = {
-		...To(),
+function Do(e) {
+	To = {
+		...Eo(),
 		...e
 	};
 	try {
-		localStorage.setItem(So, JSON.stringify(wo));
+		localStorage.setItem(Co, JSON.stringify(To));
 	} catch {}
-	return wo;
+	return To;
 }
 //#endregion
 //#region src/engine/audio/engine.ts
-var Do = /* @__PURE__ */ new WeakMap(), Oo = "./assets/";
-function ko(e) {
-	Oo = e;
+var Oo = /* @__PURE__ */ new WeakMap(), ko = "./assets/";
+function Ao(e) {
+	ko = e;
 }
-var Ao = class e {
+var jo = class e {
 	ctx;
 	master;
 	dry;
@@ -45536,9 +45564,9 @@ var Ao = class e {
 	clips = /* @__PURE__ */ new Map();
 	static of(t) {
 		let n = t.game;
-		if (Do.has(n)) return Do.get(n);
+		if (Oo.has(n)) return Oo.get(n);
 		let r = t.sound.context, i = r ? new e(r) : null;
-		return Do.set(n, i), i;
+		return Oo.set(n, i), i;
 	}
 	constructor(e) {
 		this.ctx = e, this.master = e.createGain(), this.master.connect(e.destination), this.dry = e.createGain(), this.dry.connect(this.master), this.reverb = e.createConvolver(), this.reverbSend = e.createGain(), this.reverbSend.gain.value = 0, this.reverbSend.connect(this.reverb), this.reverb.connect(this.master), this.applyPrefs();
@@ -45550,7 +45578,7 @@ var Ao = class e {
 		return this.ctx.state === "running";
 	}
 	applyPrefs() {
-		let e = To();
+		let e = Eo();
 		this.master.gain.setTargetAtTime(e.muted ? 0 : e.master, this.now, .05);
 	}
 	setRoom(e) {
@@ -45568,9 +45596,9 @@ var Ao = class e {
 	}
 	clip(e) {
 		let t = this.clips.get(e);
-		return t || (t = fetch(`${Oo}audio/${e}.mp3`).then((e) => e.ok ? e.arrayBuffer() : Promise.reject(Error(String(e.status)))).then((e) => this.ctx.decodeAudioData(e)).then((e) => ({
+		return t || (t = fetch(`${ko}audio/${e}.mp3`).then((e) => e.ok ? e.arrayBuffer() : Promise.reject(Error(String(e.status)))).then((e) => this.ctx.decodeAudioData(e)).then((e) => ({
 			buffer: e,
-			...jo(e)
+			...Mo(e)
 		})).catch((t) => (console.warn("[vortable] som não carregou:", e, t), null)), this.clips.set(e, t)), t;
 	}
 	play(e, t, n = 1, r = 1, i = this.now) {
@@ -45599,7 +45627,7 @@ var Ao = class e {
 		}
 	}
 };
-function jo(e) {
+function Mo(e) {
 	let t = e.getChannelData(0), n = 8e-4, r = 0, i = t.length - 1;
 	for (; r < t.length - 1 && Math.abs(t[r]) < n;) r++;
 	for (; i > r && Math.abs(t[i]) < n;) i--;
@@ -45610,7 +45638,7 @@ function jo(e) {
 }
 //#endregion
 //#region src/engine/audio/ambience.ts
-var Mo = [
+var No = [
 	{
 		id: "forest",
 		label: "Floresta",
@@ -45686,7 +45714,7 @@ var Mo = [
 		label: "Tocha",
 		icon: "torch"
 	}
-], No = {
+], Po = {
 	forest: ["amb/forest-day", "amb/forest-night"],
 	spooky: ["amb/spooky"],
 	wind: ["amb/wind"],
@@ -45701,7 +45729,7 @@ var Mo = [
 	cave: ["amb/cave"],
 	fire: ["amb/fire"],
 	torch: ["amb/torch"]
-}, Po = (e, t) => e + Math.random() * (t - e), Fo = class {
+}, Fo = (e, t) => e + Math.random() * (t - e), Io = class {
 	e;
 	id;
 	out;
@@ -45710,7 +45738,7 @@ var Mo = [
 	sources = [];
 	parts = [];
 	current = 0;
-	nextThunder = Po(4, 12);
+	nextThunder = Fo(4, 12);
 	thunder;
 	level = 0;
 	constructor(e, t) {
@@ -45722,7 +45750,7 @@ var Mo = [
 			e.clip("fx/thunder").then((e) => this.thunder = e);
 			return;
 		}
-		for (let t of No[this.id]) {
+		for (let t of Po[this.id]) {
 			let n = e.gain(+!t.endsWith("night"));
 			n.connect(this.out), this.parts.push(n), e.clip(t).then((t) => {
 				if (!t || !this.out) return;
@@ -45736,7 +45764,7 @@ var Mo = [
 		let n = (n) => {
 			if (!n || !this.muffle) return;
 			let r = this.e.filter("lowpass", 9e3 - e * 8e3, .5);
-			r.connect(this.muffle), this.e.play(n, r, t * (1 - e * .55), Po(.82, 1.08) - e * .12);
+			r.connect(this.muffle), this.e.play(n, r, t * (1 - e * .55), Fo(.82, 1.08) - e * .12);
 		};
 		this.thunder === void 0 ? this.e.clip("fx/thunder").then(n) : n(this.thunder);
 	}
@@ -45747,7 +45775,7 @@ var Mo = [
 			this.build();
 		}
 		let r = n.now;
-		this.out.gain.setTargetAtTime(this.id === "thunder" ? 1 : this.current, r, .15), this.muffle.frequency.setTargetAtTime(t.muffled ? 700 : 18e3, r, .3), this.panner.pan.setTargetAtTime(t.pan, r, .3), this.id === "forest" && this.parts.length === 2 && (this.parts[0].gain.setTargetAtTime(t.day, r, 1), this.parts[1].gain.setTargetAtTime(1 - t.day, r, 1)), this.id === "thunder" && this.current > .01 && n.running && (this.nextThunder -= e, this.nextThunder <= 0 && (this.nextThunder = Po(10, 28) / Math.max(.3, this.current), this.strike(Po(.5, .95), this.current)));
+		this.out.gain.setTargetAtTime(this.id === "thunder" ? 1 : this.current, r, .15), this.muffle.frequency.setTargetAtTime(t.muffled ? 700 : 18e3, r, .3), this.panner.pan.setTargetAtTime(t.pan, r, .3), this.id === "forest" && this.parts.length === 2 && (this.parts[0].gain.setTargetAtTime(t.day, r, 1), this.parts[1].gain.setTargetAtTime(1 - t.day, r, 1)), this.id === "thunder" && this.current > .01 && n.running && (this.nextThunder -= e, this.nextThunder <= 0 && (this.nextThunder = Fo(10, 28) / Math.max(.3, this.current), this.strike(Fo(.5, .95), this.current)));
 	}
 	destroy() {
 		for (let e of this.sources) try {
@@ -45755,41 +45783,41 @@ var Mo = [
 		} catch {}
 		this.sources = [], this.panner?.disconnect(), this.out = void 0;
 	}
-}, Io = (e, t) => e + Math.random() * (t - e);
-function Lo(e) {
+}, Lo = (e, t) => e + Math.random() * (t - e);
+function Ro(e) {
 	let t = Math.floor(e.sampleRate * .5), n = e.createBuffer(1, t, e.sampleRate), r = n.getChannelData(0), i = 0;
 	for (let e = 0; e < t; e++) i = (i + .02 * (Math.random() * 2 - 1)) / 1.02, r[e] = i * 3.5;
 	return n;
 }
-function Ro(e, t, n, r, i, a) {
+function zo(e, t, n, r, i, a) {
 	let o = e.createOscillator();
 	o.type = "sine", o.frequency.setValueAtTime(110 * a, r), o.frequency.exponentialRampToValueAtTime(55 * a, r + .11);
 	let s = e.createGain();
 	s.gain.setValueAtTime(0, r), s.gain.linearRampToValueAtTime(.55 * i, r + .012), s.gain.exponentialRampToValueAtTime(.001, r + .17), o.connect(s).connect(t), o.start(r), o.stop(r + .2);
 	let c = e.createBufferSource();
-	c.buffer = n, c.playbackRate.value = Io(.9, 1.1);
+	c.buffer = n, c.playbackRate.value = Lo(.9, 1.1);
 	let l = e.createBiquadFilter();
-	l.type = "lowpass", l.frequency.value = Io(520, 700) * a, l.Q.value = .5;
+	l.type = "lowpass", l.frequency.value = Lo(520, 700) * a, l.Q.value = .5;
 	let u = e.createBiquadFilter();
 	u.type = "highpass", u.frequency.value = 70;
 	let d = e.createGain();
-	d.gain.setValueAtTime(0, r), d.gain.linearRampToValueAtTime(.9 * i, r + .014), d.gain.exponentialRampToValueAtTime(.001, r + .16), c.connect(l).connect(u).connect(d).connect(t), c.start(r, Io(0, .25)), c.stop(r + .2);
+	d.gain.setValueAtTime(0, r), d.gain.linearRampToValueAtTime(.9 * i, r + .014), d.gain.exponentialRampToValueAtTime(.001, r + .16), c.connect(l).connect(u).connect(d).connect(t), c.start(r, Lo(0, .25)), c.stop(r + .2);
 	let f = e.createBufferSource();
 	f.buffer = n, f.playbackRate.value = 2.4;
 	let p = e.createBiquadFilter();
-	p.type = "bandpass", p.frequency.value = Io(1800, 2600), p.Q.value = .7;
+	p.type = "bandpass", p.frequency.value = Lo(1800, 2600), p.Q.value = .7;
 	let m = e.createGain();
-	m.gain.setValueAtTime(0, r + .006), m.gain.linearRampToValueAtTime(.14 * i, r + .024), m.gain.exponentialRampToValueAtTime(.001, r + .11), f.connect(p).connect(m).connect(t), f.start(r, Io(0, .25)), f.stop(r + .14);
+	m.gain.setValueAtTime(0, r + .006), m.gain.linearRampToValueAtTime(.14 * i, r + .024), m.gain.exponentialRampToValueAtTime(.001, r + .11), f.connect(p).connect(m).connect(t), f.start(r, Lo(0, .25)), f.stop(r + .14);
 }
-function zo(e, t, n, r, i) {
+function Bo(e, t, n, r, i) {
 	let a = e.createGain();
 	a.gain.value = i * 1, a.connect(t);
-	let o = Io(.9, 1.12);
-	Ro(e, a, n, r, Io(.85, 1), o), Ro(e, a, n, r + Io(.06, .085), Io(.3, .42), o * 1.12);
+	let o = Lo(.9, 1.12);
+	zo(e, a, n, r, Lo(.85, 1), o), zo(e, a, n, r + Lo(.06, .085), Lo(.3, .42), o * 1.12);
 }
 //#endregion
 //#region src/engine/audio/steps.ts
-var Bo = {
+var Vo = {
 	grass: "Grama",
 	dirt: "Terra",
 	sand: "Areia",
@@ -45799,7 +45827,7 @@ var Bo = {
 	wood: "Madeira",
 	rug: "Tapete",
 	water: "Água"
-}, Vo = {
+}, Ho = {
 	grass: {
 		set: "grass",
 		n: 5,
@@ -45849,15 +45877,15 @@ var Bo = {
 		n: 5,
 		gain: .8
 	}
-}, Ho = (e, t) => e + Math.random() * (t - e), Uo = class {
+}, Uo = (e, t) => e + Math.random() * (t - e), Wo = class {
 	e;
 	clips = /* @__PURE__ */ new Map();
 	last = /* @__PURE__ */ new Map();
 	noise = null;
 	constructor(e) {
 		this.e = e;
-		for (let t of new Set(Object.values(Vo).map((e) => e.set))) {
-			let n = Math.max(...Object.values(Vo).filter((e) => e.set === t).map((e) => e.n));
+		for (let t of new Set(Object.values(Ho).map((e) => e.set))) {
+			let n = Math.max(...Object.values(Ho).filter((e) => e.set === t).map((e) => e.n));
 			Promise.all(Array.from({ length: n }, (n, r) => e.clip(`steps/${t}-${r}`))).then((e) => {
 				this.clips.set(t, e.filter((e) => !!e));
 			});
@@ -45865,7 +45893,7 @@ var Bo = {
 	}
 	play(e, t, n = 0, r = !1, i = !1) {
 		if (e === "rug") return this.playRug(t, n, r);
-		let a = Vo[e], o = this.clips.get(a.set);
+		let a = Ho[e], o = this.clips.get(a.set);
 		if (!o?.length) return;
 		let s = Math.floor(Math.random() * o.length);
 		o.length > 1 && s === this.last.get(a.set) && (s = (s + 1) % o.length), this.last.set(a.set, s);
@@ -45879,31 +45907,31 @@ var Bo = {
 			e.connect(l), l = e;
 		}
 		let d = c.gain(.4);
-		if (u.connect(d), d.connect(c.reverbSend), c.play(o[s], l, t * a.gain * (i ? 1.4 : 1) * Ho(.8, 1), (a.rate ?? 1) * (i ? .62 : 1) * Ho(.93, 1.07)), i && e !== "wood") {
+		if (u.connect(d), d.connect(c.reverbSend), c.play(o[s], l, t * a.gain * (i ? 1.4 : 1) * Uo(.8, 1), (a.rate ?? 1) * (i ? .62 : 1) * Uo(.93, 1.07)), i && e !== "wood") {
 			let e = this.clips.get("wood");
-			e?.length && c.play(e[Math.floor(Math.random() * e.length)], u, t * .32, Ho(1.5, 1.85));
+			e?.length && c.play(e[Math.floor(Math.random() * e.length)], u, t * .32, Uo(1.5, 1.85));
 		}
 		if (r && e !== "water") {
 			let e = this.clips.get("water");
-			e?.length && c.play(e[Math.floor(Math.random() * e.length)], u, t * .22, Ho(1.1, 1.3));
+			e?.length && c.play(e[Math.floor(Math.random() * e.length)], u, t * .22, Uo(1.1, 1.3));
 		}
 	}
 	playRug(e, t, n) {
 		let r = this.e;
-		this.noise ??= Lo(r.ctx);
+		this.noise ??= Ro(r.ctx);
 		let i = r.ctx.createStereoPanner();
 		i.pan.value = t, i.connect(r.dry);
 		let a = r.gain(.3);
-		if (i.connect(a), a.connect(r.reverbSend), zo(r.ctx, i, this.noise, r.now, e), n) {
+		if (i.connect(a), a.connect(r.reverbSend), Bo(r.ctx, i, this.noise, r.now, e), n) {
 			let t = this.clips.get("water");
-			t?.length && r.play(t[Math.floor(Math.random() * t.length)], i, e * .22, Ho(1.1, 1.3));
+			t?.length && r.play(t[Math.floor(Math.random() * t.length)], i, e * .22, Uo(1.1, 1.3));
 		}
 	}
-}, Wo = 240, Go = 280;
-function Ko(e) {
+}, Go = 240, Ko = 280;
+function qo(e) {
 	return e.sound ?? {};
 }
-var qo = class e {
+var Jo = class e {
 	engine;
 	zone;
 	layers = /* @__PURE__ */ new Map();
@@ -45939,11 +45967,11 @@ var qo = class e {
 	live = null;
 	constructor(e, t) {
 		this.engine = e, this.zone = t;
-		for (let t of Mo) this.layers.set(t.id, new Fo(e, t.id));
-		this.steps = new Uo(e), this.setZone(t);
+		for (let t of No) this.layers.set(t.id, new Io(e, t.id));
+		this.steps = new Wo(e), this.setZone(t);
 	}
 	static create(t, n) {
-		let r = Ao.of(t);
+		let r = jo.of(t);
 		return r ? new e(r, n) : null;
 	}
 	setZone(e) {
@@ -45974,7 +46002,7 @@ var qo = class e {
 		return e;
 	}
 	previewStep(e) {
-		this.steps.play(e, Math.max(.4, To().steps));
+		this.steps.play(e, Math.max(.4, Eo().steps));
 	}
 	thunderNow() {
 		this.layers.get("thunder").strike(.3, 1);
@@ -45982,7 +46010,7 @@ var qo = class e {
 	update(e, t) {
 		let n = this.engine, r = Ur(this.zone).place;
 		n.setRoom(r === "outdoor" ? "none" : r === "indoor" ? "room" : "cave");
-		let i = r === "underground" ? 0 : Qr(t.hour), a = t.weather, o = r === "outdoor", s = r === "indoor", c = this.live ?? Ko(this.zone), l = c.auto !== !1 && this.enabled, u = this.near(t.x, t.y), d = Object.fromEntries(Mo.map((e) => [e.id, 0])), f = a.lightning ? 0 : a.rain, p = a.lightning ? a.rain : 0;
+		let i = r === "underground" ? 0 : Qr(t.hour), a = t.weather, o = r === "outdoor", s = r === "indoor", c = this.live ?? qo(this.zone), l = c.auto !== !1 && this.enabled, u = this.near(t.x, t.y), d = Object.fromEntries(No.map((e) => [e.id, 0])), f = a.lightning ? 0 : a.rain, p = a.lightning ? a.rain : 0;
 		if (l) {
 			if (o) {
 				d.forest = this.trees >= 3 ? .6 : this.trees ? .4 : .2, (a.rain > .5 || a.snow > .5) && (d.forest *= .25);
@@ -46023,18 +46051,18 @@ var qo = class e {
 				pan: Math.max(-.8, Math.min(.8, a / r))
 			};
 		};
-		return n.fire = i(this.fires, Wo), n.torch = i(this.torches, Wo * .6), n.lake = i(this.water, Go), n.swamp = i(this.swamp, Go), n;
+		return n.fire = i(this.fires, Go), n.torch = i(this.torches, Go * .6), n.lake = i(this.water, Ko), n.swamp = i(this.swamp, Ko), n;
 	}
 	step(e, t, n, r, g = 1) {
-		let i = To();
+		let i = Eo();
 		if (!i.steps || !this.engine.running) return;
-		let a = Ur(this.zone).place === "outdoor", o = Jo(this.zone, e, t);
+		let a = Ur(this.zone).place === "outdoor", o = Yo(this.zone, e, t);
 		a && r.snow >= .6 && (o === "grass" || o === "dirt" || o === "sand") && (o = "snow"), this.stepSide = -this.stepSide, this.steps.play(o, i.steps * (n ? .9 : .7) * g, this.stepSide * .08, a && r.rain > .2);
 	}
 	hoofStep(e, t, n, r, i = 1) {
-		let a = To();
+		let a = Eo();
 		if (!a.steps || !this.engine.running) return;
-		let o = Ur(this.zone).place === "outdoor", s = Jo(this.zone, e, t);
+		let o = Ur(this.zone).place === "outdoor", s = Yo(this.zone, e, t);
 		o && r.snow >= .6 && (s === "grass" || s === "dirt" || s === "sand") && (s = "snow"), this.stepSide = -this.stepSide, this.steps.play(s, a.steps * (n ? .9 : .7) * i, this.stepSide * .08, o && r.rain > .2, !0);
 	}
 	destroy() {
@@ -46042,23 +46070,23 @@ var qo = class e {
 		this.layers.clear();
 	}
 };
-function Jo(e, t, n) {
+function Yo(e, t, n) {
 	let r = Math.max(0, Math.min(e.width, Math.round(t / 32))), i = Math.max(0, Math.min(e.height, Math.round(n / 32))), a = Ee(e, r, i);
-	return a && /tapete|rug/i.test(a.label + a.category) ? "rug" : Yo(De(e, r, i));
+	return a && /tapete|rug/i.test(a.label + a.category) ? "rug" : Xo(De(e, r, i));
 }
-function Yo(e) {
+function Xo(e) {
 	let t = `${e.id} ${e.label} ${e.category}`.toLowerCase();
 	return /neve|snow/.test(t) ? "snow" : /areia|sand/.test(t) ? "sand" : /swamp|p[âa]ntano|água rasa|water/.test(t) ? "water" : /tapete|rug/.test(t) ? "rug" : /cascalho|gravel|pedrinha|pebble/.test(t) ? "gravel" : /madeira|wood|tábua/.test(t) ? "wood" : /pedra|stone|calçamento|cobble|ladrilho|tile|castelo|masmorra|mármore|piso/.test(t) ? "stone" : /grama|grass|trigo|capim|musgo/.test(t) ? "grass" : "dirt";
 }
 //#endregion
 //#region src/engine/scenes/WorldScene.ts
-var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es = .15, ts = 500, ns = {
+var Zo = "char:me", Qo = "char:me:riding", $o = "char:npc:riding", es = 220, ts = .15, ns = 500, rs = {
 	walk: [2, 6],
 	run: [0, 4]
-}, rs = {
+}, is = {
 	walk: [3, 7],
 	run: [2, 6]
-}, is = class extends c.default.Scene {
+}, as = class extends c.default.Scene {
 	player;
 	cfg;
 	armed = !1;
@@ -46088,7 +46116,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		super("world");
 	}
 	init(e) {
-		this.npcCtl && !e.carryNpc && this.cfg?.hub?.unhostNpc(no + this.npcCtl.id), this.npcCtl = null, this.mount = null, this.npcMount = null, this.pillion = null, this.npcPillion = null, this.mounting = !1, this.mountBtn?.destroy(), this.mountBtn = void 0, this.mountTip = void 0, this.npcSolids = /* @__PURE__ */ new Map(), this.solids = void 0, this.hiddenNpcs = "", this.cfg = e, this.cin = null, this.wantCinema = e.cinemaId?.() ?? null, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new lt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.switching = !1, this.reactions = 0, this.remotes = void 0, this.npcs = void 0, this.netAt = 0, this.netSent = "";
+		this.npcCtl && !e.carryNpc && this.cfg?.hub?.unhostNpc(ro + this.npcCtl.id), this.npcCtl = null, this.mount = null, this.npcMount = null, this.pillion = null, this.npcPillion = null, this.mounting = !1, this.mountBtn?.destroy(), this.mountBtn = void 0, this.mountTip = void 0, this.npcSolids = /* @__PURE__ */ new Map(), this.solids = void 0, this.hiddenNpcs = "", this.cfg = e, this.cin = null, this.wantCinema = e.cinemaId?.() ?? null, this.player = void 0, this.armed = !1, this.travelling = !1, this.occluders = new lt(), this.lighting = void 0, this.blob = void 0, this.ground = void 0, this.clockAt = 0, this.audio = null, this.reloading = !1, this.switching = !1, this.reactions = 0, this.remotes = void 0, this.npcs = void 0, this.netAt = 0, this.netSent = "";
 	}
 	async create() {
 		let { zone: e, assetBase: t, appearance: n, arrival: r } = this.cfg, i = e.width * 32, a = e.height * 32;
@@ -46096,17 +46124,17 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		for (let t of e.objects) this.occluders.add(tt(this, t), t);
 		new xr(this, e);
 		let o = this.lighting = new Fa(this, e);
-		o.timeOffset = this.cfg.timeOffset ?? 0, o.sky = this.cfg.sky ?? { hour: null }, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = this.cfg.watch && !this.cfg.listen ? null : qo.create(this, e), this.audio && (this.audio.enabled = this.cfg.audioOn?.() ?? !0), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
+		o.timeOffset = this.cfg.timeOffset ?? 0, o.sky = this.cfg.sky ?? { hour: null }, this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio = this.cfg.watch && !this.cfg.listen ? null : Jo.create(this, e), this.audio && (this.audio.enabled = this.cfg.audioOn?.() ?? !0), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
 			this.events.off(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.audio?.destroy(), this.audio = null;
 		});
 		let s = this.physics.add.staticGroup();
 		for (let t of [...Ae(e), ...br(e)]) s.add(this.add.zone(t.x + t.w / 2, t.y + t.h / 2, t.w, t.h));
 		at(this, e.objects, s), this.solids = s;
 		for (let t of e.npcs ?? []) this.addNpcBlock(t);
-		this.npcs = new xo(this, t, this.cfg.watch ? "always" : "near"), this.npcs.set(e.npcs ?? []), this.physics.world.setBounds(0, 0, i, a);
+		this.npcs = new So(this, t, this.cfg.watch ? "always" : "near"), this.npcs.set(e.npcs ?? []), this.physics.world.setBounds(0, 0, i, a);
 		let l = this.cameras.main;
 		let vz = this.cfg.watch ? 2 : window.__vtPlayZoom ?? 2;
-		if (l.setBounds(0, 0, i, a).setZoom(vz).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * vz < l.width || a * vz < l.height) && l.removeBounds(), r && l.fadeIn($o), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
+		if (l.setBounds(0, 0, i, a).setZoom(vz).setRoundPixels(!0).setBackgroundColor("#07080c"), (i * vz < l.width || a * vz < l.height) && l.removeBounds(), r && l.fadeIn(es), this.cfg.onZone?.(e), this.cfg.notice && this.toast(this.cfg.notice), this.cfg.hub) {
 			let t = this.cfg.hub.onZoneChanged((t) => {
 				t === e.id && this.reloadZone();
 			});
@@ -46131,7 +46159,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		try {
-			await cr(this, Xo, t, n);
+			await cr(this, Zo, t, n);
 		} catch (e) {
 			console.error("[vortable] boneco não carregou", e), this.add.text(l.midPoint.x, l.midPoint.y, "Não deu pra carregar o boneco.\nConfira a conexão e recarregue.", {
 				fontFamily: "system-ui",
@@ -46148,7 +46176,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			x: u.x + u.w / 2,
 			y: u.y + u.h / 2 + 5
 		} : e.spawn);
-		this.player = new Tr(this, Xo, d.x, d.y, r?.dir ?? this.cfg.facing ?? "down"), this.applyHeight(this.player, n), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, ba).setScale(.75, .6).setAlpha(.32);
+		this.player = new Tr(this, Zo, d.x, d.y, r?.dir ?? this.cfg.facing ?? "down"), this.applyHeight(this.player, n), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, ba).setScale(.75, .6).setAlpha(.32);
 		let f = this.player.sprite;
 		o.extraCasters = () => [{
 			key: f.texture.key,
@@ -46165,7 +46193,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		}))];
 		let p = this.cfg.hub;
 		if (p) {
-			this.remotes = new to(this, p, t, e.id, (e) => this.localDriverInfo(e)), p.announce(this.cfg.appearance);
+			this.remotes = new no(this, p, t, e.id, (e) => this.localDriverInfo(e)), p.announce(this.cfg.appearance);
 			let n = p.onTeleport((e) => void this.teleportTo(e.zone, e.x, e.y));
 			this.events.once(c.default.Scenes.Events.SHUTDOWN, n);
 		}
@@ -46180,8 +46208,8 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		};
 		window.addEventListener("keydown", m), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => window.removeEventListener("keydown", m)), this.input.keyboard.on("keydown-M", () => {
 			if (Er()) return;
-			let e = !To().muted;
-			Eo({ muted: e }), Ao.of(this)?.applyPrefs(), this.toast(e ? "Som desligado (M liga de novo)" : "Som ligado");
+			let e = !Eo().muted;
+			Do({ muted: e }), jo.of(this)?.applyPrefs(), this.toast(e ? "Som desligado (M liga de novo)" : "Som ligado");
 		}), this.input.keyboard.on("keydown-C", () => {
 			if (Er()) return;
 			let e = this.physics.world;
@@ -46190,14 +46218,14 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	}
 	stepsFor(e) {
 		let t = (t, n) => {
-			let a = t.key.split(":"), r = a[a.length - 2], h = /:(rm|mount):|anim-cavalo/.test(t.key), i = h ? { walk: [3, 7], run: [2, 6] }[r] : ns[r];
+			let a = t.key.split(":"), r = a[a.length - 2], h = /:(rm|mount):|anim-cavalo/.test(t.key), i = h ? { walk: [3, 7], run: [2, 6] }[r] : rs[r];
 			i && this.audio && i.includes(Number(n.textureFrame) % (r === "walk" ? 9 : 8)) && (h ? this.audio.hoofStep(e.x, e.y - 2, r === "run", this.lighting.weatherNow) : this.audio.step(e.x, e.y - 2, r === "run", this.lighting.weatherNow));
 		};
 		e.on(c.default.Animations.Events.ANIMATION_START, t), e.on(c.default.Animations.Events.ANIMATION_UPDATE, t);
 	}
 	syncFootsteps(e) {
 		let t = (t, n) => {
-			let r = t.key.split(":"), i = r[r.length - 2], a = !!this.mount, o = (a ? rs : ns)[i];
+			let r = t.key.split(":"), i = r[r.length - 2], a = !!this.mount, o = (a ? is : rs)[i];
 			if (!o || !this.audio || !this.lighting) return;
 			let s = i === "walk" ? 9 : 8;
 			o.includes(Number(n.textureFrame) % s) && (a ? this.audio.hoofStep(e.x, e.y - 2, i === "run", this.lighting.weatherNow) : this.audio.step(e.x, e.y - 2, i === "run", this.lighting.weatherNow));
@@ -46220,7 +46248,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	portrait(e) {
 		let t = this.cinemaTarget(e);
 		if (!t) return null;
-		let n = vo(this, _o(t.texture.key));
+		let n = yo(this, vo(t.texture.key));
 		if (!n) return null;
 		let r = this.textures.get(n.texture).getSourceImage(), i = document.createElement("canvas");
 		return i.width = 256, i.height = 256, i.getContext("2d").drawImage(r, 0, 0, 256, 256, 0, 0, 256, 256), i;
@@ -46244,7 +46272,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		}
 		let i = n.map((e) => this.cinemaTarget(e)).filter((e) => !!e);
 		if (r.holding = i.length > 0, !r.holding) return;
-		let a = Math.min(...i.map((e) => e.x)), o = Math.max(...i.map((e) => e.x)), s = Math.min(...i.map((e) => e.y - 44)), l = Math.max(...i.map((e) => e.y)), u = o - a + yo.padX, d = l - s + yo.padY, f = c.default.Math.Clamp(Math.min(t.width / u, t.height / d), yo.minZoom, yo.maxZoom), p = 1 - Math.exp(-e * 4);
+		let a = Math.min(...i.map((e) => e.x)), o = Math.max(...i.map((e) => e.x)), s = Math.min(...i.map((e) => e.y - 44)), l = Math.max(...i.map((e) => e.y)), u = o - a + bo.padX, d = l - s + bo.padY, f = c.default.Math.Clamp(Math.min(t.width / u, t.height / d), bo.minZoom, bo.maxZoom), p = 1 - Math.exp(-e * 4);
 		t.setZoom(t.zoom + (f - t.zoom) * p), t.scrollX += ((a + o) / 2 - t.width / 2 - t.scrollX) * p, t.scrollY += ((s + l) / 2 - t.height / 2 - t.scrollY) * p;
 	}
 	setInputLocked(e) {
@@ -46272,7 +46300,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			r.setZoom(nz), this.following || (r.scrollX = wx - w / 2 - sx / nz, r.scrollY = wy - h / 2 - sy / nz);
 		});
 		let a = this.cfg.hub;
-		a && (this.remotes = new to(this, a, this.cfg.assetBase, e.id, (e) => this.localDriverInfo(e)), a.observe());
+		a && (this.remotes = new no(this, a, this.cfg.assetBase, e.id, (e) => this.localDriverInfo(e)), a.observe());
 		let o = this.lighting;
 		o && (o.extraCasters = () => [...this.remotes?.sprites ?? [], ...this.npcCtl ? [this.npcCtl.player.sprite] : []].map((e) => ({
 			key: e.texture.key,
@@ -46426,7 +46454,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	async setAppearance(e) {
 		this.cfg.appearance = e;
 		try {
-			await cr(this, Xo, this.cfg.assetBase, e), (this.mount || this.pillion) && await cr(this, Zo, this.cfg.assetBase, {
+			await cr(this, Zo, this.cfg.assetBase, e), (this.mount || this.pillion) && await cr(this, Qo, this.cfg.assetBase, {
 				...e,
 				pose: "riding"
 			}), this.cfg.hub?.announce(e, this.mountInfo()), this.player?.refresh(), this.player && !this.mount && this.applyHeight(this.player, e);
@@ -46437,13 +46465,13 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	preRender() {
 		let e = this.npcCtl, t = this.player ?? e?.player, n = this.cameras.main;
 		if (this.syncHiddenNpcs(), t) {
-			let r = t.sprite, i = n.scrollX + (r.x - n.width / 2 - n.scrollX) * es, a = n.scrollY + (r.y - n.height / 2 - n.scrollY) * es;
+			let r = t.sprite, i = n.scrollX + (r.x - n.width / 2 - n.scrollX) * ts, a = n.scrollY + (r.y - n.height / 2 - n.scrollY) * ts;
 			n.useBounds && (i = n.clampX(i), a = n.clampY(a)), this.cinemaHolds() || n.setScroll(i, a), (e && !this.player ? e.blob : this.blob)?.setPosition(r.x, r.y - 1).setDepth(r.depth - .5);
 		}
 		let r = t?.sprite, i = !!r && r.body.velocity.lengthSq() > 1;
 		if (this.remotes?.update(this.game.loop.delta / 1e3), this.npcs?.update(t?.sprite), this.following && !this.cinemaHolds()) {
 			let e = this.cfg.hub?.peers.get(this.following);
-			e?.state && e.state.zone === this.cfg.zone.id ? (n.scrollX += (e.state.x - n.width / 2 - n.scrollX) * es, n.scrollY += (e.state.y - n.height / 2 - n.scrollY) * es) : e?.state && this.cfg.watch && !this.switching && (this.switching = !0, this.watchZone(e.state.zone).finally(() => {
+			e?.state && e.state.zone === this.cfg.zone.id ? (n.scrollX += (e.state.x - n.width / 2 - n.scrollX) * ts, n.scrollY += (e.state.y - n.height / 2 - n.scrollY) * ts) : e?.state && this.cfg.watch && !this.switching && (this.switching = !0, this.watchZone(e.state.zone).finally(() => {
 				this.switching = !1;
 			}));
 		}
@@ -46467,7 +46495,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			});
 		}
 		let s = this.time.now;
-		this.cfg.onClock && s - this.clockAt > ts && (this.clockAt = s, this.cfg.onClock(o.hour));
+		this.cfg.onClock && s - this.clockAt > ns && (this.clockAt = s, this.cfg.onClock(o.hour));
 	}
 	update() {
 		let e = this.npcCtl;
@@ -46571,7 +46599,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		};
 		n.destroy(), t.blob.destroy();
 		let i = this.cfg.hub;
-		this.applyNpcMove(r), this.syncHiddenNpcs(), i?.moveNpc(r), i?.unhostNpc(no + r.id);
+		this.applyNpcMove(r), this.syncHiddenNpcs(), i?.moveNpc(r), i?.unhostNpc(ro + r.id);
 		try {
 			await e?.(r);
 		} catch (e) {
@@ -46674,7 +46702,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	syncHiddenNpcs() {
 		let e = /* @__PURE__ */ new Set();
 		this.npcCtl && e.add(this.npcCtl.id);
-		for (let t of this.cfg.hub?.peers.keys() ?? []) t.startsWith("npc:") && e.add(t.slice(no.length));
+		for (let t of this.cfg.hub?.peers.keys() ?? []) t.startsWith("npc:") && e.add(t.slice(ro.length));
 		for (let t of this.mountedNpcIds()) e.add(t);
 		let t = [...e].sort().join(",");
 		if (t !== this.hiddenNpcs) {
@@ -46690,7 +46718,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		let r = e.player.sprite, i = `${Math.round(r.x)},${Math.round(r.y)},${e.player.facing},${e.player.animName}`;
 		i === e.sent && n - e.at < 1e3 || (e.at = n, e.sent = i, t.link.send({
 			t: "state",
-			id: no + e.id,
+			id: ro + e.id,
 			zone: this.cfg.zone.id,
 			x: Math.round(r.x * 10) / 10,
 			y: Math.round(r.y * 10) / 10,
@@ -46717,11 +46745,11 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			}
 		}
 		let r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));
-		r.fadeOut($o);
+		r.fadeOut(es);
 		let [a] = await Promise.all([this.cfg.loadZone(n.zone).catch(() => null), i]);
 		if (this.sys.isActive()) {
 			if (!a) {
-				console.warn("[vortable] saída leva pra uma zona que não existe:", n.zone), r.fadeIn($o), this.toast("Essa passagem não leva a lugar nenhum (zona apagada ou não salva)."), t.frozen = !1, this.travelling = !1, this.armed = !1;
+				console.warn("[vortable] saída leva pra uma zona que não existe:", n.zone), r.fadeIn(es), this.toast("Essa passagem não leva a lugar nenhum (zona apagada ou não salva)."), t.frozen = !1, this.travelling = !1, this.armed = !1;
 				return;
 			}
 			this.scene.restart({
@@ -46755,7 +46783,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	busyNpcIds() {
 		let e = this.mountedNpcIds();
 		this.npcCtl && e.add(this.npcCtl.id);
-		for (let t of this.cfg.hub?.peers.keys() ?? []) t.startsWith("npc:") && e.add(t.slice(no.length));
+		for (let t of this.cfg.hub?.peers.keys() ?? []) t.startsWith("npc:") && e.add(t.slice(ro.length));
 		return e;
 	}
 	async toggleMount() {
@@ -46787,7 +46815,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		this.mounting = !0;
 		let n = `char:mount:${e.id}`;
 		try {
-			await cr(this, n, this.cfg.assetBase, e.appearance), await cr(this, Zo, this.cfg.assetBase, {
+			await cr(this, n, this.cfg.assetBase, e.appearance), await cr(this, Qo, this.cfg.assetBase, {
 				...this.cfg.appearance,
 				pose: "riding"
 			});
@@ -46796,19 +46824,21 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		if (this.mounting = !1, !this.sys.isActive() || this.player !== t || this.mount) return;
-		let r = this.add.sprite(t.sprite.x, t.sprite.y, `${Zo}:idle`, 0).setOrigin(.5, 62 / 64);
+		let r = this.add.sprite(t.sprite.x, t.sprite.y, `${Qo}:idle`, 0).setOrigin(.5, 62 / 64);
 		this.mount = {
 			npc: e,
 			key: n,
 			rider: r
-		}, t.setSkin(n), t.setHeight(1), t.setFeetBox(Ga.w, Ga.h), t.speedScale = Wa, t.sprite.setPosition(e.x, e.y), this.blob?.setScale(1.3, .8), this.syncHiddenNpcs(), this.cfg.hub?.announce(this.cfg.appearance, this.mountInfo());
+		};
+		let i = qa(e.appearance);
+		t.setSkin(n), t.setHeight(i.scale), t.setFeetBox(i.feet.w, i.feet.h), t.speedScale = i.speed, t.sprite.setPosition(e.x, e.y), this.blob?.setScale(i.blob[0], i.blob[1]), this.syncHiddenNpcs(), this.cfg.hub?.announce(this.cfg.appearance, this.mountInfo());
 	}
 	dismount() {
 		let e = this.mount, t = this.player;
 		if (!e || !t) return;
 		this.mount = null;
 		let n = t.sprite, r = t.facing, i = Math.round(n.x), a = Math.round(n.y);
-		e.rider.destroy(), t.setSkin(Xo), this.applyHeight(t, this.cfg.appearance), t.setFeetBox(18, 10), t.speedScale = 1, this.blob?.setScale(.75, .6), this.applyNpcMove({
+		e.rider.destroy(), t.setSkin(Zo), this.applyHeight(t, this.cfg.appearance), t.setFeetBox(18, 10), t.speedScale = 1, this.blob?.setScale(.75, .6), this.applyNpcMove({
 			id: e.npc.id,
 			x: i,
 			y: a,
@@ -46832,15 +46862,15 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 	}
 	setupMountUi() {
 		let e = this.game.canvas.parentElement;
-		e && (this.mountBtn = new Za(e, () => void this.toggleMount()), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
+		e && (this.mountBtn = new Qa(e, () => void this.toggleMount()), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => {
 			this.mountBtn?.destroy(), this.mountBtn = void 0;
 		})), this.input.keyboard.on("keydown-E", () => {
 			Er() || this.toggleMount();
 		});
 	}
-	showMountUi(e, t) {
-		let n = this.mountBtn;
-		if (n && (e ? n.show(e) : n.hide()), !e || !t) {
+	showMountUi(e, t, n = 1) {
+		let r = this.mountBtn;
+		if (r && (e ? r.show(e) : r.hide()), !e || !t) {
 			this.mountTip?.setVisible(!1);
 			return;
 		}
@@ -46858,14 +46888,14 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			strokeThickness: 2
 		}).setOrigin(.5, 1).setResolution(4).setDepth(1e8), this.mountTip.setInteractive({ useHandCursor: !0 }), this.mountTip.on("pointerdown", (e, t, n, r) => {
 			r.stopPropagation(), this.toggleMount();
-		})), this.mountTip.setText(`${e} (E)`).setPosition(t.x, t.y - (e.startsWith("Montar") ? 44 : 78)).setVisible(!0), (this.mountTip.input?.hitArea)?.setSize(this.mountTip.width, this.mountTip.height);
+		})), this.mountTip.setText(`${e} (E)`).setPosition(t.x, t.y - (e.startsWith("Montar") ? 44 : 78) - (n - 1) * 60).setVisible(!0), (this.mountTip.input?.hitArea)?.setSize(this.mountTip.width, this.mountTip.height);
 	}
 	updateMount(e) {
 		let t = this.mount;
 		if (t) {
 			let n = e.sprite, r = this.cfg.appearance.height ?? 1;
-			t.rider.setScale(r).setPosition(n.x, n.y - 17).setDepth(n.depth + Ya(e.facing)).setVisible(n.visible);
-			let i = `${Zo}:idle:${e.facing}`;
+			t.rider.setScale(r).setPosition(n.x, n.y - Ya(qa(t.npc.appearance), e.facing)).setDepth(n.depth + Xa(e.facing)).setVisible(n.visible);
+			let i = `${Qo}:idle:${e.facing}`;
 			this.anims.exists(i) && t.rider.anims.play(i, !0);
 		}
 		if (this.travelling || this.mounting || e.frozen || e.locked) {
@@ -46873,17 +46903,17 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		if (t) {
-			this.showMountUi("Desmontar", e.sprite);
+			this.showMountUi("Desmontar", e.sprite, qa(t.npc.appearance).scale);
 			return;
 		}
 		if (this.pillion) return;
 		let n = Ja(this.cfg.zone.npcs ?? [], e.sprite.x, e.sprite.y, this.busyNpcIds());
 		if (n) {
-			this.showMountUi("Montar", n);
+			this.showMountUi("Montar", n, qa(n.appearance).scale);
 			return;
 		}
 		let r = this.nearestRidden(e.sprite.x, e.sprite.y);
-		this.showMountUi(r ? "Montar na garupa" : null, r);
+		this.showMountUi(r ? "Montar na garupa" : null, r, r ? qa(r.horse).scale : 1);
 	}
 	localDriverInfo(e) {
 		if (this.mount?.npc.id === e && this.player) {
@@ -46932,7 +46962,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		if (!t) return;
 		this.mounting = !0;
 		try {
-			await cr(this, Zo, this.cfg.assetBase, {
+			await cr(this, Qo, this.cfg.assetBase, {
 				...this.cfg.appearance,
 				pose: "riding"
 			});
@@ -46941,7 +46971,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		if (this.mounting = !1, !this.sys.isActive() || this.player !== t || this.mount || this.pillion) return;
-		let n = this.add.sprite(t.sprite.x, t.sprite.y, `${Zo}:idle`, 0).setOrigin(.5, 62 / 64);
+		let n = this.add.sprite(t.sprite.x, t.sprite.y, `${Qo}:idle`, 0).setOrigin(.5, 62 / 64);
 		this.pillion = {
 			npc: e.npc,
 			horse: e.horse,
@@ -46965,10 +46995,10 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		t.lost = 0, e.sprite.setPosition(n.x, n.y);
-		let [r, i, a] = eo(n.dir), o = this.cfg.appearance.height ?? 1;
-		t.rider.setScale(o).setPosition(n.x + r, n.y - 17 + i).setDepth(n.depth + a);
-		let s = `${Zo}:idle:${n.dir}`;
-		this.anims.exists(s) && t.rider.anims.play(s, !0), this.showMountUi("Descer", n);
+		let r = qa(t.horse), [i, a, o] = to(n.dir, r.scale), s = this.cfg.appearance.height ?? 1;
+		t.rider.setScale(s).setPosition(n.x + i, n.y - Ya(r, n.dir) + a).setDepth(n.depth + o);
+		let c = `${Qo}:idle:${n.dir}`;
+		this.anims.exists(c) && t.rider.anims.play(c, !0), this.showMountUi("Descer", n, r.scale);
 	}
 	async toggleNpcMount() {
 		let e = this.npcCtl;
@@ -46996,7 +47026,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		this.mounting = !0;
 		let r = `char:mount:${t.id}`;
 		try {
-			await cr(this, r, this.cfg.assetBase, t.appearance), await cr(this, Qo, this.cfg.assetBase, {
+			await cr(this, r, this.cfg.assetBase, t.appearance), await cr(this, $o, this.cfg.assetBase, {
 				...n.appearance,
 				pose: "riding"
 			});
@@ -47005,12 +47035,14 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		if (this.mounting = !1, !this.sys.isActive() || this.npcCtl !== e || this.npcMount) return;
-		let i = this.add.sprite(e.player.sprite.x, e.player.sprite.y, `${Qo}:idle`, 0).setOrigin(.5, 62 / 64);
+		let i = this.add.sprite(e.player.sprite.x, e.player.sprite.y, `${$o}:idle`, 0).setOrigin(.5, 62 / 64);
 		this.npcMount = {
 			npc: t,
 			key: r,
 			rider: i
-		}, e.player.setSkin(r), e.player.setHeight(1), e.player.setFeetBox(Ga.w, Ga.h), e.player.speedScale = Wa, e.player.sprite.setPosition(t.x, t.y), e.blob.setScale(1.3, .8), this.syncHiddenNpcs(), this.cfg.hub?.hostNpc({
+		};
+		let a = qa(t.appearance);
+		e.player.setSkin(r), e.player.setHeight(a.scale), e.player.setFeetBox(a.feet.w, a.feet.h), e.player.speedScale = a.speed, e.player.sprite.setPosition(t.x, t.y), e.blob.setScale(a.blob[0], a.blob[1]), this.syncHiddenNpcs(), this.cfg.hub?.hostNpc({
 			id: e.id,
 			name: n.name,
 			appearance: n.appearance,
@@ -47057,8 +47089,8 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		let t = this.npcMount, n = e.player;
 		if (t) {
 			let r = n.sprite, i = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id)?.appearance.height ?? 1;
-			t.rider.setScale(i).setPosition(r.x, r.y - 17).setDepth(r.depth + Ya(n.facing)).setVisible(r.visible);
-			let a = `${Qo}:idle:${n.facing}`;
+			t.rider.setScale(i).setPosition(r.x, r.y - Ya(qa(t.npc.appearance), n.facing)).setDepth(r.depth + Xa(n.facing)).setVisible(r.visible);
+			let a = `${$o}:idle:${n.facing}`;
 			this.anims.exists(a) && t.rider.anims.play(a, !0);
 		}
 		if (this.travelling || this.mounting || n.frozen || n.locked || e.form) {
@@ -47066,24 +47098,24 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		if (t) {
-			this.showMountUi("Desmontar", n.sprite);
+			this.showMountUi("Desmontar", n.sprite, qa(t.npc.appearance).scale);
 			return;
 		}
 		if (this.npcPillion) return;
 		let r = Ja(this.cfg.zone.npcs ?? [], n.sprite.x, n.sprite.y, this.busyNpcIds());
 		if (r) {
-			this.showMountUi("Montar", r);
+			this.showMountUi("Montar", r, qa(r.appearance).scale);
 			return;
 		}
 		let i = this.nearestRidden(n.sprite.x, n.sprite.y);
-		this.showMountUi(i ? "Montar na garupa" : null, i);
+		this.showMountUi(i ? "Montar na garupa" : null, i, i ? qa(i.horse).scale : 1);
 	}
 	async mountNpcPillion(e, t) {
 		let n = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id);
 		if (!n) return;
 		this.mounting = !0;
 		try {
-			await cr(this, Qo, this.cfg.assetBase, {
+			await cr(this, $o, this.cfg.assetBase, {
 				...n.appearance,
 				pose: "riding"
 			});
@@ -47092,7 +47124,7 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		if (this.mounting = !1, !this.sys.isActive() || this.npcCtl !== e || this.npcMount || this.npcPillion) return;
-		let r = this.add.sprite(e.player.sprite.x, e.player.sprite.y, `${Qo}:idle`, 0).setOrigin(.5, 62 / 64);
+		let r = this.add.sprite(e.player.sprite.x, e.player.sprite.y, `${$o}:idle`, 0).setOrigin(.5, 62 / 64);
 		this.npcPillion = {
 			npc: t.npc,
 			horse: t.horse,
@@ -47133,10 +47165,10 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 			return;
 		}
 		t.lost = 0, e.player.sprite.setPosition(n.x, n.y);
-		let [r, i, a] = eo(n.dir), o = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id);
-		t.rider.setScale(o?.appearance.height ?? 1).setPosition(n.x + r, n.y - 17 + i).setDepth(n.depth + a);
-		let s = `${Qo}:idle:${n.dir}`;
-		this.anims.exists(s) && t.rider.anims.play(s, !0), this.showMountUi("Descer", n);
+		let r = qa(t.horse), [i, a, o] = to(n.dir, r.scale), s = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.id);
+		t.rider.setScale(s?.appearance.height ?? 1).setPosition(n.x + i, n.y - Ya(r, n.dir) + a).setDepth(n.depth + o);
+		let c = `${$o}:idle:${n.dir}`;
+		this.anims.exists(c) && t.rider.anims.play(c, !0), this.showMountUi("Descer", n, r.scale);
 	}
 	toast(e) {
 		let t = this.cameras.main, n = this.add.text(t.midPoint.x, t.midPoint.y - t.height / (2 * t.zoom) + 16, e, {
@@ -47150,15 +47182,15 @@ var Xo = "char:me", Zo = "char:me:riding", Qo = "char:npc:riding", $o = 220, es 
 		}).setOrigin(.5, 0).setDepth(1e9).setResolution(4).setScrollFactor(1);
 		this.time.delayedCall(3e3, () => n.destroy());
 	}
-}, as = (e) => e / 1 * 32, os = (e) => e / 32 * 1, ss = new Intl.NumberFormat("pt-BR", {
+}, os = (e) => e / 1 * 32, ss = (e) => e / 32 * 1, cs = new Intl.NumberFormat("pt-BR", {
 	minimumFractionDigits: 1,
 	maximumFractionDigits: 1
 });
-function cs(e) {
-	let t = os(e);
-	return t < 1 ? `${Math.round(t * 100)} cm` : `${ss.format(t)} m`;
+function ls(e) {
+	let t = ss(e);
+	return t < 1 ? `${Math.round(t * 100)} cm` : `${cs.format(t)} m`;
 }
-var ls = [
+var us = [
 	"N",
 	"NE",
 	"L",
@@ -47168,24 +47200,24 @@ var ls = [
 	"O",
 	"NO"
 ];
-function us(e) {
+function ds(e) {
 	let t = (Math.atan2(e.x1 - e.x0, -(e.y1 - e.y0)) * 180 / Math.PI + 360) % 360;
 	return {
 		deg: t,
-		cardinal: ls[Math.round(t / 45) % 8]
+		cardinal: us[Math.round(t / 45) % 8]
 	};
 }
-var ds = (e) => Math.hypot(e.x1 - e.x0, e.y1 - e.y0), fs = [
+var fs = (e) => Math.hypot(e.x1 - e.x0, e.y1 - e.y0), ps = [
 	30,
 	60,
 	90,
 	120
-], ps = (e) => e * os(1) ** 2, ms = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
-function hs(e) {
-	let t = ps(e);
-	return t < 100 ? `${ss.format(t)} m²` : `${ms.format(t)} m²`;
-}
+], ms = (e) => e * ss(1) ** 2, hs = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 function gs(e) {
+	let t = ms(e);
+	return t < 100 ? `${cs.format(t)} m²` : `${hs.format(t)} m²`;
+}
+function _s(e) {
 	let t = Math.min(e.x0, e.x1), n = Math.min(e.y0, e.y1), r = Math.abs(e.x1 - e.x0), i = Math.abs(e.y1 - e.y0);
 	return {
 		x: t,
@@ -47196,8 +47228,8 @@ function gs(e) {
 		perimeter: 2 * (r + i)
 	};
 }
-function _s(e) {
-	let t = ds(e);
+function vs(e) {
+	let t = fs(e);
 	return {
 		cx: e.x0,
 		cy: e.y0,
@@ -47206,8 +47238,8 @@ function _s(e) {
 		circumference: 2 * Math.PI * t
 	};
 }
-function vs(e, t) {
-	let n = ds(e), r = Math.atan2(e.y1 - e.y0, e.x1 - e.x0), i = t * Math.PI / 360;
+function ys(e, t) {
+	let n = fs(e), r = Math.atan2(e.y1 - e.y0, e.x1 - e.x0), i = t * Math.PI / 360;
 	return {
 		range: n,
 		axis: r,
@@ -47216,7 +47248,7 @@ function vs(e, t) {
 		chord: 2 * n * Math.sin(i)
 	};
 }
-function ys(e, t = 9) {
+function bs(e, t = 9) {
 	let n = 32 * e;
 	for (let e of [
 		1,
@@ -47233,7 +47265,7 @@ function ys(e, t = 9) {
 }
 //#endregion
 //#region src/engine/editor/EditorScene.ts
-var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class extends c.default.Scene {
+var xs = .1, Ss = .0015, Cs = 700, ws = 10474495, Ts = 8, Es = 180, Ds = class extends c.default.Scene {
 	state;
 	ground;
 	fences;
@@ -47273,7 +47305,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		this.state = e.state;
 	}
 	create() {
-		this.ground = new Oe(this, this.state.zone), this.fences = new xr(this, this.state.zone), this.gridGfx = this.add.graphics().setDepth(1e8), this.collisionGfx = this.add.graphics().setDepth(1e8 + 1), this.cursorGfx = this.add.graphics().setDepth(1e8 + 2), this.selectGfx = this.add.graphics().setDepth(1e8 + 2), this.portalGfx = this.add.graphics().setDepth(1e8 + 1), this.ghost = this.add.image(0, 0, "__WHITE").setOrigin(.5, 1).setAlpha(.6).setDepth(1e8 + 3).setVisible(!1), this.spawnMarker = this.makeSpawnMarker(), this.lightGfx = this.add.graphics().setDepth(1e8 + 1), this.rulerGfx = this.add.graphics().setDepth(1e8 + 2), this.rebuildObjects(), this.lighting = new Fa(this, this.state.zone), this.npcs = new xo(this, this.state.assetBase, "always"), this.npcs.set(this.state.zone.npcs ?? []), this.refreshNpcGhost(), this.drawRulers(), this.audio = qo.create(this, this.state.zone), this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.refreshOverlays();
+		this.ground = new Oe(this, this.state.zone), this.fences = new xr(this, this.state.zone), this.gridGfx = this.add.graphics().setDepth(1e8), this.collisionGfx = this.add.graphics().setDepth(1e8 + 1), this.cursorGfx = this.add.graphics().setDepth(1e8 + 2), this.selectGfx = this.add.graphics().setDepth(1e8 + 2), this.portalGfx = this.add.graphics().setDepth(1e8 + 1), this.ghost = this.add.image(0, 0, "__WHITE").setOrigin(.5, 1).setAlpha(.6).setDepth(1e8 + 3).setVisible(!1), this.spawnMarker = this.makeSpawnMarker(), this.lightGfx = this.add.graphics().setDepth(1e8 + 1), this.rulerGfx = this.add.graphics().setDepth(1e8 + 2), this.rebuildObjects(), this.lighting = new Fa(this, this.state.zone), this.npcs = new So(this, this.state.assetBase, "always"), this.npcs.set(this.state.zone.npcs ?? []), this.refreshNpcGhost(), this.drawRulers(), this.audio = Jo.create(this, this.state.zone), this.events.on(c.default.Scenes.Events.PRE_RENDER, this.preRender, this), this.refreshOverlays();
 		let e = this.cameras.main;
 		this.zoomTarget = this.state.zoom, e.setBackgroundColor("#0b0f18").setZoom(this.state.zoom).setRoundPixels(!0), this.fitBounds();
 		let t = this.state.view ?? this.state.zone.spawn;
@@ -47311,7 +47343,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		if (this.keyboardFree()) {
 			let e = this.keys, t = !(this.state.tool === "select" && this.state.selected.length), i = 0, a = 0;
 			if ((e.a.isDown || t && e.left.isDown) && --i, (e.d.isDown || t && e.right.isDown) && (i += 1), (e.w.isDown || t && e.up.isDown) && --a, (e.s.isDown || t && e.down.isDown) && (a += 1), i || a) {
-				let t = Ss * (e.shift.isDown ? 2.5 : 1) * r / n.zoom;
+				let t = Cs * (e.shift.isDown ? 2.5 : 1) * r / n.zoom;
 				this.panBy(i * t, a * t);
 			}
 		}
@@ -47320,7 +47352,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		let e = this.lighting;
 		if (e.enabled = this.state.lightPreview, e.sky = Wr(this.state.world), e.hourOverride = e.sky.hour ?? this.state.previewHour, e.render(this.game.loop.delta), this.ground.tufts.update(this.cameras.main, this.game.loop.delta / 1e3), this.audio) {
 			let t = this.cameras.main;
-			this.audio.enabled = To().editor, this.audio.update(this.game.loop.delta / 1e3, {
+			this.audio.enabled = Eo().editor, this.audio.update(this.game.loop.delta / 1e3, {
 				x: t.midPoint.x,
 				y: t.midPoint.y,
 				hour: e.hour,
@@ -47331,7 +47363,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		}
 	}
 	scheduleLights() {
-		this.lightTimer?.remove(), this.lightTimer = this.time.delayedCall(Ts, () => {
+		this.lightTimer?.remove(), this.lightTimer = this.time.delayedCall(Es, () => {
 			this.lighting.rebuild(), this.audio?.setZone(this.state.zone);
 		});
 	}
@@ -47362,7 +47394,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		this.zoomTo(this.zoomTarget * e, t);
 	}
 	zoomTo(e, t) {
-		this.zoomTarget = c.default.Math.Clamp(e, bs, 8);
+		this.zoomTarget = c.default.Math.Clamp(e, xs, 8);
 		let n = this.cameras.main, r = t ?? {
 			x: n.width / 2,
 			y: n.height / 2
@@ -47371,7 +47403,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 	}
 	fitZone() {
 		let e = this.state.zone, t = this.cameras.main, n = Math.min(t.width / (e.width * 32 + 96), t.height / (e.height * 32 + 96));
-		this.zoomTarget = c.default.Math.Clamp(n, bs, 8), this.zoomAnchor = null, this.applyZoom(this.zoomTarget, this.anchorAt(t.width / 2, t.height / 2)), this.centerOnZone();
+		this.zoomTarget = c.default.Math.Clamp(n, xs, 8), this.zoomAnchor = null, this.applyZoom(this.zoomTarget, this.anchorAt(t.width / 2, t.height / 2)), this.centerOnZone();
 	}
 	updateCursorStyle() {
 		let e = this.spaceKey.isDown && this.keyboardFree();
@@ -47497,7 +47529,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 	}
 	applySelection() {
 		let e = new Set(this.state.selected);
-		this.sprites.forEach((t, n) => e.has(n) ? t?.setTint(Cs) : t?.clearTint()), this.drawSelection();
+		this.sprites.forEach((t, n) => e.has(n) ? t?.setTint(ws) : t?.clearTint()), this.drawSelection();
 	}
 	drawSelection() {
 		let e = this.selectGfx;
@@ -47779,10 +47811,10 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 	onWheel(e, t, n, r) {
 		let i = e.event, a = i.deltaMode === 1 ? r * 16 : i.deltaMode === 2 ? r * 400 : r;
 		if (i.altKey) {
-			i.preventDefault(), a && this.state.set({ brush: c.default.Math.Clamp(this.state.brush + (a > 0 ? -1 : 1), 1, ws) });
+			i.preventDefault(), a && this.state.set({ brush: c.default.Math.Clamp(this.state.brush + (a > 0 ? -1 : 1), 1, Ts) });
 			return;
 		}
-		let o = Math.exp(c.default.Math.Clamp(-a * xs, -.7, .7)), s = this.game.canvas.getBoundingClientRect(), l = this.cameras.main, u = s.width ? {
+		let o = Math.exp(c.default.Math.Clamp(-a * Ss, -.7, .7)), s = this.game.canvas.getBoundingClientRect(), l = this.cameras.main, u = s.width ? {
 			x: (i.clientX - s.left) * l.width / s.width,
 			y: (i.clientY - s.top) * l.height / s.height
 		} : {
@@ -48120,7 +48152,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		this.state.edited(), this.state.emit("objects");
 	}
 	brushBy(e) {
-		this.state.set({ brush: c.default.Math.Clamp(this.state.brush + e, 1, ws) });
+		this.state.set({ brush: c.default.Math.Clamp(this.state.brush + e, 1, Ts) });
 	}
 	rulerGfx;
 	rulerTexts = [];
@@ -48171,7 +48203,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 				let i = Math.min(o, n + s);
 				e.lineBetween(t + l * n, r + u * n, t + l * i, r + u * i);
 			}
-		}, s = as(ys(t)), c = this.state.rulerMode, l = 16761204, u = (t) => {
+		}, s = os(bs(t)), c = this.state.rulerMode, l = 16761204, u = (t) => {
 			e.lineStyle(n * 5, 0, .55), t(), e.lineStyle(n * 2.5, l, 1), t();
 		}, d = (t, r) => {
 			e.fillStyle(0, .7).fillCircle(t, r, n * 5.5), e.fillStyle(l, 1).fillCircle(t, r, n * 3.5);
@@ -48186,7 +48218,7 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 		};
 		for (let t of r) {
 			if (c === "rect") {
-				let r = gs(t);
+				let r = _s(t);
 				if (r.w < 1 && r.h < 1) continue;
 				e.fillStyle(l, .16).fillRect(r.x, r.y, r.w, r.h), u(() => e.strokeRect(r.x, r.y, r.w, r.h)), f(r.x, r.y, r.x + r.w, r.y), f(r.x, r.y, r.x, r.y + r.h);
 				for (let [e, t] of [
@@ -48195,20 +48227,20 @@ var bs = .1, xs = .0015, Ss = 700, Cs = 10474495, ws = 8, Ts = 180, Es = class e
 					[r.x, r.y + r.h],
 					[r.x + r.w, r.y + r.h]
 				]) d(e, t);
-				r.w >= 1 && a(cs(r.w), r.x + r.w / 2, r.y - 14 * n, .9), r.h >= 1 && a(cs(r.h), r.x + r.w + 26 * n, r.y + r.h / 2, .9), a(`${hs(r.area)}
-perímetro ${cs(r.perimeter)}`, r.x + r.w / 2, r.y + r.h / 2);
+				r.w >= 1 && a(ls(r.w), r.x + r.w / 2, r.y - 14 * n, .9), r.h >= 1 && a(ls(r.h), r.x + r.w + 26 * n, r.y + r.h / 2, .9), a(`${gs(r.area)}
+perímetro ${ls(r.perimeter)}`, r.x + r.w / 2, r.y + r.h / 2);
 				continue;
 			}
 			if (c === "circle") {
-				let r = _s(t);
+				let r = vs(t);
 				if (r.radius < 1) continue;
-				e.fillStyle(l, .16).fillCircle(r.cx, r.cy, r.radius), u(() => e.strokeCircle(r.cx, r.cy, r.radius)), u(() => e.lineBetween(t.x0, t.y0, t.x1, t.y1)), f(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x0 * 2 - t.x1, t.y0 * 2 - t.y1), d(t.x0, t.y0), d(t.x1, t.y1), a(`raio ${cs(r.radius)}
-Ø ${cs(r.radius * 2)}
-${hs(r.area)}`, r.cx, r.cy - 30 * n);
+				e.fillStyle(l, .16).fillCircle(r.cx, r.cy, r.radius), u(() => e.strokeCircle(r.cx, r.cy, r.radius)), u(() => e.lineBetween(t.x0, t.y0, t.x1, t.y1)), f(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x0 * 2 - t.x1, t.y0 * 2 - t.y1), d(t.x0, t.y0), d(t.x1, t.y1), a(`raio ${ls(r.radius)}
+Ø ${ls(r.radius * 2)}
+${gs(r.area)}`, r.cx, r.cy - 30 * n);
 				continue;
 			}
 			if (c === "cone") {
-				let r = vs(t, this.state.coneAngle);
+				let r = ys(t, this.state.coneAngle);
 				if (r.range < 1) continue;
 				let i = [{
 					x: t.x0,
@@ -48223,23 +48255,23 @@ ${hs(r.area)}`, r.cx, r.cy - 30 * n);
 				}
 				e.fillStyle(l, .16).fillPoints(i, !0, !0), u(() => e.strokePoints(i, !0, !0)), e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x1, t.y1), f(t.x0, t.y0, t.x1, t.y1), d(t.x0, t.y0), d(t.x1, t.y1);
 				let s = t.x0 + Math.cos(r.axis) * r.range * .58, c = t.y0 + Math.sin(r.axis) * r.range * .58;
-				a(`${cs(r.range)} · ${this.state.coneAngle}°
-${hs(r.area)}
-fundo ${cs(r.chord)}`, s, c);
+				a(`${ls(r.range)} · ${this.state.coneAngle}°
+${gs(r.area)}
+fundo ${ls(r.chord)}`, s, c);
 				continue;
 			}
-			let r = ds(t);
+			let r = fs(t);
 			if (r < 1) continue;
 			let i = (t.x1 - t.x0) / r, p = (t.y1 - t.y0) / r, m = -p, h = i, g = Math.abs(t.x1 - t.x0), _ = Math.abs(t.y1 - t.y0);
-			g >= 16 && _ >= 16 && (e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x1, t.y0), o(t.x1, t.y0, t.x1, t.y1), a(cs(g), (t.x0 + t.x1) / 2, t.y0 + (t.y1 > t.y0 ? -12 : 12) * n, .8, .8), a(cs(_), t.x1 + (t.x1 > t.x0 ? 22 : -22) * n, (t.y0 + t.y1) / 2, .8, .8)), e.lineStyle(n * 5, 0, .55).lineBetween(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 2.5, 16761204, 1).lineBetween(t.x0, t.y0, t.x1, t.y1);
+			g >= 16 && _ >= 16 && (e.lineStyle(n * 1.5, 16777215, .35), o(t.x0, t.y0, t.x1, t.y0), o(t.x1, t.y0, t.x1, t.y1), a(ls(g), (t.x0 + t.x1) / 2, t.y0 + (t.y1 > t.y0 ? -12 : 12) * n, .8, .8), a(ls(_), t.x1 + (t.x1 > t.x0 ? 22 : -22) * n, (t.y0 + t.y1) / 2, .8, .8)), e.lineStyle(n * 5, 0, .55).lineBetween(t.x0, t.y0, t.x1, t.y1), e.lineStyle(n * 2.5, 16761204, 1).lineBetween(t.x0, t.y0, t.x1, t.y1);
 			let v = Math.floor(r / s);
 			for (let r = 1; r <= v; r++) {
 				let a = (r % 5 == 0 ? 8 : 5) * n, o = t.x0 + i * r * s, c = t.y0 + p * r * s;
 				e.lineStyle(n * 2, 16761204, 1).lineBetween(o - m * a, c - h * a, o + m * a, c + h * a);
 			}
 			for (let [r, i] of [[t.x0, t.y0], [t.x1, t.y1]]) e.fillStyle(0, .7).fillCircle(r, i, n * 5.5), e.fillStyle(16761204, 1).fillCircle(r, i, n * 3.5);
-			let { deg: y, cardinal: b } = us(t), x = h < 0 || h === 0 && m > 0 ? 1 : -1, S = 18 * n * x;
-			a(`${cs(r)}
+			let { deg: y, cardinal: b } = ds(t), x = h < 0 || h === 0 && m > 0 ? 1 : -1, S = 18 * n * x;
+			a(`${ls(r)}
 ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 		}
 		for (let e = i; e < this.rulerTexts.length; e++) this.rulerTexts[e].setVisible(!1);
@@ -48295,7 +48327,7 @@ ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 		let e = this.state.zone;
 		this.cameras.main.centerOn(e.width * 32 / 2, e.height * 32 / 2), this.afterView();
 	}
-}, Ds = 100, Os = class {
+}, Os = 100, ks = class {
 	zone;
 	tool = "brush";
 	terrain = "dirt";
@@ -48346,7 +48378,7 @@ ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 		Object.assign(this, e), e.tool && e.tool !== "select" && (this.selected = []), e.tool && e.tool !== "portal" && (this.selectedPortal = null), e.tool && e.tool !== "light" && (this.selectedLight = null), this.emit("ui");
 	}
 	checkpoint() {
-		this.undoStack.push(JSON.stringify(this.zone)), this.undoStack.length > Ds && this.undoStack.shift(), this.redoStack = [], this.dirty = !0;
+		this.undoStack.push(JSON.stringify(this.zone)), this.undoStack.length > Os && this.undoStack.shift(), this.redoStack = [], this.dirty = !0;
 	}
 	edited() {
 		this.dirty = !0, this.emit("edit");
@@ -48386,7 +48418,7 @@ ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 	zoneName(e) {
 		return e === this.zone.id ? this.zone.name : this.zones.find((t) => t.id === e)?.name ?? "(zona apagada)";
 	}
-}, ks = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}.vt-rulerbar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 90%, transparent);border:1px solid var(--vt-border-dim);border-radius:10px;align-items:center;gap:8px;max-width:calc(100% - 20px);padding:4px;animation:.22s cubic-bezier(.22,1,.36,1) backwards vt-rulerbar-in;display:flex;position:absolute;top:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-rulerbar[hidden],.vt-rulerbar-angles[hidden]{display:none}.vt-rulerbar .vt-segmented{flex-wrap:nowrap;padding:2px}.vt-rulerbar-btn{white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:5px 10px;display:inline-flex}.vt-rulerbar-ico{display:inline-flex}.vt-rulerbar-ico svg{width:15px;height:15px}.vt-rulerbar-angle-btn{font-variant-numeric:tabular-nums;padding:5px 8px}.vt-rulerbar-angles{align-items:center;animation:.2s cubic-bezier(.22,1,.36,1) backwards vt-rulerbar-in}.vt-rulerbar-lbl{color:var(--vt-text-2);padding:0 6px;font-size:11px}.vt-root.vt-testing .vt-rulerbar{display:none}@keyframes vt-rulerbar-in{0%{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%)}}@media (width<=720px){.vt-rulerbar{flex-direction:column;align-items:stretch;gap:4px}.vt-rulerbar-btn span:last-child{display:none}.vt-rulerbar-btn{padding:6px 12px}.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}.vt-npc{z-index:30;background:var(--vt-surface);border:1px solid var(--vt-border);-webkit-user-select:none;user-select:none;border-radius:10px;flex-direction:column;width:420px;max-width:calc(100% - 24px);max-height:calc(100% - 64px);display:flex;position:absolute;top:52px;left:12px;box-shadow:0 16px 40px #00000080}.vt-npc[hidden]{display:none}.vt-npc-head{border-bottom:1px solid var(--vt-border-dim);justify-content:space-between;align-items:center;padding:8px 10px;display:flex}.vt-npc-title{color:var(--vt-accent-bright);align-items:center;gap:8px;display:flex}.vt-npc-title svg{width:18px;height:18px}.vt-npc-body{flex-direction:column;gap:10px;padding:10px;display:flex;overflow-y:auto}.vt-npc-body h4{letter-spacing:.1em;text-transform:uppercase;color:var(--vt-muted);margin:4px 0 0;font-size:11px}.vt-npc-analysis{flex-direction:column;gap:4px;display:flex}.vt-npc-analysis b{color:var(--vt-text)}.vt-npc-analysis small{color:var(--vt-muted)}.vt-npc-analysis .vt-select{margin-top:4px}.vt-npc-actions{gap:6px;display:flex}.vt-npc-note{color:var(--vt-muted);margin:0}.vt-npc-note.vt-error{color:var(--vt-danger)}.vt-npc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;display:grid}.vt-npc-card>*{max-width:100%}.vt-npc-card{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);text-align:center;border-radius:8px;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;display:flex;position:relative}.vt-npc-thumb{width:96px;height:96px;image-rendering:pixelated}.vt-npc-reroll{width:26px;height:26px;padding:0;position:absolute;top:4px;right:4px}.vt-npc-reroll svg{width:14px;height:14px}.vt-npc-name{text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px;overflow:hidden}.vt-npc-card small{text-overflow:ellipsis;white-space:nowrap;max-width:100%;color:var(--vt-muted);overflow:hidden}.vt-npc-row{justify-content:center;gap:4px;width:100%;margin-top:4px;padding:0 2px;display:flex}.vt-npc-row .vt-btn{padding:4px 8px}.vt-npc-row .vt-primary{flex:auto;min-width:0}.vt-npc-list{flex-direction:column;gap:4px;display:flex}.vt-npc-item{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:6px;padding:3px 6px;display:flex}.vt-npc-item.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-npc-mini{width:36px;height:36px;image-rendering:pixelated;flex:none}.vt-npc-info{flex-direction:column;flex:auto;min-width:0;display:flex}.vt-npc-info b{text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.vt-npc-info small{color:var(--vt-muted)}.vt-npc-look{z-index:2000;position:fixed;inset:0}.vt-npc-look>.vt-root{position:absolute;inset:0}.vt-npc-specials h4{justify-content:space-between;align-items:center;display:flex}.vt-npc-specials-list{flex-direction:column;gap:6px;display:flex}", As = [
+}, As = ".vt-root{--vt-bg:var(--bg-base,#0b1326);--vt-surface:var(--bg-surface,#131b2e);--vt-elevated:var(--bg-elevated,#171f33);--vt-overlay:var(--bg-overlay,#222a3d);--vt-border:var(--border-base,#534434);--vt-border-dim:var(--border-dim,#53443459);--vt-text:var(--text-primary,#dae2fd);--vt-text-2:var(--text-secondary,#d8c3ad);--vt-muted:var(--text-muted,#a08e7a);--vt-accent:var(--accent,#f59e0b);--vt-accent-bright:var(--accent-bright,#ffc174);--vt-accent-glow:var(--accent-glow,#ffc17426);--vt-danger:#ef4444;--vt-font:var(--font-body,\"Hanken Grotesk\", system-ui, sans-serif);--vt-font-display:var(--font-display,\"EB Garamond\", Georgia, serif);background:var(--vt-bg);color:var(--vt-text);font-family:var(--vt-font);-webkit-user-select:none;user-select:none;grid-template:\"tools drawer stage\"1fr\"status status status\"26px/52px 0 1fr;font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.vt-root *{box-sizing:border-box}.vt-root.vt-drawer-open{grid-template-columns:52px 300px 1fr}.vt-root.vt-testing{grid-template-rows:1fr 0;grid-template-columns:0 0 1fr}.vt-root.vt-testing .vt-tools,.vt-root.vt-testing .vt-drawer,.vt-root.vt-testing .vt-quick,.vt-root.vt-testing .vt-status{display:none}.vt-top{background:var(--vt-surface);border-bottom:1px solid var(--vt-border);grid-area:top;align-items:center;gap:6px;padding:0 10px;display:flex}.vt-brand{font-family:var(--vt-font-display);color:var(--vt-accent-bright);letter-spacing:.5px;margin-right:8px;font-size:20px;font-weight:600}.vt-name{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:200px;color:var(--vt-text);font:inherit;border-radius:6px;padding:6px 8px}.vt-name:focus{border-color:var(--vt-accent);outline:none}.vt-sep{background:var(--vt-border-dim);width:1px;height:24px;margin:0 4px}.vt-spacer{flex:1}.vt-btn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);height:30px;color:var(--vt-text-2);font:inherit;cursor:pointer;white-space:nowrap;border-radius:6px;align-items:center;gap:6px;padding:0 10px;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.vt-btn:hover:not(:disabled){background:var(--vt-overlay);color:var(--vt-text);border-color:var(--vt-border)}.vt-btn:disabled{opacity:.4;cursor:default}.vt-btn.vt-primary{background:var(--vt-accent);border-color:var(--vt-accent);color:#2a1700;font-weight:600}.vt-btn.vt-primary:hover:not(:disabled){background:var(--vt-accent-bright);color:#2a1700}.vt-btn.vt-danger:hover:not(:disabled){border-color:var(--vt-danger);color:var(--vt-danger)}.vt-btn svg{flex:none;width:16px;height:16px}.vt-drawer{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:drawer;min-width:0;min-height:0;display:none}.vt-root.vt-drawer-open .vt-drawer{display:flex}.vt-drawer-head{border-bottom:1px solid var(--vt-border);flex-direction:column;gap:8px;padding:10px;display:flex}.vt-drawer-title{justify-content:space-between;align-items:center;display:flex}.vt-drawer-title .vt-brand{margin:0}.vt-drawer .vt-name{width:100%}.vt-drawer-actions{flex-wrap:wrap;gap:6px;display:flex}.vt-drawer-actions .vt-primary{margin-left:auto}.vt-icononly{padding:0 8px}.vt-quick{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:10px;gap:6px;padding:6px;display:flex;position:absolute;top:10px;left:10px}.vt-root.vt-drawer-open .vt-quick{display:none}.vt-tools{background:var(--vt-surface);border-right:1px solid var(--vt-border);flex-direction:column;grid-area:tools;align-items:center;gap:4px;padding:8px 0;display:flex}.vt-tool{width:38px;height:38px;color:var(--vt-text-2);cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;place-items:center;display:grid}.vt-tool svg{width:20px;height:20px}.vt-tool:hover{background:var(--vt-overlay);color:var(--vt-text)}.vt-tool.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-tools hr{border:0;border-top:1px solid var(--vt-border-dim);width:28px;margin:6px 0}.vt-size{color:var(--vt-muted);flex-direction:column;align-items:center;gap:2px;font-size:11px;display:flex}.vt-size b{color:var(--vt-text);font-size:14px}.vt-size button{justify-content:center;width:26px;height:20px;padding:0}.vt-stage{grid-area:stage;min-width:0;min-height:0;position:relative;overflow:hidden}.vt-stage canvas{display:block}.vt-panel{background:var(--vt-surface);flex-direction:column;flex:1;min-height:0;display:flex}.vt-tabs{border-bottom:1px solid var(--vt-border-dim);display:flex}.vt-tab{color:var(--vt-muted);font:inherit;cursor:pointer;background:0 0;border:0;border-bottom:2px solid #0000;flex:1;padding:10px 0;font-weight:600}.vt-tab.vt-on{color:var(--vt-accent-bright);border-bottom-color:var(--vt-accent)}.vt-pane{flex:1;min-height:0;padding:10px;overflow-y:auto}.vt-pane::-webkit-scrollbar{width:8px}.vt-pane::-webkit-scrollbar-thumb{background:var(--vt-border);border-radius:4px}.vt-group{margin-bottom:12px}.vt-group h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 6px;font-size:11px;font-weight:600}.vt-grid{gap:6px;display:grid}.vt-grid.vt-terrains{grid-template-columns:repeat(4,1fr)}.vt-grid.vt-objects{grid-template-columns:repeat(3,1fr)}.vt-cell{aspect-ratio:1;border:2px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;place-items:center;padding:0;display:grid;position:relative;overflow:hidden}.vt-cell canvas{image-rendering:pixelated;max-width:100%;max-height:100%}.vt-terrains .vt-cell canvas{width:100%;height:100%}.vt-cell:hover{border-color:var(--vt-border)}.vt-cell.vt-on{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow)}.vt-cell span{text-align:center;color:#fff;white-space:nowrap;text-overflow:ellipsis;background:#0009;padding:2px 3px;font-size:10px;line-height:1.2;position:absolute;bottom:0;left:0;right:0;overflow:hidden}.vt-search{background:var(--vt-bg);border:1px solid var(--vt-border-dim);width:100%;color:var(--vt-text);font:inherit;border-radius:6px;margin-bottom:8px;padding:7px 9px}.vt-search:focus{border-color:var(--vt-accent);outline:none}.vt-chips{flex-wrap:wrap;gap:4px;margin-bottom:10px;display:flex}.vt-chip{border:1px solid var(--vt-border-dim);color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border-radius:999px;padding:3px 8px;font-size:11px}.vt-chip.vt-on{background:var(--vt-accent-glow);border-color:var(--vt-accent);color:var(--vt-accent-bright)}.vt-empty{color:var(--vt-muted);text-align:center;padding:20px 0}.vt-cell .vt-badge{min-width:15px;color:var(--vt-accent-bright);text-align:center;background:#000000a6;border-radius:4px;padding:0 3px;font-size:10px;font-style:normal;line-height:15px;position:absolute;top:2px;right:2px}.vt-cell .vt-badge-anim{color:#fff;left:2px;right:auto}.vt-objhead{align-items:center;gap:10px;min-width:0;display:flex}.vt-objhead canvas{background:var(--vt-bg);image-rendering:pixelated;border-radius:6px;flex:none}.vt-objhead>div{gap:2px;min-width:0;display:grid}.vt-objhead b,.vt-objhead small{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-objhead small{color:var(--vt-muted);font-size:11px}.vt-variants{grid-template-columns:repeat(6,1fr);gap:4px;display:grid}.vt-variants[hidden]{display:none}.vt-variants canvas{width:100%;height:100%}.vt-objactions{flex-wrap:wrap}.vt-objheight b{text-align:center;min-width:40px;color:var(--vt-text)}.vt-objheight .vt-btn{padding:2px 8px}.vt-objactions .vt-btn{padding:4px 8px;font-size:12px}.vt-objactions .vt-btn svg{width:14px;height:14px}.vt-btn.vt-on{border-color:var(--vt-accent);color:var(--vt-accent-bright);background:var(--vt-accent-glow)}.vt-curate{grid-template-columns:auto minmax(0,1fr);align-items:start;gap:16px;display:grid}.vt-curate-art{justify-items:start;gap:8px;display:grid}.vt-curate-canvas{cursor:crosshair;max-width:min(420px,60vw);max-height:52vh;image-rendering:pixelated;touch-action:none;border-radius:6px}.vt-curate-modes{gap:4px;display:flex}.vt-curate-fields{gap:8px;min-width:0;display:grid}.vt-curate-fields .vt-row label{min-width:84px}.vt-curate-light{border-left:2px solid var(--vt-border-dim);gap:6px;padding-left:12px;display:grid}.vt-curate-light[hidden]{display:none}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:6px;display:flex}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);border-radius:6px;width:44px;height:28px;padding:0}@media (width<=720px){.vt-curate{grid-template-columns:minmax(0,1fr)}}.vt-zoneprops{border-top:1px solid var(--vt-border-dim);gap:8px;padding:10px;display:grid}.vt-row{align-items:center;gap:6px;display:flex}.vt-row label{color:var(--vt-muted);min-width:64px}.vt-input,.vt-select{background:var(--vt-bg);border:1px solid var(--vt-border-dim);min-width:0;color:var(--vt-text);font:inherit;border-radius:6px;flex:1;padding:5px 7px}.vt-input.vt-num{flex:none;width:56px}.vt-status{background:var(--vt-surface);border-top:1px solid var(--vt-border);color:var(--vt-muted);grid-area:status;align-items:center;gap:16px;padding:0 12px;font-size:12px;display:flex}.vt-status>*{white-space:nowrap;flex:none}.vt-status .vt-dirty{color:var(--vt-accent-bright)}.vt-status .vt-hint{text-overflow:ellipsis;text-align:right;flex:auto;min-width:0;margin-left:auto;overflow:hidden}.vt-testbar{border:1px solid var(--vt-border);z-index:5;color:var(--vt-text-2);background:#0b1326e0;border-radius:10px;align-items:center;gap:12px;padding:6px 6px 6px 14px;display:none;position:absolute;top:12px;left:50%;transform:translate(-50%)}.vt-root.vt-testing .vt-testbar{display:flex}.vt-testzone{color:var(--vt-accent-bright);font-family:var(--vt-font-display);font-size:16px}.vt-testbar kbd{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);border-radius:4px;padding:0 5px;font-size:11px}.vt-modal-bg{z-index:10;background:#0000008c;place-items:center;display:grid;position:absolute;inset:0}.vt-modal{background:var(--vt-elevated);border:1px solid var(--vt-border);border-radius:12px;flex-direction:column;width:min(440px,100% - 32px);max-height:calc(100% - 64px);display:flex;box-shadow:0 20px 60px #00000080}.vt-modal h3{font-family:var(--vt-font-display);color:var(--vt-accent-bright);border-bottom:1px solid var(--vt-border-dim);margin:0;padding:14px 16px;font-size:20px;font-weight:600}.vt-modal-body{grid-template-columns:minmax(0,1fr);gap:10px;padding:14px 16px;display:grid;overflow:hidden auto}.vt-modal-foot{border-top:1px solid var(--vt-border-dim);justify-content:flex-end;gap:8px;padding:12px 16px;display:flex}.vt-list{gap:6px;display:grid}.vt-item{background:var(--vt-surface);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:8px;padding:8px 10px;display:flex}.vt-item div{flex:1;min-width:0}.vt-item b{color:var(--vt-text);text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.vt-item small{color:var(--vt-muted)}.vt-toast{background:var(--vt-overlay);border:1px solid var(--vt-border);color:var(--vt-text);z-index:20;pointer-events:none;border-radius:8px;padding:8px 14px;animation:2.4s forwards vt-toast;position:absolute;bottom:40px;left:50%;transform:translate(-50%)}.vt-toast.vt-error{border-color:var(--vt-danger)}@keyframes vt-toast{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%)}to{opacity:0}}@media (width<=760px){.vt-root,.vt-root.vt-drawer-open{grid-template-columns:48px 0 1fr}.vt-root.vt-drawer-open .vt-drawer{z-index:20;width:min(320px,100% - 48px);position:absolute;top:0;bottom:26px;left:48px}.vt-quick .vt-label{display:none}}.vt-zoneprops[hidden]{display:none}.vt-portalprops{background:var(--vt-elevated)}.vt-subtitle{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-accent-bright);margin:0;font-size:11px;font-weight:600}.vt-note{color:var(--vt-muted);font-size:11px;line-height:1.4}.vt-modal.vt-modal-wide{width:min(1040px,100% - 32px)}.vt-world{border:1px solid var(--vt-border-dim);background-color:var(--vt-bg);background-image:radial-gradient(var(--vt-border-dim) 1px, transparent 1px);background-size:24px 24px;border-radius:8px;height:min(60vh,560px);position:relative;overflow:auto}.vt-world-inner{min-width:100%;min-height:100%;position:relative}.vt-world-links{pointer-events:none;color:var(--vt-accent);position:absolute;top:0;left:0}.vt-world-links line{stroke:currentColor;stroke-width:2px;opacity:.8}.vt-node{background:var(--vt-elevated);border:1px solid var(--vt-border);cursor:grab;touch-action:none;border-radius:10px;flex-direction:column;gap:2px;padding:8px 10px;display:flex;position:absolute;box-shadow:0 6px 18px #00000059}.vt-node.vt-dragging{cursor:grabbing;border-color:var(--vt-accent);z-index:2}.vt-node.vt-current{border-color:var(--vt-accent);box-shadow:0 0 0 2px var(--vt-accent-glow), 0 6px 18px #00000059}.vt-node-title{align-items:center;gap:4px;min-width:0;display:flex}.vt-node-title b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.vt-node small{color:var(--vt-muted)}.vt-star{color:var(--vt-accent-bright);display:inline-flex}.vt-star svg{fill:currentColor;width:14px;height:14px}.vt-node-actions{gap:4px;margin-top:auto;display:flex}.vt-node-actions .vt-btn{height:24px;padding:0 8px;font-size:12px}.vt-tag{height:24px;color:var(--vt-accent-bright);background:var(--vt-accent-glow);border-radius:6px;align-items:center;padding:0 8px;font-size:12px;display:inline-flex}.vt-link{color:var(--vt-accent-bright);font:inherit;cursor:pointer;background:0 0;border:0;flex:none;padding:0;text-decoration:underline}.vt-credits-intro{color:var(--vt-text-2);margin:0;line-height:1.5}.vt-credits{border:1px solid var(--vt-border-dim);background:var(--vt-surface);border-radius:8px}.vt-credits summary{cursor:pointer;color:var(--vt-text);padding:8px 12px;font-weight:600}.vt-credits-text{border-top:1px solid var(--vt-border-dim);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;color:var(--vt-text-2);margin:0;padding:10px 12px;font-size:11px;line-height:1.5;overflow:auto}.vt-zoombar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 88%, transparent);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:4px;padding:4px;display:flex;position:absolute;bottom:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-zoombar .vt-btn{justify-content:center;min-width:28px;padding:2px 8px}.vt-zoombar .vt-btn svg{width:14px;height:14px}.vt-zoom-range{width:120px;accent-color:var(--vt-accent);cursor:pointer}.vt-zoom-label{min-width:48px;color:var(--vt-text-2);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;background:0 0;border:0;padding:2px 4px;font-size:12px}.vt-zoom-label:hover{color:var(--vt-accent-bright)}.vt-root.vt-testing .vt-zoombar{display:none}.vt-rulerbar{z-index:5;background:color-mix(in srgb, var(--vt-surface) 90%, transparent);border:1px solid var(--vt-border-dim);border-radius:10px;align-items:center;gap:8px;max-width:calc(100% - 20px);padding:4px;animation:.22s cubic-bezier(.22,1,.36,1) backwards vt-rulerbar-in;display:flex;position:absolute;top:10px;left:50%;transform:translate(-50%);box-shadow:0 4px 14px #00000059}.vt-rulerbar[hidden],.vt-rulerbar-angles[hidden]{display:none}.vt-rulerbar .vt-segmented{flex-wrap:nowrap;padding:2px}.vt-rulerbar-btn{white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:5px 10px;display:inline-flex}.vt-rulerbar-ico{display:inline-flex}.vt-rulerbar-ico svg{width:15px;height:15px}.vt-rulerbar-angle-btn{font-variant-numeric:tabular-nums;padding:5px 8px}.vt-rulerbar-angles{align-items:center;animation:.2s cubic-bezier(.22,1,.36,1) backwards vt-rulerbar-in}.vt-rulerbar-lbl{color:var(--vt-text-2);padding:0 6px;font-size:11px}.vt-root.vt-testing .vt-rulerbar{display:none}@keyframes vt-rulerbar-in{0%{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%)}}@media (width<=720px){.vt-rulerbar{flex-direction:column;align-items:stretch;gap:4px}.vt-rulerbar-btn span:last-child{display:none}.vt-rulerbar-btn{padding:6px 12px}.vt-zoom-range{display:none}}.vt-keys-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;display:grid}.vt-keys h4{text-transform:uppercase;letter-spacing:.08em;color:var(--vt-muted);margin:0 0 8px;font-size:11px}.vt-keyrow{grid-template-columns:132px minmax(0,1fr);align-items:baseline;gap:10px;padding:3px 0;font-size:13px;display:grid}.vt-keyrow kbd{border:1px solid var(--vt-border);background:var(--vt-bg);color:var(--vt-accent-bright);white-space:nowrap;border-radius:4px;justify-self:start;padding:1px 6px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}.vt-keyrow span{color:var(--vt-text-2)}.vt-searchwrap{margin-bottom:8px;position:relative}.vt-searchwrap .vt-search{margin:0;padding-left:30px}.vt-search-icon{color:var(--vt-muted);pointer-events:none;display:flex;position:absolute;top:50%;left:9px;transform:translateY(-50%)}.vt-search-icon svg{width:15px;height:15px}.vt-acc-list{flex-direction:column;gap:3px;display:flex}.vt-acc{background:var(--vt-elevated);width:100%;color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border:1px solid #0000;border-radius:7px;align-items:center;gap:8px;padding:8px 10px;font-size:13px;display:flex}.vt-acc:hover{border-color:var(--vt-border-dim);background:var(--vt-overlay)}.vt-acc.vt-open{color:var(--vt-accent-bright);border-color:var(--vt-border-dim);background:var(--vt-accent-glow)}.vt-acc-chev{color:var(--vt-muted);transition:transform .15s;display:flex}.vt-acc-chev svg{width:14px;height:14px}.vt-acc.vt-open .vt-acc-chev{color:var(--vt-accent-bright);transform:rotate(90deg)}.vt-acc-icon{color:var(--vt-accent);display:flex}.vt-acc-icon svg{width:15px;height:15px}.vt-acc-title{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600;overflow:hidden}.vt-acc-count{color:var(--vt-muted);font-variant-numeric:tabular-nums;font-size:11px}.vt-acc-body{padding:6px 2px 10px}.vt-acc-body .vt-grid.vt-objects{grid-template-columns:repeat(4,1fr)}.vt-subgroup+.vt-subgroup{margin-top:10px}.vt-subgroup h5{color:var(--vt-muted);text-transform:capitalize;margin:0 0 5px;font-size:11px;font-weight:600}.vt-presets{gap:4px;display:grid}.vt-preset{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;font-size:13px;display:flex}.vt-preset:hover{border-color:var(--vt-border)}.vt-preset.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-preset-sw{flex:none;display:flex}.vt-preset-sw canvas{width:22px;height:22px;image-rendering:pixelated;border:1px solid #0006;border-radius:4px}.vt-preset-sw canvas+canvas{margin-left:-6px}.vt-styleparts{gap:4px;margin-bottom:10px;display:grid}.vt-stylepart{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:10px;padding:6px 8px;display:flex}.vt-stylepart:hover{border-color:var(--vt-accent)}.vt-stylepart>span:nth-child(2){flex:1;min-width:0;display:grid}.vt-stylepart small{color:var(--vt-muted);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.vt-stylepart-chev{color:var(--vt-muted);display:flex}.vt-stylepart-chev svg{width:14px;height:14px}.vt-swatch{width:32px;height:32px;image-rendering:pixelated;border:1px solid #0006;border-radius:5px;flex:none}.vt-heightrow .vt-range{accent-color:var(--vt-accent);flex:1}.vt-heightrow label{flex:none;min-width:0}.vt-roomhelp ul{color:var(--vt-text-2);margin:0;padding-left:18px;font-size:12px;line-height:1.6}.vt-roomhelp b{color:var(--vt-text)}.vt-picker{max-height:60vh;padding-right:4px;overflow-y:auto}.vt-segmented{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;gap:2px;padding:3px;display:flex}.vt-seg{color:var(--vt-text-2);font:inherit;cursor:pointer;background:0 0;border:0;border-radius:6px;flex:1;padding:6px 4px;font-size:12px;font-weight:600}.vt-seg:hover{color:var(--vt-text);background:var(--vt-overlay)}.vt-seg.vt-on{background:var(--vt-accent);color:#2a1700}.vt-modehelp{margin-top:6px;display:block}.vt-climates{grid-template-columns:1fr 1fr;gap:4px;display:grid}.vt-climate{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text);font:inherit;text-align:left;cursor:pointer;border-radius:7px;align-items:center;gap:8px;padding:5px 7px;font-size:12px;display:flex}.vt-climate:hover{border-color:var(--vt-border)}.vt-climate.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-climate-sw{border:1px solid #00000080;border-radius:50%;flex:none;width:18px;height:18px;box-shadow:inset 0 0 0 1px #ffffff1f}.vt-hourrow{margin-top:8px}.vt-hourrow .vt-range,.vt-lightrow .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-hourout{font-variant-numeric:tabular-nums;min-width:62px;color:var(--vt-accent-bright);align-items:center;gap:4px;display:flex}.vt-hourout svg,.vt-testclock svg{width:14px;height:14px}.vt-sublabel{color:var(--vt-muted);margin-top:8px;font-size:11px;display:block}.vt-group>.vt-row+.vt-sublabel{margin-top:10px}.vt-group>.vt-segmented+.vt-row{margin-top:8px}.vt-checks{gap:6px;display:grid}.vt-check{color:var(--vt-text-2);cursor:pointer;align-items:center;gap:8px;font-size:12px;display:flex}.vt-check input{accent-color:var(--vt-accent);margin:0}.vt-lightrow label{flex:none;min-width:56px}.vt-lightrow b{text-align:right;min-width:52px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600}.vt-lightcolors{flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 6px;display:flex}.vt-lightcolor{cursor:pointer;border:2px solid var(--vt-bg);background:radial-gradient(circle at 50% 45%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);width:22px;height:22px;box-shadow:0 0 0 1px var(--vt-border-dim);border-radius:50%;padding:0}.vt-lightcolor:hover{box-shadow:0 0 0 1px var(--vt-border), 0 0 10px var(--c)}.vt-lightcolor.vt-on{box-shadow:0 0 0 2px var(--vt-accent), 0 0 12px var(--c)}.vt-color{border:1px solid var(--vt-border-dim);background:var(--vt-bg);cursor:pointer;border-radius:6px;width:30px;height:24px;padding:0 2px}.vt-testclock{color:var(--vt-text-2);font-variant-numeric:tabular-nums;align-items:center;gap:4px;display:inline-flex}.vt-testclock:empty{display:none}.vt-weathers{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-weather{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:7px;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 6px;font-size:11px;display:flex}.vt-weather svg{width:18px;height:18px}.vt-weather:hover{border-color:var(--vt-border);color:var(--vt-text)}.vt-weather.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow);color:var(--vt-accent-bright)}.vt-soundbar{background:var(--vt-bg);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:10px;padding:8px 10px;display:flex}.vt-soundbar .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-switchrow{color:var(--vt-text-2);cursor:pointer;-webkit-user-select:none;user-select:none;align-items:center;gap:7px;font-size:12px;font-weight:600;display:inline-flex}.vt-switch{appearance:none;background:var(--vt-border-dim);cursor:pointer;border-radius:999px;flex:none;width:30px;height:17px;margin:0;transition:background .15s;position:relative}.vt-switch:after{content:\"\";background:var(--vt-text-2);border-radius:50%;width:13px;height:13px;transition:transform .15s,background .15s;position:absolute;top:2px;left:2px}.vt-switch:checked{background:var(--vt-accent)}.vt-switch:checked:after{background:#2a1700;transform:translate(13px)}.vt-iconbtn{border:1px solid var(--vt-border-dim);background:var(--vt-elevated);width:28px;height:28px;color:var(--vt-text-2);cursor:pointer;border-radius:7px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.vt-iconbtn:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-iconbtn.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent)}.vt-iconbtn svg{width:15px;height:15px}.vt-grouphead{justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;display:flex}.vt-grouphead h4{margin:0}.vt-grouphead .vt-range{width:120px;accent-color:var(--vt-accent)}.vt-soundtiles{grid-template-columns:repeat(3,1fr);gap:4px;display:grid}.vt-soundtile{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-muted);font:inherit;cursor:pointer;border-radius:8px;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px;font-size:11px;display:flex;position:relative;overflow:hidden}.vt-soundtile:hover{color:var(--vt-text);border-color:var(--vt-border)}.vt-soundtile.vt-on{color:var(--vt-accent-bright);border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-soundtile.vt-picked{box-shadow:0 0 0 1px var(--vt-accent-bright) inset}.vt-soundtile-icon{display:flex}.vt-soundtile-icon svg{width:18px;height:18px}.vt-soundtile-meter{background:var(--vt-accent);width:0;height:2px;transition:width .2s;position:absolute;bottom:0;left:0}.vt-soundpick{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);color:var(--vt-accent-bright);border-radius:8px;align-items:center;gap:8px;margin-top:8px;padding:7px 9px;display:flex}.vt-soundpick label{color:var(--vt-text);min-width:64px;font-size:12px;font-weight:600}.vt-soundpick .vt-range{min-width:0;accent-color:var(--vt-accent);flex:1}.vt-soundpick b{text-align:right;min-width:34px;color:var(--vt-text-2);font-variant-numeric:tabular-nums;font-size:11px}.vt-chips{flex-wrap:wrap;gap:4px;display:flex}.vt-chipbtn{border:1px solid var(--vt-border-dim);background:var(--vt-bg);color:var(--vt-text-2);font:inherit;cursor:pointer;border-radius:999px;padding:4px 9px;font-size:11px}.vt-chipbtn:hover{border-color:var(--vt-accent);color:var(--vt-text)}.vt-mutebtn svg{width:16px;height:16px}.vt-tab{min-width:0;padding-left:2px;padding-right:2px}.vt-npc{z-index:30;background:var(--vt-surface);border:1px solid var(--vt-border);-webkit-user-select:none;user-select:none;border-radius:10px;flex-direction:column;width:420px;max-width:calc(100% - 24px);max-height:calc(100% - 64px);display:flex;position:absolute;top:52px;left:12px;box-shadow:0 16px 40px #00000080}.vt-npc[hidden]{display:none}.vt-npc-head{border-bottom:1px solid var(--vt-border-dim);justify-content:space-between;align-items:center;padding:8px 10px;display:flex}.vt-npc-title{color:var(--vt-accent-bright);align-items:center;gap:8px;display:flex}.vt-npc-title svg{width:18px;height:18px}.vt-npc-body{flex-direction:column;gap:10px;padding:10px;display:flex;overflow-y:auto}.vt-npc-body h4{letter-spacing:.1em;text-transform:uppercase;color:var(--vt-muted);margin:4px 0 0;font-size:11px}.vt-npc-analysis{flex-direction:column;gap:4px;display:flex}.vt-npc-analysis b{color:var(--vt-text)}.vt-npc-analysis small{color:var(--vt-muted)}.vt-npc-analysis .vt-select{margin-top:4px}.vt-npc-actions{gap:6px;display:flex}.vt-npc-note{color:var(--vt-muted);margin:0}.vt-npc-note.vt-error{color:var(--vt-danger)}.vt-npc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;display:grid}.vt-npc-card>*{max-width:100%}.vt-npc-card{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);text-align:center;border-radius:8px;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;display:flex;position:relative}.vt-npc-thumb{width:96px;height:96px;image-rendering:pixelated}.vt-npc-reroll{width:26px;height:26px;padding:0;position:absolute;top:4px;right:4px}.vt-npc-reroll svg{width:14px;height:14px}.vt-npc-name{text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:12px;overflow:hidden}.vt-npc-card small{text-overflow:ellipsis;white-space:nowrap;max-width:100%;color:var(--vt-muted);overflow:hidden}.vt-npc-row{justify-content:center;gap:4px;width:100%;margin-top:4px;padding:0 2px;display:flex}.vt-npc-row .vt-btn{padding:4px 8px}.vt-npc-row .vt-primary{flex:auto;min-width:0}.vt-npc-list{flex-direction:column;gap:4px;display:flex}.vt-npc-item{background:var(--vt-elevated);border:1px solid var(--vt-border-dim);border-radius:8px;align-items:center;gap:6px;padding:3px 6px;display:flex}.vt-npc-item.vt-on{border-color:var(--vt-accent);background:var(--vt-accent-glow)}.vt-npc-mini{width:36px;height:36px;image-rendering:pixelated;flex:none}.vt-npc-info{flex-direction:column;flex:auto;min-width:0;display:flex}.vt-npc-info b{text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.vt-npc-info small{color:var(--vt-muted)}.vt-npc-look{z-index:2000;position:fixed;inset:0}.vt-npc-look>.vt-root{position:absolute;inset:0}.vt-npc-specials h4{justify-content:space-between;align-items:center;display:flex}.vt-npc-specials-list{flex-direction:column;gap:6px;display:flex}", js = [
 	{
 		title: "Personagens",
 		file: "credits/CREDITS-character.md"
@@ -48400,7 +48432,7 @@ ${b} ${Math.round(y)}°`, (t.x0 + t.x1) / 2 + m * S, (t.y0 + t.y1) / 2 + h * S);
 		file: "credits/CREDITS-audio.txt"
 	}
 ];
-function js(e) {
+function Ms(e) {
 	let t = q("p", { class: "vt-credits-intro" }, "A arte do Vortable vem do projeto Liberated Pixel Cup (LPC) e de artistas que a publicaram com licenças livres ", "(CC-BY-SA 3.0, GPL 3.0, OGA-BY e outras indicadas abaixo). Obrigado a todos."), n = ({ title: t, file: n }) => {
 		let r = q("pre", { class: "vt-credits-text" }, pt(e, !0));
 		return fetch(e + n).then((e) => e.ok ? e.text() : Promise.reject(Error(String(e.status)))).then((e) => {
@@ -48414,7 +48446,7 @@ function js(e) {
 	})));
 	return Ke().packs.length ? i(Ke().packs) : fetch(e + Re).then((e) => e.ok ? e.json() : Promise.reject(Error(String(e.status)))).then((e) => i(e.packs ?? [])).catch(() => r.append(q("p", { class: "vt-credits-intro" }, "Não deu pra carregar a lista de pacotes de objetos."))), [
 		t,
-		...As.map(n),
+		...js.map(n),
 		r
 	];
 }
@@ -48483,7 +48515,7 @@ var Y = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	download: Y("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M12 15V3\"/>"),
 	upload: Y("<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M12 3v12\"/>"),
 	trash: Y("<path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/>")
-}, Ms = {
+}, Ns = {
 	biblioteca: "Biblioteca / palácio",
 	taverna: "Taverna",
 	vila: "Vila",
@@ -48494,7 +48526,7 @@ var Y = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	masmorra: "Masmorra / caverna",
 	neve: "Terras geladas",
 	geral: "Lugar comum"
-}, Ns = (e) => e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), Ps = [
+}, Ps = (e) => e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), Fs = [
 	["biblioteca", /bibliotec|palaci|castelo|torre|arquivo|salao|trono|nobre|templo|igreja|catedral|academia|universidade|estudo/],
 	["taverna", /taverna|estalagem|bar\b|pousada|hospedaria|cantina|salao de festas/],
 	["mercado", /mercado|feira|bazar|loja|praca|comercio|porto/],
@@ -48504,7 +48536,7 @@ var Y = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 	["masmorra", /masmorra|calabouco|caverna|gruta|prisao|cela|esgoto|mina|subterraneo/],
 	["neve", /neve|gelo|geleira|tundra|montanha|nevasca|glacial/],
 	["vila", /vila|aldeia|povoado|cidade|vilarejo|rua|casa|ferraria|padaria/]
-], Fs = [
+], Is = [
 	[
 		"biblioteca",
 		/estante|livro|pergaminho|biblioteca|globo|candelabro|estatua|vitral|lareira|tapete|trono|relogio de pendulo|organ/,
@@ -48551,7 +48583,7 @@ var Y = (e) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 		.5
 	]
 ];
-function Is(e) {
+function Ls(e) {
 	let t = {
 		biblioteca: 0,
 		taverna: 0,
@@ -48565,15 +48597,15 @@ function Is(e) {
 		geral: .4
 	}, n = /* @__PURE__ */ new Map(), r = (e, r, i) => {
 		t[e] += r, i && (n.get(e) ?? n.set(e, /* @__PURE__ */ new Set()).get(e)).add(i);
-	}, i = Ns(e.name);
-	for (let [e, t] of Ps) t.test(i) && r(e, 6, "o nome da zona");
+	}, i = Ps(e.name);
+	for (let [e, t] of Fs) t.test(i) && r(e, 6, "o nome da zona");
 	let a = e.lighting?.place ?? "outdoor", o = a === "indoor" || (e.rooms?.some((e) => e) ?? !1);
 	a === "underground" && r("masmorra", 4, "ambiente subterrâneo");
 	let s = /* @__PURE__ */ new Map();
 	for (let t of e.corners) s.set(t || e.base, (s.get(t || e.base) ?? 0) + 1);
 	let c = e.corners.length || 1, l = 0, u = 0, d = 0, f = 0, p = 0;
 	for (let [e, t] of s) {
-		let n = v.get(e), r = Ns(`${n?.category ?? ""} ${n?.label ?? ""} ${e}`);
+		let n = v.get(e), r = Ps(`${n?.category ?? ""} ${n?.label ?? ""} ${e}`);
 		/grama|grass/.test(r) && (l += t), /neve|snow/.test(r) && (u += t), /agua|water|pantano|swamp/.test(r) && (d += t), /pedra|cascalho|gravel|cobble|calcamento/.test(r) && (f += t), /fazenda|arada|trigo/.test(r) && (p += t);
 	}
 	u / c > .25 && r("neve", 5, "neve no chão"), l / c > .4 && !o && (r("floresta", 1.5, "muita grama"), r("vila", .5), r("fazenda", .5)), d / c > .2 && r("floresta", 1), f / c > .3 && !o && (r("vila", 1.2, "ruas de pedra"), r("mercado", .6)), p / c > .03 && r("fazenda", 4, "terra arada e plantações"), o && (r("biblioteca", .8), r("taverna", .8), r("vila", .3));
@@ -48592,8 +48624,8 @@ function Is(e) {
 	for (let t of e.objects) {
 		let e = qe(t.kind);
 		if (!e) continue;
-		let n = Ns(`${e.label} ${e.category} ${e.tags.join(" ")}`);
-		for (let [e, t, r] of Fs) t.test(n) && (m[e] += r);
+		let n = Ps(`${e.label} ${e.category} ${e.tags.join(" ")}`);
+		for (let [e, t, r] of Is) t.test(n) && (m[e] += r);
 	}
 	let h = {
 		biblioteca: "estantes, livros e mobília fina",
@@ -48615,14 +48647,14 @@ function Is(e) {
 	for (let e of Object.keys(t)) t[e] > t[g] && (g = e);
 	return {
 		profile: g,
-		label: Ms[g],
+		label: Ns[g],
 		reasons: [...n.get(g) ?? []].slice(0, 3),
 		scores: t
 	};
 }
 //#endregion
 //#region src/engine/npc/profiles.ts
-var Ls = [
+var Rs = [
 	"gray",
 	"slate",
 	"bluegray",
@@ -48634,7 +48666,7 @@ var Ls = [
 	"charcoal",
 	"leather",
 	"steel_blue"
-], Rs = [
+], zs = [
 	"maroon",
 	"purple",
 	"navy",
@@ -48645,7 +48677,7 @@ var Ls = [
 	"oxblood",
 	"steel_blue",
 	"rose"
-], zs = [
+], Bs = [
 	"brown",
 	"tan",
 	"walnut",
@@ -48656,7 +48688,7 @@ var Ls = [
 	"yellow",
 	"espresso",
 	"orange"
-], Bs = [
+], Vs = [
 	"white",
 	"pale_gray",
 	"sky",
@@ -48671,7 +48703,7 @@ var Ls = [
 	"navy",
 	"oxblood",
 	"gray"
-], Vs = [
+], Hs = [
 	"red",
 	"orange",
 	"yellow",
@@ -48680,12 +48712,12 @@ var Ls = [
 	"brown",
 	"forest",
 	"teal"
-], Hs = [
+], Us = [
 	"gray",
 	"charcoal",
 	"slate",
 	"white"
-], Us = [
+], Ws = [
 	"maroon",
 	"navy",
 	"forest",
@@ -48697,13 +48729,13 @@ var Ls = [
 	re: e,
 	colors: t,
 	chance: n
-}), Ws = /shirts\/longsleeve\//, Gs = /torso_clothes_blouse/, Ks = /shirts\/shortsleeve\//, qs = /shirts\/sleeveless\//, Js = /torso_clothes_(robe|tunic)\b/, Ys = /torso_clothes_(vest|corset)/, Xs = /jacket_(frock|collared)/, Zs = /jacket_tabard/, Qs = /legs\/pants\/legs_(pants|pants2|formal|cuffed|pantaloons)/, $ = /legs\/pants\/legs_(pants|pants2|cuffed)/, $s = /skirts\/legs_(skirts_plain|skirt_straight|skirt_belle)/, ec = /feet\/shoes\/feet_shoes_(basic|revised|ghillies)/, tc = /feet\/boots\/feet_boots_(basic|revised|rim|fold)/, nc = /hat_formal_(tophat|bowler)/, rc = /hat_cap_(leather|bonnie)/, ic = /hat_hood_cloth/, ac = /hat_helmet_(legion|kettle|nasal|norman|morion|spangenhelm|flattop)/, oc = /neck_(cravat|jabot|bowtie|bowtie2|necktie)/, sc = /neck_scarf/, cc = /belt_(leather|double|loose|leather2)/, lc = /torso_aprons_apron(_full|_half)?$/, uc = /cape_solid/, dc = /facial_glasses(_halfmoon|_round|_secretary|_nerd)?$/, fc = /arms_gloves/, pc = /torso_aprons_(overalls|suspenders)/, mc = /armour\/torso_armour_(leather|legion|plate)|torso_chainmail/, hc = /torso_armour_leather/, gc = {
+}), Gs = /shirts\/longsleeve\//, Ks = /torso_clothes_blouse/, qs = /shirts\/shortsleeve\//, Js = /shirts\/sleeveless\//, Ys = /torso_clothes_(robe|tunic)\b/, Xs = /torso_clothes_(vest|corset)/, Zs = /jacket_(frock|collared)/, Qs = /jacket_tabard/, $s = /legs\/pants\/legs_(pants|pants2|formal|cuffed|pantaloons)/, $ = /legs\/pants\/legs_(pants|pants2|cuffed)/, ec = /skirts\/legs_(skirts_plain|skirt_straight|skirt_belle)/, tc = /feet\/shoes\/feet_shoes_(basic|revised|ghillies)/, nc = /feet\/boots\/feet_boots_(basic|revised|rim|fold)/, rc = /hat_formal_(tophat|bowler)/, ic = /hat_cap_(leather|bonnie)/, ac = /hat_hood_cloth/, oc = /hat_helmet_(legion|kettle|nasal|norman|morion|spangenhelm|flattop)/, sc = /neck_(cravat|jabot|bowtie|bowtie2|necktie)/, cc = /neck_scarf/, lc = /belt_(leather|double|loose|leather2)/, uc = /torso_aprons_apron(_full|_half)?$/, dc = /cape_solid/, fc = /facial_glasses(_halfmoon|_round|_secretary|_nerd)?$/, pc = /arms_gloves/, mc = /torso_aprons_(overalls|suspenders)/, hc = /armour\/torso_armour_(leather|legion|plate)|torso_chainmail/, gc = /torso_armour_leather/, _c = {
 	biblioteca: [
 		{
 			label: ["Bibliotecário", "Bibliotecária"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"navy",
 					"slate",
 					"bluegray",
@@ -48711,29 +48743,29 @@ var Ls = [
 					"forest",
 					"maroon",
 					"white"
-				]), Q(Gs, [
+				]), Q(Ks, [
 					"navy",
 					"slate",
 					"white",
 					"forest",
 					"maroon"
 				])],
-				vest: [Q(Ys, [
+				vest: [Q(Xs, [
 					"black",
 					"navy",
 					"maroon",
 					"forest",
 					"gray"
 				], .45)],
-				legs: [Q(Qs, Z), Q($s, Z, .5)],
-				shoes: [Q(ec, Z)],
-				neck: [Q(oc, [
+				legs: [Q($s, Z), Q(ec, Z, .5)],
+				shoes: [Q(tc, Z)],
+				neck: [Q(sc, [
 					"midnight",
 					"steel_blue",
 					"white",
 					"maroon"
 				], .6)],
-				facial: [Q(dc, void 0, .55)],
+				facial: [Q(fc, void 0, .55)],
 				hair: "neat",
 				beard: .2
 			}
@@ -48743,18 +48775,18 @@ var Ls = [
 			weight: 3,
 			outfit: {
 				clothes: [
-					Q(Js, zs.slice(0, 6)),
-					Q(Ws, Ls),
-					Q(Gs, Ls)
+					Q(Ys, Bs.slice(0, 6)),
+					Q(Gs, Rs),
+					Q(Ks, Rs)
 				],
-				belt: [Q(cc, [
+				belt: [Q(lc, [
 					"brown",
 					"leather",
 					"walnut"
 				], .5)],
-				legs: [Q($, Z), Q($s, Z, .4)],
-				shoes: [Q(ec, Z), Q(tc, ["brown", "espresso"])],
-				facial: [Q(dc, void 0, .35)],
+				legs: [Q($, Z), Q(ec, Z, .4)],
+				shoes: [Q(tc, Z), Q(nc, ["brown", "espresso"])],
+				facial: [Q(fc, void 0, .35)],
 				hair: "rustic",
 				beard: .25
 			}
@@ -48763,22 +48795,22 @@ var Ls = [
 			label: ["Nobre", "Nobre"],
 			weight: 2,
 			outfit: {
-				jacket: [Q(Xs, Rs, .9)],
-				dress: [Q(/dress_(sash|slit)/, Rs, .7)],
-				clothes: [Q(Ws, Bs), Q(Gs, Bs)],
-				neck: [Q(oc, [
+				jacket: [Q(Zs, zs, .9)],
+				dress: [Q(/dress_(sash|slit)/, zs, .7)],
+				clothes: [Q(Gs, Vs), Q(Ks, Vs)],
+				neck: [Q(sc, [
 					"white",
 					"maroon",
 					"steel_blue"
 				], .7)],
-				legs: [Q(Qs, Z)],
-				shoes: [Q(tc, [
+				legs: [Q($s, Z)],
+				shoes: [Q(nc, [
 					"black",
 					"espresso",
 					"brown"
-				]), Q(ec, Z)],
-				hat: [Q(nc, Z, .22)],
-				gloves: [Q(fc, ["white", "black"], .2)],
+				]), Q(tc, Z)],
+				hat: [Q(rc, Z, .22)],
+				gloves: [Q(pc, ["white", "black"], .2)],
 				hair: "neat",
 				beard: .3
 			}
@@ -48787,9 +48819,9 @@ var Ls = [
 			label: ["Guarda do palácio", "Guarda do palácio"],
 			weight: 2,
 			outfit: {
-				armour: [Q(mc, Hs)],
-				hat: [Q(ac, Hs)],
-				cape: [Q(uc, [
+				armour: [Q(hc, Us)],
+				hat: [Q(oc, Us)],
+				cape: [Q(dc, [
 					"maroon",
 					"navy",
 					"black"
@@ -48800,8 +48832,8 @@ var Ls = [
 					"black",
 					"navy"
 				])],
-				shoes: [Q(tc, ["black", "espresso"])],
-				gloves: [Q(fc, ["black", "gray"], .5)],
+				shoes: [Q(nc, ["black", "espresso"])],
+				gloves: [Q(pc, ["black", "gray"], .5)],
 				hair: "short",
 				beard: .3
 			}
@@ -48810,8 +48842,8 @@ var Ls = [
 			label: ["Criado", "Criada"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Gs, Bs), Q(Ws, Bs)],
-				apron: [Q(lc, [
+				clothes: [Q(Ks, Vs), Q(Gs, Vs)],
+				apron: [Q(uc, [
 					"white",
 					"pale_gray",
 					"tan"
@@ -48820,12 +48852,12 @@ var Ls = [
 					"charcoal",
 					"brown",
 					"black"
-				]), Q($s, [
+				]), Q(ec, [
 					"charcoal",
 					"brown",
 					"black"
 				], .6)],
-				shoes: [Q(ec, Z)],
+				shoes: [Q(tc, Z)],
 				hair: "neat"
 			}
 		}
@@ -48835,22 +48867,22 @@ var Ls = [
 			label: ["Taverneiro", "Taverneira"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ks, [
+				clothes: [Q(qs, [
 					"tan",
 					"white",
 					"brown"
-				]), Q(Ws, [
+				]), Q(Gs, [
 					"tan",
 					"white",
 					"brown"
 				])],
-				apron: [Q(lc, [
+				apron: [Q(uc, [
 					"white",
 					"tan",
 					"brown"
 				])],
 				legs: [Q($, Z)],
-				shoes: [Q(ec, Z)],
+				shoes: [Q(tc, Z)],
 				hair: "rustic",
 				beard: .5
 			}
@@ -48860,14 +48892,14 @@ var Ls = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Q(Ws, Vs),
-					Q(Ks, Vs),
-					Q(Gs, Vs)
+					Q(Gs, Hs),
+					Q(qs, Hs),
+					Q(Ks, Hs)
 				],
-				vest: [Q(Ys, zs, .3)],
-				legs: [Q($, Z), Q($s, Z, .3)],
-				shoes: [Q(ec, Z), Q(tc, ["brown", "espresso"])],
-				hat: [Q(rc, zs, .2)],
+				vest: [Q(Xs, Bs, .3)],
+				legs: [Q($, Z), Q(ec, Z, .3)],
+				shoes: [Q(tc, Z), Q(nc, ["brown", "espresso"])],
+				hat: [Q(ic, Bs, .2)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -48876,26 +48908,26 @@ var Ls = [
 			label: ["Bardo", "Bardo"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Gs, [
+				clothes: [Q(Ks, [
 					"red",
 					"teal",
 					"purple",
 					"yellow",
 					"white"
-				]), Q(Ws, [
+				]), Q(Gs, [
 					"red",
 					"teal",
 					"purple",
 					"orange"
 				])],
-				vest: [Q(Ys, Rs, .7)],
-				legs: [Q(Qs, Z)],
-				shoes: [Q(tc, [
+				vest: [Q(Xs, zs, .7)],
+				legs: [Q($s, Z)],
+				shoes: [Q(nc, [
 					"brown",
 					"espresso",
 					"black"
 				])],
-				hat: [Q(rc, [
+				hat: [Q(ic, [
 					"red",
 					"green",
 					"teal",
@@ -48909,14 +48941,14 @@ var Ls = [
 			label: ["Garçom", "Garçonete"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Gs, ["white", "pale_gray"]), Q(Ws, ["white", "pale_gray"])],
-				apron: [Q(lc, [
+				clothes: [Q(Ks, ["white", "pale_gray"]), Q(Gs, ["white", "pale_gray"])],
+				apron: [Q(uc, [
 					"white",
 					"black",
 					"charcoal"
 				])],
-				legs: [Q($, ["black", "charcoal"]), Q($s, ["black", "charcoal"], .6)],
-				shoes: [Q(ec, Z)],
+				legs: [Q($, ["black", "charcoal"]), Q(ec, ["black", "charcoal"], .6)],
+				shoes: [Q(tc, Z)],
 				hair: "neat"
 			}
 		},
@@ -48924,11 +48956,11 @@ var Ls = [
 			label: ["Viajante", "Viajante"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ws, zs), Q(Ks, zs)],
-				cape: [Q(uc, Us, .7)],
-				hat: [Q(ic, Us, .3)],
+				clothes: [Q(Gs, Bs), Q(qs, Bs)],
+				cape: [Q(dc, Ws, .7)],
+				hat: [Q(ac, Ws, .3)],
 				legs: [Q($, Z)],
-				shoes: [Q(tc, ["brown", "espresso"])],
+				shoes: [Q(nc, ["brown", "espresso"])],
 				backpack: [Q(/backpack\/backpack$/, void 0, .6)],
 				hair: "rustic",
 				beard: .4
@@ -48941,18 +48973,18 @@ var Ls = [
 			weight: 3,
 			outfit: {
 				clothes: [
-					Q(Ws, zs),
-					Q(Ks, zs),
-					Q(Gs, zs)
+					Q(Gs, Bs),
+					Q(qs, Bs),
+					Q(Ks, Bs)
 				],
-				apron: [Q(pc, [
+				apron: [Q(mc, [
 					"brown",
 					"tan",
 					"forest"
 				], .3)],
-				legs: [Q($, Z), Q($s, zs, .45)],
-				shoes: [Q(ec, ["brown", "espresso"]), Q(tc, ["brown"])],
-				hat: [Q(rc, zs, .3)],
+				legs: [Q($, Z), Q(ec, Bs, .45)],
+				shoes: [Q(tc, ["brown", "espresso"]), Q(nc, ["brown"])],
+				hat: [Q(ic, Bs, .3)],
 				hair: "rustic",
 				beard: .35
 			}
@@ -48961,19 +48993,19 @@ var Ls = [
 			label: ["Ferreiro", "Ferreira"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(qs, Z), Q(Ks, Z)],
-				apron: [Q(lc, [
+				clothes: [Q(Js, Z), Q(qs, Z)],
+				apron: [Q(uc, [
 					"leather",
 					"brown",
 					"charcoal"
 				])],
-				gloves: [Q(fc, ["black", "brown"], .7)],
+				gloves: [Q(pc, ["black", "brown"], .7)],
 				legs: [Q($, [
 					"charcoal",
 					"brown",
 					"black"
 				])],
-				shoes: [Q(tc, ["black", "espresso"])],
+				shoes: [Q(nc, ["black", "espresso"])],
 				hair: "short",
 				beard: .55
 			}
@@ -48982,14 +49014,14 @@ var Ls = [
 			label: ["Padeiro", "Padeira"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ks, Bs), Q(Gs, Bs)],
-				apron: [Q(lc, ["white", "pale_gray"])],
+				clothes: [Q(qs, Vs), Q(Ks, Vs)],
+				apron: [Q(uc, ["white", "pale_gray"])],
 				legs: [Q($, [
 					"tan",
 					"gray",
 					"brown"
-				]), Q($s, ["tan", "gray"], .5)],
-				shoes: [Q(ec, ["brown", "espresso"])],
+				]), Q(ec, ["tan", "gray"], .5)],
+				shoes: [Q(tc, ["brown", "espresso"])],
 				hair: "neat",
 				beard: .2
 			}
@@ -48998,23 +49030,23 @@ var Ls = [
 			label: ["Guarda da vila", "Guarda da vila"],
 			weight: 2,
 			outfit: {
-				armour: [Q(hc, [
+				armour: [Q(gc, [
 					"brown",
 					"leather",
 					"walnut"
 				])],
-				hat: [Q(ac, Hs, .8)],
+				hat: [Q(oc, Us, .8)],
 				legs: [Q($, [
 					"brown",
 					"charcoal",
 					"navy"
 				])],
-				shoes: [Q(tc, [
+				shoes: [Q(nc, [
 					"brown",
 					"espresso",
 					"black"
 				])],
-				cape: [Q(uc, [
+				cape: [Q(dc, [
 					"green",
 					"forest",
 					"navy",
@@ -49029,13 +49061,13 @@ var Ls = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Q(Ws, Vs),
-					Q(Ks, Vs),
-					Q(Gs, Vs)
+					Q(Gs, Hs),
+					Q(qs, Hs),
+					Q(Ks, Hs)
 				],
-				vest: [Q(Ys, zs, .25)],
-				legs: [Q($, Z), Q($s, Z, .5)],
-				shoes: [Q(ec, Z), Q(tc, ["brown"])],
+				vest: [Q(Xs, Bs, .25)],
+				legs: [Q($, Z), Q(ec, Z, .5)],
+				shoes: [Q(tc, Z), Q(nc, ["brown"])],
 				hair: "rustic",
 				beard: .3
 			}
@@ -49044,17 +49076,17 @@ var Ls = [
 			label: ["Mercador", "Mercadora"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ws, Rs), Q(Gs, Rs)],
-				vest: [Q(Ys, [
+				clothes: [Q(Gs, zs), Q(Ks, zs)],
+				vest: [Q(Xs, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .6)],
-				belt: [Q(cc, ["brown", "leather"], .6)],
-				legs: [Q(Qs, Z)],
-				shoes: [Q(tc, ["brown", "espresso"])],
-				hat: [Q(rc, Rs, .35)],
+				belt: [Q(lc, ["brown", "leather"], .6)],
+				legs: [Q($s, Z)],
+				shoes: [Q(nc, ["brown", "espresso"])],
+				hat: [Q(ic, zs, .35)],
 				hair: "neat",
 				beard: .35
 			}
@@ -49065,18 +49097,18 @@ var Ls = [
 			label: ["Mercador", "Mercadora"],
 			weight: 4,
 			outfit: {
-				clothes: [Q(Ws, Rs), Q(Gs, Vs)],
-				vest: [Q(Ys, [
+				clothes: [Q(Gs, zs), Q(Ks, Hs)],
+				vest: [Q(Xs, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .6)],
-				apron: [Q(lc, Bs, .3)],
-				belt: [Q(cc, ["brown", "leather"], .6)],
-				legs: [Q(Qs, Z), Q($s, Z, .4)],
-				shoes: [Q(ec, Z), Q(tc, ["brown"])],
-				hat: [Q(rc, Rs, .35)],
+				apron: [Q(uc, Vs, .3)],
+				belt: [Q(lc, ["brown", "leather"], .6)],
+				legs: [Q($s, Z), Q(ec, Z, .4)],
+				shoes: [Q(tc, Z), Q(nc, ["brown"])],
+				hat: [Q(ic, zs, .35)],
 				hair: "rustic",
 				beard: .35
 			}
@@ -49086,13 +49118,13 @@ var Ls = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Q(Ws, Vs),
-					Q(Ks, Vs),
-					Q(Gs, Vs)
+					Q(Gs, Hs),
+					Q(qs, Hs),
+					Q(Ks, Hs)
 				],
-				legs: [Q($, Z), Q($s, Z, .5)],
-				shoes: [Q(ec, Z)],
-				hat: [Q(rc, zs, .15)],
+				legs: [Q($, Z), Q(ec, Z, .5)],
+				shoes: [Q(tc, Z)],
+				hat: [Q(ic, Bs, .15)],
 				backpack: [Q(/backpack_basket/, void 0, .3)],
 				hair: "rustic",
 				beard: .3
@@ -49102,15 +49134,15 @@ var Ls = [
 			label: ["Artesão", "Artesã"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ks, zs), Q(qs, zs)],
-				apron: [Q(lc, [
+				clothes: [Q(qs, Bs), Q(Js, Bs)],
+				apron: [Q(uc, [
 					"leather",
 					"brown",
 					"tan"
 				])],
-				gloves: [Q(fc, ["brown"], .3)],
+				gloves: [Q(pc, ["brown"], .3)],
 				legs: [Q($, ["brown", "charcoal"])],
-				shoes: [Q(tc, ["brown"])],
+				shoes: [Q(nc, ["brown"])],
 				hair: "short",
 				beard: .4
 			}
@@ -49119,14 +49151,14 @@ var Ls = [
 			label: ["Guarda", "Guarda"],
 			weight: 2,
 			outfit: {
-				armour: [Q(hc, ["brown", "leather"])],
-				hat: [Q(ac, Hs, .8)],
+				armour: [Q(gc, ["brown", "leather"])],
+				hat: [Q(oc, Us, .8)],
 				legs: [Q($, [
 					"charcoal",
 					"brown",
 					"navy"
 				])],
-				shoes: [Q(tc, ["black", "espresso"])],
+				shoes: [Q(nc, ["black", "espresso"])],
 				hair: "short",
 				beard: .3
 			}
@@ -49137,18 +49169,18 @@ var Ls = [
 			label: ["Fazendeiro", "Fazendeira"],
 			weight: 4,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"tan",
 					"white",
 					"brown",
 					"yellow",
 					"gray"
-				]), Q(Ks, [
+				]), Q(qs, [
 					"tan",
 					"white",
 					"yellow"
 				])],
-				apron: [Q(pc, [
+				apron: [Q(mc, [
 					"brown",
 					"navy",
 					"forest",
@@ -49159,8 +49191,8 @@ var Ls = [
 					"tan",
 					"navy"
 				])],
-				shoes: [Q(tc, ["brown", "espresso"])],
-				hat: [Q(rc, [
+				shoes: [Q(nc, ["brown", "espresso"])],
+				hat: [Q(ic, [
 					"tan",
 					"brown",
 					"yellow"
@@ -49173,14 +49205,14 @@ var Ls = [
 			label: ["Peão", "Peã"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ks, zs), Q(qs, zs)],
+				clothes: [Q(qs, Bs), Q(Js, Bs)],
 				legs: [Q($, [
 					"brown",
 					"tan",
 					"charcoal"
 				])],
-				shoes: [Q(tc, ["brown"]), Q(ec, ["brown"])],
-				hat: [Q(rc, ["tan", "brown"], .5)],
+				shoes: [Q(nc, ["brown"]), Q(tc, ["brown"])],
+				hat: [Q(ic, ["tan", "brown"], .5)],
 				hair: "short",
 				beard: .4
 			}
@@ -49189,20 +49221,20 @@ var Ls = [
 			label: ["Pastor", "Pastora"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"brown",
 					"tan",
 					"gray",
 					"forest"
 				])],
-				cape: [Q(uc, [
+				cape: [Q(dc, [
 					"brown",
 					"forest",
 					"gray"
 				], .6)],
-				hat: [Q(ic, ["brown", "forest"], .3)],
+				hat: [Q(ac, ["brown", "forest"], .3)],
 				legs: [Q($, ["brown", "charcoal"])],
-				shoes: [Q(tc, ["brown", "espresso"])],
+				shoes: [Q(nc, ["brown", "espresso"])],
 				hair: "rustic",
 				beard: .4
 			}
@@ -49211,10 +49243,10 @@ var Ls = [
 			label: ["Cozinheiro", "Cozinheira"],
 			weight: 1,
 			outfit: {
-				clothes: [Q(Gs, Bs), Q(Ks, Bs)],
-				apron: [Q(lc, ["white", "pale_gray"])],
-				legs: [Q($, ["brown", "gray"]), Q($s, ["brown", "gray"], .5)],
-				shoes: [Q(ec, Z)],
+				clothes: [Q(Ks, Vs), Q(qs, Vs)],
+				apron: [Q(uc, ["white", "pale_gray"])],
+				legs: [Q($, ["brown", "gray"]), Q(ec, ["brown", "gray"], .5)],
+				shoes: [Q(tc, Z)],
 				hair: "neat"
 			}
 		}
@@ -49224,35 +49256,35 @@ var Ls = [
 			label: ["Caçador", "Caçadora"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"brown",
 					"forest",
 					"green",
 					"tan",
 					"walnut"
-				]), Q(Ks, [
+				]), Q(qs, [
 					"brown",
 					"forest",
 					"tan"
 				])],
-				vest: [Q(Ys, [
+				vest: [Q(Xs, [
 					"leather",
 					"brown",
 					"forest"
 				], .5)],
-				cape: [Q(uc, [
+				cape: [Q(dc, [
 					"forest",
 					"brown",
 					"green"
 				], .5)],
-				hat: [Q(ic, ["forest", "brown"], .4), Q(rc, ["brown", "forest"], .2)],
-				belt: [Q(cc, ["brown", "leather"], .7)],
+				hat: [Q(ac, ["forest", "brown"], .4), Q(ic, ["brown", "forest"], .2)],
+				belt: [Q(lc, ["brown", "leather"], .7)],
 				legs: [Q($, [
 					"brown",
 					"forest",
 					"charcoal"
 				])],
-				shoes: [Q(tc, ["brown", "espresso"])],
+				shoes: [Q(nc, ["brown", "espresso"])],
 				backpack: [Q(/backpack\/backpack$/, void 0, .4)],
 				hair: "rustic",
 				beard: .5
@@ -49262,11 +49294,11 @@ var Ls = [
 			label: ["Andarilho", "Andarilha"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ws, zs)],
-				cape: [Q(uc, Us)],
-				hat: [Q(ic, Us, .5)],
+				clothes: [Q(Gs, Bs)],
+				cape: [Q(dc, Ws)],
+				hat: [Q(ac, Ws, .5)],
 				legs: [Q($, Z)],
-				shoes: [Q(tc, ["brown", "espresso"])],
+				shoes: [Q(nc, ["brown", "espresso"])],
 				backpack: [Q(/backpack\/backpack/, void 0, .5)],
 				hair: "rustic",
 				beard: .5
@@ -49276,19 +49308,19 @@ var Ls = [
 			label: ["Ervanário", "Ervanária"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Js, [
+				clothes: [Q(Ys, [
 					"forest",
 					"green",
 					"tan",
 					"brown"
-				]), Q(Gs, [
+				]), Q(Ks, [
 					"green",
 					"forest",
 					"white"
 				])],
-				belt: [Q(cc, ["brown", "leather"], .6)],
-				legs: [Q($, ["brown", "forest"]), Q($s, ["brown", "forest"], .5)],
-				shoes: [Q(ec, ["brown"]), Q(tc, ["brown"])],
+				belt: [Q(lc, ["brown", "leather"], .6)],
+				legs: [Q($, ["brown", "forest"]), Q(ec, ["brown", "forest"], .5)],
+				shoes: [Q(tc, ["brown"]), Q(nc, ["brown"])],
 				backpack: [Q(/backpack_basket/, void 0, .6)],
 				hair: "rustic",
 				age: "any",
@@ -49299,20 +49331,20 @@ var Ls = [
 			label: ["Batedor", "Batedora"],
 			weight: 2,
 			outfit: {
-				armour: [Q(hc, [
+				armour: [Q(gc, [
 					"brown",
 					"leather",
 					"forest"
 				])],
-				hat: [Q(rc, ["brown", "forest"], .6)],
-				cape: [Q(uc, ["forest", "green"], .5)],
+				hat: [Q(ic, ["brown", "forest"], .6)],
+				cape: [Q(dc, ["forest", "green"], .5)],
 				legs: [Q($, [
 					"brown",
 					"forest",
 					"charcoal"
 				])],
-				shoes: [Q(tc, ["brown", "espresso"])],
-				gloves: [Q(fc, ["brown"], .5)],
+				shoes: [Q(nc, ["brown", "espresso"])],
+				gloves: [Q(pc, ["brown"], .5)],
 				hair: "short",
 				beard: .35
 			}
@@ -49323,20 +49355,20 @@ var Ls = [
 			label: ["Coveiro", "Coveira"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"charcoal",
 					"gray",
 					"brown",
 					"black"
-				]), Q(Ks, ["charcoal", "gray"])],
-				vest: [Q(Ys, ["black", "charcoal"], .4)],
-				hat: [Q(rc, [
+				]), Q(qs, ["charcoal", "gray"])],
+				vest: [Q(Xs, ["black", "charcoal"], .4)],
+				hat: [Q(ic, [
 					"black",
 					"charcoal",
 					"brown"
 				], .4)],
 				legs: [Q($, ["black", "charcoal"])],
-				shoes: [Q(tc, ["black", "espresso"])],
+				shoes: [Q(nc, ["black", "espresso"])],
 				hair: "short",
 				beard: .5
 			}
@@ -49345,21 +49377,21 @@ var Ls = [
 			label: ["Sacerdote", "Sacerdotisa"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Js, [
+				clothes: [Q(Ys, [
 					"black",
 					"white",
 					"pale_gray",
 					"midnight",
 					"oxblood"
 				])],
-				hat: [Q(ic, [
+				hat: [Q(ac, [
 					"black",
 					"midnight",
 					"white"
 				], .4)],
-				belt: [Q(cc, ["brown", "leather"], .4)],
+				belt: [Q(lc, ["brown", "leather"], .4)],
 				legs: [Q($, ["black", "charcoal"])],
-				shoes: [Q(ec, Z)],
+				shoes: [Q(tc, Z)],
 				hair: "neat",
 				age: "any",
 				beard: .35
@@ -49369,16 +49401,16 @@ var Ls = [
 			label: ["Enlutado", "Enlutada"],
 			weight: 3,
 			outfit: {
-				jacket: [Q(Xs, [
+				jacket: [Q(Zs, [
 					"black",
 					"charcoal",
 					"midnight"
 				], .4)],
 				dress: [Q(/dress_(sash|slit)/, ["black", "charcoal"], .6)],
-				clothes: [Q(Ws, ["black", "charcoal"]), Q(Gs, ["black", "charcoal"])],
-				legs: [Q(Qs, ["black", "charcoal"]), Q($s, ["black"], .5)],
-				shoes: [Q(ec, ["black"]), Q(tc, ["black"])],
-				hat: [Q(nc, ["black"], .2)],
+				clothes: [Q(Gs, ["black", "charcoal"]), Q(Ks, ["black", "charcoal"])],
+				legs: [Q($s, ["black", "charcoal"]), Q(ec, ["black"], .5)],
+				shoes: [Q(tc, ["black"]), Q(nc, ["black"])],
+				hat: [Q(rc, ["black"], .2)],
 				hair: "neat",
 				age: "any",
 				beard: .2
@@ -49388,15 +49420,15 @@ var Ls = [
 			label: ["Vigia", "Vigia"],
 			weight: 1,
 			outfit: {
-				clothes: [Q(Ws, ["charcoal", "gray"])],
-				cape: [Q(uc, [
+				clothes: [Q(Gs, ["charcoal", "gray"])],
+				cape: [Q(dc, [
 					"black",
 					"charcoal",
 					"midnight"
 				])],
-				hat: [Q(ic, ["black", "charcoal"], .5)],
+				hat: [Q(ac, ["black", "charcoal"], .5)],
 				legs: [Q($, ["black", "charcoal"])],
-				shoes: [Q(tc, ["black", "espresso"])],
+				shoes: [Q(nc, ["black", "espresso"])],
 				hair: "short",
 				beard: .4
 			}
@@ -49407,16 +49439,16 @@ var Ls = [
 			label: ["Guarda", "Guarda"],
 			weight: 4,
 			outfit: {
-				armour: [Q(mc, Hs)],
-				hat: [Q(ac, Hs)],
+				armour: [Q(hc, Us)],
+				hat: [Q(oc, Us)],
 				legs: [Q($, [
 					"charcoal",
 					"black",
 					"gray"
 				])],
-				shoes: [Q(tc, ["black", "espresso"])],
-				gloves: [Q(fc, ["black", "gray"], .6)],
-				cape: [Q(uc, ["black", "charcoal"], .3)],
+				shoes: [Q(nc, ["black", "espresso"])],
+				gloves: [Q(pc, ["black", "gray"], .6)],
+				cape: [Q(dc, ["black", "charcoal"], .3)],
 				hair: "short",
 				beard: .4
 			}
@@ -49425,20 +49457,20 @@ var Ls = [
 			label: ["Carcereiro", "Carcereira"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(qs, Z), Q(Ks, Z)],
-				vest: [Q(Ys, [
+				clothes: [Q(Js, Z), Q(qs, Z)],
+				vest: [Q(Xs, [
 					"leather",
 					"brown",
 					"black"
 				], .8)],
-				belt: [Q(cc, [
+				belt: [Q(lc, [
 					"brown",
 					"leather",
 					"charcoal"
 				])],
-				gloves: [Q(fc, ["black", "brown"], .6)],
+				gloves: [Q(pc, ["black", "brown"], .6)],
 				legs: [Q($, ["charcoal", "brown"])],
-				shoes: [Q(tc, ["black", "espresso"])],
+				shoes: [Q(nc, ["black", "espresso"])],
 				hair: "short",
 				beard: .55
 			}
@@ -49447,12 +49479,12 @@ var Ls = [
 			label: ["Prisioneiro", "Prisioneira"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(qs, [
+				clothes: [Q(Js, [
 					"gray",
 					"tan",
 					"brown",
 					"pale_gray"
-				]), Q(Ks, [
+				]), Q(qs, [
 					"gray",
 					"tan",
 					"brown"
@@ -49471,16 +49503,16 @@ var Ls = [
 			label: ["Aventureiro", "Aventureira"],
 			weight: 2,
 			outfit: {
-				armour: [Q(hc, [
+				armour: [Q(gc, [
 					"brown",
 					"leather",
 					"charcoal"
 				])],
-				cape: [Q(uc, Us, .6)],
+				cape: [Q(dc, Ws, .6)],
 				backpack: [Q(/backpack\/backpack/, void 0, .6)],
 				legs: [Q($, ["brown", "charcoal"])],
-				shoes: [Q(tc, ["brown", "espresso"])],
-				belt: [Q(cc, ["brown", "leather"], .5)],
+				shoes: [Q(nc, ["brown", "espresso"])],
+				belt: [Q(lc, ["brown", "leather"], .5)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -49491,25 +49523,25 @@ var Ls = [
 			label: ["Montanhês", "Montanhesa"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"brown",
 					"gray",
 					"tan",
 					"forest",
 					"navy"
 				])],
-				cape: [Q(uc, [
+				cape: [Q(dc, [
 					"brown",
 					"gray",
 					"forest",
 					"navy"
 				], .8)],
-				hat: [Q(ic, [
+				hat: [Q(ac, [
 					"brown",
 					"gray",
 					"forest"
 				], .7)],
-				neck: [Q(sc, [
+				neck: [Q(cc, [
 					"red",
 					"maroon",
 					"gray",
@@ -49520,8 +49552,8 @@ var Ls = [
 					"charcoal",
 					"navy"
 				])],
-				shoes: [Q(tc, ["brown", "espresso"])],
-				gloves: [Q(fc, ["brown", "gray"], .7)],
+				shoes: [Q(nc, ["brown", "espresso"])],
+				gloves: [Q(pc, ["brown", "gray"], .7)],
 				hair: "rustic",
 				beard: .6
 			}
@@ -49530,17 +49562,17 @@ var Ls = [
 			label: ["Caçador", "Caçadora"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"brown",
 					"tan",
 					"gray"
 				])],
-				vest: [Q(Ys, ["leather", "brown"], .6)],
-				cape: [Q(uc, ["brown", "gray"], .6)],
-				hat: [Q(ic, ["brown", "gray"], .6)],
+				vest: [Q(Xs, ["leather", "brown"], .6)],
+				cape: [Q(dc, ["brown", "gray"], .6)],
+				hat: [Q(ac, ["brown", "gray"], .6)],
 				legs: [Q($, ["brown", "charcoal"])],
-				shoes: [Q(tc, ["brown", "espresso"])],
-				gloves: [Q(fc, ["brown"], .6)],
+				shoes: [Q(nc, ["brown", "espresso"])],
+				gloves: [Q(pc, ["brown"], .6)],
 				backpack: [Q(/backpack\/backpack$/, void 0, .4)],
 				hair: "rustic",
 				beard: .5
@@ -49550,25 +49582,25 @@ var Ls = [
 			label: ["Viajante agasalhado", "Viajante agasalhada"],
 			weight: 3,
 			outfit: {
-				jacket: [Q(Zs, [
+				jacket: [Q(Qs, [
 					"navy",
 					"maroon",
 					"forest",
 					"gray",
 					"brown"
 				], .8)],
-				clothes: [Q(Ws, [
+				clothes: [Q(Gs, [
 					"white",
 					"tan",
 					"gray"
 				])],
-				neck: [Q(sc, [
+				neck: [Q(cc, [
 					"red",
 					"teal",
 					"yellow",
 					"maroon"
 				], .8)],
-				hat: [Q(ic, [
+				hat: [Q(ac, [
 					"gray",
 					"brown",
 					"navy"
@@ -49578,8 +49610,8 @@ var Ls = [
 					"brown",
 					"navy"
 				])],
-				shoes: [Q(tc, ["brown", "black"])],
-				gloves: [Q(fc, ["brown", "gray"], .6)],
+				shoes: [Q(nc, ["brown", "black"])],
+				gloves: [Q(pc, ["brown", "gray"], .6)],
 				hair: "rustic",
 				beard: .4
 			}
@@ -49591,13 +49623,13 @@ var Ls = [
 			weight: 4,
 			outfit: {
 				clothes: [
-					Q(Ws, Vs),
-					Q(Ks, Vs),
-					Q(Gs, Vs)
+					Q(Gs, Hs),
+					Q(qs, Hs),
+					Q(Ks, Hs)
 				],
-				vest: [Q(Ys, zs, .25)],
-				legs: [Q($, Z), Q($s, Z, .5)],
-				shoes: [Q(ec, Z), Q(tc, ["brown"])],
+				vest: [Q(Xs, Bs, .25)],
+				legs: [Q($, Z), Q(ec, Z, .5)],
+				shoes: [Q(tc, Z), Q(nc, ["brown"])],
 				hair: "rustic",
 				beard: .3
 			}
@@ -49606,11 +49638,11 @@ var Ls = [
 			label: ["Viajante", "Viajante"],
 			weight: 3,
 			outfit: {
-				clothes: [Q(Ws, zs)],
-				cape: [Q(uc, Us, .6)],
-				hat: [Q(ic, Us, .3)],
+				clothes: [Q(Gs, Bs)],
+				cape: [Q(dc, Ws, .6)],
+				hat: [Q(ac, Ws, .3)],
 				legs: [Q($, Z)],
-				shoes: [Q(tc, ["brown", "espresso"])],
+				shoes: [Q(nc, ["brown", "espresso"])],
 				backpack: [Q(/backpack\/backpack$/, void 0, .5)],
 				hair: "rustic",
 				beard: .4
@@ -49620,17 +49652,17 @@ var Ls = [
 			label: ["Comerciante", "Comerciante"],
 			weight: 2,
 			outfit: {
-				clothes: [Q(Ws, Rs), Q(Gs, Rs)],
-				vest: [Q(Ys, [
+				clothes: [Q(Gs, zs), Q(Ks, zs)],
+				vest: [Q(Xs, [
 					"black",
 					"maroon",
 					"forest",
 					"navy"
 				], .5)],
-				belt: [Q(cc, ["brown", "leather"], .6)],
-				legs: [Q(Qs, Z)],
-				shoes: [Q(tc, ["brown", "espresso"]), Q(ec, Z)],
-				hat: [Q(rc, Rs, .3)],
+				belt: [Q(lc, ["brown", "leather"], .6)],
+				legs: [Q($s, Z)],
+				shoes: [Q(nc, ["brown", "espresso"]), Q(tc, Z)],
+				hat: [Q(ic, zs, .3)],
 				hair: "neat",
 				beard: .35
 			}
@@ -49639,16 +49671,16 @@ var Ls = [
 			label: ["Guarda", "Guarda"],
 			weight: 1,
 			outfit: {
-				armour: [Q(hc, ["brown", "leather"])],
-				hat: [Q(ac, Hs, .7)],
+				armour: [Q(gc, ["brown", "leather"])],
+				hat: [Q(oc, Us, .7)],
 				legs: [Q($, ["charcoal", "brown"])],
-				shoes: [Q(tc, ["black", "espresso"])],
+				shoes: [Q(nc, ["black", "espresso"])],
 				hair: "short",
 				beard: .35
 			}
 		}
 	]
-}, _c = {
+}, vc = {
 	neat: {
 		male: /hair_(parted|parted2|parted3|page|page2|swoop|swoop_side|curtains|plain|bangsshort|parted_side_bangs|parted_side_bangs2|relm_short)$/,
 		female: /hair_(page|page2|bob|bob_side_part|lob|parted|parted2|parted3|bangs|bangslong|bangslong2|long_center_part|long_straight|half_up|bangs_bun|ponytail|ponytail2|high_ponytail|princess|shoulderl|shoulderr|topknot_long|topknot_short)$/
@@ -49665,7 +49697,7 @@ var Ls = [
 		male: /hair_(balding|plain|parted|buzzcut|high_and_tight|page|messy3|curtains)$/,
 		female: /hair_(bob|lob|bangs_bun|half_up|page|plain|long_straight|ponytail|topknot_short|bangs)$/
 	}
-}, vc = {
+}, yc = {
 	branca: ["light"],
 	parda: [
 		"amber",
@@ -49674,7 +49706,7 @@ var Ls = [
 		"bronze"
 	],
 	negra: ["brown", "black"]
-}, yc = {
+}, bc = {
 	branca: [
 		"black",
 		"cocoa",
@@ -49703,7 +49735,7 @@ var Ls = [
 		"umber",
 		"dark_gray"
 	]
-}, bc = {
+}, xc = {
 	branca: [
 		"rose",
 		"pink",
@@ -49728,12 +49760,12 @@ var Ls = [
 		"black",
 		"orange"
 	]
-}, xc = [
+}, Sc = [
 	"gray",
 	"white",
 	"dark_gray",
 	"gray"
-], Sc = [
+], Cc = [
 	"brown",
 	"brown",
 	"brown",
@@ -49741,13 +49773,13 @@ var Ls = [
 	"green",
 	"gray",
 	"blue"
-], Cc = /* @__PURE__ */ "Aurélio.Benício.Cássio.Davi.Eládio.Fausto.Gaspar.Heitor.Isidoro.Joaquim.Leandro.Matias.Nestor.Otávio.Rúben.Silvestre.Tadeu.Ulisses.Valério.Xavier.Abel.Bento.Caetano.Dimas.Elias.Félix.Gil.Hugo".split("."), wc = /* @__PURE__ */ "Adélia.Beatriz.Cecília.Dalila.Eulália.Fabíola.Gabriela.Helena.Ísis.Joana.Lívia.Marta.Nair.Olívia.Pietra.Quitéria.Rosana.Sílvia.Tereza.Valéria.Zélia.Alice.Bianca.Clara.Dora.Elisa.Flora.Graça".split("."), Tc = /* @__PURE__ */ "Albuquerque.Barbosa.Cardoso.Duarte.Esteves.Furtado.Guedes.Horta.Ivo.Junqueira.Lacerda.Moura.Nogueira.Oliveira.Paiva.Queiroz.Rangel.Siqueira.Teixeira.Valadares.Xavier.Pimentel.Sampaio.Tavares.Brandão.Coelho.Ferraz.Lobo".split("."), Ec = (e, t) => e[Math.floor(t() * e.length)];
-function Dc(e, t) {
+], wc = /* @__PURE__ */ "Aurélio.Benício.Cássio.Davi.Eládio.Fausto.Gaspar.Heitor.Isidoro.Joaquim.Leandro.Matias.Nestor.Otávio.Rúben.Silvestre.Tadeu.Ulisses.Valério.Xavier.Abel.Bento.Caetano.Dimas.Elias.Félix.Gil.Hugo".split("."), Tc = /* @__PURE__ */ "Adélia.Beatriz.Cecília.Dalila.Eulália.Fabíola.Gabriela.Helena.Ísis.Joana.Lívia.Marta.Nair.Olívia.Pietra.Quitéria.Rosana.Sílvia.Tereza.Valéria.Zélia.Alice.Bianca.Clara.Dora.Elisa.Flora.Graça".split("."), Ec = /* @__PURE__ */ "Albuquerque.Barbosa.Cardoso.Duarte.Esteves.Furtado.Guedes.Horta.Ivo.Junqueira.Lacerda.Moura.Nogueira.Oliveira.Paiva.Queiroz.Rangel.Siqueira.Teixeira.Valadares.Xavier.Pimentel.Sampaio.Tavares.Brandão.Coelho.Ferraz.Lobo".split("."), Dc = (e, t) => e[Math.floor(t() * e.length)];
+function Oc(e, t) {
 	let n = e.reduce((e, t) => e + t.weight, 0), r = t() * n;
 	for (let t of e) if (r -= t.weight, r <= 0) return t;
 	return e[e.length - 1];
 }
-function Oc(e, t) {
+function kc(e, t) {
 	let n = [...e];
 	for (let e = n.length - 1; e > 0; e--) {
 		let r = Math.floor(t() * (e + 1));
@@ -49755,10 +49787,10 @@ function Oc(e, t) {
 	}
 	return n;
 }
-var kc = /shirts\/longsleeve\//;
-function Ac(e, t) {
+var Ac = /shirts\/longsleeve\//;
+function jc(e, t) {
 	if (!e.colors) return e;
-	let n = e.colors.filter((e) => !bc[t].includes(e));
+	let n = e.colors.filter((e) => !xc[t].includes(e));
 	return {
 		...e,
 		colors: n.length ? n : [
@@ -49769,55 +49801,55 @@ function Ac(e, t) {
 		]
 	};
 }
-function jc(e, t, n, r, i, a = !1) {
+function Mc(e, t, n, r, i, a = !1) {
 	if (!r?.length) return null;
-	let o = Oc(r, i);
+	let o = kc(r, i);
 	for (let r of o) {
 		if (!a && i() > (r.chance ?? 1)) continue;
 		let o = Kt(e, t, n).filter((e) => r.re.test(e.id));
-		if (o.length) return Mc(e, Ec(o, i), r.colors, i);
+		if (o.length) return Nc(e, Dc(o, i), r.colors, i);
 	}
 	return null;
 }
-function Mc(e, t, n, r) {
+function Nc(e, t, n, r) {
 	let i = { id: t.id };
 	if (t.variants?.length) {
 		let e = n?.filter((e) => t.variants.includes(e)) ?? [];
-		i.variant = e.length ? Ec(e, r) : Ec(t.variants, r);
+		i.variant = e.length ? Dc(e, r) : Dc(t.variants, r);
 	}
 	for (let a of t.colors ?? []) {
 		if (a.material === "body" && t.matchBody) continue;
 		let o = Object.keys(e.palettes[a.material] ?? {});
 		if (!o.length) continue;
 		let s = n?.filter((e) => o.includes(e)) ?? [];
-		(i.colors ??= {})[a.key] = s.length ? Ec(s, r) : Ec(o, r);
+		(i.colors ??= {})[a.key] = s.length ? Dc(s, r) : Dc(o, r);
 	}
 	return i;
 }
-function Nc(e, t, n, r, i, a, o, s) {
-	let c = Kt(e, "hair", t), l = i ? "elder" : r, u = _c[l][n], d = c.filter((e) => u.test(e.id) && !s.has(e.id));
+function Pc(e, t, n, r, i, a, o, s) {
+	let c = Kt(e, "hair", t), l = i ? "elder" : r, u = vc[l][n], d = c.filter((e) => u.test(e.id) && !s.has(e.id));
 	if (d.length || (d = c.filter((e) => u.test(e.id))), o() < .2) {
-		let e = _c[l][n === "male" ? "female" : "male"], t = c.filter((t) => e.test(t.id) && !s.has(t.id));
+		let e = vc[l][n === "male" ? "female" : "male"], t = c.filter((t) => e.test(t.id) && !s.has(t.id));
 		t.length && (d = t);
 	}
-	return d.length ? Mc(e, Ec(d, o), [Ec(i ? xc : yc[a], o)], o) : null;
+	return d.length ? Nc(e, Dc(d, o), [Dc(i ? Sc : bc[a], o)], o) : null;
 }
-function Pc(e, t, n, r, i) {
+function Fc(e, t, n, r, i) {
 	let a = Kt(e, "head", t).filter((e) => e.id.includes("/human/") && !/_small$/.test(e.id)), o = a.filter((e) => r ? /elderly/.test(e.id) : !/elderly/.test(e.id)), s = o.length ? o : a;
 	if (n === "male" && !r && i() < .25) {
 		let e = s.filter((e) => /gaunt|plump/.test(e.id));
 		e.length && (s = e);
 	} else n === "male" && !r && (s = s.filter((e) => !/gaunt|plump/.test(e.id)).length ? s.filter((e) => !/gaunt|plump/.test(e.id)) : s);
 	return {
-		id: Ec(s, i).id,
-		colors: { color_2: Ec(Sc, i) }
+		id: Dc(s, i).id,
+		colors: { color_2: Dc(Cc, i) }
 	};
 }
-function Fc(e, t) {
-	let n = t.rnd ?? Math.random, r = gc[t.profile] ?? gc.geral, i = t.avoid, a = r.map((e) => ({
+function Ic(e, t) {
+	let n = t.rnd ?? Math.random, r = _c[t.profile] ?? _c.geral, i = t.avoid, a = r.map((e) => ({
 		...e,
 		weight: e.weight / (1 + (i?.roles.get(e.label[0]) ?? 0) * 1.5)
-	})), o = t.role && a.find((e) => e.label[0] === t.role) || Dc(a, n), s = n() < .5 ? "male" : "female", c = t.skin ?? Ec(Object.keys(vc), n), l = Ec(vc[c], n), u = o.outfit, d = u.age ?? "adult", f = d === "elder" || (d === "adult" ? n() < .08 : n() < .35), p = s, m = o.label[0];
+	})), o = t.role && a.find((e) => e.label[0] === t.role) || Oc(a, n), s = n() < .5 ? "male" : "female", c = t.skin ?? Dc(Object.keys(yc), n), l = Dc(yc[c], n), u = o.outfit, d = u.age ?? "adult", f = d === "elder" || (d === "adult" ? n() < .08 : n() < .35), p = s, m = o.label[0];
 	s === "male" && !f && (m === "Ferreiro" && n() < .55 || m === "Prisioneiro" && n() < .25) ? p = "muscular" : !f && [
 		"Criado",
 		"Peão",
@@ -49829,43 +49861,43 @@ function Fc(e, t) {
 	].includes(m) && n() < .18 && (p = "teen");
 	let h = {
 		body: { id: "body/body" },
-		head: Pc(e, p, s, f, n)
-	}, g = Nc(e, p, s, u.hair, f, c, n, i?.hair ?? /* @__PURE__ */ new Set());
+		head: Fc(e, p, s, f, n)
+	}, g = Pc(e, p, s, u.hair, f, c, n, i?.hair ?? /* @__PURE__ */ new Set());
 	if (g) {
 		h.hair = g;
-		let t = g.colors?.color, r = jc(e, "eyebrows", p, [{
+		let t = g.colors?.color, r = Mc(e, "eyebrows", p, [{
 			re: /eyebrows_(thick|thin)/,
 			chance: 1
 		}], n, !0);
 		if (r && (r.colors = { color: t && n() < .8 ? t : "black" }, h.eyebrows = r), s === "male" && u.beard && n() < (f ? Math.max(u.beard, .45) : u.beard)) {
-			let r = jc(e, n() < .7 ? "beard" : "mustache", p, [{ re: /beards_/ }], n, !0);
-			r && (t && (r.colors = { color: t }), h[Bc(e, r)] = r);
+			let r = Mc(e, n() < .7 ? "beard" : "mustache", p, [{ re: /beards_/ }], n, !0);
+			r && (t && (r.colors = { color: t }), h[Vc(e, r)] = r);
 		}
 	}
 	let _ = !1;
 	if (s === "female" && u.dress) {
-		let t = jc(e, "dress", p, u.dress, n);
+		let t = Mc(e, "dress", p, u.dress, n);
 		t && (h.dress = t, _ = !0);
 	}
 	if (!_) {
 		let t = (t, r, i = !1) => {
-			let a = jc(e, t, p, r, n, i);
+			let a = Mc(e, t, p, r, n, i);
 			a && (h[t] = a);
 		};
-		u.armour ? t("armour", u.armour, !0) : t("clothes", u.clothes?.map((e) => Ac(e, c)), !0), t("vest", u.vest), t("jacket", u.jacket), t("legs", u.legs, !0);
+		u.armour ? t("armour", u.armour, !0) : t("clothes", u.clothes?.map((e) => jc(e, c)), !0), t("vest", u.vest), t("jacket", u.jacket), t("legs", u.legs, !0);
 	}
 	if (!_ && !h.clothes && !h.armour) {
-		let t = jc(e, "clothes", p, [{
-			re: kc,
-			colors: Ac(u.clothes?.[0] ?? { re: kc }, c).colors
+		let t = Mc(e, "clothes", p, [{
+			re: Ac,
+			colors: jc(u.clothes?.[0] ?? { re: Ac }, c).colors
 		}], n, !0);
 		t && (h.clothes = t);
 	}
 	let v = (t, r, i = !1) => {
-		let a = jc(e, t, p, r, n, i);
+		let a = Mc(e, t, p, r, n, i);
 		a && (h[t] = a);
 	};
-	v("shoes", u.shoes, !0), v("hat", u.hat), v("neck", u.neck), v("cape", u.cape), v("apron", u.apron), v("belt", u.belt), v("gloves", u.gloves), v("arms", u.arms), v("backpack", u.backpack), v("facial", u.facial), zc(e, p, s, o, f, h, n);
+	v("shoes", u.shoes, !0), v("hat", u.hat), v("neck", u.neck), v("cape", u.cape), v("apron", u.apron), v("belt", u.belt), v("gloves", u.gloves), v("arms", u.arms), v("backpack", u.backpack), v("facial", u.facial), Bc(e, p, s, o, f, h, n);
 	let y = n(), b = f ? y < .5 ? .92 : 1 : y < .6 ? 1 : y < .8 ? .92 : y < .95 ? 1.08 : .84, x = n(), S = p === "muscular" ? 0 : x < .1 ? -1 : +(x < .22), C = () => {
 		let e = n();
 		return e < .2 ? -1 : e < .8 ? 0 : 1;
@@ -49882,14 +49914,14 @@ function Fc(e, t) {
 		slots: h,
 		height: b,
 		shape: w
-	}), E = `${Ec(s === "male" ? Cc : wc, n)} ${Ec(Tc, n)}`, D = o.label[s === "male" ? 0 : 1];
+	}), E = `${Dc(s === "male" ? wc : Tc, n)} ${Dc(Ec, n)}`, D = o.label[s === "male" ? 0 : 1];
 	return i && (T.slots.hair && i.hair.add(T.slots.hair.id), i.roles.set(o.label[0], (i.roles.get(o.label[0]) ?? 0) + 1), i.looks.add(`${T.slots.clothes?.id ?? T.slots.dress?.id}:${JSON.stringify(T.slots.clothes?.colors ?? T.slots.clothes?.variant ?? "")}`)), {
 		name: E,
 		role: D,
 		appearance: T
 	};
 }
-var Ic = [
+var Lc = [
 	"Guarda do palácio",
 	"Guarda da vila",
 	"Guarda",
@@ -49902,7 +49934,7 @@ var Ic = [
 	"Montanhês",
 	"Ferreiro",
 	"Taverneiro"
-], Lc = [
+], Rc = [
 	"Nobre",
 	"Bardo",
 	"Garçom",
@@ -49911,7 +49943,7 @@ var Ic = [
 	"Freguês",
 	"Mercador",
 	"Comerciante"
-], Rc = {
+], zc = {
 	freckle: [
 		"castanho",
 		"ruivo",
@@ -49958,46 +49990,46 @@ var Ic = [
 		"azul"
 	]
 };
-function zc(e, t, n, r, i, a, o) {
+function Bc(e, t, n, r, i, a, o) {
 	let s = r.label[0], c = (n, r, i) => {
 		if (o() > r) return;
 		let s = Kt(e, n, t).filter((e) => e.proc && (!i || i.test(e.id)));
 		if (!s.length) return;
-		let c = Ec(s, o), l = c.colors?.[0]?.material;
-		a[n] = Mc(e, c, l ? Rc[l] : void 0, o);
-	}, l = Ic.includes(s);
-	if (c("skin_spots", i ? .5 : .22, i ? /manchas_idade|olheiras|sardas_leves/ : /sardas|pinta|acne|fuligem|queimado|olheiras/), c("scar_face", l ? .3 : .04), (n === "female" || Lc.includes(s)) && (c("makeup_lips", n === "female" ? Lc.includes(s) ? .5 : .14 : .03, /batom_(fino|cheio)|gloss/), c("makeup_cheeks", n === "female" && Lc.includes(s) ? .35 : .06, /blush_suave|rubor/), c("makeup_eyes", n === "female" && Lc.includes(s) ? .2 : .03, /delineado|sombra/)), s === "Bardo" && c("face_paint", .18), (l || s === "Andarilho") && c("tattoo_face", .1), o() < .18 && !i) {
+		let c = Dc(s, o), l = c.colors?.[0]?.material;
+		a[n] = Nc(e, c, l ? zc[l] : void 0, o);
+	}, l = Lc.includes(s);
+	if (c("skin_spots", i ? .5 : .22, i ? /manchas_idade|olheiras|sardas_leves/ : /sardas|pinta|acne|fuligem|queimado|olheiras/), c("scar_face", l ? .3 : .04), (n === "female" || Rc.includes(s)) && (c("makeup_lips", n === "female" ? Rc.includes(s) ? .5 : .14 : .03, /batom_(fino|cheio)|gloss/), c("makeup_cheeks", n === "female" && Rc.includes(s) ? .35 : .06, /blush_suave|rubor/), c("makeup_eyes", n === "female" && Rc.includes(s) ? .2 : .03, /delineado|sombra/)), s === "Bardo" && c("face_paint", .18), (l || s === "Andarilho") && c("tattoo_face", .1), o() < .18 && !i) {
 		let n = Kt(e, "expression", t).filter((e) => !e.proc && /happy|sad|angry|shame|neutral|blush/i.test(e.name));
-		n.length && (a.expression = Mc(e, Ec(n, o), Sc, o));
+		n.length && (a.expression = Nc(e, Dc(n, o), Cc, o));
 	}
 }
-function Bc(e, t) {
+function Vc(e, t) {
 	return e.byId.get(t.id)?.slot ?? "beard";
 }
-function Vc(e, t, n, r = Math.random) {
+function Hc(e, t, n, r = Math.random) {
 	let i = {
 		hair: /* @__PURE__ */ new Set(),
 		looks: /* @__PURE__ */ new Set(),
 		roles: /* @__PURE__ */ new Map()
-	}, a = Oc(Object.keys(vc), r), o = [];
-	for (let s = 0; s < n; s++) o.push(Fc(e, {
+	}, a = kc(Object.keys(yc), r), o = [];
+	for (let s = 0; s < n; s++) o.push(Ic(e, {
 		rnd: r,
 		profile: t,
 		skin: a[s % a.length],
 		avoid: i
 	}));
-	return Oc(o, r);
+	return kc(o, r);
 }
 //#endregion
 //#region src/engine/character/storage.ts
-var Hc = [
+var Uc = [
 	"male",
 	"female",
 	"muscular",
 	"teen",
 	"child"
 ];
-function Uc(e, t) {
+function Wc(e, t) {
 	return {
 		version: 1,
 		id: F("pers"),
@@ -50006,9 +50038,9 @@ function Uc(e, t) {
 		updatedAt: Date.now()
 	};
 }
-function Wc(e) {
+function Gc(e) {
 	let t = e, n = t?.appearance;
-	return !t || typeof t.id != "string" || !n || n.version !== 2 || !Hc.includes(n.body) || typeof n.slots != "object" || !n.slots ? null : {
+	return !t || typeof t.id != "string" || !n || n.version !== 2 || !Uc.includes(n.body) || typeof n.slots != "object" || !n.slots ? null : {
 		version: 1,
 		id: t.id,
 		name: typeof t.name == "string" ? t.name : "Sem nome",
@@ -50025,7 +50057,7 @@ function Wc(e) {
 		updatedAt: typeof t.updatedAt == "number" ? t.updatedAt : 0
 	};
 }
-var Gc = class {
+var Kc = class {
 	key;
 	activeKey;
 	constructor(e = "") {
@@ -50034,7 +50066,7 @@ var Gc = class {
 	}
 	read() {
 		try {
-			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Wc).filter((e) => !!e);
+			return JSON.parse(localStorage.getItem(this.key) ?? "[]").map(Gc).filter((e) => !!e);
 		} catch {
 			return [];
 		}
@@ -50062,10 +50094,10 @@ var Gc = class {
 	async setActive(e) {
 		e ? localStorage.setItem(this.activeKey, e) : localStorage.removeItem(this.activeKey);
 	}
-}, Kc = "vortable-character";
-function qc(e) {
+}, qc = "vortable-character";
+function Jc(e) {
 	return JSON.stringify({
-		format: Kc,
+		format: qc,
 		version: 1,
 		characters: e.map((e) => ({
 			name: e.name,
@@ -50073,13 +50105,13 @@ function qc(e) {
 		}))
 	}, null, 2);
 }
-function Jc(e) {
+function Yc(e) {
 	return `${e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "personagem"}.vortable-personagem.json`;
 }
 function vtConfirm(message, options) {
 	return typeof window.__vtConfirm == "function" ? window.__vtConfirm(message, options) : Promise.resolve(confirm(message));
 }
-function Yc(e, t) {
+function Xc(e, t) {
 	let n = e;
 	if (typeof e == "string") try {
 		n = JSON.parse(e);
@@ -50090,23 +50122,23 @@ function Yc(e, t) {
 	if (!r || typeof r != "object") throw Error("Este arquivo não é um personagem do Vortable.");
 	let i = r.format === "vortable-character" && Array.isArray(r.characters) ? r.characters : r.appearance ? [r] : [], a = [];
 	for (let e of i) {
-		let n = e, r = Wc({
+		let n = e, r = Gc({
 			id: "x",
 			name: n?.name,
 			appearance: n?.appearance
 		});
 		if (!r) continue;
 		let i = (typeof n.name == "string" && n.name.trim() ? n.name.trim() : "Sem nome").slice(0, 80);
-		a.push(Uc(i, t ? en(t, r.appearance) : r.appearance));
+		a.push(Wc(i, t ? en(t, r.appearance) : r.appearance));
 	}
 	if (!a.length) throw Error("Este arquivo não é um personagem do Vortable.");
 	return a;
 }
-function Xc(e, t, n = "application/json") {
+function Zc(e, t, n = "application/json") {
 	let r = URL.createObjectURL(new Blob([t], { type: n })), i = document.createElement("a");
 	i.href = r, i.download = e, document.body.append(i), i.click(), i.remove(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function Zc(e = ".json,application/json") {
+function Qc(e = ".json,application/json") {
 	return new Promise((t) => {
 		let n = document.createElement("input");
 		n.type = "file", n.accept = e, n.onchange = async () => {
@@ -50117,7 +50149,7 @@ function Zc(e = ".json,application/json") {
 }
 //#endregion
 //#region src/engine/character/creator.css?inline
-var Qc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);flex-wrap:wrap;display:flex}.cp-tab{color:var(--cp-dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:auto;padding:11px 10px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}", $c = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cachorro|head\/nenhuma|grime\/|clothes\/surrada|legs\/surrada|hat\/(gorro|boina|chapeu))/, el = new RegExp([
+var $c = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp-line2:#ffffff3d;--cp-red:#ff4f5e;--cp-red-soft:#ff4f5e29;--cp-amber:#ffb347;--cp-text:#eef1f8;--cp-dim:#8d96ab;--cp-font:var(--font-label,\"Space Grotesk\", system-ui, sans-serif);background:var(--cp-bg);color:var(--cp-text);font-family:var(--cp-font);-webkit-user-select:none;user-select:none;grid-template-columns:minmax(0,1fr) minmax(380px,540px);font-size:13px;display:grid;position:absolute;inset:0;overflow:hidden}.cp-root *{box-sizing:border-box}.cp-root button{font:inherit;color:inherit;cursor:pointer}.cp-root button:disabled{opacity:.35;cursor:default}.cp-root svg{flex:none;width:16px;height:16px}.cp-spacer{flex:1}.cp-stage{cursor:grab;touch-action:none;background:radial-gradient(55% 65% at 50% 60%,#ff4f5e33,#0000 70%),radial-gradient(70% 50% at 15% 0,#7846ff24,#0000 60%),linear-gradient(#0a0b12,#06070b);min-width:0;min-height:0;position:relative;overflow:hidden}.cp-stage.cp-dragging{cursor:grabbing}.cp-canvas{width:100%;height:100%;display:block;position:absolute;inset:0}.cp-stage__fx{pointer-events:none;background:repeating-linear-gradient(0deg,#00000012 0 1px,#0000 1px 4px),radial-gradient(#0000 50%,#000000a6 100%);position:absolute;inset:0}.cp-stage__head{z-index:2;flex-direction:column;align-items:flex-start;gap:6px;display:flex;position:absolute;top:22px;left:28px;right:28px}.cp-kicker{border-bottom:1px solid var(--cp-line2);width:min(100%,360px);color:var(--cp-red);letter-spacing:.3em;text-transform:uppercase;padding-bottom:7px;font-size:11px;font-weight:600}.cp-name{width:min(100%,440px);color:var(--cp-text);font-family:var(--font-display,Georgia, serif);-webkit-user-select:text;user-select:text;background:0 0;border:0;border-bottom:1px solid #0000;padding:2px 0;font-size:32px}.cp-name:hover{border-bottom-color:var(--cp-line)}.cp-name:focus{border-bottom-color:var(--cp-red);outline:none}.cp-tools{gap:6px;margin-top:4px;display:flex}.cp-tool{border:1px solid var(--cp-line);width:34px;height:34px;color:var(--cp-dim);background:#0006;place-items:center;padding:0;transition:color .12s,border-color .12s,background .12s;display:grid}.cp-tool:hover{color:#fff;border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__foot{z-index:2;pointer-events:none;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;display:flex;position:absolute;bottom:22px;left:28px;right:28px}.cp-stage__foot>*{pointer-events:auto}.cp-rotate{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;align-items:center;gap:10px;font-size:10px;display:flex}.cp-round{border:1px solid var(--cp-line2);background:#00000073;border-radius:50%;width:38px;height:38px;padding:0;font-size:18px;line-height:1}.cp-round:hover{border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-stage__opts{flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;display:flex}.cp-panel{background:var(--cp-panel);border-left:1px solid var(--cp-line2);flex-direction:column;min-width:0;min-height:0;display:flex;box-shadow:-24px 0 60px #00000080}.cp-panel__head{justify-content:space-between;align-items:center;gap:12px;padding:16px 18px 12px;display:flex}.cp-panel__title{align-items:center;gap:10px;min-width:0;display:flex}.cp-panel__title b{letter-spacing:.22em;text-transform:uppercase;font-size:15px;display:block}.cp-panel__title small{color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;font-size:10px;display:block}.cp-panel__icon{border:1px solid var(--cp-red);width:38px;height:38px;color:var(--cp-red);place-items:center;display:grid}.cp-panel__icon svg{width:20px;height:20px}.cp-panel__actions{align-items:center;gap:8px;display:flex}.cp-btn{border:1px solid var(--cp-line2);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));background:#ffffff0f;justify-content:center;align-items:center;gap:7px;height:36px;padding:0 16px;font-size:11px;font-weight:600;transition:background .12s,border-color .12s,color .12s;display:inline-flex}.cp-btn:hover:not(:disabled){border-color:var(--cp-red);background:var(--cp-red-soft)}.cp-btn.cp-primary{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-btn.cp-primary:hover:not(:disabled){background:#ff7480;border-color:#ff7480}.cp-btn.cp-ghost{background:0 0}.cp-btn.cp-x{padding:0 11px}.cp-tabs{border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line2);flex-wrap:wrap;display:flex}.cp-tab{color:var(--cp-dim);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;background:0 0;border:0;border-bottom:2px solid #0000;flex:auto;padding:11px 10px;font-size:11px;font-weight:600;transition:color .12s,background .12s}.cp-tab i{color:var(--cp-red);margin-right:6px;font-style:normal}.cp-tab:hover{color:#fff}.cp-tab.cp-on{color:#fff;border-bottom-color:var(--cp-red);background:linear-gradient(0deg, var(--cp-red-soft), transparent)}.cp-rows{-webkit-user-select:none;user-select:none;flex-direction:column;flex:1;gap:5px;min-height:0;padding:10px 14px 14px;display:flex;overflow-y:auto}.cp-rows::-webkit-scrollbar{width:8px}.cp-rows::-webkit-scrollbar-thumb{background:var(--cp-line2)}.cp-row{border:1px solid var(--cp-line);clip-path:polygon(0 0,calc(100% - 11px) 0,100% 11px,100% 100%,0 100%);background:#ffffff05;border-left:3px solid #0000;padding:9px 12px 11px;transition:background .14s,border-color .14s}.cp-row:hover{background:#ffffff0b}.cp-row.cp-on{background:linear-gradient(90deg, var(--cp-red-soft), #ff4f5e0a);border-left-color:var(--cp-red)}.cp-row__head{width:100%;color:var(--cp-dim);letter-spacing:.2em;text-transform:uppercase;text-align:left;background:0 0;border:0;justify-content:space-between;align-items:center;padding:0;font-size:10px;display:flex}.cp-plain .cp-row__head{cursor:default}.cp-row.cp-on .cp-row__head{color:var(--cp-red)}.cp-row__count{font-variant-numeric:tabular-nums;opacity:.7}.cp-row__ctl{align-items:center;gap:6px;margin-top:7px;display:flex}.cp-arrow{border:1px solid var(--cp-line);width:32px;height:32px;color:var(--cp-red);background:#ffffff0d;flex:none;place-items:center;padding:0;font-size:11px;transition:background .12s,border-color .12s;display:grid}.cp-arrow:hover{background:var(--cp-red-soft);border-color:var(--cp-red)}.cp-arrow.cp-grid{color:var(--cp-dim)}.cp-row__value{border:1px solid var(--cp-line);text-align:center;text-overflow:ellipsis;white-space:nowrap;cursor:default;background:#00000059;flex:1;min-width:0;height:32px;padding:0 10px;font-size:13px;line-height:30px;overflow:hidden}button.cp-row__value{cursor:pointer}button.cp-row__value:hover{border-color:var(--cp-line2)}.cp-row:not(.cp-filled) .cp-row__value{color:var(--cp-dim)}.cp-plain .cp-row__value{cursor:default;color:var(--cp-text)}.cp-sub{color:var(--cp-dim);letter-spacing:.18em;text-transform:uppercase;margin:10px 0 0;font-size:10px}.cp-swatches{flex-wrap:wrap;gap:5px;margin-top:7px;display:flex}.cp-swatch{border:2px solid #fff3;border-radius:50%;width:23px;height:23px;padding:0;transition:transform .1s}.cp-swatch:hover{transform:scale(1.18)}.cp-swatch.cp-on{box-shadow:0 0 0 2px var(--cp-red);border-color:#fff}.cp-chips{gap:6px;display:flex}.cp-chips.cp-wrap{flex-wrap:wrap;margin-top:7px}.cp-chip{border:1px solid var(--cp-line2);letter-spacing:.14em;text-transform:uppercase;background:#00000073;border-radius:999px;padding:6px 12px;font-size:10px;font-weight:600;transition:background .12s,border-color .12s}.cp-chip:hover{border-color:var(--cp-red)}.cp-chip.cp-on{background:var(--cp-red);border-color:var(--cp-red);color:#1a0509}.cp-panel__foot{border-top:1px solid var(--cp-line2);align-items:center;gap:8px;padding:12px 18px;display:flex}.cp-panel__foot svg{width:14px;height:14px}.cp-status{border-top:1px solid var(--cp-line);color:var(--cp-dim);letter-spacing:.08em;justify-content:space-between;align-items:center;gap:12px;padding:8px 18px 10px;font-size:10px;display:flex}.cp-dirty{color:var(--cp-amber)}.cp-link{color:var(--cp-dim);background:0 0;border:0;padding:0;text-decoration:underline}.cp-link:hover{color:#fff}.cp-modal-bg{z-index:50;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);background:#020306c7;place-items:center;padding:20px;display:grid;position:absolute;inset:0}.cp-modal{border:1px solid var(--cp-line2);border-top:2px solid var(--cp-red);background:#0c0e16;flex-direction:column;gap:12px;width:min(900px,100%);max-height:100%;padding:18px 20px;display:flex;box-shadow:0 30px 80px #000000b3}.cp-modal h3{letter-spacing:.22em;text-transform:uppercase;margin:0;font-size:13px;font-weight:600}.cp-modal-body{min-height:0;overflow-y:auto}.cp-modal-foot{justify-content:flex-end;gap:8px;display:flex}.cp-grid-list{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;display:grid}.cp-cell{border:1px solid var(--cp-line);background:#ffffff0a;flex-direction:column;align-items:center;gap:4px;padding:7px 5px 6px;transition:border-color .12s,background .12s;display:flex}.cp-cell:hover{border-color:var(--cp-line2);background:#ffffff14}.cp-cell.cp-on{border-color:var(--cp-red);box-shadow:inset 0 0 0 1px var(--cp-red);background:var(--cp-red-soft)}.cp-cell canvas{width:96px;height:96px;image-rendering:pixelated}.cp-cell span{max-width:100%;color:var(--cp-dim);text-align:center;text-overflow:ellipsis;white-space:nowrap;font-size:10px;overflow:hidden}.cp-cell.cp-none{min-height:128px;color:var(--cp-dim);justify-content:center}.cp-list{flex-direction:column;gap:6px;display:flex}.cp-item{border:1px solid var(--cp-line);background:#ffffff0a;align-items:center;gap:12px;padding:8px 10px;display:flex}.cp-item>div{flex:1;min-width:0}.cp-item small{color:var(--cp-dim);display:block}.cp-item-thumb{width:56px;height:56px;image-rendering:pixelated}.cp-empty{color:var(--cp-dim);text-align:center;padding:24px}.cp-toast{z-index:60;border:1px solid var(--cp-red);letter-spacing:.04em;background:#11131c;padding:9px 16px;font-size:12px;position:absolute;bottom:84px;left:50%;transform:translate(-50%)}.cp-toast.cp-error{color:#ff9a9a;border-color:#ff2d2d}@media (width<=900px){.cp-root{grid-template-rows:minmax(260px,44%) 1fr;grid-template-columns:1fr}.cp-panel{border-left:0;border-top:1px solid var(--cp-line2);box-shadow:none}.cp-name{font-size:24px}.cp-rotate span{display:none}}", el = /^tlou\/(weapon_(hand|back|hip)\/(machadinha|facao|faca|arco)|body\/cachorro|head\/nenhuma|grime\/|clothes\/surrada|legs\/surrada|hat\/(gorro|boina|chapeu))/, tl = new RegExp([
 	"backpack_jetpack",
 	"facial_glasses(_shades|_sunglasses|_nerd|_secretary)?$",
 	"neck_necktie",
@@ -50128,7 +50160,7 @@ var Qc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp
 	"hat_holiday_christmas",
 	"hat_formal_(bowler|tophat)",
 	"heads_alien"
-].join("|")), tl = new RegExp([
+].join("|")), nl = new RegExp([
 	"headwear/helmets/helmets/",
 	"hat_magic_",
 	"hat_formal_(crown|tiara)",
@@ -50154,18 +50186,18 @@ var Qc = ".cp-root{--cp-bg:#07080d;--cp-panel:#0b0d15f5;--cp-line:#ffffff1c;--cp
 	"eyes_cyclops",
 	"backpack_jetpack"
 ].join("|"));
-function nl(e, t) {
+function rl(e, t) {
 	if (!t) return !0;
 	let n = e.id;
-	return t === "medieval" ? n.startsWith("tlou/") ? $c.test(n) : !el.test(n) : ![
+	return t === "medieval" ? n.startsWith("tlou/") ? el.test(n) : !tl.test(n) : ![
 		"wings",
 		"horns",
 		"tail"
-	].includes(e.slot) && !tl.test(n);
+	].includes(e.slot) && !nl.test(n);
 }
-function rl(e, t) {
+function il(e, t) {
 	if (!t) return e;
-	let n = e.catalog.items.filter((e) => nl(e, t));
+	let n = e.catalog.items.filter((e) => rl(e, t));
 	return {
 		...e,
 		catalog: {
@@ -50177,16 +50209,16 @@ function rl(e, t) {
 }
 //#endregion
 //#region src/engine/character/CreatorUI.ts
-var il = {
+var al = {
 	idle: "Parado",
 	walk: "Andando",
 	run: "Correndo"
-}, al = [
+}, ol = [
 	"male",
 	"female",
 	"teen",
 	"child"
-], ol = [
+], sl = [
 	"Corpo",
 	"Rosto",
 	"Cabelo",
@@ -50194,7 +50226,7 @@ var il = {
 	"Marcas",
 	"Roupa",
 	"Acessórios"
-], sl = {
+], cl = {
 	body: "Corpo",
 	tail: "Corpo",
 	wings: "Corpo",
@@ -50210,11 +50242,11 @@ var il = {
 	ponytail: "Cabelo",
 	beard: "Cabelo",
 	mustache: "Cabelo"
-}, cl = /* @__PURE__ */ new Set(/* @__PURE__ */ "head.ears.nose.eyebrows.eyes.wrinkles.expression.hair.ponytail.beard.mustache.horns.hat.bandana.facial.mask.earrings.scar_eye_l.scar_eye_r.scar_mouth.wound_head.skin_spots.scar_face.makeup_lips.makeup_eyes.makeup_cheeks.face_paint.tattoo_face".split(".")), ll = /* @__PURE__ */ new Set([
+}, ll = /* @__PURE__ */ new Set(/* @__PURE__ */ "head.ears.nose.eyebrows.eyes.wrinkles.expression.hair.ponytail.beard.mustache.horns.hat.bandana.facial.mask.earrings.scar_eye_l.scar_eye_r.scar_mouth.wound_head.skin_spots.scar_face.makeup_lips.makeup_eyes.makeup_cheeks.face_paint.tattoo_face".split(".")), ul = /* @__PURE__ */ new Set([
 	"Rosto",
 	"Cabelo",
 	"Maquiagem"
-]), ul = {
+]), dl = {
 	"Eye color": "Cor dos olhos",
 	"Eye Color": "Cor dos olhos",
 	"eye color": "Cor dos olhos",
@@ -50227,14 +50259,14 @@ var il = {
 	Fabric: "Tecido",
 	Cloth: "Tecido",
 	Leather: "Couro"
-}, dl = {
+}, fl = {
 	body: "pele",
 	hair: "cabelo",
 	cloth: "tecido",
 	eye: "olho",
 	metal: "metal",
 	wood: "madeira"
-}, fl = {
+}, pl = {
 	face: {
 		cx: 32,
 		cy: 27,
@@ -50247,7 +50279,7 @@ var il = {
 		h: 70,
 		minW: 46
 	}
-}, pl = 3, ml = 2 ** pl, hl = class {
+}, ml = 3, hl = 2 ** ml, gl = class {
 	opts;
 	root;
 	data;
@@ -50290,7 +50322,7 @@ var il = {
 		this.dirty && e.preventDefault();
 	};
 	constructor(e, t) {
-		this.opts = t, dt("editor", ks), dt("creator", Qc), this.character = Uc(t.initialName ?? "Novo personagem", $t()), this.nameInput = q("input", {
+		this.opts = t, dt("editor", As), dt("creator", $c), this.character = Wc(t.initialName ?? "Novo personagem", $t()), this.nameInput = q("input", {
 			class: "cp-name",
 			value: this.character.name,
 			title: "Nome do personagem",
@@ -50324,7 +50356,7 @@ var il = {
 				onclick: () => {
 					this.anim = e, this.refreshAnimButtons();
 				}
-			}, il[e]);
+			}, al[e]);
 			this.animButtons.set(e, t), n.append(t);
 		}
 		this.stageEl = q("section", { class: "cp-stage" }, this.canvas, q("div", {
@@ -50359,7 +50391,7 @@ var il = {
 	}
 	async init() {
 		try {
-			this.data = rl(await Bt(this.opts.assetBase), this.opts.setting);
+			this.data = il(await Bt(this.opts.assetBase), this.opts.setting);
 		} catch (e) {
 			this.loading?.remove(), this.statusEl.textContent = `Não deu pra carregar o catálogo de personagem: ${e.message}`;
 			return;
@@ -50386,11 +50418,11 @@ var il = {
 		return Kt(this.data, e, this.appearance.body, this.appearance);
 	}
 	groupOf(e) {
-		return sl[e.id] ?? e.group;
+		return cl[e.id] ?? e.group;
 	}
 	groups() {
-		let e = new Set(this.data.catalog.slots.filter((e) => this.itemsFor(e.id).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !ol.includes(e));
-		return [...ol, ...t].filter((t) => e.has(t));
+		let e = new Set(this.data.catalog.slots.filter((e) => this.itemsFor(e.id).length).map((e) => this.groupOf(e))), t = [...e].filter((e) => !sl.includes(e));
+		return [...sl, ...t].filter((t) => e.has(t));
 	}
 	slotsOfGroup(e = this.group) {
 		return this.data.catalog.slots.filter((t) => this.groupOf(t) === e && this.itemsFor(t.id).length);
@@ -50436,7 +50468,7 @@ var il = {
 	}
 	bodyRow() {
 		let e = this.appearance, t = e.body === "muscular" ? "male" : e.body;
-		return this.choiceRow("Tipo de corpo", al.map((e) => Ht[e]), al.indexOf(t), (e) => this.setBody(al[e]));
+		return this.choiceRow("Tipo de corpo", ol.map((e) => Ht[e]), ol.indexOf(t), (e) => this.setBody(ol[e]));
 	}
 	shapeRows() {
 		let e = this.appearance, t = e.shape ?? {}, n = (e) => e === -1 ? 0 : e === 1 ? 2 : 1, r = (e) => e === -2 ? 0 : e === -1 ? 1 : e === 1 ? 3 : 2, i = (e, t) => this.update((n) => {
@@ -50544,7 +50576,7 @@ var il = {
 		let r = [];
 		for (let i of n.colors ?? []) {
 			if (i.material === "body" && n.matchBody) continue;
-			let a = i.label ? ul[i.label] ?? i.label : n.colors.length > 1 ? `Cor (${dl[i.material] ?? i.material})` : "Cor";
+			let a = i.label ? dl[i.label] ?? i.label : n.colors.length > 1 ? `Cor (${fl[i.material] ?? i.material})` : "Cor";
 			r.push(q("div", { class: "cp-sub" }, a), this.swatches(i.material, t.colors?.[i.key] ?? null, (t) => this.update((n) => {
 				(n.slots[e.id].colors ??= {})[i.key] = t;
 			})));
@@ -50618,7 +50650,7 @@ var il = {
 				}, r = await ar(this.opts.assetBase, {
 					...a,
 					slots: {
-						...gl(a, ["body", "head"]),
+						..._l(a, ["body", "head"]),
 						hair: n,
 						[t]: o
 					}
@@ -50630,7 +50662,7 @@ var il = {
 				let n = await ar(this.opts.assetBase, {
 					...a,
 					slots: {
-						...gl(a, ["body", "head"]),
+						..._l(a, ["body", "head"]),
 						[t]: o
 					}
 				});
@@ -50639,7 +50671,7 @@ var il = {
 			}
 			let [s, c] = await Promise.all([this.baseThumb ??= ar(this.opts.assetBase, {
 				...a,
-				slots: gl(a, ["body", "head"])
+				slots: _l(a, ["body", "head"])
 			}), ar(this.opts.assetBase, {
 				...a,
 				slots: { [t]: o }
@@ -50729,7 +50761,7 @@ var il = {
 		}, "Créditos da arte"));
 	}
 	cameraMode() {
-		return this.camOverride ? this.camOverride : cl.has(this.slot) || ll.has(this.group) ? "face" : "body";
+		return this.camOverride ? this.camOverride : ll.has(this.slot) || ul.has(this.group) ? "face" : "body";
 	}
 	toggleCamera() {
 		this.camOverride = this.cameraMode() === "face" ? "body" : "face";
@@ -50760,7 +50792,7 @@ var il = {
 		let i = `${this.rev}:${e}:${t}:${n}`, a = this.upCache.get(i);
 		if (!a) {
 			let e = document.createElement("canvas");
-			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = po(e, pl), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
+			e.width = e.height = 64, e.getContext("2d").drawImage(r, n * 64, t * 64, 64, 64, 0, 0, 64, 64), a = mo(e, ml), this.upCache.size > 60 && this.upCache.delete(this.upCache.keys().next().value), this.upCache.set(i, a);
 		}
 		return a;
 	}
@@ -50773,7 +50805,7 @@ var il = {
 			n = i, this.fitCanvas();
 			let o = this.canvas.width, s = this.canvas.height;
 			e.clearRect(0, 0, o, s);
-			let c = this.cameraMode(), l = fl[c], u = 1 - Math.exp(-a * 7);
+			let c = this.cameraMode(), l = pl[c], u = 1 - Math.exp(-a * 7);
 			this.hs += ((this.appearance.height ?? 1) - this.hs) * u;
 			let d = this.hs, f = 62 - (62 - l.cy) * d, p = Math.max(l.h * (c === "body" ? Math.max(1, d) : 1), l.minW * d / (o / s));
 			this.cam.cx += (l.cx - this.cam.cx) * u, this.cam.cy += (f - this.cam.cy) * u, this.cam.h += (p - this.cam.h) * u, this.camBtn.textContent = this.cameraMode() === "face" ? "Ver o corpo" : "Ver o rosto";
@@ -50782,7 +50814,7 @@ var il = {
 			let { frames: h, rate: g } = Kn[this.anim], _ = +(this.anim === "walk"), v = h - _, y = _ + Math.floor((i - t) / 1e3 * g) % v, b = this.upscaled(this.anim, this.dir, y, m), x = this.cam.h, S = o / s * x, C = this.cam.cx - S / 2, w = this.cam.cy - x / 2, T = o / S, E = (32 - C) * T, D = (61.5 - w) * T;
 			e.save(), e.translate(E, D), e.scale(1, .22);
 			let O = 17 * T, k = e.createRadialGradient(0, 0, 0, 0, 0, O);
-			k.addColorStop(0, "rgba(0,0,0,0.55)"), k.addColorStop(.7, "rgba(0,0,0,0.25)"), k.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = k, e.beginPath(), e.arc(0, 0, O, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, T * .35), e.beginPath(), e.arc(0, 0, O * .82, 0, Math.PI * 2), e.stroke(), e.restore(), e.save(), e.translate(E, (62 - w) * T), e.scale(this.hs, this.hs), e.translate(-E, -(62 - w) * T), _l(e, b, C * ml, w * ml, S * ml, x * ml, 0, 0, o, s), e.restore();
+			k.addColorStop(0, "rgba(0,0,0,0.55)"), k.addColorStop(.7, "rgba(0,0,0,0.25)"), k.addColorStop(1, "rgba(0,0,0,0)"), e.fillStyle = k, e.beginPath(), e.arc(0, 0, O, 0, Math.PI * 2), e.fill(), e.strokeStyle = "rgba(255, 79, 94, 0.55)", e.lineWidth = Math.max(1, T * .35), e.beginPath(), e.arc(0, 0, O * .82, 0, Math.PI * 2), e.stroke(), e.restore(), e.save(), e.translate(E, (62 - w) * T), e.scale(this.hs, this.hs), e.translate(-E, -(62 - w) * T), vl(e, b, C * hl, w * hl, S * hl, x * hl, 0, 0, o, s), e.restore();
 		};
 		this.raf = requestAnimationFrame(r);
 	}
@@ -50837,15 +50869,15 @@ var il = {
 	}
 	exportFile() {
 		let e = this.nameInput.value.trim() || "Sem nome";
-		Xc(Jc(e), qc([{
+		Zc(Yc(e), Jc([{
 			name: e,
 			appearance: this.appearance
 		}])), this.toast(`"${e}" exportado.`);
 	}
 	async importFile() {
-		let e = await Zc();
+		let e = await Qc();
 		if (e !== null) try {
-			let [t] = Yc(e, this.data);
+			let [t] = Xc(e, this.data);
 			if (this.dirty && !await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) return;
 			this.character = this.opts.single ? {
 				...t,
@@ -50859,13 +50891,13 @@ var il = {
 		this.dirty && await vtConfirm(`Salvar "${this.nameInput.value || "o personagem"}" antes de sair?`, { title: "Salvar antes de sair?", confirmLabel: "Salvar e sair", cancelLabel: "Sair sem salvar" }) && !await this.save() || (this.dirty = !1, this.opts.back?.onClick());
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", js(this.opts.assetBase), [q("button", {
+		let e = this.modal("Créditos da arte", Ms(this.opts.assetBase), [q("button", {
 			class: "cp-btn cp-ghost",
 			onclick: () => e()
 		}, "Fechar")]);
 	}
 	async newCharacter() {
-		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Uc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
+		(!this.dirty || await vtConfirm("O personagem atual tem mudanças não salvas. Descartar?", { title: "Descartar mudanças?", tone: "danger", confirmLabel: "Descartar" })) && (this.character = Wc("Novo personagem", $t(this.appearance.body)), this.nameInput.value = this.character.name, this.dirty = !0, this.afterLoad());
 	}
 	afterLoad() {
 		this.character.appearance = en(this.data, this.character.appearance), this.baseThumb = null, this.renderTabs(), this.renderRows(), this.recompose();
@@ -50931,21 +50963,21 @@ var il = {
 		this.root.append(n), setTimeout(() => n.remove(), 2500);
 	}
 };
-function gl(e, t) {
+function _l(e, t) {
 	return Object.fromEntries(t.filter((t) => e.slots[t]).map((t) => [t, e.slots[t]]));
 }
-function _l(e, t, n, r, i, a, o, s, c, l) {
+function vl(e, t, n, r, i, a, o, s, c, l) {
 	let u = c / i, d = l / a, f = Math.max(0, n), p = Math.max(0, r), m = Math.min(t.width, n + i), h = Math.min(t.height, r + a);
 	m <= f || h <= p || e.drawImage(t, f, p, m - f, h - p, o + (f - n) * u, s + (p - r) * d, (m - f) * u, (h - p) * d);
 }
 //#endregion
 //#region src/engine/editor/NpcPanel.ts
-var vl = 6, yl = [
+var yl = 6, bl = [
 	"down",
 	"left",
 	"up",
 	"right"
-], bl = class {
+], xl = class {
 	state;
 	hooks;
 	el;
@@ -51009,7 +51041,7 @@ var vl = 6, yl = [
 	refreshAnalysis(e) {
 		if (!this.data) return;
 		let t = this.state.zone;
-		this.analysis = Is(t);
+		this.analysis = Ls(t);
 		let n = this.zoneId !== t.id;
 		this.zoneId = t.id, e && (n || this.drafts.length === 0) ? this.newBatch() : this.render();
 	}
@@ -51017,7 +51049,7 @@ var vl = 6, yl = [
 		return this.style === "auto" ? this.analysis?.profile ?? "geral" : this.style;
 	}
 	newBatch() {
-		this.data && (this.drafts = Vc(this.data, this.profile, vl), this.render());
+		this.data && (this.drafts = Hc(this.data, this.profile, yl), this.render());
 	}
 	render() {
 		if (!this.analysis) return;
@@ -51027,7 +51059,7 @@ var vl = 6, yl = [
 			onchange: (e) => {
 				this.style = e.target.value, this.newBatch();
 			}
-		}, q("option", { value: "auto" }, `Automático (${e.label})`), ...Object.keys(Ms).map((e) => q("option", { value: e }, Ms[e])));
+		}, q("option", { value: "auto" }, `Automático (${e.label})`), ...Object.keys(Ns).map((e) => q("option", { value: e }, Ns[e])));
 		t.value = this.style;
 		let n = q("div", { class: "vt-npc-grid" });
 		this.drafts.forEach((e, t) => n.append(this.card(e, t))), this.listEl = q("div", { class: "vt-npc-list" }), this.specialsEl = this.hooks.specials ? q("div", { class: "vt-npc-specials" }) : null, this.body.replaceChildren(q("div", { class: "vt-npc-analysis" }, q("b", {}, `Zona: ${e.label}`), e.reasons.length ? q("small", {}, `Por causa de: ${e.reasons.join(", ")}`) : null, t), q("div", { class: "vt-npc-actions" }, q("button", {
@@ -51131,13 +51163,13 @@ var vl = 6, yl = [
 		} catch {}
 	}
 	reroll(e) {
-		this.data && (this.drafts[e] = Fc(this.data, { profile: this.profile }), this.render());
+		this.data && (this.drafts[e] = Ic(this.data, { profile: this.profile }), this.render());
 	}
 	async importCharacter() {
 		if (this.data) try {
-			let e = await Zc();
+			let e = await Qc();
 			if (e == null) return;
-			let [t] = Yc(e, this.data);
+			let [t] = Xc(e, this.data);
 			this.pick({
 				name: t.name,
 				role: "",
@@ -51229,7 +51261,7 @@ var vl = 6, yl = [
 		document.body.append(r);
 		let i = () => {
 			a.destroy(), r.remove(), this.look = null;
-		}, a = new hl(r, {
+		}, a = new gl(r, {
 			assetBase: this.hooks.assetBase,
 			storage: n,
 			single: !0,
@@ -51252,7 +51284,7 @@ var vl = 6, yl = [
 		this.state.checkpoint(), e.showName ? delete e.showName : e.showName = !0, this.state.emit("npcs"), this.state.edited();
 	}
 	turn(e) {
-		this.state.checkpoint(), e.dir = yl[(yl.indexOf(e.dir) + 1) % yl.length], this.state.emit("npcs"), this.state.edited();
+		this.state.checkpoint(), e.dir = bl[(bl.indexOf(e.dir) + 1) % bl.length], this.state.emit("npcs"), this.state.edited();
 	}
 	move(e) {
 		this.state.set({
@@ -51274,7 +51306,7 @@ var vl = 6, yl = [
 			npcDraft: null
 		}), this.state.emit("npcs"), this.state.edited(), this.hooks.toast(`"${e.name}" removido.`);
 	}
-}, xl = {
+}, Sl = {
 	x: 0,
 	y: -24,
 	radius: 96,
@@ -51282,7 +51314,7 @@ var vl = 6, yl = [
 	intensity: 1,
 	flicker: .2
 };
-function Sl(e, t, n) {
+function Cl(e, t, n) {
 	let r = structuredClone(e.solids), i = e.sort, a = !1, o = e.light ? { ...e.light } : null, s = "solid", c = -1, l = Math.max(1, Math.min(6, Math.floor(Math.min(360 / e.w, 300 / e.h)))), u = q("canvas", {
 		class: "vt-curate-canvas",
 		width: e.w * l + 24,
@@ -51315,7 +51347,7 @@ function Sl(e, t, n) {
 		let t = g(e);
 		if (s === "sort") i = Math.max(0, -t.y), a = !1;
 		else if (s === "light") o = {
-			...o ?? xl,
+			...o ?? Sl,
 			x: t.x,
 			y: t.y
 		}, F();
@@ -51374,7 +51406,7 @@ function Sl(e, t, n) {
 		type: "checkbox",
 		checked: !!o,
 		onchange: () => {
-			o = k.checked ? { ...o ?? xl } : null, F(), m();
+			o = k.checked ? { ...o ?? Sl } : null, F(), m();
 		}
 	}), A = q("input", {
 		class: "vt-input vt-num",
@@ -51474,7 +51506,7 @@ function Sl(e, t, n) {
 }
 //#endregion
 //#region src/engine/editor/prefs.ts
-function Cl(e) {
+function wl(e) {
 	try {
 		let t = JSON.parse(localStorage.getItem(e) ?? "[]");
 		return Array.isArray(t) ? t.filter((e) => typeof e == "string") : [];
@@ -51482,14 +51514,14 @@ function Cl(e) {
 		return [];
 	}
 }
-function wl(e, t) {
+function Tl(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
 }
 //#endregion
 //#region src/engine/storage.ts
-function Tl(e, t = Date.now()) {
+function El(e, t = Date.now()) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -51503,7 +51535,7 @@ function Tl(e, t = Date.now()) {
 		}))
 	};
 }
-function El(e = "Meu mundo") {
+function Dl(e = "Meu mundo") {
 	return {
 		version: 1,
 		id: F("mundo"),
@@ -51512,7 +51544,7 @@ function El(e = "Meu mundo") {
 		layout: {}
 	};
 }
-var Dl = class {
+var Ol = class {
 	zoneKey;
 	indexKey;
 	worldKey;
@@ -51537,9 +51569,9 @@ var Dl = class {
 	async loadWorld() {
 		try {
 			let e = localStorage.getItem(this.worldKey);
-			if (e) return Rl(JSON.parse(e));
+			if (e) return zl(JSON.parse(e));
 		} catch {}
-		return El();
+		return Dl();
 	}
 	async saveWorld(e) {
 		localStorage.setItem(this.worldKey, JSON.stringify(e));
@@ -51550,19 +51582,19 @@ var Dl = class {
 	async load(e) {
 		try {
 			let t = localStorage.getItem(this.zoneKey + e);
-			return t ? Al(JSON.parse(t)) : null;
+			return t ? jl(JSON.parse(t)) : null;
 		} catch {
 			return null;
 		}
 	}
 	async save(e) {
-		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([Tl(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
+		localStorage.setItem(this.zoneKey + e.id, JSON.stringify(e)), this.writeIndex([El(e), ...this.readIndex().filter((t) => t.id !== e.id)]);
 	}
 	async remove(e) {
 		localStorage.removeItem(this.zoneKey + e), this.writeIndex(this.readIndex().filter((t) => t.id !== e));
 	}
 };
-function Ol() {
+function kl() {
 	try {
 		let e = "vortable:teste";
 		return localStorage.setItem(e, "1"), localStorage.removeItem(e), !0;
@@ -51570,14 +51602,14 @@ function Ol() {
 		return !1;
 	}
 }
-var kl = (e) => typeof e == "number" && Number.isFinite(e);
-function Al(e) {
+var Al = (e) => typeof e == "number" && Number.isFinite(e);
+function jl(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Arquivo não é uma zona do Vortable.");
 	let { width: n, height: r } = t, i = (e) => typeof e == "number" && Number.isInteger(e) && e >= 8 && e <= 128;
 	if (!i(n) || !i(r)) throw Error("Tamanho de zona inválido (precisa ser de 8 a 128 tiles).");
 	if (!Array.isArray(t.corners) || t.corners.length !== (n + 1) * (r + 1)) throw Error("Zona corrompida: a grade de terrenos não bate com o tamanho.");
-	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && kl(e.x) && kl(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && kl(e.x) && kl(e.y) && kl(e.w) && kl(e.h) && e.w > 0 && e.h > 0), l = t.spawn && kl(t.spawn.x) && kl(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
+	let a = n * 32, o = r * 32, s = (Array.isArray(t.objects) ? t.objects : []).filter((e) => e && typeof e.kind == "string" && Al(e.x) && Al(e.y)), c = (Array.isArray(t.portals) ? t.portals : []).filter((e) => !!e && typeof e.id == "string" && Al(e.x) && Al(e.y) && Al(e.w) && Al(e.h) && e.w > 0 && e.h > 0), l = t.spawn && Al(t.spawn.x) && Al(t.spawn.y) && t.spawn.x >= 0 && t.spawn.y >= 0 && t.spawn.x <= a && t.spawn.y <= o ? t.spawn : {
 		x: a / 2,
 		y: o / 2
 	};
@@ -51597,12 +51629,12 @@ function Al(e) {
 			x: Math.round(e.x),
 			y: Math.round(e.y),
 			...e.flip === !0 ? { flip: !0 } : {},
-			...kl(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
+			...Al(e.z) && e.z > 0 ? { z: Math.min(160, Math.round(e.z)) } : {}
 		})),
-		...Pl(t.lighting),
-		...Il(t.sound),
-		...Array.isArray(t.lights) && t.lights.length ? { lights: Ll(t.lights, a, o) } : {},
-		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: jl(t.npcs, a, o) } : {},
+		...Fl(t.lighting),
+		...Ll(t.sound),
+		...Array.isArray(t.lights) && t.lights.length ? { lights: Rl(t.lights, a, o) } : {},
+		...Array.isArray(t.npcs) && t.npcs.length ? { npcs: Ml(t.npcs, a, o) } : {},
 		portals: c.map((e) => ({
 			id: e.id,
 			name: typeof e.name == "string" ? e.name : "Saída",
@@ -51621,12 +51653,12 @@ function Al(e) {
 		}
 	};
 }
-function jl(e, t, n) {
+function Ml(e, t, n) {
 	let r = [];
 	for (let i of e) {
 		let e = i;
-		if (!e || typeof e != "object" || !kl(e.x) || !kl(e.y)) continue;
-		let a = Wc({
+		if (!e || typeof e != "object" || !Al(e.x) || !Al(e.y)) continue;
+		let a = Gc({
 			id: "x",
 			name: e.name,
 			appearance: e.appearance
@@ -51636,8 +51668,8 @@ function jl(e, t, n) {
 			name: typeof e.name == "string" && e.name.trim() ? e.name.trim().slice(0, 60) : "NPC",
 			role: typeof e.role == "string" ? e.role.slice(0, 60) : "",
 			appearance: a.appearance,
-			x: Nl(Math.round(e.x), 0, t),
-			y: Nl(Math.round(e.y), 0, n),
+			x: Pl(Math.round(e.x), 0, t),
+			y: Pl(Math.round(e.y), 0, n),
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {},
 			...typeof e.sheet == "string" && e.sheet ? { sheet: e.sheet.slice(0, 120) } : {}
@@ -51645,29 +51677,29 @@ function jl(e, t, n) {
 	}
 	return r;
 }
-var Ml = /^#[0-9a-f]{6}$/i, Nl = (e, t, n) => Math.max(t, Math.min(n, e));
-function Pl(e) {
+var Nl = /^#[0-9a-f]{6}$/i, Pl = (e, t, n) => Math.max(t, Math.min(n, e));
+function Fl(e) {
 	let t = e;
 	return !t || typeof t != "object" ? {} : { lighting: {
 		place: t.place === "indoor" || t.place === "underground" ? t.place : "outdoor",
-		...typeof t.tint == "string" && Ml.test(t.tint) ? { tint: t.tint } : {},
+		...typeof t.tint == "string" && Nl.test(t.tint) ? { tint: t.tint } : {},
 		...t.sunShadows === !1 ? { sunShadows: !1 } : {},
 		...t.particles === !1 ? { particles: !1 } : {},
-		...kl(t.wind) ? { wind: Nl(t.wind, 0, 1) } : {},
+		...Al(t.wind) ? { wind: Pl(t.wind, 0, 1) } : {},
 		...t.clouds === !1 ? { clouds: !1 } : {}
 	} };
 }
-function Fl(e) {
+function Il(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {
-		hour: kl(t.hour) ? Nl(t.hour, 0, 24) % 24 : null,
-		...kl(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Nl(t.dayMinutes, 1, 1440) } : {},
+		hour: Al(t.hour) ? Pl(t.hour, 0, 24) % 24 : null,
+		...Al(t.dayMinutes) && t.dayMinutes > 0 && t.dayMinutes !== 24 ? { dayMinutes: Pl(t.dayMinutes, 1, 1440) } : {},
 		...typeof t.weather == "string" && t.weather in Xi && t.weather !== "clear" ? { weather: t.weather } : {}
 	};
 	return n.hour === null && n.dayMinutes === void 0 && n.weather === void 0 ? {} : { sky: n };
 }
-function Il(e) {
+function Ll(e) {
 	let t = e;
 	if (!t || typeof t != "object") return {};
 	let n = {}, r = [
@@ -51689,7 +51721,7 @@ function Il(e) {
 	];
 	for (let [e, i] of Object.entries(t.layers ?? {})) {
 		let t = e === "water" ? "stream" : e;
-		r.includes(t) && kl(i) && i > 0 && (n[t] = Nl(i, 0, 1));
+		r.includes(t) && Al(i) && i > 0 && (n[t] = Pl(i, 0, 1));
 	}
 	let i = {
 		...t.auto === !1 ? { auto: !1 } : {},
@@ -51697,22 +51729,22 @@ function Il(e) {
 	};
 	return Object.keys(i).length ? { sound: i } : {};
 }
-function Ll(e, t, n) {
-	return e.filter((e) => !!e && typeof e == "object" && kl(e.x) && kl(e.y)).map((e) => ({
+function Rl(e, t, n) {
+	return e.filter((e) => !!e && typeof e == "object" && Al(e.x) && Al(e.y)).map((e) => ({
 		id: typeof e.id == "string" && e.id ? e.id : F("luz"),
-		x: Nl(Math.round(e.x), 0, t),
-		y: Nl(Math.round(e.y), 0, n),
-		radius: kl(e.radius) ? Nl(Math.round(e.radius), 16, 512) : 96,
-		color: typeof e.color == "string" && Ml.test(e.color) ? e.color : "#ffb060",
-		intensity: kl(e.intensity) ? Nl(e.intensity, 0, 1) : 1,
-		flicker: kl(e.flicker) ? Nl(e.flicker, 0, 1) : 0
+		x: Pl(Math.round(e.x), 0, t),
+		y: Pl(Math.round(e.y), 0, n),
+		radius: Al(e.radius) ? Pl(Math.round(e.radius), 16, 512) : 96,
+		color: typeof e.color == "string" && Nl.test(e.color) ? e.color : "#ffb060",
+		intensity: Al(e.intensity) ? Pl(e.intensity, 0, 1) : 1,
+		flicker: Al(e.flicker) ? Pl(e.flicker, 0, 1) : 0
 	}));
 }
-function Rl(e) {
+function zl(e) {
 	let t = e;
 	if (!t || typeof t != "object" || t.version !== 1) throw Error("Dados de mundo inválidos.");
 	let n = {};
-	for (let [e, r] of Object.entries(t.layout ?? {})) r && kl(r.x) && kl(r.y) && (n[e] = {
+	for (let [e, r] of Object.entries(t.layout ?? {})) r && Al(r.x) && Al(r.y) && (n[e] = {
 		x: r.x,
 		y: r.y
 	});
@@ -51722,12 +51754,12 @@ function Rl(e) {
 		name: typeof t.name == "string" ? t.name : "Meu mundo",
 		start: typeof t.start == "string" ? t.start : null,
 		layout: n,
-		...Fl(t.sky)
+		...Il(t.sky)
 	};
 }
 //#endregion
 //#region src/engine/editor/EditorUI.ts
-var zl = [
+var Bl = [
 	{
 		id: "brush",
 		label: "Pincel de terreno",
@@ -51778,16 +51810,16 @@ var zl = [
 		label: "Régua: segure e arraste pra medir em metros (1 tile = 1 m)",
 		key: "R"
 	}
-], Bl = 8, Vl = "vortable:objects:favorites", Hl = "vortable:editor:drawer";
-function Ul(e) {
+], Vl = 8, Hl = "vortable:objects:favorites", Ul = "vortable:editor:drawer";
+function Wl(e) {
 	try {
-		let t = localStorage.getItem(Hl);
+		let t = localStorage.getItem(Ul);
 		return e ? t !== "0" : t === "1";
 	} catch {
 		return e;
 	}
 }
-var Wl = "vortable:objects:recent", Gl = 24, Kl = [
+var Gl = "vortable:objects:recent", Kl = 24, ql = [
 	[
 		"Fogo",
 		"#ffa050",
@@ -51828,7 +51860,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		"#8ae8ff",
 		0
 	]
-], ql = "★", Jl = "⟲", Yl = class {
+], Jl = "★", Yl = "⟲", Xl = class {
 	state;
 	storage;
 	hooks;
@@ -51863,8 +51895,8 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 	objectEl;
 	shownObject = "";
 	catalogVersion = 0;
-	favorites = Cl(Vl);
-	recents = Cl(Wl);
+	favorites = wl(Hl);
+	recents = wl(Gl);
 	terrainCells = /* @__PURE__ */ new Map();
 	objectCells = /* @__PURE__ */ new Map();
 	testing = !1;
@@ -51883,12 +51915,12 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		this.state.dirty && e.preventDefault();
 	};
 	constructor(e, t, n, r) {
-		this.state = t, this.storage = n, this.hooks = r, dt("editor", ks), this.npcPanel = new bl(t, {
+		this.state = t, this.storage = n, this.hooks = r, dt("editor", As), this.npcPanel = new xl(t, {
 			assetBase: r.assetBase,
 			focus: (e, t) => r.scene()?.focusAt(e, t),
 			toast: (e, t) => this.toast(e, t),
 			specials: r.npcLibrary
-		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildRulerBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Ul(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
+		}), this.stage = q("div", { class: "vt-stage" }, this.buildZoomBar(), this.buildRulerBar(), r.externalBar ? null : this.buildQuick(), this.npcPanel.el), this.root = q("div", { class: `vt-root${Wl(!!r.externalBar) ? " vt-drawer-open" : ""}` }, this.buildTools(), this.buildDrawer(), this.stage, this.buildStatus(), q("div", { class: "vt-testbar" }, this.testZoneEl = q("b", { class: "vt-testzone" }), this.testClockEl = q("span", { class: "vt-testclock" }), this.muteBtn = q("button", {
 			class: "vt-btn vt-mutebtn",
 			title: "Som (M)",
 			onclick: () => this.toggleMute()
@@ -52022,13 +52054,13 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 	setDrawer(e) {
 		this.root.classList.toggle("vt-drawer-open", e), this.notifyBar();
 		try {
-			localStorage.setItem(Hl, e ? "1" : "0");
+			localStorage.setItem(Ul, e ? "1" : "0");
 		} catch {}
 		requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
 	}
 	buildTools() {
 		let e = q("aside", { class: "vt-tools" });
-		for (let t of zl) {
+		for (let t of Bl) {
 			let n = q("button", {
 				class: "vt-tool",
 				title: `${t.label} (${t.key})`,
@@ -52059,7 +52091,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 				on: r
 			}), e.append(a);
 		};
-		return t(X.grid, "Mostrar grade (H)", () => this.state.showGrid, () => this.state.set({ showGrid: !this.state.showGrid })), t(X.collision, "Mostrar colisões (K)", () => this.state.showCollision, () => this.state.set({ showCollision: !this.state.showCollision })), t(X.sun, "Ver iluminação: hora, luzes e sombras (I)", () => this.state.lightPreview, () => this.state.set({ lightPreview: !this.state.lightPreview })), t(X.sound, "Ouvir os sons da zona no editor (U)", () => To().editor, () => this.toggleEditorSound()), t(X.snap, "Encaixar objetos na grade (N)", () => this.state.snap, () => this.state.set({ snap: !this.state.snap })), e.append(q("button", {
+		return t(X.grid, "Mostrar grade (H)", () => this.state.showGrid, () => this.state.set({ showGrid: !this.state.showGrid })), t(X.collision, "Mostrar colisões (K)", () => this.state.showCollision, () => this.state.set({ showCollision: !this.state.showCollision })), t(X.sun, "Ver iluminação: hora, luzes e sombras (I)", () => this.state.lightPreview, () => this.state.set({ lightPreview: !this.state.lightPreview })), t(X.sound, "Ouvir os sons da zona no editor (U)", () => Eo().editor, () => this.toggleEditorSound()), t(X.snap, "Encaixar objetos na grade (N)", () => this.state.snap, () => this.state.set({ snap: !this.state.snap })), e.append(q("button", {
 			class: "vt-tool",
 			title: "Centralizar a zona (Home)",
 			html: X.center,
@@ -52115,7 +52147,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			}), q("span", {}, n.label));
 			this.rulerModeButtons.set(n.id, e), t.push(e);
 		}
-		let n = fs.map((e) => {
+		let n = ps.map((e) => {
 			let t = q("button", {
 				class: "vt-seg vt-rulerbar-angle-btn",
 				title: `Abertura do cone: ${e}°`,
@@ -52134,7 +52166,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		}, q("div", { class: "vt-segmented" }, ...t), this.coneAngleEl), this.rulerBar;
 	}
 	buildZoomBar() {
-		let e = 1e3, t = (t) => String(Math.round(Math.log(t / bs) / Math.log(8 / bs) * e)), n = (t) => bs * (8 / bs) ** (t / e);
+		let e = 1e3, t = (t) => String(Math.round(Math.log(t / xs) / Math.log(8 / xs) * e)), n = (t) => xs * (8 / xs) ** (t / e);
 		return this.zoomSlider = q("input", {
 			class: "vt-zoom-range",
 			type: "range",
@@ -52178,7 +52210,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			let r = q("button", {
 				class: "vt-tab",
 				onclick: () => {
-					this.tab = t, t === "rooms" && this.state.set({ tool: "room" }), t === "light" && this.state.set({ tool: "light" }), t === "sound" && (To().editor || Eo({ editor: !0 }), (this.state.tool === "light" || this.state.tool === "room") && this.state.set({ tool: "select" })), this.renderPane(), this.refresh();
+					this.tab = t, t === "rooms" && this.state.set({ tool: "room" }), t === "light" && this.state.set({ tool: "light" }), t === "sound" && (Eo().editor || Do({ editor: !0 }), (this.state.tool === "light" || this.state.tool === "room") && this.state.set({ tool: "select" })), this.renderPane(), this.refresh();
 				}
 			}, n);
 			this.tabButtons.set(t, r), e.append(r);
@@ -52288,7 +52320,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		});
 	}
 	renderTerrains() {
-		let e = Xl(this.terrainFilter.trim()), t = _.filter((t) => !e || Xl(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
+		let e = Zl(this.terrainFilter.trim()), t = _.filter((t) => !e || Zl(`${t.label} ${t.category}`).includes(e)), n = this.searchBox(this.terrainFilter, `Buscar entre ${_.length} terrenos`, (e) => {
 			this.terrainFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -52307,7 +52339,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		return this.objectCells.set(e.id, n), n;
 	}
 	renderObjects() {
-		let e = Ye(), t = Xl(this.objectFilter.trim()), n = (e) => !t || Xl(Zl(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
+		let e = Ye(), t = Zl(this.objectFilter.trim()), n = (e) => !t || Zl(Ql(e)).includes(t), r = this.searchBox(this.objectFilter, `Buscar entre ${e.length} peças (nome, tag, tipo)`, (e) => {
 			this.objectFilter = e, this.renderPane(), this.refresh();
 			let t = this.paneEl.querySelector("input");
 			t.focus(), t.setSelectionRange(e.length, e.length);
@@ -52347,14 +52379,14 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			"Masmorra"
 		], c = [...o.keys()].sort((e, t) => (s.indexOf(e) + 1 || 99) - (s.indexOf(t) + 1 || 99) || e.localeCompare(t, "pt")), l = i(this.favorites), u = i(this.recents), d = [
 			...!t || l.length ? [{
-				id: ql,
+				id: Jl,
 				title: "Favoritos",
 				icon: X.star,
 				count: l.length,
 				content: () => a(l, "Nenhum favorito ainda. Escolha uma peça e clique na estrela.")
 			}] : [],
 			...!t || u.length ? [{
-				id: Jl,
+				id: Yl,
 				title: "Recentes",
 				icon: X.clock,
 				count: u.length,
@@ -52596,7 +52628,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			title: "Outra cor"
 		});
 		c.addEventListener("input", () => o({ color: c.value }, !0)), c.addEventListener("change", () => o({ color: c.value }));
-		let l = q("div", { class: "vt-lightcolors" }, ...Kl.map(([e, t, r]) => q("button", {
+		let l = q("div", { class: "vt-lightcolors" }, ...ql.map(([e, t, r]) => q("button", {
 			class: `vt-lightcolor${n.color.toLowerCase() === t ? " vt-on" : ""}`,
 			title: e,
 			style: `--c:${t}`,
@@ -52617,14 +52649,14 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		})) : null);
 	}
 	toggleEditorSound() {
-		Eo({ editor: !To().editor }), this.tab === "sound" && this.renderPane(), this.refresh();
+		Do({ editor: !Eo().editor }), this.tab === "sound" && this.renderPane(), this.refresh();
 	}
 	toggleMute() {
-		Eo({ muted: !To().muted }), this.applySound();
+		Do({ muted: !Eo().muted }), this.applySound();
 	}
 	applySound() {
 		this.hooks.applySound?.();
-		let e = To().muted;
+		let e = Eo().muted;
 		this.muteBtn.innerHTML = e ? X.mute : X.sound, this.muteBtn.classList.toggle("vt-on", !e);
 	}
 	switchEl(e, t, n = "") {
@@ -52637,12 +52669,12 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		return r.addEventListener("change", () => t(r.checked)), r;
 	}
 	renderSound() {
-		let e = this.state, t = e.zone, n = Ko(t), r = To(), i = !1, a = (n, r = !1) => {
+		let e = this.state, t = e.zone, n = qo(t), r = Eo(), i = !1, a = (n, r = !1) => {
 			i ||= (e.checkpoint(), !0);
 			let a = {
-				...Ko(t),
+				...qo(t),
 				layers: {
-					...Ko(t).layers,
+					...qo(t).layers,
 					...n
 				}
 			};
@@ -52650,7 +52682,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			Object.keys(a.layers).length || delete a.layers, Object.keys(a).length ? t.sound = a : delete t.sound, e.edited(), r || (i = !1, this.renderPane());
 		}, o = (n) => {
 			e.checkpoint();
-			let r = { ...Ko(t) };
+			let r = { ...qo(t) };
 			n ? delete r.auto : r.auto = !1, Object.keys(r).length ? t.sound = r : delete t.sound, e.edited(), this.renderPane();
 		}, s = (e, t, n, r = "") => {
 			let i = q("input", {
@@ -52667,7 +52699,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			class: "vt-switchrow",
 			title: "Tocar os sons enquanto edita (U)"
 		}, this.switchEl(r.editor, () => this.toggleEditorSound()), q("span", {}, "Ouvir")), s(r.master, (e) => {
-			Eo({ master: e }), this.applySound();
+			Do({ master: e }), this.applySound();
 		}, () => this.applySound(), "Volume geral"), q("button", {
 			class: `vt-iconbtn${r.muted ? " vt-on" : ""}`,
 			title: r.muted ? "Ligar o som" : "Mudo",
@@ -52675,13 +52707,13 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			onclick: () => {
 				this.toggleMute(), this.renderPane();
 			}
-		})), l = n.layers ?? {}, u = this.soundPick && Mo.some((e) => e.id === this.soundPick) ? this.soundPick : null, d = /* @__PURE__ */ new Map(), f = Mo.map((e) => {
+		})), l = n.layers ?? {}, u = this.soundPick && No.some((e) => e.id === this.soundPick) ? this.soundPick : null, d = /* @__PURE__ */ new Map(), f = No.map((e) => {
 			let t = (l[e.id] ?? 0) > 0, n = q("span", { class: "vt-soundtile-meter" });
 			return d.set(e.id, n), q("button", {
 				class: `vt-soundtile${t ? " vt-on" : ""}${u === e.id ? " vt-picked" : ""}`,
 				title: e.label,
 				onclick: () => {
-					this.soundPick = e.id, To().editor || Eo({ editor: !0 }), u === e.id || !t ? a({ [e.id]: t ? 0 : .7 }) : this.renderPane();
+					this.soundPick = e.id, Eo().editor || Do({ editor: !0 }), u === e.id || !t ? a({ [e.id]: t ? 0 : .7 }) : this.renderPane();
 				}
 			}, q("span", {
 				class: "vt-soundtile-icon",
@@ -52694,7 +52726,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		p(), this.meterTimer = window.setInterval(p, 200);
 		let m = null;
 		if (u) {
-			let e = Mo.find((e) => e.id === u), t = l[u] ?? 0, n = q("b", {}, t ? `${Math.round(t * 100)}%` : "auto");
+			let e = No.find((e) => e.id === u), t = l[u] ?? 0, n = q("b", {}, t ? `${Math.round(t * 100)}%` : "auto");
 			m = q("div", { class: "vt-soundpick" }, q("span", {
 				class: "vt-soundtile-icon",
 				html: X[e.icon] ?? X.sound
@@ -52707,15 +52739,15 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 				onclick: () => this.hooks.scene()?.audio?.thunderNow()
 			}) : null);
 		}
-		let h = Object.keys(Bo).map((e) => q("button", {
+		let h = Object.keys(Vo).map((e) => q("button", {
 			class: "vt-chipbtn",
 			title: "Ouvir",
 			onclick: () => this.hooks.scene()?.audio?.previewStep(e)
-		}, Bo[e]));
+		}, Vo[e]));
 		this.paneEl.append(q("div", { class: "vt-group" }, c), q("div", { class: "vt-group" }, q("div", { class: "vt-grouphead" }, q("h4", {}, "Ambiente"), q("label", {
 			class: "vt-switchrow",
 			title: "Segue o tempo, a hora e o que há perto"
-		}, q("span", {}, "Automático"), this.switchEl(n.auto !== !1, o))), q("div", { class: "vt-soundtiles" }, ...f), m ?? q("small", { class: "vt-note" }, "Clique numa camada pra ligar e ajustar.")), q("div", { class: "vt-group" }, q("div", { class: "vt-grouphead" }, q("h4", {}, "Passos"), s(r.steps, (e) => Eo({ steps: e }), () => void 0, "Volume dos passos")), q("div", { class: "vt-chips" }, ...h)));
+		}, q("span", {}, "Automático"), this.switchEl(n.auto !== !1, o))), q("div", { class: "vt-soundtiles" }, ...f), m ?? q("small", { class: "vt-note" }, "Clique numa camada pra ligar e ajustar.")), q("div", { class: "vt-group" }, q("div", { class: "vt-grouphead" }, q("h4", {}, "Passos"), s(r.steps, (e) => Do({ steps: e }), () => void 0, "Volume dos passos")), q("div", { class: "vt-chips" }, ...h)));
 	}
 	openTerrainPicker(e, t) {
 		let n = [
@@ -52770,14 +52802,14 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		let t = qe(e);
 		if (!t) return;
 		let n = this.primary(t).id;
-		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Gl), wl(Wl, this.recents), this.state.set({
+		this.recents = [n, ...this.recents.filter((e) => e !== n)].slice(0, Kl), Tl(Gl, this.recents), this.state.set({
 			objectKind: e,
 			tool: "object"
 		});
 	}
 	toggleFavorite(e) {
 		let t = this.primary(e).id;
-		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], wl(Vl, this.favorites), this.tab === "objects") {
+		if (this.favorites = this.favorites.includes(t) ? this.favorites.filter((e) => e !== t) : [t, ...this.favorites], Tl(Hl, this.favorites), this.tab === "objects") {
 			let e = this.paneEl.scrollTop;
 			this.renderPane(), this.paneEl.scrollTop = e;
 		}
@@ -52868,7 +52900,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		r.checkpoint(), n ? e.z = n : delete e.z, r.edited(), r.emit("objects");
 	}
 	openCurate(e) {
-		let t = this.primary(e), n = [...new Set(Ke().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = Sl(t, this.hooks.textureImage(ze(t.sheet)), n), i = q("button", {
+		let t = this.primary(e), n = [...new Set(Ke().objects.map((e) => e.category))].sort((e, t) => e.localeCompare(t, "pt")), r = Cl(t, this.hooks.textureImage(ze(t.sheet)), n), i = q("button", {
 			class: "vt-btn vt-primary",
 			onclick: async () => {
 				i.disabled = !0;
@@ -53051,7 +53083,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		e === "object" && this.tab !== "objects" && (this.tab = "objects", this.renderPane()), (e === "brush" || e === "fill") && this.tab !== "terrains" && (this.tab = "terrains", this.renderPane()), e === "room" && this.tab !== "rooms" && (this.tab = "rooms", this.renderPane()), e === "light" && this.tab !== "light" && (this.tab = "light", this.renderPane()), this.state.set({ tool: e });
 	}
 	setBrush(e) {
-		this.state.set({ brush: Math.max(1, Math.min(Bl, e)) });
+		this.state.set({ brush: Math.max(1, Math.min(Vl, e)) });
 	}
 	async save() {
 		try {
@@ -53065,7 +53097,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 	exportZone() {
 		let e = this.state.zone, t = new Blob([JSON.stringify(e)], { type: "application/json" }), n = q("a", {
 			href: URL.createObjectURL(t),
-			download: `${Ql(e.name) || "zona"}.vortable.json`
+			download: `${$l(e.name) || "zona"}.vortable.json`
 		});
 		n.click(), setTimeout(() => URL.revokeObjectURL(n.href), 1e3);
 	}
@@ -53075,7 +53107,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 	}
 	async importZone(e) {
 		try {
-			let t = Al(JSON.parse(await e.text()));
+			let t = jl(JSON.parse(await e.text()));
 			if (!await this.resolveUnsaved()) return;
 			this.state.load(t), this.state.dirty = !0, this.state.emit("ui"), this.hooks.centerOnZone(), this.toast(`"${t.name}" importada. Salve pra guardar.`);
 		} catch (e) {
@@ -53199,7 +53231,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		}, "Fechar")], void 0, !0);
 	}
 	openCredits() {
-		let e = this.modal("Créditos da arte", js(this.hooks.assetBase), [q("button", {
+		let e = this.modal("Créditos da arte", Ms(this.hooks.assetBase), [q("button", {
 			class: "vt-btn",
 			onclick: () => e()
 		}, "Fechar")]);
@@ -53328,8 +53360,8 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		await this.reloadWorld();
 		let e = this.state, t = e.world;
 		if (!t) return;
-		let n = e.zones.map((t) => t.id === e.zone.id ? Tl(e.zone, t.updatedAt) : t);
-		n.some((t) => t.id === e.zone.id) || n.unshift(Tl(e.zone, 0));
+		let n = e.zones.map((t) => t.id === e.zone.id ? El(e.zone, t.updatedAt) : t);
+		n.some((t) => t.id === e.zone.id) || n.unshift(El(e.zone, 0));
 		let r = (e, n) => Object.values(t.layout).some((t) => Math.abs(t.x - e) < 190 && Math.abs(t.y - n) < 84), i = !1;
 		for (let e of n) if (!t.layout[e.id]) for (let n = 0;; n++) {
 			let a = 24 + n % 4 * 250, o = 24 + Math.floor(n / 4) * 134;
@@ -53509,7 +53541,7 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 			}
 			return;
 		}
-		let s = zl.find((e) => e.key.toLowerCase() === i);
+		let s = Bl.find((e) => e.key.toLowerCase() === i);
 		if (s) {
 			this.setTool(s.id);
 			return;
@@ -53520,10 +53552,10 @@ var Wl = "vortable:objects:recent", Gl = 24, Kl = [
 		}) : e.key === " " && e.preventDefault();
 	}
 };
-function Xl(e) {
+function Zl(e) {
 	return e.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
-function Zl(e) {
+function Ql(e) {
 	return [
 		e.label,
 		e.category,
@@ -53532,16 +53564,16 @@ function Zl(e) {
 		...Je(e).map((e) => e.variant ?? "")
 	].join(" ");
 }
-function Ql(e) {
+function $l(e) {
 	return e.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 //#endregion
 //#region src/engine/index.ts
-var $l = "/__vortable/curate";
-function eu(e, t) {
+var eu = "/__vortable/curate";
+function tu(e, t) {
 	let n = t.assetBase ?? "./assets/";
-	ko(n);
-	let r = t.mode ?? "play", i = t.storage ?? new Dl(), a = t.appearance, o = !1, s = null, l = !0, u = t.net ? new uo(t.net) : void 0, d = null, f = null, p = e, m = (e, i, c, f = 0, p) => ({
+	Ao(n);
+	let r = t.mode ?? "play", i = t.storage ?? new Ol(), a = t.appearance, o = !1, s = null, l = !0, u = t.net ? new fo(t.net) : void 0, d = null, f = null, p = e, m = (e, i, c, f = 0, p) => ({
 		zone: e,
 		...p ? {
 			at: {
@@ -53588,7 +53620,7 @@ function eu(e, t) {
 	};
 	if (r === "edit") {
 		let r = t.resume?.kind === "edit" ? t.resume : null, a = r && !r.dirty && t.zone?.id === r.zone.id;
-		f = new Os(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), f.assetBase = n, r && (f.dirty = r.dirty, f.view = r.view, f.zoom = r.zoom), d = new Yl(e, f, i, {
+		f = new ks(r && !a ? r.zone : t.zone ?? B("Nova zona", 40, 30)), f.assetBase = n, r && (f.dirty = r.dirty, f.view = r.view, f.zoom = r.zoom), d = new Xl(e, f, i, {
 			assetBase: n,
 			textureImage: (e) => _.textures.get(e).getSourceImage(),
 			startTest: () => {
@@ -53602,7 +53634,7 @@ function eu(e, t) {
 			deleteSelected: () => y()?.deleteSelected(),
 			applySound: () => {
 				let e = _.scene.getScenes(!0)[0];
-				e && Ao.of(e)?.applyPrefs();
+				e && jo.of(e)?.applyPrefs();
 			},
 			centerOnZone: () => y()?.centerOnZone(),
 			scene: () => y(),
@@ -53610,7 +53642,7 @@ function eu(e, t) {
 			npcLibrary: t.npcLibrary,
 			externalBar: t.externalToolbar,
 			curate: t.curate ? async (e, t, n) => {
-				let r = await fetch($l, {
+				let r = await fetch(eu, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -53684,7 +53716,7 @@ function eu(e, t) {
 		},
 		input: { mouse: { preventDefaultWheel: !0 } }
 	});
-	_.scene.add("world", is), _.scene.add("editor", Es), _.scene.add("boot", new ht(n, async () => {
+	_.scene.add("world", as), _.scene.add("editor", Ds), _.scene.add("boot", new ht(n, async () => {
 		if (_.scene.stop("boot"), r === "edit") _.scene.start("editor", { state: f }), d.assetsReady();
 		else {
 			let { zone: e, sky: t, start: n } = await g();
@@ -53755,7 +53787,7 @@ function eu(e, t) {
 					t && (t.enabled = e);
 				},
 				prefs: () => {
-					let e = To();
+					let e = Eo();
 					return {
 						master: e.master,
 						muted: e.muted,
@@ -53763,9 +53795,9 @@ function eu(e, t) {
 					};
 				},
 				setPrefs: (e) => {
-					Eo(e);
+					Do(e);
 					let t = _.scene.getScenes(!0)[0];
-					t && Ao.of(t)?.applyPrefs();
+					t && jo.of(t)?.applyPrefs();
 				},
 				previewStep: (e) => v()?.watchAudio()?.previewStep(e),
 				thunderNow: () => v()?.watchAudio()?.thunderNow()
@@ -53825,10 +53857,10 @@ function eu(e, t) {
 		}
 	};
 }
-function tu(e, t = {}) {
-	let n = new hl(e, {
+function nu(e, t = {}) {
+	let n = new gl(e, {
 		assetBase: t.assetBase ?? "./assets/",
-		storage: t.storage ?? new Gc(),
+		storage: t.storage ?? new Kc(),
 		back: t.back,
 		single: t.single,
 		title: t.title,
@@ -53841,4 +53873,4 @@ function tu(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { H as BIG_HEIGHTS, Kc as CHARACTER_FORMAT, yi as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, X as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Gc as LocalCharacterStorage, Dl as LocalWorldStorage, j as METERS_PER_TILE, ro as REACTIONS, xi as SKY_PRESETS, Mo as SOUND_LAYERS, Bo as SURFACE_LABELS, _ as TERRAINS, A as TILE, Xi as WEATHERS, Zi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, Jc as characterFileName, ar as characterFrame, z as clampZoneSize, Qr as daylight, $t as defaultAppearance, Xc as downloadText, qc as exportCharacters, _i as formatHour, Bt as loadCharacterData, Ol as localStorageAvailable, tu as mountCharacterCreator, eu as mountVortable, Uc as newCharacter, F as newId, El as newWorld, B as newZone, en as normalizeAppearance, Wc as parseCharacter, Yc as parseCharacterFile, so as parseNet, Rl as parseWorld, Al as parseZone, Zc as pickTextFile, an as randomAppearance, hi as shiftForHour, bi as skySwatch, Tl as summarize, mi as worldHour };
+export { H as BIG_HEIGHTS, qc as CHARACTER_FORMAT, yi as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, X as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Kc as LocalCharacterStorage, Ol as LocalWorldStorage, j as METERS_PER_TILE, io as REACTIONS, xi as SKY_PRESETS, No as SOUND_LAYERS, Vo as SURFACE_LABELS, _ as TERRAINS, A as TILE, Xi as WEATHERS, Zi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, Yc as characterFileName, ar as characterFrame, z as clampZoneSize, Qr as daylight, $t as defaultAppearance, Zc as downloadText, Jc as exportCharacters, _i as formatHour, Bt as loadCharacterData, kl as localStorageAvailable, nu as mountCharacterCreator, tu as mountVortable, Wc as newCharacter, F as newId, Dl as newWorld, B as newZone, en as normalizeAppearance, Gc as parseCharacter, Xc as parseCharacterFile, co as parseNet, zl as parseWorld, jl as parseZone, Qc as pickTextFile, an as randomAppearance, hi as shiftForHour, bi as skySwatch, El as summarize, mi as worldHour };
