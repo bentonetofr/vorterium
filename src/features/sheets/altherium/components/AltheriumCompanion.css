@@ -1,0 +1,129 @@
+/* Aba Companheiro da ficha de Altherium e a bolinha do bicho no retrato. */
+
+.alth-pet__row { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+.alth-pet__top { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; }
+.alth-pet__ident { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: var(--space-2); }
+
+.alth-pet__photo-wrap { position: relative; flex: none; }
+.alth-pet__photo {
+  position: relative; display: grid; place-items: center; width: 96px; height: 96px; border-radius: 50%;
+  border: 2px solid var(--gilded-bright); background: var(--bg-elevated); overflow: hidden; color: var(--accent-bright);
+  cursor: var(--cursor-hand, pointer);
+}
+.alth-pet__photo.is-ro { cursor: default; }
+.alth-pet__photo img { width: 100%; height: 100%; object-fit: cover; }
+.alth-pet__photo svg { width: 52%; height: 52%; }
+.alth-pet__photo-over {
+  position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, 0.55); color: var(--text-primary);
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0;
+  transition: opacity var(--transition-fast); pointer-events: none; text-align: center;
+}
+.alth-pet__photo:hover .alth-pet__photo-over, .alth-pet__photo:focus-within .alth-pet__photo-over { opacity: 1; }
+
+.alth-pet__field { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.alth-pet__field--sm { flex: 0 0 120px; }
+.alth-pet__field--xs { flex: 0 0 84px; }
+.alth-pet__field > span, .alth-pet__label, .alth-pet__stat > small {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+}
+
+.alth-pet__in {
+  width: 100%; min-width: 0; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: var(--bg-void, rgba(0, 0, 0, 0.3)); color: var(--text-primary); font-family: var(--font-body); font-size: 14px;
+}
+.alth-pet__in:focus { outline: none; border-color: var(--accent-bright); }
+.alth-pet__in:disabled { opacity: 0.8; }
+.alth-pet__in--xs { flex: 0 0 56px; width: 56px; text-align: center; }
+.alth-pet__text { resize: vertical; font-size: 13px; line-height: 1.4; }
+
+.alth-pet__states { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+.alth-pet__state {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14)); background: var(--bg-elevated); color: var(--text-secondary);
+  cursor: var(--cursor-hand, pointer);
+}
+.alth-pet__state:disabled { cursor: default; }
+.alth-pet__state.is-on { color: var(--text-primary); }
+.alth-pet__state--protegido.is-on { border-color: rgba(84, 255, 159, 0.55); background: rgba(84, 255, 159, 0.12); color: var(--alth-resource, #54ff9f); }
+.alth-pet__state--exposto.is-on { border-color: var(--gilded-bright); background: rgba(255, 190, 90, 0.14); color: var(--accent-bright); }
+.alth-pet__state--caido.is-on { border-color: rgba(255, 120, 120, 0.6); background: rgba(255, 120, 120, 0.14); color: var(--danger, #ff7878); }
+.alth-pet__state--morto.is-on { border-color: var(--border-bright); background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+
+.alth-pet__hint { font-size: 12px; color: var(--text-muted); margin: var(--space-2) 0 0; line-height: 1.45; }
+.alth-pet__wounds { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-3); }
+.alth-pet__wounds .alth-pet__hint { margin: 0; flex: 1; min-width: 80px; }
+
+.alth-pet__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+.alth-pet__stat--wide { grid-column: 1 / -1; }
+.alth-pet__stat { display: flex; flex-direction: column; gap: 4px; background: var(--bg-elevated); border-radius: 10px; padding: 8px 10px; }
+.alth-pet__stat > small { text-transform: none; letter-spacing: 0.02em; font-size: 11px; }
+.alth-pet__pair { display: flex; gap: 6px; align-items: center; color: var(--text-secondary); font-size: 13px; }
+
+.alth-pet__acts { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+.alth-pet__acts .btn { padding: 7px var(--space-4); min-height: 0; }
+
+.alth-pet__list { display: flex; flex-direction: column; gap: var(--space-2); }
+.alth-pet__item {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: 9px 12px; border-radius: 10px;
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+.alth-pet__item strong { display: block; font-size: 14px; }
+.alth-pet__item small { color: var(--text-muted); font-size: 12px; display: block; }
+.alth-pet__grief { display: block; margin-top: 4px; font-size: 12px; font-style: normal; color: var(--danger, #ff7878); }
+.alth-pet__check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+.alth-pet__danger { color: var(--danger, #ff7878); border-color: rgba(255, 120, 120, 0.4); }
+
+.alth-pet__ability { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 10px; background: var(--bg-elevated); border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08)); }
+.alth-pet__ability.is-off { opacity: 0.6; }
+.alth-pet__ability-head { display: flex; gap: 6px; align-items: center; }
+.alth-pet__in--name { flex: 1.3; font-weight: 600; }
+.alth-pet__in--use { flex: 1.2; }
+.alth-pet__chip {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--gilded-bright); color: var(--accent-bright); background: transparent; cursor: var(--cursor-hand, pointer); white-space: nowrap;
+}
+.alth-pet__chip.is-used { opacity: 0.55; text-decoration: line-through; }
+.alth-pet__x { border: 0; background: transparent; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: var(--cursor-hand, pointer); padding: 2px 6px; }
+.alth-pet__x:hover { color: var(--danger, #ff7878); }
+
+.alth-pet-empty { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; }
+.alth-pet-empty p { color: var(--text-secondary); max-width: 62ch; margin: 0; line-height: 1.5; }
+.alth-pet__ghost { color: var(--text-muted); width: 56px; height: 56px; }
+.alth-pet__ghost svg { width: 100%; height: 100%; }
+
+/* A bolinha do companheiro, encostada no retrato do jogador (cabeçalho da ficha). */
+.alth-pet-dot {
+  position: absolute; right: -10px; bottom: -6px; width: 32px; height: 32px; padding: 0; border-radius: 50%;
+  border: 2px solid var(--gilded-bright); background: var(--bg-elevated); color: var(--accent-bright); overflow: hidden;
+  display: grid; place-items: center; cursor: var(--cursor-hand, pointer);
+}
+.alth-pet-dot img { width: 100%; height: 100%; object-fit: cover; }
+.alth-pet-dot svg { width: 58%; height: 58%; }
+.alth-pet-dot__state { position: absolute; right: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg-void, #0b1020); }
+.alth-pet-dot--protegido .alth-pet-dot__state { background: #54ff9f; }
+.alth-pet-dot--exposto .alth-pet-dot__state { background: #ffcc66; }
+.alth-pet-dot--caido .alth-pet-dot__state { background: #ff7878; }
+.alth-pet-dot--morto { filter: grayscale(1); }
+.alth-pet-dot--morto .alth-pet-dot__state { background: #8a8f9c; }
+
+/* Modo leitura: o nome, os números e as habilidades aparecem como texto; o lapizinho abre a edição do pedaço. */
+.alth-pet__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.alth-pet__pencil {
+  flex: none; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.16)); background: transparent; color: var(--text-muted);
+  cursor: var(--cursor-hand, pointer); transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.alth-pet__pencil:hover { color: var(--accent-bright); border-color: var(--gilded-bright); }
+.alth-pet__pencil.is-on { color: var(--bg-void, #0b1020); background: var(--accent-bright); border-color: var(--accent-bright); }
+.alth-pet__name { margin: 0; font-family: var(--font-display, var(--font-heading, serif)); font-size: 26px; font-weight: 600; color: var(--accent-bright); line-height: 1.15; }
+.alth-pet__name.is-empty { color: var(--text-muted); font-weight: 400; }
+.alth-pet__hint--first { margin-top: 2px; }
+.alth-pet__tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+.alth-pet__tile { background: var(--bg-elevated); border-radius: 10px; padding: 10px; text-align: center; min-width: 0; }
+.alth-pet__tile b { display: block; font-family: var(--font-display, var(--font-heading, serif)); font-size: 20px; color: var(--accent-bright); overflow-wrap: anywhere; }
+.alth-pet__tile small { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.alth-pet__pill { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18)); color: var(--text-secondary); white-space: nowrap; }
+.alth-pet__grow { flex: 1; }
+.alth-pet__ability-name { font-size: 14px; }
+.alth-pet__ability-text { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+.alth-pet__ability-text.is-empty { color: var(--text-muted); font-style: italic; }

@@ -54,7 +54,7 @@ const sheet: AltheriumSheet = {
   db_pernas: 0, db_bracos: 0, db_tronco: 8, db_cabeca: 0, dano_pernas: 0, dano_bracos: 0, dano_tronco: 0, dano_cabeca: 0,
   berserker_triumphs: [], runaskin_trail: raiz === 'runaskin' ? 'regente' : null, runaskin_scene_uses: 0, runaskin_trail_overrides: {},
   pilar_card_mode: 'virtual', pilar_deck: null, recent_triumphs: [], genesis_abilities: [], skald_inspirations: [], notes: null,
-  combat_state: {}, resources: {}, survival: {}, created_at: now, updated_at: now,
+  combat_state: {}, resources: {}, survival: {}, companion: {}, created_at: now, updated_at: now,
 } as AltheriumSheet
 
 seedFakeDb({

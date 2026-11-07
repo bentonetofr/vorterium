@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.13',
+    date:    '2026-11-07',
+    title:   'Altherium: companheiro animal',
+    items: [
+      'Nova aba Companheiro na ficha de Altherium, para quem tem um animal (um lobo criado desde filhote, um corvo, um urso). Dá pra começar pelo lobo do livro (2 feridas, Defesa 12, ataque 2d10+2, dano 1d8 de mordida, as 5 habilidades) ou montar outro bicho em branco. A aba mostra tudo como texto, no mesmo estilo da ficha, e o lapizinho ao lado de cada pedaço (nome, espécie e números; cada habilidade; as anotações) abre a edição dele. Tudo é editável: nome, espécie, foto (com o mesmo ajuste de enquadramento do retrato), limite de feridas, Defesa, dados e bônus do ataque, dano, estado e as habilidades (com o companheiro ou guardadas, uma vez por cena, descrição livre).',
+      'Regras do livro prontas: Comandar deixa o companheiro Exposto, Recolher volta a Protegido, Ferir e Crítico (2 feridas) derrubam ao chegar no limite, Curar remove 1 ferida, Estabilizou, Morreu (o dono perde 2d6 de Equilíbrio na hora e fica com −1 dado em Vontade até o Descanso Longo) e Fome (sem comer a Ração, o Descanso Longo não cura). A mecânica de Laço ficou de fora.',
+      'No retrato do personagem aparece uma bolinha menor com a foto do companheiro, com um pontinho de estado (verde protegido, amarelo exposto, vermelho caído); clicar nela abre a aba. Precisa rodar a migration 20240226 (coluna companion) no Supabase.',
+    ],
+  },
+  {
     version: '2.12',
     date:    '2026-11-06',
     title:   'Vortable: novo mundo Midfold',

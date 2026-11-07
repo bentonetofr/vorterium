@@ -295,6 +295,8 @@ export interface AltheriumSheet {
   resources?:         unknown
   /** Fichas de Exploração, Fome, Descansos e Traumas — migration 20240218; ver altheriumSurvival.ts. */
   survival?:          unknown
+  /** Companheiro animal (nome, foto, feridas, estado, habilidades) — migration 20240226; ver altheriumCompanion.ts. */
+  companion?:         unknown
   /** Ficha de NPC do mestre (migration 20240189000000). */
   is_npc?: boolean
   /** O mestre mostrou o NPC pros jogadores (eles só leem). */

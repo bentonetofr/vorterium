@@ -55,6 +55,8 @@ import {
   ALTHERIUM_PORTRAIT_MAX_BYTES,
   ALTHERIUM_PORTRAIT_TYPES,
   announceTriumphUse,
+  removeAltheriumCompanionPhoto,
+  uploadAltheriumCompanionPhoto,
   removeTrailTriumphImage,
   uploadTrailTriumphImage,
   type AltheriumCustomItemInput,
@@ -71,6 +73,8 @@ import { AltheriumActionBar, type ActionDef, type PlayAction } from './Altherium
 import { QteSheetButton } from '../../../qte/QteSetup'
 import { AltheriumStatusStrip } from './AltheriumStatusStrip'
 import { AltheriumTurnPanel } from './AltheriumTurnPanel'
+import { AltheriumCompanionPanel, PawIcon } from './AltheriumCompanionPanel'
+import { readCompanion, type Companion } from '../utils/altheriumCompanion'
 import { AltheriumRequestCard } from './AltheriumRequestCard'
 import { AltheriumExploreWindow } from './AltheriumExploreWindow'
 import { AltheriumRestWindow } from './AltheriumRestWindow'
@@ -187,6 +191,10 @@ type FormData = {
   survival:           Survival
   /** A coluna existe no banco (migration 20240218)? */
   survival_known:     boolean
+  /** Companheiro animal (ver altheriumCompanion.ts). */
+  companion:          Companion
+  /** A coluna existe no banco (migration 20240226)? Sem ela, o companheiro fica só na tela. */
+  companion_known:    boolean
 }
 
 function sheetToForm(s: AltheriumSheet): FormData {
@@ -239,6 +247,8 @@ function sheetToForm(s: AltheriumSheet): FormData {
     resources_known:    'resources' in s,
     survival:           readSurvival(s.survival),
     survival_known:     'survival' in s,
+    companion:          readCompanion(s.companion),
+    companion_known:    'companion' in s,
   }
 }
 
@@ -284,6 +294,7 @@ function formToPayload(f: FormData): AltheriumSheetUpdate {
     ...(f.combat_known ? { combat_state: readCombatState(f.combat_state) } : {}),
     ...(f.resources_known ? { resources: readResources(f.resources) } : {}),
     ...(f.survival_known ? { survival: readSurvival(f.survival) } : {}),
+    ...(f.companion_known ? { companion: readCompanion(f.companion) } : {}),
     recent_triumphs:     f.recent_triumphs,
     genesis_abilities:   f.genesis_abilities.map((a) => ({ id: a.id, name: a.name, description: a.description })),
     skald_inspirations:  f.skald_inspirations.map((i) => ({
@@ -355,7 +366,7 @@ function normalize(s: string): string {
 // troca de ficha (o componente inteiro remonta).
 // ────────────────────────────────────────────────────────
 
-type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'triunfos' | 'inspiracoes' | 'lore' | 'anotacoes'
+type AltheriumFormTabId = 'visao-geral' | 'luta' | 'combate' | 'triunfos' | 'inspiracoes' | 'companheiro' | 'lore' | 'anotacoes'
 
 interface AltheriumFormTab {
   id:    AltheriumFormTabId
@@ -368,6 +379,7 @@ const ALTHERIUM_FORM_TABS: AltheriumFormTab[] = [
   { id: 'combate',     label: 'Equipamento' },
   { id: 'triunfos',    label: 'Triunfos' },
   { id: 'inspiracoes', label: 'Inspirações' },
+  { id: 'companheiro', label: 'Companheiro' },
   { id: 'lore',        label: 'Lore' },
   { id: 'anotacoes',   label: 'Anotações' },
 ]
@@ -937,6 +949,17 @@ export function AltheriumSheetForm({
             )}
             {portraitPickError && (
               <p className="alth-hero__portrait-error" role="alert">{portraitPickError}</p>
+            )}
+            {form.companion.has && (
+              <button
+                type="button" className={`alth-pet-dot alth-pet-dot--${form.companion.state}`}
+                onClick={() => selectTab('companheiro')}
+                title={`${form.companion.name || 'Companheiro'}: ${form.companion.state} (abre a aba Companheiro)`}
+                aria-label={`Abrir a aba do companheiro ${form.companion.name}`}
+              >
+                {form.companion.photo_url ? <img src={form.companion.photo_url} alt="" /> : <PawIcon />}
+                <span className="alth-pet-dot__state" aria-hidden="true" />
+              </button>
             )}
           </div>
 
@@ -1545,6 +1568,21 @@ export function AltheriumSheetForm({
               inspirations={form.skald_inspirations}
               onChange={(next) => set('skald_inspirations', next)}
               onUse={(i) => announceTriumph(`a inspiração ${i.name}${i.cost ? ` (${i.cost})` : ''}`)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Companheiro: o animal do personagem (ficha editável, foto, estado, habilidades) ── */}
+      <div id="alth-tabpanel-companheiro" role="tabpanel" hidden={activeTab !== 'companheiro'}>
+        {activeTab === 'companheiro' && (
+          <div className="anim-tab-panel">
+            <AltheriumCompanionPanel
+              sheetId={sheet.id} companion={form.companion} canEdit={canRollTests}
+              onChange={(next) => set('companion', next)}
+              onEquilibriumLoss={(n) => setForm((prev) => ({ ...prev, equilibrio_current: Math.max(0, prev.equilibrio_current - n) }))}
+              uploadPhoto={(file) => uploadAltheriumCompanionPhoto(sheet.id, file)}
+              removePhoto={() => removeAltheriumCompanionPhoto(sheet.id)}
             />
           </div>
         )}

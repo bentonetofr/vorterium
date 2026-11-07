@@ -143,6 +143,33 @@ export async function removeAltheriumPortrait(sheetId: string): Promise<Altheriu
   return updateAltheriumSheet(sheetId, { portrait_url: null })
 }
 
+/** Envia a foto do companheiro (mesmo bucket do retrato, caminho <ficha>/companion) e devolve a URL pública. */
+export async function uploadAltheriumCompanionPhoto(sheetId: string, file: File): Promise<string> {
+  if (!ALTHERIUM_PORTRAIT_TYPES.includes(file.type as (typeof ALTHERIUM_PORTRAIT_TYPES)[number])) {
+    throw new Error('Escolha uma imagem JPG, PNG ou WebP.')
+  }
+  if (file.size > ALTHERIUM_PORTRAIT_MAX_BYTES) {
+    throw new Error('A foto deve ter no máximo 2 MB.')
+  }
+  const path = `${sheetId}/companion`
+  const { error } = await supabase.storage.from('altherium-portraits').upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
+  if (error) {
+    console.error('Erro do Storage ao enviar a foto do companheiro:', error)
+    throw new Error(`Não foi possível enviar a foto: ${error.message}`)
+  }
+  const { data } = supabase.storage.from('altherium-portraits').getPublicUrl(path)
+  return `${data.publicUrl}?v=${Date.now()}`
+}
+
+/** Remove a foto do companheiro do armazenamento (quem chama limpa a URL da ficha). */
+export async function removeAltheriumCompanionPhoto(sheetId: string): Promise<void> {
+  const { error } = await supabase.storage.from('altherium-portraits').remove([`${sheetId}/companion`])
+  if (error) {
+    console.error('Erro do Storage ao remover a foto do companheiro:', error)
+    throw new Error(`Não foi possível remover a foto: ${error.message}`)
+  }
+}
+
 /** Fichas Altherium do usuário atual em todas as campanhas (página "Minhas fichas"). */
 export async function getMyAltheriumSheetsEverywhere(): Promise<(AltheriumSheet & { campaign_name: string })[]> {
   const { data: { user } } = await supabase.auth.getUser()
