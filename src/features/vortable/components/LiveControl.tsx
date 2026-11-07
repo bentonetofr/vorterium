@@ -117,10 +117,13 @@ export function LiveControl({ campaign, userId, onOpen }: { campaign: CampaignWi
     const el = viewRef.current
     if (!el) return
     let down: { x: number; y: number } | null = null
-    const onDown = (e: PointerEvent) => { down = { x: e.clientX, y: e.clientY } }
+    // cliques dentro do próprio menu do NPC não contam: senão o pointerup fecha o menu antes do clique chegar no botão
+    const inMenu = (e: Event) => !!(e.target as HTMLElement | null)?.closest?.('.live__npcmenu')
+    const onDown = (e: PointerEvent) => { down = inMenu(e) ? null : { x: e.clientX, y: e.clientY } }
     const onUp = (e: PointerEvent) => {
       const d = down
       down = null
+      if (inMenu(e)) return
       if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 5 || e.button !== 0) return
       const pt = mapPoint(watch.current, e.pageX, e.pageY)
       if (!pt) { setNpcMenu(null); return }
