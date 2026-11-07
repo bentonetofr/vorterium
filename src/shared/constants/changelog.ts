@@ -30,6 +30,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-11-07',
     title:   'Vortable: animais (cavalos e cachorros)',
     items: [
+      'Montaria: quem joga chega perto de um cavalo e aparece o botão Montar (no PC, e solto na tela no celular; a tecla E também monta e desmonta). Montado, o jogador controla o cavalo, que é bem mais rápido, com o boneco sentado em cima; os outros jogadores e a câmera do mestre veem o cavaleiro no cavalo. Desmontando, o cavalo fica ali (pra todos os que estão na sessão); passar por uma saída desmonta. Vale pra qualquer NPC cujo corpo seja a peça Cavalo.',
       'Novo botão de pata no controle ao vivo do mestre: o painel Animais põe cavalos (preto, branco malhado de laranja, alazão, palomino, tordilho e castanho de meias brancas) e cachorros (pastor alemão clássico, preto, sable e branco) na cena, clicando em Colocar ou arrastando pro mapa, com Onde, Quantos, espalhamento e nome sobre a cabeça. A aba Na zona lista os animais colocados, com Controlar (o mestre anda com o bicho como um jogador) e Tirar.',
       'Cavalo agora é uma peça de corpo do criador de personagem (`tlou/body/cavalo`, seis pelagens), desenhada por código como o cachorro: anda, corre e fica parado nas quatro direções. Se o catálogo do site estiver desatualizado e não tiver a arte do animal, o painel avisa em vez de colocar um corpo humano sem cabeça.',
     ],

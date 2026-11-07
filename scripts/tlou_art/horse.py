@@ -240,23 +240,23 @@ def _front(name: str, anim: str, f: int) -> Cv:
         _leg(cv, [(cx, 44 + b), (cx, 52 - up * 0.4), (cx, BASE - up)], [6, 4], body, hoof, sock)
     # pescoço grosso e cabeça comprida vista de frente
     hd = round(g['head'])
-    neck = _mask([(25, 38 + b), (39, 38 + b), (37, 22 + hd + b), (27, 22 + hd + b)])
+    neck = _mask([(24, 38 + b), (40, 38 + b), (38, 24 + hd + b), (26, 24 + hd + b)])
     _fill(cv, neck, body, SEED + 5, 0.5, 2.6)
-    hy = 13 + hd + b
-    _fill(cv, ImageChops.multiply(_mask([(25, hy + 12), (39, hy + 12), (39, 38 + b), (25, 38 + b)]), neck), _dark(body, 0.22), SEED + 12, 0.4, 2.4)   # o pescoço mais escuro, pra cabeça se destacar
+    hy = 15 + hd + b
+    _fill(cv, ImageChops.multiply(_mask([(24, hy + 9), (40, hy + 9), (40, 38 + b), (24, 38 + b)]), neck), _dark(body, 0.22), SEED + 12, 0.4, 2.4)   # o pescoço mais escuro, pra cabeça se destacar
     ear_l = _mask([(27, hy - 1), (28, hy - 8), (31, hy)])
     ear_r = _mask([(33, hy), (36, hy - 8), (37, hy - 1)])
     _fill(cv, ear_l, body, SEED + 8, 0.5); _fill(cv, ear_r, body, SEED + 8, 0.5)
-    head = _mask([(28, hy), (36, hy), (37, hy + 6), (36, hy + 14), (35, hy + 17), (29, hy + 17), (28, hy + 14), (27, hy + 6)])
+    head = _mask([(27, hy), (37, hy), (38, hy + 5), (36, hy + 11), (35, hy + 13), (29, hy + 13), (28, hy + 11), (26, hy + 5)])
     _fill(cv, head, body, SEED + 9, 0.55, 2.2)
-    muzzle = _mask([(29, hy + 12), (35, hy + 12), (36, hy + 17), (28, hy + 17)])
+    muzzle = _mask([(29, hy + 9), (35, hy + 9), (36, hy + 13), (28, hy + 13)])
     _fill(cv, muzzle, belly, SEED + 10, 0.5, 2.0)
     if 'blaze' in coat:
-        _fill(cv, ImageChops.multiply(_mask([(31, hy), (33, hy), (34, hy + 15), (30, hy + 15)]), head), coat['blaze'], SEED + 11, 0.3, 2.0)
+        _fill(cv, ImageChops.multiply(_mask([(31, hy), (33, hy), (34, hy + 11), (30, hy + 11)]), head), coat['blaze'], SEED + 11, 0.3, 2.0)
     _fill(cv, _mask([(26, hy - 2), (38, hy - 2), (39, hy + 4), (36, hy + 3), (32, hy + 1), (28, hy + 3), (25, hy + 4)]), mane, SEED + 7, 0.3, 2.0)   # franja
-    cv.px(29, hy + 5, EYE); cv.px(35, hy + 5, EYE)
-    cv.px(29, hy + 4, EYE_GLINT); cv.px(35, hy + 4, EYE_GLINT)
-    cv.px(30, hy + 16, NOSTRIL); cv.px(34, hy + 16, NOSTRIL)
+    cv.px(28, hy + 4, EYE); cv.px(36, hy + 4, EYE)
+    cv.px(28, hy + 3, EYE_GLINT); cv.px(36, hy + 3, EYE_GLINT)
+    cv.px(30, hy + 12, NOSTRIL); cv.px(34, hy + 12, NOSTRIL)
     if 'patch' in coat:
         whole = _union(chest, neck, head)
         pm = _patches(name, whole, 0, -b, 0.56)

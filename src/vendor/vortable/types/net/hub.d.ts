@@ -6,6 +6,11 @@ export type NetAnim = 'idle' | 'walk' | 'run';
  */
 /** Forma do NPC controlado: `rat` = o mestre o transformou num rato. */
 export type NpcForm = 'rat';
+/** Quem está montado: o desenho do cavalo e o id do NPC-cavalo (que some do chão enquanto alguém monta nele). */
+export interface NetMount {
+    appearance: Appearance;
+    npc: string;
+}
 export interface NetHello {
     t: 'hello';
     id: string;
@@ -14,6 +19,7 @@ export interface NetHello {
     npc?: boolean;
     showName?: boolean;
     form?: NpcForm;
+    mount?: NetMount;
 }
 /**
  * `from`: o NPC mudou de zona (saiu dela); `npc`: os dados dele pra quem ainda não o tem na zona de destino.
@@ -115,7 +121,7 @@ export declare class NetHub {
     private asked;
     constructor(link: NetLink);
     /** Diz pra sala quem eu sou (e, na primeira vez, pede que todos digam quem são). */
-    announce(appearance: Appearance): void;
+    announce(appearance: Appearance, mount?: NetMount): void;
     /** Observador (a câmera do mestre): só pergunta quem está na sala, sem aparecer. */
     observe(): void;
     /** Mestre: começa a controlar um NPC (a sala o vê como um jogador de id `npc:<id>`). */

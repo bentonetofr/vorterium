@@ -13,6 +13,8 @@ export declare class Remotes {
     spriteOf(id: string): Phaser.GameObjects.Sprite | null;
     update(dt: number): void;
     private build;
+    /** Subiu (ou desceu) de um cavalo: monta as texturas dele e troca o desenho do boneco. */
+    private buildMount;
     private drop;
     private destroy;
 }

@@ -64,8 +64,8 @@ if (code.includes('hookSteps(')) {
   const stepNew = `step(e, t, n, r, g = 1) {\n\t\tlet i = ${vaName}();\n\t\tif (!i.steps || !this.engine.running) return;`
   const playOld = 'this.steps.play(o, i.steps * (n ? .9 : .7), this.stepSide * .08'
   const playNew = 'this.steps.play(o, i.steps * (n ? .9 : .7) * g, this.stepSide * .08'
-  const animOld = 'e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l);'
-  const animNew = 'e.playing !== l && this.scene.anims.exists(l) && (r.anims.play(l, !0), e.playing = l), this.hookSteps(e, r);'
+  // a linha que toca a animação do boneco remoto (os nomes minificados mudam a cada build, e pode vir seguida de outra expressão)
+  const animRe = /([\w$]+)\.playing !== ([\w$]+) && this\.scene\.anims\.exists\(\2\) && \(([\w$]+)\.anims\.play\(\2, !0\), \1\.playing = \2\)/
   const dropOld = '\tdrop(e) {\n\t\te.sprite?.destroy(), e.shadow?.destroy()'
   const hook = [
     '\thookSteps(e, t) {',
@@ -80,10 +80,11 @@ if (code.includes('hookSteps(')) {
     '\t\tt.on(c.default.Animations.Events.ANIMATION_START, n), t.on(c.default.Animations.Events.ANIMATION_UPDATE, n);',
     '\t}',
   ].join('\n')
-  for (const a of [stepOld, playOld, animOld, dropOld]) {
+  for (const a of [stepOld, playOld, dropOld]) {
     if (!code.includes(a)) throw new Error('motor: não achei onde remendar os passos (o motor mudou?): ' + a.slice(0, 40))
   }
-  code = code.replace(stepOld, stepNew).replace(playOld, playNew).replace(animOld, animNew).replace(dropOld, hook + '\n' + dropOld)
+  if (!animRe.test(code)) throw new Error('motor: não achei onde o boneco remoto toca a animação (o motor mudou?)')
+  code = code.replace(stepOld, stepNew).replace(playOld, playNew).replace(animRe, (m, e, _l, r) => `${m}, this.hookSteps(${e}, ${r})`).replace(dropOld, hook + '\n' + dropOld)
   writeFileSync(js, code)
   console.log('motor: passos remendados')
 }

@@ -86,6 +86,10 @@ export declare class WorldScene extends Phaser.Scene {
     /** NPC que o mestre (câmera) controla agora, como se fosse um jogador. */
     private npcCtl;
     private hiddenNpcs;
+    /** Montado num cavalo (o jogador local): o NPC-cavalo, a chave das texturas dele e o cavaleiro por cima. */
+    private mount;
+    private mounting;
+    private mountBtn?;
     /** Quanto andou desde o último passo, e onde estava no quadro anterior. */
     constructor();
     init(data: WorldSceneData): void;
@@ -209,5 +213,16 @@ export declare class WorldScene extends Phaser.Scene {
     private publishNpc;
     private portalUnder;
     private travel;
+    /** O que a sala vê de mim montado (nada, se estou a pé). */
+    private mountInfo;
+    /** Cavalos que alguém está montando agora (eu e os outros jogadores): somem do chão. */
+    private mountedNpcIds;
+    /** Monta no cavalo mais perto, ou desce se já está montado. */
+    private toggleMount;
+    private mountOn;
+    /** Desce: o cavalo fica onde estou (todos veem) e o boneco dá uns passos à frente. */
+    private dismount;
+    /** Cada quadro: o cavaleiro acompanha o cavalo, e o botão de montar/desmontar aparece quando faz sentido. */
+    private updateMount;
     private toast;
 }
