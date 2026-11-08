@@ -16,6 +16,7 @@ import { RollButton } from '../rolls/RollButton'
 import { useDndRoll } from '../rolls/DndRollProvider'
 import { attackCheck, critDamage, damageFormulaOf, deathCheck, deathResult, initiativeCheck } from '../rolls/checkModel'
 import { parseDiceFormula } from '../../../dice/services/diceService'
+import { forcedDie } from '../../../owner/ownerTools'
 
 // ────────────────────────────────────────────────────────
 // Aba Combate: PV (dano, cura, PV temporários, salvaguardas contra a morte,
@@ -109,7 +110,7 @@ export function DndCombateTab({ ctx }: { ctx: SheetCtx }) {
     // com a mesa: o dado cai na bandeja e fica no histórico; sem campanha, sorteio local
     const rolled = roller.canRoll ? await roller.roll(`Dado de vida (d${die})`, `1d${die}`, { kind: 'hit_die' }) : null
     if (roller.canRoll && !rolled) return
-    const roll = rolled ? rolled.result : 1 + Math.floor(Math.random() * die)
+    const roll = rolled ? rolled.result : forcedDie(1, die) ?? 1 + Math.floor(Math.random() * die)
     const gained = hitDieHealing(roll, derived.abilityMods.constitution)
     update((f) => ({ ...f, hit_dice_used: next, hp_current: Math.min(hpMax, Math.max(0, f.hp_current) + gained) }))
     setLastRoll(`d${die}: ${roll} ${derived.abilityMods.constitution >= 0 ? '+' : '−'} ${Math.abs(derived.abilityMods.constitution)} = ${gained} PV recuperados`)

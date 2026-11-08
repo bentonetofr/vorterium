@@ -1,5 +1,6 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { logActivity } from '../../activity/services/activityService'
+import { forcedDie } from '../../owner/ownerTools'
 import type { DiceRoll, DiceRollContext, DiceRollWithProfile, DieType, RollBreakdownItem, RollMode } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -143,7 +144,9 @@ export function parseDiceFormula(raw: string): ParsedFormula {
 // Roller (gera resultados aleatórios para uma fórmula parseada)
 // ────────────────────────────────────────────────────────
 
-function randomInt(min: number, max: number): number {
+function randomInt(min: number, max: number, bonus = false): number {
+  const forced = forcedDie(min, max, bonus)
+  if (forced !== null) return forced
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
@@ -386,7 +389,7 @@ export function rollEvensPool(dice: number): EvensRollResult {
   // Teto de segurança: a chance de 100 seis seguidos é nula, mas o banco
   // recusa mais que isso.
   while (pending > 0 && bonus.length < 100) {
-    const r = randomInt(1, 6)
+    const r = randomInt(1, 6, true)
     bonus.push(r)
     pending -= 1
     if (r === 6) pending += 1
