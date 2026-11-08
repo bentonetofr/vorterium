@@ -13,6 +13,13 @@ import { isCollectionSkin } from '../dice3d/skins'
 
 const HISTORY_LIMIT = 1500
 
+/**
+ * O prêmio vale daqui pra frente: só contam as rolagens feitas a partir deste dia (horário de Brasília). O que a conta rolou
+ * antes não vira dado, pra ninguém ganhar de uma vez por causa do histórico.
+ */
+export const COLLECTION_START = '2026-11-08T00:00:00-03:00'
+const START_MS = Date.parse(COLLECTION_START)
+
 export interface UnlockEvent { skin: string; achievement: string; title: string; at: number }
 
 interface Store { userId: string | null; loaded: boolean; unlocked: ReadonlySet<string> }
@@ -67,8 +74,8 @@ const COLUMNS = 'id, campaign_id, die_type, result, individual_results, roll_bre
 
 async function loadHistory(userId: string): Promise<boolean> {
   const [rows, count] = await Promise.all([
-    supabase.from('dice_rolls').select(COLUMNS).eq('user_id', userId).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
-    supabase.from('dice_rolls').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('dice_rolls').select(COLUMNS).eq('user_id', userId).gte('created_at', COLLECTION_START).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
+    supabase.from('dice_rolls').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', COLLECTION_START),
   ])
   if (rows.error || count.error) return false
   const rolls = (rows.data as unknown as RollLite[]).reverse()
@@ -83,8 +90,10 @@ const lite = (r: DiceRoll): RollLite => ({
 
 function view(): History {
   const h = history!
-  const rolls = h.rolls.filter((r) => !isForcedRoll(r.id))
-  return { rolls, total: h.total, campaigns: new Set(h.rolls.map((r) => r.campaign_id)).size }
+  // só rolagens a partir do corte (a consulta já filtra; aqui é uma segunda trava) e sem as forçadas pelo dono
+  const since = h.rolls.filter((r) => Date.parse(r.created_at) >= START_MS)
+  const rolls = since.filter((r) => !isForcedRoll(r.id))
+  return { rolls, total: Math.min(h.total, Math.max(since.length, h.total - (h.rolls.length - since.length))), campaigns: new Set(since.map((r) => r.campaign_id)).size }
 }
 
 // ── A cada rolagem ──────────────────────────────────────
