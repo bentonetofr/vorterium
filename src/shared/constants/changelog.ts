@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.26',
+    date:    '2026-11-07',
+    title:   'Vortable: NPC que segue alguém continua montado',
+    items: [
+      'Quando os NPCs seguem um jogador, o NPC que estava montado num cavalo ou lobo segue montado: a sala vê o cavaleiro em cima do animal andando e correndo atrás do jogador, e ao parar o conjunto fica guardado na zona como estava.',
+    ],
+  },
+  {
     version: '2.25',
     date:    '2026-11-07',
     title:   'Vortable: cavalo atravessa saídas e NPCs não voltam mais pro lugar antigo',

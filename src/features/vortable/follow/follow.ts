@@ -166,6 +166,8 @@ export class FollowCrew {
     for (const f of this.followers.values()) {
       broadcast(this.o.net, {
         t: 'hello', id: `npc:${f.npc.id}`, name: f.npc.name, appearance: f.npc.appearance as Appearance, npc: true, showName: f.npc.showName === true,
+        // montado num cavalo ou lobo: segue montado (a sala vê o cavaleiro em cima do animal)
+        ...(f.npc.steed ? { mount: { appearance: f.npc.steed.appearance, npc: f.npc.steed.id } } : {}),
       })
     }
     this.last = performance.now()
@@ -242,7 +244,8 @@ export class FollowCrew {
   private settle(f: Follower) {
     const x = Math.round(f.x)
     const y = Math.round(f.y)
-    broadcast(this.o.net, { t: 'npcmove', zone: this.o.zoneId, id: f.npc.id, x, y, dir: f.dir })
+    // `saved`: quem grava a zona aqui é o seguir (o mestre não precisa gravar de novo); o animal fica com o cavaleiro
+    broadcast(this.o.net, { t: 'npcmove', zone: this.o.zoneId, id: f.npc.id, x, y, dir: f.dir, saved: true, ...(f.npc.steed ? { steed: f.npc.steed } : {}) })
     broadcast(this.o.net, { t: 'bye', id: `npc:${f.npc.id}` })
   }
 

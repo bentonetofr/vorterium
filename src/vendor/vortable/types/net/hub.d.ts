@@ -41,6 +41,8 @@ export interface NetNpcMove {
     };
     /** O NPC ficou montado neste animal (o animal sai da lista de NPCs da zona e passa a ser dele). */
     steed?: NpcSteed;
+    /** Quem mandou já grava o ponto na zona (o mestre não precisa gravar de novo). */
+    saved?: boolean;
 }
 /** Prefixo do id de um NPC controlado pelo mestre na rede. */
 export declare const NPC_PEER = "npc:";

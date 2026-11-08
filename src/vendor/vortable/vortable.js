@@ -45166,7 +45166,8 @@ function co(e) {
 			dir: ao.includes(t.dir) ? t.dir : "down",
 			...typeof t.from == "string" && t.from ? { from: t.from.slice(0, 80) } : {},
 			...uo(t.npc),
-			...lo(t.steed)
+			...lo(t.steed),
+			...t.saved === !0 ? { saved: !0 } : {}
 		};
 		case "teleport": return typeof t.zone == "string" && so(t.x) && so(t.y) ? {
 			t: "teleport",
@@ -46166,7 +46167,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		}
 		if (this.cfg.hub) {
 			let t = this.cfg.hub.onNpcMove((t) => {
-				t.from === e.id && t.zone !== e.id && this.removeNpc(t.id), t.zone === e.id && this.applyNpcMove(t), this.cfg.watch && (t.zone === e.id || t.from === e.id) && this.cfg.onNpcMoved?.(t);
+				t.from === e.id && t.zone !== e.id && this.removeNpc(t.id), t.zone === e.id && this.applyNpcMove(t), this.cfg.watch && !t.saved && (t.zone === e.id || t.from === e.id) && this.cfg.onNpcMoved?.(t);
 			});
 			this.events.once(c.default.Scenes.Events.SHUTDOWN, t);
 		}

@@ -113,6 +113,24 @@ describe('seguir um jogador: os NPCs na rede', () => {
     expect(crew.running).toBe(false)
   })
 
+  it('NPC montado segue montado: o hello leva o animal, e ao parar o npcmove devolve o animal pro NPC', async () => {
+    const steed = { id: 'anim-lobo-artico-z', name: 'Gelo', role: 'Lobo', appearance: { version: 2, slots: {} } }
+    zone.npcs.push({ id: 'pess-montado', name: 'Cavaleiro', role: '', appearance: { version: 2, slots: {} }, x: 220, y: 200, dir: 'down', steed } as never)
+    try {
+      const crew = await FollowCrew.create(options({ pessoa: true, animal: false, inimigo: false }))
+      const hello = sent.find((m) => m.t === 'hello' && m.id === 'npc:pess-montado') as { mount?: { npc: string } } | undefined
+      expect(hello?.mount?.npc).toBe('anim-lobo-artico-z')
+      expect((sent.find((m) => m.t === 'hello' && m.id === 'npc:pess-a') as { mount?: unknown }).mount).toBeUndefined()
+      await crew.stop()
+      const move = sent.find((m) => m.t === 'npcmove' && m.id === 'pess-montado') as { steed?: { id: string }; saved?: boolean }
+      expect(move.steed?.id).toBe('anim-lobo-artico-z')
+      expect(move.saved).toBe(true)
+      expect(saved[saved.length - 1].npcs.find((n) => n.id === 'pess-montado')).toMatchObject({ steed: { id: 'anim-lobo-artico-z' } })
+    } finally {
+      zone.npcs.pop()
+    }
+  })
+
   it('só os tipos marcados seguem', async () => {
     const crew = await FollowCrew.create(options({ pessoa: true, animal: false, inimigo: false }))
     expect(crew.count).toBe(1)
