@@ -155,7 +155,10 @@ export class FollowCrew {
     const worlds = await zoneStorage(o)
     const zone = await worlds.load(o.zoneId)
     if (!zone) throw new Error('Não achei esta zona.')
-    const npcs = (zone.npcs ?? []).filter((n) => o.kinds[npcKind(n.id)] && !o.skip.includes(n.id))
+    const picked = (zone.npcs ?? []).filter((n) => o.kinds[npcKind(n.id)] && !o.skip.includes(n.id))
+    // quem vai na garupa de outro só segue junto com quem o conduz; se o condutor não vai, ele fica sentado onde está
+    const ids = new Set(picked.map((n) => n.id))
+    const npcs = picked.filter((n) => !n.rides || ids.has(n.rides))
     const crew = new FollowCrew(o, npcs, { w: zone.width * TILE, h: zone.height * TILE })
     crew.begin()
     return crew
@@ -164,10 +167,12 @@ export class FollowCrew {
   private begin() {
     // cada NPC aparece na sala como um jogador (o parado da zona some enquanto isso)
     for (const f of this.followers.values()) {
+      const driver = f.npc.rides ? this.followers.get(f.npc.rides)?.npc.steed : undefined
       broadcast(this.o.net, {
         t: 'hello', id: `npc:${f.npc.id}`, name: f.npc.name, appearance: f.npc.appearance as Appearance, npc: true, showName: f.npc.showName === true,
-        // montado num cavalo ou lobo: segue montado (a sala vê o cavaleiro em cima do animal)
+        // montado num cavalo ou lobo: segue montado (a sala vê o cavaleiro em cima do animal); na garupa, atrás de quem conduz
         ...(f.npc.steed ? { mount: { appearance: f.npc.steed.appearance, npc: f.npc.steed.id } } : {}),
+        ...(driver ? { mount: { appearance: driver.appearance, npc: driver.id, seat: 'back' } } : {}),
       })
     }
     this.last = performance.now()
@@ -195,11 +200,19 @@ export class FollowCrew {
     const here = !!peer && peer.zone === this.o.zoneId
     this.state = here ? 'following' : peer ? 'away' : 'gone'
     for (const f of this.followers.values()) {
+      if (f.npc.rides) continue                                   // quem vai na garupa copia o condutor (logo abaixo)
       const goal = here ? { x: peer.x + f.slot.x, y: peer.y + f.slot.y } : null
       const toTarget = here ? Math.hypot(peer.x - f.x, peer.y - f.y) : 0
       const next = stepWalker(f, goal ? this.keepInside(goal) : null, here ? peer : null, dt, toTarget, this.bounds)
       if (next.x !== f.x || next.y !== f.y) this.moved = true
       Object.assign(f, next)
+      this.publish(f, now)
+    }
+    for (const f of this.followers.values()) {
+      if (!f.npc.rides) continue
+      const d = this.followers.get(f.npc.rides)
+      if (!d) continue
+      Object.assign(f, { x: d.x, y: d.y, dir: d.dir, moving: d.moving, anim: d.anim })
       this.publish(f, now)
     }
     if (this.moved && now - this.lastSave >= SAVE_EVERY_MS) { this.lastSave = now; this.moved = false; void this.persist([...this.followers.values()]) }
@@ -245,7 +258,7 @@ export class FollowCrew {
     const x = Math.round(f.x)
     const y = Math.round(f.y)
     // `saved`: quem grava a zona aqui é o seguir (o mestre não precisa gravar de novo); o animal fica com o cavaleiro
-    broadcast(this.o.net, { t: 'npcmove', zone: this.o.zoneId, id: f.npc.id, x, y, dir: f.dir, saved: true, ...(f.npc.steed ? { steed: f.npc.steed } : {}) })
+    broadcast(this.o.net, { t: 'npcmove', zone: this.o.zoneId, id: f.npc.id, x, y, dir: f.dir, saved: true, ...(f.npc.steed ? { steed: f.npc.steed } : {}), ...(f.npc.rides ? { rides: f.npc.rides } : {}) })
     broadcast(this.o.net, { t: 'bye', id: `npc:${f.npc.id}` })
   }
 

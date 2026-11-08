@@ -45167,6 +45167,7 @@ function co(e) {
 			...typeof t.from == "string" && t.from ? { from: t.from.slice(0, 80) } : {},
 			...uo(t.npc),
 			...lo(t.steed),
+			...typeof t.rides == "string" && t.rides ? { rides: t.rides.slice(0, 80) } : {},
 			...t.saved === !0 ? { saved: !0 } : {}
 		};
 		case "teleport": return typeof t.zone == "string" && so(t.x) && so(t.y) ? {
@@ -45467,7 +45468,11 @@ var xo = {
 		let t = new Set(e.map((e) => e.id));
 		for (let [e, n] of this.items) t.has(e) || (this.drop(n), this.items.delete(e));
 		for (let t of e) {
-			let e = JSON.stringify([t.appearance, t.steed ?? null]), n = this.items.get(t.id);
+			let e = JSON.stringify([
+				t.appearance,
+				t.steed ?? null,
+				!!t.rides
+			]), n = this.items.get(t.id);
 			n || (n = {
 				npc: t,
 				sig: "",
@@ -45484,7 +45489,10 @@ var xo = {
 		e.building = !0;
 		let n = e.npc.steed;
 		try {
-			n ? (await cr(this.scene, Co(e), this.assetBase, n.appearance), await cr(this.scene, wo(e), this.assetBase, {
+			e.npc.rides ? (await cr(this.scene, e.texKey, this.assetBase, e.npc.appearance), await cr(this.scene, wo(e), this.assetBase, {
+				...e.npc.appearance,
+				pose: "riding"
+			})) : n ? (await cr(this.scene, Co(e), this.assetBase, n.appearance), await cr(this.scene, wo(e), this.assetBase, {
 				...e.npc.appearance,
 				pose: "riding"
 			})) : await cr(this.scene, e.texKey, this.assetBase, e.npc.appearance);
@@ -45493,30 +45501,37 @@ var xo = {
 			return;
 		}
 		if (e.building = !1, !this.scene.sys.isActive() || this.items.get(e.npc.id) !== e) return;
-		e.sig = t, n || (e.rider?.destroy(), e.rider = null), e.sprite ? e.sprite.setTexture(`${To(e)}:idle`, 0) : (e.sprite = this.scene.add.sprite(0, 0, `${To(e)}:idle`, 0).setOrigin(.5, 62 / 64), e.shadow = this.scene.add.image(0, 0, ba).setScale(.75, .6).setAlpha(.32), e.label = this.scene.add.text(0, 0, e.npc.name, {
+		e.sig = t, !n && !e.npc.rides && (e.rider?.destroy(), e.rider = null), e.sprite ? e.sprite.setTexture(`${To(e)}:idle`, 0) : (e.sprite = this.scene.add.sprite(0, 0, `${To(e)}:idle`, 0).setOrigin(.5, 62 / 64), e.shadow = this.scene.add.image(0, 0, ba).setScale(.75, .6).setAlpha(.32), e.label = this.scene.add.text(0, 0, e.npc.name, {
 			fontFamily: "system-ui",
 			fontSize: "9px",
 			color: "#ffe9c2",
 			stroke: "#000",
 			strokeThickness: 3
-		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), n && (e.rider ? e.rider.setTexture(`${wo(e)}:idle`, 0) : e.rider = this.scene.add.sprite(0, 0, `${wo(e)}:idle`, 0).setOrigin(.5, 62 / 64));
+		}).setOrigin(.5, 1).setResolution(4).setVisible(!1)), (n || e.npc.rides) && (e.rider ? e.rider.setTexture(`${wo(e)}:idle`, 0) : e.rider = this.scene.add.sprite(0, 0, `${wo(e)}:idle`, 0).setOrigin(.5, 62 / 64));
 		let r = n ? qa(n.appearance) : null, i = r ? r.scale : e.npc.appearance.height ?? 1;
 		e.sprite.setScale(i), e.rider?.setScale(e.npc.appearance.height ?? 1), r ? e.shadow?.setScale(r.blob[0], r.blob[1]) : e.shadow?.setScale(.75 * i, .6 * i), e.sprite.anims.play(`${To(e)}:idle:${e.npc.dir}`, !0), this.place(e);
 	}
 	place(e) {
 		let { sprite: t, shadow: n, label: r, npc: i } = e;
 		if (!t || !n || !r) return;
-		let a = this.hidden.has(i.id);
+		let a = this.hidden.has(i.id), o = i.rides ? this.items.get(i.rides)?.npc : void 0;
+		if (o?.steed && e.rider) {
+			let i = qa(o.steed.appearance), [s, c, l] = to(o.dir, i.scale);
+			t.setVisible(!1), n.setVisible(!1), r.setVisible(!1), e.rider.setVisible(!a).setPosition(o.x + s, o.y - Ya(i, o.dir) + c).setDepth(o.y + l);
+			let u = `${wo(e)}:idle:${o.dir}`;
+			e.rider.anims.currentAnim?.key !== u && this.scene.anims.exists(u) && e.rider.anims.play(u, !0);
+			return;
+		}
 		t.setVisible(!a), n.setVisible(!a), t.setPosition(i.x, i.y).setDepth(i.y), n.setPosition(i.x, i.y - 1).setDepth(i.y - .5);
-		let o = i.steed ? qa(i.steed.appearance) : null, s = o ? Ya(o, i.dir) : 0;
-		if (r.setPosition(i.x, i.y - 66 * (i.appearance.height ?? 1) - s).setDepth(1e8), e.rider) {
-			e.rider.setVisible(!a).setPosition(i.x, i.y - s).setDepth(i.y + Xa(i.dir));
+		let s = i.steed ? qa(i.steed.appearance) : null, c = s ? Ya(s, i.dir) : 0;
+		if (r.setPosition(i.x, i.y - 66 * (i.appearance.height ?? 1) - c).setDepth(1e8), e.rider && !i.steed && e.rider.setVisible(!1), e.rider && i.steed) {
+			e.rider.setVisible(!a).setPosition(i.x, i.y - c).setDepth(i.y + Xa(i.dir));
 			let t = `${wo(e)}:idle:${i.dir}`;
 			e.rider.anims.currentAnim?.key !== t && this.scene.anims.exists(t) && e.rider.anims.play(t, !0);
 		}
 		r.text !== i.name && r.setText(i.name), !i.showName || a ? r.setVisible(!1) : this.names === "always" && r.setVisible(!0);
-		let c = `${To(e)}:idle:${i.dir}`;
-		t.anims.currentAnim?.key !== c && this.scene.anims.exists(c) && t.anims.play(c, !0);
+		let l = `${To(e)}:idle:${i.dir}`;
+		t.anims.currentAnim?.key !== l && this.scene.anims.exists(l) && t.anims.play(l, !0);
 	}
 	update(e) {
 		if (this.names !== "always") for (let t of this.items.values()) {
@@ -46598,6 +46613,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		if (!this.cfg.watch || this.npcCtl || !this.solids) return !1;
 		let t = (this.cfg.zone.npcs ?? []).find((t) => t.id === e);
 		if (!t) return !1;
+		this.standDownPassengersOf(t), t.rides && this.standUp(t);
 		let n = `char:npc:${t.id}`;
 		try {
 			await cr(this, n, this.cfg.assetBase, t.appearance);
@@ -46614,7 +46630,8 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 			blob: i,
 			at: 0,
 			sent: "",
-			form: null
+			form: null,
+			steed: t.steed
 		}, this.following = null, this.cameras.main.setZoom(2), window.addEventListener("keydown", this.npcNoScroll), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => window.removeEventListener("keydown", this.npcNoScroll)), this.cfg.hub?.hostNpc({
 			id: e,
 			name: t.name,
@@ -46635,27 +46652,33 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 	async releaseNpc(e) {
 		let t = this.npcCtl;
 		if (!t) return;
-		this.npcPillion && this.dismountNpcPillion();
-		let n = this.npcMount, r = n ? {
-			id: n.npc.id,
-			name: n.npc.name,
-			role: n.npc.role,
-			appearance: n.npc.appearance
-		} : void 0;
-		n && (n.rider.destroy(), this.npcMount = null), this.npcCtl = null, window.removeEventListener("keydown", this.npcNoScroll);
-		let i = t.player.sprite, a = {
+		let n;
+		if (this.npcPillion) {
+			let e = this.parkedDriver(this.npcPillion.npc);
+			e ? n = e.id : this.dismountNpcPillion();
+		}
+		n && (this.npcPillion?.rider.destroy(), this.npcPillion = null);
+		let r = this.npcMount, i = r ? {
+			id: r.npc.id,
+			name: r.npc.name,
+			role: r.npc.role,
+			appearance: r.npc.appearance
+		} : t.steed;
+		r && (r.rider.destroy(), this.npcMount = null), this.npcCtl = null, window.removeEventListener("keydown", this.npcNoScroll);
+		let a = t.player.sprite, o = {
 			id: t.id,
 			zone: this.cfg.zone.id,
-			x: Math.round(i.x),
-			y: Math.round(i.y),
+			x: Math.round(a.x),
+			y: Math.round(a.y),
 			dir: t.player.facing,
-			...r ? { steed: r } : {}
+			...i ? { steed: i } : {},
+			...n ? { rides: n } : {}
 		};
-		i.destroy(), t.blob.destroy();
-		let o = this.cfg.hub;
-		this.applyNpcMove(a), this.syncHiddenNpcs(), o?.moveNpc(a), o?.unhostNpc(ro + a.id), this.showMountUi(null, null);
+		a.destroy(), t.blob.destroy();
+		let s = this.cfg.hub;
+		this.applyNpcMove(o), this.syncHiddenNpcs(), s?.moveNpc(o), s?.unhostNpc(ro + o.id), this.showMountUi(null, null);
 		try {
-			await e?.(a);
+			await e?.(o);
 		} catch (e) {
 			console.error("[vortable] não deu pra guardar o ponto do NPC", e);
 		}
@@ -46701,7 +46724,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 			dir: e.dir,
 			...e.npc.showName ? { showName: !0 } : {}
 		}, (this.cfg.zone.npcs ??= []).push(t), this.addNpcBlock(t)), !t) return;
-		t.x = e.x, t.y = e.y, t.dir = e.dir, e.steed ? (t.steed = e.steed, this.removeNpc(e.steed.id)) : delete t.steed, this.npcs?.set(this.cfg.zone.npcs ?? []);
+		t.x = e.x, t.y = e.y, t.dir = e.dir, e.steed ? (t.steed = e.steed, this.removeNpc(e.steed.id)) : delete t.steed, e.rides ? t.rides = e.rides : delete t.rides, this.npcs?.set(this.cfg.zone.npcs ?? []);
 		let n = this.npcSolids.get(e.id);
 		n && (n.setPosition(e.x, e.y - 3), n.body.updateFromGameObject());
 	}
@@ -47048,7 +47071,50 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 				y: s.y
 			}, a = c);
 		}
+		if (this.cfg.watch) {
+			let n = this.cfg.zone.npcs ?? [];
+			for (let r of n) {
+				if (!r.steed || r.id === this.npcCtl?.id || n.some((e) => e.rides === r.id)) continue;
+				let o = Math.hypot(r.x - e, r.y - t);
+				o <= a && (i = {
+					npc: r.steed.id,
+					horse: r.steed.appearance,
+					x: r.x,
+					y: r.y
+				}, a = o);
+			}
+		}
 		return i;
+	}
+	parkedDriver(e) {
+		let t = (this.cfg.zone.npcs ?? []).find((t) => t.steed?.id === e);
+		return t ? {
+			id: t.id,
+			x: t.x,
+			y: t.y,
+			dir: t.dir,
+			depth: t.y
+		} : null;
+	}
+	standUp(e) {
+		let t = (this.cfg.zone.npcs ?? []).find((t) => t.id === e.rides), n = Math.round((t?.x ?? e.x) + 26), r = Math.round((t?.y ?? e.y) + 4);
+		this.moveStaticNpc(e, n, r, e.dir);
+	}
+	standDownPassengersOf(e) {
+		for (let t of this.cfg.zone.npcs ?? []) t.rides === e.id && this.moveStaticNpc(t, Math.round(e.x + 26), Math.round(e.y + 4), t.dir);
+	}
+	moveStaticNpc(e, t, n, r) {
+		let i = {
+			zone: this.cfg.zone.id,
+			id: e.id,
+			x: t,
+			y: n,
+			dir: r
+		};
+		this.applyNpcMove(i), this.cfg.hub?.moveNpc(i), this.cfg.onNpcMoved?.({
+			t: "npcmove",
+			...i
+		});
 	}
 	async mountPillion(e) {
 		let t = this.player;
@@ -47134,7 +47200,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 			key: i,
 			rider: a,
 			stored: n
-		};
+		}, e.steed = void 0;
 		let o = qa(t.appearance);
 		e.player.setSkin(i), e.player.setHeight(o.scale), e.player.setFeetBox(o.feet.w, o.feet.h), e.player.speedScale = o.speed, e.player.sprite.setPosition(t.x, t.y), e.blob.setScale(o.blob[0], o.blob[1]), this.syncHiddenNpcs(), this.cfg.hub?.hostNpc({
 			id: e.id,
@@ -47266,7 +47332,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 	updateNpcPillion(e) {
 		let t = this.npcPillion;
 		if (!t) return;
-		let n = this.remotes?.driverOf(t.npc) ?? null;
+		let n = this.remotes?.driverOf(t.npc) ?? this.parkedDriver(t.npc);
 		if (!n) {
 			t.lost += this.game.loop.delta, t.lost > 700 && this.dismountNpcPillion();
 			return;
@@ -51780,7 +51846,8 @@ function Il(e, t, n) {
 			dir: e.dir === "up" || e.dir === "left" || e.dir === "right" ? e.dir : "down",
 			...e.showName === !0 ? { showName: !0 } : {},
 			...typeof e.sheet == "string" && e.sheet ? { sheet: e.sheet.slice(0, 120) } : {},
-			...Ll(e.steed)
+			...Ll(e.steed),
+			...typeof e.rides == "string" && e.rides ? { rides: e.rides.slice(0, 60) } : {}
 		});
 	}
 	return r;
@@ -53873,7 +53940,7 @@ function lu(e, t) {
 		}], await i.save(n));
 	}, S = async (e) => {
 		let t = await i.load(e.zone), n = t?.npcs?.find((t) => t.id === e.id);
-		t && n && (n.x = e.x, n.y = e.y, n.dir = e.dir, e.steed ? (n.steed = e.steed, t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.steed.id)) : delete n.steed, await i.save(t));
+		t && n && (n.x = e.x, n.y = e.y, n.dir = e.dir, e.steed ? (n.steed = e.steed, t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.steed.id)) : delete n.steed, e.rides ? n.rides = e.rides : delete n.rides, await i.save(t));
 	}, C = async (e) => {
 		if (e.from && e.from !== e.zone) {
 			if (!e.npc) return;
@@ -53909,7 +53976,7 @@ function lu(e, t) {
 			y: e.y,
 			dir: e.dir,
 			...e.npc.showName ? { showName: !0 } : {}
-		}, (t.npcs ??= []).push(n)), n && (n.x = e.x, n.y = e.y, n.dir = e.dir, e.steed ? (n.steed = e.steed, t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.steed.id)) : delete n.steed, await i.save(t));
+		}, (t.npcs ??= []).push(n)), n && (n.x = e.x, n.y = e.y, n.dir = e.dir, e.steed ? (n.steed = e.steed, t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.steed.id)) : delete n.steed, e.rides ? n.rides = e.rides : delete n.rides, await i.save(t));
 	}, w = (e) => ou(S(e)), T = async (e, t) => {
 		let n = await i.load(e);
 		if (!n) return;

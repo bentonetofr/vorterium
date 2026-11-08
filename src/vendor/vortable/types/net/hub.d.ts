@@ -41,6 +41,8 @@ export interface NetNpcMove {
     };
     /** O NPC ficou montado neste animal (o animal sai da lista de NPCs da zona e passa a ser dele). */
     steed?: NpcSteed;
+    /** Na garupa do animal do NPC `rides`. */
+    rides?: string;
     /** Quem mandou já grava o ponto na zona (o mestre não precisa gravar de novo). */
     saved?: boolean;
 }

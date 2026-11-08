@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.27',
+    date:    '2026-11-07',
+    title:   'Vortable: NPC solto na garupa continua na garupa',
+    items: [
+      'O NPC que o mestre controla agora pode ir na garupa de um NPC que está parado montado (perto dele aparece Montar na garupa). Ao soltar, ele continua sentado atrás, parado junto, e isso fica guardado na zona e todos veem. Antes ele descia ao ser solto. Controlar o NPC da garupa faz ele descer ao lado; controlar o NPC que conduz também faz quem está atrás descer.',
+      'Quando os NPCs seguem um jogador, quem está na garupa vai junto com quem o conduz. Se o condutor não estiver entre os que seguem, quem está atrás fica sentado onde está.',
+      'Na garupa de um animal conduzido por um jogador (que anda por conta própria) o NPC ainda desce ao ser solto, porque o animal não fica parado.',
+      'Se o mestre soltar um NPC que estava parado montado antes de ele terminar de montar de novo, o animal não se perde mais.',
+    ],
+  },
+  {
     version: '2.26',
     date:    '2026-11-07',
     title:   'Vortable: NPC que segue alguém continua montado',

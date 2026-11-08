@@ -209,6 +209,7 @@ export declare class WorldScene extends Phaser.Scene {
         y: number;
         dir: Dir;
         steed?: NpcSteed;
+        rides?: string;
     }) => Promise<void>): Promise<void>;
     /** Forma do NPC controlado agora (null = ele mesmo). */
     controllingForm(): NpcForm | null;
@@ -249,6 +250,14 @@ export declare class WorldScene extends Phaser.Scene {
     private localDriverInfo;
     /** Um cavalo que alguém conduz, perto de (x, y) e com a garupa livre. */
     private nearestRidden;
+    /** O NPC parado montado cujo animal tem este id (pra quem vai na garupa dele se posicionar). */
+    private parkedDriver;
+    /** O NPC `npc` estava sentado na garupa de outro: desce e fica ao lado (a sala vê e o ponto fica guardado). */
+    private standUp;
+    /** Quem estava na garupa do NPC parado `npc` (que vai sair dali) desce e fica ao lado dele. */
+    private standDownPassengersOf;
+    /** Põe um NPC parado (sem `rides`) neste ponto: todos veem na hora e o mestre grava o ponto. */
+    private moveStaticNpc;
     private mountPillion;
     /** Desce da garupa: fica ao lado do cavalo. */
     private dismountPillion;

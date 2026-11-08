@@ -122,6 +122,8 @@ export interface ZoneNpc {
     sheet?: string;
     /** Montado: o animal (cavalo, lobo…) em que este NPC está sentado. O NPC e o animal viram um conjunto parado no mesmo ponto. */
     steed?: NpcSteed;
+    /** Na garupa: o id do NPC montado (com `steed`) em cujo animal este NPC vai sentado atrás. Fica parado junto, no ponto dele. */
+    rides?: string;
 }
 /** O animal em que um NPC está montado (com o id e o nome que ele tinha como NPC, pra voltar a ser um quando o cavaleiro descer). */
 export interface NpcSteed {
