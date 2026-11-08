@@ -4,6 +4,7 @@ import { getSkin, type Tier } from '../dice3d/skins'
 import { setMyDiceSkin } from '../dice3d/diceSkinService'
 import type { DiceShowcase } from '../dice3d/DiceShowcase'
 import { playUnlockSound } from './unlockSound'
+import { didOf } from './achievements'
 import type { UnlockEvent } from './collectionService'
 import './UnlockCard.css'
 
@@ -88,6 +89,7 @@ export function UnlockCard({ event, onClose }: { event: UnlockEvent; onClose: ()
         <h2 className="uc__title">Parabéns!</h2>
         <p className="uc__sub">Conquista desbloqueada</p>
         <p className="uc__name">{event.title}</p>
+        {didOf(event.achievement) && <p className="uc__did"><span aria-hidden="true">✓</span> {didOf(event.achievement)}</p>}
         <p className="uc__gift">Você ganhou o dado <strong>{skin.name}</strong></p>
       </div>
 

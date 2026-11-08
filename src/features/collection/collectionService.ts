@@ -14,10 +14,10 @@ import { isCollectionSkin } from '../dice3d/skins'
 const HISTORY_LIMIT = 1500
 
 /**
- * O prêmio vale daqui pra frente: só contam as rolagens feitas a partir deste dia (horário de Brasília). O que a conta rolou
- * antes não vira dado, pra ninguém ganhar de uma vez por causa do histórico.
+ * O prêmio vale daqui pra frente: só contam as rolagens feitas depois deste instante (08/11/2026, 17:20, horário de Brasília,
+ * quando a coleção foi reiniciada do zero). O que a conta rolou antes não vira dado, pra ninguém ganhar de uma vez por causa do histórico.
  */
-export const COLLECTION_START = '2026-11-08T00:00:00-03:00'
+export const COLLECTION_START = '2026-11-08T17:20:00-03:00'
 const START_MS = Date.parse(COLLECTION_START)
 
 export interface UnlockEvent { skin: string; achievement: string; title: string; at: number }

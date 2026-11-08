@@ -68,6 +68,9 @@
 /* o palco pega todo o espaço que sobra: mais chão para os dados rolarem soltos */
 .dcp--hub .dcp__frame { flex: 1 1 680px; min-height: 170px; width: 100%; }
 .dcp--hub .dcp__tiles, .dcp--hub .ddw { flex: none; }
+/* "Meus dados" é uma lista grande (a coleção): a aba encolhe até caber e o corpo dela rola */
+.dcp--hub .ddw.ddw--skins { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+.dcp--hub .ddw--skins .ddw__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .dcp--hub .ddw__tabs { padding-top: 0; }
 
 /* o rolador, compacto */

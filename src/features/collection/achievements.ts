@@ -101,6 +101,33 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   { id: 'o-vortice-chamou', skin: 'vortice', title: 'O Vórtice Chamou', tier: 'lendaria', test: (h) => { const l = last(h.rolls, 3); return !!l && l.every(isStrong) } },
 ]
 
+/**
+ * O que o jogador fez pra ganhar, dito depois que ele ganhou (só o cartão da conquista mostra isto; antes, a regra é segredo).
+ */
+const DID: Record<string, string> = {
+  'osso-do-oficio': 'Fez 10 rolagens de dado.',
+  'ferro-e-fogo': 'Tirou uma falha crítica.',
+  'barro-moldado': 'Tirou o seu primeiro resultado forte (crítico).',
+  'rabiscos-de-taverna': 'Rolou todos os tipos de dado: d4, d6, d8, d10, d12, d20 e d100.',
+  'moedas-de-cobre': 'Rolou dados em 3 campanhas diferentes.',
+  'memoria-de-marfim': 'Fez 100 rolagens de dado.',
+  'sombra-polida': 'Tirou 3 resultados fortes (críticos).',
+  'geodo-escondido': 'Tirou 5 rolagens com dois dados iguais.',
+  'sangue-de-uva': 'Teve 5 sucessos seguidos em testes.',
+  'calma-do-jade': 'Rolou dados em 7 dias diferentes.',
+  'fumaca-no-salao': 'Tirou o número máximo em 3 tipos de dado diferentes.',
+  'inverno-subito': 'Tirou 2 resultados fortes seguidos.',
+  'coracao-de-vulcao': 'Tirou o máximo em todos os dados de uma rolagem de 3 ou mais dados.',
+  'estrela-caida': 'Tirou o mesmo resultado 4 vezes seguidas.',
+  'raizes-no-escuro': 'Fez 500 rolagens de dado.',
+  'preso-no-tempo': 'Tirou o número máximo em todos os tipos de dado, do d4 ao d100.',
+  'apertou-a-mao-da-morte': 'Passou em 3 testes de morte com resultado forte.',
+  'noite-de-vaga-lumes': 'Tirou 3 resultados fortes no mesmo dia.',
+  'runas-acesas': 'Tirou 100 e também 1 no d100.',
+  'o-vortice-chamou': 'Tirou 3 resultados fortes seguidos.',
+}
+export const didOf = (id: string): string | undefined => DID[id]
+
 export const achievementOf = (id: string): Achievement | undefined => ACHIEVEMENTS.find((a) => a.id === id)
 export const achievementForSkin = (skin: string): Achievement | undefined => ACHIEVEMENTS.find((a) => a.skin === skin)
 

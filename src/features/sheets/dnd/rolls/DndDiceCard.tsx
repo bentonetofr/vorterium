@@ -151,7 +151,7 @@ export function DndDiceCard({ campaignId, currentUserId, onClose, system = 'dnd5
           </ul>
         )}
 
-        <div className="ddw">
+        <div className={`ddw${tab === 'skins' ? ' ddw--skins' : ''}`}>
           <div className="ddw__tabs" role="tablist" aria-label="Seções do cartão de dados">
             {([['free', 'Rolagem'], ['skins', 'Meus dados']] as const).map(([id, label]) => (
               <button key={id} type="button" role="tab" aria-selected={tab === id} className={`ddw__tab${tab === id ? ' is-on' : ''}`} onClick={() => setTab(id)}>{label}</button>

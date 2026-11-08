@@ -40,7 +40,7 @@ function d20(v: number, over: Partial<DiceRoll> = {}): DiceRoll {
   n += 1
   return {
     id: `roll-${n}`, campaign_id: 'c1', user_id: 'u1', die_type: 'd20', result: v, quantity: 1, modifier: 0, individual_results: [v], total_result: v,
-    roll_mode: 'sum', kept_result: null, formula: '1d20', is_private: false, created_at: new Date(2026, 10, 9, 12, 0, n).toISOString(),
+    roll_mode: 'sum', kept_result: null, formula: '1d20', is_private: false, created_at: new Date(Date.parse('2026-11-09T12:00:00-03:00') + n * 1000).toISOString(),
     roll_breakdown: [{ type: 'sum', notation: '1d20', quantity: 1, sides: 20, results: [v], subtotal: v }], ...over,
   } as DiceRoll
 }
@@ -72,8 +72,8 @@ describe('coleção: conferir as conquistas a cada rolagem', () => {
     expect(events).toHaveLength(1)
   })
 
-  it('rolagens de antes do corte (08/11/2026) não contam: o prêmio vem daqui pra frente', async () => {
-    const old = (v: number, i: number) => d20(v, { created_at: new Date(2026, 9, 1, 12, 0, i).toISOString() })
+  it('rolagens de antes do corte (08/11/2026, 17:20) não contam: o prêmio vem daqui pra frente', async () => {
+    const old = (v: number, i: number) => d20(v, { created_at: new Date(Date.parse('2026-11-08T15:00:00-03:00') + i * 1000).toISOString() })
     // o histórico antigo teria dado o osso (10 rolagens), o ferro (um 1) e a argila (um 20)
     db.rolls = [...Array.from({ length: 12 }, (_, i) => lite(old(2 + (i % 7), i))), lite(old(20, 40)), lite(old(1, 41))]
     db.total = 14

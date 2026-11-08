@@ -111,6 +111,13 @@
 @keyframes uc-title { from { opacity: 0; transform: scale(0.4) rotate(-6deg); } 60% { transform: scale(1.14) rotate(2deg); } }
 .uc__sub { margin: 0; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); animation: uc-rise 420ms var(--ease-out) 760ms backwards; }
 .uc__name { margin: 2px 0 0; font-family: var(--font-display); font-size: var(--text-xl); color: #fff; animation: uc-rise 480ms var(--ease-out) 860ms backwards; }
+/* o que o jogador fez pra ganhar (só aparece depois de ganhar) */
+.uc__did {
+  display: inline-flex; align-items: flex-start; gap: 6px; max-width: 100%; margin: 6px 0 0; padding: 5px 12px; text-align: left; font-size: var(--text-sm); line-height: 1.35; color: var(--text-primary);
+  background: color-mix(in srgb, var(--tc) 14%, transparent); border: 1px solid color-mix(in srgb, var(--tc) 45%, transparent); border-radius: 12px;
+  animation: uc-rise 480ms var(--ease-out) 940ms backwards;
+}
+.uc__did span { color: var(--tc); font-weight: 800; }
 .uc__gift { margin: 2px 0 0; font-size: var(--text-sm); color: var(--text-secondary); animation: uc-rise 480ms var(--ease-out) 980ms backwards; }
 .uc__gift strong { color: color-mix(in srgb, var(--tc) 50%, #fff); }
 @keyframes uc-rise { from { opacity: 0; transform: translateY(10px); } }
