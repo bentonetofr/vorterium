@@ -70,7 +70,9 @@
 .dcp--hub .dcp__tiles, .dcp--hub .ddw { flex: none; }
 /* "Meus dados" é uma lista grande (a coleção): a aba encolhe até caber e o corpo dela rola */
 .dcp--hub .ddw.ddw--skins { flex: 0 1 auto; min-height: 0; overflow: hidden; }
-.dcp--hub .ddw--skins .ddw__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.dcp--hub .ddw--skins .ddw__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+/* trava de segurança: mesmo que o navegador não encolha a aba, o corpo nunca passa da altura que sobra no cartão (palco 170 px + abas + folgas) */
+.dcp--hub .ddw--skins .ddw__body { max-height: calc(min(96vh, 1040px) - 300px); max-height: calc(min(96dvh, 1040px) - 300px); }
 .dcp--hub .ddw__tabs { padding-top: 0; }
 
 /* o rolador, compacto */
