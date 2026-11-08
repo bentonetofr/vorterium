@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { type NpcForm } from '../net/hub';
+import { type NetNpcMove, type NpcForm } from '../net/hub';
 import type { NetHub } from '../net/hub';
 import { ZoneAudio } from '../audio/ZoneAudio';
 import { type Appearance, type Dir, type NpcSteed, type WorldSky, type ZoneData, type ZoneNpc } from '../types';
@@ -49,6 +49,8 @@ export interface WorldSceneData {
     audioOn?: () => boolean;
     /** Câmera do mestre: id do NPC que atravessou uma saída e continua controlado na zona nova. */
     carryNpc?: string;
+    /** O animal (id de um NPC da zona nova) que o cavaleiro leva consigo pela saída: ele monta nele de novo ao chegar. */
+    carryMount?: string;
     /** Forma do NPC que atravessou a saída (continua rato se era rato). */
     carryForm?: NpcForm;
     /** O NPC controlado trocou de zona: avisa a sala e guarda a mudança (sai de uma zona, entra na outra). */
@@ -62,6 +64,8 @@ export interface WorldSceneData {
     }) => void;
     /** O cavaleiro (NPC do mestre) desceu de um animal que estava guardado nele: o animal volta a ser um NPC da zona (guarda). */
     onNpcRestore?: (zone: string, npc: ZoneNpc) => void;
+    /** Câmera do mestre: um NPC mudou de lugar por obra de outra pessoa (um cavalo que o jogador largou, por exemplo): o mestre grava o ponto na zona. */
+    onNpcMoved?: (m: NetNpcMove) => void;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;

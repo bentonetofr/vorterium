@@ -24,6 +24,8 @@ export type { NetLink, NetMsg, NetHello, NetState, NetAnim, NetEnv, NetReact } f
 export { formatHour, worldHour, daylight };
 export { WEATHERS, WEATHER_ORDER } from './world/weather';
 export { WIND_LEVELS, DEFAULT_WIND } from './world/wind';
+/** Avisa o motor de uma gravação em andamento: o próximo jogo que abrir espera ela terminar antes de ler as zonas. */
+export declare function holdLoads<T>(p: Promise<T>): Promise<T>;
 export interface VortableOptions {
     /** play: jogar · edit: editor · watch: câmera livre do mestre (sem boneco; precisa de `net`). */
     mode?: 'play' | 'edit' | 'watch';

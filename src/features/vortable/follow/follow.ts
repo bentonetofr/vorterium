@@ -1,6 +1,7 @@
 import type { Appearance, ZoneNpc } from '../../../vendor/vortable/vortable'
 import type { VortableNet } from '../net/VortableNet'
 import { broadcast, zoneStorage } from '../enemies/enemies'
+import { loadEngine } from '../services/vortableService'
 
 // ────────────────────────────────────────────────────────
 // NPCs que seguem um jogador. Os NPCs do Vortable são bonecos parados; o único que anda é o que o mestre
@@ -232,6 +233,8 @@ export class FollowCrew {
       await worlds.save({ ...zone, npcs })
     }).catch(() => {})
     this.saving = next
+    // sair do Vortable e voltar remonta o jogo na hora: ele espera esta gravação antes de ler as zonas (senão os NPCs voltam pro lugar antigo)
+    void loadEngine().then((e) => e.holdLoads(next)).catch(() => {})
     return next
   }
 

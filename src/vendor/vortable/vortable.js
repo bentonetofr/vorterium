@@ -46166,7 +46166,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		}
 		if (this.cfg.hub) {
 			let t = this.cfg.hub.onNpcMove((t) => {
-				t.from === e.id && t.zone !== e.id && this.removeNpc(t.id), t.zone === e.id && this.applyNpcMove(t);
+				t.from === e.id && t.zone !== e.id && this.removeNpc(t.id), t.zone === e.id && this.applyNpcMove(t), this.cfg.watch && (t.zone === e.id || t.from === e.id) && this.cfg.onNpcMoved?.(t);
 			});
 			this.events.once(c.default.Scenes.Events.SHUTDOWN, t);
 		}
@@ -46178,8 +46178,15 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		}
 		if (this.setupMountUi(), this.cfg.watch) {
 			this.startWatch(e, i, a);
-			let t = this.cfg.carryNpc, n = this.cfg.carryForm;
-			this.cfg.carryNpc = void 0, this.cfg.carryForm = void 0, t && this.controlNpc(t).then(() => n && this.transformNpc(n));
+			let t = this.cfg.carryNpc, n = this.cfg.carryForm, r = this.cfg.carryMount;
+			this.cfg.carryNpc = void 0, this.cfg.carryForm = void 0, this.cfg.carryMount = void 0, t && this.controlNpc(t).then(async () => {
+				if (n) {
+					await this.transformNpc(n);
+					return;
+				}
+				let i = r ? (e.npcs ?? []).find((e) => e.id === r) : void 0;
+				i && this.npcCtl?.id === t && await this.mountNpcOn(this.npcCtl, i);
+			});
 			return;
 		}
 		try {
@@ -46201,13 +46208,17 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 			y: u.y + u.h / 2 + 5
 		} : e.spawn);
 		this.player = new Tr(this, ts, d.x, d.y, r?.dir ?? this.cfg.facing ?? "down"), this.applyHeight(this.player, n), this.inputLocked = this.cfg.inputLocked?.() ?? this.inputLocked, this.player.locked = this.inputLocked, this.physics.add.collider(this.player.sprite, s), this.syncFootsteps(this.player.sprite), l.centerOn(d.x, d.y), this.blob = this.add.image(d.x, d.y, ba).setScale(.75, .6).setAlpha(.32);
-		let f = this.player.sprite;
+		let f = this.cfg.carryMount;
+		this.cfg.carryMount = void 0;
+		let p = f ? (e.npcs ?? []).find((e) => e.id === f) : void 0;
+		p && this.mountOn(p);
+		let m = this.player.sprite;
 		o.extraCasters = () => [{
-			key: f.texture.key,
-			frame: f.frame.name,
-			x: f.x,
-			y: f.y,
-			originY: f.originY
+			key: m.texture.key,
+			frame: m.frame.name,
+			x: m.x,
+			y: m.y,
+			originY: m.originY
 		}, ...(this.remotes?.sprites ?? []).map((e) => ({
 			key: e.texture.key,
 			frame: e.frame.name,
@@ -46215,13 +46226,13 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 			y: e.y,
 			originY: e.originY
 		}))];
-		let p = this.cfg.hub;
-		if (p) {
-			this.remotes = new no(this, p, t, e.id, (e) => this.localDriverInfo(e)), p.announce(this.cfg.appearance);
-			let n = p.onTeleport((e) => void this.teleportTo(e.zone, e.x, e.y));
+		let h = this.cfg.hub;
+		if (h) {
+			this.remotes = new no(this, h, t, e.id, (e) => this.localDriverInfo(e)), h.announce(this.cfg.appearance);
+			let n = h.onTeleport((e) => void this.teleportTo(e.zone, e.x, e.y));
 			this.events.once(c.default.Scenes.Events.SHUTDOWN, n);
 		}
-		let m = (e) => {
+		let g = (e) => {
 			!Er() && [
 				"ArrowUp",
 				"ArrowDown",
@@ -46230,7 +46241,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 				" "
 			].includes(e.key) && e.preventDefault();
 		};
-		window.addEventListener("keydown", m), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => window.removeEventListener("keydown", m)), this.input.keyboard.on("keydown-M", () => {
+		window.addEventListener("keydown", g), this.events.once(c.default.Scenes.Events.SHUTDOWN, () => window.removeEventListener("keydown", g)), this.input.keyboard.on("keydown-M", () => {
 			if (Er()) return;
 			let e = !Ao().muted;
 			jo({ muted: e }), Fo.of(this)?.applyPrefs(), this.toast(e ? "Som desligado (M liga de novo)" : "Som ligado");
@@ -46525,12 +46536,12 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		let e = this.npcCtl;
 		if (e && (e.player.update(), this.publishNpc(e), this.updateNpcMount(e), this.updateNpcPillion(e), this.occluders.update(e.player.sprite.x, e.player.sprite.y), !this.travelling)) {
 			let t = this.portalUnder(e.player.foot);
-			t ? this.armed && t.to && (this.npcMount && this.dismountNpc(), this.npcPillion && this.dismountNpcPillion(), this.travelNpc(t)) : this.armed = !0;
+			t ? this.armed && t.to && (this.npcPillion && this.dismountNpcPillion(), this.travelNpc(t)) : this.armed = !0;
 		}
 		let t = this.player;
 		if (!t || (t.update(), this.updateMount(t), this.updatePillion(t), this.publish(t), this.occluders.update(t.sprite.x, t.sprite.y), this.travelling)) return;
 		let n = this.portalUnder(t.foot);
-		n ? this.armed && n.to && (this.mount && this.dismount(), this.pillion && this.dismountPillion(), this.travel(n)) : this.armed = !0;
+		n ? this.armed && n.to && (this.pillion && this.dismountPillion(), this.travel(n)) : this.armed = !0;
 	}
 	publish(e) {
 		let t = this.cfg.hub;
@@ -46703,7 +46714,7 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		if (!t.npcs?.some((t) => t.id === e)) return;
 		t.npcs = t.npcs.filter((t) => t.id !== e), this.npcs?.set(t.npcs);
 		let n = this.npcSolids.get(e);
-		n && (n.destroy(), this.npcSolids.delete(e)), this.hiddenNpcs = "\0";
+		n && (n.destroy(), this.npcSolids.delete(e)), this.hiddenNpcs = "#";
 	}
 	async travelNpc(e) {
 		let t = this.npcCtl, n = e.to;
@@ -46731,13 +46742,32 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 			x: c.x,
 			y: c.y,
 			dir: s
-		}), this.scene.restart({
+		});
+		let l, u = this.npcMount;
+		if (u) {
+			let e = {
+				...u.npc,
+				x: c.x,
+				y: c.y,
+				dir: s
+			};
+			r.npcs = [...(r.npcs ?? []).filter((t) => t.id !== e.id), e], this.cfg.onNpcTransfer?.({
+				npc: e,
+				from: this.cfg.zone.id,
+				to: r.id,
+				x: e.x,
+				y: e.y,
+				dir: s
+			}), u.rider.destroy(), this.npcMount = null, l = e.id;
+		}
+		this.scene.restart({
 			...this.cfg,
 			zone: r,
 			arrival: void 0,
 			at: void 0,
 			carryNpc: t.id,
 			carryForm: t.form ?? void 0,
+			carryMount: l,
 			notice: void 0
 		});
 	}
@@ -46789,22 +46819,42 @@ var ts = "char:me", ns = "char:me:riding", rs = "char:npc:riding", is = 220, as 
 		let r = this.cameras.main, i = new Promise((e) => r.once(c.default.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => e()));
 		r.fadeOut(is);
 		let [a] = await Promise.all([this.cfg.loadZone(n.zone).catch(() => null), i]);
-		if (this.sys.isActive()) {
-			if (!a) {
-				console.warn("[vortable] saída leva pra uma zona que não existe:", n.zone), r.fadeIn(is), this.toast("Essa passagem não leva a lugar nenhum (zona apagada ou não salva)."), t.frozen = !1, this.travelling = !1, this.armed = !1;
-				return;
-			}
-			this.scene.restart({
-				...this.cfg,
-				zone: a,
-				arrival: {
-					portal: n.portal,
-					dir: t.facing
-				},
-				at: void 0,
-				notice: void 0
-			});
+		if (!this.sys.isActive()) return;
+		if (!a) {
+			console.warn("[vortable] saída leva pra uma zona que não existe:", n.zone), r.fadeIn(is), this.toast("Essa passagem não leva a lugar nenhum (zona apagada ou não salva)."), t.frozen = !1, this.travelling = !1, this.armed = !1;
+			return;
 		}
+		let o, s = this.mount;
+		if (s) {
+			let e = a.portals.find((e) => e.id === n.portal), r = e ? {
+				x: e.x + e.w / 2,
+				y: e.y + e.h / 2 + 5
+			} : a.spawn, i = {
+				...s.npc,
+				x: Math.round(r.x),
+				y: Math.round(r.y),
+				dir: t.facing
+			};
+			a.npcs = [...(a.npcs ?? []).filter((e) => e.id !== i.id), i], this.cfg.onNpcTransfer?.({
+				npc: i,
+				from: this.cfg.zone.id,
+				to: a.id,
+				x: i.x,
+				y: i.y,
+				dir: i.dir
+			}), s.rider.destroy(), this.mount = null, o = i.id;
+		}
+		this.scene.restart({
+			...this.cfg,
+			zone: a,
+			arrival: {
+				portal: n.portal,
+				dir: t.facing
+			},
+			at: void 0,
+			carryMount: o,
+			notice: void 0
+		});
 	}
 	mountInfo() {
 		return this.pillion ? {
@@ -53641,8 +53691,18 @@ function iu(e) {
 }
 //#endregion
 //#region src/engine/index.ts
-var au = "/__vortable/curate";
-function ou(e, t) {
+var au = /* @__PURE__ */ new Set();
+function ou(e) {
+	au.add(e);
+	let t = () => {
+		au.delete(e);
+	};
+	return e.then(t, t), e;
+}
+var su = async () => {
+	for (let e = 0; e < 5 && au.size; e++) await Promise.allSettled([...au]);
+}, cu = "/__vortable/curate";
+function lu(e, t) {
 	let n = t.assetBase ?? "./assets/";
 	Po(n);
 	let r = t.mode ?? "play", i = t.storage ?? new Ml(), a = t.appearance, o = !1, s = null, l = !0, u = t.net ? new po(t.net) : void 0, d = null, f = null, p = e, m = (e, i, c, f = 0, p) => ({
@@ -53670,8 +53730,11 @@ function ou(e, t) {
 		watch: r === "watch",
 		listen: t.listen,
 		audioOn: () => l,
+		onNpcMoved: (e) => {
+			ou(C(e)).catch((e) => console.error("[vortable] não deu pra guardar o ponto do NPC", e));
+		},
 		onNpcRestore: (e, t) => {
-			S(e, t).catch((e) => console.error("[vortable] não deu pra guardar o animal do NPC", e));
+			ou(T(e, t).catch((e) => console.error("[vortable] não deu pra guardar o animal do NPC", e)));
 		},
 		onNpcTransfer: (e) => {
 			u?.moveNpc({
@@ -53687,7 +53750,7 @@ function ou(e, t) {
 					appearance: e.npc.appearance,
 					showName: !!e.npc.showName
 				}
-			}), b(e).catch((e) => console.error("[vortable] não deu pra guardar a mudança de zona do NPC", e));
+			}), b = ou(b.then(() => x(e)).catch((e) => console.error("[vortable] não deu pra guardar a mudança de zona do NPC", e)));
 		}
 	}), h = (e, t) => {
 		let n = (e.dayMinutes ?? 24) * 6e4, r = Date.now();
@@ -53717,7 +53780,7 @@ function ou(e, t) {
 			npcLibrary: t.npcLibrary,
 			externalBar: t.externalToolbar,
 			curate: t.curate ? async (e, t, n) => {
-				let r = await fetch(au, {
+				let r = await fetch(cu, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -53734,6 +53797,7 @@ function ou(e, t) {
 	async function g() {
 		let e = Wr(null);
 		try {
+			await su();
 			let n = await i.loadWorld();
 			if (e = Wr(n), t.resume?.kind === "play") {
 				let n = t.resume, r = await i.load(n.zoneId);
@@ -53795,10 +53859,10 @@ function ou(e, t) {
 		if (_.scene.stop("boot"), r === "edit") _.scene.start("editor", { state: f }), d.assetsReady();
 		else {
 			let { zone: e, sky: t, start: n } = await g();
-			_.scene.start("world", m(e, (e) => i.load(e), t, 0, n));
+			_.scene.start("world", m(e, async (e) => (await su(), i.load(e)), t, 0, n));
 		}
 	}), !0);
-	let v = () => _.scene.isActive("world") ? _.scene.getScene("world") : null, y = () => _.scene.isActive("editor") ? _.scene.getScene("editor") : null, b = async (e) => {
+	let v = () => _.scene.isActive("world") ? _.scene.getScene("world") : null, y = () => _.scene.isActive("editor") ? _.scene.getScene("editor") : null, b = Promise.resolve(), x = async (e) => {
 		let [t, n] = await Promise.all([i.load(e.from), i.load(e.to)]);
 		t && (t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.npc.id), t.npcs.length || delete t.npcs, await i.save(t)), n && (n.npcs = [...(n.npcs ?? []).filter((t) => t.id !== e.npc.id), {
 			...e.npc,
@@ -53806,10 +53870,46 @@ function ou(e, t) {
 			y: e.y,
 			dir: e.dir
 		}], await i.save(n));
-	}, x = async (e) => {
+	}, S = async (e) => {
 		let t = await i.load(e.zone), n = t?.npcs?.find((t) => t.id === e.id);
 		t && n && (n.x = e.x, n.y = e.y, n.dir = e.dir, e.steed ? (n.steed = e.steed, t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.steed.id)) : delete n.steed, await i.save(t));
-	}, S = async (e, t) => {
+	}, C = async (e) => {
+		if (e.from && e.from !== e.zone) {
+			if (!e.npc) return;
+			let t = {
+				id: e.id,
+				name: e.npc.name,
+				role: e.npc.role,
+				appearance: e.npc.appearance,
+				x: e.x,
+				y: e.y,
+				dir: e.dir,
+				...e.npc.showName ? { showName: !0 } : {}
+			};
+			b = ou(b.then(() => x({
+				npc: t,
+				from: e.from,
+				to: e.zone,
+				x: e.x,
+				y: e.y,
+				dir: e.dir
+			})).catch(() => {}));
+			return;
+		}
+		let t = await i.load(e.zone);
+		if (!t) return;
+		let n = t.npcs?.find((t) => t.id === e.id);
+		!n && e.npc && (n = {
+			id: e.id,
+			name: e.npc.name,
+			role: e.npc.role,
+			appearance: e.npc.appearance,
+			x: e.x,
+			y: e.y,
+			dir: e.dir,
+			...e.npc.showName ? { showName: !0 } : {}
+		}, (t.npcs ??= []).push(n)), n && (n.x = e.x, n.y = e.y, n.dir = e.dir, e.steed ? (n.steed = e.steed, t.npcs = (t.npcs ?? []).filter((t) => t.id !== e.steed.id)) : delete n.steed, await i.save(t));
+	}, w = (e) => ou(S(e)), T = async (e, t) => {
 		let n = await i.load(e);
 		if (!n) return;
 		n.npcs = [...(n.npcs ?? []).filter((e) => e.id !== t.id), { ...t }];
@@ -53819,7 +53919,7 @@ function ou(e, t) {
 	return {
 		watch: r === "watch" ? {
 			setZone: async (e) => {
-				await v()?.releaseNpc(x), await v()?.watchZone(e);
+				await v()?.releaseNpc(w), await v()?.watchZone(e);
 			},
 			npcs: () => v()?.watchNpcs() ?? [],
 			controllingNpc: () => v()?.controllingNpc() ?? null,
@@ -53829,7 +53929,7 @@ function ou(e, t) {
 				await v()?.transformNpc(e);
 			},
 			releaseNpc: async () => {
-				await v()?.releaseNpc(x);
+				await v()?.releaseNpc(w);
 			},
 			fit: () => v()?.watchFit(),
 			zoomBy: (e) => v()?.watchZoom(e),
@@ -53934,11 +54034,11 @@ function ou(e, t) {
 			window.__vtPlayZoom = e, _.scene.isActive("world") && _.scene.getScene("world").setPlayZoom?.(e);
 		},
 		destroy() {
-			r === "watch" && v()?.releaseNpc(x), u?.leave(), d?.destroy(), _.destroy(!0);
+			r === "watch" && v()?.releaseNpc(w), u?.leave(), d?.destroy(), _.destroy(!0);
 		}
 	};
 }
-function su(e, t = {}) {
+function uu(e, t = {}) {
 	let n = new bl(e, {
 		assetBase: t.assetBase ?? "./assets/",
 		storage: t.storage ?? new Xc(),
@@ -53954,4 +54054,4 @@ function su(e, t = {}) {
 	return { destroy: () => n.destroy() };
 }
 //#endregion
-export { H as BIG_HEIGHTS, Zc as CHARACTER_FORMAT, yi as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, X as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Xc as LocalCharacterStorage, Ml as LocalWorldStorage, j as METERS_PER_TILE, io as REACTIONS, xi as SKY_PRESETS, Lo as SOUND_LAYERS, Go as SURFACE_LABELS, _ as TERRAINS, A as TILE, Xi as WEATHERS, Zi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, $c as characterFileName, ar as characterFrame, z as clampZoneSize, Qr as daylight, $t as defaultAppearance, tl as downloadText, Qc as exportCharacters, _i as formatHour, Bt as loadCharacterData, Nl as localStorageAvailable, su as mountCharacterCreator, ou as mountVortable, Jc as newCharacter, F as newId, jl as newWorld, B as newZone, en as normalizeAppearance, Yc as parseCharacter, el as parseCharacterFile, co as parseNet, Wl as parseWorld, Fl as parseZone, nl as pickTextFile, an as randomAppearance, hi as shiftForHour, bi as skySwatch, Al as summarize, mi as worldHour };
+export { H as BIG_HEIGHTS, Zc as CHARACTER_FORMAT, yi as DAY_LENGTHS, M as DAY_MINUTES, ae as DEFAULT_WIND, X as EDITOR_ICONS, V as HEIGHTS, P as LIGHT_RADIUS_MAX, N as LIGHT_RADIUS_MIN, Xc as LocalCharacterStorage, Ml as LocalWorldStorage, j as METERS_PER_TILE, io as REACTIONS, xi as SKY_PRESETS, Lo as SOUND_LAYERS, Go as SURFACE_LABELS, _ as TERRAINS, A as TILE, Xi as WEATHERS, Zi as WEATHER_ORDER, ie as WIND_LEVELS, R as ZONE_MAX, L as ZONE_MIN, I as Z_MAX, $c as characterFileName, ar as characterFrame, z as clampZoneSize, Qr as daylight, $t as defaultAppearance, tl as downloadText, Qc as exportCharacters, _i as formatHour, ou as holdLoads, Bt as loadCharacterData, Nl as localStorageAvailable, uu as mountCharacterCreator, lu as mountVortable, Jc as newCharacter, F as newId, jl as newWorld, B as newZone, en as normalizeAppearance, Yc as parseCharacter, el as parseCharacterFile, co as parseNet, Wl as parseWorld, Fl as parseZone, nl as pickTextFile, an as randomAppearance, hi as shiftForHour, bi as skySwatch, Al as summarize, mi as worldHour };

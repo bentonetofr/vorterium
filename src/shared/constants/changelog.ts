@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.25',
+    date:    '2026-11-07',
+    title:   'Vortable: cavalo atravessa saídas e NPCs não voltam mais pro lugar antigo',
+    items: [
+      'Quem atravessa uma saída montado num cavalo ou lobo agora leva o animal junto: ele sai da zona de onde veio e aparece na nova, e o cavaleiro já chega montado. Vale pro jogador e pro NPC que o mestre controla. Antes ele descia do animal antes de passar e o animal ficava pra trás.',
+      'Sair do Vortable (por exemplo pra minimizar) e voltar reiniciava o jogo e os NPCs podiam aparecer onde estavam antes. O motivo era uma corrida: o jogo lia a zona do banco antes de a gravação da posição dos NPCs terminar. Agora o jogo espera as gravações pendentes (NPC solto, seguidores que pararam, mudança de zona) antes de ler.',
+      'Também passou a ficar guardado na zona o lugar onde um jogador larga um cavalo (o mestre grava quando a câmera dele está nessa zona), e o animal que mudou de zona com o cavaleiro. Se ninguém do mestre estiver com o controle aberto, o ponto onde um jogador largou um cavalo só vale até a página recarregar.',
+    ],
+  },
+  {
     version: '2.24',
     date:    '2026-11-07',
     title:   'Vortable: NPC solto continua montado',
