@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════════
+   O cartão suspenso da conquista: cai do alto da tela com o dado girando num pedestal de luz, raios que giram, uma chuva de
+   faíscas, estrelinhas, o brilho que passa e o nome da raridade. A cor vem de --tc (clara) e --tc2 (funda) da raridade.
+   O dado é um canvas só por cima da .uc__show (DiceShowcase), centrado no .uc__pedestal.
+   ═══════════════════════════════════════════════════════ */
+
+.uc-wrap {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1500; width: min(440px, calc(100vw - 20px));
+  display: flex; justify-content: center; pointer-events: none; perspective: 900px;
+}
+
+.uc {
+  --tc: #ffc23a; --tc2: #b8620c;
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; overflow: hidden;
+  padding: var(--space-4) var(--space-5) var(--space-3); text-align: center; pointer-events: auto;
+  background:
+    radial-gradient(ellipse at 50% 18%, color-mix(in srgb, var(--tc) 26%, transparent), transparent 62%),
+    radial-gradient(ellipse at 50% 100%, color-mix(in srgb, var(--tc2) 40%, transparent), transparent 70%),
+    #0e1220;
+  border: 1px solid color-mix(in srgb, var(--tc) 70%, transparent); border-radius: 24px;
+  box-shadow: 0 0 0 3px #090c15, 0 0 0 4px color-mix(in srgb, var(--tc) 40%, transparent), 0 26px 70px rgba(0, 0, 0, 0.7), 0 0 70px color-mix(in srgb, var(--tc) 30%, transparent);
+  transform-origin: 50% 0;
+  animation: uc-drop 820ms cubic-bezier(0.2, 1.25, 0.35, 1) backwards;
+}
+.uc[data-state='closing'] { animation: uc-leave 260ms ease-in forwards; }
+@keyframes uc-drop {
+  0%   { opacity: 0; transform: translateY(-150%) rotateX(38deg) scale(0.86); }
+  55%  { opacity: 1; transform: translateY(8px) rotateX(-4deg) scale(1.03); }
+  100% { transform: none; }
+}
+@keyframes uc-leave { to { opacity: 0; transform: translateY(-40px) scale(0.94); } }
+
+.uc__close {
+  position: absolute; top: 8px; right: 10px; z-index: 5; width: 30px; height: 30px; display: grid; place-items: center;
+  font-size: 21px; line-height: 1; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 50%; cursor: var(--cursor-hand);
+  transition: color var(--transition-fast), border-color var(--transition-fast), transform 200ms var(--ease-spring);
+}
+.uc__close:hover { color: var(--text-primary); border-color: var(--border-base); transform: rotate(90deg); }
+
+/* o brilho que atravessa o cartão */
+.uc__shine { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 4; }
+.uc__shine::after {
+  content: ''; position: absolute; top: -30%; bottom: -30%; width: 24%; left: -50%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  animation: uc-shine 1.4s ease-out 700ms 1, uc-shine 6s ease-in-out 3.2s infinite;
+}
+@keyframes uc-shine { 0% { left: -50%; } 60%, 100% { left: 140%; } }
+
+/* ── A vitrine: raios, faíscas e o dado ── */
+.uc__show { position: relative; z-index: 1; width: 100%; height: 190px; display: grid; place-items: center; }
+.uc__rays {
+  position: absolute; left: 50%; top: 46%; width: 330px; height: 330px; margin: -165px 0 0 -165px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tc) 42%, transparent) 0deg 6deg, transparent 6deg 22deg);
+  -webkit-mask-image: radial-gradient(circle, #000 8%, transparent 66%); mask-image: radial-gradient(circle, #000 8%, transparent 66%);
+  animation: uc-rays-in 900ms ease-out 200ms backwards, uc-spin 16s linear infinite;
+}
+@keyframes uc-rays-in { from { opacity: 0; transform: scale(0.2); } }
+@keyframes uc-spin { to { transform: rotate(360deg); } }
+
+/* chuva de faíscas: saem do dado em todas as direções e somem */
+.uc__burst { position: absolute; left: 50%; top: 46%; width: 0; height: 0; pointer-events: none; }
+.uc__burst i {
+  position: absolute; left: 0; top: 0; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); border-radius: 50%;
+  background: radial-gradient(circle, #fff, var(--tc) 55%, transparent 72%); opacity: 0;
+  animation: uc-burst 1500ms cubic-bezier(0.1, 0.7, 0.3, 1) calc(520ms + var(--t)) forwards;
+}
+@keyframes uc-burst {
+  0%   { opacity: 1; transform: rotate(var(--a)) translateX(0) scale(0.4); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--d)) scale(1.1); }
+}
+/* estrelinhas que piscam em volta */
+.uc__stars { position: absolute; inset: 0; pointer-events: none; }
+.uc__stars b {
+  position: absolute; left: calc(8% + var(--i) * 8.6%); top: calc(10% + (var(--i) * 37 % 70) * 1%); font-size: calc(9px + (var(--i) % 3) * 4px);
+  color: var(--tc); text-shadow: 0 0 10px var(--tc); opacity: 0; animation: uc-twinkle 2.4s ease-in-out calc(1000ms + var(--i) * 230ms) infinite;
+}
+@keyframes uc-twinkle { 0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); } 50% { opacity: 1; transform: scale(1.2) rotate(90deg); } }
+
+.uc__pedestal { position: relative; z-index: 2; width: 150px; height: 150px; display: grid; place-items: center; margin-bottom: 8px; animation: uc-pop 700ms var(--ease-spring) 380ms backwards; }
+@keyframes uc-pop { from { opacity: 0; transform: scale(0.2) rotate(-40deg); } }
+.uc__base {
+  position: absolute; left: 50%; bottom: 8px; width: 150px; height: 26px; transform: translateX(-50%); border-radius: 50%; z-index: 1;
+  background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--tc2) 70%, #222), #0a0e18 72%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tc) 55%, transparent), 0 -4px 30px color-mix(in srgb, var(--tc) 55%, transparent), inset 0 3px 8px rgba(255, 255, 255, 0.12);
+}
+.uc__base::after {
+  content: ''; position: absolute; inset: 18% 18%; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--tc) 90%, #fff), transparent 70%); filter: blur(4px);
+  animation: uc-glow 2.2s ease-in-out infinite;
+}
+@keyframes uc-glow { 50% { opacity: 0.4; } }
+.uc__swatch { display: grid; place-items: center; width: 62%; aspect-ratio: 1; border-radius: 50%; border: 3px solid; font: 700 30px 'EB Garamond', Georgia, serif; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+
+/* ── Textos ── */
+.uc__text { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: -2px; }
+.uc__tier {
+  padding: 3px 14px; font-family: var(--font-label); font-size: 11px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; color: #170c02;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tc) 55%, #fff), var(--tc)); border-radius: 999px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4), 0 0 18px color-mix(in srgb, var(--tc) 60%, transparent);
+  animation: uc-rise 520ms var(--ease-spring) 520ms backwards;
+}
+.uc--lendaria .uc__tier {
+  background: linear-gradient(100deg, #ffe08a, #ff9a3a, #ff5a6a, #c284ff, #ffe08a); background-size: 300% 100%; animation: uc-rise 520ms var(--ease-spring) 520ms backwards, uc-shimmer 3s linear infinite;
+}
+@keyframes uc-shimmer { to { background-position: 300% 0; } }
+.uc__title {
+  margin: 4px 0 0; font-family: var(--font-display); font-size: clamp(30px, 8vw, 38px); font-weight: 700; line-height: 1.05; color: color-mix(in srgb, var(--tc) 38%, #fff);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 0 28px color-mix(in srgb, var(--tc) 70%, transparent);
+  animation: uc-title 800ms var(--ease-spring) 600ms backwards;
+}
+@keyframes uc-title { from { opacity: 0; transform: scale(0.4) rotate(-6deg); } 60% { transform: scale(1.14) rotate(2deg); } }
+.uc__sub { margin: 0; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); animation: uc-rise 420ms var(--ease-out) 760ms backwards; }
+.uc__name { margin: 2px 0 0; font-family: var(--font-display); font-size: var(--text-xl); color: #fff; animation: uc-rise 480ms var(--ease-out) 860ms backwards; }
+.uc__gift { margin: 2px 0 0; font-size: var(--text-sm); color: var(--text-secondary); animation: uc-rise 480ms var(--ease-out) 980ms backwards; }
+.uc__gift strong { color: color-mix(in srgb, var(--tc) 50%, #fff); }
+@keyframes uc-rise { from { opacity: 0; transform: translateY(10px); } }
+
+.uc__foot { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); width: 100%; animation: uc-rise 480ms var(--ease-out) 1100ms backwards; }
+.uc__hint, .uc__ok, .uc__err { margin: 0; font-size: var(--text-xs); color: var(--text-muted); }
+.uc__ok { color: #8be0a4; }
+.uc__err { color: #ff9a9a; }
+.uc__actions { display: flex; gap: var(--space-3); }
+.uc__use { min-width: 150px; }
+
+/* a barrinha do tempo na base */
+.uc__timer { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; transform-origin: 0 50%; background: linear-gradient(90deg, var(--tc2), var(--tc)); animation: uc-timer linear forwards; z-index: 5; }
+@keyframes uc-timer { to { transform: scaleX(0); } }
+
+@media (max-width: 480px) {
+  .uc { padding: var(--space-3) var(--space-4) var(--space-3); border-radius: 20px; }
+  .uc__show { height: 168px; }
+  .uc__pedestal { width: 128px; height: 128px; }
+  .uc__base { width: 128px; }
+  .uc__rays { width: 280px; height: 280px; margin: -140px 0 0 -140px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uc, .uc *, .uc *::before, .uc *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; }
+}

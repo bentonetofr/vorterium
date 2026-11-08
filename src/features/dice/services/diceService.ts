@@ -1,6 +1,7 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { logActivity } from '../../activity/services/activityService'
-import { forcedDie } from '../../owner/ownerTools'
+import { forcedDie, markForcedRoll, resetForceUsed, takeForceUsed } from '../../owner/ownerTools'
+import { noteRoll } from '../../collection/collectionService'
 import type { DiceRoll, DiceRollContext, DiceRollWithProfile, DieType, RollBreakdownItem, RollMode } from '../../../shared/types'
 
 // ────────────────────────────────────────────────────────
@@ -161,10 +162,13 @@ export interface RollResult {
   legacyRollMode: RollMode
   legacyKeptResult: number | null
   legacyIndividualResults: number[] | null
+  /** Os dados saíram forçados pela ferramenta do dono (não contam pras conquistas). */
+  forced?: boolean
 }
 
 /** `floor: false` deixa o total abaixo de 1 (testes do D&D). */
 export function rollParsedFormula(parsed: ParsedFormula, opts: { floor?: boolean } = {}): RollResult {
+  resetForceUsed()
   const breakdown: RollBreakdownItem[] = []
   let total = 0
 
@@ -248,6 +252,7 @@ export function rollParsedFormula(parsed: ParsedFormula, opts: { floor?: boolean
     legacyIndividualResults: breakdown.length === 1 && breakdown[0].type !== 'modifier'
       ? (breakdown[0] as { results: number[] }).results
       : null,
+    ...(takeForceUsed() ? { forced: true } : {}),
   }
 }
 
@@ -355,6 +360,8 @@ export async function recordRoll(
 
   if (error) throw new Error('Não foi possível registrar a rolagem.')
   const roll = data as DiceRoll
+  if (rolled.forced) markForcedRoll(roll.id)
+  void noteRoll(roll)
   // Rolagem privada não gera rastro na aba Atividade — nem pro autor, nem pro mestre.
   if (!isPrivate) {
     const what = roll.roll_label ? `${roll.roll_label} (${roll.formula ?? roll.die_type})` : (roll.formula ?? roll.die_type)
@@ -378,10 +385,12 @@ export interface EvensRollResult {
   results:  number[]
   bonus:    number[]
   evens:    number
+  forced?:  boolean
 }
 
 /** Rola a parada (só a sorte — não grava nada). */
 export function rollEvensPool(dice: number): EvensRollResult {
+  resetForceUsed()
   const qty = Math.max(1, Math.min(EVENS_MAX_DICE, Math.floor(dice)))
   const results = Array.from({ length: qty }, () => randomInt(1, 6))
   const bonus: number[] = []
@@ -395,7 +404,7 @@ export function rollEvensPool(dice: number): EvensRollResult {
     if (r === 6) pending += 1
   }
   const evens = [...results, ...bonus].filter((r) => r % 2 === 0).length
-  return { results, bonus, evens }
+  return { results, bonus, evens, ...(takeForceUsed() ? { forced: true } : {}) }
 }
 
 export interface EvensTestOptions {
@@ -449,6 +458,8 @@ export async function rollEvensTest(
 
   if (error) throw new Error('Não foi possível registrar a rolagem.')
   const roll = data as DiceRoll
+  if (pool.forced) markForcedRoll(roll.id)
+  void noteRoll(roll)
   if (!isPrivate) {
     logActivity(campaignId, 'dice_rolled', `Teste de pares (${qty}d6): desempenho ${total}.`)
   }

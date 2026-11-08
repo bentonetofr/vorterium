@@ -6,13 +6,13 @@
 // ────────────────────────────────────────────────────────
 import { DiceStage, diceStageSupported, type StageDie } from '../src/features/dice3d/DiceStage'
 import { facesCount, type DieKind } from '../src/features/dice3d/polyhedra'
-import { DICE_SKINS } from '../src/features/dice3d/skins'
+import { COLLECTION_SKINS, DICE_SKINS } from '../src/features/dice3d/skins'
 import { playDiceHit, playDiceRattle, setDiceSoundMuted } from '../src/features/dice3d/sound'
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 const out = $('out')
 const skinSel = $<HTMLSelectElement>('skin')
-for (const s of DICE_SKINS) skinSel.add(new Option(s.name, s.id))
+for (const s of [...DICE_SKINS, ...COLLECTION_SKINS]) skinSel.add(new Option(s.name, s.id))
 $<HTMLInputElement>('mute').addEventListener('change', (e) => setDiceSoundMuted((e.target as HTMLInputElement).checked))
 
 if (!diceStageSupported()) out.textContent = 'Sem WebGL (ou "reduzir movimento" ligado): a ficha usaria o modo simples.'

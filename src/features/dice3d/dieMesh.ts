@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import { centroid, labelForValue, labelText, numberUp, polyhedron, type DieKind, type V3 } from './polyhedra'
 import { DIE_RADIUS } from './simulate'
-import { SURFACES, hashString, hexToRgb, mulberry32, type FacePaint } from './dieSurfaces'
+import { BASE_SURFACES, hashString, hexToRgb, mulberry32, type FacePaint } from './dieSurfaces'
+import { PACK_SURFACES } from './dieSurfacesPack'
 import type { DiceSkin } from './skins'
 import { aimToy, makeToy } from './toys'
 import { LITE_DICE } from './lite'
@@ -14,6 +15,9 @@ import { LITE_DICE } from './lite'
 // ────────────────────────────────────────────────────────
 
 /** Tamanho do atlas: os conjuntos detalhados pedem mais pixels nos dados de muitas faces (cada face é pequena). */
+/** Os pintores de superfície: os três iniciais e os 20 da coleção. */
+const SURFACES: Record<string, (typeof BASE_SURFACES)[string]> = { ...BASE_SURFACES, ...PACK_SURFACES }
+
 function atlasSize(kind: DieKind, skin: DiceSkin): number {
   const full = fullAtlasSize(kind, skin)
   // celular: metade do lado (um quarto da memória); o d100, que é o maior, vai a 2048
@@ -24,7 +28,8 @@ function fullAtlasSize(kind: DieKind, skin: DiceSkin): number {
   if (kind === 'd2') return 2048   // 26 células (as duas tampas e o friso): a tampa precisa de pixels para o número
   if (!skin.surface) return 1024
   const faces = polyhedron(kind).faces.length
-  return faces >= 100 ? 4096 : faces >= 20 ? 2048 : faces >= 10 ? 1536 : 1024
+  // o bolão tem 100 células: nos conjuntos da coleção (muitos detalhes por face) 2560 já dá um número nítido e custa bem menos pra pintar
+  return faces >= 100 ? (skin.tier ? 2560 : 4096) : faces >= 20 ? 2048 : faces >= 10 ? 1536 : 1024
 }
 
 type V2 = [number, number]
@@ -179,6 +184,7 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
     // conjunto detalhado: a superfície inteira (e os números) vêm do pintor do material
     const paint: FacePaint | null = bx && skin.surface ? {
       cx, bx, rx, poly, center, radius, skin, k: ATLAS / 1024, rnd: mulberry32(hashString(`${skin.id}:${kind}:${i}`)),
+      ...(skin.glowPower > 0 ? { gx } : {}), ...(tx ? { tx } : {}),
     } : null
     if (paint && skin.surface) SURFACES[skin.surface].face(paint)
     else {

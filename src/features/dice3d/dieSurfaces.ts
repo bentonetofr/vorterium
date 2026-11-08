@@ -14,6 +14,8 @@ export type V2 = [number, number]
 export interface FacePaint {
   /** Cor, relevo (cinza 128 = plano; claro sobe, escuro afunda) e rugosidade/metal. */
   cx: Ctx; bx: Ctx; rx: Ctx
+  /** Brilho próprio (só nos conjuntos que brilham) e opacidade (só na resina: claro = opaco). */
+  gx?: Ctx; tx?: Ctx
   poly: V2[]
   center: V2
   radius: number
@@ -53,19 +55,19 @@ export function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
 }
 
-const rgba = (hex: string, a: number) => { const [r, g, b] = hexToRgb(hex); return `rgba(${r}, ${g}, ${b}, ${a})` }
+export const rgba = (hex: string, a: number) => { const [r, g, b] = hexToRgb(hex); return `rgba(${r}, ${g}, ${b}, ${a})` }
 
 /** Clareia (amt > 0) ou escurece (amt < 0) uma cor. */
-function shade(hex: string, amt: number): string {
+export function shade(hex: string, amt: number): string {
   const [r, g, b] = hexToRgb(hex)
   const f = (c: number) => Math.max(0, Math.min(255, Math.round(amt >= 0 ? c + (255 - c) * amt : c * (1 + amt))))
   return `#${[f(r), f(g), f(b)].map((c) => c.toString(16).padStart(2, '0')).join('')}`
 }
 
-const gray = (v: number, a = 1) => `rgba(${v}, ${v}, ${v}, ${a})`
-const between = (rnd: () => number, a: number, b: number) => a + rnd() * (b - a)
+export const gray = (v: number, a = 1) => `rgba(${v}, ${v}, ${v}, ${a})`
+export const between = (rnd: () => number, a: number, b: number) => a + rnd() * (b - a)
 
-function polyPath(ctx: Ctx, poly: V2[], center: V2, inset: number): void {
+export function polyPath(ctx: Ctx, poly: V2[], center: V2, inset: number): void {
   ctx.beginPath()
   poly.forEach(([x, y], i) => {
     const px = center[0] + (x - center[0]) * (1 - inset), py = center[1] + (y - center[1]) * (1 - inset)
@@ -74,13 +76,13 @@ function polyPath(ctx: Ctx, poly: V2[], center: V2, inset: number): void {
   ctx.closePath()
 }
 
-function lineTo(ctx: Ctx, pts: V2[]): void {
+export function lineTo(ctx: Ctx, pts: V2[]): void {
   ctx.beginPath()
   pts.forEach(([x, y], i) => { if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y) })
 }
 
 /** Caminho torto de `a` até `b`: rachadura, veio de pedra, fio de lasca. */
-function jagged(a: V2, b: V2, rnd: () => number, amp: number, step: number): V2[] {
+export function jagged(a: V2, b: V2, rnd: () => number, amp: number, step: number): V2[] {
   const len = Math.hypot(b[0] - a[0], b[1] - a[1])
   const n = Math.max(2, Math.round(len / step))
   const nx = -(b[1] - a[1]) / (len || 1), ny = (b[0] - a[0]) / (len || 1)
@@ -93,15 +95,15 @@ function jagged(a: V2, b: V2, rnd: () => number, amp: number, step: number): V2[
   return pts
 }
 
-const lerp2 = (a: V2, b: V2, t: number): V2 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+export const lerp2 = (a: V2, b: V2, t: number): V2 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
 
-function clipFace(f: FacePaint, ...ctxs: Ctx[]): void {
+export function clipFace(f: FacePaint, ...ctxs: Ctx[]): void {
   for (const c of ctxs) { c.save(); polyPath(c, f.poly, f.center, -0.06); c.clip() }
 }
-const unclip = (...ctxs: Ctx[]) => { for (const c of ctxs) c.restore() }
+export const unclip = (...ctxs: Ctx[]) => { for (const c of ctxs) c.restore() }
 
 /** Marca uma rachadura: a partir de uma aresta, para dentro da face. */
-function crackPath(f: FacePaint, rnd: () => number): V2[] {
+export function crackPath(f: FacePaint, rnd: () => number): V2[] {
   const { poly, center, radius, k } = f
   const i = Math.floor(rnd() * poly.length)
   const start = lerp2(poly[i], poly[(i + 1) % poly.length], between(rnd, 0.2, 0.8))
@@ -120,7 +122,7 @@ function crackPath(f: FacePaint, rnd: () => number): V2[] {
 }
 
 /** Quebra em um canto: a região entre o vértice e dois pontos das arestas vizinhas, com a borda interna torta. */
-function chipShape(f: FacePaint, rnd: () => number, size = 1): { shape: V2[]; edge: V2[] } {
+export function chipShape(f: FacePaint, rnd: () => number, size = 1): { shape: V2[]; edge: V2[] } {
   const { poly, k } = f
   const n = poly.length, i = Math.floor(rnd() * n)
   const v = poly[i], a = poly[(i + n - 1) % n], b = poly[(i + 1) % n]
@@ -492,7 +494,7 @@ function plasticNumber(f: FacePaint, text: string, x: number, y: number, angle: 
   for (const c of [cx, bx, rx]) c.restore()
 }
 
-export const SURFACES: Record<NonNullable<DiceSkin['surface']>, Surface> = {
+export const BASE_SURFACES: Record<string, Surface> = {
   wood:    { face: woodFace, number: woodNumber },
   stone:   { face: stoneFace, number: stoneNumber },
   plastic: { face: plasticFace, number: plasticNumber },

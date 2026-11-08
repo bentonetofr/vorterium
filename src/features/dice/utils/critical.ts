@@ -13,13 +13,14 @@ interface RollLike {
   result?:             number | null
   individual_results?: number[] | null
   roll_breakdown?:     RollBreakdownItem[] | null
-  roll_context?:       { system?: string; kind?: string; natural?: number } | null
+  roll_context?:       { system?: string; kind?: string; natural?: number; crit?: 'crit' | 'fumble' | null; outcome?: 'success' | 'failure' | null } | null
+  roll_label?:         string | null
 }
 
 export type FullRollKind = 'critical' | 'fumble'
 
 /** Os dados da rolagem: lados e resultados de cada grupo (null se não dá pra saber). */
-function diceGroups(roll: RollLike): { sides: number; results: number[] }[] | null {
+export function diceGroups(roll: RollLike): { sides: number; results: number[] }[] | null {
   const breakdown = roll.roll_breakdown
   if (breakdown && breakdown.length > 0) {
     if (breakdown.some((b) => b.type === 'evens')) return null

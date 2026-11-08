@@ -63,10 +63,26 @@ export function forcedDie(min: number, max: number, bonus = false): number | nul
   const s = state
   if (!s.armed || s.dice === 'off') return null
   if (s.d20Only && max !== 20) return null
+  forceUsed = true
   if (bonus) return Math.min(max, Math.max(min, 4))
   if (s.dice === 'max') return max
   if (s.dice === 'min') return min
   return Math.min(max, Math.max(min, s.fixed))
+}
+
+// Uma rolagem forçada não conta pras conquistas: quem rola avisa (resetForceUsed antes, takeForceUsed depois) e a rolagem gravada
+// fica marcada neste aparelho (markForcedRoll).
+let forceUsed = false
+export const resetForceUsed = () => { forceUsed = false }
+export const takeForceUsed = (): boolean => { const v = forceUsed; forceUsed = false; return v }
+
+const FORCED_KEY = 'owner-tools-forced'
+const forcedIds = (): string[] => { try { const v = JSON.parse(localStorage.getItem(FORCED_KEY) ?? '[]'); return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [] } catch { return [] } }
+export function markForcedRoll(id: string): void {
+  try { localStorage.setItem(FORCED_KEY, JSON.stringify([...forcedIds(), id].slice(-1500))) } catch { /* guardar é extra */ }
+}
+export function isForcedRoll(id: string): boolean {
+  return forcedIds().includes(id)
 }
 
 /** Está mexendo nos dados agora? (pro botão avisar) */

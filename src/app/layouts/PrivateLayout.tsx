@@ -12,6 +12,7 @@ import { AltheriumWatchRolls } from '../../features/sheets/altherium/components/
 import { DndCheckNotice }     from '../../features/sheets/dnd/rolls/DndCheckNotice'
 import { PatchNotice }        from '../../features/patch/PatchNotice'
 import { BetaGiftNotice }     from '../../features/patch/BetaGiftNotice'
+import { UnlockHost }          from '../../features/collection/UnlockHost'
 import { NotificationBell }   from '../../features/activity/components/NotificationBell'
 import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
@@ -311,6 +312,7 @@ function PrivateLayoutContent() {
     {!observer && <DndCheckNotice />}
     {!observer && <PatchNotice />}
     {!observer && <BetaGiftNotice />}
+    {!observer && <UnlockHost />}
     {!observer && <VortablePip />}
     <DocumentOverlay />
     {!observer && <LivroHost />}

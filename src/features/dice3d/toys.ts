@@ -167,6 +167,58 @@ function buildNerd(): THREE.Group {
 
 let nerd: THREE.Group | null = null
 
+/** Um inseto preso no âmbar: corpo em três partes, seis pernas, duas asas de vidro e antenas. Vê-se de cima, de frente para +z. */
+function buildInsect(): THREE.Group {
+  const g = new THREE.Group()
+  const body = new THREE.MeshPhysicalMaterial({ color: '#2a1206', roughness: 0.35, clearcoat: 0.9, clearcoatRoughness: 0.2 })
+  const wing = new THREE.MeshPhysicalMaterial({ color: '#f8e6b0', roughness: 0.12, transparent: true, opacity: 0.5, side: THREE.DoubleSide, clearcoat: 1 })
+  const part = (rx: number, ry: number, rz: number, x: number, y = 0, z = 0, mat: Mat = body) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 18), mat)
+    m.scale.set(rx, ry, rz); m.position.set(x, y, z); g.add(m); return m
+  }
+  part(0.5, 0.3, 0.27, -0.62)      // abdômen
+  part(0.34, 0.27, 0.25, -0.05)    // tórax
+  part(0.24, 0.22, 0.22, 0.4)      // cabeça
+  part(0.07, 0.07, 0.05, 0.52, 0.12, 0.17, new THREE.MeshPhysicalMaterial({ color: '#f4e0a0', roughness: 0.15, clearcoat: 1 }))
+  part(0.07, 0.07, 0.05, 0.52, -0.12, 0.17, new THREE.MeshPhysicalMaterial({ color: '#f4e0a0', roughness: 0.15, clearcoat: 1 }))
+  const tube = (pts: THREE.Vector3[], r: number) => {
+    const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 18, r, 6), body)
+    g.add(m)
+  }
+  for (const side of [1, -1]) {
+    for (const [x, sw] of [[0.12, 0.28], [-0.05, 0.1], [-0.22, -0.18]] as const) {
+      tube([v3(x, side * 0.12, -0.12), v3(x + sw * 0.5, side * 0.46, -0.1), v3(x + sw, side * 0.78, -0.22), v3(x + sw * 0.9, side * 0.98, -0.42)], 0.03)
+    }
+    tube([v3(0.55, side * 0.1, 0.05), v3(0.82, side * 0.26, 0.06), v3(1.05, side * 0.52, 0.04)], 0.018)       // antena
+    const w = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), wing)
+    w.scale.set(0.62, 0.2, 0.012); w.position.set(-0.42, side * 0.4, 0.2); w.rotation.z = side * 0.55; g.add(w)
+  }
+  g.userData.reach = 1.18
+  return g
+}
+
+/** Vaga-lumes soltos na resina: bolinhas de luz com halo, em lugares fixos. */
+function buildFireflies(): THREE.Group {
+  const g = new THREE.Group()
+  const spots: [number, number, number, number][] = [
+    [-0.55, 0.45, 0.3, 0.1], [0.5, 0.6, -0.2, 0.08], [0.1, -0.1, 0.65, 0.12], [-0.6, -0.5, -0.1, 0.09], [0.62, -0.35, 0.3, 0.1],
+    [0.0, 0.8, 0.2, 0.07], [-0.2, 0.15, -0.6, 0.085], [0.35, 0.05, -0.55, 0.075], [-0.75, 0.0, 0.1, 0.07], [0.15, -0.72, -0.2, 0.08],
+  ]
+  const core = new THREE.MeshBasicMaterial({ color: '#f6ffa8', toneMapped: false })
+  const halo = new THREE.MeshBasicMaterial({ color: '#b8ff70', transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })
+  const wide = new THREE.MeshBasicMaterial({ color: '#7dff9a', transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })
+  for (const [x, y, z, r] of spots) {
+    const c = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), core); c.position.set(x, y, z); g.add(c)
+    const h = new THREE.Mesh(new THREE.SphereGeometry(r * 3.2, 14, 10), halo); h.position.set(x, y, z); g.add(h)
+    const w = new THREE.Mesh(new THREE.SphereGeometry(r * 6.5, 12, 8), wide); w.position.set(x, y, z); g.add(w)
+  }
+  g.userData.reach = 1.0
+  return g
+}
+
+let insect: THREE.Group | null = null
+let fireflies: THREE.Group | null = null
+
 /** Raio da maior esfera que cabe dentro do dado (encosta nas faces). */
 function inradius(kind: DieKind): number {
   const p = polyhedron(kind)
@@ -193,9 +245,12 @@ export function aimToy(toy: THREE.Object3D, kind: DieKind, face: number): void {
 }
 
 /** Uma cópia do brinquedinho, já do tamanho para ficar inteiro dentro deste dado (com folga da resina). */
-export function makeToy(kind: DieKind, toy: 'nerd'): THREE.Object3D {
+export function makeToy(kind: DieKind, toy: 'nerd' | 'inseto' | 'vagalumes'): THREE.Object3D {
   if (toy === 'nerd') nerd ??= buildNerd()
-  const model = nerd!.clone()
+  if (toy === 'inseto') insect ??= buildInsect()
+  if (toy === 'vagalumes') fireflies ??= buildFireflies()
+  const source = toy === 'nerd' ? nerd! : toy === 'inseto' ? insect! : fireflies!
+  const model = source.clone()
   const s = (inradius(kind) * 0.86) / (model.userData.reach as number)
   model.scale.setScalar(s)
   model.userData.toy = true

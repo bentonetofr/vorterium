@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.28',
+    date:    '2026-11-08',
+    title:   'Dados: coleção secreta e conquistas',
+    items: [
+      'Chegou a coleção de dados: 20 conjuntos novos, bem detalhados (osso entalhado, ferro enferrujado, ouro rúnico, gelo, magma, vaga-lumes, o Dado da Morte e outros), ganhos por conquistas secretas. Ninguém sabe como conseguir cada um: é só jogar e rolar. Quanto mais difícil a conquista, melhor o dado.',
+      'Quando você ganha um, cai um cartão com animação, o dado girando num pedestal de luz e os parabéns. "Usar agora" já troca os seus dados. Ele fica guardado em "Meus dados", onde os que faltam aparecem como mistério, só com a raridade. A coleção é da conta: vale em todas as campanhas, e todo mundo vê o seu dado na mesa.',
+    ],
+  },
+  {
     version: '2.27',
     date:    '2026-11-07',
     title:   'Vortable: NPC solto na garupa continua na garupa',

@@ -3,6 +3,8 @@ import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/s
 import { formatRelativeTime, useRecentRolls } from '../../../dice/useRecentRolls'
 import { getMyDiceSkin, onDiceSkinChange, peekMyDiceSkin, setMyDiceSkin } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN, getSkin, skinsFor } from '../../../dice3d/skins'
+import { useCollection } from '../../../collection/collectionService'
+import { CollectionProgress, LockedSkins } from '../../../collection/LockedSkins'
 import type { DiceShowcase } from '../../../dice3d/DiceShowcase'
 import { useFeatureAccess } from '../../../control/siteFeatures'
 import { useRollSkin } from '../../../dice3d/useRollSkin'
@@ -257,7 +259,8 @@ function SkinList({ skin, error, onPick }: { skin: string; error: string | null;
   const showcase = useRef<DiceShowcase | null>(null)
   const [simple, setSimple] = useState(false)
   // os de todos e os exclusivos liberados para esta conta
-  const skins = skinsFor(useFeatureAccess())
+  const { unlocked, loaded } = useCollection()
+  const skins = skinsFor(useFeatureAccess(), unlocked)
   const skinKey = skins.map((k) => k.id).join(',')
 
   // Os dados de verdade: um canvas só sobre a lista, com um d20 de cada conjunto girando no lugar do marcador.
@@ -282,6 +285,7 @@ function SkinList({ skin, error, onPick }: { skin: string; error: string | null;
   return (
     <div className="alth-dice__skins" ref={hostRef}>
       <p className="alth-dice__note">É com o conjunto escolhido que os seus dados rolam, e é assim que os outros jogadores os veem. O dado do telão já mostra a sua escolha.</p>
+      <CollectionProgress unlocked={unlocked} loaded={loaded} />
       <ul className="alth-dice__skinlist" role="radiogroup" aria-label="Conjuntos de dados">
         {skins.map((k) => (
           <li key={k.id}>
@@ -301,6 +305,7 @@ function SkinList({ skin, error, onPick }: { skin: string; error: string | null;
             </button>
           </li>
         ))}
+        <LockedSkins unlocked={unlocked} loaded={loaded} className="col-locked--row" />
       </ul>
       {error && <p className="alth-test__note alth-test__note--warn" role="alert">{error}</p>}
     </div>

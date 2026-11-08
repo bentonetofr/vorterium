@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { skinsFor } from '../../../dice3d/skins'
 import { useFeatureAccess } from '../../../control/siteFeatures'
+import { useCollection } from '../../../collection/collectionService'
+import { CollectionProgress, LockedSkins } from '../../../collection/LockedSkins'
 import type { DiceShowcase } from '../../../dice3d/DiceShowcase'
 
 // ────────────────────────────────────────────────────────
@@ -19,7 +21,8 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
   const showcase = useRef<DiceShowcase | null>(null)
   const [simple, setSimple] = useState(false)
   // os conjuntos de todos e os exclusivos liberados para esta conta (o dos betas chega quando o acesso carrega)
-  const skins = skinsFor(useFeatureAccess())
+  const { unlocked, loaded } = useCollection()
+  const skins = skinsFor(useFeatureAccess(), unlocked)
   const skinKey = skins.map((s) => s.id).join(',')
 
   useEffect(() => {
@@ -43,6 +46,7 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
   return (
     <div className="ddw-vitrine" ref={hostRef}>
       <p className="ddw-vitrine__intro">Escolha o conjunto de dados. É com ele que os seus dados rolam na mesa, e é assim que os outros jogadores os veem.</p>
+      <CollectionProgress unlocked={unlocked} loaded={loaded} />
       <ul className="ddw-skins">
         {skins.map((s) => {
           const on = skin === s.id
@@ -63,6 +67,7 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
             </li>
           )
         })}
+        <LockedSkins unlocked={unlocked} loaded={loaded} />
       </ul>
       {error && <p className="ddw-error" role="alert">{error}</p>}
     </div>
