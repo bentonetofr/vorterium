@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.24',
+    date:    '2026-11-07',
+    title:   'Vortable: NPC solto continua montado',
+    items: [
+      'Quando o mestre solta um NPC que está montado num cavalo ou num lobo gigante, o NPC agora continua montado: ele e o animal ficam parados juntos no mesmo ponto, com o cavaleiro por cima, e todos na sala veem na hora. Antes ele descia do animal ao ser solto.',
+      'Fica guardado na zona: ao recarregar ou entrar depois, o NPC segue montado onde foi deixado. Controlar esse NPC de novo já o põe montado, e ao desmontar o animal volta a ser um NPC da zona (e isso também fica guardado). Soltar o NPC a pé não muda nada. Quem vai na garupa de um animal conduzido por jogador continua descendo ao ser solto.',
+      'Também corrigi um detalhe: o botão Desmontar ficava na tela depois de soltar o NPC.',
+    ],
+  },
+  {
     version: '2.23',
     date:    '2026-11-07',
     title:   'Vortable: lobo gigante',

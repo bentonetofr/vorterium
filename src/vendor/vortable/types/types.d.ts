@@ -120,6 +120,15 @@ export interface ZoneNpc {
     showName?: boolean;
     /** NPC especial: a chave do personagem dele na ficha (a aparência acompanha a ficha). Sem ela, é um NPC comum. */
     sheet?: string;
+    /** Montado: o animal (cavalo, lobo…) em que este NPC está sentado. O NPC e o animal viram um conjunto parado no mesmo ponto. */
+    steed?: NpcSteed;
+}
+/** O animal em que um NPC está montado (com o id e o nome que ele tinha como NPC, pra voltar a ser um quando o cavaleiro descer). */
+export interface NpcSteed {
+    id: string;
+    name: string;
+    role: string;
+    appearance: Appearance;
 }
 /** Um NPC especial (com ficha), como a interface do mestre o entrega ao editor. */
 export interface SpecialNpc {

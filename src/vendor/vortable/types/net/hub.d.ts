@@ -1,4 +1,4 @@
-import type { Appearance, Dir } from '../types';
+import type { Appearance, Dir, NpcSteed } from '../types';
 export type NetAnim = 'idle' | 'walk' | 'run';
 /**
  * `npc`: NPC que o mestre está controlando (id `npc:<id do NPC>`). Aparece como um jogador, mas o NPC
@@ -39,6 +39,8 @@ export interface NetNpcMove {
         appearance: Appearance;
         showName: boolean;
     };
+    /** O NPC ficou montado neste animal (o animal sai da lista de NPCs da zona e passa a ser dele). */
+    steed?: NpcSteed;
 }
 /** Prefixo do id de um NPC controlado pelo mestre na rede. */
 export declare const NPC_PEER = "npc:";

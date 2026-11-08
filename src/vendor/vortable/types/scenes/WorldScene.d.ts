@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { type NpcForm } from '../net/hub';
 import type { NetHub } from '../net/hub';
 import { ZoneAudio } from '../audio/ZoneAudio';
-import { type Appearance, type Dir, type WorldSky, type ZoneData, type ZoneNpc } from '../types';
+import { type Appearance, type Dir, type NpcSteed, type WorldSky, type ZoneData, type ZoneNpc } from '../types';
 export interface WorldSceneData {
     zone: ZoneData;
     appearance: Appearance;
@@ -60,6 +60,8 @@ export interface WorldSceneData {
         y: number;
         dir: Dir;
     }) => void;
+    /** O cavaleiro (NPC do mestre) desceu de um animal que estava guardado nele: o animal volta a ser um NPC da zona (guarda). */
+    onNpcRestore?: (zone: string, npc: ZoneNpc) => void;
 }
 export declare class WorldScene extends Phaser.Scene {
     private player?;
@@ -202,6 +204,7 @@ export declare class WorldScene extends Phaser.Scene {
         x: number;
         y: number;
         dir: Dir;
+        steed?: NpcSteed;
     }) => Promise<void>): Promise<void>;
     /** Forma do NPC controlado agora (null = ele mesmo). */
     controllingForm(): NpcForm | null;
