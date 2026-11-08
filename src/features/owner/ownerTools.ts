@@ -2,14 +2,14 @@ import { useSyncExternalStore } from 'react'
 
 // ────────────────────────────────────────────────────────
 // Ferramentas privadas do dono do site (botão acima do sino). Não é recurso do site: não vai nas Novidades.
-// Só vale se o botão estiver "armado" (conta do dono + campanha aberta em que ele é mestre): quem arma é o OwnerToolsFab;
+// Só vale se o botão estiver "armado" (conta do dono, em qualquer campanha, como mestre ou como jogador): quem arma é o OwnerToolsFab;
 // fora disso nada aqui mexe em nada.
 // ────────────────────────────────────────────────────────
 
 export type DieForce = 'off' | 'max' | 'min' | 'fixed'
 
 export interface OwnerTools {
-  /** Conta do dono + campanha em que ele é mestre: sem isto, nada abaixo vale. */
+  /** Conta do dono: sem isto, nada abaixo vale. */
   armed: boolean
   /** O que fazer com cada dado que o dono rolar: sorteio normal, sempre o máximo (crítico), sempre o mínimo ou um número. */
   dice: DieForce

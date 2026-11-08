@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Presence } from '../../shared/components/Presence'
 import { useFloatingPanel } from '../../shared/lib/floatingPanels'
-import { useCurrentCampaign } from '../campaigns/CurrentCampaignContext'
 import { useIsSiteOwner } from '../control/siteFeatures'
 import { diceForced, setOwnerTools, useOwnerTools, type DieForce } from './ownerTools'
 import './OwnerToolsFab.css'
@@ -19,17 +18,15 @@ const MODES: { id: DieForce; label: string; hint: string }[] = [
 ]
 
 export function OwnerToolsFab() {
-  const { campaign } = useCurrentCampaign()
   // o dono do site, conferido no banco (tabela app_owners): o e-mail não fica no código
   const isOwner = useIsSiteOwner()
-  const master = campaign?.role === 'master'
   const tools = useOwnerTools()
   const [isOpen, setIsOpen] = useState(false)
   const close = useCallback(() => setIsOpen(false), [])
   const { instant } = useFloatingPanel('owner', isOpen, close)
 
-  // arma só com a conta do dono dentro de uma campanha que ele mestra (e desarma ao sair)
-  const armed = isOwner && master
+  // arma só com a conta do dono (em qualquer campanha, como mestre ou como jogador) e desarma ao sair
+  const armed = isOwner
   useEffect(() => {
     setOwnerTools({ armed })
     return () => setOwnerTools({ armed: false })
@@ -48,16 +45,10 @@ export function OwnerToolsFab() {
                 <SparkIcon />
                 <div className="owner-panel__titles">
                   <span className="owner-panel__title">Trapaças</span>
-                  <span className="owner-panel__sub">Só você vê, só nas campanhas que você mestra</span>
+                  <span className="owner-panel__sub">Só você vê, em qualquer campanha (como mestre ou jogador)</span>
                 </div>
                 <button type="button" className="owner-panel__close" onClick={close} aria-label="Fechar">✕</button>
               </div>
-
-              {!master && (
-                <p className="owner-panel__warn" role="status">
-                  {campaign ? 'Nesta campanha você não é o mestre: nada aqui vale.' : 'Abra uma campanha em que você é o mestre: fora dela nada aqui vale.'}
-                </p>
-              )}
 
               <section className="owner-panel__section" aria-label="Dados">
                 <h3 className="owner-panel__h">Seus dados</h3>
