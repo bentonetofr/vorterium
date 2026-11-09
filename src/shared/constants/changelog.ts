@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.29',
+    date:    '2026-11-08',
+    title:   'D&D: aba Anotações',
+    items: [
+      'A ficha de D&D ganhou a aba Anotações, uma página em branco pra lembretes da campanha, nomes e contatos, pistas e planos. Salva sozinha, junto com a ficha. O texto que você já tinha em Anotações (antes dentro de História) está lá, nada se perdeu.',
+    ],
+  },
+  {
     version: '2.28',
     date:    '2026-11-08',
     title:   'Dados: coleção secreta e conquistas',

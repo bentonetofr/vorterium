@@ -28,6 +28,7 @@ import { DndMagiasTab } from './DndMagiasTab'
 import { DndInventarioTab } from './DndInventarioTab'
 import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
+import { DndAnotacoesTab } from './DndAnotacoesTab'
 import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
@@ -515,10 +516,22 @@ describe('abas', () => {
     expect(html).not.toContain('1º nível')      // espaços de magia ficam na aba Magias
   })
 
-  it('História: os seis campos de texto', () => {
+  it('História: os cinco campos de texto (as anotações têm aba própria)', () => {
     const html = renderToStaticMarkup(<DndHistoriaTab ctx={makeCtx()} />)
-    for (const t of ['Traços de personalidade', 'Ideais', 'Vínculos', 'Defeitos', 'História do personagem', 'Anotações']) expect(html).toContain(t)
+    for (const t of ['Traços de personalidade', 'Ideais', 'Vínculos', 'Defeitos', 'História do personagem']) expect(html).toContain(t)
     expect(html).toContain('Vem do norte.')
+    expect(html).not.toContain('Lembretes da campanha')
+  })
+
+  it('Anotações: uma página de texto com o contador e, em modo leitura, sem poder editar', () => {
+    const ctx = makeCtx()
+    ctx.form.notes = 'O ferreiro deve um favor.'
+    const html = renderToStaticMarkup(<DndAnotacoesTab ctx={ctx} />)
+    expect(html).toContain('Anotações')
+    expect(html).toContain('O ferreiro deve um favor.')
+    expect(html).toContain('/ 12.000')
+    expect(html).not.toContain('readonly=""')
+    expect(renderToStaticMarkup(<DndAnotacoesTab ctx={makeCtx({ readOnly: true })} />)).toContain('readonly=""')
   })
 
   it('modo leitura (NPC mostrado a um jogador): nada de botões de adicionar', () => {
@@ -535,7 +548,7 @@ describe('abas', () => {
       details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] },
     })
     const ctx = makeCtx({ data: empty, sheet: makeSheet({ race_key: null, subrace_key: null, background_key: null, conditions: [], exhaustion: 0, level: 1, experience: 0 }) })
-    for (const Tab of [DndPersonagemTab, DndAtributosTab, DndCombateTab, DndMagiasTab, DndInventarioTab, DndCaracteristicasTab, DndHistoriaTab]) {
+    for (const Tab of [DndPersonagemTab, DndAtributosTab, DndCombateTab, DndMagiasTab, DndInventarioTab, DndCaracteristicasTab, DndHistoriaTab, DndAnotacoesTab]) {
       expect(() => renderToStaticMarkup(<Tab ctx={ctx} />)).not.toThrow()
     }
     expect(() => hero(ctx)).not.toThrow()

@@ -4,10 +4,10 @@ import type { SheetCtx } from './sheetContext'
 
 // ────────────────────────────────────────────────────────
 // Aba História: traços de personalidade, ideais, vínculos, defeitos, a
-// história do personagem e as anotações da mesa.
+// e a história do personagem. As anotações da mesa têm aba própria (DndAnotacoesTab).
 // ────────────────────────────────────────────────────────
 
-type TextField = 'personality_traits' | 'ideals' | 'bonds' | 'flaws' | 'backstory' | 'notes'
+type TextField = 'personality_traits' | 'ideals' | 'bonds' | 'flaws' | 'backstory'
 
 export function DndHistoriaTab({ ctx }: { ctx: SheetCtx }) {
   const { form, set, readOnly } = ctx
@@ -37,7 +37,6 @@ export function DndHistoriaTab({ ctx }: { ctx: SheetCtx }) {
         {area('flaws', 'Defeitos', 3, 'O que o derruba.')}
       </div>
       {area('backstory', 'História do personagem', 9, 'De onde veio, o que viveu, o que quer.', { tall: true, wide: true })}
-      {area('notes', 'Anotações', 6, 'Lembretes da campanha, contatos, pistas.', { wide: true })}
     </div>
   )
 }

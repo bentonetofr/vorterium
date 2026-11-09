@@ -1140,6 +1140,8 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
   background: rgba(0, 0, 0, 0.22); border: 1px solid var(--border-dim); border-radius: var(--radius-md); outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+.dsh-notearea--page { min-height: 440px; }
+.dsh-notepage .dsh-card__title { font-size: var(--text-lg); }
 .dsh-notearea::placeholder { color: var(--text-muted); opacity: 0.7; }
 .dsh-notearea:hover { border-color: var(--border-base); }
 .dsh-notearea:focus { border-color: var(--dsh-accent-line); box-shadow: 0 0 0 1px var(--dsh-accent-soft); }

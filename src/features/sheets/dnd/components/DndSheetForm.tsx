@@ -18,6 +18,7 @@ import { DndMagiasTab } from './DndMagiasTab'
 import { DndInventarioTab } from './DndInventarioTab'
 import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
+import { DndAnotacoesTab } from './DndAnotacoesTab'
 import type { SheetCtx } from './sheetContext'
 import { DndRollProvider } from '../rolls/DndRollProvider'
 // o assistente de importar PDF só é baixado quando alguém abre
@@ -52,7 +53,7 @@ interface DndSheetFormProps {
 const AUTOSAVE_DELAY_MS = 800
 type SaveState = 'saved' | 'pending' | 'saving' | 'error'
 
-type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'inventario' | 'caracteristicas' | 'historia' | 'lore'
+type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'inventario' | 'caracteristicas' | 'historia' | 'anotacoes' | 'lore'
 /** `short`: o nome na grade de abas do celular, onde o completo não cabe. */
 const TABS: { id: TabId; label: string; short: string }[] = [
   { id: 'personagem',      label: 'Personagem',           short: 'Personagem' },
@@ -62,6 +63,7 @@ const TABS: { id: TabId; label: string; short: string }[] = [
   { id: 'inventario',      label: 'Inventário',           short: 'Inventário' },
   { id: 'caracteristicas', label: 'Características',      short: 'Características' },
   { id: 'historia',        label: 'História',             short: 'História' },
+  { id: 'anotacoes',       label: 'Anotações',            short: 'Anotações' },
   { id: 'lore',            label: 'Lore',                 short: 'Lore' },
 ]
 const TAB_IDS = TABS.map((t) => t.id)
@@ -77,6 +79,7 @@ const MagiasTab = memo(DndMagiasTab)
 const InventarioTab = memo(DndInventarioTab)
 const CaracteristicasTab = memo(DndCaracteristicasTab)
 const HistoriaTab = memo(DndHistoriaTab)
+const AnotacoesTab = memo(DndAnotacoesTab)
 
 export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false, onSave, saveError, portraitBusy, onPortraitChange, onPortraitRemove }: DndSheetFormProps) {
   const data = useDndSheetData(sheet.id, sheet.campaign_id)
@@ -380,6 +383,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         <div id="dsh-tabpanel-inventario" role="tabpanel" hidden={activeTab !== 'inventario'}>{activeTab === 'inventario' && <InventarioTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-caracteristicas" role="tabpanel" hidden={activeTab !== 'caracteristicas'}>{activeTab === 'caracteristicas' && <CaracteristicasTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-historia" role="tabpanel" hidden={activeTab !== 'historia'}>{activeTab === 'historia' && <HistoriaTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-anotacoes" role="tabpanel" hidden={activeTab !== 'anotacoes'}>{activeTab === 'anotacoes' && <AnotacoesTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-lore" role="tabpanel" hidden={activeTab !== 'lore'}>
           {activeTab === 'lore' && (
             <div className="dsh-tab anim-tab-panel">
