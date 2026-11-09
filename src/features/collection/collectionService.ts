@@ -6,6 +6,9 @@ import { ACHIEVEMENTS, satisfied, type Achievement, type History, type RollLite 
 import { isCollectionSkin } from '../dice3d/skins'
 
 // ────────────────────────────────────────────────────────
+// As conquistas valem só pra quem rola como JOGADOR: rolagem em campanha que a conta mestra não conta (nem pro histórico, nem pra
+// contagem). Os conjuntos já ganhos servem em qualquer lugar, inclusive nas campanhas que a conta mestra.
+//
 // A coleção de dados da conta: quais conjuntos já foram ganhos (tabela dice_skin_unlocks, migration 20240229) e a conferência
 // das conquistas a cada rolagem gravada. Lê as rolagens da própria conta uma vez (as últimas 1500, mais a contagem total),
 // guarda em memória e soma cada rolagem nova. Sem a migration ou sem rede, não faz nada (um erro nunca atrapalha a rolagem).
@@ -59,7 +62,7 @@ export async function loadCollection(force = false): Promise<boolean> {
   const userId = await currentUserId()
   if (!userId) { if (store.userId) setStore({ userId: null, loaded: false, unlocked: new Set() }); return false }
   if (!force && store.userId === userId && store.loaded) return true
-  if (store.userId !== userId) { history = null; setStore({ userId, loaded: false, unlocked: new Set() }) }
+  if (store.userId !== userId) { history = null; masterOf = new Set(); known = new Set(); setStore({ userId, loaded: false, unlocked: new Set() }) }
   const { data, error } = await supabase.from('dice_skin_unlocks').select('skin_id').eq('user_id', userId)
   if (error) return false
   setStore({ userId, loaded: true, unlocked: new Set((data as { skin_id: string }[]).map((r) => r.skin_id).filter(isCollectionSkin)) })
@@ -70,15 +73,32 @@ export async function loadCollection(force = false): Promise<boolean> {
 
 let history: { userId: string; rolls: RollLite[]; total: number } | null = null
 
+/** As campanhas que a conta mestra (as rolagens delas não contam) e as campanhas que já foram conferidas. */
+let masterOf = new Set<string>()
+let known = new Set<string>()
+
+async function refreshMasters(userId: string): Promise<boolean> {
+  const { data, error } = await supabase.from('campaigns').select('id').eq('master_id', userId)
+  if (error) return false
+  masterOf = new Set((data as { id: string }[]).map((c) => c.id))
+  for (const id of masterOf) known.add(id)
+  return true
+}
+
 const COLUMNS = 'id, campaign_id, die_type, result, individual_results, roll_breakdown, roll_context, roll_label, created_at'
 
 async function loadHistory(userId: string): Promise<boolean> {
+  if (!(await refreshMasters(userId))) return false
+  // sem as rolagens das campanhas que a conta mestra
+  const asPlayer = <T extends { not: (col: string, op: string, val: string) => T }>(q: T): T =>
+    masterOf.size ? q.not('campaign_id', 'in', `(${[...masterOf].join(',')})`) : q
   const [rows, count] = await Promise.all([
-    supabase.from('dice_rolls').select(COLUMNS).eq('user_id', userId).gte('created_at', COLLECTION_START).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
-    supabase.from('dice_rolls').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', COLLECTION_START),
+    asPlayer(supabase.from('dice_rolls').select(COLUMNS).eq('user_id', userId).gte('created_at', COLLECTION_START)).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
+    asPlayer(supabase.from('dice_rolls').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', COLLECTION_START)),
   ])
   if (rows.error || count.error) return false
   const rolls = (rows.data as unknown as RollLite[]).reverse()
+  for (const r of rolls) known.add(r.campaign_id)
   history = { userId, rolls, total: Math.max(count.count ?? 0, rolls.length) }
   return true
 }
@@ -113,6 +133,10 @@ async function check(roll: DiceRoll): Promise<void> {
   if (!history || history.userId !== userId) { if (!(await loadHistory(userId))) return }
   const h = history
   if (!h) return
+  // campanha que ainda não conhecemos (acabou de ser criada, ou virou de mestre): confere de novo quem é o mestre
+  if (!known.has(roll.campaign_id)) { if (!(await refreshMasters(userId))) return; known.add(roll.campaign_id) }
+  // como mestre não se ganha dado: a rolagem não entra na conta das conquistas
+  if (masterOf.has(roll.campaign_id)) return
   // a rolagem que acabou de chegar pode já estar no que foi lido do banco (ou não ter chegado): garante que esteja uma vez só
   if (!h.rolls.some((r) => r.id === roll.id)) {
     h.rolls.push(lite(roll))
@@ -134,6 +158,7 @@ async function grant(a: Achievement): Promise<void> {
 /** Só pra testes. */
 export function resetCollection(): void {
   history = null
+  masterOf = new Set(); known = new Set()
   chain = Promise.resolve()
   store = { userId: null, loaded: false, unlocked: new Set() }
 }

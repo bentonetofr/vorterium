@@ -7,13 +7,22 @@ const db = vi.hoisted(() => ({
   total: 0,
   rpc: [] as { name: string; args: Record<string, string> }[],
   rpcResult: true as boolean,
+  masters: [] as string[],
 }))
 
 vi.mock('../../shared/lib/supabase', () => {
+  // `not('campaign_id','in','(a,b)')` tira de verdade essas campanhas das rolagens (e da contagem)
   const query = (result: unknown) => {
+    let out = result as { data?: Record<string, unknown>[]; count?: number; error: null }
     const q: Record<string, unknown> = {}
     for (const m of ['select', 'eq', 'gte', 'order', 'limit']) q[m] = () => q
-    q.then = (res: (v: unknown) => unknown) => res(result)
+    q.not = (_col: string, _op: string, val: string) => {
+      const ids = val.replace(/[()]/g, '').split(',')
+      if (out.data) out = { ...out, data: out.data.filter((r) => !ids.includes(String(r.campaign_id))) }
+      if (out.count !== undefined) out = { ...out, count: db.rolls.filter((r) => !ids.includes(String(r.campaign_id))).length }
+      return q
+    }
+    q.then = (res: (v: unknown) => unknown) => res(out)
     return q
   }
   return {
@@ -23,6 +32,7 @@ vi.mock('../../shared/lib/supabase', () => {
       from: (table: string) => ({
         select: (_cols: string, opts?: { head?: boolean }) => {
           if (table === 'dice_skin_unlocks') return query({ data: db.unlocks, error: null })
+          if (table === 'campaigns') return query({ data: db.masters.map((id) => ({ id })), error: null })
           return opts?.head ? query({ count: db.total, error: null }) : query({ data: [...db.rolls].reverse(), error: null })
         },
       }),
@@ -52,7 +62,7 @@ vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, se
 
 beforeEach(() => {
   resetCollection()
-  db.userId = 'u1'; db.unlocks = []; db.rolls = []; db.total = 0; db.rpc = []; db.rpcResult = true
+  db.userId = 'u1'; db.unlocks = []; db.rolls = []; db.total = 0; db.rpc = []; db.rpcResult = true; db.masters = []
   localStorage.clear()
 })
 
@@ -109,6 +119,35 @@ describe('coleção: conferir as conquistas a cada rolagem', () => {
     await noteRoll(one)
     expect(db.rpc).toHaveLength(1)
     expect(events).toEqual([])
+  })
+
+  it('como mestre não se ganha dado: rolagens em campanha que a conta mestra não contam (nem as de antes, nem a nova)', async () => {
+    db.masters = ['mesa']
+    // 12 rolagens na mesa que ela mestra, mais um 20 e um 1: tudo isso daria osso, argila e ferro como jogadora
+    db.rolls = [...Array.from({ length: 12 }, (_, i) => lite(d20(2 + (i % 7), { campaign_id: 'mesa' }))), lite(d20(20, { campaign_id: 'mesa' })), lite(d20(1, { campaign_id: 'mesa' }))]
+    db.total = 14
+    const events: UnlockEvent[] = []
+    onUnlock((e) => events.push(e))
+    const novo = d20(20, { campaign_id: 'mesa' })
+    db.rolls.push(lite(novo)); db.total = 15
+    await noteRoll(novo)
+    expect(db.rpc).toEqual([])
+    expect(events).toEqual([])
+    // numa campanha onde joga, o mesmo 20 conta (e as da mesa continuam fora da conta)
+    const jogando = d20(20, { campaign_id: 'outra' })
+    db.rolls.push(lite(jogando)); db.total = 16
+    await noteRoll(jogando)
+    expect(db.rpc.map((c) => c.args.p_skin)).toEqual(['argila'])
+  })
+
+  it('campanha nova, criada depois de a coleção carregar, e que a conta mestra: não conta', async () => {
+    db.rolls = [lite(d20(5, { campaign_id: 'velha' }))]; db.total = 1
+    await noteRoll(d20(5, { campaign_id: 'velha' }))
+    db.masters = ['nova']                                // acabou de criar a campanha
+    const forte = d20(20, { campaign_id: 'nova' })
+    db.rolls.push(lite(forte)); db.total = 2
+    await noteRoll(forte)
+    expect(db.rpc).toEqual([])
   })
 
   it('rolagem de outra conta ou sem login não faz nada', async () => {
