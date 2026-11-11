@@ -159,3 +159,15 @@
   background: rgba(77, 158, 120, 0.07);
   border-color: rgba(77, 158, 120, 0.4);
 }
+
+/* ── Movimento ── */
+.settings-panel__section { animation: m-item-in 440ms var(--ease-out) backwards; }
+.settings-panel__section:nth-child(2) { animation-delay: 50ms; }
+.settings-panel__section:nth-child(3) { animation-delay: 100ms; }
+.settings-panel__section:nth-child(4) { animation-delay: 150ms; }
+.settings-panel__section:nth-child(n + 5) { animation-delay: 200ms; }
+.settings-panel__icon { display: inline-block; animation: m-bump 460ms var(--ease-spring) 120ms backwards; }
+.settings-panel__confirm { animation: m-form-in 300ms var(--ease-out) backwards; }
+.settings-panel__msg { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+.settings-panel__msg--error { animation: m-alert-in var(--motion-base) var(--ease-out) backwards, m-shake 420ms var(--ease-out) 120ms; }
+.campaign-cover-preview { transition: filter var(--motion-base) ease, box-shadow var(--motion-base) ease; }

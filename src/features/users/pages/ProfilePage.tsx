@@ -11,6 +11,7 @@ import {
 } from '../services/profileService'
 import { AvatarCropEditor } from '../components/AvatarCropEditor'
 import { Presence } from '../../../shared/components/Presence'
+import { AvatarImage } from '../../../shared/components/AvatarImage'
 import type { Profile } from '../../../shared/types'
 import { useTheme } from '../../../shared/theme/ThemeProvider'
 import '../../../features/campaigns/pages/CampaignPages.css'
@@ -202,10 +203,11 @@ export function ProfilePage() {
               className="profile-avatar anim-ring"
               aria-hidden={profile.avatar_url ? undefined : true}
             >
-              {profile.avatar_url
-                ? <img src={profile.avatar_url} alt="" className="anim-img-swap" />
-                : profile.display_name.trim().charAt(0).toUpperCase()
-              }
+              <AvatarImage
+                src={profile.avatar_url}
+                fallback={profile.display_name.trim().charAt(0).toUpperCase()}
+                className="anim-img-swap"
+              />
             </div>
             <div className="profile-avatar-editor__body">
               <strong>{profile.display_name}</strong>

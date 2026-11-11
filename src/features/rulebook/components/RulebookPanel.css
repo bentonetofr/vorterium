@@ -59,3 +59,8 @@
   font-size: var(--text-sm);
 }
 .rulebook__mobile .btn { width: 100%; max-width: 280px; min-height: 44px; }
+
+/* ── Movimento ── */
+.rulebook__header { animation: m-item-in 420ms var(--ease-out) backwards; }
+.rulebook__viewer,
+.rulebook__mobile { animation: m-reveal-fade 520ms var(--ease-out) 100ms backwards; }

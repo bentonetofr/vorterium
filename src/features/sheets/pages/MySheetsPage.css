@@ -236,3 +236,18 @@
     padding: var(--space-4) var(--space-5);
   }
 }
+
+/* ── Movimento ── */
+.my-sheets-page__header { animation: m-item-in 460ms var(--ease-out) backwards; }
+.my-sheets-page__empty { animation: m-item-in 520ms var(--ease-out) 80ms backwards; }
+.my-sheets-page__empty-icon { animation: m-float 5.5s ease-in-out infinite; }
+.my-sheet-card {
+  transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out),
+              border-color var(--transition-base);
+}
+@media (hover: hover) {
+  .my-sheet-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3); }
+  .my-sheet-card:hover .my-sheet-card__char-name { color: var(--accent-bright); }
+}
+.my-sheet-card__char-name { transition: color var(--motion-fast) ease; }
+.my-sheet-badge { animation: m-bump 380ms var(--ease-spring) 260ms backwards; }

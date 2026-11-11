@@ -293,6 +293,176 @@
 /* Spinners entram suaves em vez de piscar. */
 .spinner { animation: spin 0.7s linear infinite, m-bump 260ms var(--ease-out) backwards; }
 
+/* ── Revelar ao rolar (shared/lib/scrollReveal.ts) ───────── */
+
+@keyframes m-reveal-up    { from { opacity: 0; transform: translateY(30px); } }
+@keyframes m-reveal-left  { from { opacity: 0; transform: translateX(-34px); } }
+@keyframes m-reveal-right { from { opacity: 0; transform: translateX(34px); } }
+@keyframes m-reveal-scale { from { opacity: 0; transform: scale(0.93); } }
+@keyframes m-reveal-fade  { from { opacity: 0; } }
+
+/* Só esconde quando o script está de pé (classe no <html>). */
+html.reveal-on [data-reveal]:not([data-revealed]) { opacity: 0; }
+[data-reveal][data-revealed] {
+  animation: m-reveal-up 780ms var(--ease-out) var(--reveal-delay, 0ms) backwards;
+}
+[data-reveal="left"][data-revealed]  { animation-name: m-reveal-left; }
+[data-reveal="right"][data-revealed] { animation-name: m-reveal-right; }
+[data-reveal="scale"][data-revealed] { animation-name: m-reveal-scale; }
+[data-reveal="fade"][data-revealed]  { animation-name: m-reveal-fade; }
+@media print {
+  html.reveal-on [data-reveal]:not([data-revealed]) { opacity: 1; }
+}
+
+/* ── Entrada em degraus ──────────────────────────────────── */
+
+/* Cada peça sobe na sua vez: style={{ '--i': n }} dá a ordem. */
+@keyframes m-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+.anim-rise { animation: m-rise 720ms var(--ease-out) calc(var(--i, 0) * 90ms + var(--rise-base, 0ms)) backwards; }
+
+/* Flutua devagar, sem parar (logo, ícone de lista vazia). */
+@keyframes m-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+.anim-float { animation: m-float 5.5s ease-in-out infinite; }
+
+/* Brilho que respira (halo atrás de um destaque). */
+@keyframes m-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+/* Ponto que pulsa uma onda pra fora (novidade, ao vivo). */
+@keyframes m-ping {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 9px transparent; }
+}
+
+/* Faixa de carregamento que desliza (esqueletos). */
+@keyframes m-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+.anim-shimmer {
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.07) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: m-shimmer 1.6s linear infinite;
+}
+
+/* ── <details> que abre deslizando ───────────────────────── */
+
+/* O conteúdo sempre entra com um fade; onde o navegador sabe animar a
+   altura automática, ela também desliza (abrir e fechar). */
+.anim-details[open] > :not(summary) { animation: m-form-in 320ms var(--ease-out) backwards; }
+@supports (interpolate-size: allow-keywords) and selector(::details-content) {
+  .anim-details { interpolate-size: allow-keywords; }
+  .anim-details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 340ms var(--ease-out), content-visibility 340ms allow-discrete;
+  }
+  .anim-details[open]::details-content { block-size: auto; }
+}
+
+/* ── Troca de tema (ThemeProvider) ───────────────────────── */
+
+/* O tema novo abre num círculo a partir de onde a pessoa clicou. */
+@keyframes m-theme-reveal {
+  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to   { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
+html.theme-switching::view-transition-old(root) { animation: none; z-index: 1; }
+html.theme-switching::view-transition-new(root) {
+  z-index: 2;
+  mix-blend-mode: normal;
+  animation: m-theme-reveal 620ms var(--ease-out) both;
+}
+/* Durante a troca, as transições de cor de cada peça ficam paradas: a
+   foto do "antes" e a do "depois" já fazem a passagem. */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after { transition: none !important; }
+
+/* ── Links de texto: o sublinhado cresce da esquerda ─────── */
+
+:is(.public-layout__footer-link, .sidebar__legal-link, .auth-card__footer-link,
+    .auth-card__legal-link, .landing__more-link, .landing__link, .more-legal a,
+    .public-page__back) {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 1px;
+  transition: color var(--motion-fast) ease, background-size var(--motion-base) var(--ease-out),
+              transform var(--motion-base) var(--ease-out);
+}
+@media (hover: hover) {
+  :is(.public-layout__footer-link, .sidebar__legal-link, .auth-card__footer-link,
+      .auth-card__legal-link, .landing__more-link, .landing__link, .more-legal a,
+      .public-page__back):hover { background-size: 100% 1px; }
+}
+
+/* ── Páginas de ferramentas (toolPage.css) ───────────────── */
+
+/* O título chega primeiro e os blocos descem atrás dele. :where() = sem
+   especificidade: bloco que já tem animação própria (estante da
+   Biblioteca, álbum da Galeria) fica com a dele. */
+:where(.tool-page > *) { animation: m-item-in 460ms var(--ease-out) backwards; }
+:where(.tool-page > :nth-child(2)) { animation-delay: 60ms; }
+:where(.tool-page > :nth-child(3)) { animation-delay: 120ms; }
+:where(.tool-page > :nth-child(4)) { animation-delay: 180ms; }
+:where(.tool-page > :nth-child(n + 5)) { animation-delay: 240ms; }
+
+.tool-page__empty-icon { animation: m-float 5.5s ease-in-out infinite; }
+.tool-page__state .spinner { flex: none; }
+
+@media (hover: hover) {
+  :where(.tool-card, .feedback-item) {
+    transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out),
+                border-color var(--motion-fast) ease;
+  }
+  :where(.tool-card, .feedback-item):hover {
+    transform: translateY(-2px);
+    border-color: var(--border-base);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+  }
+}
+
+/* ── Botões e controles: resposta ao toque ───────────────── */
+
+/* Qualquer botão-ícone redondo/quadrado do site encolhe ao apertar. */
+:where(.modal-close, .topbar__btn, .campaign-card-row__icon-btn,
+       .feedback-kind, .cfg-seg__btn, .more-link, .help-topic__summary):active {
+  transform: scale(0.96);
+  transition-duration: 60ms;
+}
+.modal-close { transition: color var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-base) var(--ease-spring); }
+@media (hover: hover) {
+  .modal-close:hover:not(:disabled) { transform: rotate(90deg); }
+}
+
+/* Botão fantasma e de perigo ganham a mesma mola do principal. */
+@media (hover: hover) {
+  :where(.btn-ghost, .secondary-button, .btn-danger, .danger-button):hover:not(:disabled) { transform: translateY(-1px); }
+}
+
+/* Ícone do topo das janelinhas de confirmar/avisar. */
+.dlg__icon { animation: m-bump 460ms var(--ease-spring) 120ms backwards; }
+.dlg--danger .dlg__icon { animation: m-bump 460ms var(--ease-spring) 120ms backwards, m-shake 420ms var(--ease-out) 420ms; }
+.dlg__title, .dlg__message, .dlg__field, .dlg__actions { animation: m-item-in 380ms var(--ease-out) backwards; }
+.dlg__title   { animation-delay: 80ms; }
+.dlg__message { animation-delay: 130ms; }
+.dlg__field   { animation-delay: 170ms; }
+.dlg__actions { animation-delay: 210ms; }
+
+/* Imagem que ainda está chegando não pisca: aparece num fade (classe
+   posta pelo componente quando termina de carregar). */
+.img-fade { opacity: 0; transition: opacity 360ms var(--ease-out); }
+.img-fade--in { opacity: 1; }
+
 /* ── Menos movimento ─────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

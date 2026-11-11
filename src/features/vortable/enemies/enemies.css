@@ -73,3 +73,14 @@
 .enemy__lead { display: flex; align-items: center; gap: 8px; }
 .enemy__card--lib { grid-template-columns: auto 1fr; }
 .enemy__card--lib .enemy__actions { grid-column: 1 / -1; justify-content: flex-end; }
+
+/* ── Movimento ── */
+.enemy__list > * { animation: m-item-in 360ms var(--ease-out) backwards; }
+.enemy__list > :nth-child(2) { animation-delay: 35ms; }
+.enemy__list > :nth-child(3) { animation-delay: 70ms; }
+.enemy__list > :nth-child(4) { animation-delay: 105ms; }
+.enemy__list > :nth-child(n + 5) { animation-delay: 140ms; }
+.enemy__card { transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out); }
+@media (hover: hover) { .enemy__card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28); } }
+.creature-sfx { transition: color var(--motion-fast) ease, opacity var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.creature-sfx:active { transform: scale(0.88); }

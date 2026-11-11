@@ -99,3 +99,11 @@
   .chat-fab__button { width: 38px; height: 38px; }
   .chat-message-popup__anchor { right: calc(48px + var(--space-3)); bottom: calc(5px + 38px + var(--space-3)); }
 }
+
+/* ── Movimento ── */
+.chat-fab__badge { animation: m-bump 380ms var(--ease-spring) backwards; }
+.chat-fab__button { transition: all var(--transition-base), transform 180ms var(--ease-spring); }
+.chat-fab__button:active { transform: scale(0.9); transition-duration: 80ms; }
+.chat-fab__close { transition: color var(--motion-fast) ease, transform var(--motion-base) var(--ease-spring); }
+@media (hover: hover) { .chat-fab__close:hover { transform: rotate(90deg); } }
+.chat-fab__header-icon { animation: m-bump 420ms var(--ease-spring) 120ms backwards; }

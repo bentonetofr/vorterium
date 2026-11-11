@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 
 // ────────────────────────────────────────────────────────
@@ -44,8 +44,70 @@ function saveTheme(theme: Theme) {
   try { localStorage.setItem(STORAGE_KEY, theme) } catch { /* sem armazenamento */ }
 }
 
+// ── Troca animada: o tema novo abre num círculo a partir do último clique ──
+// (View Transitions; onde o navegador não tem, ou com "reduzir animações",
+// a troca é direta como sempre foi.)
+
+let lastPointer: { x: number; y: number } | null = null
+if (typeof window !== 'undefined') {
+  window.addEventListener('pointerdown', (e) => { lastPointer = { x: e.clientX, y: e.clientY } }, { capture: true, passive: true })
+}
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => { finished: Promise<void> }
+}
+
+function motionReduced(): boolean {
+  return document.documentElement.getAttribute('data-reduce-motion') === 'on'
+    || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
+// Enquanto a troca animada espera o navegador fotografar o "antes", ninguém
+// mais mexe no data-theme (senão a foto já sairia com o tema novo).
+let switchPending = false
+
+/** Aplica o tema no <html> com a animação de círculo, quando dá. */
+function applyThemeAnimated(theme: Theme): void {
+  const root = document.documentElement
+  const doc = document as ViewTransitionDocument
+  if (!doc.startViewTransition || motionReduced() || document.visibilityState !== 'visible') {
+    root.setAttribute('data-theme', theme)
+    return
+  }
+  const x = lastPointer?.x ?? window.innerWidth / 2
+  const y = lastPointer?.y ?? window.innerHeight / 2
+  const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
+  root.style.setProperty('--vt-x', `${x}px`)
+  root.style.setProperty('--vt-y', `${y}px`)
+  root.style.setProperty('--vt-r', `${Math.ceil(radius)}px`)
+  root.classList.add('theme-switching')
+  const done = () => root.classList.remove('theme-switching')
+  switchPending = true
+  try {
+    doc.startViewTransition(() => {
+      switchPending = false
+      root.setAttribute('data-theme', theme)
+    }).finished.then(done, done)
+  } catch {
+    switchPending = false
+    root.setAttribute('data-theme', theme)
+    done()
+  }
+}
+
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => (readSavedTheme() === 'light' ? 'light' : 'dark'))
+  const [theme, setThemeState] = useState<Theme>(() => (readSavedTheme() === 'light' ? 'light' : 'dark'))
+  const themeRef = useRef(theme)
+  themeRef.current = theme
+
+  // Troca pedida pela pessoa: anima. (A do carregamento, lá embaixo, não.)
+  const setTheme = useCallback((next: Theme | ((current: Theme) => Theme)) => {
+    const value = typeof next === 'function' ? next(themeRef.current) : next
+    if (value === themeRef.current) return
+    themeRef.current = value
+    applyThemeAnimated(value)
+    setThemeState(value)
+  }, [])
 
   const [accountReady, setAccountReady] = useState(false)
 
@@ -64,7 +126,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           .eq('id', session.user.id)
           .maybeSingle()
         if (active && (data?.theme_preference === 'light' || data?.theme_preference === 'dark')) {
-          setTheme(data.theme_preference)
+          setThemeState(data.theme_preference)
         }
       }
       if (active) setAccountReady(true)
@@ -75,7 +137,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   // Aplica o atributo no <html> e persiste
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
+    if (!switchPending) document.documentElement.setAttribute('data-theme', theme)
     if (!accountReady) return
     saveTheme(theme)
 

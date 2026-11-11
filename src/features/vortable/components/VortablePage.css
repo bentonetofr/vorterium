@@ -200,3 +200,22 @@
 
 /* a página do Vortable não tem a barra de navegação de baixo: os botões do canto e as janelas descem até a borda */
 .vortable-page { --bottom-nav-h: 0px; }
+
+/* ── Movimento ── */
+
+/* A faixa de cima desce e a tela do jogo aparece por baixo dela. Só
+   opacidade no palco: o motor mede o clique pela posição do canvas. */
+@keyframes vortable-bar-in { from { opacity: 0; transform: translateY(-100%); } }
+.vortable-page__bar { animation: vortable-bar-in 420ms var(--ease-out) backwards; }
+.vortable-page__body { animation: m-reveal-fade 520ms var(--ease-out) 120ms backwards; }
+.vortable-page__wait { animation: m-item-in 460ms var(--ease-out) backwards; }
+
+/* Estado da rede: o ponto pisca enquanto conecta e dá um pulso ao ficar online. */
+.vortable-page__net { transition: color var(--motion-base) ease, background var(--motion-base) ease, border-color var(--motion-base) ease; }
+.vortable-page__net--connecting { animation: vortable-net-blink 1.2s ease-in-out infinite; }
+@keyframes vortable-net-blink { 50% { opacity: 0.45; } }
+.vortable-page__net--online { animation: m-bump 360ms var(--ease-spring) backwards; }
+
+/* Botão das ferramentas (celular): gira ao abrir e o selo dá um pulinho. */
+.vortable-tools__toggle { transition: transform var(--motion-base) var(--ease-spring), background var(--motion-fast) ease, color var(--motion-fast) ease; }
+.vortable-tools__badge { animation: m-bump 360ms var(--ease-spring) backwards; }

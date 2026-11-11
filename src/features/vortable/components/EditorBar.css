@@ -58,3 +58,9 @@
   .editor-bar__label { display: none; }
   .editor-bar__btn { padding: 0 8px; }
 }
+
+/* ── Movimento ── */
+.editor-bar { animation: m-drop-in 320ms var(--ease-out) backwards; }
+.editor-bar__btn { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.editor-bar__btn:active:not(:disabled) { transform: scale(0.94); }
+.editor-bar__dot { animation: m-bump 320ms var(--ease-spring) backwards; }

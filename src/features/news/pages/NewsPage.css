@@ -69,3 +69,22 @@
 @media (max-width: 560px) {
   .news-entry__date { margin-left: 0; flex-basis: 100%; }
 }
+
+/* ── Movimento ── */
+
+/* O trilho da linha do tempo se desenha de cima pra baixo. */
+.news-timeline::before { transform-origin: top center; animation: news-rail-in 1100ms var(--ease-out) 120ms backwards; }
+@keyframes news-rail-in { from { transform: scaleY(0); opacity: 0; } }
+
+/* A versão mais nova pulsa no trilho. */
+.news-entry--latest::before { color: var(--gilded-bright); animation: m-ping 2.2s var(--ease-out) 900ms infinite; }
+.news-entry::before { transition: transform var(--motion-base) var(--ease-spring), background var(--motion-fast) ease; }
+
+.news-entry { transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease; }
+@media (hover: hover) {
+  .news-entry:hover { transform: translateX(3px); border-color: var(--border-base); }
+  .news-entry--latest:hover { border-color: var(--gilded-bright); }
+  .news-entry:hover::before { transform: scale(1.25); background: var(--gilded-bright); }
+}
+/* As entradas de baixo aparecem conforme a página rola. */
+.news-entry[data-reveal][data-revealed] { animation-duration: 560ms; }

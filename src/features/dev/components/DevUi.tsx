@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import type { DevRecord } from '../services/devService'
 import { Loader } from '../../../shared/components/Loader'
+import { AvatarImage } from '../../../shared/components/AvatarImage'
 
 // ────────────────────────────────────────────────────────
 // Peças do painel do desenvolvedor: carregamento, erro, tabela de
@@ -40,7 +41,7 @@ export function DevState({ loading, error, children }: { loading: boolean; error
 export function DevAvatar({ name, url, size = 28 }: { name: string; url?: string | null; size?: number }) {
   return (
     <span className="dev-avatar" style={{ width: size, height: size }} aria-hidden="true">
-      {url ? <img src={url} alt="" /> : (name || '?').charAt(0).toUpperCase()}
+      <AvatarImage src={url} fallback={(name || '?').charAt(0).toUpperCase()} />
     </span>
   )
 }

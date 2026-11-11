@@ -16,6 +16,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.30',
+    date:    '2026-11-10',
+    title:   'Movimento em todo o site e polimento geral',
+    items: [
+      'O site ganhou movimento de ponta a ponta. A página inicial entra em degraus e cada seção aparece conforme você rola; o login, o Perfil, Mais, Ajuda, Novidades, Feedback, Minhas fichas e Meu bestiário montam em cascata; os tópicos da Ajuda abrem e fecham deslizando.',
+      'Trocar entre o tema escuro e o claro agora abre o tema novo num círculo, a partir de onde você clicou.',
+      'A barra lateral, as barras do celular e os botões do canto (sino, dados, chat e os outros) chegam animados ao abrir o site. Cards levantam ao passar o mouse e botões respondem ao toque.',
+      'Dentro da campanha: Episódios, Notas, Bestiário, Membros e Configurações ganharam entradas e respostas mais macias, e a ficha de Vampiro reage ao toque nas bolinhas e caixas.',
+      'Vortable: a faixa de cima, a barra do editor, a telinha e as listas de jogadores e de inimigos entram com animação, e o aviso de rede pisca enquanto conecta.',
+      'Corrigido: a foto de perfil de contas Google às vezes aparecia como imagem quebrada. Agora carrega direito e, se falhar, mostra a inicial do nome e tenta de novo.',
+      'Corrigido: em Membros, o texto do cartão "Convite por link" quebrava uma palavra por linha em telas médias.',
+      'Corrigido: um erro interno na lista de Novidades (duas versões com o mesmo número).',
+      'Quem liga "Reduzir animações" nas Configurações continua vendo tudo sem movimento.',
+    ],
+  },
+  {
     version: '2.29',
     date:    '2026-11-08',
     title:   'D&D: aba Anotações',

@@ -659,3 +659,57 @@
   :root:has(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="color"], [type="file"]):focus, textarea:focus, select:focus, [contenteditable="true"]:focus) { --bottom-nav-h: 0px; }
   :root:has(input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="color"], [type="file"]):focus, textarea:focus, select:focus, [contenteditable="true"]:focus) .bottom-nav { display: none; }
 }
+
+/* ═══ Movimento — chegada do site ═══ */
+
+/* Ao abrir o site, a barra lateral monta de cima pra baixo: marca, conta
+   e cada link na sua vez. Só na montagem — trocar de página não repete. */
+@keyframes sidebar-item-in { from { opacity: 0; transform: translateX(-14px); } }
+.sidebar__brand { animation: m-reveal-fade 520ms var(--ease-out) backwards; }
+.sidebar__user  { animation: sidebar-item-in 460ms var(--ease-out) 60ms backwards; }
+.sidebar__nav > * { animation: sidebar-item-in 420ms var(--ease-out) backwards; }
+.sidebar__nav > :nth-child(1)  { animation-delay: 100ms; }
+.sidebar__nav > :nth-child(2)  { animation-delay: 135ms; }
+.sidebar__nav > :nth-child(3)  { animation-delay: 170ms; }
+.sidebar__nav > :nth-child(4)  { animation-delay: 205ms; }
+.sidebar__nav > :nth-child(5)  { animation-delay: 240ms; }
+.sidebar__nav > :nth-child(6)  { animation-delay: 275ms; }
+.sidebar__nav > :nth-child(7)  { animation-delay: 310ms; }
+.sidebar__nav > :nth-child(8)  { animation-delay: 345ms; }
+.sidebar__nav > :nth-child(9)  { animation-delay: 380ms; }
+.sidebar__nav > :nth-child(n + 10) { animation-delay: 415ms; }
+/* o submenu da campanha tem a própria animação de abrir (Collapse) */
+.sidebar__nav > .anim-collapse { animation: m-collapse-open 320ms var(--ease-out) both; }
+.sidebar__nav > .anim-collapse[data-state="closing"] { animation: m-collapse-close 240ms var(--ease-in) both; }
+.sidebar__footer { animation: m-reveal-fade 520ms var(--ease-out) 380ms backwards; }
+
+/* Item do submenu da campanha: desliza um tantinho no hover. */
+@media (hover: hover) {
+  .campaign-submenu__item:hover { padding-left: calc(var(--space-3) + 3px); }
+}
+
+/* Ponto de novidade: pulsa uma onda. */
+.sidebar__dot, .bottom-nav__dot { color: var(--danger-bright); animation: m-ping 1.8s var(--ease-out) infinite; }
+
+/* Celular: a barra de cima desce e a de baixo sobe ao abrir o site. */
+@keyframes topbar-in { from { opacity: 0; transform: translateY(-100%); } }
+@keyframes bottom-nav-in { from { opacity: 0; transform: translateY(100%); } }
+.topbar { animation: topbar-in 420ms var(--ease-out) backwards; }
+.bottom-nav { animation: bottom-nav-in 460ms var(--ease-out) 80ms backwards; }
+.bottom-nav__link:nth-child(1) .bottom-nav__icon { animation: m-bump 420ms var(--ease-spring) 260ms backwards; }
+.bottom-nav__link:nth-child(2) .bottom-nav__icon { animation: m-bump 420ms var(--ease-spring) 310ms backwards; }
+.bottom-nav__link:nth-child(3) .bottom-nav__icon { animation: m-bump 420ms var(--ease-spring) 360ms backwards; }
+.bottom-nav__link:nth-child(4) .bottom-nav__icon { animation: m-bump 420ms var(--ease-spring) 410ms backwards; }
+.bottom-nav__link:nth-child(5) .bottom-nav__icon { animation: m-bump 420ms var(--ease-spring) 460ms backwards; }
+
+/* Botões do canto (sino, dado, chat...): nascem com um pulo — ao abrir o
+   site, ao entrar numa campanha e ao abrir as ferramentas no celular. */
+@keyframes fab-in {
+  0%   { opacity: 0; transform: scale(0.4) translateY(12px); }
+  70%  { opacity: 1; transform: scale(1.08); }
+  100% { transform: none; }
+}
+.dice-fab-wrapper :is(.dice-fab, .notification-bell, .owner-fab, .control-fab, .vortable-fab:not(.vortable-fab--live),
+                   .chat-fab__button, .notebook-fab__button, .docs-fab, .alth-master-fab),
+.site-tools__toggle { animation: fab-in 440ms var(--ease-out) backwards; }
+.site-tools__badge { animation: m-bump 360ms var(--ease-spring) backwards; }

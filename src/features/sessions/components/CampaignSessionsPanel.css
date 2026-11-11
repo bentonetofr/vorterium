@@ -411,3 +411,13 @@
   .session-card__actions { width: 100%; justify-content: flex-end; }
   .session-card__confirm { justify-content: flex-end; }
 }
+
+/* ── Movimento ── */
+.sessions-panel__intro { animation: m-item-in 420ms var(--ease-out) backwards; }
+.sessions-toolbar { animation: m-item-in 420ms var(--ease-out) 60ms backwards; }
+.sessions-panel__empty { animation: m-reveal-fade 460ms var(--ease-out) backwards; }
+.sessions-filter-btn { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.sessions-filter-btn:active { transform: scale(0.95); }
+.sessions-filter-btn--active .sessions-filter-btn__count { animation: m-bump 320ms var(--ease-spring) backwards; }
+.session-card__title { transition: color var(--motion-fast) ease; }
+@media (hover: hover) { .session-card:hover .session-card__title { color: var(--accent-bright); } }

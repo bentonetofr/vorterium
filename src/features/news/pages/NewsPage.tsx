@@ -24,9 +24,10 @@ export function NewsPage() {
         </div>
       </div>
 
-      <ol className="news-timeline anim-stagger">
+      <ol className="news-timeline">
         {CHANGELOG.map((entry, i) => (
-          <li key={entry.version} className={`news-entry${i === 0 ? ' news-entry--latest' : ''}`}>
+          // versão + título: já houve duas entradas com o mesmo número de versão
+          <li key={`${entry.version}:${entry.title}`} className={`news-entry${i === 0 ? ' news-entry--latest' : ''}`} data-reveal>
             <div className="news-entry__head">
               <span className="news-entry__version">v{entry.version}</span>
               <h2 className="news-entry__title">{entry.title}</h2>

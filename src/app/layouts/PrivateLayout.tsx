@@ -5,6 +5,7 @@ import { SettingsButton } from '../../features/settings/SettingsButton'
 import { ObserverGuard } from '../../features/dev/ObserverGuard'
 import { useObserver } from '../../shared/lib/observer'
 import { AppLogo }     from '../../shared/components/AppLogo'
+import { AvatarImage } from '../../shared/components/AvatarImage'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { DndWatchRolls }      from '../../features/sheets/dnd/rolls/DndWatchRolls'
@@ -151,7 +152,7 @@ function PrivateLayoutContent() {
         {user && (
           <Link to="/perfil" className="sidebar__user sidebar__user--link">
             <div className="sidebar__avatar" aria-hidden={avatarUrl ? undefined : true}>
-              {avatarUrl ? <img key={avatarUrl} src={avatarUrl} alt="" className="anim-img-swap" /> : initial}
+              <AvatarImage src={avatarUrl} fallback={initial} className="anim-img-swap" />
             </div>
             <div className="sidebar__user-info">
               <span className="sidebar__user-name">{displayName}</span>

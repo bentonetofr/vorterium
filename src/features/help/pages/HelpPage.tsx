@@ -111,7 +111,7 @@ export function HelpPage() {
 
       <div className="help-topics">
         {TOPICS.map((t, i) => (
-          <details key={t.id} className="help-topic" open={i === 0}>
+          <details key={t.id} className="help-topic anim-details" open={i === 0}>
             <summary className="help-topic__summary">
               <span className="help-topic__icon" aria-hidden="true">{t.icon}</span>
               <span className="help-topic__title">{t.title}</span>

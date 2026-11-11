@@ -55,3 +55,22 @@
 @media (max-width: 560px) {
   .help-topic__steps { padding-left: calc(var(--space-5) + 12px); }
 }
+
+/* ── Movimento ── */
+.help-topic { transition: border-color var(--motion-fast) ease, box-shadow var(--motion-base) var(--ease-out), background var(--motion-fast) ease; }
+.help-topic[open] { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22); }
+.help-topic__icon { transition: transform var(--motion-base) var(--ease-spring), background var(--motion-fast) ease; }
+.help-topic[open] .help-topic__icon { transform: scale(1.1) rotate(-6deg); }
+.help-topic__chevron { transition: transform 320ms var(--ease-spring), color var(--motion-fast) ease; }
+.help-topic[open] .help-topic__chevron { color: var(--accent-bright); }
+@media (hover: hover) {
+  .help-topic:hover { border-color: var(--border-base); }
+  .help-topic[open]:hover { border-color: var(--gilded); }
+  .help-topic__summary:hover .help-topic__icon { transform: scale(1.1); }
+}
+/* os passos descem um depois do outro quando o tópico abre */
+.help-topic[open] .help-topic__steps > li { animation: m-item-in 360ms var(--ease-out) backwards; }
+.help-topic[open] .help-topic__steps > li:nth-child(2) { animation-delay: 45ms; }
+.help-topic[open] .help-topic__steps > li:nth-child(3) { animation-delay: 90ms; }
+.help-topic[open] .help-topic__steps > li:nth-child(4) { animation-delay: 135ms; }
+.help-topic[open] .help-topic__steps > li:nth-child(n + 5) { animation-delay: 180ms; }

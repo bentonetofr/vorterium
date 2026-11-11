@@ -345,3 +345,18 @@
   .vtm-hero__id { flex-direction: column; align-items: center; }
   .vtm-hero__name { text-align: center; font-size: 22px; }
 }
+
+/* ── Movimento ── */
+.vtm-hero { animation: m-item-in 480ms var(--ease-out) backwards; }
+.vtm-track { transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease, background var(--motion-base) ease; }
+.vtm-track__alert { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+.vtm-track--broken .vtm-track__alert { animation: m-alert-in var(--motion-base) var(--ease-out) backwards, m-shake 420ms var(--ease-out) 120ms; }
+/* bolinha, caixa e gota: mudam de cor macio e encolhem ao apertar */
+.vtm-dot, .vtm-box, .vtm-hbox, .vtm-drop svg { transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 200ms var(--ease-spring), fill var(--motion-fast) ease, color var(--motion-fast) ease; }
+.vtm-dot:active:not(:disabled), .vtm-box:active, .vtm-hbox:active { transform: scale(0.82); }
+.vtm-drop:active svg { transform: scale(0.82); }
+.vtm-chip, .vtm-mini { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.vtm-chip:active:not(:disabled), .vtm-mini:active { transform: scale(0.94); }
+.vtm-portrait__img { transition: border-color var(--motion-fast) ease, box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-spring); }
+@media (hover: hover) { .vtm-portrait__img:hover { transform: scale(1.03); } }
+.vtm-track__value { transition: color var(--motion-base) ease; }

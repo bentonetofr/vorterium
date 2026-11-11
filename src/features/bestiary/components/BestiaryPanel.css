@@ -384,3 +384,13 @@
   font-weight: 700;
   color: var(--text-primary);
 }
+
+/* ── Movimento ── */
+.bestiary__intro { animation: m-item-in 420ms var(--ease-out) backwards; }
+.bestiary-party { animation: m-item-in 460ms var(--ease-out) 60ms backwards; }
+.bestiary-member { transition: opacity var(--motion-base) ease, background var(--motion-fast) ease; }
+.bestiary-total__value { transition: color var(--motion-fast) ease; }
+.creature-tier { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.creature-tier:active:not(:disabled) { transform: scale(0.96); }
+.creature-tier--active { animation: m-bump 320ms var(--ease-spring) backwards; }
+.bestiary__empty { animation: m-reveal-fade 460ms var(--ease-out) backwards; }

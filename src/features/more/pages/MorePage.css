@@ -48,3 +48,20 @@
 
 /* Sair da conta: no celular a barra lateral não existe, então o botão mora aqui */
 .btn.more-signout { width: 100%; margin-top: var(--space-4); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+
+/* ── Movimento ── */
+.more-list > li { animation: m-item-in 420ms var(--ease-out) backwards; }
+.more-list > li:nth-child(2) { animation-delay: 50ms; }
+.more-list > li:nth-child(3) { animation-delay: 100ms; }
+.more-list > li:nth-child(4) { animation-delay: 150ms; }
+.more-list > li:nth-child(n + 5) { animation-delay: 200ms; }
+.more-link { transition: background var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.more-link__icon { transition: transform var(--motion-base) var(--ease-spring), background var(--motion-fast) ease; }
+.more-link__chevron { transition: transform var(--motion-base) var(--ease-out), color var(--motion-fast) ease; }
+@media (hover: hover) {
+  .more-link:hover { background: var(--accent-glow); }
+  .more-link:hover .more-link__icon { transform: scale(1.12) rotate(-4deg); }
+  .more-link:hover .more-link__chevron { transform: translateX(4px); color: var(--accent-bright); }
+}
+.more-link:active .more-link__chevron { transform: translateX(6px); color: var(--accent-bright); }
+.more-link__dot { color: var(--danger-bright); animation: m-ping 1.8s var(--ease-out) infinite; }

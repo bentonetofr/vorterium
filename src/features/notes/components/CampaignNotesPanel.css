@@ -336,3 +336,10 @@
     justify-content: flex-end;
   }
 }
+
+/* ── Movimento ── */
+.notes-panel__intro { animation: m-item-in 420ms var(--ease-out) backwards; }
+.notes-panel__empty,
+.notes-panel__empty-sub { animation: m-item-in 460ms var(--ease-out) 80ms backwards; }
+.note-card__title { transition: color var(--motion-fast) ease; }
+@media (hover: hover) { .note-card:hover .note-card__title { color: var(--accent-bright); } }

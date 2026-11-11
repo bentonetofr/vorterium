@@ -50,3 +50,7 @@
     padding: var(--space-5);
   }
 }
+
+/* ── Movimento ── */
+.dnd-coming-soon__image { animation: m-reveal-scale 620ms var(--ease-out) backwards; }
+.dnd-coming-soon__message { animation: m-item-in 480ms var(--ease-out) 160ms backwards; }

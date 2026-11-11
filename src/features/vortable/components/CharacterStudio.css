@@ -33,3 +33,8 @@
   transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 .char-btn:hover { color: var(--text-primary); border-color: var(--gilded-bright); background: var(--bg-elevated); }
+
+/* ── Movimento ── */
+.char-studio__host { animation: m-reveal-fade 420ms var(--ease-out) backwards; }
+.char-btn { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.char-btn:active { transform: scale(0.95); }

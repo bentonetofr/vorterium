@@ -62,11 +62,15 @@
 
 .members-block__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-3);
 }
 
-.members-block__header-text { flex: 1; min-width: 0; }
+/* Pede uma largura mínima: num cartão estreito (dois lado a lado em tela
+   média) o selo do convite desce pra linha de baixo em vez de espremer o
+   texto numa coluna de uma palavra por linha. */
+.members-block__header-text { flex: 1 1 170px; min-width: 0; }
 
 .members-block__icon {
   font-size: var(--text-lg);

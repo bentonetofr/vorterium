@@ -315,3 +315,26 @@
 
 [data-theme="light"] .auth-card__legal-link { color: var(--text-muted); }
 [data-theme="light"] .auth-card__legal-link:hover { color: var(--accent-bright); }
+
+/* ── Movimento ── */
+
+/* As peças do cartão de login chegam uma depois da outra. */
+.auth-card > * { animation: m-item-in 480ms var(--ease-out) backwards; }
+.auth-card > :nth-child(1) { animation-delay: 80ms; }
+.auth-card > :nth-child(2) { animation-delay: 150ms; }
+.auth-card > :nth-child(3) { animation-delay: 220ms; }
+.auth-card > :nth-child(4) { animation-delay: 290ms; }
+.auth-card > :nth-child(n + 5) { animation-delay: 360ms; }
+/* aviso de erro que aparece depois: sem atraso, e com a sacudida */
+.auth-card > .auth-feedback { animation: m-alert-in var(--motion-base) var(--ease-out) backwards; }
+.auth-card > .auth-feedback--error {
+  animation: m-alert-in var(--motion-base) var(--ease-out) backwards, m-shake 420ms var(--ease-out) 120ms;
+}
+
+/* O fio dourado do topo se estende ao abrir. */
+.auth-card::before { animation: auth-rule-in 900ms var(--ease-out) 200ms backwards; }
+@keyframes auth-rule-in { from { width: 0; opacity: 0; } }
+
+/* Ícone do campo acende quando o campo está em foco. */
+.auth-input-icon { transition: color var(--motion-fast) ease, transform var(--motion-base) var(--ease-spring); }
+.auth-input-wrap:focus-within .auth-input-icon { color: var(--accent-bright); transform: scale(1.15); }

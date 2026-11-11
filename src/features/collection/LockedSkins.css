@@ -24,3 +24,12 @@
 .col-locked--row { flex-direction: row; justify-content: flex-start; gap: var(--space-3); min-height: 0; padding: var(--space-2) var(--space-3); }
 .col-locked--row .col-locked__die { width: 34px; height: 34px; font-size: 16px; flex-shrink: 0; }
 .col-locked--row .col-locked__name { flex: 1 1 auto; font-size: var(--text-sm); }
+
+/* ── Movimento ── */
+/* A barra de progresso da coleção enche ao aparecer. */
+.col-progress__bar i { transform-origin: left center; animation: col-progress-in 900ms var(--ease-out) 200ms backwards; }
+@keyframes col-progress-in { from { transform: scaleX(0); } }
+.col-locked { transition: transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease; }
+@media (hover: hover) { .col-locked:hover { transform: translateY(-2px); } }
+.col-locked__die { transition: transform 420ms var(--ease-spring); }
+@media (hover: hover) { .col-locked:hover .col-locked__die { transform: rotate(-10deg) scale(1.06); } }

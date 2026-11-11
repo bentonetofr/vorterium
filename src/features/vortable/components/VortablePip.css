@@ -80,3 +80,14 @@
   .vortable-pip { bottom: calc(var(--bottom-nav-h, 60px) + var(--space-4, 16px) + env(safe-area-inset-bottom, 0px)); width: min(300px, calc(100vw - 2 * var(--space-4, 16px))); }
   .vortable-pip__view { height: 160px; }
 }
+
+/* ── Movimento ── */
+@keyframes vortable-pip-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.92); }
+}
+.vortable-pip { transform-origin: bottom left; animation: vortable-pip-in 420ms var(--ease-spring) backwards; }
+.vortable-pip__btn { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.vortable-pip__btn:active:not(:disabled) { transform: scale(0.88); }
+.vortable-pip__live { animation: vortable-pip-live 2.2s ease-in-out infinite; }
+@keyframes vortable-pip-live { 50% { opacity: 0.6; } }
+.vortable-pip__who { animation: m-reveal-fade 260ms var(--ease-out) backwards; }

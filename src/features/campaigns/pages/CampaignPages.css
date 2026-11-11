@@ -703,3 +703,15 @@
 @media (prefers-reduced-motion: reduce) {
   .mcard__body, .mcard__inner, .mcard__chev { transition: none; }
 }
+
+/* ── Movimento: lista de campanhas ── */
+.campaign-card-row__cover { transition: transform var(--motion-slow) var(--ease-out), border-color var(--motion-fast) ease, box-shadow var(--motion-base) ease; }
+@media (hover: hover) {
+  .campaign-card-row:hover .campaign-card-row__cover {
+    transform: scale(1.05) rotate(-1deg);
+    border-color: var(--gilded);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  }
+}
+.campaign-line__archive { transition: color var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 180ms var(--ease-spring); }
+.campaign-line__archive:active { transform: scale(0.9); }

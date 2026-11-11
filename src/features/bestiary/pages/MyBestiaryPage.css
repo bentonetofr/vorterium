@@ -55,3 +55,16 @@
 .my-creature-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .my-creature-form__notes { resize: vertical; min-height: 72px; }
 .my-creature-form__actions { justify-content: flex-end; }
+
+/* ── Movimento ── */
+.my-bestiary__grid > * { animation: m-item-in 460ms var(--ease-out) backwards; }
+.my-bestiary__grid > :nth-child(2) { animation-delay: 60ms; }
+.my-bestiary__grid > :nth-child(3) { animation-delay: 120ms; }
+.my-bestiary__grid > :nth-child(4) { animation-delay: 180ms; }
+.my-bestiary__grid > :nth-child(n + 5) { animation-delay: 240ms; }
+.my-creature__copy { animation: m-form-in 300ms var(--ease-out) backwards; }
+.my-creature__stat { transition: border-color var(--motion-fast) ease, transform var(--motion-base) var(--ease-spring); }
+@media (hover: hover) {
+  .my-creature__stat:hover { border-color: var(--gilded); transform: translateY(-2px); }
+}
+.my-creature-form { animation: m-form-in 340ms var(--ease-out) backwards; }

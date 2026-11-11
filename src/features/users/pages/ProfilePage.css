@@ -147,3 +147,23 @@
   background: rgba(77, 158, 120, 0.07);
   border-color: rgba(77, 158, 120, 0.4);
 }
+
+/* ── Movimento ── */
+
+/* O fio do topo do cartão corre de um lado ao outro. */
+.profile-card__top-line { transform-origin: center; animation: profile-line-in 1000ms var(--ease-out) 200ms backwards; }
+@keyframes profile-line-in { from { transform: scaleX(0); opacity: 0; } }
+
+/* Cada bloco do cartão sobe na sua vez. */
+.profile-card > :not(.profile-card__top-line) { animation: m-item-in 460ms var(--ease-out) backwards; }
+.profile-card > :nth-child(3) { animation-delay: 50ms; }
+.profile-card > :nth-child(4) { animation-delay: 90ms; }
+.profile-card > :nth-child(5) { animation-delay: 130ms; }
+.profile-card > :nth-child(6) { animation-delay: 170ms; }
+.profile-card > :nth-child(7) { animation-delay: 210ms; }
+.profile-card > :nth-child(n + 8) { animation-delay: 250ms; }
+
+.profile-avatar { transition: transform var(--motion-base) var(--ease-spring), border-color var(--motion-fast) ease, box-shadow var(--motion-base) ease; }
+@media (hover: hover) {
+  .profile-avatar:hover { transform: scale(1.05); border-color: var(--gilded-bright); }
+}

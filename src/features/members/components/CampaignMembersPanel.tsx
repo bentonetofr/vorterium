@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react'
+import { AvatarImage } from '../../../shared/components/AvatarImage'
 import {
   getCampaignMembers,
   getCampaignMembersWithSheetStatus,
@@ -53,7 +54,7 @@ function AvatarPlaceholder({ name, avatarUrl }: { name: string; avatarUrl: strin
   const initial = name.trim().charAt(0).toUpperCase() || '?'
   return (
     <div className="member-avatar" aria-hidden={avatarUrl ? undefined : true}>
-      {avatarUrl ? <img src={avatarUrl} alt="" loading="lazy" /> : initial}
+      <AvatarImage src={avatarUrl} fallback={initial} lazy />
     </div>
   )
 }

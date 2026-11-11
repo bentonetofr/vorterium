@@ -19,6 +19,7 @@ import { useActiveChat } from '../ActiveChatContext'
 import type { CampaignMemberWithProfile } from '../../../shared/types'
 import './CampaignChatPanel.css'
 import { Loader } from '../../../shared/components/Loader'
+import { AvatarImage } from '../../../shared/components/AvatarImage'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -568,9 +569,7 @@ export function CampaignChatPanel({ campaignId, currentUserId, userRole, compact
             return (
               <div key={m.id} className={`chat-message${isOwn ? ' chat-message--own' : ''}`}>
                 <span className="chat-message__avatar" aria-hidden="true">
-                  {authorAvatar
-                    ? <img src={authorAvatar} alt="" />
-                    : authorName.charAt(0).toUpperCase()}
+                  <AvatarImage src={authorAvatar} fallback={authorName.charAt(0).toUpperCase()} />
                 </span>
                 <div className="chat-message__body">
                   <div className="chat-message__meta">
