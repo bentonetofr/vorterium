@@ -450,6 +450,10 @@ p { text-wrap: pretty; }
     box-shadow: var(--shadow-float);
   }
   .site-tools__toggle--open { color: var(--text-inverse); background: var(--accent-bright); border-color: transparent; }
+  /* descendo a página: o botão encolhe e encosta na borda, sem tapar o que se lê; volta ao subir */
+  .site-tools__toggle { transition: transform 320ms var(--ease-out), opacity var(--motion-base) ease, background var(--transition-base), color var(--transition-base); }
+  .site-tools--tucked .site-tools__toggle { transform: translateX(22px) scale(0.72); opacity: 0.6; }
+  .site-tools--tucked .site-tools__toggle:active { transform: translateX(14px) scale(0.76); opacity: 1; }
 }
 
 /* abas no celular: o nome cabe em caixa normal */

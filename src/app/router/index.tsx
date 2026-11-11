@@ -1,50 +1,57 @@
+import { Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import { PublicLayout }   from '../layouts/PublicLayout'
-import { PrivateLayout }  from '../layouts/PrivateLayout'
 import { ProtectedRoute } from '../../features/auth/ProtectedRoute'
 import { GuestRoute }     from '../../features/auth/GuestRoute'
 
+// A porta de entrada (página inicial, login, cadastro) vem no pacote
+// principal, pra abrir na hora. Todo o resto chega sob demanda.
+import { LandingPage }      from '../../features/public/pages/LandingPage'
 import { LoginPage }        from '../../features/auth/pages/LoginPage'
 import { RegisterPage }     from '../../features/auth/pages/RegisterPage'
 import { AuthCallbackPage } from '../../features/auth/pages/AuthCallbackPage'
-
-import { CampaignsPage }   from '../../features/campaigns/pages/CampaignsPage'
-import { NewCampaignPage } from '../../features/campaigns/pages/NewCampaignPage'
-import { CampaignAreaLayout } from '../../features/campaigns/pages/CampaignAreaLayout'
-import { VortablePage }       from '../../features/vortable/pages/VortablePage'
-import { ProfilePage }     from '../../features/users/pages/ProfilePage'
-import { MySheetsPage }        from '../../features/sheets/pages/MySheetsPage'
-import { GlobalActivityPage } from '../../features/activity/pages/GlobalActivityPage'
-import { LibraryPage }        from '../../features/library/pages/LibraryPage'
-import { MyBestiaryPage }     from '../../features/bestiary/pages/MyBestiaryPage'
-import { GalleryPage }        from '../../features/mesa/pages/GalleryPage'
-import { NewsPage }           from '../../features/news/pages/NewsPage'
-import { HelpPage }           from '../../features/help/pages/HelpPage'
-import { FeedbackPage }       from '../../features/feedback/pages/FeedbackPage'
-import { MorePage }           from '../../features/more/pages/MorePage'
-
-import { LandingPage }     from '../../features/public/pages/LandingPage'
-import { SobrePage }       from '../../features/public/pages/SobrePage'
-import { TermosPage }      from '../../features/public/pages/TermosPage'
-import { PrivacidadePage } from '../../features/public/pages/PrivacidadePage'
-
-import { InvitePage } from '../../features/invites/pages/InvitePage'
-import { SecretShortcut, SecretPage, SECRET_PATH } from '../../shared/components/SecretTab'
-
+import { SecretShortcut, SECRET_PATH } from '../../shared/components/SecretTab'
 import { DevRoute }         from '../../features/dev/DevRoute'
-import { DevLayout }        from '../../features/dev/DevLayout'
-import { DevLoginPage }     from '../../features/dev/pages/DevLoginPage'
-import { DevOverviewPage }  from '../../features/dev/pages/DevOverviewPage'
-import { DevFeedbackPage }  from '../../features/dev/pages/DevFeedbackPage'
-import { DevUsersPage, DevUserPage } from '../../features/dev/pages/DevUsersPage'
-import { DevCampaignsPage, DevCampaignPage } from '../../features/dev/pages/DevCampaignsPage'
-import { DevErrorsPage }    from '../../features/dev/pages/DevErrorsPage'
+import { lazyPage, RouteFallback } from './lazyPage'
+
+const PrivateLayout      = lazyPage(() => import('../layouts/PrivateLayout'), 'PrivateLayout')
+const CampaignsPage      = lazyPage(() => import('../../features/campaigns/pages/CampaignsPage'), 'CampaignsPage')
+const NewCampaignPage    = lazyPage(() => import('../../features/campaigns/pages/NewCampaignPage'), 'NewCampaignPage')
+const CampaignAreaLayout = lazyPage(() => import('../../features/campaigns/pages/CampaignAreaLayout'), 'CampaignAreaLayout')
+const VortablePage       = lazyPage(() => import('../../features/vortable/pages/VortablePage'), 'VortablePage')
+const ProfilePage        = lazyPage(() => import('../../features/users/pages/ProfilePage'), 'ProfilePage')
+const MySheetsPage       = lazyPage(() => import('../../features/sheets/pages/MySheetsPage'), 'MySheetsPage')
+const GlobalActivityPage = lazyPage(() => import('../../features/activity/pages/GlobalActivityPage'), 'GlobalActivityPage')
+const LibraryPage        = lazyPage(() => import('../../features/library/pages/LibraryPage'), 'LibraryPage')
+const MyBestiaryPage     = lazyPage(() => import('../../features/bestiary/pages/MyBestiaryPage'), 'MyBestiaryPage')
+const GalleryPage        = lazyPage(() => import('../../features/mesa/pages/GalleryPage'), 'GalleryPage')
+const NewsPage           = lazyPage(() => import('../../features/news/pages/NewsPage'), 'NewsPage')
+const HelpPage           = lazyPage(() => import('../../features/help/pages/HelpPage'), 'HelpPage')
+const FeedbackPage       = lazyPage(() => import('../../features/feedback/pages/FeedbackPage'), 'FeedbackPage')
+const MorePage           = lazyPage(() => import('../../features/more/pages/MorePage'), 'MorePage')
+
+const SobrePage       = lazyPage(() => import('../../features/public/pages/SobrePage'), 'SobrePage')
+const TermosPage      = lazyPage(() => import('../../features/public/pages/TermosPage'), 'TermosPage')
+const PrivacidadePage = lazyPage(() => import('../../features/public/pages/PrivacidadePage'), 'PrivacidadePage')
+const InvitePage      = lazyPage(() => import('../../features/invites/pages/InvitePage'), 'InvitePage')
+const SecretPage      = lazyPage(() => import('../../shared/components/SecretTab'), 'SecretPage')
+
+const DevLayout        = lazyPage(() => import('../../features/dev/DevLayout'), 'DevLayout')
+const DevLoginPage     = lazyPage(() => import('../../features/dev/pages/DevLoginPage'), 'DevLoginPage')
+const DevOverviewPage  = lazyPage(() => import('../../features/dev/pages/DevOverviewPage'), 'DevOverviewPage')
+const DevFeedbackPage  = lazyPage(() => import('../../features/dev/pages/DevFeedbackPage'), 'DevFeedbackPage')
+const DevUsersPage     = lazyPage(() => import('../../features/dev/pages/DevUsersPage'), 'DevUsersPage')
+const DevUserPage      = lazyPage(() => import('../../features/dev/pages/DevUsersPage'), 'DevUserPage')
+const DevCampaignsPage = lazyPage(() => import('../../features/dev/pages/DevCampaignsPage'), 'DevCampaignsPage')
+const DevCampaignPage  = lazyPage(() => import('../../features/dev/pages/DevCampaignsPage'), 'DevCampaignPage')
+const DevErrorsPage    = lazyPage(() => import('../../features/dev/pages/DevErrorsPage'), 'DevErrorsPage')
 
 export function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <SecretShortcut />
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* ── Aba secreta (Ctrl+Ç): sem layout, sem login, sem link no site ── */}
         <Route path={SECRET_PATH} element={<SecretPage />} />
@@ -100,6 +107,7 @@ export function AppRouter() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

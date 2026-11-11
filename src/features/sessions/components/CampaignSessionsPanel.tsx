@@ -17,6 +17,7 @@ import { Presence } from '../../../shared/components/Presence'
 import { Select } from '../../../shared/components/Select'
 import './CampaignSessionsPanel.css'
 import { Loader } from '../../../shared/components/Loader'
+import { SessionRecap } from './SessionRecap'
 
 // ────────────────────────────────────────────────────────
 // Props
@@ -334,6 +335,9 @@ function SessionCard({
       {session.summary && (
         <p className="session-card__summary">{session.summary}</p>
       )}
+
+      {/* episódio concluído e com data: as rolagens daquele dia, sob demanda */}
+      <SessionRecap session={session} />
     </div>
   )
 }

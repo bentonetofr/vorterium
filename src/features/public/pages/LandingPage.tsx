@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { AppLogo } from '../../../shared/components/AppLogo'
+import { LandingShowcase } from './LandingShowcase'
 import './PublicPages.css'
 
 const FEATURES = [
@@ -20,7 +21,7 @@ export function LandingPage() {
     <div className="landing">
 
       {/* ── Hero ── */}
-      <section className="landing__hero">
+      <section className="landing__hero landing__hero--showcase">
         <div className="landing__logo anim-rise" style={step(0)}>
           <span className="landing__logo-halo" aria-hidden="true" />
           <AppLogo size="lg" className="anim-float" />
@@ -38,9 +39,7 @@ export function LandingPage() {
           <Link to="/cadastro" className="btn btn-ghost">Criar conta</Link>
         </div>
         <Link to="/sobre" className="landing__more-link anim-rise" style={step(5)}>Saiba mais sobre o projeto</Link>
-        <a href="#features-heading" className="landing__scroll-hint anim-rise" style={step(7)} aria-label="Ver os recursos">
-          <span aria-hidden="true" />
-        </a>
+        <LandingShowcase />
       </section>
 
       {/* ── Recursos disponíveis ── */}

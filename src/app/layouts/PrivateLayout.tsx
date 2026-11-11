@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider'
 import { SettingsButton } from '../../features/settings/SettingsButton'
@@ -7,6 +7,8 @@ import { useObserver } from '../../shared/lib/observer'
 import { AppLogo }     from '../../shared/components/AppLogo'
 import { AvatarImage } from '../../shared/components/AvatarImage'
 import { NavIcon } from '../../shared/components/NavIcon'
+import { PageFallback } from '../router/lazyPage'
+import { SearchPalette, openSearch } from '../../features/search/SearchPalette'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { DndWatchRolls }      from '../../features/sheets/dnd/rolls/DndWatchRolls'
@@ -46,6 +48,7 @@ import { FabToasts } from '../../shared/components/FabToasts'
 import { Collapse } from '../../shared/components/Collapse'
 import { COMPACT_QUERY, useMediaQuery } from '../../shared/lib/useMediaQuery'
 import { useOpenFloatingPanel } from '../../shared/lib/floatingPanels'
+import { useScrollingDown } from '../../shared/lib/useScrollingDown'
 import { useUnseenChangelog } from '../../shared/constants/changelog'
 import { SITE_NAV, TOOL_NAV, pageLabel, type NavItem } from '../navigation'
 import './PrivateLayout.css'
@@ -100,6 +103,8 @@ function PrivateLayoutContent() {
   const [toolsOpen, setToolsOpen] = useState(false)
   const panelOpen = useOpenFloatingPanel()
   const toolsFolded = compact && !toolsOpen && !panelOpen
+  // lendo (descendo a página) com as ferramentas fechadas: o botão encolhe pro canto e para de tapar o conteúdo
+  const toolsTucked = useScrollingDown(toolsFolded) && toolsFolded
   const unreadTotal = chatUnread + privateUnread
   const location = useLocation()
   const unseenNews = useUnseenChangelog()
@@ -125,6 +130,13 @@ function PrivateLayoutContent() {
   // caminho — dentro de uma campanha (/campanhas/:id/...) quem anima a
   // troca de seção é o próprio CampaignAreaLayout.
   const pageKey = location.pathname.split('/').slice(0, 3).join('/')
+
+  // Conta criada pelo Google: copia a foto pro armazenamento do site, uma vez (ver adoptAvatar.ts).
+  const userId = user?.id
+  useEffect(() => {
+    if (!userId || observer) return
+    void import('../../features/users/services/adoptAvatar').then((m) => m.adoptExternalAvatar()).catch(() => {})
+  }, [userId, observer])
 
   // Menu da campanha (mobile) fecha sozinho ao sair da campanha.
   useEffect(() => { if (!campaign) setMobileCampaignMenuOpen(false) }, [campaign])
@@ -163,6 +175,12 @@ function PrivateLayoutContent() {
             </div>
           </Link>
         )}
+
+        <button type="button" className="sidebar__search" onClick={openSearch} aria-label="Buscar no Vorterium (Ctrl+K)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+          <span>Buscar</span>
+          <kbd className="cmdk__kbd">Ctrl K</kbd>
+        </button>
 
         <nav className="sidebar__nav">
           <NavLink
@@ -242,6 +260,9 @@ function PrivateLayoutContent() {
         <div className="topbar__row">
           <AppLogo size="sm" showText />
           <div className="topbar__actions">
+            <button type="button" className="topbar__search" onClick={openSearch} aria-label="Buscar no Vorterium">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+            </button>
             <SettingsButton />
             <button
               className="topbar__btn"
@@ -284,7 +305,10 @@ function PrivateLayoutContent() {
       <main className="private-layout__main">
         {observer && <ObserverGuard />}
         <div key={pageKey} className="private-layout__page anim-page">
-          <Outlet />
+          {/* a página chega sob demanda; enquanto isso a barra lateral fica no lugar */}
+          <Suspense fallback={<PageFallback />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 
@@ -308,6 +332,7 @@ function PrivateLayoutContent() {
         ))}
       </nav>
     </div>
+    {!observer && <SearchPalette />}
     {!observer && <CritWolf />}
     <DndWatchRolls />
     <AltheriumWatchRolls />
@@ -320,7 +345,7 @@ function PrivateLayoutContent() {
     {!observer && <LivroHost />}
     {!observer && <TorreHost />}
     {!observer && <QteOverlay />}
-    <div className={`dice-fab-wrapper${compact ? ` site-tools${toolsFolded ? ' site-tools--folded' : ''}` : ''}`}>
+    <div className={`dice-fab-wrapper${compact ? ` site-tools${toolsFolded ? ' site-tools--folded' : ''}${toolsTucked ? ' site-tools--tucked' : ''}` : ''}`}>
       {!observer && (
         <FabToasts>
           <MesaLiveNotice />

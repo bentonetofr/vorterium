@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react'
+import { countdownLabel, daysUntil } from '../../sessions/utils/sessionCountdown'
 import {
   getMasterOverview,
   getPlayerOverview,
@@ -372,7 +373,13 @@ function MasterDashboard({
                   </span>
                 )}
                 {data.nextPlannedSession?.session_date && (
-                  <span>{formatDateShort(data.nextPlannedSession.session_date)}</span>
+                  <span>
+                    {formatDateShort(data.nextPlannedSession.session_date)}
+                    {' · '}
+                    <strong className={`ov-stat__countdown${daysUntil(data.nextPlannedSession.session_date) === 0 ? ' ov-stat__countdown--today' : ''}`}>
+                      {countdownLabel(data.nextPlannedSession.session_date)}
+                    </strong>
+                  </span>
                 )}
               </>
             )}
@@ -467,7 +474,13 @@ function PlayerDashboard({
                   </span>
                 )}
                 {data.nextPlannedSession?.session_date && (
-                  <span>{formatDateShort(data.nextPlannedSession.session_date)}</span>
+                  <span>
+                    {formatDateShort(data.nextPlannedSession.session_date)}
+                    {' · '}
+                    <strong className={`ov-stat__countdown${daysUntil(data.nextPlannedSession.session_date) === 0 ? ' ov-stat__countdown--today' : ''}`}>
+                      {countdownLabel(data.nextPlannedSession.session_date)}
+                    </strong>
+                  </span>
                 )}
               </>
             )}

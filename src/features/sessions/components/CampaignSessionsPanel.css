@@ -421,3 +421,55 @@
 .sessions-filter-btn--active .sessions-filter-btn__count { animation: m-bump 320ms var(--ease-spring) backwards; }
 .session-card__title { transition: color var(--motion-fast) ease; }
 @media (hover: hover) { .session-card:hover .session-card__title { color: var(--accent-bright); } }
+
+/* ── Resumo do dia (rolagens do episódio concluído) ── */
+.session-recap { margin-top: var(--space-3); border-top: 1px solid var(--border-dim); }
+.session-recap__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: var(--cursor-hand);
+  list-style: none;
+  transition: color var(--motion-fast) ease;
+}
+.session-recap__summary::-webkit-details-marker { display: none; }
+.session-recap__summary:hover,
+.session-recap[open] .session-recap__summary { color: var(--accent-bright); }
+.session-recap__icon { font-size: var(--text-xs); }
+.session-recap__chevron { margin-left: auto; color: var(--text-muted); transition: transform 320ms var(--ease-spring); }
+.session-recap[open] .session-recap__chevron { transform: rotate(180deg); }
+.session-recap__body { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-3); }
+.session-recap__empty { margin: 0; font-size: var(--text-sm); color: var(--text-muted); }
+.session-recap__stats { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
+.session-recap__stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 96px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-void);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.session-recap__stats dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.session-recap__stats dd { margin: 0; font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.1; color: var(--text-primary); }
+.session-recap__stats dd.session-recap__time { font-family: var(--font-body); font-size: var(--text-sm); font-weight: 600; line-height: 1.7; }
+.session-recap__best { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+.session-recap__best strong { color: var(--text-primary); font-weight: 600; }
+.session-recap__players { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.session-recap__players li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px 3px 10px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+}
+.session-recap__players b { min-width: 22px; padding: 1px 6px; text-align: center; font-weight: 700; color: var(--text-primary); background: var(--bg-void); border-radius: 5px; }

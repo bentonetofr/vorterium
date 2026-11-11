@@ -1,19 +1,32 @@
 {
   "name": "Vorterium",
   "short_name": "Vorterium",
+  "description": "Campanhas de RPG: fichas, dados, chat, quadro da campanha e mesa ao vivo.",
+  "lang": "pt-BR",
+  "id": "/",
+  "start_url": "/campanhas",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0b1326",
+  "background_color": "#0b1326",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "theme_color": "#0b1326",
-  "background_color": "#0b1326",
-  "display": "standalone"
+  "shortcuts": [
+    { "name": "Campanhas", "url": "/campanhas" },
+    { "name": "Minhas fichas", "url": "/minhas-fichas" }
+  ]
 }

@@ -6,6 +6,8 @@ import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../.
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import type { CampaignWithRole } from '../../../shared/types'
 import { DeleteCampaignModal } from '../components/DeleteCampaignModal'
+import { CampaignsResume } from '../components/CampaignsResume'
+import { FirstSteps } from '../components/FirstSteps'
 import './CampaignPages.css'
 import { Loader } from '../../../shared/components/Loader'
 import { confirmDialog } from '../../../shared/components/dialogs'
@@ -139,7 +141,10 @@ export function CampaignsPage() {
         <div className="page__feedback page__feedback--error" role="alert">{error}</div>
       )}
 
-      {!loading && !error && !showArchived && active.length === 0 && (
+      {/* conta nova, sem campanha nenhuma (nem arquivada): o guia de primeiros passos */}
+      {!loading && !error && !showArchived && campaigns.length === 0 && <FirstSteps />}
+
+      {!loading && !error && !showArchived && active.length === 0 && campaigns.length > 0 && (
         <div className="page__empty animate-fade-up">
           <div className="page__empty-icon" aria-hidden="true">◈</div>
           <h3 className="page__empty-title">Nenhuma campanha ainda</h3>
@@ -148,6 +153,10 @@ export function CampaignsPage() {
             Criar campanha
           </Link>
         </div>
+      )}
+
+      {!loading && !error && !showArchived && active.length > 0 && user && (
+        <CampaignsResume userId={user.id} campaigns={active} />
       )}
 
       {!loading && !error && !showArchived && active.length > 0 && (

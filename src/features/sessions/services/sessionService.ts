@@ -1,6 +1,7 @@
 import { supabase } from '../../../shared/lib/supabase'
 import { logActivity } from '../../activity/services/activityService'
 import type { CampaignSession } from '../../../shared/types'
+import { localToday } from '../utils/sessionCountdown'
 
 // ────────────────────────────────────────────────────────
 // Tipos e helpers de status
@@ -75,6 +76,26 @@ export async function getCampaignSessions(
     .order('created_at',   { ascending: false })
 
   if (error) throw new Error('Não foi possível carregar as sessões.')
+  return (data ?? []) as CampaignSession[]
+}
+
+/**
+ * Próximas sessões marcadas (status "planejada", com data de hoje em diante)
+ * de várias campanhas de uma vez, da mais próxima pra mais distante.
+ * RLS garante que só entram as campanhas em que a pessoa participa.
+ */
+export async function getUpcomingSessions(campaignIds: string[], limit = 8): Promise<CampaignSession[]> {
+  if (campaignIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('campaign_sessions')
+    .select('*')
+    .in('campaign_id', campaignIds)
+    .eq('status', 'planned')
+    .gte('session_date', localToday())
+    .order('session_date', { ascending: true })
+    .limit(limit)
+
+  if (error) throw new Error('Não foi possível carregar as próximas sessões.')
   return (data ?? []) as CampaignSession[]
 }
 

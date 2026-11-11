@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { SITE_NAV, TOOL_NAV, type NavItem } from '../../../app/navigation'
 import { useUnseenChangelog } from '../../../shared/constants/changelog'
 import { NavIcon, hasNavIcon } from '../../../shared/components/NavIcon'
+import { useInstallApp } from '../../../shared/lib/installApp'
 import '../../../shared/theme/toolPage.css'
 import './MorePage.css'
 
@@ -15,6 +16,7 @@ export function MorePage() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
   const unseen = useUnseenChangelog()
+  const { state: installState, install } = useInstallApp()
 
   function renderGroup(title: string, items: NavItem[]) {
     return (
@@ -55,6 +57,26 @@ export function MorePage() {
       </div>
       {renderGroup('Ferramentas', TOOL_NAV)}
       {renderGroup('Vorterium', SITE_NAV)}
+
+      {/* Instalar como aplicativo: só aparece onde dá pra instalar e ainda não está instalado */}
+      {(installState === 'available' || installState === 'ios') && (
+        <section className="more-install">
+          <span className="more-install__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M12 7.5v7M9 11.8l3 3 3-3" />
+            </svg>
+          </span>
+          <div className="more-install__text">
+            <strong>Instalar o Vorterium</strong>
+            {installState === 'available'
+              ? <span>Vira um aplicativo na tela inicial, em tela cheia e sem a barra do navegador.</span>
+              : <span>No iPhone: toque em Compartilhar (o quadrado com a seta) e depois em "Adicionar à Tela de Início".</span>}
+          </div>
+          {installState === 'available' && (
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => { void install() }}>Instalar</button>
+          )}
+        </section>
+      )}
       <button
         type="button"
         className="btn btn-ghost more-signout"

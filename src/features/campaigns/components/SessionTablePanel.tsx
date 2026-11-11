@@ -13,6 +13,7 @@ import { useScreenShare } from '../../mesa/screen/ScreenShareProvider'
 import type { CampaignWithRole } from '../../../shared/types'
 import type { SessionSubTabId } from '../campaignSections'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../shared/components/TabIndicator'
+import { useSwipe } from '../../../shared/lib/useSwipe'
 import './SessionTablePanel.css'
 
 interface SessionTablePanelProps {
@@ -82,6 +83,15 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
     ...(hasRulebook(campaign.system) ? [{ id: 'livro' as const, label: 'Livro' }] : []),
   ]
 
+  // Celular: deslizar o dedo pro lado vai pra sub-aba vizinha (menos em cima
+  // da Mesa e de qualquer coisa que já arrasta — ver useSwipe).
+  const panelsRef = useRef<HTMLDivElement>(null)
+  useSwipe(panelsRef, (direction) => {
+    const index = subTabs.findIndex((t) => t.id === activeSubTab)
+    const next = subTabs[index + direction]
+    if (next) selectTab(next.id)
+  })
+
   return (
     <div className="session-table" style={{ '--tab-dir': tabDir } as CSSProperties}>
       <nav ref={tabsRef} className="session-table__subtabs campaign-tabs" role="tablist" aria-label="Sessão">
@@ -103,7 +113,7 @@ export function SessionTablePanel({ campaign, currentUserId }: SessionTablePanel
         <TabIndicator activeKey={activeSubTab} />
       </nav>
 
-      <div style={panelsStyle}>
+      <div ref={panelsRef} style={panelsStyle}>
       <div
         id="session-subtabpanel-mesa"
         role="tabpanel"

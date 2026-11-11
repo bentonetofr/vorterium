@@ -88,3 +88,33 @@
 }
 /* As entradas de baixo aparecem conforme a página rola. */
 .news-entry[data-reveal][data-revealed] { animation-duration: 560ms; }
+
+/* ── Versões anteriores, guardadas por mês ── */
+.news-archive { display: flex; flex-direction: column; gap: var(--space-2); }
+.news-month {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--motion-fast) ease;
+}
+.news-month[open] { border-color: var(--border-base); }
+.news-month__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: var(--cursor-hand);
+  list-style: none;
+}
+.news-month__summary::-webkit-details-marker { display: none; }
+.news-month__name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; color: var(--text-primary); transition: color var(--motion-fast) ease; }
+.news-month__summary:hover .news-month__name { color: var(--accent-bright); }
+.news-month__count { font-size: var(--text-sm); color: var(--text-secondary); }
+.news-month__range { font-size: var(--text-xs); color: var(--text-muted); }
+.news-month__chevron { margin-left: auto; color: var(--text-muted); transition: transform 320ms var(--ease-spring), color var(--motion-fast) ease; }
+.news-month[open] .news-month__chevron { transform: rotate(180deg); color: var(--accent-bright); }
+.news-timeline--month { padding: var(--space-2) var(--space-4) var(--space-4) calc(var(--space-4) + var(--space-6)); }
+.news-timeline--month::before { left: calc(var(--space-4) + 6px); top: var(--space-3); bottom: var(--space-5); animation: none; }
+.news-timeline--month .news-entry { background: var(--bg-elevated); }

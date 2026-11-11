@@ -248,3 +248,34 @@
     justify-content: center;
   }
 }
+
+/* ── Rolagens seguidas, juntas num bloco que abre ── */
+.gact-group { min-width: 0; }
+.gact-group__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  cursor: var(--cursor-hand);
+  list-style: none;
+}
+.gact-group__summary::-webkit-details-marker { display: none; }
+.gact-group__summary .gact-item__message { font-weight: 600; }
+.gact-group__more { font-size: var(--text-xs); color: var(--text-muted); transition: color var(--motion-fast) ease; }
+.gact-group__summary:hover .gact-group__more { color: var(--accent-bright); }
+.gact-group__chevron { display: inline-block; transition: transform 320ms var(--ease-spring); }
+.gact-group[open] .gact-group__chevron { transform: rotate(180deg); }
+.gact-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) 0 0 var(--space-3);
+  list-style: none;
+  border-left: 2px solid var(--border-dim);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.gact-group__list li { display: flex; justify-content: space-between; gap: var(--space-3); }
+.gact-group__list span { min-width: 0; overflow-wrap: anywhere; }
+.gact-group__list time { flex: none; font-size: var(--text-xs); color: var(--text-muted); }

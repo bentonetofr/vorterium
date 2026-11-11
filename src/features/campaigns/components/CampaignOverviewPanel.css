@@ -335,3 +335,7 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* quanto falta pra próxima sessão */
+.ov-stat__countdown { font-weight: 700; color: var(--text-primary); }
+.ov-stat__countdown--today { color: var(--accent-bright); }

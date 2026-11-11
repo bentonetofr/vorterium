@@ -16,6 +16,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.32',
+    date:    '2026-11-11',
+    title:   'Busca geral, continuar de onde parou e site mais rápido',
+    items: [
+      'O site abre bem mais rápido: cada página só baixa o que precisa quando você chega nela (antes vinha tudo de uma vez).',
+      'Busca geral: aperte Ctrl+K (ou o botão Buscar do menu; no celular, a lupa no topo) e ache campanhas, seções, fichas, episódios, notas e criaturas. As setas escolhem e o Enter abre.',
+      'Campanhas agora abre com "Continuar de onde parou": a última campanha que você abriu neste aparelho, com atalho direto pra onde estava, e as próximas sessões marcadas com a contagem (hoje, amanhã, em 5 dias). A visão geral da campanha também mostra quanto falta.',
+      'Conta nova, ainda sem campanha, vê os Primeiros passos: o caminho de quem vai mestrar e o de quem vai jogar.',
+      'Episódios concluídos e com data ganharam o "Resumo do dia": quantas rolagens, quem rolou e a maior do dia. As rolagens privadas não entram.',
+      'Atividade: rolagens, triunfos e atualizações de ficha seguidas viram um bloco só, que abre pra mostrar cada uma.',
+      'Novidades mostra as versões mais recentes e guarda as antigas por mês.',
+      'Página inicial com uma vitrine do site (no computador e no celular) logo abaixo dos botões de entrar.',
+      'Celular: o botão de ferramentas encolhe pro canto enquanto você desce a página e volta ao subir; na Sessão, dá pra trocar de aba deslizando o dedo pro lado; e em Mais apareceu "Instalar o Vorterium", pra usar o site como aplicativo.',
+      'A foto de quem entrou com o Google passa a ficar guardada no próprio site (é copiada uma vez), pra não sumir mais.',
+    ],
+  },
+  {
     version: '2.31',
     date:    '2026-11-11',
     title:   'Visual novo: mais moderno, no computador e no celular',

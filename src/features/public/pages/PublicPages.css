@@ -520,3 +520,145 @@ html.reveal-on .landing__step:not([data-revealed])::before { transform: scaleY(0
   .landing__actions { flex-direction: column; width: 100%; }
   .landing__actions .btn { width: 100%; justify-content: center; }
 }
+
+/* ═══ Vitrine da página inicial: o site em miniatura ═══ */
+.landing__hero--showcase { min-height: 0; padding-bottom: var(--space-12); gap: var(--space-4); }
+.showcase {
+  position: relative;
+  width: min(940px, 100%);
+  margin: var(--space-10) auto 0;
+  text-align: left;
+  pointer-events: none;
+  user-select: none;
+  font-family: var(--font-body);
+  --sc-line: var(--border-base);
+}
+.showcase em { font-style: normal; }
+.showcase i { font-style: normal; display: block; }
+
+.showcase__window {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--sc-line);
+  border-radius: 14px;
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.02), 0 0 120px -40px rgba(255, 193, 116, 0.22);
+}
+.showcase__chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: var(--bg-void); border-bottom: 1px solid var(--border-dim); }
+.showcase__chrome > i { width: 9px; height: 9px; border-radius: 50%; background: var(--border-base); }
+.showcase__url { margin-left: 10px; padding: 2px 12px; font-size: 11px; color: var(--text-muted); background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: 6px; }
+
+.showcase__app { display: grid; grid-template-columns: 54px minmax(0, 1fr); min-height: 330px; }
+.showcase__side { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0; background: color-mix(in srgb, var(--bg-void) 60%, transparent); border-right: 1px solid var(--border-dim); }
+.showcase__logo { width: 24px; height: 24px; margin-bottom: 6px; border-radius: 7px; background: var(--accent-bright); opacity: 0.9; }
+.showcase__nav { width: 34px; height: 30px; display: grid; place-items: center; color: var(--text-muted); border-radius: 8px; }
+.showcase__nav > i { display: none; }
+.showcase__nav--on { color: var(--accent-bright); background: var(--tint-active, rgba(255, 193, 116, 0.11)); }
+
+.showcase__main { display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 22px; min-width: 0; }
+.showcase__head { display: flex; align-items: center; gap: 14px; }
+.showcase__cover { flex: none; width: 96px; height: 58px; border-radius: 10px; border: 1px solid var(--border-dim); background: linear-gradient(135deg, #24406e, #6b3526 55%, #c08f3a); }
+.showcase__titles { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.showcase__titles strong { font-family: var(--font-display); font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em; color: var(--accent-bright); line-height: 1.1; }
+.showcase__chips { display: flex; gap: 6px; }
+.showcase__chips i { padding: 1px 8px; font-size: 10.5px; font-weight: 600; color: var(--text-secondary); background: var(--bg-overlay); border: 1px solid var(--border-dim); border-radius: 5px; }
+.showcase__chips .showcase__chip--gold { color: var(--accent-bright); background: transparent; border-color: transparent; padding-inline: 2px; }
+.showcase__chips .showcase__chip--ok { color: #6fcf8e; background: transparent; border-color: transparent; padding-inline: 2px; }
+
+.showcase__tabs { display: inline-flex; align-self: flex-start; gap: 2px; padding: 3px; background: var(--bg-void); border: 1px solid var(--border-dim); border-radius: 10px; }
+.showcase__tabs span { padding: 5px 14px; font-size: 11.5px; font-weight: 600; color: var(--text-muted); border-radius: 7px; }
+.showcase__tabs .showcase__tab--on { color: var(--accent-bright); background: var(--bg-overlay); }
+
+.showcase__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.showcase__card,
+.showcase__phone-card { display: flex; flex-direction: column; gap: 10px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: 10px; }
+.showcase__who { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.showcase__who > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.showcase__who strong { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
+.showcase__who em { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.showcase__face { flex: none; width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(140deg, hsl(var(--hue) 55% 62%), hsl(calc(var(--hue) + 40) 45% 32%)); border: 1px solid var(--border-base); }
+.showcase__bars { display: flex; flex-direction: column; gap: 5px; }
+.showcase__bar { position: relative; height: 5px; border-radius: 3px; background: var(--bg-void); overflow: hidden; }
+.showcase__bar::after { content: ""; position: absolute; inset: 0; border-radius: 3px; transform-origin: left center; transform: scaleX(var(--fill, 1)); }
+.showcase__bar--hp::after { background: #ff9d92; }
+.showcase__bar--mp::after { background: #5fe0c0; }
+/* as barras enchem quando a vitrine entra na tela */
+html.reveal-on .showcase:not([data-revealed]) .showcase__bar::after { transform: scaleX(0); }
+.showcase[data-revealed] .showcase__bar::after { animation: showcase-fill 1100ms var(--ease-out) 500ms backwards; }
+@keyframes showcase-fill { from { transform: scaleX(0); } }
+
+.showcase__order { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.showcase__order-title { margin-right: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.showcase__turn { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; font-size: 11px; color: var(--text-secondary); background: var(--bg-elevated); border: 1px solid var(--border-dim); border-radius: 7px; }
+.showcase__turn b { display: grid; place-items: center; min-width: 20px; height: 20px; font-size: 10.5px; font-weight: 700; color: var(--text-primary); background: var(--bg-void); border-radius: 5px; }
+.showcase__turn--now { color: var(--accent-bright); border-color: var(--accent-bright); }
+
+/* a rolagem pousada no canto: sobe e flutua */
+.showcase__roll {
+  position: absolute;
+  right: 22%;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px 9px 9px;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  box-shadow: 0 16px 34px -12px rgba(0, 0, 0, 0.7);
+  animation: m-float 5.5s ease-in-out 1.6s infinite;
+}
+.showcase[data-revealed] .showcase__roll { animation: m-pop-in 520ms var(--ease-spring) 1100ms backwards, m-float 5.5s ease-in-out 1.7s infinite; }
+.showcase__die { display: grid; place-items: center; width: 34px; height: 34px; color: var(--text-inverse); background: var(--accent-bright); border-radius: 9px; }
+.showcase__roll-text { display: flex; flex-direction: column; line-height: 1.25; }
+.showcase__roll-text em { font-size: 10.5px; color: var(--text-muted); }
+.showcase__roll-text strong { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.showcase__roll-text b { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--accent-bright); }
+
+/* o celular por cima, no canto direito */
+.showcase__phone {
+  position: absolute;
+  right: -14px;
+  bottom: -34px;
+  width: 168px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 9px 9px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-bright);
+  border-radius: 24px;
+  box-shadow: 0 34px 70px -22px rgba(0, 0, 0, 0.85), 0 0 0 4px rgba(4, 7, 16, 0.5);
+}
+.showcase[data-revealed] .showcase__phone { animation: showcase-phone-in 900ms var(--ease-out) 420ms backwards; }
+@keyframes showcase-phone-in { from { opacity: 0; transform: translateY(46px) rotate(4deg); } }
+.showcase__notch { position: absolute; top: 6px; left: 50%; width: 44px; height: 5px; margin-left: -22px; border-radius: 3px; background: var(--border-base); }
+.showcase__phone-cover { display: flex; align-items: flex-end; height: 62px; padding: 7px 9px; border-radius: 12px; background: linear-gradient(180deg, rgba(6, 14, 32, 0) 30%, rgba(6, 14, 32, 0.75)), linear-gradient(135deg, #24406e, #6b3526 55%, #c08f3a); }
+.showcase__phone-cover strong { font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: -0.015em; color: #ffd9a6; line-height: 1.1; }
+.showcase__phone-card { gap: 8px; padding: 9px; border-radius: 10px; }
+.showcase__phone-card--chat { gap: 3px; font-size: 10.5px; line-height: 1.35; color: var(--text-secondary); }
+.showcase__phone-card--chat em { font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-bright); }
+.showcase__dock { display: flex; justify-content: space-around; padding: 5px; margin-top: 2px; background: var(--bg-surface); border: 1px solid var(--border-dim); border-radius: 12px; }
+.showcase__dock span { display: grid; place-items: center; width: 30px; height: 22px; color: var(--text-muted); border-radius: 7px; }
+.showcase__dock .showcase__dock--on { color: var(--accent-bright); background: var(--tint-active, rgba(255, 193, 116, 0.11)); }
+
+@media (max-width: 760px) {
+  .showcase { margin-top: var(--space-8); }
+  .showcase__app { grid-template-columns: 40px minmax(0, 1fr); min-height: 0; }
+  .showcase__main { padding: 12px 12px 54px; gap: 10px; }
+  .showcase__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .showcase__cards > :nth-child(3), .showcase__order { display: none; }
+  .showcase__cover { width: 60px; height: 40px; }
+  .showcase__titles strong { font-size: 1.05rem; }
+  .showcase__url { display: none; }
+  .showcase__roll { right: auto; left: 52px; bottom: 10px; }
+  .showcase__phone { width: 128px; right: -6px; bottom: -26px; padding: 14px 7px 7px; border-radius: 20px; }
+  .showcase__phone-card--chat { display: none; }
+  .landing__hero--showcase { padding-bottom: var(--space-16); }
+}
+@media (max-width: 420px) {
+  .showcase__side { display: none; }
+  .showcase__app { grid-template-columns: minmax(0, 1fr); }
+  .showcase__tabs span { padding-inline: 9px; }
+  .showcase__roll { left: 10px; }
+}

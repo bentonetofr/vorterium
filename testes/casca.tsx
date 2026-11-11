@@ -5,23 +5,16 @@
 // estilos de verdade, sem login e sem banco. Serve pra conferir o visual
 // geral (tema escuro e claro, computador e celular) depois de mexer no
 // index.css, no motion.css ou no refine.css.
-// `?pagina=campanhas|campanha|ferramenta` troca o miolo; `?tema=light` abre no claro.
+// `?pagina=campanhas|campanha|ferramenta|novidades|primeiros` troca o miolo; `?tema=light` abre no claro.
 // ────────────────────────────────────────────────────────
 import { createRoot } from 'react-dom/client'
-import '../src/app/layouts/PrivateLayout.css'
-import '../src/features/campaigns/pages/CampaignPages.css'
-import '../src/features/campaigns/components/CampaignOverviewPanel.css'
-import '../src/features/campaigns/components/SessionTablePanel.css'
-import '../src/features/sheets/pages/MySheetsPage.css'
-import '../src/features/more/pages/MorePage.css'
-import '../src/shared/theme/toolPage.css'
-import '../src/index.css'
-import '../src/shared/theme/motion.css'
-import '../src/shared/theme/refine.css'
-import '../src/shared/theme/touch.css'
+import '../src/styles' // todo o CSS do site, na ordem do site
 import { AppLogo } from '../src/shared/components/AppLogo'
 import { NavIcon } from '../src/shared/components/NavIcon'
 import { SITE_NAV, TOOL_NAV } from '../src/app/navigation'
+import { NewsPage } from '../src/features/news/pages/NewsPage'
+import { FirstSteps } from '../src/features/campaigns/components/FirstSteps'
+import { MemoryRouter } from 'react-router-dom'
 
 const params = new URLSearchParams(location.search)
 const pagina = params.get('pagina') ?? 'campanhas'
@@ -287,7 +280,11 @@ function Casca() {
         <Topbar />
         <main className="private-layout__main">
           <div className="private-layout__page">
-            {pagina === 'campanha' ? <Campanha /> : pagina === 'ferramenta' ? <Ferramenta /> : <Campanhas />}
+            {pagina === 'campanha' ? <Campanha />
+              : pagina === 'ferramenta' ? <Ferramenta />
+              : pagina === 'novidades' ? <NewsPage />
+              : pagina === 'primeiros' ? <div className="page"><FirstSteps /></div>
+              : <Campanhas />}
           </div>
         </main>
         <nav className="bottom-nav">
@@ -309,4 +306,4 @@ function Casca() {
   )
 }
 
-createRoot(document.getElementById('root')!).render(<Casca />)
+createRoot(document.getElementById('root')!).render(<MemoryRouter><Casca /></MemoryRouter>)

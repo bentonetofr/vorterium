@@ -65,3 +65,18 @@
 }
 .more-link:active .more-link__chevron { transform: translateX(6px); color: var(--accent-bright); }
 .more-link__dot { color: var(--danger-bright); animation: m-ping 1.8s var(--ease-out) infinite; }
+
+/* Instalar como aplicativo */
+.more-install {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--tint-active);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  animation: m-item-in 420ms var(--ease-out) backwards;
+}
+.more-install__icon { flex: none; display: grid; place-items: center; width: 36px; height: 36px; color: var(--accent-bright); background: var(--bg-surface); border-radius: var(--radius-md); }
+.more-install__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--text-xs); line-height: 1.45; color: var(--text-secondary); }
+.more-install__text strong { font-size: var(--text-md); font-weight: 600; color: var(--text-primary); }

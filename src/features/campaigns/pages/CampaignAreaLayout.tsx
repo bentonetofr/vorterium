@@ -20,6 +20,7 @@ import { PlayerNotesPanel }       from '../../notebook/components/PlayerNotesPan
 import { BoardPanel }             from '../../board/components/BoardPanel'
 import './CampaignPages.css'
 import { Loader } from '../../../shared/components/Loader'
+import { rememberCampaign } from '../../../shared/lib/lastCampaign'
 
 // ────────────────────────────────────────────────────────
 // Componente
@@ -58,6 +59,11 @@ export function CampaignAreaLayout() {
     load()
     return () => { cancelled = true }
   }, [campaignId, user, setCampaign])
+
+  // Lembra a campanha e a seção: a página Campanhas oferece "Continuar de onde parou".
+  useEffect(() => {
+    if (campaign && user && !campaign.observer) rememberCampaign(user.id, campaign.id, section)
+  }, [campaign, user, section])
 
   // Fecha o submenu da barra lateral ao sair da campanha.
   useEffect(() => () => setCampaign(null), [setCampaign])

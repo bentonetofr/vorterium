@@ -7,6 +7,7 @@ import {
   type ActivityWithCampaign,
 } from '../services/activityService'
 import { Select } from '../../../shared/components/Select'
+import { groupActivity, groupTitle } from '../utils/groupActivity'
 import './GlobalActivityPage.css'
 import { Loader } from '../../../shared/components/Loader'
 
@@ -50,6 +51,8 @@ export function GlobalActivityPage() {
   const filtered = filter === 'all'
     ? activities
     : activities.filter((a) => a.campaign_id === filter)
+  // rolagens seguidas da mesma pessoa viram um bloco só
+  const entries = useMemo(() => groupActivity(filtered), [filtered])
 
   return (
     <div className="gact-page">
@@ -116,7 +119,40 @@ export function GlobalActivityPage() {
       {/* ── Lista ── */}
       {!loading && !error && filtered.length > 0 && (
         <ul className="gact-list anim-stagger" role="list">
-          {filtered.map((item) => (
+          {entries.map((entry) => entry.kind === 'group' ? (
+            <li key={entry.key} className="gact-item gact-item--group">
+              <div className="gact-item__icon" aria-hidden="true">{ACTIVITY_ICONS[entry.items[0].type] ?? '◦'}</div>
+              <div className="gact-item__content">
+                <div className="gact-item__top">
+                  <span className="gact-item__campaign">{entry.items[0].campaign_name}</span>
+                  <time className="gact-item__time" dateTime={entry.items[0].created_at}>
+                    {formatActivityTime(entry.items[0].created_at)}
+                  </time>
+                </div>
+                <details className="gact-group anim-details">
+                  <summary className="gact-group__summary">
+                    <span className="gact-item__message">{groupTitle(entry.items[0].type, entry.items.length)}</span>
+                    <span className="gact-group__more">ver todas <span className="gact-group__chevron" aria-hidden="true">▾</span></span>
+                  </summary>
+                  <ul className="gact-group__list">
+                    {entry.items.map((item) => (
+                      <li key={item.id}>
+                        <span>{item.message}</span>
+                        <time dateTime={item.created_at}>{formatActivityTime(item.created_at)}</time>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+              <button
+                className="btn btn-ghost gact-item__btn"
+                onClick={() => navigate(`/campanhas/${entry.items[0].campaign_id}`)}
+                aria-label={`Abrir campanha ${entry.items[0].campaign_name}`}
+              >
+                Abrir campanha →
+              </button>
+            </li>
+          ) : [entry.item].map((item) => (
             <li key={item.id} className="gact-item">
               <div className="gact-item__icon" aria-hidden="true">
                 {ACTIVITY_ICONS[item.type] ?? '◦'}
@@ -138,7 +174,7 @@ export function GlobalActivityPage() {
                 Abrir campanha →
               </button>
             </li>
-          ))}
+          )))}
         </ul>
       )}
 
