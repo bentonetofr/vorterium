@@ -30,8 +30,8 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
-  background: linear-gradient(180deg, var(--bg-elevated), var(--bg-surface));
-  border: 1px solid var(--gilded);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
@@ -175,10 +175,10 @@
 }
 /* Pílula com o ícone da raiz / da gênesis antes do nome. */
 .alth-hero__select.select-trigger {
-  border-radius: 999px;
   background: var(--bg-overlay);
   padding-left: var(--space-3);
   padding-right: var(--space-3);
+  border-radius: var(--radius-md);
 }
 /* Os selos da Raiz e da Gênesis seguem a cor de destaque. */
 .alth-hero__field--raiz .alth-hero__select,
@@ -531,8 +531,8 @@
   color: var(--accent-bright);
   background: transparent;
   border: 1px solid var(--accent-dim, var(--border-base));
-  border-radius: 999px;
   cursor: var(--cursor-hand);
+  border-radius: var(--radius-md);
 }
 .alth-movement__auto:hover { background: var(--accent-glow); border-color: var(--accent); }
 .alth-hint {
@@ -551,23 +551,12 @@
   /* Seis abas: ocupam a largura toda e, se faltar lugar, quebram em duas linhas (nada fica cortado). */
   flex-wrap: wrap;
   overflow: visible;
-  border-color: var(--gilded);
-  box-shadow: var(--shadow-md);
 }
 .alth-sheet-tabs .campaign-tab {
   flex: 1 1 auto;
   justify-content: center;
   padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-  letter-spacing: 0.05em;
   white-space: nowrap;
-}
-.alth-sheet-tabs .campaign-tab--active {
-  box-shadow: 0 0 0 1px var(--gilded-bright), var(--shadow-glow);
-}
-/* Com o destaque deslizante, o contorno dourado vai junto com ele. */
-.alth-sheet-tabs > .tab-indicator {
-  box-shadow: 0 0 0 1px var(--gilded-bright), var(--shadow-glow);
 }
 
 .alth-tab-panel {
@@ -946,8 +935,6 @@
   font-family: var(--font-label);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--text-muted);
   background: none;
   border: none;
@@ -962,7 +949,7 @@
 /* "Mostrar mais": abre a lista toda de domínios (por padrão só os 10 mais usados). */
 .alth-doms__more {
   width: 100%; padding: 9px; background: none; border: 1px dashed var(--border-base); border-radius: var(--radius-md);
-  font-family: var(--font-label); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--font-label); font-size: var(--text-xs); font-weight: 700;
   color: var(--text-secondary); cursor: var(--cursor-hand);
   transition: border-color var(--transition-fast), color var(--transition-fast);
 }
@@ -1427,6 +1414,7 @@
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--gilded-bright);
+  border-radius: 6px;
 }
 .alth-triumph__desc {
   flex: 1;
@@ -1442,7 +1430,7 @@
   letter-spacing: 0.04em;
   color: var(--text-muted);
   border: 1px solid var(--border-dim);
-  border-radius: 999px;
+  border-radius: 6px;
 }
 .alth-triumph__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
 .alth-triumph__btn {
@@ -1450,8 +1438,6 @@
   font-family: var(--font-label);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   background: transparent;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
@@ -2004,20 +1990,19 @@
   gap: 2px;
   background: var(--bg-void);
   border: 1px solid var(--border-dim);
-  border-radius: 999px;
+  border-radius: var(--radius-md);
 }
 .alth-pilar-mode__btn {
   padding: 4px 12px;
   border: 0;
-  border-radius: 999px;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-label);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: 0.04em;
   cursor: var(--cursor-hand);
   transition: background var(--transition-fast), color var(--transition-fast);
+  border-radius: 6px;
 }
 .alth-pilar-mode__btn:hover:not(:disabled) { color: var(--text-primary); }
 .alth-pilar-mode__btn--active {
@@ -2171,13 +2156,13 @@
   bottom: -6px;
   min-width: 20px;
   padding: 1px 5px;
-  border-radius: 999px;
   background: var(--accent-bright);
   color: #2a1700;
   font-family: var(--font-label);
   font-size: 10px;
   font-weight: 800;
   text-align: center;
+  border-radius: 6px;
 }
 @keyframes alth-pcard-in {
   from { opacity: 0; transform: translateY(-14px) rotateY(80deg) scale(0.9); }
@@ -2618,9 +2603,9 @@
 
 /* Títulos da ficha na segunda fonte (Cinzel). */
 :where([class*="alth-"]) :is(h1, h2, h3, h4, h5, h6),
-:is(h1, h2, h3, h4, h5, h6):where([class*="alth-"]) { font-family: var(--font-rune); letter-spacing: 0.02em; }
+:is(h1, h2, h3, h4, h5, h6):where([class*="alth-"]) { font-family: var(--font-rune); letter-spacing: -0.012em; }
 
-/* Terceira fonte (Almendra): descrições e texto de sabor, não regras nem números. */
+/* Descrições e texto de sabor (não regras nem números): um ponto maiores, pra ler com calma. */
 .alth-attr-pop p:not([class]),
 .alth-genesis__text p,
 .alth-icard__note,

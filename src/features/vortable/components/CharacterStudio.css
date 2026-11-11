@@ -19,20 +19,18 @@
   max-width: 150px;
   padding: 4px 10px;
   font-family: var(--font-label);
-  font-size: 10px;
   font-weight: 600;
   line-height: 1.25;
-  letter-spacing: 0.04em;
   text-align: center;
-  text-transform: uppercase;
-  color: var(--accent-bright);
   background: var(--bg-void);
-  border: 1px solid var(--gilded);
-  border-radius: 999px;
   cursor: var(--cursor-hand);
   transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+  font-size: 11px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
 }
-.char-btn:hover { color: var(--text-primary); border-color: var(--gilded-bright); background: var(--bg-elevated); }
+.char-btn:hover { color: var(--accent-bright); border-color: var(--border-bright); background: var(--bg-elevated); }
 
 /* ── Movimento ── */
 .char-studio__host { animation: m-reveal-fade 420ms var(--ease-out) backwards; }

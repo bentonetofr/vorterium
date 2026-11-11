@@ -446,13 +446,13 @@
 .npc-section__count {
   min-width: 22px;
   padding: 0 6px;
-  border-radius: 999px;
   border: 1px solid var(--gilded);
   font-family: var(--font-label);
   font-size: var(--text-xs);
   line-height: 20px;
   text-align: center;
   color: var(--accent-bright);
+  border-radius: 6px;
 }
 .npc-section__hint {
   margin: 0;

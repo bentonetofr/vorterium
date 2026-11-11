@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.33',
+    date:    '2026-11-12',
+    title:   'Fichas no visual novo',
+    items: [
+      'As fichas de Altherium, D&D 5e, Terra Devastada e Vampiro entraram no visual novo do site: botões e rótulos em caixa normal (antes eram maiúsculas pequenas), peças de cor chapada no lugar dos degradês e cantos mais discretos nas etiquetas.',
+      'Altherium e D&D usam agora as mesmas fontes do resto do site (Fraunces nos títulos e números, Figtree no texto), no lugar das fontes próprias que cada ficha tinha. O vermelho do D&D e o dourado do Altherium continuam.',
+      'As abas da ficha de Altherium perderam o contorno dourado brilhante e seguem o mesmo estilo das abas do resto do site.',
+      'A ficha de Terra Devastada Adaptada mantém o estilo de menu de jogo que já tinha.',
+    ],
+  },
+  {
     version: '2.32',
     date:    '2026-11-11',
     title:   'Busca geral, continuar de onde parou e site mais rápido',

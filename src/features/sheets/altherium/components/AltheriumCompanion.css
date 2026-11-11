@@ -38,9 +38,10 @@
 
 .alth-pet__states { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
 .alth-pet__state {
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px;
+  font-family: var(--font-label); font-size: 11px; padding: 6px 14px;
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.14)); background: var(--bg-elevated); color: var(--text-secondary);
   cursor: var(--cursor-hand, pointer);
+  border-radius: var(--radius-md);
 }
 .alth-pet__state:disabled { cursor: default; }
 .alth-pet__state.is-on { color: var(--text-primary); }
@@ -79,8 +80,9 @@
 .alth-pet__in--name { flex: 1.3; font-weight: 600; }
 .alth-pet__in--use { flex: 1.2; }
 .alth-pet__chip {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+  font-family: var(--font-label); font-size: 10px; padding: 4px 10px;
   border: 1px solid var(--gilded-bright); color: var(--accent-bright); background: transparent; cursor: var(--cursor-hand, pointer); white-space: nowrap;
+  border-radius: var(--radius-md);
 }
 .alth-pet__chip.is-used { opacity: 0.55; text-decoration: line-through; }
 .alth-pet__x { border: 0; background: transparent; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: var(--cursor-hand, pointer); padding: 2px 6px; }
@@ -122,7 +124,7 @@
 .alth-pet__tile { background: var(--bg-elevated); border-radius: 10px; padding: 10px; text-align: center; min-width: 0; }
 .alth-pet__tile b { display: block; font-family: var(--font-display, var(--font-heading, serif)); font-size: 20px; color: var(--accent-bright); overflow-wrap: anywhere; }
 .alth-pet__tile small { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-.alth-pet__pill { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18)); color: var(--text-secondary); white-space: nowrap; }
+.alth-pet__pill { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 10px; border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18)); color: var(--text-secondary); white-space: nowrap; border-radius: 6px; }
 .alth-pet__grow { flex: 1; }
 .alth-pet__ability-name { font-size: 14px; }
 .alth-pet__ability-text { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }

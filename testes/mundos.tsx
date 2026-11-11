@@ -6,6 +6,7 @@ import { seedFakeDb } from './_ficha-viva-db'
 import { createRoot } from 'react-dom/client'
 import '../src/index.css'
 import '../src/shared/theme/motion.css'
+import '../src/shared/theme/refine.css'
 import '../src/shared/theme/touch.css'
 
 const params = new URLSearchParams(location.search)

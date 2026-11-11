@@ -7,6 +7,7 @@ import { seedFakeDb } from './_ficha-viva-db'
 import { createRoot } from 'react-dom/client'
 import '../src/index.css'
 import '../src/shared/theme/motion.css'
+import '../src/shared/theme/refine.css'
 import '../src/features/sheets/components/SheetPanel.css'
 import '../src/features/sheets/altherium/components/AltheriumSheet.css'
 

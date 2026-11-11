@@ -47,10 +47,11 @@
   --font-body:    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-label:   'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono:    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* Segunda fonte, só da ficha de Altherium: títulos e números grandes. */
-  --font-rune:    'Cinzel', 'EB Garamond', Georgia, serif;
-  /* Terceira fonte, só da ficha de Altherium: texto de sabor e a voz do mestre (caligráfica). */
-  --font-quill:   'Almendra', 'EB Garamond', Georgia, serif;
+  /* Ficha de Altherium: títulos e números grandes (--font-rune) e texto de
+     sabor (--font-quill). Eram Cinzel e Almendra; hoje são as fontes do
+     site, pra ficha não parecer de outro lugar. */
+  --font-rune:    var(--font-display);
+  --font-quill:   var(--font-body);
 
   /* Tamanhos */
   --text-xs:  0.75rem;
