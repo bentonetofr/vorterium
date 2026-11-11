@@ -6,6 +6,7 @@ import { ObserverGuard } from '../../features/dev/ObserverGuard'
 import { useObserver } from '../../shared/lib/observer'
 import { AppLogo }     from '../../shared/components/AppLogo'
 import { AvatarImage } from '../../shared/components/AvatarImage'
+import { NavIcon } from '../../shared/components/NavIcon'
 import { DiceRollerProvider } from '../../features/dice/DiceRollerProvider'
 import { DiceFab }            from '../../features/dice/components/DiceFab'
 import { DndWatchRolls }      from '../../features/sheets/dnd/rolls/DndWatchRolls'
@@ -72,12 +73,12 @@ export function PrivateLayout() {
 }
 
 const BOTTOM_NAV_ITEMS = [
-  { to: '/campanhas',     icon: '◈', label: 'Campanhas' },
-  { to: '/minhas-fichas', icon: '◎', label: 'Fichas' },
-  { to: '/atividade',     icon: '◉', label: 'Atividade' },
-  { to: '/perfil',        icon: '○', label: 'Perfil' },
+  { to: '/campanhas',     label: 'Campanhas' },
+  { to: '/minhas-fichas', label: 'Fichas' },
+  { to: '/atividade',     label: 'Atividade' },
+  { to: '/perfil',        label: 'Perfil' },
   // Biblioteca, Meu bestiário, Galeria, Novidades, Ajuda e Feedback.
-  { to: '/mais',          icon: '☰', label: 'Mais' },
+  { to: '/mais',          label: 'Mais' },
 ] as const
 
 /** Páginas que moram dentro do "Mais" no celular (acendem o botão dele). */
@@ -114,7 +115,7 @@ function PrivateLayoutContent() {
         state={item.to === '/feedback' ? { from: pageLabel(location.pathname, campaign?.name) } : undefined}
         className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
       >
-        <span className="sidebar__link-icon">{item.icon}</span>
+        <span className="sidebar__link-icon"><NavIcon to={item.to} /></span>
         {item.label}
         {item.to === '/novidades' && unseenNews && <span className="sidebar__dot" aria-label="novidade" />}
       </NavLink>
@@ -170,7 +171,7 @@ function PrivateLayoutContent() {
               `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
             }
           >
-            <span className="sidebar__link-icon">◈</span>
+            <span className="sidebar__link-icon"><NavIcon to="/campanhas" /></span>
             Campanhas
           </NavLink>
           <Collapse open={!!campaign}>
@@ -190,7 +191,7 @@ function PrivateLayoutContent() {
               `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
             }
           >
-            <span className="sidebar__link-icon">◎</span>
+            <span className="sidebar__link-icon"><NavIcon to="/minhas-fichas" /></span>
             Minhas fichas
           </NavLink>
           <NavLink
@@ -199,7 +200,7 @@ function PrivateLayoutContent() {
               `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
             }
           >
-            <span className="sidebar__link-icon">◉</span>
+            <span className="sidebar__link-icon"><NavIcon to="/atividade" /></span>
             Atividade
           </NavLink>
           <NavLink
@@ -208,7 +209,7 @@ function PrivateLayoutContent() {
               `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
             }
           >
-            <span className="sidebar__link-icon">○</span>
+            <span className="sidebar__link-icon"><NavIcon to="/perfil" /></span>
             Perfil
           </NavLink>
 
@@ -299,7 +300,7 @@ function PrivateLayoutContent() {
               `bottom-nav__link${isActive || (item.to === '/mais' && inMore) ? ' bottom-nav__link--active' : ''}`}
           >
             <span className="bottom-nav__icon" aria-hidden="true">
-              {item.icon}
+              <NavIcon to={item.to} size={22} />
               {item.to === '/mais' && unseenNews && <span className="bottom-nav__dot" aria-label="novidade" />}
             </span>
             <span className="bottom-nav__label">{item.label}</span>

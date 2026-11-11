@@ -1,0 +1,565 @@
+/* ═══════════════════════════════════════════════════════════
+   VORTERIUM — Acabamento
+   A camada que dá profundidade e fluidez ao visual: fundo com uma luz
+   suave, superfícies em camadas, cabeçalhos com um fio dourado, abas e
+   menus limpos e a navegação do celular (barra de vidro em cima, doca
+   flutuante embaixo, capa da campanha de fora a fora).
+
+   Regras da casa: cor chapada (nada de degradê em botão, aba ou item de
+   menu), cantos discretos, bordas neutras finas e o dourado só como
+   acento. Vem depois do index.css e do motion.css (main.tsx), então vale
+   por cima dos estilos de cada tela quando a força do seletor empata.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* luz bem leve que vem de cima nas superfícies */
+  --surface-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.028) 0%, rgba(255, 255, 255, 0) 52%);
+  --surface-edge:  inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-card:   0 1px 2px rgba(0, 0, 0, 0.28), 0 12px 28px -18px rgba(0, 0, 0, 0.6);
+  --shadow-float:  0 24px 54px -16px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.3);
+  /* fio dourado que some pra direita (só enfeite de cabeçalho) */
+  --hairline-gold: linear-gradient(90deg, var(--gilded-bright) 0%, var(--gilded) 18%, var(--border-dim) 50%, transparent 100%);
+  /* vidro fosco das barras e janelas flutuantes */
+  --glass-bg:      color-mix(in srgb, var(--bg-surface) 74%, transparent);
+  --glass-blur:    blur(20px) saturate(1.3);
+  /* realce chapado de "este é o item ativo" */
+  --tint-active:   rgba(255, 193, 116, 0.11);
+  --tint-hover:    rgba(198, 210, 245, 0.06);
+}
+
+[data-theme="light"] {
+  --surface-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 55%);
+  --surface-edge:  inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --shadow-card:   0 1px 2px rgba(80, 55, 10, 0.1), 0 12px 26px -18px rgba(80, 55, 10, 0.34);
+  --shadow-float:  0 24px 46px -18px rgba(60, 40, 5, 0.4), 0 2px 8px rgba(60, 40, 5, 0.12);
+  --glass-bg:      color-mix(in srgb, var(--bg-base) 80%, transparent);
+  --tint-active:   rgba(176, 122, 0, 0.13);
+  --tint-hover:    rgba(90, 60, 10, 0.06);
+}
+
+/* ── Texto ───────────────────────────────────────────────── */
+
+h1, h2, h3, h4 { text-wrap: balance; }
+p { text-wrap: pretty; }
+::selection { background: rgba(255, 193, 116, 0.3); color: var(--text-primary); }
+
+/* Quem anda pelo teclado enxerga onde está. */
+:where(a, button, summary, [role="button"], [role="tab"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+/* Barra de rolagem fina e arredondada. */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-base);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--border-bright); background-clip: padding-box; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Fundo com luz (área logada) ─────────────────────────── */
+
+/* O fundo fica numa camada fixa atrás de tudo: um clarão quente no alto
+   à direita, um azul frio embaixo à esquerda e um grão bem leve. A página
+   rola por cima; a luz fica parada. (z-index negativo: não cria camada
+   nova pro conteúdo — janelas e painéis fixos continuam como estavam.) */
+.private-layout { background: transparent; }
+.private-layout::before,
+.private-layout::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.private-layout::before {
+  background:
+    radial-gradient(1100px 640px at 94% -16%, rgba(255, 193, 116, 0.085), transparent 62%),
+    radial-gradient(900px 620px at 2% 114%, rgba(84, 120, 220, 0.14), transparent 60%);
+}
+.private-layout::after {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+[data-theme="light"] .private-layout::before {
+  background:
+    radial-gradient(1100px 640px at 94% -16%, rgba(255, 255, 255, 0.55), transparent 62%),
+    radial-gradient(900px 620px at 2% 114%, rgba(176, 122, 0, 0.09), transparent 60%);
+}
+
+/* ── Barra lateral ───────────────────────────────────────── */
+
+.sidebar {
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-right-color: var(--border-dim);
+}
+.sidebar__brand { border-bottom-color: transparent; padding-bottom: var(--space-4); }
+
+/* A conta vira um cartãozinho. */
+.sidebar__user {
+  margin: 0 var(--space-3) var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  background-color: var(--tint-hover);
+  transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+.sidebar__user--link:hover { background-color: rgba(198, 210, 245, 0.1); border-color: var(--border-base); }
+.sidebar__user-email { letter-spacing: 0; }
+
+.sidebar__link {
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+.sidebar__link:hover { background: var(--tint-hover); border-color: transparent; }
+.sidebar__link--active,
+.sidebar__link--active:hover {
+  color: var(--accent-bright);
+  background: var(--tint-active);
+  border-color: transparent;
+  font-weight: 600;
+}
+.sidebar__link-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.nav-icon { display: block; }
+.sidebar__group { opacity: 1; color: var(--text-muted); letter-spacing: 0.1em; margin-left: var(--space-3); }
+.sidebar__footer { border-top-color: var(--border-dim); }
+.sidebar__legal-link { letter-spacing: 0; }
+.campaign-submenu__item { letter-spacing: 0; font-size: 0.8125rem; }
+.campaign-submenu__item:hover { background: var(--tint-hover); }
+.campaign-submenu__item--active { background: var(--tint-active); }
+
+/* ── Superfícies (cartões e painéis do site inteiro) ─────── */
+
+/* O mesmo cartão de sempre, com uma luz leve no alto e sombra embaixo. */
+.card, .section-card, .campaign-card, .campaign-card-row, .mcard, .tool-card, .campaign-area__card,
+.session-card, .note-card, .member-card, .members-block, .my-sheet-card, .settings-panel,
+.profile-card, .news-entry, .help-topic, .more-list, .feedback-item, .ov-stat, .ov-description,
+.lore-card, .bestiary-party, .creature-form, .creature-card, .sheet-panel, .vtm-card, .rulebook,
+.session-form, .gact-item, .landing__feature-card, .landing__role-block, .tool-page__empty, .page__empty {
+  background-image: var(--surface-sheen);
+}
+/* :where() = sem força: quem já define a própria sombra (ou a muda no
+   hover / quando abre) continua mandando. */
+:where(.card, .section-card, .campaign-card, .campaign-card-row, .mcard, .tool-card, .campaign-area__card,
+       .session-card, .note-card, .member-card, .members-block, .my-sheet-card, .settings-panel,
+       .profile-card, .news-entry, .help-topic, .more-list, .feedback-item, .ov-stat, .ov-description,
+       .lore-card, .bestiary-party, .creature-form, .creature-card, .sheet-panel, .vtm-card, .rulebook,
+       .session-form, .gact-item, .landing__feature-card, .landing__role-block) {
+  box-shadow: var(--surface-edge), var(--shadow-card);
+}
+
+/* ── Botões e campos ─────────────────────────────────────── */
+
+[data-theme="light"] .btn-ghost,
+[data-theme="light"] .secondary-button { background: rgba(255, 255, 255, 0.4); }
+[data-theme="light"] .btn-ghost:hover:not(:disabled),
+[data-theme="light"] .secondary-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.7); }
+
+.input, .form-field input, .form-field textarea, .form-field select { border-radius: var(--radius-md); }
+.input:hover:not(:focus):not(:disabled) { border-color: var(--border-bright); }
+.input:focus {
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 0 3px rgba(255, 193, 116, 0.16);
+}
+
+/* ── Cabeçalho das páginas ───────────────────────────────── */
+
+/* Embaixo do título, em vez da linha cinza, um fio dourado que começa
+   num losango e some pra direita. */
+.page__header,
+.tool-page__header,
+.my-sheets-page__header,
+.gact-page__header {
+  position: relative;
+  border-bottom: 0;
+  padding-bottom: var(--space-6);
+}
+.page__header::after,
+.tool-page__header::after,
+.my-sheets-page__header::after,
+.gact-page__header::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--hairline-gold);
+  pointer-events: none;
+}
+.page__header::before,
+.tool-page__header::before,
+.my-sheets-page__header::before,
+.gact-page__header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent-bright);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+/* Todas as páginas do menu ganham o mesmo título grande das Campanhas. */
+.page__title { letter-spacing: -0.02em; }
+.tool-page__title,
+.my-sheets-page__title,
+.gact-page__title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--accent-bright);
+}
+
+/* "← Campanhas": um botão discreto, do mesmo feitio dos outros. */
+.page__back {
+  padding: 7px 12px 7px 10px;
+  border-radius: var(--radius-md);
+  border-color: var(--border-base);
+  background: rgba(198, 210, 245, 0.04);
+  box-shadow: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.page__back:hover {
+  color: var(--accent-bright);
+  background: rgba(198, 210, 245, 0.09);
+  border-color: var(--border-bright);
+  box-shadow: none;
+}
+.page__back-arrow { font-size: var(--text-md); }
+
+/* Títulos de seção: o mesmo fio, mais curto. */
+.campaigns-section__title { position: relative; border-bottom: 0; letter-spacing: -0.015em; }
+.campaigns-section__title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--hairline-gold);
+}
+.campaigns-section__title-icon { color: var(--accent-bright); }
+
+/* ── Abas ────────────────────────────────────────────────── */
+
+/* Trilho afundado, aba ativa em relevo; nomes em caixa normal. */
+.campaign-tabs {
+  background: color-mix(in srgb, var(--bg-void) 70%, transparent);
+  border-color: var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+}
+.campaign-tab {
+  border-radius: var(--radius-md);
+  /* 13px e um pouco menos de respiro: as 8 abas da ficha de D&D cabem
+     numa linha sem rolar, como cabiam em maiúsculas pequenas */
+  padding-inline: var(--space-4);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.campaign-tab:hover:not(.campaign-tab--active) { background: var(--tint-hover); }
+.tab-indicator {
+  border-radius: var(--radius-md);
+  background: var(--bg-overlay);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ── Lista de campanhas ──────────────────────────────────── */
+
+.campaign-card-row { border-radius: var(--radius-xl); padding: var(--space-4); }
+.campaign-card-row:hover { border-color: var(--border-bright); }
+.campaign-card-row__cover { border-radius: var(--radius-lg); width: 112px; height: 70px; flex-basis: 112px; }
+.campaign-card-row__name { letter-spacing: -0.012em; }
+.campaign-card-row__enter { font-size: var(--text-sm); border-color: var(--border-base); }
+.campaign-card-row:hover .campaign-card-row__enter { border-color: var(--accent-bright); }
+.campaign-line__archive { border-radius: var(--radius-md); width: 42px; height: 42px; }
+
+/* ── Cabeçalho da campanha ───────────────────────────────── */
+
+.campaign-area__cover {
+  position: relative;
+  border-color: var(--border-base);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.65);
+}
+
+/* ── Página inicial ──────────────────────────────────────── */
+
+/* O nome do site maior e os dois botões de entrada com mais presença. */
+.landing__title { font-size: clamp(3rem, 8.5vw, 4.75rem); letter-spacing: -0.03em; line-height: 1.02; }
+.landing__tagline { letter-spacing: -0.015em; }
+.landing__actions .btn { padding: 13px 26px; font-size: var(--text-md); }
+.landing__feature-card { border-top-width: 1px; border-top-color: var(--border-dim); }
+.landing__feature-card:hover { border-top-color: var(--accent-bright); }
+.landing__feature-title { letter-spacing: 0.04em; color: var(--accent-bright); }
+.landing__section--alt, .landing__cta-section { background: color-mix(in srgb, var(--bg-elevated) 55%, transparent); }
+
+/* ── Janelas flutuantes ──────────────────────────────────── */
+
+.fab-panel {
+  border-radius: var(--radius-xl);
+  border-color: var(--border-base);
+  box-shadow: var(--shadow-float);
+}
+.modal-overlay { background: rgba(4, 7, 16, 0.62); -webkit-backdrop-filter: blur(10px) saturate(1.1); backdrop-filter: blur(10px) saturate(1.1); }
+[data-theme="light"] .modal-overlay { background: rgba(60, 44, 12, 0.32); }
+
+/* ── Estados vazios ──────────────────────────────────────── */
+
+.tool-page__empty, .page__empty, .my-sheets-page__empty, .gact-empty { border-radius: var(--radius-xl); }
+
+/* ═══════════════════════════════════════════════════════════
+   CELULAR E TABLET
+   Barra de cima fina de vidro, navegação de baixo como uma doca
+   flutuante, cabeçalho da campanha com a capa de fora a fora e páginas
+   com mais respiro.
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  /* ── Barra de cima ── */
+  .topbar {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-bottom-color: var(--border-dim);
+  }
+  .topbar__row { padding-block: 6px; min-height: 52px; }
+  .topbar .app-logo { gap: var(--space-2); }
+  .topbar .app-logo__img { width: 30px; height: 39px; }
+  .topbar .app-logo__text { font-size: var(--text-lg); }
+  .topbar__btn {
+    padding: 6px 10px;
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-md);
+    background: rgba(198, 210, 245, 0.04);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* campanha atual: um seletor que abre o menu das seções */
+  .topbar__campaign-row { border-top: 0; padding: 0 var(--space-4) var(--space-2); }
+  .topbar__campaign-toggle {
+    padding: 8px 12px;
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-md);
+    background: rgba(198, 210, 245, 0.05);
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform 160ms var(--ease-spring);
+  }
+  .topbar__campaign-toggle:active { transform: scale(0.985); }
+  .topbar__campaign-toggle[aria-expanded="true"] { border-color: var(--accent-bright); }
+  .topbar__campaign-menu {
+    top: calc(100% + 2px);
+    left: var(--space-3);
+    right: var(--space-3);
+    border: 1px solid var(--border-base);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-float);
+    padding: var(--space-2);
+  }
+  .topbar__campaign-menu .campaign-submenu__item {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    min-height: 44px;
+  }
+
+  /* ── Páginas ── */
+  .page { padding: var(--space-5) var(--space-4); gap: var(--space-6); }
+  .tool-page, .my-sheets-page, .gact-page { padding: var(--space-5) var(--space-4); }
+  .page__title { font-size: clamp(1.6rem, 7.4vw, 2.1rem); line-height: 1.12; }
+  .tool-page__title, .my-sheets-page__title, .gact-page__title { font-size: clamp(1.5rem, 6.8vw, 1.875rem); }
+  .page__meta { font-size: var(--text-sm); }
+  .page__header { padding-bottom: var(--space-5); }
+  /* a doca já leva pra Campanhas: o "← Campanhas" solto no topo sai */
+  .page__header:not(.campaign-area__page-header) .page__back { display: none; }
+
+  /* botões do topo da lista de campanhas: lado a lado, o principal maior */
+  .campaigns-header-actions { width: 100%; flex-wrap: nowrap; }
+  .campaigns-header-actions > .btn { flex: 1 1 auto; min-width: 0; padding-inline: var(--space-3); }
+  .campaigns-header-actions > .btn-primary { flex: 1.6 1 auto; }
+
+  .campaigns-section__title { font-size: var(--text-xl); }
+
+  /* card de campanha */
+  .mcard { border-radius: var(--radius-xl); }
+  .mcard__head { padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3); }
+  .mcard__cover { flex-basis: 64px; width: 64px; height: 64px; border-radius: var(--radius-lg); }
+  .mcard__banner { height: 128px; border-radius: var(--radius-lg); }
+  .mcard--open { border-color: var(--border-bright); box-shadow: var(--surface-edge), 0 18px 36px -16px rgba(0, 0, 0, 0.65); }
+  .mcard__chev {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-md);
+    background: var(--tint-hover);
+  }
+
+  /* Atividade: o "Abrir campanha" vira um atalho pequeno no pé do cartão */
+  .gact-item__btn {
+    width: auto;
+    margin-left: 44px;
+    min-height: 34px;
+    padding: 6px 12px;
+  }
+
+  /* ── Botão das ferramentas ── */
+  .site-tools__toggle {
+    width: 52px;
+    height: 52px;
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-color: var(--border-base);
+    box-shadow: var(--shadow-float);
+  }
+  .site-tools__toggle--open { color: var(--text-inverse); background: var(--accent-bright); border-color: transparent; }
+}
+
+/* abas no celular: o nome cabe em caixa normal */
+@media (max-width: 600px) {
+  .campaign-tab__label { font-size: 0.8125rem; }
+}
+
+/* ── Doca de navegação (em pé; deitado com pouca altura continua barra) ── */
+@media (max-width: 900px) and (not ((max-height: 500px) and (orientation: landscape))) {
+  /* espaço que a doca ocupa embaixo: 60 da doca + folga (a regra do
+     teclado aberto, que zera a altura, é mais forte e continua valendo) */
+  :root { --bottom-nav-h: 72px; }
+  .bottom-nav {
+    left: max(10px, env(safe-area-inset-left, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    height: 60px;
+    padding: 0 6px;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-base);
+    border-radius: 18px;
+    box-shadow: var(--shadow-float);
+  }
+  .bottom-nav__link { gap: 3px; }
+  .bottom-nav__icon { display: grid; place-items: center; width: 48px; height: 28px; }
+  .bottom-nav__label { font-size: 10.5px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+
+  /* o destaque do ativo: um bloco chapado atrás do ícone, no lugar do
+     fio de cima */
+  .bottom-nav__link::before {
+    top: 7px;
+    left: 50%;
+    right: auto;
+    width: 48px;
+    height: 28px;
+    margin-left: -24px;
+    border-radius: var(--radius-md);
+    background: var(--tint-active);
+    box-shadow: none;
+    transform: scale(0.6);
+    opacity: 0;
+    transition: transform 360ms var(--ease-spring), opacity var(--motion-base) ease;
+  }
+  .bottom-nav__link--active::before { transform: scale(1); opacity: 1; }
+  .bottom-nav__link--active .bottom-nav__icon { transform: none; }
+  .bottom-nav__link:active .bottom-nav__icon { transform: scale(0.86); }
+  .bottom-nav__dot { top: 1px; right: 8px; }
+
+  /* o conteúdo termina acima da doca e dos botões do canto */
+  .private-layout__main { padding-bottom: calc(var(--bottom-nav-h) + 72px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── Cabeçalho da campanha no celular: a capa de fora a fora ── */
+@media (max-width: 600px) and (not ((max-height: 500px) and (orientation: landscape))) {
+  .campaign-area__page-header {
+    display: block;
+    padding-bottom: var(--space-4);
+  }
+  .campaign-area__cover {
+    width: 100%;
+    height: 148px;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+  }
+  /* a capa escurece embaixo pra receber o nome */
+  .campaign-area__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(6, 14, 32, 0.38) 0%, rgba(6, 14, 32, 0) 34%, rgba(6, 14, 32, 0.55) 68%, var(--bg-base) 100%);
+    pointer-events: none;
+  }
+  [data-theme="light"] .campaign-area__cover::after {
+    background: linear-gradient(180deg, rgba(40, 28, 6, 0.28) 0%, rgba(40, 28, 6, 0) 34%, rgba(245, 238, 216, 0.6) 72%, var(--bg-base) 100%);
+  }
+  .campaign-area__cover--empty { font-size: var(--text-4xl); }
+  /* "← Campanhas" pousa em cima da capa */
+  .campaign-area__page-header .page__back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+    margin: 0;
+    color: #e8ecfa;
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(6, 14, 32, 0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  /* nome e etiquetas sobem pra cima do pé da capa */
+  .campaign-area__page-header > div:last-child {
+    margin-top: -46px;
+    padding: 0 var(--space-3);
+  }
+  /* (o bloco não é posicionado, pra "← Campanhas" se ancorar no cabeçalho
+     inteiro; quem precisa ficar por cima da capa são o nome e as etiquetas) */
+  .campaign-area__page-header .page__title,
+  .campaign-area__page-header .campaign-area__header-meta { position: relative; z-index: 1; }
+  .campaign-area-page .page__title { filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55)); }
+  [data-theme="light"] .campaign-area-page .page__title { filter: none; }
+  /* as etiquetas ficam logo abaixo da borda da capa, sem pisar nela */
+  .campaign-area__header-meta { margin-top: var(--space-3); }
+}
+
+/* ── Páginas públicas no celular ─────────────────────────── */
+@media (max-width: 600px) {
+  /* o cartão de login não fica embaixo do botão de configurações do canto */
+  .public-layout__main:not(.public-layout__main--landing) { padding-top: calc(var(--space-16) + env(safe-area-inset-top, 0px)); align-items: flex-start; }
+  .auth-card { padding: var(--space-6) var(--space-5); }
+  .public-layout__footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px)); }
+}

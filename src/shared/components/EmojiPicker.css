@@ -23,7 +23,7 @@ em-emoji-picker {
   --rgb-accent: 255, 193, 116;
   --color-border: rgba(212, 175, 55, 0.22);
   --color-border-over: rgba(212, 175, 55, 0.45);
-  --font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-family: 'Figtree', system-ui, sans-serif;
   --border-radius: 12px;
   --shadow: none;
   border: 1px solid var(--gilded);

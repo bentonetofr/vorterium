@@ -5,6 +5,7 @@ import { installNoSpaceActivation } from './shared/lib/noSpaceActivation'
 import { installScrollReveal } from './shared/lib/scrollReveal'
 import './index.css'
 import './shared/theme/motion.css'
+import './shared/theme/refine.css'
 import './shared/theme/touch.css'
 
 installNoSpaceActivation()

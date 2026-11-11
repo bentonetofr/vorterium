@@ -16,6 +16,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.31',
+    date:    '2026-11-11',
+    title:   'Visual novo: mais moderno, no computador e no celular',
+    items: [
+      'O site ganhou um visual novo, mais limpo e moderno, sem perder o azul-noite e o dourado. Os títulos agora usam a fonte Fraunces e o texto usa a Figtree, mais nítidas na tela.',
+      'Botões retos e de cor chapada, com o texto em caixa normal. Abas, campos e cartões seguem o mesmo feitio: cantos discretos, bordas finas e uma sombra leve.',
+      'O fundo da área logada tem uma luz suave que fica parada enquanto a página rola, e a barra lateral ficou de vidro fosco, com ícones novos desenhados em linha.',
+      'Todas as páginas do menu têm o mesmo cabeçalho: título grande e um fio dourado embaixo.',
+      'Celular repaginado: barra de cima fina, navegação de baixo como uma doca flutuante com ícones novos, e o cabeçalho da campanha mostra a capa de fora a fora com o nome por cima.',
+      'No celular, os botões do topo de Campanhas ficam lado a lado e os cartões de campanha e de Atividade ficaram mais enxutos. O atalho "← Campanhas" do topo do Perfil saiu, porque a doca já leva pra lá.',
+      'A tela de login no celular não fica mais embaixo do botão de configurações.',
+    ],
+  },
+  {
     version: '2.30',
     date:    '2026-11-10',
     title:   'Movimento em todo o site e polimento geral',

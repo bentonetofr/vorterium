@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { SITE_NAV, TOOL_NAV, type NavItem } from '../../../app/navigation'
 import { useUnseenChangelog } from '../../../shared/constants/changelog'
+import { NavIcon, hasNavIcon } from '../../../shared/components/NavIcon'
 import '../../../shared/theme/toolPage.css'
 import './MorePage.css'
 
@@ -28,7 +29,7 @@ export function MorePage() {
                 state={item.to === '/feedback' ? { from: (location.state as { from?: string } | null)?.from } : undefined}
                 className="more-link"
               >
-                <span className="more-link__icon" aria-hidden="true">{item.icon}</span>
+                <span className="more-link__icon" aria-hidden="true">{hasNavIcon(item.to) ? <NavIcon to={item.to} /> : item.icon}</span>
                 <span className="more-link__text">
                   <span className="more-link__label">
                     {item.label}
