@@ -85,11 +85,36 @@ export function isForcedRoll(id: string): boolean {
   return forcedIds().includes(id)
 }
 
+// ── O botão some e volta com um atalho ──
+// Só esconde o botão (e fecha o painel): o que estiver ligado nos dados continua valendo, e o ponto de aviso volta junto com o botão.
+
+export const OWNER_HIDE_SHORTCUT = 'Alt+Shift+T'
+const HIDDEN_KEY = 'owner-tools-hidden'
+let hidden = (() => { try { return localStorage.getItem(HIDDEN_KEY) === '1' } catch { return false } })()
+const hiddenListeners = new Set<() => void>()
+
+export function setOwnerHidden(next: boolean): void {
+  if (next === hidden) return
+  hidden = next
+  try { localStorage.setItem(HIDDEN_KEY, next ? '1' : '0') } catch { /* guardar é extra */ }
+  hiddenListeners.forEach((l) => l())
+}
+export const toggleOwnerHidden = (): void => setOwnerHidden(!hidden)
+export const isOwnerHidden = (): boolean => hidden
+export function useOwnerHidden(): boolean {
+  return useSyncExternalStore((l) => { hiddenListeners.add(l); return () => { hiddenListeners.delete(l) } }, () => hidden)
+}
+/** O atalho que esconde e mostra o botão: Alt+Shift+T (sem Ctrl nem Cmd, que o navegador usa). */
+export const isHideShortcut = (e: Pick<KeyboardEvent, 'code' | 'altKey' | 'shiftKey' | 'ctrlKey' | 'metaKey'>): boolean =>
+  e.code === 'KeyT' && e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey
+
 /** Está mexendo nos dados agora? (pro botão avisar) */
 export const diceForced = (s: OwnerTools) => s.armed && s.dice !== 'off'
 
 /** Só pros testes. */
 export function resetOwnerTools() {
   state = { ...DEFAULTS }
+  hidden = false
   listeners.forEach((l) => l())
+  hiddenListeners.forEach((l) => l())
 }

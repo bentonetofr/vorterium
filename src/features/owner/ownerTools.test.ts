@@ -4,7 +4,7 @@ vi.mock('../../shared/lib/supabase', () => ({ supabase: {}, uniqueChannel: (b: s
 vi.mock('../activity/services/activityService', () => ({ logActivity: () => {} }))
 
 import { parseDiceFormula, rollEvensPool, rollParsedFormula } from '../dice/services/diceService'
-import { diceForced, forcedDie, getOwnerTools, resetOwnerTools, setOwnerTools } from './ownerTools'
+import { diceForced, forcedDie, getOwnerTools, isHideShortcut, isOwnerHidden, resetOwnerTools, setOwnerTools, toggleOwnerHidden } from './ownerTools'
 
 beforeEach(() => resetOwnerTools())
 
@@ -47,5 +47,26 @@ describe('ferramentas do dono: dados', () => {
     expect(pool.results).toEqual([6, 6, 6])
     expect(pool.bonus).toEqual([4, 4, 4])
     expect(pool.evens).toBe(6)
+  })
+})
+
+describe('ferramentas do dono: esconder o botão', () => {
+  it('o atalho é Alt+Shift+T, sem Ctrl nem Cmd', () => {
+    const key = (over: object) => ({ code: 'KeyT', altKey: true, shiftKey: true, ctrlKey: false, metaKey: false, ...over })
+    expect(isHideShortcut(key({}))).toBe(true)
+    expect(isHideShortcut(key({ shiftKey: false }))).toBe(false)
+    expect(isHideShortcut(key({ altKey: false }))).toBe(false)
+    expect(isHideShortcut(key({ ctrlKey: true }))).toBe(false)
+    expect(isHideShortcut(key({ code: 'KeyY' }))).toBe(false)
+  })
+
+  it('esconder e mostrar não desarma o que está ligado nos dados', () => {
+    setOwnerTools({ armed: true, dice: 'max' })
+    expect(isOwnerHidden()).toBe(false)
+    toggleOwnerHidden()
+    expect(isOwnerHidden()).toBe(true)
+    expect(forcedDie(1, 20)).toBe(20)
+    toggleOwnerHidden()
+    expect(isOwnerHidden()).toBe(false)
   })
 })
