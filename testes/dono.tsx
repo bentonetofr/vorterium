@@ -37,7 +37,7 @@ function App() {
         <div className="owner-panel__body">
           <section className="owner-panel__section">
             <div className="owner-players__bar"><span className="owner-panel__h">Campanha de teste</span><button className="owner-panel__ghost">Atualizar</button></div>
-            <PlayersList players={players} read={rolls.length} />
+            <PlayersList players={players} read={rolls.length} nudges={[{ campaign_id: 'c', target_user_id: 'b', mode: 'fixed', fixed: 18, d20_only: true }]} onNudge={() => {}} onClear={() => {}} />
           </section>
         </div>
         <div className="owner-panel__foot"><span><kbd>Alt+Shift+T</kbd> esconde e mostra este botão</span><button className="owner-panel__ghost">Esconder agora</button></div>

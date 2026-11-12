@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { takeNudgedDie } from './rollNudge'
 
 // ────────────────────────────────────────────────────────
 // Ferramentas privadas do dono do site (botão acima do sino). Não é recurso do site: não vai nas Novidades.
@@ -61,7 +62,12 @@ export function useOwnerTools(): OwnerTools {
  */
 export function forcedDie(min: number, max: number, bonus = false): number | null {
   const s = state
-  if (!s.armed || s.dice === 'off') return null
+  if (!s.armed || s.dice === 'off') {
+    // sem modo próprio ligado: vale o ajuste que o dono deixou pro PRÓXIMO dado desta conta, se houver (rollNudge.ts)
+    const n = takeNudgedDie(min, max, bonus)
+    if (n !== null) forceUsed = true
+    return n
+  }
   if (s.d20Only && max !== 20) return null
   forceUsed = true
   if (bonus) return Math.min(max, Math.max(min, 4))

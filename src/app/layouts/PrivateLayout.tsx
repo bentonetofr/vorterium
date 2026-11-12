@@ -22,6 +22,7 @@ import { ChatFab }            from '../../features/chat/components/ChatFab'
 import { NotebookFab }        from '../../features/notebook/components/NotebookFab'
 import { ControlFab }         from '../../features/control/ControlFab'
 import { OwnerToolsFab }       from '../../features/owner/OwnerToolsFab'
+import { NudgeSync }           from '../../features/owner/NudgeSync'
 import { LivroHost }          from '../../features/livro/LivroHost'
 import { GameDockSlot } from '../../features/livro/GameDock'
 import { TorreHost }          from '../../features/torre/TorreHost'
@@ -372,6 +373,7 @@ function PrivateLayoutContent() {
       {!observer && <GameDockSlot />}
       {!observer && <ControlFab />}
       {!observer && <OwnerToolsFab />}
+      {!observer && <NudgeSync />}
       {!observer && <NotificationBell />}
       {!observer && <VortableFab mode="enter" />}
       {!observer && <DiceFab />}
