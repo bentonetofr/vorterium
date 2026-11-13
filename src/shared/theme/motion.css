@@ -191,6 +191,20 @@
 /* ── Barras de abas com destaque deslizante (<TabIndicator>) ── */
 
 .campaign-tabs { position: relative; }
+
+/* Setas nas pontas da barra de abas que rola pro lado (criadas por TabIndicator): só aparecem quando há mais abas daquele lado.
+   Zero de largura e coladas na borda (sticky); o botão se estende pra dentro da barra, em cor chapada. */
+.tabs-more { display: none; position: sticky; z-index: 4; flex: 0 0 0; width: 0; align-self: stretch; pointer-events: none; }
+.tabs-more--left { left: 0; }
+.tabs-more--right { right: 0; }
+.campaign-tabs[data-more-left] > .tabs-more--left, .campaign-tabs[data-more-right] > .tabs-more--right { display: block; }
+.tabs-more > button {
+  position: absolute; top: 0; bottom: 0; width: 30px; display: grid; place-items: center; padding: 0 0 2px; pointer-events: auto;
+  font-size: 22px; line-height: 1; color: var(--text-primary); background: var(--bg-elevated); border: none; cursor: var(--cursor-hand);
+}
+.tabs-more--left > button { left: 0; border-radius: var(--radius-md) 0 0 var(--radius-md); box-shadow: 10px 0 10px -6px rgba(0, 0, 0, 0.5); }
+.tabs-more--right > button { right: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: -10px 0 10px -6px rgba(0, 0, 0, 0.5); }
+.tabs-more > button:hover { color: var(--accent-bright); }
 .campaign-tabs > .campaign-tab { position: relative; z-index: 1; }
 .campaign-tabs:has(> .tab-indicator) > .campaign-tab--active {
   background: transparent;

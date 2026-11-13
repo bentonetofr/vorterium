@@ -299,14 +299,21 @@ export async function deleteDndInventoryItem(id: string): Promise<void> {
 }
 
 export async function createDndSpell(sheetId: string, input: DndCharacterSpellInput): Promise<DndCharacterSpell> {
-  const { data, error } = await supabase.from('dnd_character_spells').insert({ sheet_id: sheetId, ...input }).select('*').single()
-  if (error) throw new Error('Não foi possível adicionar a magia.')
-  return data as DndCharacterSpell
+  const first = await supabase.from('dnd_character_spells').insert({ sheet_id: sheetId, ...input }).select('*').single()
+  if (!first.error) return first.data as DndCharacterSpell
+  if (input.class_key) {
+    // sem a migration da classe da magia (20240231), a magia entra do mesmo jeito, só sem a classe
+    const plain: Record<string, unknown> = { ...input }
+    delete plain.class_key
+    const retry = await supabase.from('dnd_character_spells').insert({ sheet_id: sheetId, ...plain }).select('*').single()
+    if (!retry.error) return retry.data as DndCharacterSpell
+  }
+  throw new Error('Não foi possível adicionar a magia.')
 }
 
 export async function updateDndSpell(id: string, input: Partial<DndCharacterSpellInput>): Promise<DndCharacterSpell> {
   const { data, error } = await supabase.from('dnd_character_spells').update(input).eq('id', id).select('*').single()
-  if (error) throw new Error('Não foi possível atualizar a magia.')
+  if (error) throw new Error('class_key' in input ? 'Não foi possível guardar a classe da magia. A migration 20240231 já rodou no Supabase?' : 'Não foi possível atualizar a magia.')
   return data as DndCharacterSpell
 }
 

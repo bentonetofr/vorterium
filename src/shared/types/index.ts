@@ -966,6 +966,8 @@ export interface DndCharacterSpell {
   description: string
   /** Chave da magia no catálogo do SRD; null = magia própria. */
   catalog_key: string | null
+  /** De qual classe é a magia (conjurador multiclasse); vazio = sem classe. Coluna da migration 20240231. */
+  class_key?: string | null
   sort_order: number
   created_at: string
   updated_at: string

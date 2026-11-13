@@ -9,6 +9,7 @@ import { useSpellCatalog } from '../hooks/useSpellCatalog'
 import { ABILITIES } from '../rules/abilities'
 import { PACT_SLOT_KEY, spellSlotKey, spellSlotLabel } from '../model/slots'
 import { formatSigned } from '../model/format'
+import { autoSpellClass, spellClassLabel } from '../model/spellClasses'
 import { createDndSpell, deleteDndSpell, updateDndSpell } from '../services/dndSheetService'
 import { saveDndResource, setDndResourceCurrent } from '../services/dndResourceService'
 import { DerivedField, NumberField, Pips } from './DndControls'
@@ -116,8 +117,15 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
     setName('')
   })
 
+  /** Só com mais de uma classe conjuradora a magia leva (e mostra) a classe a que pertence. */
+  const castClasses = casting?.classes ?? []
+  const multiclass = castClasses.length > 1
+  const classOptions = [{ value: '', label: 'Sem classe' }, ...castClasses.map((c) => ({ value: c.classKey, label: spellClassLabel(c.classKey, form.class_names) }))]
+
   const addFromBook = (sp: SpellEntry) => run(sp.key, async () => {
+    const own = multiclass ? autoSpellClass(sp.classes, castClasses.map((c) => ({ classKey: c.classKey, subclassKey: data.classes.find((r) => r.class_key === c.classKey)?.subclass_key }))) : null
     const saved = await createDndSpell(sheet.id, {
+      ...(own ? { class_key: own } : {}),
       name: sp.name, spell_level: sp.level, school: SPELL_SCHOOL_LABEL[sp.school], casting_time: sp.castingTime, spell_range: sp.range,
       duration: sp.duration, concentration: !!sp.concentration, ritual: !!sp.ritual, prepared: false, description: '',
       catalog_key: sp.key, sort_order: data.details.spells.length,
@@ -126,7 +134,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
   })
 
   const [editing, setEditing] = useState<string | null>(null)
-  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'name' | 'spell_level' | 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key' | 'school' | 'casting_time' | 'spell_range' | 'duration'>>) =>
+  const patchSpell = (s: DndCharacterSpell, patch: Partial<Pick<DndCharacterSpell, 'name' | 'spell_level' | 'prepared' | 'concentration' | 'ritual' | 'description' | 'catalog_key' | 'school' | 'casting_time' | 'spell_range' | 'duration' | 'class_key'>>) =>
     run(s.id, async () => {
       const saved = await updateDndSpell(s.id, patch)
       data.setDetails((d) => ({ ...d, spells: d.spells.map((x) => (x.id === saved.id ? saved : x)) }))
@@ -284,6 +292,7 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
               {spells.filter((s) => s.spell_level === lv).map((s) => {
                 const cat = s.catalog_key ? catalogMod?.getSpell(s.catalog_key) : undefined
                 const meta = [s.school, s.casting_time, s.spell_range, s.duration].filter(Boolean)
+                const classChip = multiclass && s.class_key ? spellClassLabel(s.class_key, form.class_names) : null
                 const isPrepared = s.prepared && s.spell_level > 0
                 return (
                   <li key={s.id} className={`dsh-spell${isPrepared ? ' is-prepared' : ''}${isNew(s.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
@@ -301,12 +310,23 @@ export function DndMagiasTab({ ctx }: { ctx: SheetCtx }) {
                       <CardTools name={s.name} editing={editing === s.id} onEdit={() => setEditing(editing === s.id ? null : s.id)}
                         onDelete={(from) => void removeSpell(s, from)} busy={busy === s.id} />
                     )}
-                    {meta.length > 0 && <div className="dsh-spellchips">{meta.map((m) => <span key={m} className="dsh-cardchip">{m}</span>)}</div>}
+                    {(meta.length > 0 || classChip) && (
+                      <div className="dsh-spellchips">
+                        {classChip && <span className="dsh-cardchip dsh-cardchip--accent dsh-spellclass" title="Classe a que a magia pertence">{classChip}</span>}
+                        {meta.map((m) => <span key={m} className="dsh-cardchip">{m}</span>)}
+                      </div>
+                    )}
                     {editing === s.id && !readOnly ? (
                       <EditBox onDone={() => setEditing(null)}>
                         <EditField label="Nome" value={s.name} required max={160} onSave={(name) => void patchSpell(s, { name })} />
                         <div className="dsh-field dsh-field--tile"><span className="dsh-label">Nível</span>
                           <Select options={LEVEL_OPTIONS} value={String(s.spell_level)} disabled={busy === s.id} onChange={(v) => void patchSpell(s, { spell_level: Number(v) })} aria-label={`Nível de ${s.name}`} /></div>
+                        {multiclass && (
+                          <div className="dsh-field dsh-field--tile"><span className="dsh-label">Classe da magia</span>
+                            <Select
+                              options={s.class_key && !classOptions.some((o) => o.value === s.class_key) ? [...classOptions, { value: s.class_key, label: spellClassLabel(s.class_key, form.class_names) }] : classOptions}
+                              value={s.class_key ?? ''} disabled={busy === s.id} onChange={(v) => void patchSpell(s, { class_key: v || null })} aria-label={`Classe de ${s.name}`} /></div>
+                        )}
                         {!cat && (
                           <>
                             <div className="dsh-field dsh-field--tile"><span className="dsh-label">Escola</span>

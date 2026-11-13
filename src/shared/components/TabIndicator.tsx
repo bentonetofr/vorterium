@@ -7,6 +7,62 @@ import { useLayoutEffect, useRef, useState } from 'react'
 // com barra em linha ou em grade (celular), e acompanha redimensionamento.
 // ────────────────────────────────────────────────────────
 
+/**
+ * Tem mais abas escondidas de cada lado da barra que rola pro lado? (folga de 2 px por causa de arredondamento)
+ */
+export function scrollHints(scrollLeft: number, clientWidth: number, scrollWidth: number): { left: boolean; right: boolean } {
+  return { left: scrollLeft > 2, right: scrollLeft + clientWidth < scrollWidth - 2 }
+}
+
+/**
+ * Setas nas pontas da barra de abas quando ela rola pro lado: avisam que há mais abas à esquerda ou à direita (a de Lore, por
+ * exemplo, ficava escondida sem ninguém perceber). Clicar anda a barra. Os dois botões vão como primeiro e último filho da barra
+ * (zero de largura, grudados na borda) e só aparecem quando a barra tem o que mostrar daquele lado.
+ */
+function useScrollArrows(list: HTMLElement | null | undefined) {
+  useLayoutEffect(() => {
+    if (!list) return
+    const make = (side: 'left' | 'right') => {
+      const wrap = document.createElement('span')
+      wrap.className = `tabs-more tabs-more--${side}`
+      wrap.setAttribute('aria-hidden', 'true')
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.tabIndex = -1
+      btn.textContent = side === 'left' ? '‹' : '›'
+      btn.title = side === 'left' ? 'Mais abas à esquerda' : 'Mais abas à direita'
+      btn.addEventListener('click', (e) => {
+        e.preventDefault()
+        list.scrollBy({ left: (side === 'left' ? -1 : 1) * Math.max(120, list.clientWidth * 0.6), behavior: 'smooth' })
+      })
+      wrap.appendChild(btn)
+      return wrap
+    }
+    const left = make('left')
+    const right = make('right')
+    list.prepend(left)
+    list.append(right)
+    const update = () => {
+      const h = scrollHints(list.scrollLeft, list.clientWidth, list.scrollWidth)
+      list.toggleAttribute('data-more-left', h.left)
+      list.toggleAttribute('data-more-right', h.right)
+    }
+    update()
+    list.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(list)
+    list.querySelectorAll('[role="tab"]').forEach((tab) => observer.observe(tab))
+    return () => {
+      list.removeEventListener('scroll', update)
+      observer.disconnect()
+      left.remove()
+      right.remove()
+      list.removeAttribute('data-more-left')
+      list.removeAttribute('data-more-right')
+    }
+  }, [list])
+}
+
 interface TabIndicatorProps {
   /** Muda sempre que a aba ativa muda — dispara o reposicionamento. */
   activeKey: string
@@ -17,6 +73,10 @@ export function TabIndicator({ activeKey }: TabIndicatorProps) {
   // Só liga a transição depois da 1ª posição — senão ele "voa" do canto
   // ao abrir a página.
   const [ready, setReady] = useState(false)
+  // a barra (pai do destaque) ganha as setas de "tem mais abas pro lado"
+  const [list, setList] = useState<HTMLElement | null>(null)
+  useLayoutEffect(() => { setList(ref.current?.parentElement ?? null) }, [])
+  useScrollArrows(list)
 
   useLayoutEffect(() => {
     const indicator = ref.current

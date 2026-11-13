@@ -195,6 +195,21 @@ describe('abas', () => {
     expect(html).toContain('Atributo de conjuração')
   })
 
+  it('Magias de conjurador multiclasse: a classe da magia aparece ao lado das outras características; com uma classe só, não', () => {
+    const base = makeData({ classes: [cls('wizard', 3, true), cls('cleric', 2, false)] })
+    const withClass = makeData({
+      classes: base.classes,
+      details: { ...base.details, spells: base.details.spells.map((s) => (s.id === 'p1' ? { ...s, class_key: 'wizard', casting_time: '1 ação' } : s)) },
+    })
+    const html = renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data: withClass })} />)
+    expect(html).toContain('dsh-spellclass')
+    expect(html).toContain('>Mago<')
+    // a magia sem classe não leva etiqueta
+    expect(html.match(/dsh-spellclass/g)).toHaveLength(1)
+    const single = makeData({ classes: [cls('wizard', 5, true)], details: withClass.details })
+    expect(renderToStaticMarkup(<DndMagiasTab ctx={makeCtx({ data: single })} />)).not.toContain('dsh-spellclass')
+  })
+
   it('Magias sem classe conjuradora, com atributo escolhido, mostra CD e ataque', () => {
     const data = makeData({ classes: [cls('fighter', 5, true)] })
     const ctx = makeCtx({ data, sheet: makeSheet({ choices: { spellAbility: 'intelligence' } }) })
