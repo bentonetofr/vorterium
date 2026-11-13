@@ -20,7 +20,7 @@ const first = klass === 'ranger' ? ['primal:land', 'ranger:wolf'] : klass === 'd
 function App() {
   const [form, setForm] = useState<DndForm>(() => ({
     ...base.form, class_names: klass === 'artificer' ? { hb_artificeiro: 'Artificeiro' } : {},
-    companions: params.get('vazio') ? [] : first.map((k) => companionFromPreset(k)!).map((c) => ({ ...c, hp: c.hp_max })),
+    companions: params.get('vazio') ? [] : first.map((k) => companionFromPreset(k)!).map((c) => ({ ...c, hp: c.hp_max, ...(params.get('foto') && c.template === 'steel' ? { photo_url: location.origin + '/android-chrome-192x192.png' } : {}) })),
   }))
   const ctx: SheetCtx = useMemo(() => ({
     ...base, form,

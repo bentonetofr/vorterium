@@ -589,6 +589,29 @@ describe('abas', () => {
     expect(roHtml).not.toContain('aria-label="Editar:')
   })
 
+  it('Companheiros: a foto aparece no alto do cartão e na etiqueta; sem foto, convida a adicionar; em modo leitura não troca', () => {
+    const url = 'https://exemplo.supabase.co/storage/v1/object/public/dnd-portraits/s1/companion-x'
+    const ctx = makeCtx()
+    ctx.form.companions = [{ ...companionFromPreset('steel')!, name: 'Rex', photo_url: url }]
+    const html = renderToStaticMarkup(<DndCompanheirosTab ctx={ctx} />)
+    expect(html).toContain('dcm-photo')
+    expect(html).toContain(`src="${url}"`)
+    expect(html).toContain('alt="Foto de Rex"')
+    expect(html).toContain('Trocar foto')
+    expect(html).toContain('aria-label="Remover a foto de Rex"')
+    const none = makeCtx()
+    none.form.companions = [companionFromPreset('steel')!]
+    const noneHtml = renderToStaticMarkup(<DndCompanheirosTab ctx={none} />)
+    expect(noneHtml).toContain('Adicionar foto')
+    expect(noneHtml).not.toContain('Remover a foto')
+    const ro = makeCtx({ readOnly: true })
+    ro.form.companions = [{ ...companionFromPreset('steel')!, photo_url: url }]
+    const roHtml = renderToStaticMarkup(<DndCompanheirosTab ctx={ro} />)
+    expect(roHtml).toContain(`src="${url}"`)
+    expect(roHtml).not.toContain('Trocar foto')
+    expect(roHtml).not.toContain('Remover a foto')
+  })
+
   it('todas as abas renderizam com a ficha vazia e sem dados', () => {
     const empty = makeData({
       classes: [], proficiencies: [], resources: [], features: [],

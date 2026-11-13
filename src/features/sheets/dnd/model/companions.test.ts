@@ -164,6 +164,18 @@ describe('companheiros: vida, descanso e leitura do banco', () => {
     expect(readCompanions(Array.from({ length: 30 }, () => ({}))).length).toBe(12)
   })
 
+  it('foto: só endereço http(s) vale; qualquer outra coisa vira sem foto, e o endereço sobrevive a gravar e ler', () => {
+    const url = 'https://exemplo.supabase.co/storage/v1/object/public/dnd-portraits/ficha/companion-c1?v=123'
+    expect(readCompanion({ photo_url: url }).photo_url).toBe(url)
+    expect(readCompanion({ photo_url: 'javascript:alert(1)' }).photo_url).toBeNull()
+    expect(readCompanion({ photo_url: 'data:image/png;base64,AAAA' }).photo_url).toBeNull()
+    expect(readCompanion({ photo_url: 42 }).photo_url).toBeNull()
+    expect(readCompanion({}).photo_url).toBeNull()
+    expect(readCompanion({ photo_url: `https://a.co/${'x'.repeat(900)}` }).photo_url).toHaveLength(600)
+    const c = { ...companionFromPreset('steel')!, photo_url: url }
+    expect(readCompanion(JSON.parse(JSON.stringify(c)))).toEqual(c)
+  })
+
   it('ida e volta: o que o modelo cria sobrevive a ser gravado e lido', () => {
     for (const p of PRESETS) {
       const c = companionFromPreset(p.key)!

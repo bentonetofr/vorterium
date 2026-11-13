@@ -160,3 +160,30 @@
 .dcm-cond.is-on { color: #fff; background: #8a3a3f; border-color: transparent; font-weight: 700; }
 .dcm-cond:disabled { cursor: default; }
 .dcm-foot { display: flex; justify-content: flex-end; padding-top: var(--space-3); border-top: 1px solid var(--border-dim); }
+
+/* ── Foto do companheiro: círculo à esquerda, no alto do cartão (como a do companheiro de Altherium) ── */
+.dcm-top { display: flex; align-items: flex-start; gap: var(--space-5); }
+.dcm-top > .dcm-vitals { flex: 1; min-width: 0; }
+@media (max-width: 560px) { .dcm-top { flex-direction: column; align-items: center; } .dcm-top > .dcm-vitals { width: 100%; } }
+.dcm-photo-wrap { position: relative; flex: none; }
+.dcm-photo {
+  position: relative; display: grid; place-items: center; width: 96px; height: 96px; border-radius: 50%; overflow: hidden;
+  border: 2px solid var(--dcm-kind); background: var(--bg-elevated); color: var(--dcm-kind); cursor: var(--cursor-hand, pointer);
+}
+.dcm-photo.is-ro { cursor: default; }
+.dcm-photo img { width: 100%; height: 100%; object-fit: cover; }
+.dcm-photo__tag { font-family: var(--font-label); font-size: 18px; font-weight: 800; letter-spacing: 0.06em; }
+.dcm-photo__over {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 0 10px; text-align: center; pointer-events: none;
+  font-family: var(--font-label); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.55); opacity: 0; transition: opacity var(--transition-fast);
+}
+.dcm-photo:hover .dcm-photo__over, .dcm-photo:focus-within .dcm-photo__over { opacity: 1; }
+.dcm-photo__x {
+  position: absolute; top: -2px; right: -2px; width: 24px; height: 24px; display: grid; place-items: center; padding: 0 0 2px;
+  font-size: 16px; line-height: 1; color: var(--text-primary); background: var(--bg-elevated); border: 1px solid var(--border-base);
+  border-radius: 50%; cursor: var(--cursor-hand, pointer);
+}
+.dcm-photo__x:hover:not(:disabled) { color: #fff; background: var(--dsh-accent); border-color: transparent; }
+.dcm-av--photo { background: transparent; overflow: hidden; border: 2px solid var(--dcm-kind); }
+.dcm-av--photo img { width: 100%; height: 100%; object-fit: cover; }

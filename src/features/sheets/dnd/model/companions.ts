@@ -119,6 +119,8 @@ export interface Companion {
   level_ref: number | null
   /** Nível do espaço de magia (criatura invocada por magia). */
   slot_level: number
+  /** Foto do companheiro (URL pública no bucket dnd-portraits, caminho <ficha>/companion-<id>); null = sem foto. */
+  photo_url: string | null
   /** Variante: forma do Canhão ('flamethrower' | 'ballista' | 'protector'), besta da Tasha ('land' | 'sea' | 'sky') ou material do Constructo ('clay' | 'metal' | 'stone'). */
   form: string
 }
@@ -180,7 +182,7 @@ export function blankCompanion(over: Partial<Companion> = {}): Companion {
     abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     save_prof: [], skills: [], pb_checks: false,
     senses: '', languages: '', resistances: '', immunities: '', condition_immunities: '', cr: '',
-    attacks: [], traits: [], conditions: [], notes: '', level_ref: null, slot_level: 4, form: '', ...over,
+    attacks: [], traits: [], conditions: [], notes: '', level_ref: null, slot_level: 4, form: '', photo_url: null, ...over,
   }
 }
 
@@ -238,6 +240,7 @@ export function readCompanion(raw: unknown): Companion {
     notes: str(r.notes, 4000),
     level_ref: r.level_ref == null ? null : clampInt(r.level_ref, 1, 20, 1),
     slot_level: clampInt(r.slot_level, 3, 9, 4), form: str(r.form, 20),
+    photo_url: typeof r.photo_url === 'string' && /^https?:\/\//.test(r.photo_url) ? r.photo_url.slice(0, 600) : null,
   }
 }
 

@@ -1,4 +1,8 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { AvatarCropEditor } from '../../../users/components/AvatarCropEditor'
+import { Presence } from '../../../../shared/components/Presence'
+import { DND_PORTRAIT_PICK_MAX_BYTES, DND_PORTRAIT_TYPES } from '../constants/dnd'
+import { removeDndCompanionPhoto, uploadDndCompanionPhoto } from '../services/dndPortraitService'
 import { CONDITIONS } from '../catalog'
 import { COMPANION_GUIDE } from '../model/companionGuide'
 import { BLANKS, PRESETS, blankOfKind, companionFromPreset, presetAttacks } from '../model/companionCatalog'
@@ -48,7 +52,10 @@ export function DndCompanheirosTab({ ctx }: { ctx: SheetCtx }) {
     // carregado só na hora (o diálogo mexe em `window`, que não existe nos testes de desenho)
     const { confirmDialog } = await import('../../../../shared/components/dialogs')
     const ok = await confirmDialog({ title: 'Remover companheiro', message: `Tirar ${c.name || c.species || 'este companheiro'} da ficha? Não dá para desfazer.`, confirmLabel: 'Remover' })
-    if (ok) update((f) => ({ ...f, companions: f.companions.filter((x) => x.id !== c.id) }))
+    if (!ok) return
+    update((f) => ({ ...f, companions: f.companions.filter((x) => x.id !== c.id) }))
+    // a foto só ficaria órfã no armazenamento: tira junto (se não der, não atrapalha)
+    if (c.photo_url) void removeDndCompanionPhoto(ctx.sheet.id, c.id).catch(() => undefined)
   }
 
   return (
@@ -254,7 +261,7 @@ function CompanionCard({ c, owner, ctx, open, onToggle, onChange, onRemove }: Ca
     <article className={`dsh-card dcm-card dcm-card--${c.kind} dcm-state--${c.state}${open ? ' is-open' : ''}`}>
       <header className="dcm-card__head">
         <button type="button" className="dcm-card__toggle" onClick={onToggle} aria-expanded={open} aria-label={`${open ? 'Recolher' : 'Abrir'} ${name}`}>
-          <span className={`dcm-av dcm-av--${c.kind}`} aria-hidden="true">{KIND_TAG[c.kind]}</span>
+          <span className={`dcm-av dcm-av--${c.kind}${c.photo_url ? ' dcm-av--photo' : ''}`} aria-hidden="true">{c.photo_url ? <img src={c.photo_url} alt="" /> : KIND_TAG[c.kind]}</span>
           <span className="dcm-card__who">
             <span className="dcm-card__name">{name}</span>
             <span className="dcm-card__sub">{KIND_LABEL[c.kind]}{c.species && c.name.trim() ? ` · ${c.species}` : ''} · {c.size} · {c.type}</span>
@@ -267,6 +274,8 @@ function CompanionCard({ c, owner, ctx, open, onToggle, onChange, onRemove }: Ca
 
       {open && (
         <div className="dcm-card__body">
+          <div className="dcm-top">
+          <CompanionPhoto c={c} ro={ro} sheetId={ctx.sheet.id} report={ctx.report} onPhoto={(url) => set('photo_url', url)} />
           {/* Vida */}
           <div className="dcm-vitals">
             <div className="dcm-hp">
@@ -287,6 +296,7 @@ function CompanionCard({ c, owner, ctx, open, onToggle, onChange, onRemove }: Ca
                 {(Object.keys(STATE_LABEL) as CompanionState[]).map((s) => <option key={s} value={s}>{STATE_LABEL[s]}</option>)}
               </select>
             </label>
+          </div>
           </div>
 
           {/* Números */}
@@ -532,6 +542,56 @@ function CompanionCard({ c, owner, ctx, open, onToggle, onChange, onRemove }: Ca
         </div>
       )}
     </article>
+  )
+}
+
+/**
+ * A foto do companheiro: um círculo no alto do cartão, à esquerda, no mesmo lugar e do mesmo jeito da foto do companheiro de
+ * Altherium (clicar troca, o × tira, e antes de enviar abre o ajuste de enquadramento).
+ */
+function CompanionPhoto({ c, ro, sheetId, report, onPhoto }: { c: Companion; ro: boolean; sheetId: string; report: (m: string | null) => void; onPhoto: (url: string | null) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [draft, setDraft] = useState<File | null>(null)
+  const [busy, setBusy] = useState(false)
+  const pick = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    if (!DND_PORTRAIT_TYPES.includes(f.type as (typeof DND_PORTRAIT_TYPES)[number])) { report('Escolha uma imagem JPG, PNG ou WebP.'); return }
+    if (f.size > DND_PORTRAIT_PICK_MAX_BYTES) { report('A imagem deve ter no máximo 10 MB.'); return }
+    report(null)
+    setDraft(f)
+  }
+  const save = async (file: File) => {
+    setBusy(true)
+    try { onPhoto(await uploadDndCompanionPhoto(sheetId, c.id, file)); setDraft(null) }
+    catch (err) { setDraft(null); report(err instanceof Error ? err.message : 'Não deu pra enviar a foto.') }
+    finally { setBusy(false) }
+  }
+  const drop = async () => {
+    setBusy(true)
+    try { await removeDndCompanionPhoto(sheetId, c.id); onPhoto(null) }
+    catch (err) { report(err instanceof Error ? err.message : 'Não deu pra remover a foto.') }
+    finally { setBusy(false) }
+  }
+  const name = c.name.trim() || c.species || 'companheiro'
+  return (
+    <div className="dcm-photo-wrap">
+      <label className={`dcm-photo${ro ? ' is-ro' : ''}`}>
+        {c.photo_url ? <img src={c.photo_url} alt={`Foto de ${name}`} /> : <span className="dcm-photo__tag" aria-hidden="true">{KIND_TAG[c.kind]}</span>}
+        {!ro && <span className="dcm-photo__over">{c.photo_url ? 'Trocar foto' : 'Adicionar foto'}</span>}
+        {!ro && <input ref={fileRef} type="file" hidden accept={DND_PORTRAIT_TYPES.join(',')} disabled={busy} onChange={pick} aria-label={`Foto de ${name}`} />}
+      </label>
+      {c.photo_url && !ro && <button type="button" className="dcm-photo__x" onClick={() => void drop()} disabled={busy} aria-label={`Remover a foto de ${name}`}>×</button>}
+      <Presence show={!!draft} exitMs={220}>
+        {() => draft && (
+          <AvatarCropEditor
+            file={draft} saving={busy} onCancel={() => setDraft(null)} onSave={save}
+            title="Ajustar foto do companheiro" description="Escolha o enquadramento que aparece no cartão do companheiro." confirmLabel="Usar esta foto"
+          />
+        )}
+      </Presence>
+    </div>
   )
 }
 

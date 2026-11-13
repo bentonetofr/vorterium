@@ -38,3 +38,24 @@ export async function removeDndPortrait(sheetId: string): Promise<DndCharacterSh
   if (error) throw new Error(`Não foi possível remover o retrato: ${error.message}`)
   return setPortraitUrl(sheetId, null)
 }
+
+// ── Foto de companheiro ──────────────────────────────────
+// Mesmo bucket do retrato; o caminho "<id da ficha>/companion-<id do companheiro>" cai nas mesmas regras de acesso (a primeira parte
+// do caminho é a ficha). A URL é guardada no próprio companheiro (choices.companions), não numa coluna.
+
+/** Envia (ou troca) a foto de um companheiro e devolve a URL pública. */
+export async function uploadDndCompanionPhoto(sheetId: string, companionId: string, file: File): Promise<string> {
+  if (!DND_PORTRAIT_TYPES.includes(file.type as (typeof DND_PORTRAIT_TYPES)[number])) throw new Error('Escolha uma imagem JPG, PNG ou WebP.')
+  if (file.size > DND_PORTRAIT_MAX_BYTES) throw new Error('A foto deve ter no máximo 2 MB.')
+  const path = `${sheetId}/companion-${companionId}`
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true, cacheControl: '3600', contentType: file.type })
+  if (error) throw new Error(`Não foi possível enviar a foto: ${error.message}`)
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+  return `${data.publicUrl}?v=${Date.now()}`
+}
+
+/** Remove a foto de um companheiro do armazenamento (quem chama limpa a URL do companheiro). */
+export async function removeDndCompanionPhoto(sheetId: string, companionId: string): Promise<void> {
+  const { error } = await supabase.storage.from(BUCKET).remove([`${sheetId}/companion-${companionId}`])
+  if (error) throw new Error(`Não foi possível remover a foto: ${error.message}`)
+}
