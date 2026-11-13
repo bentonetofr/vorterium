@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date:    '2026-11-12',
     title:   'Abas com setas e a classe de cada magia',
     items: [
-      'Quando as abas de uma ficha ou da campanha não cabem na tela, a barra ganha uma seta (‹ ou ›) na ponta onde ainda há abas escondidas. A seta aparece só quando tem o que mostrar daquele lado e, ao clicar, a barra anda. Antes a aba de Lore podia ficar escondida do lado direito sem ninguém perceber.',
+      'Quando as abas de uma ficha ou da campanha não cabem na tela, a barra ganha uma seta (‹ ou ›), do lado de fora dela, no lado onde ainda há abas escondidas. A seta nunca cobre uma aba e, ao clicar, a barra anda. Antes a aba de Lore podia ficar escondida do lado direito sem ninguém perceber.',
       'Na ficha de D&D, quem conjura com mais de uma classe pode dizer de qual classe é cada magia: no lápis da magia há o campo Classe da magia, e na lista a classe aparece como uma etiqueta ao lado das outras características (escola, tempo de conjuração, alcance, duração). Magias do livro que só uma das suas classes tem já entram com a classe certa. Precisa rodar a migration 20240231 no Supabase.',
     ],
   },

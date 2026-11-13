@@ -14,51 +14,71 @@ export function scrollHints(scrollLeft: number, clientWidth: number, scrollWidth
   return { left: scrollLeft > 2, right: scrollLeft + clientWidth < scrollWidth - 2 }
 }
 
+/** Largura da vaga de cada seta, fora da barra (a seta tem 30 px e 4 px de respiro). */
+const ARROW_SLOT = 34
+
 /**
- * Setas nas pontas da barra de abas quando ela rola pro lado: avisam que há mais abas à esquerda ou à direita (a de Lore, por
- * exemplo, ficava escondida sem ninguém perceber). Clicar anda a barra. Os dois botões vão como primeiro e último filho da barra
- * (zero de largura, grudados na borda) e só aparecem quando a barra tem o que mostrar daquele lado.
+ * Setas FORA da barra de abas, uma de cada lado dela, quando a barra rola pro lado: avisam que há mais abas à esquerda ou à direita
+ * (a de Lore, por exemplo, ficava escondida sem ninguém perceber). Clicar anda a barra.
+ *
+ * As setas vão como irmãs da barra, em posição absoluta nas margens que a barra reserva (data-scrolls, em motion.css), então nunca
+ * cobrem uma aba. Só aparece a seta do lado que tem o que mostrar; a vaga do outro lado fica vazia pra a barra não mudar de largura.
  */
 function useScrollArrows(list: HTMLElement | null | undefined) {
   useLayoutEffect(() => {
-    if (!list) return
+    const parent = list?.parentElement
+    if (!list || !parent) return
+    // os irmãos absolutos se medem pelo pai: ele precisa ser a referência de posição
+    const madeRelative = getComputedStyle(parent).position === 'static'
+    if (madeRelative) parent.style.position = 'relative'
     const make = (side: 'left' | 'right') => {
-      const wrap = document.createElement('span')
-      wrap.className = `tabs-more tabs-more--${side}`
-      wrap.setAttribute('aria-hidden', 'true')
       const btn = document.createElement('button')
       btn.type = 'button'
+      btn.className = `tabs-more tabs-more--${side}`
       btn.tabIndex = -1
+      btn.setAttribute('aria-hidden', 'true')
       btn.textContent = side === 'left' ? '‹' : '›'
       btn.title = side === 'left' ? 'Mais abas à esquerda' : 'Mais abas à direita'
+      btn.style.display = 'none'
       btn.addEventListener('click', (e) => {
         e.preventDefault()
         list.scrollBy({ left: (side === 'left' ? -1 : 1) * Math.max(120, list.clientWidth * 0.6), behavior: 'smooth' })
       })
-      wrap.appendChild(btn)
-      return wrap
+      return btn
     }
     const left = make('left')
     const right = make('right')
-    list.prepend(left)
-    list.append(right)
+    parent.insertBefore(left, list)
+    list.after(right)
+
     const update = () => {
-      const h = scrollHints(list.scrollLeft, list.clientWidth, list.scrollWidth)
-      list.toggleAttribute('data-more-left', h.left)
-      list.toggleAttribute('data-more-right', h.right)
+      // com as margens reservadas a barra fica menor; a largura de verdade é a de agora mais o que está reservado
+      const reserved = list.hasAttribute('data-scrolls') ? ARROW_SLOT * 2 : 0
+      const scrolls = list.scrollWidth > list.clientWidth + reserved + 2
+      list.toggleAttribute('data-scrolls', scrolls)
+      const h = scrolls ? scrollHints(list.scrollLeft, list.clientWidth, list.scrollWidth) : { left: false, right: false }
+      const place = (btn: HTMLElement, show: boolean, x: number) => {
+        btn.style.display = show ? '' : 'none'
+        btn.style.top = `${list.offsetTop}px`
+        btn.style.height = `${list.offsetHeight}px`
+        btn.style.left = `${x}px`
+      }
+      place(left, h.left, list.offsetLeft - ARROW_SLOT)
+      place(right, h.right, list.offsetLeft + list.offsetWidth + 4)
     }
     update()
     list.addEventListener('scroll', update, { passive: true })
     const observer = new ResizeObserver(update)
     observer.observe(list)
+    observer.observe(parent)
     list.querySelectorAll('[role="tab"]').forEach((tab) => observer.observe(tab))
     return () => {
       list.removeEventListener('scroll', update)
       observer.disconnect()
       left.remove()
       right.remove()
-      list.removeAttribute('data-more-left')
-      list.removeAttribute('data-more-right')
+      list.removeAttribute('data-scrolls')
+      if (madeRelative) parent.style.position = ''
     }
   }, [list])
 }

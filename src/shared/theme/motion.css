@@ -192,19 +192,15 @@
 
 .campaign-tabs { position: relative; }
 
-/* Setas nas pontas da barra de abas que rola pro lado (criadas por TabIndicator): só aparecem quando há mais abas daquele lado.
-   Zero de largura e coladas na borda (sticky); o botão se estende pra dentro da barra, em cor chapada. */
-.tabs-more { display: none; position: sticky; z-index: 4; flex: 0 0 0; width: 0; align-self: stretch; pointer-events: none; }
-.tabs-more--left { left: 0; }
-.tabs-more--right { right: 0; }
-.campaign-tabs[data-more-left] > .tabs-more--left, .campaign-tabs[data-more-right] > .tabs-more--right { display: block; }
-.tabs-more > button {
-  position: absolute; top: 0; bottom: 0; width: 30px; display: grid; place-items: center; padding: 0 0 2px; pointer-events: auto;
-  font-size: 22px; line-height: 1; color: var(--text-primary); background: var(--bg-elevated); border: none; cursor: var(--cursor-hand);
+/* Setas FORA da barra de abas que rola pro lado (criadas por TabIndicator): a barra reserva uma vaga de cada lado (data-scrolls) e as
+   setas ficam nelas, em posição absoluta, sem cobrir nenhuma aba. */
+.campaign-tabs[data-scrolls] { margin-left: 34px; margin-right: 34px; }
+.tabs-more {
+  position: absolute; z-index: 4; width: 30px; margin: 0 !important; padding: 0 0 2px; display: grid; place-items: center;
+  font-size: 22px; line-height: 1; color: var(--text-secondary); background: var(--bg-elevated); border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md); cursor: var(--cursor-hand); transition: color var(--transition-fast), border-color var(--transition-fast);
 }
-.tabs-more--left > button { left: 0; border-radius: var(--radius-md) 0 0 var(--radius-md); box-shadow: 10px 0 10px -6px rgba(0, 0, 0, 0.5); }
-.tabs-more--right > button { right: 0; border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: -10px 0 10px -6px rgba(0, 0, 0, 0.5); }
-.tabs-more > button:hover { color: var(--accent-bright); }
+.tabs-more:hover { color: var(--accent-bright); border-color: var(--border-base); }
 .campaign-tabs > .campaign-tab { position: relative; z-index: 1; }
 .campaign-tabs:has(> .tab-indicator) > .campaign-tab--active {
   background: transparent;
