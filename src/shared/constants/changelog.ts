@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.34',
+    date:    '2026-11-12',
+    title:   'D&D: aba Companheiros (constructos, familiares, pets e montarias)',
+    items: [
+      'A ficha de D&D ganhou a aba Companheiros: cada familiar, constructo, animal fiel, montaria, criatura invocada ou pet tem a sua mini-ficha, com PV (dano, cura e PV temporários), CA, deslocamento, atributos, salvaguardas, perícias, ataques, habilidades com usos, condições e anotações. Até 12 por personagem, salvos junto com a ficha.',
+      'Dá para começar de um modelo do livro: Defensor de Aço, Servo Homúnculo, Canhão Místico (lança-chamas, balista e protetor) e Constructo Invocado (argila, metal ou pedra); os 15 familiares de Convocar Familiar e as 4 formas do Pacto da Corrente (diabrete, quasit, pseudodragão e fadinha); Fera da Terra, do Mar e do Céu, Companheiro do Patrulheiro (lobo, pantera, mastim) e Espírito de Fogo Selvagem; corcéis convocados e montarias comuns; e pets. Também há modelos em branco de cada tipo.',
+      'Os modelos de regra começam no Automático: PV, CA, bônus de ataque, dano e CD saem do seu nível e da sua proficiência (por exemplo, Defensor de Aço = 2 + Int + 5 × nível de Artificeiro; Fera da Terra = 5 + 5 × nível de Patrulheiro e CA 13 + proficiência). O botão Manual guarda esses números e deixa digitar qualquer um. A classe Artificeiro não está na lista da ficha: o nível é lido do nome da classe própria ou digitado no campo Nível de referência.',
+      'Os ataques e o dano rolam no cartão de dados da mesa (com crítico), e os testes e salvaguardas deles também. Os usos das habilidades voltam nos descansos curto e longo da ficha. Há um Guia de regras na própria aba: como cada tipo age, quem comanda, familiar, constructos do Artificeiro, animal companheiro, montaria, criaturas invocadas e pets.',
+    ],
+  },
+  {
     version: '2.33',
     date:    '2026-11-12',
     title:   'Fichas no visual novo',

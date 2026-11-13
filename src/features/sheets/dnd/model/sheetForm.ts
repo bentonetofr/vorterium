@@ -2,6 +2,7 @@ import type { DndCharacterSheet, DndCharacterSheetUpdateInput, DndCondition } fr
 import { getBackground, getRace } from '../catalog'
 import type { AbilityKey, Derived } from '../rules/types'
 import { isManualMode, type ManualMode } from './automation'
+import { readCompanions, type Companion } from './companions'
 import { clampHp, derivedColumns, homebrewHitDieOf, manualCarriedOf, manualHitDiceOf, manualSpellCountsOf, spellAbilityOf, type SpellCounts } from './sheetModel'
 
 // ────────────────────────────────────────────────────────
@@ -78,6 +79,8 @@ export interface DndForm {
   carried_kg:        number | null
   /** Dado de vida das classes fora do livro (e da ficha sem classe), por chave; vai em `choices.homebrewHitDie`. */
   homebrew_hit_die:  Record<string, number>
+  /** Companheiros (familiar, constructo, pet, montaria...); vão em `choices.companions`. */
+  companions:        Companion[]
 }
 
 export function formFromSheet(s: DndCharacterSheet): DndForm {
@@ -129,6 +132,7 @@ export function formFromSheet(s: DndCharacterSheet): DndForm {
     manual_spell_counts: manualSpellCountsOf(choices),
     carried_kg:       manualCarriedOf(choices),
     homebrew_hit_die: homebrewHitDieOf(choices),
+    companions:       readCompanions(choices.companions),
   }
 }
 
@@ -220,6 +224,8 @@ export function formToPayload(sheet: DndCharacterSheet, f: DndForm, derived: Der
   else delete choices.carriedKg
   if (Object.keys(f.homebrew_hit_die).length > 0) choices.homebrewHitDie = homebrewHitDieOf({ homebrewHitDie: f.homebrew_hit_die })
   else delete choices.homebrewHitDie
+  if (f.companions.length > 0) choices.companions = f.companions
+  else delete choices.companions
   const subNames = Object.fromEntries(Object.entries(f.subclass_names).map(([k, v]) => [k, v.trim().slice(0, DND_TEXT_LIMITS.subclass_name)]).filter(([, v]) => v))
   if (Object.keys(subNames).length > 0) choices.subclassNames = subNames
   else delete choices.subclassNames

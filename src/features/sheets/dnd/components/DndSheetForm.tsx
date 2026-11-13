@@ -19,6 +19,8 @@ import { DndInventarioTab } from './DndInventarioTab'
 import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
 import { DndAnotacoesTab } from './DndAnotacoesTab'
+import { DndCompanheirosTab } from './DndCompanheirosTab'
+import { restCompanions } from '../model/companions'
 import type { SheetCtx } from './sheetContext'
 import { DndRollProvider } from '../rolls/DndRollProvider'
 // o assistente de importar PDF só é baixado quando alguém abre
@@ -53,13 +55,14 @@ interface DndSheetFormProps {
 const AUTOSAVE_DELAY_MS = 800
 type SaveState = 'saved' | 'pending' | 'saving' | 'error'
 
-type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'inventario' | 'caracteristicas' | 'historia' | 'anotacoes' | 'lore'
+type TabId = 'personagem' | 'atributos' | 'combate' | 'magias' | 'companheiros' | 'inventario' | 'caracteristicas' | 'historia' | 'anotacoes' | 'lore'
 /** `short`: o nome na grade de abas do celular, onde o completo não cabe. */
 const TABS: { id: TabId; label: string; short: string }[] = [
   { id: 'personagem',      label: 'Personagem',           short: 'Personagem' },
   { id: 'atributos',       label: 'Atributos e Perícias', short: 'Atributos' },
   { id: 'combate',         label: 'Combate',              short: 'Combate' },
   { id: 'magias',          label: 'Magias',               short: 'Magias' },
+  { id: 'companheiros',    label: 'Companheiros',         short: 'Companheiros' },
   { id: 'inventario',      label: 'Inventário',           short: 'Inventário' },
   { id: 'caracteristicas', label: 'Características',      short: 'Características' },
   { id: 'historia',        label: 'História',             short: 'História' },
@@ -76,6 +79,7 @@ const PersonagemTab = memo(DndPersonagemTab)
 const AtributosTab = memo(DndAtributosTab)
 const CombateTab = memo(DndCombateTab)
 const MagiasTab = memo(DndMagiasTab)
+const CompanheirosTab = memo(DndCompanheirosTab)
 const InventarioTab = memo(DndInventarioTab)
 const CaracteristicasTab = memo(DndCaracteristicasTab)
 const HistoriaTab = memo(DndHistoriaTab)
@@ -291,6 +295,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
     setRestBusy(true); setError(null); setNotice(null)
     try {
       const n = await rechargeResourcesAndFeatures('short')
+      update((f) => ({ ...f, companions: restCompanions(f.companions, 'short') }))
       setNotice(n ? `Descanso curto: ${n} ${n === 1 ? 'recurso recarregado' : 'recursos recarregados'}. Gaste dados de vida na aba Combate para recuperar PV.` : 'Descanso curto feito. Nada precisava recarregar; gaste dados de vida na aba Combate para recuperar PV.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível fazer o descanso curto.')
@@ -317,6 +322,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       update((f) => ({
         ...f, hp_current: rest.hpCurrent, exhaustion: rest.exhaustion, concentrating_on: '',
         death_save_successes: rest.deathSaves.successes, death_save_failures: rest.deathSaves.failures, hit_dice_used: rest.hitDiceUsed,
+        companions: restCompanions(f.companions, 'long'),
       }))
       setNotice(`Descanso longo feito${n ? `, ${n} ${n === 1 ? 'recurso recarregado' : 'recursos recarregados'}` : ''}.`)
     } catch (err) {
@@ -380,6 +386,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         <div id="dsh-tabpanel-atributos" role="tabpanel" hidden={activeTab !== 'atributos'}>{activeTab === 'atributos' && <AtributosTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-combate" role="tabpanel" hidden={activeTab !== 'combate'}>{activeTab === 'combate' && <CombateTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-magias" role="tabpanel" hidden={activeTab !== 'magias'}>{activeTab === 'magias' && <MagiasTab ctx={ctx} />}</div>
+        <div id="dsh-tabpanel-companheiros" role="tabpanel" hidden={activeTab !== 'companheiros'}>{activeTab === 'companheiros' && <CompanheirosTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-inventario" role="tabpanel" hidden={activeTab !== 'inventario'}>{activeTab === 'inventario' && <InventarioTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-caracteristicas" role="tabpanel" hidden={activeTab !== 'caracteristicas'}>{activeTab === 'caracteristicas' && <CaracteristicasTab ctx={ctx} />}</div>
         <div id="dsh-tabpanel-historia" role="tabpanel" hidden={activeTab !== 'historia'}>{activeTab === 'historia' && <HistoriaTab ctx={ctx} />}</div>

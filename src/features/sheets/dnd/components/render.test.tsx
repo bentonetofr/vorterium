@@ -29,6 +29,8 @@ import { DndInventarioTab } from './DndInventarioTab'
 import { DndCaracteristicasTab } from './DndCaracteristicasTab'
 import { DndHistoriaTab } from './DndHistoriaTab'
 import { DndAnotacoesTab } from './DndAnotacoesTab'
+import { DndCompanheirosTab } from './DndCompanheirosTab'
+import { companionFromPreset } from '../model/companionCatalog'
 import type { SheetCtx } from './sheetContext'
 import { cls, makeCtx, makeData, makeSheet, resource } from './fixtures'
 import { DndSpellBrowser } from './DndSpellBrowser'
@@ -542,13 +544,43 @@ describe('abas', () => {
     }
   })
 
+  it('Companheiros: sem nenhum, convida a adicionar; com um, mostra a mini-ficha com os números do livro', () => {
+    const empty = renderToStaticMarkup(<DndCompanheirosTab ctx={makeCtx()} />)
+    expect(empty).toContain('Nenhum companheiro ainda')
+    expect(empty).toContain('Adicionar companheiro')
+    expect(empty).toContain('Guia de regras')
+    const ctx = makeCtx()
+    const steel = companionFromPreset('steel')!
+    ctx.form.companions = [{ ...steel, hp: 10 }, companionFromPreset('pet:wolf')!]
+    const html = renderToStaticMarkup(<DndCompanheirosTab ctx={ctx} />)
+    expect(html).toContain('Defensor de Aço')
+    expect(html).toContain('Lobo')
+    expect(html).toContain('<b>10</b>/29')                // PV atuais do defensor (29 = 2 + Int + 5 x nível 5)
+    expect(html).not.toContain('Remover companheiro')    // cartão fechado: só o resumo (com dois, nenhum abre sozinho)
+  })
+
+  it('Companheiros: um só cartão já vem aberto, com Automático, ataque e habilidades; em modo leitura não edita nada', () => {
+    const ctx = makeCtx()
+    ctx.form.companions = [companionFromPreset('steel')!]
+    const html = renderToStaticMarkup(<DndCompanheirosTab ctx={ctx} />)
+    for (const t of ['Automático', 'Manual', 'Golpe Reforçado por Energia', 'Reparar', 'Desviar Ataque', 'Nível de referência', 'Remover companheiro']) expect(html).toContain(t)
+    const ro = renderToStaticMarkup(<DndCompanheirosTab ctx={makeCtx({ readOnly: true })} />)
+    expect(ro).not.toContain('Adicionar companheiro')
+    const roOpen = makeCtx({ readOnly: true })
+    roOpen.form.companions = [companionFromPreset('steel')!]
+    const roHtml = renderToStaticMarkup(<DndCompanheirosTab ctx={roOpen} />)
+    expect(roHtml).not.toContain('Remover companheiro')
+    expect(roHtml).not.toContain('Curar tudo')
+    expect(roHtml).not.toContain('aria-label="Editar:')
+  })
+
   it('todas as abas renderizam com a ficha vazia e sem dados', () => {
     const empty = makeData({
       classes: [], proficiencies: [], resources: [], features: [],
       details: { skills: [], attacks: [], inventory: [], spells: [], overrides: [] },
     })
     const ctx = makeCtx({ data: empty, sheet: makeSheet({ race_key: null, subrace_key: null, background_key: null, conditions: [], exhaustion: 0, level: 1, experience: 0 }) })
-    for (const Tab of [DndPersonagemTab, DndAtributosTab, DndCombateTab, DndMagiasTab, DndInventarioTab, DndCaracteristicasTab, DndHistoriaTab, DndAnotacoesTab]) {
+    for (const Tab of [DndPersonagemTab, DndAtributosTab, DndCombateTab, DndMagiasTab, DndInventarioTab, DndCaracteristicasTab, DndHistoriaTab, DndAnotacoesTab, DndCompanheirosTab]) {
       expect(() => renderToStaticMarkup(<Tab ctx={ctx} />)).not.toThrow()
     }
     expect(() => hero(ctx)).not.toThrow()
