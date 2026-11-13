@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { enableDragScroll, scrollByStep, scrollToSmooth } from './tabScroll'
 
 // ────────────────────────────────────────────────────────
 // Destaque que desliza até a aba ativa. Vai DENTRO da barra de abas
@@ -39,10 +40,10 @@ function useScrollArrows(list: HTMLElement | null | undefined) {
       btn.setAttribute('aria-hidden', 'true')
       btn.textContent = side === 'left' ? '‹' : '›'
       btn.title = side === 'left' ? 'Mais abas à esquerda' : 'Mais abas à direita'
-      btn.style.display = 'none'
       btn.addEventListener('click', (e) => {
         e.preventDefault()
-        list.scrollBy({ left: (side === 'left' ? -1 : 1) * Math.max(120, list.clientWidth * 0.6), behavior: 'smooth' })
+        // cliques seguidos somam: a barra continua andando em vez de recomeçar
+        scrollByStep(list, (side === 'left' ? -1 : 1) * Math.max(120, list.clientWidth * 0.6))
       })
       return btn
     }
@@ -58,7 +59,8 @@ function useScrollArrows(list: HTMLElement | null | undefined) {
       list.toggleAttribute('data-scrolls', scrolls)
       const h = scrolls ? scrollHints(list.scrollLeft, list.clientWidth, list.scrollWidth) : { left: false, right: false }
       const place = (btn: HTMLElement, show: boolean, x: number) => {
-        btn.style.display = show ? '' : 'none'
+        // some e volta com transição (classe is-on), em vez de pular
+        btn.classList.toggle('is-on', show)
         btn.style.top = `${list.offsetTop}px`
         btn.style.height = `${list.offsetHeight}px`
         btn.style.left = `${x}px`
@@ -67,13 +69,19 @@ function useScrollArrows(list: HTMLElement | null | undefined) {
       place(right, h.right, list.offsetLeft + list.offsetWidth + 4)
     }
     update()
-    list.addEventListener('scroll', update, { passive: true })
+    // durante o arrasto e a inércia a barra rola a cada quadro: as setas se atualizam no máximo uma vez por quadro
+    let frame = 0
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; update() }) }
+    list.addEventListener('scroll', onScroll, { passive: true })
+    const stopDrag = enableDragScroll(list)
     const observer = new ResizeObserver(update)
     observer.observe(list)
     observer.observe(parent)
     list.querySelectorAll('[role="tab"]').forEach((tab) => observer.observe(tab))
     return () => {
-      list.removeEventListener('scroll', update)
+      list.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(frame)
+      stopDrag()
       observer.disconnect()
       left.remove()
       right.remove()
@@ -115,8 +123,8 @@ export function TabIndicator({ activeKey }: TabIndicatorProps) {
       if (list!.scrollWidth > list!.clientWidth) {
         const left  = active.offsetLeft - 16
         const right = active.offsetLeft + active.offsetWidth + 16 - list!.clientWidth
-        if (list!.scrollLeft > left) list!.scrollTo({ left, behavior: 'smooth' })
-        else if (list!.scrollLeft < right) list!.scrollTo({ left: right, behavior: 'smooth' })
+        if (list!.scrollLeft > left) scrollToSmooth(list!, left)
+        else if (list!.scrollLeft < right) scrollToSmooth(list!, right)
       }
     }
 
