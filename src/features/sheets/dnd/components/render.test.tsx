@@ -589,6 +589,18 @@ describe('abas', () => {
     expect(roHtml).not.toContain('aria-label="Editar:')
   })
 
+  it('Companheiros: o nome muda no próprio lugar, no alto do cartão aberto; em modo leitura o campo não edita', () => {
+    const ctx = makeCtx()
+    ctx.form.companions = [{ ...companionFromPreset('steel')!, name: 'Rex' }]
+    const html = renderToStaticMarkup(<DndCompanheirosTab ctx={ctx} />)
+    expect(html).toContain('aria-label="Nome do companheiro"')
+    expect(html).toContain('value="Rex"')
+    expect(html).not.toMatch(/class="dcm-name"[^>]*readonly/)
+    const ro = makeCtx({ readOnly: true })
+    ro.form.companions = [{ ...companionFromPreset('steel')!, name: 'Rex' }]
+    expect(renderToStaticMarkup(<DndCompanheirosTab ctx={ro} />)).toMatch(/class="dcm-name"[^>]*readonly/)
+  })
+
   it('Companheiros: a foto aparece no alto do cartão e na etiqueta; sem foto, convida a adicionar; em modo leitura não troca', () => {
     const url = 'https://exemplo.supabase.co/storage/v1/object/public/dnd-portraits/s1/companion-x'
     const ctx = makeCtx()

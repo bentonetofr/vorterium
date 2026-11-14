@@ -276,6 +276,12 @@ function CompanionCard({ c, owner, ctx, open, onToggle, onChange, onRemove }: Ca
         <div className="dcm-card__body">
           <div className="dcm-top">
           <CompanionPhoto c={c} ro={ro} sheetId={ctx.sheet.id} report={ctx.report} onPhoto={(url) => set('photo_url', url)} />
+          <div className="dcm-top__main">
+          {/* O nome se muda no próprio lugar: é só clicar nele e digitar */}
+          <input
+            type="text" className="dcm-name" value={c.name} maxLength={80} readOnly={ro} placeholder={c.species || 'Nome do companheiro'}
+            onChange={(e) => set('name', e.target.value)} aria-label="Nome do companheiro" title={ro ? undefined : 'Clique para mudar o nome'}
+          />
           {/* Vida */}
           <div className="dcm-vitals">
             <div className="dcm-hp">
@@ -296,6 +302,7 @@ function CompanionCard({ c, owner, ctx, open, onToggle, onChange, onRemove }: Ca
                 {(Object.keys(STATE_LABEL) as CompanionState[]).map((s) => <option key={s} value={s}>{STATE_LABEL[s]}</option>)}
               </select>
             </label>
+          </div>
           </div>
           </div>
 
