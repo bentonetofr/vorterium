@@ -19,6 +19,11 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Backup: os scripts ficam no repositório, os segredos e as cópias NUNCA
+backup/conexao.txt
+backup/chave*.txt
+vorterium-backups/
+
 # Logs
 *.log
 npm-debug.log*
