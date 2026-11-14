@@ -15,6 +15,7 @@ import { VortableFab } from './VortableFab'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { FabToasts } from '../../../shared/components/FabToasts'
 import { COMPACT_QUERY, useMediaQuery } from '../../../shared/lib/useMediaQuery'
+import { visibleInterval } from '../../../shared/lib/visibleInterval'
 
 /**
  * Os botões flutuantes do site (sino, dados, chat, o caderno de quem tem um e o livro de documentos do mestre)
@@ -45,13 +46,13 @@ export function VortableTools({ open, onToggle }: { open: boolean; onToggle: () 
       } catch { /* só deixa de atualizar o selo */ }
     }
     const first = setTimeout(refresh, 1500)
-    const interval = setInterval(refresh, 60_000)
+    const stopInterval = visibleInterval(() => { void refresh() }, 60_000)
     const onMessage = (e: Event) => { if ((e as CustomEvent<string>).detail === campaignId) void refresh() }
     window.addEventListener(CHAT_MESSAGE_EVENT, onMessage)
     return () => {
       dead = true
       clearTimeout(first)
-      clearInterval(interval)
+      stopInterval()
       window.removeEventListener(CHAT_MESSAGE_EVENT, onMessage)
     }
   }, [campaignId, chatOpen, setChatUnread, setPrivateUnread])

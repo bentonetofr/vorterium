@@ -52,7 +52,7 @@ export function VortableWorldProvider({ children }: { children: ReactNode }) {
     const off = watchWorlds(campaignId, () => { void refresh() })
     // rede de segurança: se o tempo real caiu e voltou, nada se perde (confere de novo de vez em quando
     // e quando a aba volta a ficar visível)
-    const timer = window.setInterval(() => { void refresh() }, 20_000)
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh() }, 60_000)
     const onVisible = () => { if (document.visibilityState === 'visible') void refresh() }
     document.addEventListener('visibilitychange', onVisible)
     return () => { off(); window.clearInterval(timer); document.removeEventListener('visibilitychange', onVisible) }

@@ -9,12 +9,13 @@ import {
   type LiveNotification,
 } from '../services/activityService'
 import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts'
+import { visibleInterval } from '../../../shared/lib/visibleInterval'
 import './NotificationPopup.css'
 import './NotificationTda.css'
 
 // Mais rápido que o sino de propósito — é o mecanismo "ao vivo", quer parecer
 // imediato. Ainda sem Realtime, só um polling mais frequente.
-const POLL_INTERVAL_MS = 20_000
+const POLL_INTERVAL_MS = 45_000
 // Quanto tempo cada pop-up fica visível antes de sumir.
 const POPUP_DURATION_MS = 5_000
 // Duração da animação de saída — soma dentro do tempo total acima.
@@ -75,8 +76,7 @@ export function NotificationPopup() {
   useEffect(() => {
     if (!user) return
     poll()
-    const interval = setInterval(poll, POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
+    return visibleInterval(() => { void poll() }, POLL_INTERVAL_MS)
   }, [user, poll])
 
   // ── Mensagem de chat NÃO passa por aqui: quem avisa é o botão do chat

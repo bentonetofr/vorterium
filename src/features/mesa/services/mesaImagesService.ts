@@ -1,4 +1,5 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
+import { forgetSignedUrl, signedUrl, signedUrls } from '../../../shared/lib/signedUrls'
 
 // ────────────────────────────────────────────────────────
 // Galeria — imagens que o mestre guarda pra mostrar à mesa (e as fotos do
@@ -12,9 +13,7 @@ const BUCKET = 'mesa-images'
 export const MESA_IMAGE_MAX_BYTES = 10 * 1024 * 1024
 export const MESA_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
 
-/** Link das miniaturas da galeria. */
-const THUMB_URL_SECONDS = 60 * 60
-/** Link da imagem na mesa — cobre uma sessão longa. */
+/** Imagem na mesa — link novo, que cobre uma sessão longa (as miniaturas usam o cache de signedUrls). */
 const SHOW_URL_SECONDS = 12 * 60 * 60
 
 export interface MesaGalleryImage {
@@ -58,11 +57,7 @@ export async function listMesaImages(campaignId: string): Promise<MesaGalleryIma
   const rows = (data ?? []) as Omit<MesaGalleryImage, 'url'>[]
   if (rows.length === 0) return []
 
-  const { data: signed } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrls(rows.map((r) => r.path), THUMB_URL_SECONDS)
-
-  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
+  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path))
   return rows.map((r) => ({ ...r, url: urlByPath.get(r.path) ?? null }))
 }
 
@@ -73,7 +68,7 @@ export async function uploadMesaImage(campaignId: string, file: File): Promise<M
   const path = `${campaignId}/${crypto.randomUUID()}.${EXTENSIONS[file.type] ?? 'img'}`
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(path, file, { contentType: file.type, cacheControl: '3600' })
+    .upload(path, file, { contentType: file.type, cacheControl: '31536000' })
 
   if (uploadError) {
     console.error('Erro do Storage ao enviar imagem da Mesa:', uploadError)
@@ -91,8 +86,7 @@ export async function uploadMesaImage(campaignId: string, file: File): Promise<M
     throw new Error('Não foi possível salvar a imagem na galeria.')
   }
 
-  const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrl(path, THUMB_URL_SECONDS)
-  return { ...(data as Omit<MesaGalleryImage, 'url'>), url: signed?.signedUrl ?? null }
+  return { ...(data as Omit<MesaGalleryImage, 'url'>), url: await signedUrl(BUCKET, path) }
 }
 
 export async function deleteMesaImage(image: MesaGalleryImage): Promise<void> {
@@ -100,6 +94,7 @@ export async function deleteMesaImage(image: MesaGalleryImage): Promise<void> {
   if (error) throw new Error('Não foi possível excluir a imagem.')
   const { error: removeError } = await supabase.storage.from(BUCKET).remove([image.path])
   if (removeError) console.error('Imagem da Mesa ficou no Storage:', removeError)
+  forgetSignedUrl(BUCKET, image.path)
 }
 
 /** Link que vai pros jogadores ao colocar a imagem na mesa. */
@@ -129,10 +124,7 @@ export async function listAllMyMesaImages(): Promise<GalleryImageWithCampaign[]>
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.campaigns != null)
   if (rows.length === 0) return []
 
-  const { data: signed } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrls(rows.map((r) => r.path), THUMB_URL_SECONDS)
-  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
+  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path))
 
   return rows.map(({ campaigns, ...r }) => ({ ...r, campaign_name: campaigns!.name, url: urlByPath.get(r.path) ?? null }))
 }
@@ -159,9 +151,9 @@ export async function copyMesaImageToCampaign(image: MesaGalleryImage, campaignI
 
 /** Link temporário pra abrir a imagem em tamanho real numa aba nova. */
 export async function getMesaImageViewUrl(path: string): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, THUMB_URL_SECONDS)
-  if (error || !data?.signedUrl) throw new Error('Não foi possível abrir a imagem.')
-  return data.signedUrl
+  const url = await signedUrl(BUCKET, path)
+  if (!url) throw new Error('Não foi possível abrir a imagem.')
+  return url
 }
 
 // ────────────────────────────────────────────────────────
@@ -206,7 +198,7 @@ export async function uploadBoardPhoto(campaignId: string, file: File, shield: b
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(path, img.blob, { contentType: img.type, cacheControl: '3600' })
+    .upload(path, img.blob, { contentType: img.type, cacheControl: '31536000' })
   if (uploadError) {
     console.error('Erro do Storage ao enviar foto do Quadro:', uploadError)
     throw new Error(`Não foi possível enviar "${file.name}".`)
@@ -224,27 +216,9 @@ export async function uploadBoardPhoto(campaignId: string, file: File, shield: b
   return { path, name, w: img.w, h: img.h }
 }
 
-const photoUrlCache = new Map<string, { url: string; until: number }>()
-
 /** Links temporários das fotos do Quadro (path → link), com cache. */
-export async function signBoardPhotos(paths: string[]): Promise<Map<string, string>> {
-  const now = Date.now()
-  const out = new Map<string, string>()
-  const missing = [...new Set(paths)].filter((p) => {
-    const hit = photoUrlCache.get(p)
-    if (hit && hit.until > now) { out.set(p, hit.url); return false }
-    return true
-  })
-  if (missing.length) {
-    const { data } = await supabase.storage.from(BUCKET).createSignedUrls(missing, SHOW_URL_SECONDS)
-    for (const s of data ?? []) {
-      if (s.path && s.signedUrl) {
-        photoUrlCache.set(s.path, { url: s.signedUrl, until: now + (SHOW_URL_SECONDS - 600) * 1000 })
-        out.set(s.path, s.signedUrl)
-      }
-    }
-  }
-  return out
+export function signBoardPhotos(paths: string[]): Promise<Map<string, string>> {
+  return signedUrls(BUCKET, paths)
 }
 
 // ────────────────────────────────────────────────────────
@@ -266,8 +240,7 @@ type ArtRow = Omit<MesaGalleryImage, 'url'> & { uploaded_by: string | null; hidd
 
 async function withUrls(rows: ArtRow[]): Promise<MesaArt[]> {
   if (rows.length === 0) return []
-  const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(rows.map((r) => r.path), THUMB_URL_SECONDS)
-  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
+  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path))
   return rows.map(({ uploader, hidden, ...r }) => ({ ...r, hidden: hidden === true, uploader_name: uploader?.display_name ?? null, url: urlByPath.get(r.path) ?? null }))
 }
 
@@ -304,7 +277,7 @@ export async function uploadMesaArt(campaignId: string, file: File): Promise<Mes
   if (file.size > 40 * 1024 * 1024) throw new Error(`"${file.name}" passa de 40 MB.`)
   const img = await fitForGallery(file)
   const path = `${campaignId}/arte/${crypto.randomUUID()}.${EXTENSIONS[img.type] ?? 'img'}`
-  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, img.blob, { contentType: img.type, cacheControl: '3600' })
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, img.blob, { contentType: img.type, cacheControl: '31536000' })
   if (uploadError) {
     console.error('Erro do Storage ao enviar arte/referência:', uploadError)
     throw new Error(`Não foi possível enviar "${file.name}".`)

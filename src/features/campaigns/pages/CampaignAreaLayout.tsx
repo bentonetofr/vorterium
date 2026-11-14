@@ -21,6 +21,7 @@ import { BoardPanel }             from '../../board/components/BoardPanel'
 import './CampaignPages.css'
 import { Loader } from '../../../shared/components/Loader'
 import { rememberCampaign } from '../../../shared/lib/lastCampaign'
+import { visibleInterval } from '../../../shared/lib/visibleInterval'
 
 // ────────────────────────────────────────────────────────
 // Componente
@@ -92,14 +93,14 @@ export function CampaignAreaLayout() {
     }
     // Pequena espera: ao fechar o chat, a marcação de "lida" ainda está a caminho.
     const first = setTimeout(refresh, 1500)
-    const interval = setInterval(refresh, 60_000)
+    const stopInterval = visibleInterval(() => { void refresh() }, 60_000)
     // Mensagem nova nesta campanha: o selo do botão do chat sobe na hora.
     const onMessage = (e: Event) => { if ((e as CustomEvent<string>).detail === campaign!.id) void refresh() }
     window.addEventListener(CHAT_MESSAGE_EVENT, onMessage)
     return () => {
       cancelled = true
       clearTimeout(first)
-      clearInterval(interval)
+      stopInterval()
       window.removeEventListener(CHAT_MESSAGE_EVENT, onMessage)
     }
   }, [campaign?.id, chatOpen, setChatUnread])
@@ -117,12 +118,12 @@ export function CampaignAreaLayout() {
       } catch { /* selo só deixa de atualizar, não quebra a tela */ }
     }
     refresh()
-    const interval = setInterval(refresh, 60_000)
+    const stopInterval = visibleInterval(() => { void refresh() }, 60_000)
     const onMessage = (e: Event) => { if ((e as CustomEvent<string>).detail === campaign!.id) void refresh() }
     window.addEventListener(CHAT_MESSAGE_EVENT, onMessage)
     return () => {
       cancelled = true
-      clearInterval(interval)
+      stopInterval()
       window.removeEventListener(CHAT_MESSAGE_EVENT, onMessage)
     }
   }, [campaign?.id, setPrivateUnread])

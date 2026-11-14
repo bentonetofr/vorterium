@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
+import { signedUrls } from '../../../shared/lib/signedUrls'
 import type { CampaignSession } from '../../../shared/types'
 import { notePlainText } from '../noteHtml'
 import { sortSessions } from '../../sessions/services/sessionService'
@@ -239,7 +240,7 @@ export async function uploadNoteImage(campaignId: string, authorId: string, file
   if (file.size > IMAGE_RAW_LIMIT) throw new Error(`"${file.name}" passa de 25 MB.`)
   const img = await prepareImage(file)
   const path = `${campaignId}/${authorId}/${crypto.randomUUID()}.${img.ext}`
-  const { error } = await supabase.storage.from(IMAGES_BUCKET).upload(path, img.blob, { contentType: img.type, cacheControl: '3600' })
+  const { error } = await supabase.storage.from(IMAGES_BUCKET).upload(path, img.blob, { contentType: img.type, cacheControl: '31536000' })
   if (error) {
     console.error('Erro ao guardar imagem da anotação:', error)
     throw new Error('Não foi possível guardar a imagem.')
@@ -252,27 +253,9 @@ export async function removeNoteImageFile(path: string): Promise<void> {
   await supabase.storage.from(IMAGES_BUCKET).remove([path])
 }
 
-const imageUrlCache = new Map<string, { url: string; until: number }>()
-
 /** Links temporários das imagens (path → link), com cache. */
-export async function noteImageUrls(paths: string[]): Promise<Map<string, string>> {
-  const now = Date.now()
-  const out = new Map<string, string>()
-  const missing = paths.filter((p) => {
-    const hit = imageUrlCache.get(p)
-    if (hit && hit.until > now) { out.set(p, hit.url); return false }
-    return true
-  })
-  if (missing.length) {
-    const { data } = await supabase.storage.from(IMAGES_BUCKET).createSignedUrls(missing, 3600)
-    for (const s of data ?? []) {
-      if (s.path && s.signedUrl) {
-        imageUrlCache.set(s.path, { url: s.signedUrl, until: now + 50 * 60 * 1000 })
-        out.set(s.path, s.signedUrl)
-      }
-    }
-  }
-  return out
+export function noteImageUrls(paths: string[]): Promise<Map<string, string>> {
+  return signedUrls(IMAGES_BUCKET, paths)
 }
 
 /** Primeira linha do texto, sem formatação (pra dar nome à anotação na lista). */

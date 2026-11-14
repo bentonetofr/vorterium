@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { useMesaStream } from '../../mesa/MesaStreamProvider'
 import { getCharacterFaces } from '../../chat/services/chatService'
+import { visibleInterval } from '../../../shared/lib/visibleInterval'
 import { VortableNet, type DoorRequest, type NetCommand, type NetIssue, type NetPeerInfo, type NetStatus, type NetTransport, type Signaling } from './VortableNet'
 import { createRelayFactory } from './relay'
 import { DoorPrompt } from '../components/DoorPrompt'
@@ -158,7 +159,7 @@ export function VortableNetProvider({ children, startWatching = false, remember 
   }, [masterGone])
   useEffect(() => () => vtResolve('mestre'), [])
 
-  // nome do personagem na ficha: confere ao abrir, a cada 5 segundos e quando a janela da ficha fecha
+  // nome do personagem na ficha: confere ao abrir, de vez em quando (só com a aba à vista) e quando a janela da ficha fecha
   useEffect(() => {
     if (!campaign || !userId) return
     let dead = false
@@ -168,9 +169,9 @@ export function VortableNetProvider({ children, startWatching = false, remember 
         .catch(() => { /* sem o nome da ficha, vale o da conta */ })
     }
     load()
-    const timer = window.setInterval(load, 5_000)
+    const stop = visibleInterval(load, 60_000)
     window.addEventListener(SHEET_CLOSED_EVENT, load)
-    return () => { dead = true; window.clearInterval(timer); window.removeEventListener(SHEET_CLOSED_EVENT, load) }
+    return () => { dead = true; stop(); window.removeEventListener(SHEET_CLOSED_EVENT, load) }
   }, [campaign?.id, userId])
 
   useEffect(() => {

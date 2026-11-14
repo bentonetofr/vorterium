@@ -14,9 +14,10 @@ import { loadTdaFonts } from '../../sheets/terraDevastadaAdaptada/utils/tdaFonts
 import './NotificationBell.css'
 import './NotificationTda.css'
 import { Loader } from '../../../shared/components/Loader'
+import { visibleInterval } from '../../../shared/lib/visibleInterval'
 
 // Cadência do selo — mais devagar que o pop-up ao vivo, é só o "de fundo".
-const POLL_INTERVAL_MS = 75_000
+const POLL_INTERVAL_MS = 90_000
 
 function formatRelativeTime(iso: string): string {
   const diff    = Date.now() - new Date(iso).getTime()
@@ -50,8 +51,7 @@ export function NotificationBell() {
   useEffect(() => {
     if (!user) return
     refreshCount()
-    const interval = setInterval(refreshCount, POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
+    return visibleInterval(() => { void refreshCount() }, POLL_INTERVAL_MS)
   }, [user, refreshCount])
 
   const close = useCallback(() => setIsOpen(false), [])

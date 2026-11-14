@@ -1,4 +1,5 @@
 import { supabase } from '../../../shared/lib/supabase'
+import { signedUrls } from '../../../shared/lib/signedUrls'
 
 // ────────────────────────────────────────────────────────
 // Biblioteca da campanha — livros e documentos que o mestre guarda pra
@@ -39,7 +40,7 @@ const TYPES: Record<string, { kind: DocumentKind; ext: string }> = {
 /** O que vai no accept do <input type="file">. */
 export const DOCUMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png,.webp,.gif,.txt,.md,' + Object.keys(TYPES).join(',')
 
-/** Links assinados: cobrem uma sessão longa de leitura. */
+/** Links assinados só pra baixar o arquivo (abrir e miniaturas usam o cache de signedUrls). */
 const URL_SECONDS = 6 * 60 * 60
 
 export function documentKind(doc: Pick<CampaignDocument, 'mime_type'>): DocumentKind {
@@ -163,6 +164,12 @@ export async function deleteDocument(doc: CampaignDocument): Promise<void> {
 
 /** Link temporário pra ler o arquivo no site (ou baixar, com `download`). */
 export async function getDocumentUrl(doc: CampaignDocument, download = false): Promise<string> {
+  // abrir no site reaproveita o link (o PDF que já abriu não baixa de novo)
+  if (!download) {
+    const cached = (await signedUrls(BUCKET, [doc.path])).get(doc.path)
+    if (!cached) throw new Error('Não foi possível abrir o documento.')
+    return cached
+  }
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .createSignedUrl(doc.path, URL_SECONDS, download ? { download: fileNameOf(doc) } : undefined)
@@ -174,10 +181,7 @@ export async function getDocumentUrl(doc: CampaignDocument, download = false): P
 export async function getThumbUrls(docs: CampaignDocument[]): Promise<Map<string, string>> {
   const images = docs.filter((d) => documentKind(d) === 'image')
   if (images.length === 0) return new Map()
-  const { data } = await supabase.storage.from(BUCKET).createSignedUrls(images.map((d) => d.path), URL_SECONDS)
-  const urls = new Map<string, string>()
-  for (const s of data ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl)
-  return urls
+  return signedUrls(BUCKET, images.map((d) => d.path))
 }
 
 export function fileNameOf(doc: CampaignDocument): string {

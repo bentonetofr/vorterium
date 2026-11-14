@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.37',
+    date:    '2026-11-14',
+    title:   'Site mais leve: menos consultas e imagens que não baixam de novo',
+    items: [
+      'O site passou a fazer bem menos consultas ao servidor em segundo plano: o nome do personagem no Vortable era conferido a cada 5 segundos e agora é a cada minuto, e os selos de mensagem, as notificações e a lista de mundos esperam mais entre uma conferência e outra.',
+      'Aba escondida não consulta mais nada: ao voltar pra ela, o site confere na hora.',
+      'As imagens da Galeria, do Quadro, das Anotações e da Biblioteca guardam o link por um dia, e o navegador deixa de baixar a mesma imagem toda vez que você abre a página.',
+    ],
+  },
+  {
     version: '2.36',
     date:    '2026-11-14',
     title:   'Coleção de dados: 14 dados novos, sons próprios e a raridade Mítica',

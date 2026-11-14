@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../../shared/lib/supabase'
+import { signedUrls } from '../../../shared/lib/signedUrls'
 
 // ────────────────────────────────────────────────────────
 // Quadro da campanha — quadro infinito que a mesa monta junta (post-its,
@@ -243,29 +244,10 @@ export function connectBoard(campaignId: string, board: BoardId, me: BoardPeer, 
 // ── Imagens da Biblioteca ───────────────────────────────
 
 const BUCKET = 'campaign-documents'
-const URL_SECONDS = 6 * 60 * 60
-const urlCache = new Map<string, { url: string; until: number }>()
 
 /** Links assinados das imagens do quadro (path → link), com cache. */
-export async function signBoardPaths(paths: string[]): Promise<Map<string, string>> {
-  const now = Date.now()
-  const out = new Map<string, string>()
-  const missing: string[] = []
-  for (const p of new Set(paths)) {
-    const hit = urlCache.get(p)
-    if (hit && hit.until > now) out.set(p, hit.url)
-    else missing.push(p)
-  }
-  if (missing.length) {
-    const { data } = await supabase.storage.from(BUCKET).createSignedUrls(missing, URL_SECONDS)
-    for (const s of data ?? []) {
-      if (s.path && s.signedUrl) {
-        urlCache.set(s.path, { url: s.signedUrl, until: now + (URL_SECONDS - 600) * 1000 })
-        out.set(s.path, s.signedUrl)
-      }
-    }
-  }
-  return out
+export function signBoardPaths(paths: string[]): Promise<Map<string, string>> {
+  return signedUrls(BUCKET, paths)
 }
 
 /**
