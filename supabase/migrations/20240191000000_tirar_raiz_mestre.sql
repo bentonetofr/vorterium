@@ -20,13 +20,13 @@
 
 do $$
 declare
-  s    public.altherium_character_sheets;
+  sh   public.altherium_character_sheets;
   b    jsonb;
   prev public.altherium_character_sheets;
 begin
   -- ── 1. Quem recusou: a ficha volta a ser como era ──
-  for s in select * from public.altherium_character_sheets where mestre_refusal_backup is not null for update loop
-    b := s.mestre_refusal_backup;
+  for sh in select * from public.altherium_character_sheets where mestre_refusal_backup is not null for update loop
+    b := sh.mestre_refusal_backup;
     prev := jsonb_populate_record(null::public.altherium_character_sheets, b->'sheet');
     update public.altherium_character_sheets set
       level               = prev.level,
@@ -50,9 +50,9 @@ begin
       berserker_triumphs  = prev.berserker_triumphs,
       recent_triumphs     = prev.recent_triumphs,
       mestre_refusal_backup = null
-    where id = s.id;
+    where id = sh.id;
 
-    delete from public.altherium_character_domains where sheet_id = s.id;
+    delete from public.altherium_character_domains where sheet_id = sh.id;
     insert into public.altherium_character_domains
     select * from jsonb_populate_recordset(null::public.altherium_character_domains, b->'domains');
 
