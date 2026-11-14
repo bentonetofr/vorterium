@@ -107,14 +107,19 @@ rem 6) Os arquivos do Storage (retratos, imagens, documentos, avatares). So baix
 rem    e novo, entao depois da primeira vez gasta quase nada do trafego do Supabase.
 echo   [6/6] Baixando os arquivos do Storage... na primeira vez pode demorar.
 set RESUMO=o script do Storage nao respondeu
-for /f "delims=" %%i in ('docker run --rm --env-file "%PASTA%\chave.txt" -e DESTINO=/backup/storage -v "%PASTA%:/backup" -v "%SCRIPTS%:/app:ro" node:22-alpine node /app/storage-backup.mjs 2^>"%ERRO%"') do (
+set SAIDA=%PASTA%\saida-temp.log
+docker run --rm --env-file "%PASTA%\chave.txt" -e DESTINO=/backup/storage -v "%PASTA%:/backup" -v "%SCRIPTS%:/app:ro" node:22-alpine node /app/storage-backup.mjs >"%SAIDA%" 2>"%ERRO%"
+set CODIGO=!errorlevel!
+rem Mostra o que o script contou e guarda a ultima linha (RESUMO ...).
+if exist "%SAIDA%" for /f "usebackq delims=" %%i in ("%SAIDA%") do (
   echo     %%i
   set RESUMO=%%i
 )
-rem O "for" nao devolve o codigo de saida do node, entao a conta e feita lendo a linha
-rem RESUMO (falhas=N) que ele imprime no fim.
-echo !RESUMO! | findstr /c:"falhas=0" >nul
-if errorlevel 1 (
+del "%SAIDA%" 2>nul
+rem Falha se o node saiu com erro OU se o RESUMO nao diz falhas=0.
+set STORAGE_OK=0
+if "!CODIGO!"=="0" echo !RESUMO! | findstr /c:"falhas=0" >nul && set STORAGE_OK=1
+if "!STORAGE_OK!"=="0" (
   set MOTIVO=O banco foi salvo, mas o Storage nao veio completo. !RESUMO! - detalhe em erro-temp.log
   echo !AGORA!  PARCIAL - banco salvo em vorterium-%DATA%.sql, Storage com problema: !RESUMO!>>"%LOG%"
   goto :falhou_sem_log
