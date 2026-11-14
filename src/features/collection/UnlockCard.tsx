@@ -4,6 +4,7 @@ import { getSkin, type Tier } from '../dice3d/skins'
 import { setMyDiceSkin } from '../dice3d/diceSkinService'
 import type { DiceShowcase } from '../dice3d/DiceShowcase'
 import { playUnlockSound } from './unlockSound'
+import { playDiceRattle } from '../dice3d/sound'
 import { didOf } from './achievements'
 import type { UnlockEvent } from './collectionService'
 import './UnlockCard.css'
@@ -13,14 +14,16 @@ import './UnlockCard.css'
 // o nome da raridade e os parabéns. A conquista é secreta: o cartão só mostra o nome dela, nunca como se ganha.
 // ────────────────────────────────────────────────────────
 
-export const TIER_LABEL: Record<Tier, string> = { comum: 'Comum', incomum: 'Incomum', rara: 'Rara', epica: 'Épica', lendaria: 'Lendária' }
+export const TIER_LABEL: Record<Tier, string> = { comum: 'Comum', incomum: 'Incomum', rara: 'Rara', epica: 'Épica', lendaria: 'Lendária', mitica: 'Mítica' }
 /** Cor principal e cor funda de cada raridade. */
 export const TIER_COLOR: Record<Tier, [string, string]> = {
-  comum: ['#d9c9a3', '#7a6a48'], incomum: ['#5fe0a8', '#1f7a56'], rara: ['#5ab4ff', '#1f5fa8'], epica: ['#c284ff', '#6a2ab0'], lendaria: ['#ffc23a', '#b8620c'],
+  comum: ['#d9c9a3', '#7a6a48'], incomum: ['#5fe0a8', '#1f7a56'], rara: ['#5ab4ff', '#1f5fa8'], epica: ['#c284ff', '#6a2ab0'], lendaria: ['#ffc23a', '#b8620c'], mitica: ['#ff5d8f', '#7a0c3a'],
 }
 
 const SPARKS = Array.from({ length: 30 }, (_, i) => i)
 const STARS = Array.from({ length: 10 }, (_, i) => i)
+/** Quando a fanfarra de cada raridade já acabou (ms): aí o dado novo faz o som dele. */
+const RATTLE_AFTER_MS: Record<Tier, number> = { comum: 1500, incomum: 1600, rara: 1700, epica: 1900, lendaria: 2000, mitica: 2900 }
 /** Quanto o cartão fica na tela se ninguém fechar (ms). */
 const STAY_MS = 20000
 
@@ -38,6 +41,8 @@ export function UnlockCard({ event, onClose }: { event: UnlockEvent; onClose: ()
   // o dado girando (o 3D baixa na hora, num pedaço separado) e o som de entrada
   useEffect(() => {
     playUnlockSound(tier)
+    // depois da fanfarra, o dado novo "rola" uma vez: quem ganhou um dado com som próprio já ouve como ele bate
+    const rattle = skin.sound ? window.setTimeout(() => playDiceRattle(skin.sound), RATTLE_AFTER_MS[tier]) : 0
     let alive = true
     let made: DiceShowcase | null = null
     void Promise.all([import('../dice3d/DiceStage'), import('../dice3d/DiceShowcase')]).then(([stageMod, showMod]) => {
@@ -49,8 +54,8 @@ export function UnlockCard({ event, onClose }: { event: UnlockEvent; onClose: ()
         void made.show([{ id: skin.id, el: pedestalRef.current }])
       } catch { setSimple(true) }
     }).catch(() => { if (alive) setSimple(true) })
-    return () => { alive = false; showcase.current = null; made?.dispose() }
-  }, [skin.id, tier])
+    return () => { alive = false; window.clearTimeout(rattle); showcase.current = null; made?.dispose() }
+  }, [skin.id, skin.sound, tier])
 
   // some sozinho depois de um tempo
   useEffect(() => {

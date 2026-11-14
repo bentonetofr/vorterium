@@ -3,9 +3,9 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { alignments, labelForValue, labelText, numberUp, polyhedron, quatFromM3, upIndex, type DieKind, type V3 } from './polyhedra'
 import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from './camera'
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
-import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
+import { animateDieGlow, disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { getSkin } from './skins'
-import { playDiceHit } from './sound'
+import { playDiceHit, type DiceVoice } from './sound'
 import { LITE_DICE } from './lite'
 
 // ────────────────────────────────────────────────────────
@@ -42,6 +42,8 @@ interface LiveDie {
   /** Giro em torno do eixo vertical aplicado em todo o lançamento (só no palco). */
   yaw:    THREE.Quaternion
   dim:    boolean
+  /** O som do material deste dado (conjuntos com voz própria). */
+  voice?: DiceVoice
 }
 
 /** Um lançamento: os dados dele, a gravação da física e o ponto em que está. */
@@ -228,6 +230,7 @@ export class DiceStage {
     const tick = () => {
       if (this.disposed || this.idleMesh !== mesh) return
       const t = (performance.now() - start) / 1000
+      animateDieGlow(mesh, t)
       if (this.style === 'wide') this.idleHome(home)
       mesh.position.set(home.x, home.y + Math.sin(t * 1.6) * 0.18, home.z)
       mesh.rotation.set(0.5 + Math.sin(t * 0.7) * 0.25, t * 0.6, 0.3 + Math.cos(t * 0.5) * 0.2)
@@ -301,11 +304,12 @@ export class DiceStage {
         const dir = new THREE.Vector3(...numberUp(p, ball ? up : p.labels.indexOf(label))).applyQuaternion(fix).applyQuaternion(body)
         yaw.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dir.x, -dir.z))
       }
-      const mesh = makeDieMesh(d.kind, getSkin(d.skin ?? opts.skin), ball ? { face: up, label } : undefined)
+      const skin = getSkin(d.skin ?? opts.skin)
+      const mesh = makeDieMesh(d.kind, skin, ball ? { face: up, label } : undefined)
       mesh.castShadow = true
       mesh.userData.kind = d.kind
       this.scene.add(mesh)
-      return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim }
+      return { mesh, frames: sim.frames[i], fix, yaw, dim: !!d.dim, voice: skin.sound }
     })
 
     let resolve: () => void = () => {}
@@ -360,10 +364,12 @@ export class DiceStage {
       d.mesh.quaternion.slerpQuaternions(this.q0, this.q1, f).premultiply(d.yaw).multiply(d.fix)
       // entrada: cresce nos primeiros quadros, como se viesse da mão
       d.mesh.scale.setScalar(Math.min(1, 0.55 + t / 10))
+      animateDieGlow(d.mesh, now / 1000)
     }
     if (th.sound) {
       while (th.nextSound < th.sounds.length && th.sounds[th.nextSound].step <= t) {
-        playDiceHit(th.sounds[th.nextSound].strength, th.sounds[th.nextSound].withDie)
+        const hit = th.sounds[th.nextSound]
+        playDiceHit(hit.strength, hit.withDie, th.dice[hit.die]?.voice)
         th.nextSound++
       }
     }
@@ -385,6 +391,8 @@ export class DiceStage {
     for (const d of th.dice) {
       if (d.dim) (d.mesh.material as THREE.MeshPhysicalMaterial).opacity = 1 - 0.7 * k
       else d.mesh.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.1)
+      // parado, o dado fica com a luz cheia (a cena para de ser desenhada: não pode congelar num clarão nem no escuro)
+      animateDieGlow(d.mesh, now / 1000, k)
     }
     if (k >= 1) { th.phase = 'rest'; th.resolve() }
   }

@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
+import { animateDieGlow, disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { DIE_RADIUS } from './simulate'
 import { getSkin } from './skins'
 import { LITE_DICE } from './lite'
@@ -150,6 +150,7 @@ export class DiceShowcase {
       s.grow += ((hot ? 1.14 : 1) - s.grow) * Math.min(1, dt * 9)
       s.mesh.rotation.set(0.5 + Math.sin(s.phase) * 0.18, s.spin, 0.28 + Math.cos(s.phase * 0.8) * 0.12)
       s.mesh.scale.setScalar((s.mesh.userData.base as number) * s.grow)
+      animateDieGlow(s.mesh, now / 1000 + s.phase)
     }
     this.renderer.render(this.scene, this.camera)
     this.raf = requestAnimationFrame(this.tick)

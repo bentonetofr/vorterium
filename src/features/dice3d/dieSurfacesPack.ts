@@ -12,17 +12,17 @@ import {
 
 type Ctx = CanvasRenderingContext2D
 
-const ctxsOf = (f: FacePaint): Ctx[] => [f.cx, f.bx, f.rx, ...(f.gx ? [f.gx] : []), ...(f.tx ? [f.tx] : [])]
-const boxOf = (f: FacePaint) => [f.center[0] - f.radius * 1.6, f.center[1] - f.radius * 1.6, f.radius * 3.2, f.radius * 3.2] as const
-const rm = (rough: number, metal: number) => `rgb(0, ${Math.round(rough * 255)}, ${Math.round(metal * 255)})`
-const glowOf = (f: FacePaint, hex: string, a = 1) => rgba(hex, Math.min(1, a * f.skin.glowPower))
-const pick = <T,>(rnd: () => number, list: readonly T[]): T => list[Math.floor(rnd() * list.length)]
-const at = (f: FacePaint, spread = 1): V2 => [f.center[0] + between(f.rnd, -f.radius, f.radius) * spread, f.center[1] + between(f.rnd, -f.radius, f.radius) * spread]
+export const ctxsOf = (f: FacePaint): Ctx[] => [f.cx, f.bx, f.rx, ...(f.gx ? [f.gx] : []), ...(f.tx ? [f.tx] : [])]
+export const boxOf = (f: FacePaint) => [f.center[0] - f.radius * 1.6, f.center[1] - f.radius * 1.6, f.radius * 3.2, f.radius * 3.2] as const
+export const rm = (rough: number, metal: number) => `rgb(0, ${Math.round(rough * 255)}, ${Math.round(metal * 255)})`
+export const glowOf = (f: FacePaint, hex: string, a = 1) => rgba(hex, Math.min(1, a * f.skin.glowPower))
+export const pick = <T,>(rnd: () => number, list: readonly T[]): T => list[Math.floor(rnd() * list.length)]
+export const at = (f: FacePaint, spread = 1): V2 => [f.center[0] + between(f.rnd, -f.radius, f.radius) * spread, f.center[1] + between(f.rnd, -f.radius, f.radius) * spread]
 
-interface Base { top: string; bottom: string; rough: number; metal: number; lit?: number; /** Resina: opacidade no meio e nas bordas (cinza; mais claro = mais opaco). */ alpha?: [string, string] }
+export interface Base { top: string; bottom: string; rough: number; metal: number; lit?: number; /** Resina: opacidade no meio e nas bordas (cinza; mais claro = mais opaco). */ alpha?: [string, string] }
 
 /** Abre a face: recorta, pinta o fundo (degradê), a rugosidade/metal base e, na resina, a opacidade (clara no meio, densa nas bordas). */
-function begin(f: FacePaint, o: Base): void {
+export function begin(f: FacePaint, o: Base): void {
   clipFace(f, ...ctxsOf(f))
   const { cx, rx, tx, center, radius: R } = f
   const g = cx.createRadialGradient(center[0], center[1] - R * (o.lit ?? 0.2), R * 0.1, center[0], center[1], R * 1.15)
@@ -37,13 +37,13 @@ function begin(f: FacePaint, o: Base): void {
 }
 
 /** Fecha a face: solta o recorte e escurece a borda de fora (a junta entre as faces). */
-function end(f: FacePaint): void {
+export function end(f: FacePaint): void {
   unclip(...ctxsOf(f))
   f.cx.strokeStyle = 'rgba(0, 0, 0, 0.5)'; f.cx.lineWidth = 7 * f.k; polyPath(f.cx, f.poly, f.center, -0.06); f.cx.stroke()
 }
 
 /** Manchas macias de cor. */
-function blobs(f: FacePaint, cols: string[], n: number, r0: number, r1: number, a0: number, a1: number): void {
+export function blobs(f: FacePaint, cols: string[], n: number, r0: number, r1: number, a0: number, a1: number): void {
   const { cx, rnd, radius: R } = f
   for (let i = 0; i < n; i++) {
     const c = at(f), r = R * between(rnd, r0, r1), col = pick(rnd, cols)
@@ -54,7 +54,7 @@ function blobs(f: FacePaint, cols: string[], n: number, r0: number, r1: number, 
 }
 
 /** Grão: pontinhos e manchinhas (palette = cor e opacidade). `bump`: opacidade do relevo (grão áspero). */
-function grains(f: FacePaint, palette: [string, number][], dens: number, s0: number, s1: number, bump = 0): void {
+export function grains(f: FacePaint, palette: [string, number][], dens: number, s0: number, s1: number, bump = 0): void {
   const { cx, bx, rnd, radius: R, k } = f
   const n = Math.round((R * R) / dens)
   for (let i = 0; i < n; i++) {
@@ -66,7 +66,7 @@ function grains(f: FacePaint, palette: [string, number][], dens: number, s0: num
 }
 
 /** Fibras e riscos numa direção (veio, fibra, escova). `bump` deixa um sulco leve no relevo. */
-function fibers(f: FacePaint, color: string, n: number, angle: number, l0: number, l1: number, w0: number, w1: number, a0: number, a1: number, bump = 0): void {
+export function fibers(f: FacePaint, color: string, n: number, angle: number, l0: number, l1: number, w0: number, w1: number, a0: number, a1: number, bump = 0): void {
   const { cx, bx, rnd, k } = f
   cx.lineCap = 'round'
   for (let i = 0; i < n; i++) {
@@ -79,20 +79,20 @@ function fibers(f: FacePaint, color: string, n: number, angle: number, l0: numbe
 }
 
 /** Riscos finos de uso, em qualquer direção. */
-function scratches(f: FacePaint, n: number, color = '#ffffff', a = 0.3): void {
+export function scratches(f: FacePaint, n: number, color = '#ffffff', a = 0.3): void {
   fibers(f, color, n, f.rnd() * Math.PI, 12, 46, 0.5, 1.1, a * 0.6, a, 0.15)
   for (let i = 0; i < n * 0.4; i++) fibers(f, color, 1, f.rnd() * Math.PI * 2, 16, 70, 0.5, 0.9, a * 0.5, a, 0.12)
 }
 
 /** Caminho de veio cruzando a face. */
-function veinPath(f: FacePaint, amp = 12, step = 14): V2[] {
+export function veinPath(f: FacePaint, amp = 12, step = 14): V2[] {
   const { poly, center, rnd, k } = f
   const a = lerp2(poly[Math.floor(rnd() * poly.length)], center, between(rnd, 0, 0.25)), b = lerp2(poly[Math.floor(rnd() * poly.length)], center, between(rnd, 0, 0.25))
   return jagged(a, b, rnd, amp * k, step * k)
 }
 
 /** Um veio (com sombra) e, se pedido, relevo. */
-function vein(f: FacePaint, path: V2[], main: string, shadow: string, w: number, bump?: number): void {
+export function vein(f: FacePaint, path: V2[], main: string, shadow: string, w: number, bump?: number): void {
   const { cx, bx, k } = f
   cx.lineJoin = 'round'; cx.lineCap = 'round'
   cx.strokeStyle = shadow; cx.lineWidth = w * 2.4 * k; lineTo(cx, path.map(([x, y]): V2 => [x + 1.6 * k, y + 1.6 * k])); cx.stroke()
@@ -101,7 +101,7 @@ function vein(f: FacePaint, path: V2[], main: string, shadow: string, w: number,
 }
 
 /** Veio com ramificações. */
-function veinTree(f: FacePaint, main: string, shadow: string, w: number, branches: number, bump?: number): V2[] {
+export function veinTree(f: FacePaint, main: string, shadow: string, w: number, branches: number, bump?: number): V2[] {
   const { rnd, k } = f
   const trunk = veinPath(f)
   vein(f, trunk, main, shadow, w, bump)
@@ -114,7 +114,7 @@ function veinTree(f: FacePaint, main: string, shadow: string, w: number, branche
 }
 
 /** Bolhas de ar presas. */
-function bubbles(f: FacePaint, n: number, r0: number, r1: number, tint = '255, 255, 255'): void {
+export function bubbles(f: FacePaint, n: number, r0: number, r1: number, tint = '255, 255, 255'): void {
   const { cx, rnd, radius: R, k } = f
   for (let i = 0; i < n; i++) {
     const p = at(f, 0.9), r = between(rnd, r0, r1) * k
@@ -126,7 +126,7 @@ function bubbles(f: FacePaint, n: number, r0: number, r1: number, tint = '255, 2
 }
 
 /** Covinhas de martelo ou de impacto. */
-function dents(f: FacePaint, n: number, r0: number, r1: number, light: string, dark: string): void {
+export function dents(f: FacePaint, n: number, r0: number, r1: number, light: string, dark: string): void {
   const { cx, bx, rnd, k } = f
   for (let i = 0; i < n; i++) {
     const p = at(f, 1.1), r = between(rnd, r0, r1) * k, rot = rnd() * 3
@@ -140,7 +140,7 @@ function dents(f: FacePaint, n: number, r0: number, r1: number, light: string, d
 }
 
 /** Rachaduras (com uma ramificação), na cor dada. `glow`: luz saindo da fenda. */
-function cracks(f: FacePaint, count: number, dark: string, light: string, w = 3.2, glow?: string): void {
+export function cracks(f: FacePaint, count: number, dark: string, light: string, w = 3.2, glow?: string): void {
   const { cx, bx, gx, rnd, k } = f
   for (let c = 0; c < count; c++) {
     const pts = crackPath(f, rnd)
@@ -164,7 +164,7 @@ function cracks(f: FacePaint, count: number, dark: string, light: string, w = 3.
 }
 
 /** Quina: fio claro na borda e sombra por dentro (e relevo clareado). */
-function rim(f: FacePaint, light: string, dark: string, widthLight = 7, widthDark = 6): void {
+export function rim(f: FacePaint, light: string, dark: string, widthLight = 7, widthDark = 6): void {
   const { cx, bx, poly, center, k } = f
   cx.lineJoin = 'round'
   cx.strokeStyle = light; cx.lineWidth = widthLight * k; polyPath(cx, poly, center, 0.012); cx.stroke()
@@ -173,7 +173,7 @@ function rim(f: FacePaint, light: string, dark: string, widthLight = 7, widthDar
 }
 
 /** Lasca num canto: o material de dentro, claro e áspero. */
-function chip(f: FacePaint, inner: string, size = 0.8): void {
+export function chip(f: FacePaint, inner: string, size = 0.8): void {
   const { cx, bx, rnd, k } = f
   const { shape, edge } = chipShape(f, rnd, size)
   cx.fillStyle = inner; lineTo(cx, shape); cx.closePath(); cx.fill()
@@ -183,7 +183,7 @@ function chip(f: FacePaint, inner: string, size = 0.8): void {
 }
 
 /** Brilho de janela, macio, no alto da face (vidro, resina, pedra polida). */
-function sheen(f: FacePaint, a = 0.2): void {
+export function sheen(f: FacePaint, a = 0.2): void {
   const { cx, center, radius: R } = f
   const g = cx.createLinearGradient(center[0] - R, center[1] - R, center[0] + R * 0.2, center[1] + R * 0.5)
   g.addColorStop(0, `rgba(255, 255, 255, ${a})`); g.addColorStop(0.5, `rgba(255, 255, 255, ${a * 0.2})`); g.addColorStop(1, 'rgba(255, 255, 255, 0)')
@@ -191,7 +191,7 @@ function sheen(f: FacePaint, a = 0.2): void {
 }
 
 /** Escurece para as bordas (uso e sombra). */
-function vignette(f: FacePaint, color: string, edge = 0.6): void {
+export function vignette(f: FacePaint, color: string, edge = 0.6): void {
   const { cx, center, radius: R } = f
   const g = cx.createRadialGradient(center[0], center[1], R * 0.3, center[0], center[1], R * 1.12)
   g.addColorStop(0, rgba(color, 0)); g.addColorStop(1, rgba(color, edge))
@@ -200,7 +200,7 @@ function vignette(f: FacePaint, color: string, edge = 0.6): void {
 
 // ── Números ─────────────────────────────────────────────
 
-interface NumStyle {
+export interface NumStyle {
   mode: 'cut' | 'raise' | 'paint'
   fill: string | [string, string]
   family?: string
@@ -214,10 +214,10 @@ interface NumStyle {
   glowAlpha?: number
 }
 
-const SERIF = '"EB Garamond", "Cormorant Garamond", Georgia, serif'
+export const SERIF = '"EB Garamond", "Cormorant Garamond", Georgia, serif'
 
 /** Um número no estilo do material: entalhado (cut), em relevo (raise) ou pintado (paint), com brilho próprio e opacidade (resina). */
-function num(f: FacePaint, text: string, x: number, y: number, angle: number, px: number, underline: boolean, s: NumStyle): void {
+export function num(f: FacePaint, text: string, x: number, y: number, angle: number, px: number, underline: boolean, s: NumStyle): void {
   const { cx, bx, rx, gx, tx, k } = f
   const font = `${s.weight ?? 700} ${Math.round(px * 1.02)}px ${s.family ?? SERIF}`
   const list = ctxsOf(f)
@@ -263,7 +263,7 @@ function num(f: FacePaint, text: string, x: number, y: number, angle: number, px
 }
 
 /** Número à mão, em traços retos (giz, carvão, argila): cada traço com a cor, uma sombra e um sulco leve. */
-function handNum(f: FacePaint, text: string, x: number, y: number, angle: number, px: number, underline: boolean, color: string, shadow: string, widthK = 0.1, deep = false): void {
+export function handNum(f: FacePaint, text: string, x: number, y: number, angle: number, px: number, underline: boolean, color: string, shadow: string, widthK = 0.1, deep = false): void {
   const { cx, bx, rx, rnd, k } = f
   const H = px * 0.82, gw = H * 0.6, gap = H * 0.3
   const total = text.length * gw + (text.length - 1) * gap

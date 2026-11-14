@@ -3,6 +3,7 @@ import { centroid, labelForValue, labelText, numberUp, polyhedron, type DieKind,
 import { DIE_RADIUS } from './simulate'
 import { BASE_SURFACES, hashString, hexToRgb, mulberry32, type FacePaint } from './dieSurfaces'
 import { PACK_SURFACES } from './dieSurfacesPack'
+import { PACK2_SURFACES } from './dieSurfacesPack2'
 import type { DiceSkin } from './skins'
 import { aimToy, makeToy } from './toys'
 import { LITE_DICE } from './lite'
@@ -15,8 +16,8 @@ import { LITE_DICE } from './lite'
 // ────────────────────────────────────────────────────────
 
 /** Tamanho do atlas: os conjuntos detalhados pedem mais pixels nos dados de muitas faces (cada face é pequena). */
-/** Os pintores de superfície: os três iniciais e os 20 da coleção. */
-const SURFACES: Record<string, (typeof BASE_SURFACES)[string]> = { ...BASE_SURFACES, ...PACK_SURFACES }
+/** Os pintores de superfície: os três iniciais e os da coleção (as duas levas). */
+const SURFACES: Record<string, (typeof BASE_SURFACES)[string]> = { ...BASE_SURFACES, ...PACK_SURFACES, ...PACK2_SURFACES }
 
 function atlasSize(kind: DieKind, skin: DiceSkin): number {
   const full = fullAtlasSize(kind, skin)
@@ -182,11 +183,13 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
 
     const radius = Math.max(...poly.map(([x, y]) => Math.hypot(x - center[0], y - center[1])))
     // conjunto detalhado: a superfície inteira (e os números) vêm do pintor do material
-    const paint: FacePaint | null = bx && skin.surface ? {
+    // (um conjunto cujo pintor ainda não existe cai no desenho simples, em vez de quebrar)
+    const painter = skin.surface ? SURFACES[skin.surface] : undefined
+    const paint: FacePaint | null = bx && painter ? {
       cx, bx, rx, poly, center, radius, skin, k: ATLAS / 1024, rnd: mulberry32(hashString(`${skin.id}:${kind}:${i}`)),
       ...(skin.glowPower > 0 ? { gx } : {}), ...(tx ? { tx } : {}),
     } : null
-    if (paint && skin.surface) SURFACES[skin.surface].face(paint)
+    if (paint && painter) painter.face(paint)
     else {
       // corpo: degradê do centro para as bordas, como pedra lapidada
       const grad = cx.createRadialGradient(center[0], center[1] - radius * 0.2, radius * 0.1, center[0], center[1], radius * 1.05)
@@ -215,8 +218,8 @@ function drawAtlas(kind: DieKind, skin: DiceSkin): Atlas {
     }
 
     // números
-    const drawNumber = paint && skin.surface
-      ? (text: string, x: number, y: number, angle: number, px: number, underline: boolean) => SURFACES[skin.surface!].number(paint, text, x, y, angle, px, underline)
+    const drawNumber = paint && painter
+      ? (text: string, x: number, y: number, angle: number, px: number, underline: boolean) => painter.number(paint, text, x, y, angle, px, underline)
       : (text: string, x: number, y: number, angle: number, px: number, underline: boolean) => {
       const layers: [CanvasRenderingContext2D, 'color' | 'glow' | 'rm' | 'trans'][] = [[cx, 'color'], [gx, 'glow'], [rx, 'rm']]
       if (tx) layers.push([tx, 'trans'])
@@ -299,6 +302,12 @@ export function dieMaterial(kind: DieKind, skin: DiceSkin): THREE.MeshPhysicalMa
     m.thickness = 2.2
     m.ior = 1.5
   }
+  if (skin.iridescence) {
+    // furta-cor: película fina que muda de cor conforme o ângulo (madrepérola, prisma)
+    m.iridescence = skin.iridescence
+    m.iridescenceIOR = 1.7
+    m.iridescenceThicknessRange = [180, 620]
+  }
   if (skin.resin && a.alpha) {
     // resina de dado: transparente de verdade (o brinquedo aparece dentro, por cima de qualquer fundo),
     // números opacos e um verniz forte. As faces de trás são outra malha, mais apagada (makeDieMesh).
@@ -357,6 +366,7 @@ export function makeDieMesh(kind: DieKind, skin: DiceSkin, show?: { face: number
   const geometry = dieGeometry(kind, ball?.cellOf)
   const mesh = new THREE.Mesh(geometry, dieMaterial(kind, skin))
   if (ball) mesh.userData.faceLabels = ball.labels
+  if (skin.glowAnim && skin.glowPower > 0) mesh.userData.glowAnim = skin.glowAnim
   if (skin.resin) {
     // o lado de dentro das faces de trás: dá a espessura do bloco de resina, mas apagado, para os números
     // de trás (espelhados) não brigarem com os da frente. Desenha antes da frente (renderOrder).
@@ -382,6 +392,27 @@ export function makeDieMesh(kind: DieKind, skin: DiceSkin, show?: { face: number
 export function maxFace(kind: DieKind, labels: readonly number[] = polyhedron(kind).labels): number {
   const sides = kind === 'd100' ? 100 : Number(kind.slice(1))
   return labels.indexOf(labelForValue(kind, sides))
+}
+
+/**
+ * A luz própria que se mexe (conjuntos com `glowAnim`): pulso lento, clarões de raio ou brasa que tremula. `t` em segundos.
+ * `rest` (0 a 1) leva a luz de volta ao normal: o palco para de desenhar quando o dado para, e ela não pode congelar num clarão.
+ */
+export function animateDieGlow(mesh: THREE.Mesh, t: number, rest = 0): void {
+  const anim = mesh.userData.glowAnim as 'pulso' | 'raio' | 'brasa' | undefined
+  if (!anim) return
+  let level = 1
+  if (anim === 'pulso') level = 1 + Math.sin(t * 1.9) * 0.4
+  else if (anim === 'brasa') level = 1 + Math.sin(t * 7.3) * 0.14 + Math.sin(t * 12.7 + 1.3) * 0.1
+  else {
+    // raio: quase sempre fraco, com clarões curtos em instantes que parecem ao acaso
+    const beat = Math.sin(t * 5.1) * Math.sin(t * 8.7 + 0.6) * Math.sin(t * 2.3 + 2)
+    level = 0.55 + (beat > 0.32 ? 2.2 * (beat - 0.32) / 0.68 + 0.8 : 0)
+  }
+  const value = level + (1 - level) * Math.min(1, Math.max(0, rest))
+  const set = (o: THREE.Object3D) => { if (o instanceof THREE.Mesh && !o.userData.toy) (o.material as THREE.MeshPhysicalMaterial).emissiveIntensity = value }
+  set(mesh)
+  for (const c of mesh.children) set(c)
 }
 
 /** O brinquedo dentro do dado (resina), se houver. */

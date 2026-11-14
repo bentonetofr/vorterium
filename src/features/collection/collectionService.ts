@@ -113,7 +113,10 @@ function view(): History {
   // só rolagens a partir do corte (a consulta já filtra; aqui é uma segunda trava) e sem as forçadas pelo dono
   const since = h.rolls.filter((r) => Date.parse(r.created_at) >= START_MS)
   const rolls = since.filter((r) => !isForcedRoll(r.id))
-  return { rolls, total: Math.min(h.total, Math.max(since.length, h.total - (h.rolls.length - since.length))), campaigns: new Set(since.map((r) => r.campaign_id)).size }
+  return {
+    rolls, total: Math.min(h.total, Math.max(since.length, h.total - (h.rolls.length - since.length))), campaigns: new Set(since.map((r) => r.campaign_id)).size,
+    owned: store.unlocked.size,
+  }
 }
 
 // ── A cada rolagem ──────────────────────────────────────
@@ -145,6 +148,8 @@ async function check(roll: DiceRoll): Promise<void> {
   }
   const fresh = satisfied(view()).filter((a) => !store.unlocked.has(a.skin))
   for (const a of fresh) await grant(a)
+  // um dado ganho agora pode ter completado a conquista que premia a coleção: confere mais uma vez, já com os novos na conta
+  if (fresh.length > 0) for (const a of satisfied(view()).filter((x) => !store.unlocked.has(x.skin))) await grant(a)
 }
 
 async function grant(a: Achievement): Promise<void> {

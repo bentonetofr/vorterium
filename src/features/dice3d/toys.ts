@@ -3,7 +3,8 @@ import { numberUp, polyhedron, type DieKind } from './polyhedra'
 import { DIE_RADIUS } from './simulate'
 
 // ────────────────────────────────────────────────────────
-// Brinquedinhos presos dentro dos dados de resina (o dado de betinha tester):
+// Brinquedinhos presos dentro dos dados de resina (o dado de betinha tester e os da coleção: o inseto do âmbar, as
+// luzinhas dos vaga-lumes, o olho do abismo e o planeta da galáxia). O primeiro foi o do betinha:
 // um emoji nerd de plástico, como os patinhos dos dados de resina de verdade.
 // Cabeça amarela envernizada; óculos pretos grossos, boca com os dentes,
 // olhos e sobrancelhas modelados COLADOS na curva da cabeça (faixas sobre a
@@ -219,6 +220,92 @@ function buildFireflies(): THREE.Group {
 let insect: THREE.Group | null = null
 let fireflies: THREE.Group | null = null
 
+/** Faixas de um planeta gasoso, pintadas num canvas pequeno (a textura enrola na esfera). */
+function planetBands(): THREE.CanvasTexture {
+  const c = document.createElement('canvas')
+  c.width = 64; c.height = 128
+  const x = c.getContext('2d')!
+  const bands = ['#f2c890', '#d89a5a', '#f6dcb0', '#b8703a', '#e8b478', '#f8e4c0', '#c88448', '#eac090', '#a85e30', '#e0a868', '#f4d4a0', '#cc8c50']
+  bands.forEach((col, i) => { x.fillStyle = col; x.fillRect(0, (i * 128) / bands.length, 64, 128 / bands.length + 1) })
+  // a grande mancha
+  x.fillStyle = '#b0402a'; x.beginPath(); x.ellipse(40, 82, 9, 5, 0, 0, Math.PI * 2); x.fill()
+  x.fillStyle = '#e07a50'; x.beginPath(); x.ellipse(40, 82, 5, 2.6, 0, 0, Math.PI * 2); x.fill()
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+/** Um planeta com anéis, duas luas e umas estrelas em volta, preso na resina da galáxia. Os anéis ficam inclinados para quem olha de +z. */
+function buildPlanet(): THREE.Group {
+  const g = new THREE.Group()
+  const tilt = new THREE.Group()
+  tilt.rotation.set(1.12, 0, 0.42)
+  const globe = new THREE.Mesh(new THREE.SphereGeometry(0.6, 40, 28), new THREE.MeshPhysicalMaterial({ map: planetBands(), roughness: 0.55, clearcoat: 0.35, emissive: new THREE.Color('#5a3418'), emissiveIntensity: 0.45 }))
+  globe.rotation.x = Math.PI / 2   // os polos no eixo dos anéis
+  tilt.add(globe)
+  const rings: [number, number, string, number][] = [[0.76, 0.9, '#f4dcae', 0.75], [0.93, 1.08, '#c8a070', 0.6], [1.11, 1.24, '#f8ecd0', 0.4]]
+  for (const [r0, r1, col, op] of rings) {
+    tilt.add(new THREE.Mesh(new THREE.RingGeometry(r0, r1, 72), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, side: THREE.DoubleSide, depthWrite: false })))
+  }
+  g.add(tilt)
+  const moon = new THREE.MeshPhysicalMaterial({ color: '#d8d4e8', roughness: 0.8, emissive: new THREE.Color('#6a6488'), emissiveIntensity: 0.5 })
+  for (const [x, y, z, r] of [[-0.95, 0.62, 0.3, 0.11], [0.88, -0.7, 0.45, 0.075]] as const) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12), moon); m.position.set(x, y, z); g.add(m)
+  }
+  const star = new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false })
+  const halo = new THREE.MeshBasicMaterial({ color: '#b8a6ff', transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })
+  for (const [x, y, z, r] of [[-0.7, -0.75, -0.3, 0.035], [0.5, 0.95, -0.2, 0.03], [1.05, 0.3, -0.5, 0.04], [-1.1, -0.1, -0.4, 0.028], [0.1, -1.1, 0.2, 0.03], [-0.3, 1.1, 0.3, 0.026]] as const) {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), star); s.position.set(x, y, z); g.add(s)
+    const h = new THREE.Mesh(new THREE.SphereGeometry(r * 3.4, 10, 8), halo); h.position.set(x, y, z); g.add(h)
+  }
+  g.userData.reach = 1.3
+  return g
+}
+
+/** Um olho arrancado, olhando para +z: o branco com vasos, a íris vermelha que brilha no escuro e a pupila em fenda. */
+function buildEye(): THREE.Group {
+  const g = new THREE.Group()
+  const white = new THREE.MeshPhysicalMaterial({ color: '#efe2d2', roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08 })
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), white))
+  // calotas coladas na frente da esfera (o polo da calota vira para +z)
+  const cap = (radius: number, angle: number, mat: THREE.Material) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 16, 0, Math.PI * 2, 0, angle), mat)
+    m.rotation.x = Math.PI / 2
+    g.add(m)
+    return m
+  }
+  cap(1.004, 0.72, new THREE.MeshPhysicalMaterial({ color: '#3a0410', roughness: 0.4 }))                                         // o aro escuro da íris
+  cap(1.008, 0.64, new THREE.MeshPhysicalMaterial({ color: '#e0203c', roughness: 0.3, emissive: new THREE.Color('#ff2848'), emissiveIntensity: 0.9 }))
+  cap(1.012, 0.42, new THREE.MeshPhysicalMaterial({ color: '#ffb02a', roughness: 0.3, emissive: new THREE.Color('#ff8a1a'), emissiveIntensity: 0.9 }))   // o anel de fogo em volta da pupila
+  // a pupila em fenda: uma faixa estreita e alta, colada na curva do olho
+  const black = new THREE.MeshBasicMaterial({ color: '#000000', side: THREE.DoubleSide })
+  g.add(new THREE.Mesh(sphereBand(v3(0, 0, 1), v3(0, 1, 0), () => 0, (t) => 0.09 + 0.47 * Math.abs(Math.cos(t)) ** 1.6, 0, Math.PI * 2, 0.016, 64), black))
+  // a córnea: uma cúpula de vidro com o reflexo da janela
+  const cornea = cap(1.03, 0.8, new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.02, transparent: true, opacity: 0.16, clearcoat: 1, clearcoatRoughness: 0.02, depthWrite: false }))
+  cornea.renderOrder = 1
+  const glint = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 10), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }))
+  glint.position.copy(v3(-0.22, 0.28, 0.93).normalize().multiplyScalar(1.03)); g.add(glint)
+  // vasos: fios vermelhos que saem de trás e vêm até perto da íris
+  const vessel = new THREE.MeshPhysicalMaterial({ color: '#b01028', roughness: 0.4 })
+  const on = (polar: number, a: number) => v3(Math.sin(polar) * Math.cos(a), Math.sin(polar) * Math.sin(a), Math.cos(polar)).multiplyScalar(1.004)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2 + (i % 3) * 0.14, wob = i % 2 ? 0.2 : -0.17
+    g.add(new THREE.Mesh(tube([2.9, 2.3, 1.8, 1.4, 1.02].map((polar, j) => on(polar, a + wob * Math.sin(j * 1.3))), 0.026 + (i % 3) * 0.008), vessel))
+    // um ramo fino saindo do meio de cada vaso
+    g.add(new THREE.Mesh(tube([1.8, 1.55, 1.3].map((polar, j) => on(polar, a + wob * Math.sin(2.6) + (i % 2 ? 1 : -1) * 0.16 * j)), 0.014), vessel))
+  }
+  // o nervo, atrás
+  const nerve = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.1, 6, 16), new THREE.MeshPhysicalMaterial({ color: '#b84a5a', roughness: 0.5 }))
+  nerve.rotation.x = Math.PI / 2; nerve.position.set(0, 0, -0.95); g.add(nerve)
+  g.userData.reach = 1.12
+  // olha um pouco acima do número da face, para a fenda da pupila aparecer por cima dele
+  g.userData.tilt = -0.2
+  return g
+}
+
+let planet: THREE.Group | null = null
+let eye: THREE.Group | null = null
+
 /** Raio da maior esfera que cabe dentro do dado (encosta nas faces). */
 function inradius(kind: DieKind): number {
   const p = polyhedron(kind)
@@ -242,14 +329,14 @@ export function aimToy(toy: THREE.Object3D, kind: DieKind, face: number): void {
   const y = new THREE.Vector3(...numberUp(p, face))
   const x = new THREE.Vector3().crossVectors(y, z)
   toy.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z))
+  if (typeof toy.userData.tilt === 'number') toy.rotateX(toy.userData.tilt)
 }
 
 /** Uma cópia do brinquedinho, já do tamanho para ficar inteiro dentro deste dado (com folga da resina). */
-export function makeToy(kind: DieKind, toy: 'nerd' | 'inseto' | 'vagalumes'): THREE.Object3D {
+export function makeToy(kind: DieKind, toy: 'nerd' | 'inseto' | 'vagalumes' | 'olho' | 'planeta'): THREE.Object3D {
   if (toy === 'nerd') nerd ??= buildNerd()
   if (toy === 'inseto') insect ??= buildInsect()
-  if (toy === 'vagalumes') fireflies ??= buildFireflies()
-  const source = toy === 'nerd' ? nerd! : toy === 'inseto' ? insect! : fireflies!
+  const source = toy === 'nerd' ? nerd! : toy === 'inseto' ? insect! : toy === 'olho' ? (eye ??= buildEye()) : toy === 'planeta' ? (planet ??= buildPlanet()) : (fireflies ??= buildFireflies())
   const model = source.clone()
   const s = (inradius(kind) * 0.86) / (model.userData.reach as number)
   model.scale.setScalar(s)

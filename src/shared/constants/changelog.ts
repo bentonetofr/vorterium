@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.36',
+    date:    '2026-11-14',
+    title:   'Coleção de dados: 14 dados novos, sons próprios e a raridade Mítica',
+    items: [
+      'A coleção secreta de dados cresceu de 20 para 34: são 14 dados novos, cada um com a sua conquista secreta. Como sempre, ninguém vê como se ganha: o dado aparece como silhueta com "?" até a conquista sair, e o cartão conta o que você fez só depois.',
+      'Há uma raridade nova acima da Lendária: a Mítica. São só dois dados, os mais difíceis do site, com cartão de conquista e fanfarra próprios.',
+      'Os dados novos têm som próprio: cada um bate na mesa com o som do seu material (tem dado que soa como sino, como vidro, como papel, como trovão, e um que toca uma nota a cada batida). Quem está na mesa ouve o dado de cada jogador com o som dele. Quando a conquista sai, depois da fanfarra o dado novo faz o som dele uma vez.',
+      'Alguns dados novos têm luz que se mexe (pulsa, tremula ou dá clarões) na vitrine e enquanto rolam, um tem brilho furta-cor de verdade, que muda de cor conforme o dado gira, e dois são de resina com uma coisa presa dentro.',
+      'Precisa rodar a migration 20240232 no Supabase: sem ela o site funciona igual, mas os dados novos não são concedidos.',
+    ],
+  },
+  {
     version: '2.35',
     date:    '2026-11-12',
     title:   'Abas com setas e a classe de cada magia',
