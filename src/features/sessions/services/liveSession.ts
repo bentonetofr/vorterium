@@ -2,37 +2,59 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { supabase } from '../../../shared/lib/supabase'
 
 // ────────────────────────────────────────────────────────
-// O estado de sessão da campanha: aberta ou fechada, e por quê. Quem decide é o banco (migration 20240233): a sessão está aberta
-// no horário marcado de uma sessão planejada ('scheduled') ou quando o mestre e pelo menos um jogador estão online juntos ('together').
+// O estado de sessão da campanha: aberta ou fechada, e por quê. Quem decide é o banco (migrations 20240233 e 20240234):
+//  • a sessão só abre com o MESTRE ativo (online agora); jogador nenhum abre a sessão sozinho;
+//  • com o mestre ativo ela abre quando o mestre abre pelo botão ('manual'), no horário marcado ('scheduled') ou quando pelo menos
+//    a metade dos jogadores está online ('together');
+//  • o mestre também pode encerrar (a sessão fica fechada por 6 horas, ou até ele abrir de novo).
 // Aqui só se lê esse estado, guardado por campanha e dividido entre quem mostra (o selo no cabeçalho, o aviso da coleção).
 // ────────────────────────────────────────────────────────
 
-export type SessionReason = 'scheduled' | 'together'
+export type SessionReason = 'manual' | 'scheduled' | 'together'
+export type SessionOverride = 'open' | 'closed'
+export type SessionAction = 'open' | 'close' | 'auto'
 
 export interface LiveSession {
   open: boolean
   reason: SessionReason | null
   /** Quando abre a próxima sessão marcada (ISO), se houver. */
   nextAt: string | null
+  /** O mestre abriu ou encerrou à mão, e ainda vale. */
+  override: SessionOverride | null
+  masterOnline: boolean
+  playersOnline: number
+  playersTotal: number
   /** Já conferiu com o banco? (antes disso a tela não mostra nada) */
   known: boolean
 }
 
-export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, known: false }
+export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false }
 
 const states = new Map<string, LiveSession>()
 const listeners = new Set<() => void>()
 const inflight = new Map<string, Promise<void>>()
 
+const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0)
+
 export function parseLiveSession(raw: unknown): LiveSession {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
-  const reason = r.reason === 'scheduled' || r.reason === 'together' ? r.reason : null
-  return { open: r.open === true && reason !== null, reason, nextAt: typeof r.next_at === 'string' ? r.next_at : null, known: true }
+  const reason = r.reason === 'manual' || r.reason === 'scheduled' || r.reason === 'together' ? r.reason : null
+  return {
+    open: r.open === true && reason !== null, reason,
+    nextAt: typeof r.next_at === 'string' ? r.next_at : null,
+    override: r.override === 'open' || r.override === 'closed' ? r.override : null,
+    masterOnline: r.master_online === true, playersOnline: count(r.players_online), playersTotal: count(r.players_total),
+    known: true,
+  }
 }
+
+const same = (a: LiveSession, b: LiveSession) =>
+  a.open === b.open && a.reason === b.reason && a.nextAt === b.nextAt && a.override === b.override && a.masterOnline === b.masterOnline
+  && a.playersOnline === b.playersOnline && a.playersTotal === b.playersTotal && a.known === b.known
 
 function publish(campaignId: string, next: LiveSession) {
   const prev = states.get(campaignId)
-  if (prev && prev.open === next.open && prev.reason === next.reason && prev.nextAt === next.nextAt && prev.known) return
+  if (prev && same(prev, next)) return
   states.set(campaignId, next)
   listeners.forEach((l) => l())
 }
@@ -55,6 +77,13 @@ export function refreshLiveSession(campaignId: string): Promise<void> {
   return job
 }
 
+/** O mestre abre ('open'), encerra ('close') ou devolve pro automático ('auto'). O banco recusa quem não é o mestre. */
+export async function setCampaignSession(campaignId: string, action: SessionAction): Promise<void> {
+  const { error } = await supabase.rpc('set_campaign_session', { campaign_id_input: campaignId, action })
+  if (error) throw new Error('Não foi possível mudar a sessão. A migration 20240234 já rodou no Supabase?')
+  await refreshLiveSession(campaignId)
+}
+
 /** O estado da sessão da campanha, atualizado sempre que alguém chama refreshLiveSession (a tela da campanha faz isso a cada batida de presença). */
 export function useLiveSession(campaignId: string | null | undefined): LiveSession {
   useEffect(() => {
@@ -75,4 +104,12 @@ export function resetLiveSessions(): void {
 /** Define o estado de uma campanha à mão (páginas de teste). */
 export function setLiveSession(campaignId: string, raw: unknown): void {
   publish(campaignId, parseLiveSession(raw))
+}
+
+/**
+ * Quantos jogadores precisam estar online pra mesa contar como reunida: a metade, arredondando pra cima (4 jogadores = 2; 3 = 2; 1 = 1).
+ * É a mesma conta do banco (_campaign_session_reason); aqui serve pra explicar na tela quanto falta.
+ */
+export function playersNeeded(total: number): number {
+  return total <= 0 ? 0 : Math.ceil(total / 2)
 }

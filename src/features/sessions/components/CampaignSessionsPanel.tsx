@@ -220,7 +220,7 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
               disabled={saving || !sessionDate}
             />
             <p className="session-form__hint">
-              Com data e horário, a sessão abre sozinha 15 minutos antes e fecha ao fim da duração. As conquistas e os conjuntos de dados só contam rolagens com a sessão aberta.
+              Com data e horário, a sessão abre sozinha 15 minutos antes (com você online) e fecha ao fim da duração. Só o mestre abre a sessão. As conquistas e os conjuntos de dados só contam rolagens com a sessão aberta.
             </p>
           </div>
           {sessionDate && sessionTime && (

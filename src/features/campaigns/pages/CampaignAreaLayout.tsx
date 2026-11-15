@@ -200,7 +200,7 @@ export function CampaignAreaLayout() {
             <span className={`campaign-status ${getCampaignStatusClass(campaign.status)}`}>
               {getCampaignStatusLabel(campaign.status)}
             </span>
-            {!campaign.observer && <SessionLiveBadge campaignId={campaign.id} />}
+            {!campaign.observer && <SessionLiveBadge campaignId={campaign.id} isMaster={campaign.role === 'master'} />}
           </div>
         </div>
       </header>
