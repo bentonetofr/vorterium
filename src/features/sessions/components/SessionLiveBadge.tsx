@@ -13,6 +13,7 @@ const WHY: Record<SessionReason, { label: string; tip: string }> = {
   manual: { label: 'aberta pelo mestre', tip: 'O mestre abriu a sessão' },
   scheduled: { label: 'horário marcado', tip: 'No horário marcado da sessão' },
   together: { label: 'mesa reunida', tip: 'O mestre e pelo menos a metade dos jogadores estão online' },
+  ending: { label: 'encerrando?', tip: 'A mesa deixou de estar reunida e o mestre ainda não confirmou o fim da sessão' },
 }
 
 export function SessionLiveBadge({ campaignId, isMaster = false }: { campaignId: string; isMaster?: boolean }) {

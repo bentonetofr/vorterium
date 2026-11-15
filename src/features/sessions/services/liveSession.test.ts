@@ -5,7 +5,7 @@ vi.mock('../../../shared/lib/supabase', () => ({
   supabase: { rpc: async (name: string) => { rpc.calls.push(name); return rpc.result } },
 }))
 
-import { closedReason, getLiveSession, parseLiveSession, playersNeeded, refreshLiveSession, resetLiveSessions, setCampaignSession, useLiveSession } from './liveSession'
+import { closedReason, endPromptCopy, getLiveSession, parseLiveSession, playersNeeded, refreshLiveSession, resetLiveSessions, setCampaignSession, useLiveSession } from './liveSession'
 
 beforeEach(() => { resetLiveSessions(); rpc.calls = []; rpc.result = { data: null, error: null } })
 
@@ -70,6 +70,35 @@ describe('estado da sessão da campanha', () => {
     const failed = { ...parseLiveSession(null), failed: true }
     expect(closedReason(failed)).toBe('')
     expect(parseLiveSession(null).failed).toBe(false)
+  })
+
+  it('lê o estado "encerrando" e a pergunta ao mestre (jogadores saíram ou chegou o horário de término)', () => {
+    expect(parseLiveSession({ open: true, reason: 'ending', ask_end: 'leaving' })).toMatchObject({ open: true, reason: 'ending', askEnd: 'leaving' })
+    expect(parseLiveSession({ open: true, reason: 'together', ask_end: 'schedule' }).askEnd).toBe('schedule')
+    expect(parseLiveSession({ open: true, reason: 'together', ask_end: 'sorte' }).askEnd).toBeNull()
+    expect(parseLiveSession({ open: false, reason: null }).askEnd).toBeNull()
+  })
+
+  it('o texto da pergunta muda com o motivo e sempre explica o que cada resposta faz', () => {
+    const leaving = endPromptCopy('leaving')
+    const schedule = endPromptCopy('schedule')
+    expect(leaving.title).toBe('A sessão acabou?')
+    expect(leaving.message).toContain('foram saindo')
+    expect(schedule.message).toContain('horário de término')
+    for (const c of [leaving, schedule]) {
+      expect(c.message).toContain('30 minutos')
+      expect(c.yes).toMatch(/encerrar/i)
+      expect(c.no).toMatch(/continuar/i)
+    }
+  })
+
+  it('o mestre também pode mandar a sessão continuar', async () => {
+    const seen: string[] = []
+    rpc.result = { data: null, error: null }
+    const original = rpc.calls.push.bind(rpc.calls)
+    rpc.calls.push = (...a: string[]) => { seen.push(a[0]); return original(...a) }
+    await setCampaignSession('c1', 'continue')
+    expect(seen).toContain('set_campaign_session')
   })
 
   it('o hook existe e não pergunta sem campanha', () => {

@@ -16,7 +16,7 @@ import './SessionOpenNotice.css'
 const NOTICE_MS = 14_000
 const POLL_MS = 60_000
 
-const WHY = { manual: 'O mestre abriu a sessão', scheduled: 'No horário marcado', together: 'A mesa está reunida' } as const
+const WHY = { manual: 'O mestre abriu a sessão', scheduled: 'No horário marcado', together: 'A mesa está reunida', ending: 'A sessão está terminando' } as const
 
 function playNotifySound() {
   try {

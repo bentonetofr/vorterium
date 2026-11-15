@@ -10,9 +10,12 @@ import { supabase } from '../../../shared/lib/supabase'
 // Aqui só se lê esse estado, guardado por campanha e dividido entre quem mostra (o selo no cabeçalho, o aviso da coleção).
 // ────────────────────────────────────────────────────────
 
-export type SessionReason = 'manual' | 'scheduled' | 'together'
+/** 'ending': esteve aberta há pouco e espera o mestre dizer se acabou (ainda conta como aberta). */
+export type SessionReason = 'manual' | 'scheduled' | 'together' | 'ending'
+/** Por que perguntar ao mestre se a sessão acabou: os jogadores saíram, ou chegou o horário de término marcado. */
+export type SessionAsk = 'leaving' | 'schedule'
 export type SessionOverride = 'open' | 'closed'
-export type SessionAction = 'open' | 'close' | 'auto'
+export type SessionAction = 'open' | 'close' | 'continue' | 'auto'
 
 export interface LiveSession {
   open: boolean
@@ -21,6 +24,8 @@ export interface LiveSession {
   nextAt: string | null
   /** O mestre abriu ou encerrou à mão, e ainda vale. */
   override: SessionOverride | null
+  /** O banco quer perguntar ao mestre se a sessão acabou. */
+  askEnd: SessionAsk | null
   masterOnline: boolean
   playersOnline: number
   playersTotal: number
@@ -32,7 +37,7 @@ export interface LiveSession {
   errorText: string
 }
 
-export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false, failed: false, errorText: '' }
+export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, askEnd: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false, failed: false, errorText: '' }
 
 const states = new Map<string, LiveSession>()
 const listeners = new Set<() => void>()
@@ -42,18 +47,19 @@ const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(
 
 export function parseLiveSession(raw: unknown): LiveSession {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
-  const reason = r.reason === 'manual' || r.reason === 'scheduled' || r.reason === 'together' ? r.reason : null
+  const reason = r.reason === 'manual' || r.reason === 'scheduled' || r.reason === 'together' || r.reason === 'ending' ? r.reason : null
   return {
     open: r.open === true && reason !== null, reason,
     nextAt: typeof r.next_at === 'string' ? r.next_at : null,
     override: r.override === 'open' || r.override === 'closed' ? r.override : null,
+    askEnd: r.ask_end === 'leaving' || r.ask_end === 'schedule' ? r.ask_end : null,
     masterOnline: r.master_online === true, playersOnline: count(r.players_online), playersTotal: count(r.players_total),
     known: true, failed: false, errorText: '',
   }
 }
 
 const same = (a: LiveSession, b: LiveSession) =>
-  a.open === b.open && a.reason === b.reason && a.nextAt === b.nextAt && a.override === b.override && a.masterOnline === b.masterOnline
+  a.open === b.open && a.reason === b.reason && a.nextAt === b.nextAt && a.override === b.override && a.askEnd === b.askEnd && a.masterOnline === b.masterOnline
   && a.playersOnline === b.playersOnline && a.playersTotal === b.playersTotal && a.known === b.known && a.failed === b.failed && a.errorText === b.errorText
 
 function publish(campaignId: string, next: LiveSession) {
@@ -124,6 +130,19 @@ export function closedReason(s: LiveSession): string {
   const missing = playersNeeded(s.playersTotal) - s.playersOnline
   if (s.playersTotal > 0 && missing > 0) return `faltam ${missing} ${missing === 1 ? 'jogador' : 'jogadores'} online`
   return ''
+}
+
+/** O texto da janela que pergunta ao mestre se a sessão acabou. */
+export function endPromptCopy(kind: SessionAsk): { title: string; message: string; yes: string; no: string } {
+  const why = kind === 'leaving'
+    ? 'Os jogadores foram saindo e a mesa já não está reunida.'
+    : 'Chegou o horário de término da sessão marcada.'
+  return {
+    title: 'A sessão acabou?',
+    message: `${why} Se acabou, a sessão é encerrada e as rolagens deixam de contar pras conquistas. Se não, ela continua aberta e eu pergunto de novo daqui a 30 minutos.`,
+    yes: 'Sim, encerrar a sessão',
+    no: 'Não, vamos continuar',
+  }
 }
 
 /**

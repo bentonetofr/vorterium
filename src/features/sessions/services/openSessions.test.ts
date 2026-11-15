@@ -11,11 +11,12 @@ describe('sessões abertas das minhas campanhas', () => {
     const out = parseOpenSessions([
       { campaign_id: 'a', campaign_name: 'Reino', role: 'player', reason: 'manual' },
       { campaign_id: 'b', campaign_name: 'Torre', role: 'master', reason: 'scheduled' },
+      { campaign_id: 'd', campaign_name: 'Fim', role: 'player', reason: 'ending' },
       { campaign_id: 'c', campaign_name: 'Sem motivo', role: 'player', reason: null },
       { campaign_name: 'Sem id', role: 'player', reason: 'together' },
       null,
     ])
-    expect(out.map((o) => [o.campaignId, o.role, o.reason])).toEqual([['a', 'player', 'manual'], ['b', 'master', 'scheduled']])
+    expect(out.map((o) => [o.campaignId, o.role, o.reason])).toEqual([['a', 'player', 'manual'], ['b', 'master', 'scheduled'], ['d', 'player', 'ending']])
     expect(parseOpenSessions('lixo')).toEqual([])
     expect(parseOpenSessions(null)).toEqual([])
   })
@@ -25,6 +26,16 @@ describe('sessões abertas das minhas campanhas', () => {
     expect(first.announce.map((o) => o.campaignId)).toEqual(['a', 'b'])
     const second = reconcileAnnounced(first.announced, [open('a'), open('b')])
     expect(second.announce).toEqual([])
+  })
+
+  it('a sessão "encerrando" não é abertura nova: não avisa, e se o mestre mandar continuar também não avisa de novo', () => {
+    const ending = reconcileAnnounced(new Set(), [open('a', { reason: 'ending' })])
+    expect(ending.announce).toEqual([])
+    const resumed = reconcileAnnounced(ending.announced, [open('a', { reason: 'manual' })])
+    expect(resumed.announce).toEqual([])
+    // se fechou de verdade (saiu da lista), uma abertura nova volta a ser anunciada
+    const closed = reconcileAnnounced(resumed.announced, [])
+    expect(reconcileAnnounced(closed.announced, [open('a')]).announce.map((o) => o.campaignId)).toEqual(['a'])
   })
 
   it('só a nova é anunciada, e quem fechou sai da lista: se abrir de novo, avisa de novo', () => {

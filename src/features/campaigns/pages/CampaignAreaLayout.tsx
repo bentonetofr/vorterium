@@ -5,6 +5,7 @@ import { getCampaignWithRole } from '../services/campaignService'
 import { touchCampaignPresence } from '../../activity/services/activityService'
 import { refreshLiveSession } from '../../sessions/services/liveSession'
 import { SessionLiveBadge } from '../../sessions/components/SessionLiveBadge'
+import { SessionEndPrompt } from '../../sessions/components/SessionEndPrompt'
 import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
@@ -165,6 +166,8 @@ export function CampaignAreaLayout() {
 
   return (
     <div className={`page campaign-area-page${section === 'quadro' ? ' campaign-area-page--wide' : ''}`}>
+      {/* A pergunta "a sessão acabou?" antes de fechar: só o mestre */}
+      {campaign.role === 'master' && !campaign.observer && <SessionEndPrompt campaignId={campaign.id} />}
       {/* ── Cabeçalho ── */}
       <header className="page__header campaign-area__page-header animate-fade-up">
         <div

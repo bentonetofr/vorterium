@@ -2,7 +2,8 @@
 import { createRoot } from 'react-dom/client'
 import '../src/index.css'
 import { SessionLiveBadge } from '../src/features/sessions/components/SessionLiveBadge'
-import { setLiveSession } from '../src/features/sessions/services/liveSession'
+import { endPromptCopy, setLiveSession } from '../src/features/sessions/services/liveSession'
+import { DialogHost, confirmDialog } from '../src/shared/components/dialogs'
 import '../src/features/sessions/components/SessionOpenNotice.css'
 
 const crowd = { master_online: true, players_online: 2, players_total: 4 }
@@ -26,6 +27,13 @@ createRoot(document.getElementById('root')!).render(
         </span>
       </div>
     ))}
+    <DialogHost />
+    <div style={{ display: 'flex', gap: 10 }}>
+      {(['leaving', 'schedule'] as const).map((k) => {
+        const c = endPromptCopy(k)
+        return <button key={k} className="btn btn-ghost" onClick={() => void confirmDialog({ title: c.title, message: c.message, confirmLabel: c.yes, cancelLabel: c.no })}>Pergunta: {k === 'leaving' ? 'jogadores saíram' : 'fim do horário'}</button>
+      })}
+    </div>
     {/* o aviso do canto, só o desenho (o componente de verdade precisa de login e do roteador) */}
     <div className="session-notice" role="status" style={{ marginTop: 18 }}>
       <span className="session-notice__tag"><i aria-hidden="true" />Sessão aberta</span>
