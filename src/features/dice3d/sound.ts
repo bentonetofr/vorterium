@@ -23,7 +23,7 @@ export interface Partial_ { freq: number; gain: number; decay: number; delay?: n
 export interface Hiss { dur: number; cutoff: number; q: number; gain: number; type: BiquadFilterType; delay?: number }
 
 /** As vozes dos conjuntos da coleção (o campo `sound` de skins.ts). */
-export type DiceVoice = 'osso' | 'ferro' | 'argila' | 'giz' | 'cobre' | 'marfim' | 'onix' | 'ametista' | 'granada' | 'jade' | 'fume' | 'gelo' | 'magma' | 'meteorito' | 'fungo' | 'ambar' | 'morte' | 'vagalumes' | 'runico' | 'vortice'
+export type DiceVoice = 'granito' | 'plastico' | 'betinha' | 'osso' | 'ferro' | 'argila' | 'giz' | 'cobre' | 'marfim' | 'onix' | 'ametista' | 'granada' | 'jade' | 'fume' | 'gelo' | 'magma' | 'meteorito' | 'fungo' | 'ambar' | 'morte' | 'vagalumes' | 'runico' | 'vortice'
   | 'cortica' | 'cera' | 'vidro' | 'papel' | 'sino' | 'relogio' | 'perola' | 'trovao' | 'olho' | 'cosmos' | 'dragao' | 'espelho' | 'vazio' | 'prisma'
 
 export interface HitRecipe {
@@ -54,7 +54,15 @@ const COSMOS_NOTES = [523.25, 659.25, 739.99, 783.99, 987.77, 1174.66] as const
 const BELL_NOTES = [587.33, 659.25, 783.99, 880] as const
 
 const VOICES: Record<DiceVoice, (s: number, rnd: () => number) => VoiceShape> = {
-  // ── a primeira leva ──
+  // ── os conjuntos iniciais (a madeira velha usa a batida padrão) ──
+  // granito: pedra maciça, "tac" pesado
+  granito: (s, rnd) => ({ wood: 0.7, woodPitch: 0.8, resin: 0.35, click: 1, ring: [{ freq: 520 + rnd() * 70, to: 400, gain: 0.5, decay: 0.06 + s * 0.03 }, { freq: 1400 + rnd() * 200, gain: 0.2, decay: 0.04 }] }),
+  // plástico: clac oco de plástico duro
+  plastico: (_s, rnd) => ({ wood: 0.35, resin: 1, resinPitch: 0.9, click: 0.8, ring: [{ freq: 1100 + rnd() * 150, to: 900, gain: 0.45, decay: 0.04, wave: 'triangle' }, { freq: 2400 + rnd() * 300, gain: 0.18, decay: 0.025 }] }),
+  // dado de betinha: brinquedo de borracha, um apito que sobe e outro que desce
+  betinha: (_s, rnd) => ({ wood: 0.5, resin: 0.1, click: 0.3, ring: [{ freq: 900 + rnd() * 120, to: 1900, gain: 0.3, decay: 0.12 }, { freq: 1500, to: 700, gain: 0.2, decay: 0.1, delay: 0.05 }] }),
+
+  // ── a primeira leva da coleção ──
   // osso: toc seco e oco, de osso na madeira
   osso: (_s, rnd) => ({ wood: 0.8, woodPitch: 1.35, resin: 0.3, click: 0.9, ring: [{ freq: 780 + rnd() * 160, to: 520, gain: 0.45, decay: 0.05 }, { freq: 1500 + rnd() * 200, gain: 0.15, decay: 0.03 }] }),
   // ferro: pancada surda, metal sem brilho
@@ -356,6 +364,12 @@ export function playDiceHit(strength: number, withDie: boolean, voice?: DiceVoic
 }
 
 /** Dado rolando e parando: uma sequência curta de batidas que vão ficando fracas (para testar o som). */
+/** Um dado "caindo" curtinho, para ouvir como o conjunto soa (usado ao escolher um conjunto na lista). */
+export function playSkinPreview(voice?: DiceVoice): void {
+  const hits = [0.95, 0.65, 0.8, 0.4, 0.45, 0.25]
+  hits.forEach((s, i) => window.setTimeout(() => playDiceHit(s, i % 3 === 2, voice), i * (80 + i * 22)))
+}
+
 export function playDiceRattle(voice?: DiceVoice): void {
   const hits = [0.95, 0.7, 0.8, 0.45, 0.5, 0.3, 0.2, 0.12]
   hits.forEach((s, i) => window.setTimeout(() => playDiceHit(s, i % 3 === 2, voice), i * (70 + i * 14)))

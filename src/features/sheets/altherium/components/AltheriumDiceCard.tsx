@@ -3,6 +3,7 @@ import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/s
 import { formatRelativeTime, useRecentRolls } from '../../../dice/useRecentRolls'
 import { getMyDiceSkin, onDiceSkinChange, peekMyDiceSkin, setMyDiceSkin } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN, getSkin, skinsFor } from '../../../dice3d/skins'
+import { playSkinPreview } from '../../../dice3d/sound'
 import { useCollection } from '../../../collection/collectionService'
 import { CollectionProgress, LockedSkins } from '../../../collection/LockedSkins'
 import type { DiceShowcase } from '../../../dice3d/DiceShowcase'
@@ -289,7 +290,7 @@ function SkinList({ skin, error, onPick }: { skin: string; error: string | null;
       <ul className="alth-dice__skinlist" role="radiogroup" aria-label="Conjuntos de dados">
         {skins.map((k) => (
           <li key={k.id}>
-            <button type="button" role="radio" aria-checked={skin === k.id} className={`alth-dice__skin-row${skin === k.id ? ' is-on' : ''}`} onClick={() => onPick(k.id)}
+            <button type="button" role="radio" aria-checked={skin === k.id} className={`alth-dice__skin-row${skin === k.id ? ' is-on' : ''}`} onClick={() => { playSkinPreview(k.sound); onPick(k.id) }}
               onMouseEnter={() => hover(k.id)} onMouseLeave={() => hover(null)} onFocus={() => hover(k.id)} onBlur={() => hover(null)}>
               <span className="alth-dice__skin-die" ref={(el) => { if (el) pedestals.current.set(k.id, el); else pedestals.current.delete(k.id) }}>
                 {simple && (

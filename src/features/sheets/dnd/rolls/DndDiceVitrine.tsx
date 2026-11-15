@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { skinsFor } from '../../../dice3d/skins'
+import { playSkinPreview } from '../../../dice3d/sound'
 import { useFeatureAccess } from '../../../control/siteFeatures'
 import { useCollection } from '../../../collection/collectionService'
 import { CollectionProgress, LockedSkins } from '../../../collection/LockedSkins'
@@ -52,7 +53,7 @@ export function DndDiceVitrine({ skin, error, onPick }: Props) {
           const on = skin === s.id
           return (
             <li key={s.id}>
-              <button type="button" className={`ddw-skin${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => onPick(s.id)}
+              <button type="button" className={`ddw-skin${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => { playSkinPreview(s.sound); onPick(s.id) }}
                 onMouseEnter={() => hover(s.id)} onMouseLeave={() => hover(null)} onFocus={() => hover(s.id)} onBlur={() => hover(null)}
                 style={{ ['--skin-glow' as string]: s.glowPower > 0 ? s.glow : s.trim }}>
                 <span className="ddw-skin__pedestal" ref={(el) => { if (el) pedestals.current.set(s.id, el); else pedestals.current.delete(s.id) }}>

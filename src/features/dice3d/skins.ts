@@ -116,10 +116,10 @@ export const ALL_SKINS: readonly DiceSkin[] = [
   // Os conjuntos iniciais: são os únicos que existem para o jogador por enquanto (superfície detalhada).
   // Ver docs/superpowers/specs/2026-10-22-colecao-de-dados.md
   { id: 'madeira',   name: 'Madeira Velha',    body: '#76492a', bodyEdge: '#2b190a', ink: '#120801', trim: '#6b4423', glow: '#000000', glowPower: 0, roughness: 0.9, metalness: 0, inkMetal: false, surface: 'wood', bump: 1.6, clearcoat: 0 },
-  { id: 'granito',   name: 'Granito',          body: '#6c6f77', bodyEdge: '#32353b', ink: '#1b1e23', trim: '#2c2f35', glow: '#000000', glowPower: 0, roughness: 0.82, metalness: 0.04, inkMetal: false, surface: 'stone', bump: 1.4, clearcoat: 0.04 },
-  { id: 'plastico',  name: 'Plástico Marmorizado', body: '#1f50d8', bodyEdge: '#0a1f70', ink: '#ffffff', trim: '#cfe0ff', glow: '#000000', glowPower: 0, roughness: 0.14, metalness: 0, inkMetal: false, surface: 'plastic', bump: 0.6, clearcoat: 0.95 },
+  { id: 'granito',   name: 'Granito',          body: '#6c6f77', bodyEdge: '#32353b', ink: '#1b1e23', trim: '#2c2f35', glow: '#000000', glowPower: 0, roughness: 0.82, metalness: 0.04, inkMetal: false, surface: 'stone', bump: 1.4, clearcoat: 0.04, sound: 'granito' },
+  { id: 'plastico',  name: 'Plástico Marmorizado', body: '#1f50d8', bodyEdge: '#0a1f70', ink: '#ffffff', trim: '#cfe0ff', glow: '#000000', glowPower: 0, roughness: 0.14, metalness: 0, inkMetal: false, surface: 'plastic', bump: 0.6, clearcoat: 0.95, sound: 'plastico' },
   // Exclusivo dos betas do D&D: resina transparente com o emoji nerd de brinquedo dentro.
-  { id: BETINHA_SKIN, name: 'Dado de Betinha Tester', body: '#f2fffd', bodyEdge: '#9fe8de', ink: '#ffffff', trim: '#ffffff', glow: '#000000', glowPower: 0, roughness: 0.05, metalness: 0, inkMetal: false, resin: true, toy: 'nerd', exclusive: BETINHA_FEATURE, clearcoat: 1 },
+  { id: BETINHA_SKIN, name: 'Dado de Betinha Tester', body: '#f2fffd', bodyEdge: '#9fe8de', ink: '#ffffff', trim: '#ffffff', glow: '#000000', glowPower: 0, roughness: 0.05, metalness: 0, inkMetal: false, resin: true, toy: 'nerd', exclusive: BETINHA_FEATURE, clearcoat: 1, sound: 'betinha' },
   // Guardados: não aparecem nem podem ser usados até virarem prêmio de conquista (e serem refeitos com o mesmo detalhe).
   // A coleção (os conjuntos ganhos por conquista; as regras ficam em features/collection)
   ...COLLECTION,

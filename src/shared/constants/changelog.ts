@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.42',
+    date:    '2026-11-14',
+    title:   'Ouça o som de cada conjunto de dados',
+    items: [
+      'Na lista "Meus dados" (cartão de dados do D&D e do Altherium), ao clicar num conjunto você ouve o dado dele caindo na mesa, antes mesmo de rolar. Clicar de novo no conjunto em uso toca o som outra vez.',
+      'O Granito, o Plástico Marmorizado e o Dado de Betinha Tester também ganharam som próprio (pedra maciça, plástico duro e um brinquedo de borracha que apita). A Madeira Velha continua com o som de sempre.',
+    ],
+  },
+  {
     version: '2.41',
     date:    '2026-11-14',
     title:   'Todos os dados da coleção com som próprio',

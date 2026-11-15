@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hitRecipe, type DiceVoice } from './sound'
-import { COLLECTION_SKINS } from './skins'
+import { ALL_SKINS, COLLECTION_SKINS } from './skins'
 
 const fixed = (v: number) => () => v
 
@@ -49,7 +49,7 @@ describe('receita do som de dado na madeira', () => {
 })
 
 describe('as vozes dos conjuntos da coleção', () => {
-  const voices = [...new Set(COLLECTION_SKINS.map((s) => s.sound).filter((v): v is DiceVoice => !!v))]
+  const voices = [...new Set(ALL_SKINS.map((s) => s.sound).filter((v): v is DiceVoice => !!v))]
 
   it('sem voz, a batida é a de sempre: nenhuma ressonância nem sopro', () => {
     const r = hitRecipe(0.6, false, fixed(0.5))
@@ -57,9 +57,10 @@ describe('as vozes dos conjuntos da coleção', () => {
     expect(r.hiss).toBeNull()
   })
 
-  it('todo conjunto da coleção tem a sua voz, e nenhuma se repete', () => {
-    expect(voices).toHaveLength(34)
+  it('todo conjunto tem a sua voz (só a madeira velha usa a batida padrão), e nenhuma se repete', () => {
     expect(COLLECTION_SKINS.filter((s) => s.sound)).toHaveLength(34)
+    expect(ALL_SKINS.filter((s) => !s.sound).map((s) => s.id)).toEqual(['madeira'])
+    expect(voices).toHaveLength(37)
   })
 
   it('toda voz muda a batida (soma ressonância ou sopro) e dá números tocáveis em qualquer força', () => {
