@@ -179,11 +179,44 @@ PASSO 4 - Devolva as CONTAS de login (mesmos ids, mesmas senhas):
 
 PASSO 5 - Devolva os ARQUIVOS do Storage. Crie um arquivo
 chave-novo.txt na pasta vorterium-backups (mesmo formato do
-chave.txt, com a URL e a service_role do projeto NOVO) e rode:
+chave.txt, com a URL e a service_role do projeto NOVO).
+
+  5A) RECOMENDADO - versao LEVE. As fotos da galeria (bucket
+  mesa-images) saem do backup, sao reduzidas (lado maior ate 2000 px,
+  WebP) e so a versao leve sobe. O caminho de cada arquivo nao muda,
+  entao o banco continua certo. Os originais seguem intactos no
+  backup, e nada e baixado do Supabase (le tudo do disco). Em 14/11/2026
+  eram 116 MB so nessa galeria; a reducao evita estourar o limite de
+  trafego de novo. Rode (precisa de internet, o Docker baixa o sharp):
+
+  docker run --rm --env-file D:\baixados\programacao_reserva\vorterium-backups\chave-novo.txt -e OTIMIZAR=1 -e ORIGEM=/backup/storage -v D:\baixados\programacao_reserva\vorterium-backups:/backup:ro -v D:\baixados\programacao_reserva\vorterium\backup:/app:ro node:22-alpine sh -c "cd /tmp && npm i sharp --silent --no-audit --no-fund && node /app/storage-restaurar.mjs"
+
+  A ultima linha mostra RESUMO ... reduzidas=N MB_antes=X MB_depois=Y.
+  Imagem que ja e leve, GIF, WebP animado e imagem que nao ficaria 20%
+  menor sobem sem mudar. Se quiser outro tamanho, acrescente -e LADO=1600.
+  Pra so ENSAIAR (nao envia nada, grava numa pasta e mostra a economia),
+  troque o --env-file por  -e DESTINO_LOCAL=/saida  e acrescente
+  -v D:\baixados\programacao_reserva\vorterium-saida:/saida .
+
+  5B) Versao original, sem reduzir (os arquivos sobem como estavam):
 
   docker run --rm --env-file D:\baixados\programacao_reserva\vorterium-backups\chave-novo.txt -e ORIGEM=/backup/storage -v D:\baixados\programacao_reserva\vorterium-backups:/backup -v D:\baixados\programacao_reserva\vorterium\backup:/app:ro node:22-alpine node /app/storage-restaurar.mjs
 
-Termina com uma linha RESUMO; falhas=0 e o que voce quer ver.
+Os dois terminam com uma linha RESUMO; falhas=0 e o que voce quer ver.
+Podem rodar quantas vezes quiser (o que ja esta la e sobrescrito).
+
+PASSO 5C - Troque os ENDERECOS de imagem do projeto antigo. Avatares,
+capas, retratos e alguns registros guardam o endereco INTEIRO da imagem
+(https://CODIGO-ANTIGO.supabase.co/storage/...); depois da mudanca eles
+ainda apontariam pro projeto velho. O arquivo trocar-enderecos.sql troca
+em todas as colunas de texto de uma vez (em 14/11/2026 eram 68 valores em
+10 colunas). Primeiro um ENSAIO, que lista o que mudaria e desfaz tudo:
+
+  docker run --rm -v D:\baixados\programacao_reserva\vorterium\backup:/app:ro postgres:17 psql "STRING_DO_PROJETO_NOVO" -v antigo=CODIGO_ANTIGO -v novo=CODIGO_NOVO -f /app/trocar-enderecos.sql
+
+CODIGO_ANTIGO e CODIGO_NOVO sao so as letras antes de .supabase.co.
+Se a lista estiver como esperado, rode de novo com  -v aplicar=1  no
+meio do comando (antes do -f) pra valer.
 
 PASSO 6 - Refaca as configuracoes do painel no projeto novo:
   - Authentication > Providers: ligar o Google (client id e
