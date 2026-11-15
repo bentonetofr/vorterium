@@ -26,9 +26,11 @@ export interface LiveSession {
   playersTotal: number
   /** Já conferiu com o banco? (antes disso a tela não mostra nada) */
   known: boolean
+  /** A consulta falhou (sem a migration ou sem rede): o estado não é confiável. */
+  failed: boolean
 }
 
-export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false }
+export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false, failed: false }
 
 const states = new Map<string, LiveSession>()
 const listeners = new Set<() => void>()
@@ -44,13 +46,13 @@ export function parseLiveSession(raw: unknown): LiveSession {
     nextAt: typeof r.next_at === 'string' ? r.next_at : null,
     override: r.override === 'open' || r.override === 'closed' ? r.override : null,
     masterOnline: r.master_online === true, playersOnline: count(r.players_online), playersTotal: count(r.players_total),
-    known: true,
+    known: true, failed: false,
   }
 }
 
 const same = (a: LiveSession, b: LiveSession) =>
   a.open === b.open && a.reason === b.reason && a.nextAt === b.nextAt && a.override === b.override && a.masterOnline === b.masterOnline
-  && a.playersOnline === b.playersOnline && a.playersTotal === b.playersTotal && a.known === b.known
+  && a.playersOnline === b.playersOnline && a.playersTotal === b.playersTotal && a.known === b.known && a.failed === b.failed
 
 function publish(campaignId: string, next: LiveSession) {
   const prev = states.get(campaignId)
@@ -66,9 +68,9 @@ export function refreshLiveSession(campaignId: string): Promise<void> {
   const job = (async () => {
     try {
       const { data, error } = await supabase.rpc('campaign_session_status', { campaign_id_input: campaignId })
-      publish(campaignId, error ? { ...UNKNOWN_SESSION, known: true } : parseLiveSession(data))
+      publish(campaignId, error ? { ...UNKNOWN_SESSION, known: true, failed: true } : parseLiveSession(data))
     } catch {
-      publish(campaignId, { ...UNKNOWN_SESSION, known: true })
+      publish(campaignId, { ...UNKNOWN_SESSION, known: true, failed: true })
     } finally {
       inflight.delete(campaignId)
     }
@@ -104,6 +106,19 @@ export function resetLiveSessions(): void {
 /** Define o estado de uma campanha à mão (páginas de teste). */
 export function setLiveSession(campaignId: string, raw: unknown): void {
   publish(campaignId, parseLiveSession(raw))
+}
+
+/**
+ * Por que a sessão está fechada, em poucas palavras (vazio quando não há o que dizer). O jogador que esperava a sessão aberta vê
+ * aqui o que falta: o mestre online, ou mais jogadores.
+ */
+export function closedReason(s: LiveSession): string {
+  if (s.failed) return ''
+  if (s.override === 'closed') return 'encerrada pelo mestre'
+  if (!s.masterOnline) return 'aguardando o mestre'
+  const missing = playersNeeded(s.playersTotal) - s.playersOnline
+  if (s.playersTotal > 0 && missing > 0) return `faltam ${missing} ${missing === 1 ? 'jogador' : 'jogadores'} online`
+  return ''
 }
 
 /**

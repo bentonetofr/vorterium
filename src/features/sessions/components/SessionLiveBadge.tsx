@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { alertDialog } from '../../../shared/components/dialogs'
-import { playersNeeded, setCampaignSession, useLiveSession, type SessionAction, type SessionReason } from '../services/liveSession'
+import { closedReason, playersNeeded, setCampaignSession, useLiveSession, type SessionAction, type SessionReason } from '../services/liveSession'
 import { formatStart } from '../utils/sessionTime'
 import './SessionLiveBadge.css'
 
@@ -28,6 +28,7 @@ export function SessionLiveBadge({ campaignId, isMaster = false }: { campaignId:
   }
 
   const need = playersNeeded(s.playersTotal)
+  const why = closedReason(s)
   const crowd = s.playersTotal > 0 ? ` Jogadores online: ${s.playersOnline} de ${s.playersTotal} (a mesa conta como reunida com ${need}).` : ''
 
   if (s.open && s.reason) {
@@ -43,11 +44,21 @@ export function SessionLiveBadge({ campaignId, isMaster = false }: { campaignId:
     )
   }
 
+  // sem resposta do banco (a migration da sessão ainda não rodou, ou sem rede): melhor dizer do que ficar sem selo
+  if (s.failed) {
+    return (
+      <span className="live-badge live-badge--closed" title="Não foi possível conferir o estado da sessão. Se isto não passar, as migrations 20240233 a 20240235 podem não ter rodado no Supabase. Enquanto isso, nenhuma rolagem conta pras conquistas.">
+        Sessão indisponível
+      </span>
+    )
+  }
+
   if (isMaster) {
     return (
       <span className="live-wrap">
         <span className="live-badge live-badge--closed" title={`A sessão abre sozinha no horário marcado ou quando pelo menos a metade dos jogadores estiver online com você.${crowd}`}>
           {s.override === 'closed' ? 'Sessão encerrada' : 'Sessão fechada'}
+          {why && s.override !== 'closed' && <small>{why}</small>}
           {s.nextAt && <small>próxima: {formatStart(s.nextAt)}</small>}
         </span>
         <button type="button" className="live-btn live-btn--go" disabled={busy} onClick={() => void act('open')} title="Abre a sessão agora: a partir daqui as rolagens contam pras conquistas">Abrir sessão</button>
@@ -56,8 +67,12 @@ export function SessionLiveBadge({ campaignId, isMaster = false }: { campaignId:
     )
   }
 
-  if (s.nextAt) {
-    return <span className="live-badge live-badge--next" title="A sessão abre quando o mestre estiver online, 15 minutos antes do horário marcado.">Próxima sessão: {formatStart(s.nextAt)}</span>
-  }
-  return null
+  // jogador: o selo fica sempre, pra ele saber em que pé está (fechada, e por quê)
+  return (
+    <span className="live-badge live-badge--closed" title={`Só o mestre abre a sessão. Ela abre quando o mestre está online e pelo menos a metade dos jogadores também (ou no horário marcado).${crowd} As rolagens só contam pras conquistas com a sessão aberta.`}>
+      Sessão fechada
+      {why && <small>{why}</small>}
+      {s.nextAt && <small>próxima: {formatStart(s.nextAt)}</small>}
+    </span>
+  )
 }

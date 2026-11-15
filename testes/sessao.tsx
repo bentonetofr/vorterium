@@ -12,10 +12,12 @@ setLiveSession('manual', { open: true, reason: 'manual', next_at: null, override
 setLiveSession('proxima', { open: false, reason: null, next_at: new Date(Date.now() + 26 * 3600_000).toISOString() })
 setLiveSession('fechada', { open: false, reason: null, next_at: null, ...crowd })
 setLiveSession('encerrada', { open: false, reason: null, next_at: null, override: 'closed', ...crowd })
+setLiveSession('semmestre', { open: false, reason: null, next_at: null, master_online: false, players_online: 3, players_total: 4 })
+setLiveSession('faltam', { open: false, reason: null, next_at: null, master_online: true, players_online: 1, players_total: 4 })
 
 createRoot(document.getElementById('root')!).render(
   <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14, color: '#eee' }}>
-    {['horario', 'mesa', 'manual', 'proxima', 'fechada', 'encerrada'].map((id) => (
+    {['horario', 'mesa', 'manual', 'proxima', 'fechada', 'encerrada', 'semmestre', 'faltam'].map((id) => (
       <div key={id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <code style={{ width: 90 }}>{id}</code>
         <span style={{ display: 'flex', gap: 24, alignItems: 'center' }}>

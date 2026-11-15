@@ -5,7 +5,7 @@ vi.mock('../../../shared/lib/supabase', () => ({
   supabase: { rpc: async (name: string) => { rpc.calls.push(name); return rpc.result } },
 }))
 
-import { parseLiveSession, playersNeeded, refreshLiveSession, resetLiveSessions, setCampaignSession, useLiveSession } from './liveSession'
+import { closedReason, parseLiveSession, playersNeeded, refreshLiveSession, resetLiveSessions, setCampaignSession, useLiveSession } from './liveSession'
 
 beforeEach(() => { resetLiveSessions(); rpc.calls = []; rpc.result = { data: null, error: null } })
 
@@ -51,6 +51,24 @@ describe('estado da sessão da campanha', () => {
     expect(calls.filter((c) => c === 'set_campaign_session')).toHaveLength(3)
     rpc.result = { data: null, error: { message: 'Só o mestre da campanha abre ou encerra a sessão.' } }
     await expect(setCampaignSession('c1', 'open')).rejects.toThrow(/20240234/)
+  })
+
+  it('explica por que a sessão está fechada: encerrada, sem o mestre ou faltando jogador', () => {
+    const base = { open: false, reason: null, master_online: true, players_online: 1, players_total: 4 }
+    expect(closedReason(parseLiveSession({ ...base, master_online: false }))).toBe('aguardando o mestre')
+    expect(closedReason(parseLiveSession(base))).toBe('faltam 1 jogador online')
+    expect(closedReason(parseLiveSession({ ...base, players_online: 0 }))).toBe('faltam 2 jogadores online')
+    expect(closedReason(parseLiveSession({ ...base, override: 'closed' }))).toBe('encerrada pelo mestre')
+    // mestre online e jogadores suficientes, mas fechada: não há o que dizer (o horário ou o botão do mestre decidem)
+    expect(closedReason(parseLiveSession({ ...base, players_online: 2 }))).toBe('')
+  })
+
+  it('sem resposta do banco o estado é marcado como falha (e não diz que aguarda o mestre)', async () => {
+    rpc.result = { data: null, error: { message: 'function does not exist' } }
+    await refreshLiveSession('c9')
+    const failed = { ...parseLiveSession(null), failed: true }
+    expect(closedReason(failed)).toBe('')
+    expect(parseLiveSession(null).failed).toBe(false)
   })
 
   it('o hook existe e não pergunta sem campanha', () => {
