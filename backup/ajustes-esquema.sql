@@ -13,3 +13,9 @@ alter table public.altherium_bestiary add constraint altherium_bestiary_sheet_sh
 alter table public.user_bestiary drop constraint if exists user_bestiary_sheet_shape;
 alter table public.user_bestiary add constraint user_bestiary_sheet_shape
   check (sheet is null or (jsonb_typeof(sheet) = 'object' and pg_column_size(sheet) <= 30000));
+
+-- 2) Leitura do dono do site (dev) nas tabelas do Caatedrum (existia no banco antigo)
+drop policy if exists "dev: le tudo" on public.caat_rooms;
+create policy "dev: le tudo" on public.caat_rooms as permissive for select to authenticated using (public.is_developer());
+drop policy if exists "dev: le tudo" on public.caat_state;
+create policy "dev: le tudo" on public.caat_state as permissive for select to authenticated using (public.is_developer());
