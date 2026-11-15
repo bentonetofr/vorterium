@@ -473,3 +473,5 @@
   border-radius: var(--radius-md);
 }
 .session-recap__players b { min-width: 22px; padding: 1px 6px; text-align: center; font-weight: 700; color: var(--text-primary); background: var(--bg-void); border-radius: 5px; }
+
+.session-form__hint { margin: 6px 0 0; font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); }

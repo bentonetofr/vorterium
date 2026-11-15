@@ -15,6 +15,7 @@ import type { CampaignSession } from '../../../shared/types'
 import { ModalOverlay } from '../../../shared/components/ModalOverlay'
 import { Presence } from '../../../shared/components/Presence'
 import { Select } from '../../../shared/components/Select'
+import { DEFAULT_DURATION_MIN, DURATION_OPTIONS, durationLabel, normalizeTime } from '../utils/sessionTime'
 import './CampaignSessionsPanel.css'
 import { Loader } from '../../../shared/components/Loader'
 import { SessionRecap } from './SessionRecap'
@@ -102,6 +103,8 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
 
   const [title,       setTitle]       = useState(initial?.title        ?? '')
   const [sessionDate, setSessionDate] = useState(initial?.session_date ?? '')
+  const [sessionTime, setSessionTime] = useState(normalizeTime(initial?.session_time) ?? '')
+  const [duration,    setDuration]    = useState(initial?.duration_min ?? DEFAULT_DURATION_MIN)
   const [summary,     setSummary]     = useState(initial?.summary      ?? '')
   const [status,      setStatus]      = useState<SessionStatus>(initial?.status ?? 'planned')
   const [saving,      setSaving]      = useState(false)
@@ -117,6 +120,8 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
     const formData: SessionFormData = {
       title:        title.trim(),
       session_date: sessionDate || null,
+      session_time: sessionDate ? sessionTime || null : null,
+      duration_min: duration,
       summary:      summary.trim() || null,
       status,
     }
@@ -145,6 +150,8 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
   const summaryOver = summary.length > SUMMARY_MAX
   const dirty = title !== (initial?.title ?? '')
     || sessionDate !== (initial?.session_date ?? '')
+    || sessionTime !== (normalizeTime(initial?.session_time) ?? '')
+    || duration !== (initial?.duration_min ?? DEFAULT_DURATION_MIN)
     || summary !== (initial?.summary ?? '')
     || status !== (initial?.status ?? 'planned')
 
@@ -194,10 +201,41 @@ function SessionForm({ initial, campaignId, onSaved, onCancel }: SessionFormProp
               type="date"
               className="input session-form__date-input"
               value={sessionDate}
-              onChange={(e) => setSessionDate(e.target.value)}
+              onChange={(e) => { setSessionDate(e.target.value); if (!e.target.value) setSessionTime('') }}
               disabled={saving}
             />
           </div>
+
+          {/* Horário: com data e horário marcados, o site abre a sessão sozinho (15 min antes) e a fecha no fim da duração */}
+          <div className="session-form__field">
+            <label className="session-form__label" htmlFor="session-time">
+              Horário (Brasília)
+            </label>
+            <input
+              id="session-time"
+              type="time"
+              className="input session-form__date-input"
+              value={sessionTime}
+              onChange={(e) => setSessionTime(e.target.value)}
+              disabled={saving || !sessionDate}
+            />
+            <p className="session-form__hint">
+              Com data e horário, a sessão abre sozinha 15 minutos antes e fecha ao fim da duração. As conquistas e os conjuntos de dados só contam rolagens com a sessão aberta.
+            </p>
+          </div>
+          {sessionDate && sessionTime && (
+            <div className="session-form__field">
+              <label className="session-form__label" htmlFor="session-duration">Duração</label>
+              <Select
+                id="session-duration"
+                className="session-form__select"
+                value={String(duration)}
+                onChange={(v) => setDuration(Number(v))}
+                disabled={saving}
+                options={DURATION_OPTIONS.some((o) => o.value === duration) ? DURATION_OPTIONS.map((o) => ({ value: String(o.value), label: o.label })) : [...DURATION_OPTIONS.map((o) => ({ value: String(o.value), label: o.label })), { value: String(duration), label: durationLabel(duration) }]}
+              />
+            </div>
+          )}
 
           {/* Status */}
           <div className="session-form__field">
@@ -286,6 +324,7 @@ function SessionCard({
           {session.session_date && (
             <span className="session-card__date">
               {formatSessionDate(session.session_date)}
+              {normalizeTime(session.session_time) && ` · ${normalizeTime(session.session_time)} (${durationLabel(session.duration_min ?? DEFAULT_DURATION_MIN)})`}
             </span>
           )}
         </div>

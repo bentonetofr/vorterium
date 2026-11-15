@@ -163,6 +163,8 @@ export interface DiceRoll {
   dice_skin?: string | null
   /** O total pode ficar abaixo de 1 (só D&D). */
   no_floor?: boolean
+  /** A sessão estava aberta quando a rolagem foi gravada (o banco carimba; só estas contam pras conquistas). Migration 20240233. */
+  session_open?: boolean
 }
 
 /** O que a ficha sabia ao rolar (dice_rolls.roll_context). */
@@ -208,6 +210,9 @@ export interface CampaignSession {
   campaign_id:  string
   title:        string
   session_date: string | null  // formato 'YYYY-MM-DD' ou null
+  /** Horário marcado ('HH:MM:SS', Brasília) e duração em minutos: com data e horário, o site abre a sessão sozinho. Migration 20240233. */
+  session_time?: string | null
+  duration_min?: number
   summary:      string | null
   status:       'planned' | 'completed' | 'canceled'
   created_by:   string

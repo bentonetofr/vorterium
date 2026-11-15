@@ -3,6 +3,8 @@ import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } fr
 import { useAuth } from '../../auth/AuthProvider'
 import { getCampaignWithRole } from '../services/campaignService'
 import { touchCampaignPresence } from '../../activity/services/activityService'
+import { refreshLiveSession } from '../../sessions/services/liveSession'
+import { SessionLiveBadge } from '../../sessions/components/SessionLiveBadge'
 import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
 import { getChatUnreadCount, getPrivateUnreadCounts } from '../../chat/services/chatService'
@@ -72,9 +74,11 @@ export function CampaignAreaLayout() {
   // ── Heartbeat de presença — atualiza a cada 60 segundos ──
   useEffect(() => {
     if (!campaign?.id) return
-    void touchCampaignPresence(campaign.id).catch(() => {})
+    // depois de cada batida, pergunta ao banco se a sessão está aberta (mestre e jogador online juntos, ou horário marcado)
+    const beat = () => { void touchCampaignPresence(campaign.id).catch(() => {}).then(() => refreshLiveSession(campaign.id)) }
+    beat()
     // Só com a aba à vista (aba escondida não gasta chamada); ao voltar, avisa na hora.
-    return visibleInterval(() => { void touchCampaignPresence(campaign.id).catch(() => {}) }, 60_000)
+    return visibleInterval(beat, 60_000)
   }, [campaign?.id])
 
   // ── Selo de chat não lido — some só com o chat aberto de fato. O
@@ -196,6 +200,7 @@ export function CampaignAreaLayout() {
             <span className={`campaign-status ${getCampaignStatusClass(campaign.status)}`}>
               {getCampaignStatusLabel(campaign.status)}
             </span>
+            {!campaign.observer && <SessionLiveBadge campaignId={campaign.id} />}
           </div>
         </div>
       </header>

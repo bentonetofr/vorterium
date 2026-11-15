@@ -17,6 +17,7 @@ export function CollectionProgress({ unlocked, loaded }: { unlocked: ReadonlySet
     <p className="col-progress" aria-label={`Coleção: ${have} de ${total} descobertos`}>
       <span className="col-progress__bar" aria-hidden="true"><i style={{ width: `${(have / total) * 100}%` }} /></span>
       <span>Coleção secreta · {have}/{total}</span>
+      <small className="col-progress__hint">só conta o que você rola com a sessão aberta</small>
     </p>
   )
 }

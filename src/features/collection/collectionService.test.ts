@@ -8,6 +8,7 @@ const db = vi.hoisted(() => ({
   rpc: [] as { name: string; args: Record<string, string> }[],
   rpcResult: true as boolean,
   masters: [] as string[],
+  eqCalls: [] as [string, unknown][],
 }))
 
 vi.mock('../../shared/lib/supabase', () => {
@@ -15,7 +16,8 @@ vi.mock('../../shared/lib/supabase', () => {
   const query = (result: unknown) => {
     let out = result as { data?: Record<string, unknown>[]; count?: number; error: null }
     const q: Record<string, unknown> = {}
-    for (const m of ['select', 'eq', 'gte', 'order', 'limit']) q[m] = () => q
+    for (const m of ['select', 'gte', 'order', 'limit']) q[m] = () => q
+    q.eq = (col: string, val: unknown) => { db.eqCalls.push([col, val]); return q }
     q.not = (_col: string, _op: string, val: string) => {
       const ids = val.replace(/[()]/g, '').split(',')
       if (out.data) out = { ...out, data: out.data.filter((r) => !ids.includes(String(r.campaign_id))) }
@@ -51,7 +53,7 @@ function d20(v: number, over: Partial<DiceRoll> = {}): DiceRoll {
   return {
     id: `roll-${n}`, campaign_id: 'c1', user_id: 'u1', die_type: 'd20', result: v, quantity: 1, modifier: 0, individual_results: [v], total_result: v,
     roll_mode: 'sum', kept_result: null, formula: '1d20', is_private: false, created_at: new Date(Date.parse('2026-11-09T12:00:00-03:00') + n * 1000).toISOString(),
-    roll_breakdown: [{ type: 'sum', notation: '1d20', quantity: 1, sides: 20, results: [v], subtotal: v }], ...over,
+    roll_breakdown: [{ type: 'sum', notation: '1d20', quantity: 1, sides: 20, results: [v], subtotal: v }], session_open: true, ...over,
   } as DiceRoll
 }
 const lite = (r: DiceRoll) => ({ id: r.id, campaign_id: r.campaign_id, die_type: r.die_type, result: r.result, individual_results: r.individual_results, roll_breakdown: r.roll_breakdown, roll_context: r.roll_context ?? null, roll_label: null, created_at: r.created_at })
@@ -62,7 +64,7 @@ vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, se
 
 beforeEach(() => {
   resetCollection()
-  db.userId = 'u1'; db.unlocks = []; db.rolls = []; db.total = 0; db.rpc = []; db.rpcResult = true; db.masters = []
+  db.userId = 'u1'; db.unlocks = []; db.rolls = []; db.total = 0; db.rpc = []; db.rpcResult = true; db.masters = []; db.eqCalls = []
   localStorage.clear()
 })
 
@@ -80,6 +82,31 @@ describe('coleção: conferir as conquistas a cada rolagem', () => {
     await noteRoll(d20(9))
     expect(db.rpc).toHaveLength(1)
     expect(events).toHaveLength(1)
+  })
+
+  it('fora da sessão aberta nada conta: nem a rolagem nova, nem a conta de rolagens, e o histórico só pede as de sessão', async () => {
+    const outside = Array.from({ length: 12 }, (_, i) => d20(2 + (i % 7), { session_open: false }))
+    db.rolls = outside.map(lite); db.total = 12
+    const events: UnlockEvent[] = []
+    onUnlock((e) => events.push(e))
+    // 12 rolagens e um 20 fora da sessão: daria o osso e a argila, mas nada conta
+    const crit = d20(20, { session_open: false })
+    db.rolls.push(lite(crit)); db.total = 13
+    await noteRoll(crit)
+    expect(db.rpc).toEqual([])
+    expect(events).toEqual([])
+    // sem o carimbo (rolagem de antes da migration) também não conta
+    const legacy = d20(20) as unknown as Record<string, unknown>
+    delete legacy.session_open
+    await noteRoll(legacy as unknown as DiceRoll)
+    expect(db.rpc).toEqual([])
+    // o histórico é pedido só com session_open = true
+    expect(db.eqCalls).toContainEqual(['session_open', true])
+    // já dentro da sessão a mesma rolagem conta
+    const inside = d20(20)
+    db.rolls.push(lite(inside)); db.total = 14
+    await noteRoll(inside)
+    expect(db.rpc.map((c) => c.args.p_skin)).toContain('argila')
   })
 
   it('rolagens de antes do corte (08/11/2026, 17:20) não contam: o prêmio vem daqui pra frente', async () => {

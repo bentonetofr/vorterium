@@ -93,8 +93,9 @@ async function loadHistory(userId: string): Promise<boolean> {
   const asPlayer = <T extends { not: (col: string, op: string, val: string) => T }>(q: T): T =>
     masterOf.size ? q.not('campaign_id', 'in', `(${[...masterOf].join(',')})`) : q
   const [rows, count] = await Promise.all([
-    asPlayer(supabase.from('dice_rolls').select(COLUMNS).eq('user_id', userId).gte('created_at', COLLECTION_START)).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
-    asPlayer(supabase.from('dice_rolls').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', COLLECTION_START)),
+    // só rolagens feitas com a sessão aberta (session_open, que o banco carimba): fora da sessão nada conta, nunca
+    asPlayer(supabase.from('dice_rolls').select(COLUMNS).eq('user_id', userId).eq('session_open', true).gte('created_at', COLLECTION_START)).order('created_at', { ascending: false }).limit(HISTORY_LIMIT),
+    asPlayer(supabase.from('dice_rolls').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('session_open', true).gte('created_at', COLLECTION_START)),
   ])
   if (rows.error || count.error) return false
   const rolls = (rows.data as unknown as RollLite[]).reverse()
@@ -140,6 +141,8 @@ async function check(roll: DiceRoll): Promise<void> {
   if (!known.has(roll.campaign_id)) { if (!(await refreshMasters(userId))) return; known.add(roll.campaign_id) }
   // como mestre não se ganha dado: a rolagem não entra na conta das conquistas
   if (masterOf.has(roll.campaign_id)) return
+  // fora da sessão aberta a rolagem não conta pra nada (o banco carimbou session_open na hora de gravar; sem carimbo, não conta)
+  if (roll.session_open !== true) return
   // a rolagem que acabou de chegar pode já estar no que foi lido do banco (ou não ter chegado): garante que esteja uma vez só
   if (!h.rolls.some((r) => r.id === roll.id)) {
     h.rolls.push(lite(roll))

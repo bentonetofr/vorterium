@@ -2,6 +2,7 @@ import { supabase } from '../../../shared/lib/supabase'
 import { logActivity } from '../../activity/services/activityService'
 import type { CampaignSession } from '../../../shared/types'
 import { localToday } from '../utils/sessionCountdown'
+import { clampDuration, normalizeTime } from '../utils/sessionTime'
 
 // ────────────────────────────────────────────────────────
 // Tipos e helpers de status
@@ -52,9 +53,21 @@ export function sortSessions(list: CampaignSession[], order: SessionSortOrder): 
 export interface SessionFormData {
   title:        string
   session_date: string | null  // 'YYYY-MM-DD' ou null
+  /** 'HH:MM' (Brasília) ou null; só vale com data. */
+  session_time: string | null
+  /** Minutos de duração (a sessão abre 15 min antes do horário e fecha horário + duração). */
+  duration_min: number
   summary:      string | null
   status:       SessionStatus
 }
+
+/** Horário só vale junto da data. */
+function timeColumns(f: SessionFormData): { session_time: string | null; duration_min: number } {
+  return { session_time: f.session_date ? normalizeTime(f.session_time) : null, duration_min: clampDuration(f.duration_min) }
+}
+
+/** Sem a migration do horário (20240233) a sessão grava do mesmo jeito, só sem horário nem duração. */
+const isTimeColumnError = (msg: string) => msg.includes('session_time') || msg.includes('duration_min')
 
 // ────────────────────────────────────────────────────────
 // Session Service
@@ -110,18 +123,18 @@ export async function createCampaignSession(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuário não autenticado.')
 
-  const { data, error } = await supabase
-    .from('campaign_sessions')
-    .insert({
-      campaign_id:  campaignId,
-      title:        formData.title.trim(),
-      session_date: formData.session_date || null,
-      summary:      formData.summary?.trim() || null,
-      status:       formData.status,
-      created_by:   user.id,
-    })
-    .select('*')
-    .single()
+  const base = {
+    campaign_id:  campaignId,
+    title:        formData.title.trim(),
+    session_date: formData.session_date || null,
+    summary:      formData.summary?.trim() || null,
+    status:       formData.status,
+    created_by:   user.id,
+  }
+  let { data, error } = await supabase.from('campaign_sessions').insert({ ...base, ...timeColumns(formData) }).select('*').single()
+  if (error && isTimeColumnError(error.message ?? '')) {
+    ;({ data, error } = await supabase.from('campaign_sessions').insert(base).select('*').single())
+  }
 
   if (error) {
     const msg = error.message ?? ''
@@ -148,17 +161,16 @@ export async function updateCampaignSession(
   sessionId: string,
   formData: SessionFormData
 ): Promise<CampaignSession> {
-  const { data, error } = await supabase
-    .from('campaign_sessions')
-    .update({
-      title:        formData.title.trim(),
-      session_date: formData.session_date || null,
-      summary:      formData.summary?.trim() || null,
-      status:       formData.status,
-    })
-    .eq('id', sessionId)
-    .select('*')
-    .single()
+  const base = {
+    title:        formData.title.trim(),
+    session_date: formData.session_date || null,
+    summary:      formData.summary?.trim() || null,
+    status:       formData.status,
+  }
+  let { data, error } = await supabase.from('campaign_sessions').update({ ...base, ...timeColumns(formData) }).eq('id', sessionId).select('*').single()
+  if (error && isTimeColumnError(error.message ?? '')) {
+    ;({ data, error } = await supabase.from('campaign_sessions').update(base).eq('id', sessionId).select('*').single())
+  }
 
   if (error) {
     const msg = error.message ?? ''

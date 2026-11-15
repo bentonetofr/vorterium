@@ -33,3 +33,4 @@
 @media (hover: hover) { .col-locked:hover { transform: translateY(-2px); } }
 .col-locked__die { transition: transform 420ms var(--ease-spring); }
 @media (hover: hover) { .col-locked:hover .col-locked__die { transform: rotate(-10deg) scale(1.06); } }
+.col-progress__hint { margin-left: var(--space-2); font-size: 10px; letter-spacing: 0.04em; text-transform: none; color: var(--text-muted); opacity: 0.85; }
