@@ -917,6 +917,43 @@ form.dsh-sheet { container: dsh / inline-size; width: 100%; min-width: 0; }
 .dsh-attack__desctext .dsh-note { margin: 0; }
 .dsh-itemdesc { display: flex; flex-direction: column; gap: var(--space-1); }
 .dsh-itemdesc .dsh-note { margin: 0; }
+/* descrição comprida de item: recolhida em ~4 linhas com "Ver mais"; aberta, rola dentro da própria caixa */
+.dsh-itemdesc-wrap { display: flex; flex-direction: column; gap: var(--space-1); }
+.dsh-itemdesc.is-clamped {
+  max-height: 6.4em; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent); mask-image: linear-gradient(to bottom, #000 62%, transparent);
+}
+.dsh-itemdesc.is-open { max-height: min(45vh, 360px); overflow-y: auto; padding-right: var(--space-2); overscroll-behavior: contain; }
+
+/* Características: título de cada grupo de origem (Raça, Classe...) */
+.dsh-listgroup {
+  display: flex; align-items: baseline; gap: var(--space-2); list-style: none; padding: var(--space-3) 2px var(--space-1);
+  font-family: var(--font-label); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);
+  border-bottom: 1px solid var(--border-dim);
+}
+.dsh-listgroup:first-child { padding-top: 0; }
+.dsh-listgroup small { font-size: 10px; font-weight: 500; letter-spacing: 0.04em; }
+
+/* Inventário: busca, tipos, organizar e reordenar */
+.dsh-invbar { display: flex; flex-direction: column; gap: var(--space-2); }
+.dsh-invbar__search { width: 100%; }
+.dsh-invbar__hint { margin: 0; }
+.dsh-reorder { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.dsh-reorder__grip {
+  display: inline-grid; place-items: center; width: 22px; height: 28px; font-size: 16px; line-height: 1; color: var(--text-muted);
+  cursor: grab; user-select: none; touch-action: none;
+}
+.dsh-reorder__grip:hover { color: var(--text-primary); }
+.dsh-reorder__grip:active { cursor: grabbing; }
+.dsh-reorder__btn {
+  display: inline-grid; place-items: center; width: 24px; height: 28px; padding: 0; font-size: 10px; line-height: 1; color: var(--text-muted);
+  background: none; border: 1px solid transparent; border-radius: var(--radius-md); cursor: var(--cursor-hand);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.dsh-reorder__btn:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-overlay); border-color: var(--border-bright); }
+.dsh-reorder__btn:disabled { opacity: 0.25; cursor: default; }
+.dsh-item.is-dragging { opacity: 0.45; }
+.dsh-item.is-dropover { border-top-color: var(--dsh-accent); box-shadow: 0 -2px 0 var(--dsh-accent); }
 .dsh-rollbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .dsh-feature__x { margin-left: auto; }
 

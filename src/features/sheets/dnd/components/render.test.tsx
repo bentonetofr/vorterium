@@ -305,6 +305,54 @@ describe('abas', () => {
     expect(renderToStaticMarkup(<DndInventarioTab ctx={makeCtx({ readOnly: true })} />)).not.toContain('Abrir o livro')
   })
 
+  it('Características: formulário da habilidade própria pede a origem, nível, usos e descrição; a lista ganha títulos por origem', () => {
+    const html = renderToStaticMarkup(<DndCaracteristicasTab ctx={makeCtx()} />)
+    for (const t of ['Característica própria', 'Origem da característica', 'Nível da característica', 'Usos da característica', 'Descrição (opcional)']) expect(html).toContain(t)
+    expect(html).toContain('dsh-listgroup')
+    expect(html).toContain('Origem: Classe')
+    expect(html).toContain('Origem: Própria')
+    // habilidade própria no lápis: dá para mudar a origem; a do livro não (a origem dela é a do catálogo)
+    const ro = renderToStaticMarkup(<DndCaracteristicasTab ctx={makeCtx({ readOnly: true })} />)
+    expect(ro).not.toContain('Origem da característica')
+  })
+
+  it('Características: habilidade própria com origem "raça" aparece sob o título Raça', () => {
+    const base = makeData()
+    const own = { ...base.features[1], id: 'fogo', name: 'Fogo Astral', source: 'race' as const }
+    const html = renderToStaticMarkup(<DndCaracteristicasTab ctx={makeCtx({ data: makeData({ features: [base.features[0], own] }) })} />)
+    expect(html).toContain('Origem: Raça')
+    expect(html).not.toContain('Origem: Própria')
+    expect(html.indexOf('Origem: Raça')).toBeLessThan(html.indexOf('Origem: Classe'))
+  })
+
+  it('Inventário: setas e alça para reordenar, tipos e botões de organizar; descrição comprida fica recolhida com "Ver mais"', () => {
+    const base = makeData()
+    const long = { ...base.details.inventory[3], id: 'varinha', name: 'Varinha longa', notes: 'Texto muito longo do item mágico. '.repeat(20) }
+    const data = makeData({ details: { ...base.details, inventory: [...base.details.inventory, long] } })
+    const html = renderToStaticMarkup(<DndInventarioTab ctx={makeCtx({ data })} />)
+    expect(html).toContain('aria-label="Subir Corda"')
+    expect(html).toContain('aria-label="Descer Corda"')
+    expect(html).toContain('dsh-reorder__grip')
+    for (const t of ['Armas', 'Armaduras', 'Próprios', 'A–Z', 'Por tipo']) expect(html).toContain(t)
+    expect(html).toContain('dsh-itemdesc is-clamped')
+    expect(html).toContain('aria-expanded="false"')
+    // só leitura: sem reordenar nem organizar
+    const ro = renderToStaticMarkup(<DndInventarioTab ctx={makeCtx({ data, readOnly: true })} />)
+    expect(ro).not.toContain('Subir Corda')
+    expect(ro).not.toContain('Por tipo')
+    expect(ro).toContain('aria-expanded="false"')
+  })
+
+  it('Inventário: descrição curta aparece inteira, sem "Ver mais"', () => {
+    const base = makeData()
+    const short = { ...base.details.inventory[3], notes: 'Uma linha só.\nOutra linha.' }
+    const data = makeData({ details: { ...base.details, inventory: [short] } })
+    const html = renderToStaticMarkup(<DndInventarioTab ctx={makeCtx({ data })} />)
+    expect(html).toContain('Outra linha.')
+    expect(html).not.toContain('aria-expanded')
+    expect(html).not.toContain('is-clamped')
+  })
+
   it('Livro de magias: lista o catálogo, marca o que já está na ficha e mostra o filtro da ficha', () => {
     const html = renderToStaticMarkup(
       <DndSpellBrowser catalog={spellCatalog.SPELLS} have={new Set(['jump'])} myClasses={['wizard']} readOnly={false} busy={null} onAdd={() => {}} />,

@@ -5,7 +5,8 @@ import { SHIELD, WEAPONS, getArmor } from '../catalog'
 import { BOOK_ITEMS, type BookItem } from '../catalog/itemBook'
 import { coinsInGold, formatKg, inventoryWeightKg } from '../model/format'
 import { itemTitle } from '../model/sheetModel'
-import { createDndInventoryItem, deleteDndInventoryItem, updateDndInventoryItem } from '../services/dndSheetService'
+import { INVENTORY_GROUP_LABEL, INVENTORY_GROUP_ORDER, filterInventory, inventoryGroup, isLongDescription, moveItemBy, moveItemTo, orderChanges, sortByGroup, sortByName, withOrder, type InventoryGroup } from '../model/organize'
+import { createDndInventoryItem, deleteDndInventoryItem, reorderDndInventory, updateDndInventoryItem } from '../services/dndSheetService'
 import { DerivedField, NumberField } from './DndControls'
 import { DndItemBrowser } from './DndItemBrowser'
 import { Bump, ChipRow, StatChip, StatusPill } from './DndVisuals'
@@ -28,6 +29,11 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
   const [customNotes, setCustomNotes] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [bookOpen, setBookOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [groupFilter, setGroupFilter] = useState<InventoryGroup | ''>('')
+  const [openDesc, setOpenDesc] = useState<Record<string, boolean>>({})
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [overId, setOverId] = useState<string | null>(null)
 
   const items = data.details.inventory
   const capacity = derived.carryCapacity
@@ -94,6 +100,30 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
     () => data.setDetails((d) => ({ ...d, inventory: d.inventory.filter((i) => i.id !== item.id) }))))
   const isNew = useFreshKeys(items.map((i) => i.id))
 
+  // busca e filtro por tipo; com um deles ligado a lista mostra só parte dos itens, então a ordem fica travada
+  const groupCounts = INVENTORY_GROUP_ORDER.map((g) => ({ g, n: items.filter((i) => inventoryGroup(i) === g).length })).filter((x) => x.n > 0)
+  const shown = filterInventory(items, query, groupFilter)
+  const filtering = query.trim() !== '' || groupFilter !== ''
+  const canOrder = !readOnly && !filtering && items.length > 1
+  const showSearch = items.length > 6
+
+  /** Põe a lista na ordem nova na tela na hora e grava só o que mudou de posição. */
+  const applyOrder = (next: DndCharacterInventoryItem[]) => {
+    const changes = orderChanges(next)
+    if (changes.length === 0) return
+    data.setDetails((d) => ({ ...d, inventory: withOrder(next) }))
+    void run('order', () => reorderDndInventory(changes))
+  }
+  const moveItem = (item: DndCharacterInventoryItem, delta: -1 | 1) => applyOrder(moveItemBy(items, item.id, delta))
+  const dropOn = (targetId: string) => {
+    const from = dragId
+    setDragId(null)
+    setOverId(null)
+    if (!from || from === targetId) return
+    const to = items.findIndex((i) => i.id === targetId)
+    if (to >= 0) applyOrder(moveItemTo(items, from, to))
+  }
+
   const equippable = (i: DndCharacterInventoryItem) => !!i.catalog_entry_key && (!!getArmor(i.catalog_entry_key) || i.catalog_entry_key === SHIELD.key || WEAPONS.some((w) => w.key === i.catalog_entry_key))
 
   return (
@@ -151,12 +181,51 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
             <span>Escolha um item do catálogo abaixo, ou escreva o nome de um item próprio.</span>
           </div>
         )}
+        {(showSearch || groupCounts.length > 1) && (
+          <div className="dsh-invbar">
+            {showSearch && (
+              <input type="search" className="dsh-focus__input dsh-invbar__search" value={query} placeholder="Procurar item pelo nome ou descrição"
+                aria-label="Procurar item" onChange={(e) => setQuery(e.target.value)} />
+            )}
+            {groupCounts.length > 1 && (
+              <div className="dsh-book__row" role="group" aria-label="Filtrar por tipo">
+                <button type="button" className={`dsh-bookchip${groupFilter === '' ? ' is-on' : ''}`} aria-pressed={groupFilter === ''} onClick={() => setGroupFilter('')}>Todos ({items.length})</button>
+                {groupCounts.map(({ g, n }) => (
+                  <button key={g} type="button" className={`dsh-bookchip${groupFilter === g ? ' is-on' : ''}`} aria-pressed={groupFilter === g} onClick={() => setGroupFilter(groupFilter === g ? '' : g)}>{INVENTORY_GROUP_LABEL[g]} ({n})</button>
+                ))}
+              </div>
+            )}
+            {!readOnly && items.length > 1 && (
+              <div className="dsh-book__row" role="group" aria-label="Organizar a lista">
+                <span className="dsh-faint">Organizar:</span>
+                <button type="button" className="dsh-bookchip" disabled={busy === 'order'} title="Põe os itens em ordem alfabética e guarda essa ordem" onClick={() => applyOrder(sortByName(items))}>A–Z</button>
+                <button type="button" className="dsh-bookchip" disabled={busy === 'order'} title="Agrupa por tipo (armas, armaduras...) e, dentro de cada um, por nome" onClick={() => applyOrder(sortByGroup(items))}>Por tipo</button>
+              </div>
+            )}
+            {canOrder && <p className="dsh-faint dsh-invbar__hint">Para mudar a ordem, use as setas ou arraste pela alça ⠿.</p>}
+            {filtering && <p className="dsh-faint dsh-invbar__hint">{shown.length === 0 ? 'Nenhum item encontrado.' : `Mostrando ${shown.length} de ${items.length}.`} A ordem só muda com a lista inteira à mostra.</p>}
+          </div>
+        )}
         <ul className="dsh-list">
-          {items.map((i) => {
+          {shown.map((i) => {
             const armor = i.catalog_entry_key ? getArmor(i.catalog_entry_key) : undefined
+            const pos = items.findIndex((x) => x.id === i.id)
+            const long = !!i.notes && isLongDescription(i.notes)
+            const descOpen = !!openDesc[i.id]
             return (
-              <li key={i.id} className={`dsh-item${i.equipped ? ' is-equipped' : ''}${isNew(i.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
+              <li key={i.id} className={`dsh-item${i.equipped ? ' is-equipped' : ''}${isNew(i.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}${dragId === i.id ? ' is-dragging' : ''}${overId === i.id && dragId !== i.id ? ' is-dropover' : ''}`}
+                onDragOver={canOrder && dragId ? (e) => { e.preventDefault(); if (overId !== i.id) setOverId(i.id) } : undefined}
+                onDrop={canOrder && dragId ? (e) => { e.preventDefault(); dropOn(i.id) } : undefined}>
                 <div className="dsh-item__main">
+                  {canOrder && (
+                    <span className="dsh-reorder">
+                      <span className="dsh-reorder__grip" draggable aria-hidden="true" title="Arraste para mudar a ordem"
+                        onDragStart={(e) => { setDragId(i.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', i.id); const li = (e.currentTarget as HTMLElement).closest('li'); if (li) e.dataTransfer.setDragImage(li, 16, 16) }}
+                        onDragEnd={() => { setDragId(null); setOverId(null) }}>⠿</span>
+                      <button type="button" className="dsh-reorder__btn" disabled={busy === 'order' || pos === 0} aria-label={`Subir ${i.name}`} title="Subir" onClick={() => moveItem(i, -1)}>▲</button>
+                      <button type="button" className="dsh-reorder__btn" disabled={busy === 'order' || pos === items.length - 1} aria-label={`Descer ${i.name}`} title="Descer" onClick={() => moveItem(i, 1)}>▼</button>
+                    </span>
+                  )}
                   {/* o nome que a pessoa deu (editável no lápis); sem nome, o do livro */}
                   <strong className="dsh-item__name">{i.name.trim() || itemTitle(i.name, i.catalog_entry_key)}</strong>
                   {armor && <span className="dsh-tag">CA {armor.baseAc}</span>}
@@ -176,7 +245,16 @@ export function DndInventarioTab({ ctx }: { ctx: SheetCtx }) {
                 )}
                 {i.notes && editing !== i.id && (i.notes.length <= 90 && !i.notes.includes('\n')
                   ? <div className="dsh-spellchips">{i.notes.split(' · ').map((n) => <span key={n} className="dsh-cardchip">{n}</span>)}</div>
-                  : <div className="dsh-itemdesc">{i.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>)}
+                  : (
+                    <div className="dsh-itemdesc-wrap">
+                      <div className={`dsh-itemdesc${long ? (descOpen ? ' is-open' : ' is-clamped') : ''}`}>{i.notes.split('\n').filter((l) => l.trim()).map((l, n) => <p key={n} className="dsh-note">{l}</p>)}</div>
+                      {long && (
+                        <button type="button" className="dsh-link" aria-expanded={descOpen} onClick={() => setOpenDesc((o) => ({ ...o, [i.id]: !descOpen }))}>
+                          {descOpen ? 'Ver menos' : 'Ver mais'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 {editing === i.id && !readOnly && (
                   <EditBox onDone={() => setEditing(null)}>
                     <EditField label="Nome" value={i.name} required max={160} wide onSave={(name) => void renameItem(i, name)} />

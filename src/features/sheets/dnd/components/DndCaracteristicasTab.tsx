@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Select } from '../../../../shared/components/Select'
 import type { DndCharacterFeature, DndCharacterResource, DndFeatureSource, DndRecharge } from '../../../../shared/types'
 import { DND_TEXT_LIMITS } from '../model/sheetForm'
@@ -6,6 +6,7 @@ import { homebrewKeyFromName } from '../catalog/homebrewKey'
 import { CLASS_OPTIONS, CLASS_OPTION_LABEL, classOptionFeatureKey, type ClassOptionEntry, type ClassOptionKind } from '../catalog/classOptions'
 import { AUTO_RESOURCE_KEYS } from '../model/classResources'
 import { availableFeatures, classOptionAllowance, findCatalogFeature, missingFeatures } from '../model/features'
+import { FEATURE_SOURCE_LABEL, OWN_FEATURE_SOURCES, groupFeatures, sortFeatures } from '../model/organize'
 import { createDndFeature, removeDndFeature, removeDndResource, saveDndResource, setDndResourceCurrent, updateDndFeature } from '../services/dndResourceService'
 import { NumberField, Pips } from './DndControls'
 import { Bump, RechargeLegend } from './DndVisuals'
@@ -28,10 +29,9 @@ const RECHARGE_LABEL = Object.fromEntries(RECHARGE_OPTIONS.map((r) => [r.value, 
 /** Siglas da tabela de recursos: DC (descanso curto), DL (descanso longo), AM (amanhecer). */
 const RECHARGE_SHORT: Record<DndRecharge, string> = { short: 'DC', long: 'DL', dawn: 'AM', manual: 'Manual' }
 
-const SOURCE_LABEL: Record<DndFeatureSource, string> = {
-  class: 'Classe', subclass: 'Subclasse', race: 'Raça', subrace: 'Sub-raça', background: 'Antecedente', feat: 'Talento', item: 'Item', manual: 'Própria',
-}
-const SOURCE_ORDER: DndFeatureSource[] = ['race', 'subrace', 'background', 'class', 'subclass', 'feat', 'item', 'manual']
+const SOURCE_LABEL = FEATURE_SOURCE_LABEL
+/** Opções do seletor de origem de uma característica própria. */
+const ORIGIN_OPTIONS = OWN_FEATURE_SOURCES.map((value) => ({ value, label: value === 'manual' ? 'Própria (sem origem)' : SOURCE_LABEL[value] }))
 
 const NOTES = [
   { key: 'notes_racial', title: 'Traços raciais', hint: 'Visão no escuro, resistências, idiomas e o que mais a raça dá.' },
@@ -46,14 +46,20 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   const [resMax, setResMax] = useState(1)
   const [resRecharge, setResRecharge] = useState<DndRecharge>('long')
   const [featName, setFeatName] = useState('')
+  const [featSource, setFeatSource] = useState<DndFeatureSource>('manual')
+  const [featNotes, setFeatNotes] = useState('')
+  const [featLevel, setFeatLevel] = useState(0)
+  const [featUses, setFeatUses] = useState(0)
   const [srcFilter, setSrcFilter] = useState<DndFeatureSource | ''>('')
   const [pick, setPick] = useState<Record<ClassOptionKind, string>>({ metamagic: '', invocation: '' })
 
   const resources = data.resources.filter((r) => r.source !== 'spell_slots').sort((a, b) => a.sort_order - b.sort_order || a.label.localeCompare(b.label, 'pt-BR'))
-  const features = [...data.features].sort((a, b) =>
-    SOURCE_ORDER.indexOf(a.source) - SOURCE_ORDER.indexOf(b.source) || (a.level ?? 0) - (b.level ?? 0) || a.name.localeCompare(b.name, 'pt-BR'))
-  const sourceCounts = SOURCE_ORDER.map((src) => ({ src, n: features.filter((f) => f.source === src).length })).filter((x) => x.n > 0)
+  const features = sortFeatures(data.features)
+  const groups = groupFeatures(data.features)
+  const sourceCounts = groups.map((g) => ({ src: g.source, n: g.items.length }))
   const shownFeatures = srcFilter ? features.filter((f) => f.source === srcFilter) : features
+  /** Com mais de uma origem na ficha, cada grupo ganha seu título (Raça, Classe...) na lista. */
+  const showGroupHeads = !srcFilter && groups.length > 1
   const missing = missingFeatures(
     availableFeatures(data.classes, form.race_key || null, form.subrace_key || null, form.background_key || null),
     data.features,
@@ -112,12 +118,19 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
   const addFeature = () => run('feat', async () => {
     const name = featName.trim()
     if (!name) { report('Escreva o nome da característica.'); return }
-    const saved = await createDndFeature(sheet.id, { source: 'manual', name: name.slice(0, 120), sort_order: data.features.length })
+    const saved = await createDndFeature(sheet.id, {
+      source: featSource, name: name.slice(0, 120), sort_order: data.features.length,
+      level: featLevel > 0 ? featLevel : null, notes: featNotes.trim().slice(0, 2000),
+      ...(featUses > 0 ? { uses_max: featUses, uses_current: featUses, recharge: 'long' as const } : {}),
+    })
     data.setFeatures((fs) => [...fs, saved])
     setFeatName('')
+    setFeatNotes('')
+    setFeatLevel(0)
+    setFeatUses(0)
   })
 
-  const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'name' | 'level' | 'notes' | 'uses_current' | 'uses_max' | 'recharge' | 'feature_key'>>) =>
+  const patchFeature = (f: DndCharacterFeature, patch: Partial<Pick<DndCharacterFeature, 'name' | 'source' | 'level' | 'notes' | 'uses_current' | 'uses_max' | 'recharge' | 'feature_key'>>) =>
     run(f.id, async () => { replaceFeature(await updateDndFeature(f.id, patch)) })
 
   const removeFeature = (f: DndCharacterFeature, from: Element) => run(f.id, () => leaveThen(from, () => removeDndFeature(f.id),
@@ -253,11 +266,18 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
           </div>
         )}
         <ul className="dsh-list">
-          {shownFeatures.map((f) => {
+          {shownFeatures.map((f, idx) => {
             const cat = f.feature_key ? findCatalogFeature(f.source, f.feature_key) : undefined
             const hasUses = f.uses_max != null
+            const groupHead = showGroupHeads && (idx === 0 || shownFeatures[idx - 1].source !== f.source)
             return (
-              <li key={f.id} className={`dsh-feature${isNewFeature(f.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
+              <Fragment key={f.id}>
+              {groupHead && (
+                <li className="dsh-listgroup" aria-label={`Origem: ${SOURCE_LABEL[f.source]}`}>
+                  <span>{SOURCE_LABEL[f.source]}</span><small>{groups.find((g) => g.source === f.source)?.items.length}</small>
+                </li>
+              )}
+              <li className={`dsh-feature${isNewFeature(f.id) ? ' is-new' : ''}${readOnly ? '' : ' has-tools'}`}>
                 <details>
                   <summary>
                     <span className="dsh-tag">{SOURCE_LABEL[f.source]}</span>
@@ -288,6 +308,11 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                   <div className="dsh-feature__edit">
                     <EditBox onDone={() => setEditing(null)}>
                       <EditField label="Nome" value={f.name} required wide onSave={(name) => void patchFeature(f, { name })} />
+                      {!f.feature_key && (
+                        <div className="dsh-field dsh-field--tile dsh-editbox__wide" title="Em que grupo da lista ela aparece"><span className="dsh-label">Origem</span>
+                          <Select options={ORIGIN_OPTIONS} value={f.source} onChange={(v) => { if (v !== f.source) void patchFeature(f, { source: v as DndFeatureSource }) }} aria-label={`Origem de ${f.name}`} />
+                        </div>
+                      )}
                       <label className="dsh-field dsh-field--tile" title="Nível em que o personagem ganhou (0 = sem nível)"><span className="dsh-label">Nível</span>
                         <NumberField value={f.level ?? 0} min={0} max={20} label={`Nível de ${f.name}`} disabled={busy === f.id} className="dsh-num--field"
                           onChange={(n) => void patchFeature(f, { level: n === 0 ? null : n })} /></label>
@@ -316,14 +341,26 @@ export function DndCaracteristicasTab({ ctx }: { ctx: SheetCtx }) {
                   </div>
                 )}
               </li>
+              </Fragment>
             )
           })}
         </ul>
         {!readOnly && (
           <div className="dsh-newattack">
             <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Característica própria</span>
-              <input type="text" className="dsh-focus__input" value={featName} maxLength={120} placeholder="Talento, dádiva, item mágico..."
+              <input type="text" className="dsh-focus__input" value={featName} maxLength={120} placeholder="Nome (ex.: Fogo Astral)"
                 onChange={(e) => setFeatName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addFeature() } }} /></label>
+            <div className="dsh-field dsh-field--tile dsh-newattack__wide" title="Em que grupo da lista ela aparece: junto das de Raça, de Classe, de um Talento...">
+              <span className="dsh-label">Origem</span>
+              <Select options={ORIGIN_OPTIONS} value={featSource} onChange={(v) => setFeatSource(v as DndFeatureSource)} aria-label="Origem da característica" />
+            </div>
+            <label className="dsh-field dsh-field--tile" title="Nível em que o personagem ganhou (0 = sem nível)"><span className="dsh-label">Nível</span>
+              <NumberField value={featLevel} min={0} max={20} label="Nível da característica" onChange={setFeatLevel} className="dsh-num--field" /></label>
+            <label className="dsh-field dsh-field--tile" title="Quantas vezes pode usar entre as recargas (0 = sem limite)"><span className="dsh-label">Usos</span>
+              <NumberField value={featUses} min={0} max={99} label="Usos da característica" onChange={setFeatUses} className="dsh-num--field" /></label>
+            <label className="dsh-field dsh-field--tile dsh-newattack__wide"><span className="dsh-label">Descrição (opcional)</span>
+              <textarea className="dsh-input dsh-textarea dsh-textarea--sm" rows={2} value={featNotes} maxLength={2000} placeholder="O que esta característica faz"
+                onChange={(e) => setFeatNotes(e.target.value)} /></label>
             <button type="button" className="dsh-newattack__add" onClick={() => void addFeature()} disabled={busy === 'feat'}>+ Adicionar característica</button>
           </div>
         )}

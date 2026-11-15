@@ -293,6 +293,12 @@ export async function updateDndInventoryItem(id: string, input: Partial<DndChara
   return data as DndCharacterInventoryItem
 }
 
+/** Grava a ordem nova do inventário: só os itens que mudaram de posição (`sort_order` = posição na lista). */
+export async function reorderDndInventory(changes: readonly { id: string; sort_order: number }[]): Promise<void> {
+  const results = await Promise.all(changes.map((c) => supabase.from('dnd_character_inventory').update({ sort_order: c.sort_order }).eq('id', c.id)))
+  if (results.some((r) => r.error)) throw new Error('Não foi possível salvar a nova ordem dos itens.')
+}
+
 export async function deleteDndInventoryItem(id: string): Promise<void> {
   const { error } = await supabase.from('dnd_character_inventory').delete().eq('id', id)
   if (error) throw new Error('Não foi possível remover o item.')

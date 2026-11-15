@@ -16,6 +16,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.43',
+    date:    '2026-11-14',
+    title:   'Ficha de D&D mais organizada: origem das habilidades, inventário em ordem e descrições menores',
+    items: [
+      'Características: ao criar uma habilidade própria você escolhe a origem (Raça, Sub-raça, Antecedente, Classe, Subclasse, Talento, Item ou Própria). Ela aparece agrupada junto das habilidades daquela origem, e não mais toda como "Própria". O formulário também pede nível, usos e descrição na hora. No lápis de uma habilidade própria dá para trocar a origem depois. As que já estavam salvas continuam em "Própria".',
+      'Características: a lista ganhou um título para cada origem (Raça, Classe, Antecedente...) com a contagem de cada grupo.',
+      'Inventário: dá para mudar a ordem dos itens com as setas de subir e descer, ou arrastando pela alça. A ordem fica salva na ficha. Os botões "A–Z" e "Por tipo" arrumam a lista toda de uma vez.',
+      'Inventário: com mais de 6 itens aparece uma busca pelo nome ou pela descrição (sem diferenciar acento), e botões para ver só um tipo (Armas, Armaduras, Equipamento, Ferramentas, Próprios). Com busca ou tipo ligados a ordem fica travada, para não embaralhar a lista.',
+      'Inventário: a descrição comprida de um item (principalmente os mágicos) agora aparece recolhida em umas quatro linhas, com "Ver mais" e "Ver menos". Aberta, ela rola dentro da própria caixa em vez de ocupar a tela inteira.',
+    ],
+  },
+  {
     version: '2.42',
     date:    '2026-11-14',
     title:   'Ouça o som de cada conjunto de dados',
@@ -39,6 +51,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:   'Sessão aberta: o site reconhece quando a mesa está em sessão',
     items: [
       'Cada campanha agora tem um estado de sessão. A sessão só abre com o MESTRE ativo (online agora): jogador nenhum abre a sessão. Com o mestre ativo ela abre sozinha quando pelo menos a metade dos jogadores da campanha também está online, ou no horário marcado de uma sessão planejada (de 15 minutos antes até o fim da duração). O mestre também pode abrir ou encerrar pelo botão do cabeçalho da campanha (encerrar fecha por 6 horas, para a sessão não reabrir logo depois de acabar). O selo "Sessão aberta" mostra o motivo; fora da sessão ele mostra a próxima sessão marcada, se houver.',
+      'Os jogadores são avisados quando a sessão abre: aparece um aviso verde "Sessão aberta" no canto da tela, em qualquer página do site, com o nome da campanha e um botão para ir até ela (e o som das notificações). Se a sessão fechar e abrir de novo, avisa de novo. O mestre não recebe o aviso, porque foi ele quem abriu.',
       'Ao planejar uma sessão, o mestre agora pode marcar também o horário (em Brasília) e a duração. Com data e horário, a sessão abre sozinha na hora certa (com o mestre online); só com a data, ela não abre sozinha.',
       'As conquistas e os conjuntos de dados da coleção só contam rolagens feitas com a sessão aberta, nunca fora dela. Quem carimba a rolagem é o servidor, na hora em que ela é gravada, então não dá para rolar "de brincadeira" fora da sessão e ganhar dado. Rolagens de antes desta versão não contam; o que já foi conquistado fica com você.',
     ],
