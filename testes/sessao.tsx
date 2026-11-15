@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import '../src/index.css'
 import { SessionLiveBadge } from '../src/features/sessions/components/SessionLiveBadge'
 import { setLiveSession } from '../src/features/sessions/services/liveSession'
+import '../src/features/sessions/components/SessionOpenNotice.css'
 
 const crowd = { master_online: true, players_online: 2, players_total: 4 }
 setLiveSession('horario', { open: true, reason: 'scheduled', next_at: null, ...crowd })
@@ -23,5 +24,17 @@ createRoot(document.getElementById('root')!).render(
         </span>
       </div>
     ))}
+    {/* o aviso do canto, só o desenho (o componente de verdade precisa de login e do roteador) */}
+    <div className="session-notice" role="status" style={{ marginTop: 18 }}>
+      <span className="session-notice__tag"><i aria-hidden="true" />Sessão aberta</span>
+      <div className="session-notice__body">
+        <p className="session-notice__message"><strong>Reino de Altherium</strong> está em sessão.</p>
+        <p className="session-notice__why">A mesa está reunida · as rolagens contam pra coleção de dados</p>
+      </div>
+      <div className="session-notice__actions">
+        <button type="button" className="btn btn-primary session-notice__go">Ir pra campanha</button>
+        <button type="button" className="session-notice__close" aria-label="Fechar aviso">✕</button>
+      </div>
+    </div>
   </div>,
 )

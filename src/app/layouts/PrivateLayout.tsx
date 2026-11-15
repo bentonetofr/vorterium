@@ -46,6 +46,7 @@ import { QteNotice, QteOverlay } from '../../features/qte/QteOverlay'
 import { usePip } from '../../features/vortable/pip/pipStore'
 import { Presence } from '../../shared/components/Presence'
 import { FabToasts } from '../../shared/components/FabToasts'
+import { SessionOpenNotice } from '../../features/sessions/components/SessionOpenNotice'
 import { Collapse } from '../../shared/components/Collapse'
 import { COMPACT_QUERY, useMediaQuery } from '../../shared/lib/useMediaQuery'
 import { useOpenFloatingPanel } from '../../shared/lib/floatingPanels'
@@ -350,6 +351,7 @@ function PrivateLayoutContent() {
       {!observer && (
         <FabToasts>
           <MesaLiveNotice />
+          <SessionOpenNotice />
           <QteNotice />
           <NotificationPopup />
         </FabToasts>
