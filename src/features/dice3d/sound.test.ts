@@ -57,9 +57,9 @@ describe('as vozes dos conjuntos da coleção', () => {
     expect(r.hiss).toBeNull()
   })
 
-  it('cada conjunto da segunda leva tem a sua voz, e nenhuma se repete', () => {
-    expect(voices).toHaveLength(14)
-    expect(COLLECTION_SKINS.filter((s) => s.sound)).toHaveLength(14)
+  it('todo conjunto da coleção tem a sua voz, e nenhuma se repete', () => {
+    expect(voices).toHaveLength(34)
+    expect(COLLECTION_SKINS.filter((s) => s.sound)).toHaveLength(34)
   })
 
   it('toda voz muda a batida (soma ressonância ou sopro) e dá números tocáveis em qualquer força', () => {

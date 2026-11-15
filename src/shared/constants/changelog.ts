@@ -16,6 +16,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.40',
+    date:    '2026-11-14',
+    title:   'Sessão aberta: o site reconhece quando a mesa está em sessão',
+    items: [
+      'Cada campanha agora tem um estado de sessão, que o site decide sozinho. A sessão fica ABERTA no horário marcado de uma sessão planejada (desde 15 minutos antes até o fim da duração) ou quando o mestre e pelo menos um jogador estão online na campanha ao mesmo tempo. O selo "Sessão aberta" aparece no cabeçalho da campanha; fora da sessão ele mostra a próxima sessão marcada, se houver.',
+      'Ao planejar uma sessão, o mestre agora pode marcar também o horário (em Brasília) e a duração. Com data e horário, a sessão abre sozinha na hora certa; só com a data, ela não abre sozinha.',
+      'As conquistas e os conjuntos de dados da coleção só contam rolagens feitas com a sessão aberta, nunca fora dela. Quem carimba a rolagem é o servidor, na hora em que ela é gravada, então não dá para rolar "de brincadeira" fora da sessão e ganhar dado. Rolagens de antes desta versão não contam; o que já foi conquistado fica com você.',
+    ],
+  },
+  {
     version: '2.39',
     date:    '2026-11-14',
     title:   'Dados da vitrine sem esticar',

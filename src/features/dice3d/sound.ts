@@ -23,7 +23,8 @@ export interface Partial_ { freq: number; gain: number; decay: number; delay?: n
 export interface Hiss { dur: number; cutoff: number; q: number; gain: number; type: BiquadFilterType; delay?: number }
 
 /** As vozes dos conjuntos da coleção (o campo `sound` de skins.ts). */
-export type DiceVoice = 'cortica' | 'cera' | 'vidro' | 'papel' | 'sino' | 'relogio' | 'perola' | 'trovao' | 'olho' | 'cosmos' | 'dragao' | 'espelho' | 'vazio' | 'prisma'
+export type DiceVoice = 'osso' | 'ferro' | 'argila' | 'giz' | 'cobre' | 'marfim' | 'onix' | 'ametista' | 'granada' | 'jade' | 'fume' | 'gelo' | 'magma' | 'meteorito' | 'fungo' | 'ambar' | 'morte' | 'vagalumes' | 'runico' | 'vortice'
+  | 'cortica' | 'cera' | 'vidro' | 'papel' | 'sino' | 'relogio' | 'perola' | 'trovao' | 'olho' | 'cosmos' | 'dragao' | 'espelho' | 'vazio' | 'prisma'
 
 export interface HitRecipe {
   /** Corpo de madeira (toc). */
@@ -53,6 +54,77 @@ const COSMOS_NOTES = [523.25, 659.25, 739.99, 783.99, 987.77, 1174.66] as const
 const BELL_NOTES = [587.33, 659.25, 783.99, 880] as const
 
 const VOICES: Record<DiceVoice, (s: number, rnd: () => number) => VoiceShape> = {
+  // ── a primeira leva ──
+  // osso: toc seco e oco, de osso na madeira
+  osso: (_s, rnd) => ({ wood: 0.8, woodPitch: 1.35, resin: 0.3, click: 0.9, ring: [{ freq: 780 + rnd() * 160, to: 520, gain: 0.45, decay: 0.05 }, { freq: 1500 + rnd() * 200, gain: 0.15, decay: 0.03 }] }),
+  // ferro: pancada surda, metal sem brilho
+  ferro: (s, rnd) => {
+    const f = 330 + rnd() * 60
+    return { wood: 0.5, resin: 0.15, click: 0.7, ring: [1, 1.58, 2.67, 3.9].map((r, i): Partial_ => ({ freq: f * r, gain: [0.5, 0.3, 0.16, 0.08][i], decay: [0.12, 0.08, 0.05, 0.03][i] * (0.6 + s * 0.6), wave: i === 0 ? 'triangle' : 'sine' })) }
+  },
+  // argila: baque de barro cozido, abafado
+  argila: (_s, rnd) => ({ wood: 0.75, woodPitch: 0.9, resin: 0.1, click: 0.35, ring: [{ freq: 260 + rnd() * 40, to: 190, gain: 0.5, decay: 0.07 }, { freq: 640 + rnd() * 80, gain: 0.14, decay: 0.035 }] }),
+  // giz: o arranhão seco do giz na pedra
+  giz: (s, rnd) => ({ wood: 0.35, resin: 0.05, click: 0.6, hiss: { dur: 0.07 + s * 0.05, cutoff: 5200 + rnd() * 1500, q: 0.9, gain: 0.55, type: 'highpass' } }),
+  // cobre: tilintar de moeda
+  cobre: (s, rnd) => {
+    const f = 1900 + rnd() * 500
+    return { wood: 0.45, resin: 0.4, ring: [{ freq: f, gain: 0.4, decay: 0.16 * (0.6 + s * 0.6) }, { freq: f * 1.5, gain: 0.2, decay: 0.1 }, { freq: f * 2.43, gain: 0.1, decay: 0.06 }] }
+  },
+  // marfim: o estalo agudo de bola de bilhar
+  marfim: (_s, rnd) => ({ wood: 0.3, resin: 0.9, resinPitch: 1.2, click: 1.3, ring: [{ freq: 4200 + rnd() * 600, gain: 0.3, decay: 0.03 }, { freq: 1250 + rnd() * 150, gain: 0.28, decay: 0.05, wave: 'triangle' }] }),
+  // ônix: pedra polida, "tac" limpo e pesado
+  onix: (s, rnd) => ({ wood: 0.6, woodPitch: 1.1, resin: 0.5, click: 1, ring: [{ freq: 1050 + rnd() * 120, gain: 0.4, decay: 0.09 + s * 0.05 }, { freq: 2650 + rnd() * 200, gain: 0.18, decay: 0.05 }] }),
+  // ametista: cristal que canta, com harmônicos
+  ametista: (s, rnd) => {
+    const f = 2000 + rnd() * 450
+    return { wood: 0.4, resin: 0.4, ring: [1, 2, 3, 4.2].map((r, i): Partial_ => ({ freq: f * r, gain: [0.36, 0.2, 0.1, 0.05][i], decay: [0.42, 0.3, 0.22, 0.15][i] * (0.6 + s * 0.6) })) }
+  },
+  // granada: gema, um tom abaixo do vidro
+  granada: (s, rnd) => {
+    const f = 1500 + rnd() * 350
+    return { wood: 0.5, resin: 0.35, ring: [{ freq: f, gain: 0.42, decay: 0.2 * (0.6 + s * 0.6) }, { freq: f * 1.47, gain: 0.2, decay: 0.12 }, { freq: f * 2.9, gain: 0.08, decay: 0.07 }] }
+  },
+  // jade: tom redondo e macio que dura um pouco
+  jade: (s, rnd) => {
+    const f = 1150 + rnd() * 200
+    return { wood: 0.5, resin: 0.15, click: 0.4, ring: [{ freq: f, gain: 0.45, decay: 0.3 * (0.6 + s * 0.6) }, { freq: f * 2.01, gain: 0.1, decay: 0.18 }] }
+  },
+  // fumê: vidro grosso, grave, com um sopro abafado
+  fume: (_s, rnd) => ({ wood: 0.6, woodPitch: 0.85, resin: 0.3, ring: [{ freq: 760 + rnd() * 100, to: 640, gain: 0.4, decay: 0.14 }, { freq: 2050 + rnd() * 250, gain: 0.16, decay: 0.18 }], hiss: { dur: 0.09, cutoff: 1400, q: 0.6, gain: 0.2, type: 'lowpass' } }),
+  // gelo: estalos curtos de gelo trincando
+  gelo: (s, rnd) => ({
+    wood: 0.35, resin: 0.7, resinPitch: 1.4, click: 1.1,
+    hiss: { dur: 0.04 + s * 0.03, cutoff: 6200, q: 0.8, gain: 0.45, type: 'highpass' },
+    ring: Array.from({ length: 3 + Math.floor(rnd() * 3) }, (_, i): Partial_ => ({ freq: 2600 + rnd() * 4200, gain: 0.22 * (0.5 + rnd() * 0.5), decay: 0.025 + rnd() * 0.05, delay: 0.015 + i * 0.018 + rnd() * 0.03 })),
+  }),
+  // magma: pedra quente que crepita
+  magma: (s, rnd) => ({
+    wood: 1, woodPitch: 0.8, resin: 0.15,
+    ring: [{ freq: 95 + rnd() * 20, to: 48, gain: 0.6 * s, decay: 0.2 }, ...Array.from({ length: 4 }, (_, i): Partial_ => ({ freq: 900 + rnd() * 1600, gain: 0.12, decay: 0.012, delay: 0.04 + i * 0.03 + rnd() * 0.03 }))],
+    hiss: { dur: 0.14 + s * 0.12, cutoff: 3200, q: 0.5, gain: 0.45, type: 'bandpass', delay: 0.015 },
+  }),
+  // meteorito: metal denso e um assobio que cai
+  meteorito: (s, rnd) => ({ wood: 0.9, woodPitch: 0.7, resin: 0.2, click: 0.8, ring: [{ freq: 140 + rnd() * 20, to: 70, gain: 0.8 * s, decay: 0.14 }, { freq: 2400, to: 900, gain: 0.14, decay: 0.2, delay: 0.01 }, { freq: 520 + rnd() * 60, gain: 0.25, decay: 0.09, wave: 'triangle' }] }),
+  // fungo: baque mole que "estoura" para cima
+  fungo: (_s, rnd) => ({ wood: 0.45, resin: 0.04, click: 0.1, ring: [{ freq: 170 + rnd() * 30, to: 330, gain: 0.55, decay: 0.09 }, { freq: 420 + rnd() * 60, to: 760, gain: 0.2, decay: 0.07, delay: 0.015 }], hiss: { dur: 0.05, cutoff: 900, q: 1.5, gain: 0.25, type: 'bandpass' } }),
+  // âmbar: toque de resina, quente e fosco
+  ambar: (_s, rnd) => ({ wood: 0.55, woodPitch: 1.05, resin: 0.55, resinPitch: 0.8, ring: [{ freq: 520 + rnd() * 70, to: 420, gain: 0.5, decay: 0.12 }, { freq: 1300 + rnd() * 140, gain: 0.2, decay: 0.08 }] }),
+  // morte: um dobre grave de finados, com uma nota torta
+  morte: (s, rnd) => {
+    const f = 98 + rnd() * 10
+    return { wood: 0.5, woodPitch: 0.75, resin: 0.1, ring: [{ freq: f, gain: 0.8 * (0.4 + s), decay: 0.9 * (0.5 + s * 0.5) }, { freq: f * 2.01, gain: 0.4, decay: 0.55 }, { freq: f * 2.83, gain: 0.25, decay: 0.4 }, { freq: f * 4.2, gain: 0.1, decay: 0.25 }] }
+  },
+  // vaga-lumes: pinguinhos de luz, um atrás do outro
+  vagalumes: (s, rnd) => ({ wood: 0.4, resin: 0.3, ring: Array.from({ length: 4 + Math.floor(s * 3) }, (_, i): Partial_ => ({ freq: 1800 + Math.floor(rnd() * 6) * 330, gain: 0.16, decay: 0.09 + rnd() * 0.05, delay: i * 0.035 + rnd() * 0.02 })) }),
+  // rúnico: gongo de ouro, com um par que bate devagar
+  runico: (s, rnd) => {
+    const f = 880 + rnd() * 160
+    return { wood: 0.45, resin: 0.3, ring: [{ freq: f, gain: 0.34, decay: 0.7 * (0.5 + s * 0.5) }, { freq: f * 1.006, gain: 0.3, decay: 0.75 * (0.5 + s * 0.5) }, { freq: f * 2.76, gain: 0.14, decay: 0.4 }, { freq: f * 5.4, gain: 0.05, decay: 0.22 }] }
+  },
+  // vórtice: um zumbido que gira (sobe e desce) e um redemoinho de ar
+  vortice: (s, rnd) => ({ wood: 0.5, woodPitch: 0.9, ring: [{ freq: 110 + rnd() * 20, to: 220, gain: 0.45, decay: 0.35 + s * 0.2 }, { freq: 880, to: 330, gain: 0.14, decay: 0.4, delay: 0.03 }, { freq: 330, to: 1100, gain: 0.1, decay: 0.3, delay: 0.06 }], hiss: { dur: 0.22, cutoff: 1200, q: 2.5, gain: 0.25, type: 'bandpass', delay: 0.02 } }),
+  // ── a segunda leva ──
   // rolha: um "poc" oco e abafado, quase sem estalo
   cortica: (_s, rnd) => ({ wood: 0.7, resin: 0.06, click: 0.3, ring: [{ freq: 380 + rnd() * 90, to: 250, gain: 0.55, decay: 0.045 }] }),
   // cera: baque mole e grave
