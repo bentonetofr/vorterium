@@ -16,6 +16,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.39',
+    date:    '2026-11-14',
+    title:   'Dados da vitrine sem esticar',
+    items: [
+      'Na lista "Meus dados", quando a coleção é comprida (principalmente no cartão de dados do Altherium), os dados do alto e do fim da lista apareciam esticados na vertical. Agora a câmera da vitrine se afasta conforme o tamanho da lista e todos os dados saem com a forma certa, em qualquer posição.',
+    ],
+  },
+  {
     version: '2.38',
     date:    '2026-11-14',
     title:   'Ficha de Bruxo sem regravar à toa e imagens bem mais leves',
@@ -27,7 +35,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: '2.37',
+    version: '2.39',
     date:    '2026-11-14',
     title:   'Site mais leve: menos consultas e imagens que não baixam de novo',
     items: [

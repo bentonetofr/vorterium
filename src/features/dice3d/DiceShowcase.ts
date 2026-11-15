@@ -31,6 +31,8 @@ interface Slot {
 }
 
 const CAMERA_DISTANCE = 1100
+/** Distância mínima da câmera por px do maior lado do canvas (1,9 deixa uns 15 graus até a borda). */
+const MIN_DISTANCE_PER_PX = 1.9
 const SPIN_SPEED = 0.42
 const HOVER_SPEED = 1.5
 
@@ -113,9 +115,16 @@ export class DiceShowcase {
     if (this.disposed) return
     const { w, h } = this.size()
     this.renderer.setSize(w, h, false)
-    this.camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(h / 2 / CAMERA_DISTANCE))
+    // Quanto maior a tela do canvas, mais longe a câmera fica: com a distância fixa, uma lista comprida (centenas de px
+    // para cima e para baixo do eixo) abria o ângulo de visão e esticava os dados que ficam longe do meio. Afastando a
+    // câmera na proporção, o ângulo até a borda fica pequeno (uns 15 graus) e o dado sai com a forma certa em qualquer
+    // ponto da lista. O fov acompanha a distância, então 1 unidade da cena segue sendo 1 px da tela.
+    const dist = Math.max(CAMERA_DISTANCE, MIN_DISTANCE_PER_PX * Math.max(w, h))
+    this.camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(h / 2 / dist))
     this.camera.aspect = w / h
-    this.camera.position.set(0, 0, CAMERA_DISTANCE)
+    this.camera.near = 10
+    this.camera.far = dist + 3000
+    this.camera.position.set(0, 0, dist)
     this.camera.updateProjectionMatrix()
     this.place()
     this.renderer.render(this.scene, this.camera)
