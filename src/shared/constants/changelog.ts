@@ -16,6 +16,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.41',
+    date:    '2026-11-14',
+    title:   'Todos os dados da coleção com som próprio',
+    items: [
+      'Os 20 primeiros dados da coleção agora também batem com o som do próprio material, como já faziam os 14 mais novos: o osso estala seco, o ferro dá uma pancada surda, a moeda de cobre tilinta, o gelo trinca, o magma crepita, e assim por diante, cada um com o seu. Quem está na mesa ouve o dado de cada jogador com o som dele, e o cartão da conquista toca o som do dado novo depois da fanfarra.',
+      'Os dados iniciais (madeira, granito e plástico) continuam com o som de sempre.',
+    ],
+  },
+  {
     version: '2.40',
     date:    '2026-11-14',
     title:   'Sessão aberta: o site reconhece quando a mesa está em sessão',
