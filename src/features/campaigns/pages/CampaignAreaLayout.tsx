@@ -73,10 +73,8 @@ export function CampaignAreaLayout() {
   useEffect(() => {
     if (!campaign?.id) return
     void touchCampaignPresence(campaign.id).catch(() => {})
-    const interval = setInterval(() => {
-      void touchCampaignPresence(campaign.id).catch(() => {})
-    }, 60_000)
-    return () => clearInterval(interval)
+    // Só com a aba à vista (aba escondida não gasta chamada); ao voltar, avisa na hora.
+    return visibleInterval(() => { void touchCampaignPresence(campaign.id).catch(() => {}) }, 60_000)
   }, [campaign?.id])
 
   // ── Selo de chat não lido — some só com o chat aberto de fato. O

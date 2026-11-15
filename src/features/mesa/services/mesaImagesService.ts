@@ -1,5 +1,6 @@
 import { supabase, uniqueChannel } from '../../../shared/lib/supabase'
 import { forgetSignedUrl, signedUrl, signedUrls } from '../../../shared/lib/signedUrls'
+import { shrinkImage } from '../../../shared/lib/imageUpload'
 
 // ────────────────────────────────────────────────────────
 // Galeria — imagens que o mestre guarda pra mostrar à mesa (e as fotos do
@@ -9,6 +10,11 @@ import { forgetSignedUrl, signedUrl, signedUrls } from '../../../shared/lib/sign
 // ────────────────────────────────────────────────────────
 
 const BUCKET = 'mesa-images'
+
+/** Lado maior das imagens da Galeria e do Quadro depois de reduzidas (sobra pra tela cheia). */
+const GALLERY_MAX_SIDE = 2000
+/** Link das imagens da Galeria vale uma semana: o navegador só guarda a imagem pelo endereço inteiro, e link novo é download novo. */
+const GALLERY_URL_SECONDS = 7 * 24 * 60 * 60
 
 export const MESA_IMAGE_MAX_BYTES = 10 * 1024 * 1024
 export const MESA_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
@@ -57,7 +63,7 @@ export async function listMesaImages(campaignId: string): Promise<MesaGalleryIma
   const rows = (data ?? []) as Omit<MesaGalleryImage, 'url'>[]
   if (rows.length === 0) return []
 
-  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path))
+  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path), GALLERY_URL_SECONDS)
   return rows.map((r) => ({ ...r, url: urlByPath.get(r.path) ?? null }))
 }
 
@@ -65,10 +71,12 @@ export async function uploadMesaImage(campaignId: string, file: File): Promise<M
   const problem = validateMesaImage(file)
   if (problem) throw new Error(problem)
 
-  const path = `${campaignId}/${crypto.randomUUID()}.${EXTENSIONS[file.type] ?? 'img'}`
+  // Leve antes de subir: foto de celular de vários MB vira WebP de algumas centenas de kB.
+  const img = await shrinkImage(file, { maxSide: GALLERY_MAX_SIDE })
+  const path = `${campaignId}/${crypto.randomUUID()}.${EXTENSIONS[img.type] ?? 'img'}`
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(path, file, { contentType: file.type, cacheControl: '31536000' })
+    .upload(path, img.blob, { contentType: img.type, cacheControl: '31536000' })
 
   if (uploadError) {
     console.error('Erro do Storage ao enviar imagem da Mesa:', uploadError)
@@ -86,7 +94,7 @@ export async function uploadMesaImage(campaignId: string, file: File): Promise<M
     throw new Error('Não foi possível salvar a imagem na galeria.')
   }
 
-  return { ...(data as Omit<MesaGalleryImage, 'url'>), url: await signedUrl(BUCKET, path) }
+  return { ...(data as Omit<MesaGalleryImage, 'url'>), url: await signedUrl(BUCKET, path, GALLERY_URL_SECONDS) }
 }
 
 export async function deleteMesaImage(image: MesaGalleryImage): Promise<void> {
@@ -124,7 +132,7 @@ export async function listAllMyMesaImages(): Promise<GalleryImageWithCampaign[]>
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.campaigns != null)
   if (rows.length === 0) return []
 
-  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path))
+  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path), GALLERY_URL_SECONDS)
 
   return rows.map(({ campaigns, ...r }) => ({ ...r, campaign_name: campaigns!.name, url: urlByPath.get(r.path) ?? null }))
 }
@@ -151,7 +159,7 @@ export async function copyMesaImageToCampaign(image: MesaGalleryImage, campaignI
 
 /** Link temporário pra abrir a imagem em tamanho real numa aba nova. */
 export async function getMesaImageViewUrl(path: string): Promise<string> {
-  const url = await signedUrl(BUCKET, path)
+  const url = await signedUrl(BUCKET, path, GALLERY_URL_SECONDS)
   if (!url) throw new Error('Não foi possível abrir a imagem.')
   return url
 }
@@ -170,23 +178,14 @@ export interface BoardPhoto {
   h:    number
 }
 
-/** Foto grande demais pro bucket (10 MB) ou formato que ele não aceita vira WebP menor. */
+/**
+ * Toda foto vira WebP leve (lado maior até 2000 px) antes de ir pro Storage: cada abertura
+ * da Galeria ou do Quadro baixa essas imagens, e o tráfego do servidor é contado por byte.
+ * Antes só ficava menor se passasse de 10 MB (a média da galeria era 650 kB, com fotos de 6 MB).
+ */
 async function fitForGallery(file: File): Promise<{ blob: Blob; type: string; w: number; h: number }> {
-  const bmp = await createImageBitmap(file)
-  const { width, height } = bmp
-  const ok = MESA_IMAGE_TYPES.includes(file.type as (typeof MESA_IMAGE_TYPES)[number]) && file.size <= 9.5 * 1024 * 1024
-  if (ok) { bmp.close(); return { blob: file, type: file.type, w: width, h: height } }
-  const scale = Math.min(1, 2400 / Math.max(width, height))
-  const w = Math.max(1, Math.round(width * scale)), h = Math.max(1, Math.round(height * scale))
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  canvas.getContext('2d')!.drawImage(bmp, 0, 0, w, h)
-  bmp.close()
-  const blob = await new Promise<Blob | null>((done) => canvas.toBlob(done, 'image/webp', 0.86))
-    ?? await new Promise<Blob | null>((done) => canvas.toBlob(done, 'image/jpeg', 0.86))
-  if (!blob) throw new Error('Não foi possível preparar a imagem.')
-  return { blob, type: blob.type || 'image/jpeg', w, h }
+  const img = await shrinkImage(file, { maxSide: GALLERY_MAX_SIDE })
+  return { blob: img.blob, type: img.type, w: img.w, h: img.h }
 }
 
 export async function uploadBoardPhoto(campaignId: string, file: File, shield: boolean): Promise<BoardPhoto> {
@@ -218,7 +217,7 @@ export async function uploadBoardPhoto(campaignId: string, file: File, shield: b
 
 /** Links temporários das fotos do Quadro (path → link), com cache. */
 export function signBoardPhotos(paths: string[]): Promise<Map<string, string>> {
-  return signedUrls(BUCKET, paths)
+  return signedUrls(BUCKET, paths, GALLERY_URL_SECONDS)
 }
 
 // ────────────────────────────────────────────────────────
@@ -240,7 +239,7 @@ type ArtRow = Omit<MesaGalleryImage, 'url'> & { uploaded_by: string | null; hidd
 
 async function withUrls(rows: ArtRow[]): Promise<MesaArt[]> {
   if (rows.length === 0) return []
-  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path))
+  const urlByPath = await signedUrls(BUCKET, rows.map((r) => r.path), GALLERY_URL_SECONDS)
   return rows.map(({ uploader, hidden, ...r }) => ({ ...r, hidden: hidden === true, uploader_name: uploader?.display_name ?? null, url: urlByPath.get(r.path) ?? null }))
 }
 

@@ -16,6 +16,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.38',
+    date:    '2026-11-14',
+    title:   'Ficha de Bruxo sem regravar à toa e imagens bem mais leves',
+    items: [
+      'Corrigido um erro na ficha de D&D de quem tem Magia de Pacto (Bruxo): ela ficava gravando o Pacto no servidor sem parar enquanto estava aberta, e isso gastava boa parte do limite do site. Agora só grava quando algo muda de verdade.',
+      'As fotos que você envia para a Galeria e para o Quadro passam por uma redução antes de subir (lado maior até 2000 px, em WebP). Ficam de 5 a 10 vezes mais leves, abrem mais rápido e quase não mudam na tela. GIFs continuam como estão.',
+      'Os links das imagens da Galeria agora valem uma semana, então o navegador guarda as imagens em vez de baixar tudo de novo todo dia.',
+      'O aviso de "online" da campanha só é enviado com a aba à vista, como as outras consultas em segundo plano.',
+    ],
+  },
+  {
     version: '2.37',
     date:    '2026-11-14',
     title:   'Site mais leve: menos consultas e imagens que não baixam de novo',

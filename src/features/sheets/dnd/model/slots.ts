@@ -14,7 +14,7 @@ export function spellSlotLabel(level: number): string {
   return `${level}º nível`
 }
 
-export interface ExistingResource { key: string; current_value: number; max_value: number }
+export interface ExistingResource { key: string; current_value: number; max_value: number; label?: string }
 
 export interface SlotUpsert {
   key:           string
@@ -52,9 +52,12 @@ export function planSlotResources(
   plan(PACT_SLOT_KEY, pact ? `Pacto (${pact.level}º nível)` : 'Pacto', pact?.slots ?? 0, 'short', 20)
 
   // Pacto de outro nível (o Bruxo subiu): o rótulo muda, mesmo com a mesma quantidade de espaços.
+  // Só se o rótulo gravado for diferente: sem essa conferência o plano nunca ficava vazio e a ficha
+  // regravava o Pacto sem parar (foram 462 mil gravações antes de esta correção).
   const pactRow = byKey.get(PACT_SLOT_KEY)
-  if (pact && pactRow && pactRow.max_value === pact.slots && !out.some((o) => o.key === PACT_SLOT_KEY)) {
-    out.push({ key: PACT_SLOT_KEY, label: `Pacto (${pact.level}º nível)`, max_value: pact.slots, current_value: pactRow.current_value, recharge: 'short', source: 'spell_slots', sort_order: 20 })
+  const pactLabel = pact ? `Pacto (${pact.level}º nível)` : ''
+  if (pact && pactRow && pactRow.max_value === pact.slots && pactRow.label !== pactLabel && !out.some((o) => o.key === PACT_SLOT_KEY)) {
+    out.push({ key: PACT_SLOT_KEY, label: pactLabel, max_value: pact.slots, current_value: pactRow.current_value, recharge: 'short', source: 'spell_slots', sort_order: 20 })
   }
   return out
 }

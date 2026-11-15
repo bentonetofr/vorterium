@@ -47,6 +47,11 @@ describe('planSlotResources', () => {
     expect(plan).toEqual([expect.objectContaining({ key: PACT_SLOT_KEY, label: 'Pacto (4º nível)', max_value: 2, current_value: 1 })])
   })
 
+  it('Pacto já com o rótulo certo não gera gravação nenhuma (era o laço que regravava sem parar)', () => {
+    const existing = [{ key: PACT_SLOT_KEY, label: 'Pacto (4º nível)', current_value: 1, max_value: 2 }]
+    expect(planSlotResources([0, 0, 0, 0, 0, 0, 0, 0, 0], { slots: 2, level: 4 }, existing)).toEqual([])
+  })
+
   it('multiclasse com Pacto mantém os dois grupos', () => {
     const plan = planSlotResources([2, 0, 0, 0, 0, 0, 0, 0, 0], { slots: 1, level: 1 }, [])
     expect(plan.map((p) => p.key)).toEqual(['spell_slot_1', PACT_SLOT_KEY])

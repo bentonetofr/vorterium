@@ -224,12 +224,18 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
 
   // ── Espaços de magia como recursos: o máximo vem do motor ──
   const slotSync = useRef(false)
+  // Trava contra laço: o mesmo plano nunca é gravado duas vezes seguidas (se o banco devolvesse algo
+  // diferente do pedido, a ficha regravaria sem parar e gastaria o tráfego do servidor).
+  const lastSlotPlan = useRef('')
   useEffect(() => {
     if (readOnly || !ready || data.degraded || slotSync.current || form.manual_modes.includes('spell_slots')) return
     const slots = derived.spellcasting?.slots ?? [0, 0, 0, 0, 0, 0, 0, 0, 0]
     const existing = data.resources.filter((r) => r.source === 'spell_slots')
     const plan = planSlotResources(slots, derived.spellcasting?.pact ?? null, existing)
-    if (plan.length === 0) return
+    if (plan.length === 0) { lastSlotPlan.current = ''; return }
+    const signature = JSON.stringify(plan)
+    if (signature === lastSlotPlan.current) return
+    lastSlotPlan.current = signature
     slotSync.current = true
     void (async () => {
       try {
@@ -238,6 +244,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         data.setResources((rs) => [...rs.filter((r) => !saved.some((s) => s.key === r.key)), ...saved])
       } catch {
         // sem a migration ou sem rede: os espaços só não aparecem; a ficha segue
+        lastSlotPlan.current = '' // deixa tentar de novo na próxima mudança
       } finally { slotSync.current = false }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -245,6 +252,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
 
   // ── Recursos de classe e de raça (Fúria, Ki, Surto de Ação...): o máximo vem das tabelas do livro ──
   const classResSync = useRef(false)
+  const lastClassPlan = useRef('')
   useEffect(() => {
     if (readOnly || !ready || data.degraded || classResSync.current || form.manual_modes.includes('class_resources')) return
     const desired = desiredClassResources({
@@ -253,7 +261,10 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       raceKey: form.race_key || null,
     })
     const { upserts, removals } = planClassResources(desired, data.resources)
-    if (upserts.length === 0 && removals.length === 0) return
+    if (upserts.length === 0 && removals.length === 0) { lastClassPlan.current = ''; return }
+    const signature = JSON.stringify({ upserts, removals })
+    if (signature === lastClassPlan.current) return
+    lastClassPlan.current = signature
     classResSync.current = true
     void (async () => {
       try {
@@ -263,6 +274,7 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
         data.setResources((rs) => [...rs.filter((r) => !removals.includes(r.id) && !saved.some((x) => x.key === r.key)), ...saved])
       } catch {
         // sem rede: os recursos só não aparecem agora; a ficha segue e tenta de novo na próxima mudança
+        lastClassPlan.current = ''
       } finally { classResSync.current = false }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
