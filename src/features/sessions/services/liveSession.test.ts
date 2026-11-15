@@ -5,7 +5,7 @@ vi.mock('../../../shared/lib/supabase', () => ({
   supabase: { rpc: async (name: string) => { rpc.calls.push(name); return rpc.result } },
 }))
 
-import { closedReason, parseLiveSession, playersNeeded, refreshLiveSession, resetLiveSessions, setCampaignSession, useLiveSession } from './liveSession'
+import { closedReason, getLiveSession, parseLiveSession, playersNeeded, refreshLiveSession, resetLiveSessions, setCampaignSession, useLiveSession } from './liveSession'
 
 beforeEach(() => { resetLiveSessions(); rpc.calls = []; rpc.result = { data: null, error: null } })
 
@@ -66,6 +66,7 @@ describe('estado da sessão da campanha', () => {
   it('sem resposta do banco o estado é marcado como falha (e não diz que aguarda o mestre)', async () => {
     rpc.result = { data: null, error: { message: 'function does not exist' } }
     await refreshLiveSession('c9')
+    expect(getLiveSession('c9')).toMatchObject({ known: true, failed: true, errorText: 'function does not exist' })
     const failed = { ...parseLiveSession(null), failed: true }
     expect(closedReason(failed)).toBe('')
     expect(parseLiveSession(null).failed).toBe(false)

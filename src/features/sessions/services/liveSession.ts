@@ -28,9 +28,11 @@ export interface LiveSession {
   known: boolean
   /** A consulta falhou (sem a migration ou sem rede): o estado não é confiável. */
   failed: boolean
+  /** O que o banco respondeu quando falhou (pra explicar o que está faltando). */
+  errorText: string
 }
 
-export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false, failed: false }
+export const UNKNOWN_SESSION: LiveSession = { open: false, reason: null, nextAt: null, override: null, masterOnline: false, playersOnline: 0, playersTotal: 0, known: false, failed: false, errorText: '' }
 
 const states = new Map<string, LiveSession>()
 const listeners = new Set<() => void>()
@@ -46,13 +48,13 @@ export function parseLiveSession(raw: unknown): LiveSession {
     nextAt: typeof r.next_at === 'string' ? r.next_at : null,
     override: r.override === 'open' || r.override === 'closed' ? r.override : null,
     masterOnline: r.master_online === true, playersOnline: count(r.players_online), playersTotal: count(r.players_total),
-    known: true, failed: false,
+    known: true, failed: false, errorText: '',
   }
 }
 
 const same = (a: LiveSession, b: LiveSession) =>
   a.open === b.open && a.reason === b.reason && a.nextAt === b.nextAt && a.override === b.override && a.masterOnline === b.masterOnline
-  && a.playersOnline === b.playersOnline && a.playersTotal === b.playersTotal && a.known === b.known && a.failed === b.failed
+  && a.playersOnline === b.playersOnline && a.playersTotal === b.playersTotal && a.known === b.known && a.failed === b.failed && a.errorText === b.errorText
 
 function publish(campaignId: string, next: LiveSession) {
   const prev = states.get(campaignId)
@@ -68,9 +70,9 @@ export function refreshLiveSession(campaignId: string): Promise<void> {
   const job = (async () => {
     try {
       const { data, error } = await supabase.rpc('campaign_session_status', { campaign_id_input: campaignId })
-      publish(campaignId, error ? { ...UNKNOWN_SESSION, known: true, failed: true } : parseLiveSession(data))
-    } catch {
-      publish(campaignId, { ...UNKNOWN_SESSION, known: true, failed: true })
+      publish(campaignId, error ? { ...UNKNOWN_SESSION, known: true, failed: true, errorText: String(error.message ?? error.code ?? '').slice(0, 200) } : parseLiveSession(data))
+    } catch (err) {
+      publish(campaignId, { ...UNKNOWN_SESSION, known: true, failed: true, errorText: err instanceof Error ? err.message.slice(0, 200) : 'sem resposta' })
     } finally {
       inflight.delete(campaignId)
     }
@@ -96,6 +98,9 @@ export function useLiveSession(campaignId: string | null | undefined): LiveSessi
     () => (campaignId ? states.get(campaignId) ?? UNKNOWN_SESSION : UNKNOWN_SESSION),
   )
 }
+
+/** O estado guardado de uma campanha (fora do React). */
+export const getLiveSession = (campaignId: string): LiveSession => states.get(campaignId) ?? UNKNOWN_SESSION
 
 /** Só pros testes. */
 export function resetLiveSessions(): void {

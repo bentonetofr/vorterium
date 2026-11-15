@@ -47,7 +47,7 @@ export function SessionLiveBadge({ campaignId, isMaster = false }: { campaignId:
   // sem resposta do banco (a migration da sessão ainda não rodou, ou sem rede): melhor dizer do que ficar sem selo
   if (s.failed) {
     return (
-      <span className="live-badge live-badge--closed" title="Não foi possível conferir o estado da sessão. Se isto não passar, as migrations 20240233 a 20240235 podem não ter rodado no Supabase. Enquanto isso, nenhuma rolagem conta pras conquistas.">
+      <span className="live-badge live-badge--closed" title={`Não foi possível conferir o estado da sessão. Se isto não passar, as migrations 20240233 a 20240235 podem não ter rodado no Supabase. Enquanto isso, nenhuma rolagem conta pras conquistas.${s.errorText ? ` Resposta do banco: ${s.errorText}` : ''}`}>
         Sessão indisponível
       </span>
     )
