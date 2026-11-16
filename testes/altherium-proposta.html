@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Proposta da ficha de Altherium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#0b1326; --surface:#131b2e; --elev:#171f33; --over:#222a3d; --line:rgba(83,68,52,.45); --line2:#534434;
+  --tx:#dae2fd; --tx2:#d8c3ad; --mut:#a08e7a; --gold:#ffc174; --gold2:#d2ad35; --amber:#f59e0b;
+  --pv:#ffb4ab; --pe:#5eead4; --res:#54ff9f; --bad:#ff8a7d;
+  --disp:'EB Garamond',Georgia,serif; --lab:'Space Grotesk',system-ui,sans-serif; --body:'Hanken Grotesk',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.4 var(--body);-webkit-font-smoothing:antialiased}
+.phone{width:100%;max-width:430px;margin:0 auto;min-height:100vh;display:none;position:relative;padding-bottom:84px}
+.phone.on{display:block}
+.lab{font-family:var(--lab);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.disp{font-family:var(--disp)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+/* ── HUD fixo ── */
+.hud{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#0e1730 0%,#0b1326 100%);border-bottom:1px solid var(--line2);padding:12px 14px 10px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.id{display:flex;gap:10px;align-items:center}
+.face{width:46px;height:46px;border-radius:50%;border:2px solid var(--gold2);background:radial-gradient(circle at 40% 35%,#c85a3c,#5a1d14);display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.name{font-family:var(--disp);font-size:22px;font-weight:700;color:var(--gold);line-height:1.05}
+.sub{font-size:12px;color:var(--tx2)}
+.lvl{margin-left:auto;text-align:right}
+.lvl b{font-family:var(--disp);font-size:22px;color:var(--gold)}
+.bars{display:grid;gap:7px;margin-top:10px}
+.bar{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;gap:6px}
+.bar>button{height:34px;border-radius:9px;background:var(--over);border:1px solid var(--line);font-size:18px;line-height:1;color:var(--tx2)}
+.track{position:relative;height:34px;border-radius:9px;background:#0a1020;border:1px solid var(--line);overflow:hidden}
+.track i{position:absolute;inset:0 auto 0 0;border-radius:8px}
+.track span{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 11px;font-family:var(--lab);font-weight:700;font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.track small{font-weight:500;opacity:.85}
+.pv i{background:linear-gradient(90deg,#8e3b36,#ffb4ab)} .pe i{background:linear-gradient(90deg,#1f7f73,#5eead4)} .fv i{background:linear-gradient(90deg,#1f8a52,#54ff9f)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;border:1px solid var(--line2);background:var(--elev);font-family:var(--lab);font-size:11px;font-weight:600;color:var(--tx2)}
+.chip.ok{border-color:#2f8f5f;color:var(--res)} .chip.bad{border-color:#a8433b;color:var(--bad);background:rgba(168,67,59,.12)}
+.pips{display:inline-flex;gap:3px}.pips u{width:9px;height:9px;border-radius:50%;background:var(--gold);display:block;box-shadow:0 0 6px rgba(255,193,116,.6)}.pips u.off{background:#2a3350;box-shadow:none}
+
+/* ── Hotbar ── */
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px}
+.act{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 4px 11px;border-radius:14px;background:linear-gradient(180deg,#1b2540,#141c32);border:1px solid var(--line2);font-family:var(--lab);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.act em{font-style:normal;font-size:26px;line-height:1}
+.act.hot{background:linear-gradient(180deg,#ffcb88,#f59e0b);color:#2a1700;border-color:#ffcb88;box-shadow:0 6px 18px rgba(245,158,11,.28)}
+.act small{font-weight:500;font-size:10px;letter-spacing:0;text-transform:none;opacity:.8}
+.sec{padding:6px 14px 0}
+.sec h3{display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tile{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.tile .n{font-family:var(--disp);font-size:24px;font-weight:700;color:var(--gold);min-width:46px}
+.tile b{display:block;font-size:13px}.tile small{color:var(--mut);font-size:11px}
+.dots{display:flex;gap:3px;margin-top:3px}.dots u{width:7px;height:7px;border-radius:2px;background:var(--gold);display:block}.dots u.off{background:#2a3350}
+
+/* ── cards de arma ── */
+.hand{display:flex;gap:9px;overflow:auto;padding:2px 14px 6px;scroll-snap-type:x mandatory}
+.wc{flex:0 0 150px;scroll-snap-align:start;padding:10px;border-radius:14px;background:var(--surface);border:1px solid var(--line2)}
+.wc.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 22px rgba(245,158,11,.18)}
+.wc .art{height:58px;border-radius:9px;background:linear-gradient(135deg,#222a3d,#0d1427);display:grid;place-items:center;font-size:30px;margin-bottom:8px}
+.wc b{display:block;font-size:13px;line-height:1.15}
+.wc .st{font-family:var(--lab);font-size:11px;color:var(--tx2);margin:3px 0 6px}
+.int{height:5px;border-radius:3px;background:#0a1020;overflow:hidden}.int i{display:block;height:100%;background:var(--res)}
+.int.warn i{background:var(--gold)}.int.bad i{background:var(--bad)}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-family:var(--lab);font-size:9.5px;padding:1px 6px;border-radius:4px;border:1px solid var(--line2);color:var(--gold2)}
+
+/* ── bottom nav ── */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:grid;grid-template-columns:repeat(5,1fr);background:#0a1122ee;backdrop-filter:blur(10px);border-top:1px solid var(--line2);padding:8px 6px 14px;z-index:6}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--lab);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:4px}
+.nav button em{font-style:normal;font-size:20px}.nav .cur{color:var(--gold)}
+
+/* ── sheet (modal de ação) ── */
+.scrim{position:fixed;inset:0;background:rgba(3,6,14,.62);z-index:8}
+.sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:430px;z-index:9;background:linear-gradient(180deg,#161f38,#10172b);border:1px solid var(--line2);border-bottom:0;border-radius:22px 22px 0 0;padding:8px 0 18px;max-height:92vh;overflow:auto;box-shadow:0 -20px 50px rgba(0,0,0,.6)}
+.grab{width:42px;height:4px;border-radius:2px;background:var(--line2);margin:2px auto 10px}
+.sh{display:flex;align-items:baseline;justify-content:space-between;padding:0 16px 8px}
+.sh h2{font-family:var(--disp);font-size:24px;color:var(--gold)}
+.row{padding:0 16px;margin-top:12px}
+.opts{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.o{padding:8px 12px;border-radius:11px;border:1px solid var(--line2);background:var(--elev);font-family:var(--lab);font-weight:600;font-size:12.5px;color:var(--tx2);display:flex;gap:6px;align-items:center}
+.o b{color:var(--gold);font-weight:700}.o.on{background:rgba(255,193,116,.14);border-color:var(--gold);color:var(--gold)}
+.o.neg.on{background:rgba(255,138,125,.12);border-color:var(--bad);color:var(--bad)}.o.neg b{color:var(--bad)}
+.o.dim{opacity:.45}
+.formula{margin:14px 16px 0;padding:12px 14px;border-radius:14px;background:#0a1020;border:1px dashed var(--line2);text-align:center}
+.formula .big{font-family:var(--disp);font-size:30px;font-weight:700;color:var(--tx);line-height:1.1}
+.formula .big b{color:var(--gold)}
+.formula small{display:block;color:var(--mut);font-size:11.5px;margin-top:3px}
+.go{display:block;width:calc(100% - 32px);margin:14px 16px 0;padding:15px;border-radius:14px;background:linear-gradient(180deg,#ffcb88,#f59e0b);color:#2a1700;font-family:var(--lab);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;text-align:center;box-shadow:0 8px 22px rgba(245,158,11,.3)}
+.go.ghost{background:var(--elev);color:var(--tx2);box-shadow:none;border:1px solid var(--line2)}
+.go2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 16px 0}.go2 .go{margin:0;width:auto}
+.dice{display:flex;justify-content:center;gap:9px;margin:14px 0 4px}
+.d{width:54px;height:54px;border-radius:12px;background:linear-gradient(180deg,#2a3350,#1b2440);border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--disp);font-size:28px;font-weight:700;color:var(--mut);opacity:.5}
+.d.k{opacity:1;color:#2a1700;background:linear-gradient(180deg,#ffe0b0,#ffc174);border-color:#ffe0b0;box-shadow:0 0 22px rgba(255,193,116,.55);transform:translateY(-4px) scale(1.06)}
+.verdict{margin:8px 16px 0;padding:10px;border-radius:12px;text-align:center;font-family:var(--lab);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:13px}
+.verdict.ok{background:rgba(84,255,159,.1);border:1px solid #2f8f5f;color:var(--res)}
+.verdict.crit{background:rgba(255,193,116,.12);border:1px solid var(--gold);color:var(--gold);box-shadow:0 0 22px rgba(255,193,116,.25)}
+.chain{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 16px 0}
+.cc{padding:11px;border-radius:12px;background:var(--elev);border:1px solid var(--line2);text-align:center}
+.cc .v{font-family:var(--disp);font-size:30px;font-weight:700;color:var(--bad);line-height:1}.cc small{display:block;color:var(--mut);font-size:11px;margin-top:3px}
+
+/* ── explorar ── */
+.dt{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:7px}
+.dt button{padding:9px 4px;border-radius:11px;border:1px solid var(--line2);background:var(--elev);text-align:center;font-family:var(--lab);font-weight:600;font-size:12px;color:var(--tx2)}
+.dt button b{display:block;font-family:var(--disp);font-size:20px;color:var(--gold)}
+.dt button.on{border-color:var(--gold);background:rgba(255,193,116,.14);color:var(--gold)}
+.finds{display:grid;gap:8px;margin:12px 16px 0}
+.find{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:13px;background:var(--elev);border:1px solid var(--line2)}
+.find .ic{width:44px;height:44px;border-radius:11px;background:#0a1020;display:grid;place-items:center;font-size:22px}
+.find.rare{border-color:var(--gold);background:linear-gradient(90deg,rgba(255,193,116,.14),var(--elev));box-shadow:0 0 18px rgba(255,193,116,.2)}
+.find b{font-size:14px;display:block}.find small{color:var(--mut);font-size:11px}
+.find .bt{display:flex;gap:6px}.find .bt button{padding:8px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--over);font-family:var(--lab);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.find .bt .g{background:var(--gold);color:#2a1700;border-color:var(--gold)}
+.find.done{opacity:.55}
+
+/* ── mochila ── */
+.seg{display:flex;gap:6px;overflow:auto;padding:0 14px;margin-top:12px}.seg .o{white-space:nowrap}
+.res{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.rc{padding:10px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.rc .t{display:flex;justify-content:space-between;font-size:13px;font-weight:600}.rc .t span{font-family:var(--lab);color:var(--gold);font-size:12px}
+.gauge{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin:7px 0}.gauge u{height:8px;border-radius:2px;background:#0a1020;overflow:hidden;display:block}.gauge u i{display:block;height:100%;background:var(--gold)}
+.rc .q{display:flex;gap:5px}.rc .q button{flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--line2);background:var(--elev);font-family:var(--lab);font-size:11px;font-weight:700;color:var(--gold)}
+.body{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:0 14px}
+.fig{position:relative;height:150px}
+.fig u{position:absolute;display:block;border-radius:8px;border:1.5px solid var(--line2);background:var(--elev)}
+.fig u.eq{border-color:var(--res);background:rgba(84,255,159,.12)}
+.fig .h{left:36px;top:0;width:24px;height:24px;border-radius:50%}.fig .t{left:26px;top:28px;width:44px;height:50px}.fig .a1{left:6px;top:30px;width:16px;height:48px}.fig .a2{left:74px;top:30px;width:16px;height:48px}.fig .l{left:28px;top:82px;width:40px;height:66px}
+.zl{display:grid;gap:6px}.zl div{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 9px;border-radius:9px;background:var(--surface);border:1px solid var(--line)}.zl b{color:var(--gold);font-family:var(--lab)}
+.cons{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px}
+.cn{padding:8px 11px;border-radius:12px;background:var(--surface);border:1px solid var(--line2);font-size:12.5px;display:flex;gap:7px;align-items:center}.cn b{font-family:var(--lab);color:var(--gold)}.cn i{font-style:normal;color:var(--res);font-family:var(--lab);font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ============ TELA 1: FICHA ============ -->
+<div class="phone" id="s1">
+  <div class="hud">
+    <div class="id">
+      <div class="face">🪓</div>
+      <div><div class="name">Gutris, O Nascido da Morte</div><div class="sub">Berserker · Gênesis Guerreiro</div></div>
+      <div class="lvl"><div class="lab">Nível</div><b>2</b></div>
+    </div>
+    <div class="bars">
+      <div class="bar pv"><button>−</button><div class="track"><i style="width:71%"></i><span>PV <small>32 / 45</small></span></div><button>+</button></div>
+      <div class="bar pe"><button>−</button><div class="track"><i style="width:100%"></i><span>EQUILÍBRIO <small>15 / 15</small></span></div><button>+</button></div>
+      <div class="bar fv"><button>−</button><div class="track"><i style="width:58%"></i><span>FORÇA DE VONTADE <small>14 / 24</small></span></div><button>+</button></div>
+    </div>
+    <div class="chips">
+      <span class="chip ok">● Reação</span>
+      <span class="chip">🧭 Fichas <span class="pips"><u></u><u></u><u></u><u class="off"></u><u class="off"></u></span></span>
+      <span class="chip bad">🩸 Sangrando · 2 turnos</span>
+      <span class="chip">🍖 Rações 2</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="act hot"><em>⚔️</em>Atacar<small>Machado de duas lâminas</small></button>
+    <button class="act"><em>🛡️</em>Defender<small>Resiliência +6</small></button>
+    <button class="act"><em>🤺</em>Aparar<small>gasta a Reação</small></button>
+    <button class="act"><em>🎲</em>Teste<small>qualquer domínio</small></button>
+    <button class="act"><em>🧭</em>Explorar<small>3 fichas</small></button>
+    <button class="act"><em>🏕️</em>Descansar<small>curto ou longo</small></button>
+  </div>
+
+  <div class="sec"><h3><span class="lab">Domínios fixados</span><span class="lab" style="color:var(--gold)">editar</span></h3>
+    <div class="tiles">
+      <div class="tile"><span class="n">3d</span><div><b>Luta</b><small>Fúria +8</small><div class="dots"><u></u><u></u><u class="off"></u></div></div></div>
+      <div class="tile"><span class="n">2d</span><div><b>Intimidação</b><small>Fúria +8 · Gênesis ✦</small><div class="dots"><u></u><u class="off"></u><u class="off"></u></div></div></div>
+      <div class="tile"><span class="n">2d</span><div><b>Percepção</b><small>Destino +0 · desv.</small><div class="dots"><u class="off"></u><u class="off"></u><u class="off"></u></div></div></div>
+      <div class="tile"><span class="n">1d</span><div><b>Furtividade</b><small>Impulso +4</small><div class="dots"><u class="off"></u><u class="off"></u><u class="off"></u></div></div></div>
+    </div>
+  </div>
+
+  <div class="sec"><h3><span class="lab">Na mão</span><span class="lab" style="color:var(--gold)">mochila →</span></h3></div>
+  <div class="hand">
+    <div class="wc sel"><div class="art">🪓</div><b>Machado de duas lâminas</b><div class="st">2d8 Cortante · Toque</div><div class="int"><i style="width:100%"></i></div><div class="tags"><span class="tag">Duas Mãos</span><span class="tag">Serrilhada</span></div></div>
+    <div class="wc"><div class="art">🗡️</div><b>Adaga serrilhada</b><div class="st">1d10 Cortante · Toque</div><div class="int warn"><i style="width:45%"></i></div><div class="tags"><span class="tag">Serrilhada</span></div></div>
+    <div class="wc"><div class="art">🏹</div><b>Arco Curto</b><div class="st">1d10 Perfurante · Médio</div><div class="int"><i style="width:90%"></i></div><div class="tags"><span class="tag">Disparo Rápido</span></div></div>
+  </div>
+
+  <div class="nav"><button class="cur"><em>⚔️</em>Ação</button><button><em>🎒</em>Mochila</button><button><em>🧬</em>Personagem</button><button><em>🔥</em>Triunfos</button><button><em>📜</em>Notas</button></div>
+</div>
+
+<!-- ============ TELA 2: ATACAR ============ -->
+<div class="phone" id="s2">
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sh"><h2>Atacar</h2><span class="lab">Reação disponível ●</span></div>
+    <div class="hand" style="padding-top:0">
+      <div class="wc sel"><div class="art">🪓</div><b>Machado de duas lâminas</b><div class="st">2d8 Cortante · Toque</div><div class="int"><i style="width:100%"></i></div></div>
+      <div class="wc"><div class="art">🗡️</div><b>Adaga serrilhada</b><div class="st">1d10 Cortante · Toque</div><div class="int warn"><i style="width:45%"></i></div></div>
+      <div class="wc"><div class="art">🏹</div><b>Arco Curto</b><div class="st">1d10 Perf. · Médio</div><div class="int"><i style="width:90%"></i></div></div>
+    </div>
+    <div class="row"><span class="lab">Situação · no máximo ±2 dados</span>
+      <div class="opts">
+        <span class="o on">🎯 Mirar <b>+2</b></span>
+        <span class="o on">👥 Cercar ×2 <b>+1</b></span>
+        <span class="o neg">📏 1 faixa além <b>−1d</b></span>
+        <span class="o neg">🧍 Inimigo em Toque <b>−1d</b></span>
+        <span class="o dim">🛡️ Cobertura do alvo</span>
+      </div></div>
+    <div class="formula"><div class="big">3<b>d10</b> · maior <b>+8</b></div><small>Fúria +8 · Mirar +2 · Cercar +1 · Gênesis +1d4 → 3d10 + 1d4 + 11</small></div>
+    <div class="row"><span class="lab">Defesa do alvo (se o mestre disser)</span><div class="opts"><span class="o">— sem</span><span class="o on">12</span><span class="o">+ −</span></div></div>
+    <button class="go">⚔️ Rolar ataque</button>
+  </div>
+</div>
+
+<!-- ============ TELA 2B: RESULTADO DO ATAQUE ============ -->
+<div class="phone" id="s2b">
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sh"><h2>Ataque</h2><span class="lab">Machado de duas lâminas</span></div>
+    <div class="dice"><div class="d">4</div><div class="d k">10</div><div class="d">7</div></div>
+    <div style="text-align:center;font-size:13px;color:var(--tx2)">10 <span style="color:var(--mut)">(maior)</span> + 3 <small>(1d4)</small> + 11 = <b class="disp" style="font-size:30px;color:var(--gold)">24</b> contra Defesa 12</div>
+    <div class="verdict crit">✦ Crítico! Acertou por 12 ✦</div>
+    <div class="chain">
+      <div class="cc"><div class="v">19</div><small>Dano 4d8 Cortante (crítico dobra)</small></div>
+      <div class="cc"><div class="v" style="color:var(--gold)">Tronco</div><small>Local atingido (1d10 = 8)</small></div>
+    </div>
+    <p style="margin:10px 16px 0;font-size:12px;color:var(--tx2)">Serrilhada: o alvo fica <b style="color:var(--bad)">Sangrando</b>. O dano e o local já foram rolados.</p>
+    <div class="go2"><button class="go ghost">Rolar de novo</button><button class="go">Fechar</button></div>
+  </div>
+</div>
+
+<!-- ============ TELA 3: EXPLORAR ============ -->
+<div class="phone" id="s3">
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sh"><h2>Explorar</h2><span class="lab">🧭 3 fichas <span class="pips"><u></u><u></u><u></u><u class="off"></u><u class="off"></u></span></span></div>
+    <div class="row" style="margin-top:2px"><span class="lab">Onde? (o mestre define)</span>
+      <div class="opts"><span class="o on">🌲 Floresta</span><span class="o">🌊 Litoral</span><span class="o">⛰️ Montanha</span><span class="o">❄️ Tundra</span><span class="o">🏘️ Vilarejo</span><span class="o">🏚️ Ruínas</span><span class="o">🌀 Fenda</span></div></div>
+    <div class="row"><span class="lab">Escassez</span>
+      <div class="dt"><button><b>5</b>Abundante</button><button class="on"><b>6</b>Normal</button><button><b>8</b>Escasso</button><button><b>10</b>Devastado</button></div></div>
+    <div class="row"><span class="lab">Condições</span>
+      <div class="opts"><span class="o neg on">🌙 Noite <b>−1d</b></span><span class="o neg">🌧️ Chuva <b>−1d</b></span><span class="o">🔦 Ferramenta <b>+1d</b></span><span class="o on">🗺️ Conhece o local <b>+1d</b></span><span class="o">📖 Narrada <b>+1d</b></span></div></div>
+    <div class="formula"><div class="big">2<b>d10</b> · maior <b>+4</b></div><small>Sobrevivência + Estratégia · contra DT 6 · Fome 0</small></div>
+    <button class="go">🧭 Explorar (gasta 1 ficha)</button>
+  </div>
+</div>
+
+<!-- ============ TELA 3B: ACHADOS ============ -->
+<div class="phone" id="s3b">
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sh"><h2>Achados</h2><span class="lab">Floresta · Normal</span></div>
+    <div class="dice"><div class="d">3</div><div class="d k">9</div></div>
+    <div class="verdict ok">Sucesso por 7 · 3 achados + 1 raro!</div>
+    <div class="finds">
+      <div class="find"><div class="ic">🪵</div><div><b>50% de Madeira</b><small>vai para 1 e 50% · cabe</small></div><div class="bt"><button class="g">Guardar</button><button>Deixar</button></div></div>
+      <div class="find"><div class="ic">🍖</div><div><b>25% de Ração</b><small>vai para 1 e 75% · cabe</small></div><div class="bt"><button class="g">Guardar</button><button>Deixar</button></div></div>
+      <div class="find done"><div class="ic">🌿</div><div><b>20% de Ervas</b><small>✓ guardado</small></div><div></div></div>
+      <div class="find rare"><div class="ic">✦</div><div><b>Achado raro: Runa</b><small>um Runaskin aprende um triunfo</small></div><div class="bt"><button class="g">Guardar</button></div></div>
+    </div>
+    <div class="go2"><button class="go ghost">Explorar de novo</button><button class="go">Guardar tudo que couber</button></div>
+  </div>
+</div>
+
+<!-- ============ TELA 4: MOCHILA ============ -->
+<div class="phone" id="s4">
+  <div class="hud" style="padding-bottom:8px">
+    <div class="id"><div class="name" style="font-size:24px">Mochila</div><div class="lvl" style="margin-left:auto"><span class="chip">Gutris · 32/45 PV</span></div></div>
+  </div>
+  <div class="seg"><span class="o on">Tudo</span><span class="o">Armas</span><span class="o">Proteções</span><span class="o">Consumíveis</span><span class="o">Materiais</span><span class="o">Oficina 🔨</span></div>
+
+  <div class="sec"><h3><span class="lab">Proteção</span><span class="lab">DB total 8</span></h3></div>
+  <div class="body">
+    <div class="fig"><u class="h"></u><u class="t eq"></u><u class="a1"></u><u class="a2"></u><u class="l"></u></div>
+    <div class="zl">
+      <div><span>Cabeça</span><b>0</b></div><div><span>Tronco · Cota de Malha</span><b>8 <small style="color:var(--gold2)">70%</small></b></div><div><span>Braços</span><b>0</b></div><div><span>Pernas</span><b>0</b></div>
+    </div>
+  </div>
+
+  <div class="sec"><h3><span class="lab">Armas</span></h3></div>
+  <div class="hand">
+    <div class="wc sel"><div class="art">🪓</div><b>Machado de duas lâminas</b><div class="st">Integridade 100%</div><div class="int"><i style="width:100%"></i></div><div class="tags"><span class="tag">Fio Temperado</span></div></div>
+    <div class="wc"><div class="art">🗡️</div><b>Adaga serrilhada</b><div class="st">Integridade 45% · gasta</div><div class="int warn"><i style="width:45%"></i></div><div class="tags"><span class="tag">Reparar → 75%</span></div></div>
+  </div>
+
+  <div class="sec"><h3><span class="lab">Consumíveis</span><span class="lab" style="color:var(--gold)">fabricar</span></h3></div>
+  <div class="cons">
+    <span class="cn">🩹 Bandagem <b>×2</b><i>USAR +1d4</i></span>
+    <span class="cn">🍾 Garrafa de Fogo <b>×1</b><i>ARREMESSAR</i></span>
+    <span class="cn">🍄 Cogumelo Berserkr <b>×1</b><i>USAR</i></span>
+  </div>
+
+  <div class="sec"><h3><span class="lab">Materiais · até 4 de cada</span><span class="lab">+ achei</span></h3>
+    <div class="res">
+      <div class="rc"><div class="t">Ferro-velho<span>1 e 50%</span></div><div class="gauge"><u><i style="width:100%"></i></u><u><i style="width:50%"></i></u><u></u><u></u></div><div class="q"><button>+10</button><button>+25</button><button>+50</button><button>+100</button></div></div>
+      <div class="rc"><div class="t">Couro<span>75%</span></div><div class="gauge"><u><i style="width:75%"></i></u><u></u><u></u><u></u></div><div class="q"><button>+10</button><button>+25</button><button>+50</button><button>+100</button></div></div>
+      <div class="rc"><div class="t">Sebo<span>25%</span></div><div class="gauge"><u><i style="width:25%"></i></u><u></u><u></u><u></u></div><div class="q"><button>+10</button><button>+25</button><button>+50</button><button>+100</button></div></div>
+      <div class="rc"><div class="t">Ração<span>2</span></div><div class="gauge"><u><i style="width:100%"></i></u><u><i style="width:100%"></i></u><u></u><u></u></div><div class="q"><button>+25</button><button>+50</button><button>+100</button></div></div>
+    </div>
+  </div>
+  <div class="nav"><button><em>⚔️</em>Ação</button><button class="cur"><em>🎒</em>Mochila</button><button><em>🧬</em>Personagem</button><button><em>🔥</em>Triunfos</button><button><em>📜</em>Notas</button></div>
+</div>
+
+<script>
+const s = new URLSearchParams(location.search).get('s') || '1';
+document.getElementById('s' + s)?.classList.add('on');
+if (s === '2' || s === '2b' || s === '3' || s === '3b') document.getElementById('s1').classList.add('on');
+</script>
+</body>
+</html>

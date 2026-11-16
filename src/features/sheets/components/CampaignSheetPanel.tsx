@@ -5,6 +5,7 @@ import { AltheriumSheetPanel }       from '../altherium/components/AltheriumShee
 import { TdSheetPanel }              from '../terraDevastada/components/TdSheetPanel'
 import { TdaSheetPanel }             from '../terraDevastadaAdaptada/components/TdaSheetPanel'
 import { VampiroSheetPanel }         from '../vampiro/components/VampiroSheetPanel'
+import { DhSheetPanel }              from '../daggerheart/components/DhSheetPanel'
 import type { CampaignWithRole }     from '../../../shared/types'
 
 // A ficha de D&D (catálogo de classes, raças e itens, as sete abas e os
@@ -86,6 +87,14 @@ export function CampaignSheetPanel({ campaign }: CampaignSheetPanelProps) {
     case 'vampiro':
       return (
         <VampiroSheetPanel
+          campaignId={campaign.id}
+          userRole={campaign.role}
+        />
+      )
+
+    case 'daggerheart':
+      return (
+        <DhSheetPanel
           campaignId={campaign.id}
           userRole={campaign.role}
         />

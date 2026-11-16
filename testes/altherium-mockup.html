@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Mockup ficha Altherium</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{--bg:#0b1326;--surface:#131b2e;--elev:#171f33;--over:#222a3d;--line:rgba(83,68,52,.45);--line2:#534434;--tx:#dae2fd;--tx2:#d8c3ad;--mut:#a08e7a;--gold:#ffc174;--gold2:#d2ad35;--amber:#f59e0b;--pv:#ffb4ab;--pe:#5eead4;--fv:#54ff9f;
+--disp:'EB Garamond',Georgia,serif;--lab:'Space Grotesk',system-ui,sans-serif;--body:'Hanken Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.4 var(--body);width:800px;padding:18px}
+.lab{font-family:var(--lab);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:600}
+button{font:inherit;color:inherit;border:0;background:none}
+.tag{position:absolute;right:-2px;top:-9px;background:#2f8f5f;color:#04140c;font:700 9px var(--lab);padding:2px 7px;border-radius:99px;letter-spacing:.06em}
+.wrap{position:relative}
+
+/* HUD */
+.hud{background:linear-gradient(180deg,#0f1832,#0b1326);border:1px solid var(--line2);border-radius:16px;padding:14px 16px 12px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.id{display:flex;align-items:center;gap:14px}
+.face{width:60px;height:60px;border-radius:50%;border:2px solid var(--gold2);background:radial-gradient(circle at 40% 35%,#c85a3c,#5a1d14);display:grid;place-items:center;font:700 26px var(--disp);color:#ffe2b8;flex-shrink:0}
+.name{font:700 26px/1.05 var(--disp);color:var(--gold)}
+.sub{color:var(--tx2);font-size:13px;margin-top:3px}
+.sub b{color:var(--gold);font-weight:600}
+.right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.coin{font:700 14px var(--lab);color:var(--gold);padding:7px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--elev)}
+.kebab{width:36px;height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--elev);font-size:18px;color:var(--tx2)}
+.bars{display:grid;gap:7px;margin-top:12px}
+.bar{display:grid;grid-template-columns:34px 1fr 34px;gap:7px;align-items:center}
+.bar>i{width:34px;height:34px;border-radius:9px;background:var(--over);border:1px solid var(--line);display:grid;place-items:center;font:normal 18px/1 var(--lab);color:var(--tx2)}
+.trk{position:relative;height:34px;border-radius:9px;background:#0a1020;border:1px solid var(--line);overflow:hidden}
+.trk u{position:absolute;inset:0 auto 0 0;border-radius:8px}
+.trk span{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font:700 13px var(--lab);text-shadow:0 1px 3px #000}
+.trk small{font-weight:500;opacity:.85;font-size:12px}
+.pv u{background:linear-gradient(90deg,#8e3b36,#ffb4ab);width:71%}.pe u{background:linear-gradient(90deg,#1f7f73,#5eead4);width:80%}.fv u{background:linear-gradient(90deg,#1f8a52,#54ff9f);width:58%}
+.chips{display:flex;gap:7px;margin-top:11px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:99px;border:1px solid var(--line2);background:var(--elev);font:600 11px var(--lab);color:var(--tx2)}
+.chip.ok{border-color:#2f8f5f;color:var(--fv)}
+.pips{display:inline-flex;gap:3px}.pips u{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(255,193,116,.6)}.pips u.off{background:#2a3350;box-shadow:none}
+
+/* pedido */
+.req{display:flex;align-items:center;gap:10px;margin-top:10px;padding:7px 8px 7px 14px;border-radius:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.45)}
+.req b{font:600 14px var(--disp);color:var(--gold);font-size:16px}.req span{color:var(--tx2);font-size:12px}
+.req button{margin-left:auto;padding:6px 18px;border-radius:9px;background:var(--gold);color:#2a1700;font:700 12px var(--lab);letter-spacing:.06em}
+
+/* acoes */
+.acts{display:grid;grid-template-columns:1.35fr repeat(5,1fr);gap:8px;margin-top:12px}
+.act{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 4px 10px;border-radius:14px;background:linear-gradient(180deg,#1b2540,#141c32);border:1px solid var(--line2);font:700 11px var(--lab);letter-spacing:.05em;text-transform:uppercase;position:relative}
+.act em{display:block;height:26px;color:var(--gold)}.act.hot em{color:#2a1700}
+.act small{font:500 10px var(--body);text-transform:none;letter-spacing:0;color:var(--mut)}
+.act.hot{background:linear-gradient(180deg,#ffcb88,#f59e0b);color:#2a1700;border-color:#ffcb88;box-shadow:0 6px 20px rgba(245,158,11,.3)}
+.act.hot small{color:#5a3a08}
+
+/* abas */
+.tabs{display:flex;gap:4px;margin-top:14px;padding:4px;background:#0a1020;border:1px solid var(--line);border-radius:12px}
+.tabs button{flex:1;padding:9px 0;border-radius:9px;font:600 11px var(--lab);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.tabs .on{background:var(--over);color:var(--gold);box-shadow:inset 0 -2px 0 var(--gold)}
+
+/* conteudo */
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-top:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.attrs{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:9px}
+.at{background:#0a1020;border:1px solid var(--line);border-radius:11px;padding:8px 2px 7px;text-align:center}
+.at .lab{font-size:9px}.at b{display:block;font:700 26px/1.1 var(--disp);color:var(--gold)}
+.at.top{border-color:var(--gold2);box-shadow:0 0 12px rgba(210,173,53,.2)}
+.dots{display:flex;gap:2px;justify-content:center;margin-top:3px}.dots u{width:6px;height:6px;border-radius:2px;background:var(--gold)}.dots u.off{background:#2a3350}
+.dom{display:grid;grid-template-columns:1fr auto;margin-top:9px}
+.row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px;margin-bottom:3px;background:var(--elev)}
+.row.act2{background:rgba(94,234,212,.09);border:1px solid rgba(94,234,212,.3)}
+.row .n{font-weight:600;font-size:13px}.row.act2 .n{color:var(--pe)}.row small{color:var(--mut);font:500 10px var(--lab);text-transform:uppercase;letter-spacing:.06em}
+.row .d{margin-left:auto;font:700 12px var(--lab);color:var(--tx2)}
+.stp{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.stp i{font:normal 700 14px/1 var(--lab);width:28px;height:26px;display:grid;place-items:center;background:var(--over);color:var(--tx2)}
+.stp i.v{background:#0a1020;color:var(--tx);width:30px}
+.radar{display:grid;place-items:center;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <div class="id">
+      <div class="face">G</div>
+      <div>
+        <div class="name">Gutris, O Nascido da Morte</div>
+        <div class="sub"><b>Berserker</b> · Guerreiro · Nível 2</div>
+      </div>
+      <div class="right"><div class="coin">¤ 1500</div><button class="kebab">⋯</button></div>
+    </div>
+    <div class="bars">
+      <div class="bar pv"><i>−</i><div class="trk pv"><u></u><span style="color:#ffe0dc">PV <small>32 / 45</small></span></div><i>+</i></div>
+      <div class="bar pe"><i>−</i><div class="trk pe"><u></u><span style="color:#d9fff9">PE <small>12 / 15</small></span></div><i>+</i></div>
+      <div class="bar fv"><i>−</i><div class="trk fv"><u></u><span style="color:#dcffe9">FV <small>14 / 24</small></span></div><i>+</i></div>
+    </div>
+    <div class="chips">
+      <span class="chip">Fichas <span class="pips"><u></u><u></u><u></u><u></u><u></u></span></span>
+      <span class="chip">Fome <span class="pips"><u class="off"></u><u class="off"></u><u class="off"></u></span></span>
+      <span class="chip ok">Reação disponível</span>
+      <span class="chip">+1d4 corpo a corpo · +1d10 Intimidação</span>
+    </div>
+  </div>
+
+  <div class="req">
+    <span class="lab" style="color:var(--amber)">Pedido do mestre</span>
+    <b>Furtividade</b><span>Furtividade + Impulso · DT 8</span>
+    <button>ROLAR</button>
+  </div>
+
+  <div class="acts">
+    <button class="act hot"><em><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="m5 14 4 4"/><path d="m7 17-3 3"/><path d="M3 19l2 2"/></svg></em>Atacar<small>Machado de duas lâminas</small></button>
+    <button class="act"><em><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></em>Defender<small>ou Aparar</small></button>
+    <button class="act"><em><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/></svg></em>Explorar<small>5 fichas</small></button>
+    <button class="act"><em><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></em>Descansar<small>Curto / Longo</small></button>
+    <button class="act"><em><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></em>Furtividade<small>Impulso</small></button>
+    <button class="act"><em><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></em>Equilíbrio<small>Vontade</small></button>
+  </div>
+
+  <div class="tabs"><button class="on">Ficha</button><button>Equipamento</button><button>Triunfos</button><button>Inspirações</button><button>Anotações</button></div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="lab">Atributos</div>
+      <div class="attrs">
+        <div class="at top"><span class="lab">Fúria</span><b>6</b><div class="dots"><u></u><u></u><u></u><u></u><u></u><u></u></div></div>
+        <div class="at"><span class="lab">Destino</span><b>2</b><div class="dots"><u></u><u></u><u class="off"></u><u class="off"></u><u class="off"></u><u class="off"></u></div></div>
+        <div class="at"><span class="lab">Espírito</span><b>4</b><div class="dots"><u></u><u></u><u></u><u></u><u class="off"></u><u class="off"></u></div></div>
+        <div class="at"><span class="lab">Impulso</span><b>4</b><div class="dots"><u></u><u></u><u></u><u></u><u class="off"></u><u class="off"></u></div></div>
+        <div class="at"><span class="lab">Estratégia</span><b>2</b><div class="dots"><u></u><u></u><u class="off"></u><u class="off"></u><u class="off"></u><u class="off"></u></div></div>
+      </div>
+      <div class="lab" style="margin-top:14px;display:flex;justify-content:space-between"><span>Domínios</span><span style="color:var(--pe)">6 / 8 pontos</span></div>
+      <div style="margin-top:8px">
+        <div class="row act2"><span class="n">Luta</span><small>Fúria</small><span class="d">3d10</span><span class="stp"><i>−</i><i class="v">2</i><i>+</i></span></div>
+        <div class="row act2"><span class="n">Intimidação</span><small>Fúria</small><span class="d">3d10 <b style="color:var(--gold);font-size:9px">+1d10</b></span><span class="stp"><i>−</i><i class="v">1</i><i>+</i></span></div>
+        <div class="row act2"><span class="n">Furtividade</span><small>Impulso</small><span class="d">2d10</span><span class="stp"><i>−</i><i class="v">1</i><i>+</i></span></div>
+        <div class="row"><span class="n">Iniciativa</span><small>Impulso</small><span class="d">1d10</span><span class="stp"><i>−</i><i class="v">0</i><i>+</i></span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:12px;align-content:start">
+      <div class="card">
+        <div class="lab">Perfil</div>
+        <div class="radar">
+          <svg width="230" height="190" viewBox="-115 -95 230 190">
+            <g fill="none" stroke="#534434" stroke-opacity=".55">
+              <polygon points="0,-70 66.6,-21.6 41.1,56.6 -41.1,56.6 -66.6,-21.6"/>
+              <polygon points="0,-46 43.8,-14.2 27,37.2 -27,37.2 -43.8,-14.2" stroke-dasharray="3 3"/>
+              <polygon points="0,-23 21.9,-7.1 13.5,18.6 -13.5,18.6 -21.9,-7.1" stroke-dasharray="3 3"/>
+            </g>
+            <polygon points="0,-70 22,-7 27,37 -27,37 -22,-7" fill="#ffc174" fill-opacity=".22" stroke="#ffc174" stroke-width="2"/>
+            <g fill="#ffc174"><circle cx="0" cy="-70" r="4.5"/><circle cx="22" cy="-7" r="3"/><circle cx="27" cy="37" r="3"/><circle cx="-27" cy="37" r="3"/><circle cx="-22" cy="-7" r="3"/></g>
+            <g font-family="Space Grotesk" font-size="9" font-weight="600" fill="#d8c3ad" text-anchor="middle">
+              <text x="0" y="-80">FÚRIA</text><text x="84" y="-18">DESTINO</text><text x="52" y="70">ESPÍRITO</text><text x="-52" y="70">IMPULSO</text><text x="-84" y="-18">ESTRATÉGIA</text>
+            </g>
+          </svg>
+        </div>
+        <div style="text-align:center;color:var(--mut);font-size:12px">Ponto forte: <b style="color:var(--gold)">Fúria</b></div>
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1"><div class="lab">Gênesis · Guerreiro</div><div style="font-size:12px;color:var(--tx2);margin-top:3px">+1d4 no acerto corpo a corpo</div></div>
+        <button class="chip" style="color:var(--gold);border-color:var(--gold2)">+ Habilidade</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

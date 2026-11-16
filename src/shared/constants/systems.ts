@@ -5,7 +5,7 @@
 // Usuários NÃO criam sistemas personalizados.
 // ────────────────────────────────────────────────────────
 
-export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada' | 'terra_devastada_adaptada' | 'vampiro'
+export type CampaignSystem = 'generic' | 'dnd5e' | 'altherium' | 'terra_devastada' | 'terra_devastada_adaptada' | 'vampiro' | 'daggerheart'
 
 export type SystemStatus = 'available' | 'preview' | 'coming-soon'
 
@@ -72,6 +72,14 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     status:      'available',
     icon:        '☣',
     variantOf:   'terra_devastada',
+  },
+  {
+    // Guardado no Painel de controle (recurso 'daggerheart').
+    id:          'daggerheart',
+    label:       'DaggerHeart',
+    description: 'Fantasia de ação do SRD 2.0 (Darrington Press): Duality Dice (2d12), Esperança e Medo, limiares de dano e cartas de domínio.',
+    status:      'available',
+    icon:        '⚄',
   },
   {
     // Guardado no Painel de controle (recurso 'vampiro'): só aparece na
