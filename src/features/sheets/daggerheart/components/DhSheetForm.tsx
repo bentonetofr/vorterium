@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../shared/components/TabIndicator'
 import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/services/diceService'
 import { getMyDiceSkin } from '../../../dice3d/diceSkinService'
@@ -9,7 +9,8 @@ import {
 } from '../constants/daggerheart'
 import { DH_ANCESTRIES, DH_COMMUNITIES } from '../catalog/ancestries'
 import { DH_ALL_ARMOR } from '../catalog/armor'
-import { DH_ALL_WEAPONS } from '../catalog/weapons'
+// DH_ALL_WEAPONS não usado diretamente (armas criadas manualmente)
+
 import { computeThresholds, describeRollOutcome, resolveDualityRoll } from '../rules/derive'
 import {
   addDhDomainCard, addDhExperience, addDhInventoryItem, addDhWeapon,
@@ -184,7 +185,7 @@ export function DhSheetForm({ full: initialFull, ownerName, onSave, saveError }:
 
       {/* Abas */}
       <div className="dh-tabs-wrapper">
-        <div className="dh-tabs" ref={tabsRef} role="tablist" aria-label="Seções da ficha">
+        <div className="dh-tabs" ref={tabsRef as React.RefObject<HTMLDivElement>} role="tablist" aria-label="Seções da ficha">
           {TABS.map((tab) => (
             <button
               key={tab.id} role="tab" type="button"
@@ -496,15 +497,10 @@ function DualityDicePanel({ sheet }: { sheet: DhCharacterSheet }) {
         label,
         skin,
         context: {
-          system:     'daggerheart',
-          sheet_id:   sheet.id,
-          character:  charName,
-          trait:      traitKey_,
-          difficulty,
-          hope_die:   hope,
-          fear_die:   fear,
-          outcome:    res.outcome,
-        } as unknown as Parameters<typeof recordRoll>[3]['context'],
+          system:    'daggerheart',
+          sheet_id:  sheet.id,
+          character: charName,
+        },
       })
 
       setResult({
@@ -718,10 +714,9 @@ const InventarioTab = memo(function InventarioTab({ ctx }: { ctx: FormCtx }) {
   async function addWeapon() {
     setBusy(true)
     try {
-      const catW = DH_ALL_WEAPONS[0]
       const w = await addDhWeapon(sheet.id, {
-        weapon_name: catW.name_pt, trait_key: catW.trait_key,
-        damage_die: catW.damage_die, damage_mod: catW.damage_mod,
+        weapon_name: 'Nova Arma', trait_key: 'strength',
+        damage_die: 6, damage_mod: 0,
         is_primary: true, is_equipped: true,
       })
       setWeapons((p) => [...p, w])
@@ -794,19 +789,18 @@ function WeaponRow({ weapon, setWeapons, onDelete }: {
   setWeapons: React.Dispatch<React.SetStateAction<DhWeapon[]>>
   onDelete: (id: string) => void
 }) {
-  const catW = DH_ALL_WEAPONS.find((w) => w.name_pt === weapon.weapon_name)
-
-  async function patch(update: Partial<DhWeapon>) {
-    setWeapons((p) => p.map((w) => w.id === weapon.id ? { ...w, ...update } : w))
-    await updateDhWeapon(weapon.id, update)
+  async function patch(key: keyof DhWeapon, value: DhWeapon[keyof DhWeapon]) {
+    setWeapons((p) => p.map((w) => w.id === weapon.id ? { ...w, [key]: value } : w))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await updateDhWeapon(weapon.id, { [key]: value === null ? undefined : value } as any)
   }
 
   return (
     <div className="dh-weapon-row">
       <input className="input dh-weapon-name" placeholder="Nome da arma" value={weapon.weapon_name}
-        onChange={(e) => void patch({ weapon_name: e.target.value })} />
+        onChange={(e) => void patch('weapon_name', e.target.value)} />
       <select className="input dh-weapon-trait" value={weapon.trait_key}
-        onChange={(e) => void patch({ trait_key: e.target.value as DhTraitKey })}>
+        onChange={(e) => void patch('trait_key', e.target.value as DhTraitKey)}>
         {TRAITS.map((t) => <option key={t.key} value={t.key}>{t.abbr}</option>)}
       </select>
       <span className="dh-weapon-dmg">
@@ -822,18 +816,19 @@ function ItemRow({ item, setInventory, onDelete }: {
   setInventory: React.Dispatch<React.SetStateAction<DhInventoryItem[]>>
   onDelete: (id: string) => void
 }) {
-  async function patch(update: Partial<DhInventoryItem>) {
-    setInventory((p) => p.map((i) => i.id === item.id ? { ...i, ...update } : i))
-    await updateDhInventoryItem(item.id, update)
+  async function patch(key: keyof DhInventoryItem, value: DhInventoryItem[keyof DhInventoryItem]) {
+    setInventory((p) => p.map((i) => i.id === item.id ? { ...i, [key]: value } : i))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await updateDhInventoryItem(item.id, { [key]: value === null ? undefined : value } as any)
   }
   return (
     <div className="dh-item-row">
       <input className="input dh-item-name" placeholder="Item" value={item.item_name}
-        onChange={(e) => void patch({ item_name: e.target.value })} />
+        onChange={(e) => void patch('item_name', e.target.value)} />
       <input className="input dh-item-qty" type="number" min={0} value={item.quantity}
-        onChange={(e) => void patch({ quantity: Math.max(0, parseInt(e.target.value) || 0) })} />
+        onChange={(e) => void patch('quantity', Math.max(0, parseInt(e.target.value) || 0))} />
       <input className="input dh-item-notes" placeholder="Obs." value={item.notes ?? ''}
-        onChange={(e) => void patch({ notes: e.target.value || null })} />
+        onChange={(e) => void patch('notes', e.target.value || null)} />
       <button type="button" className="dh-del-btn" onClick={() => void onDelete(item.id)} title="Remover">×</button>
     </div>
   )
