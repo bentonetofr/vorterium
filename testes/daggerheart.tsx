@@ -14,6 +14,7 @@ import { DhExtraTab } from '../src/features/sheets/daggerheart/components/DhExtr
 import { DhLevelTab } from '../src/features/sheets/daggerheart/components/DhLevelTab'
 import { DhPersonTab } from '../src/features/sheets/daggerheart/components/DhPersonTab'
 import { DhRestTab } from '../src/features/sheets/daggerheart/components/DhRestTab'
+import { DhDiceCard } from '../src/features/sheets/daggerheart/components/DhDiceCard'
 import { DhSheetMain } from '../src/features/sheets/daggerheart/components/DhSheetMain'
 
 function exemplo(): DhSheetData {
@@ -35,6 +36,7 @@ function Demo() {
   const [criar, setCriar] = useState(false)
   const update = (fn: (x: DhSheetData) => DhSheetData) => setD(fn)
   const target = { campaignId: 'x', sheetId: 'y', character: d.name }
+  if (new URLSearchParams(location.search).has('dados')) return <DhDiceCard campaignId="x" currentUserId="y" onClose={() => {}} />
   if (criar) return <div style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}><DhCreator initial={emptySheet()} onDone={(x) => { setD(x); setCriar(false) }} /></div>
   return (
     <div style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}>

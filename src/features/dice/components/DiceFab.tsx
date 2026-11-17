@@ -14,6 +14,7 @@ import { useFeature } from '../../control/siteFeatures'
 import { DND_FEATURE } from '../../sheets/dnd/constants/dnd'
 import { DndDiceCard } from '../../sheets/dnd/rolls/DndDiceCard'
 import { AltheriumDiceCard } from '../../sheets/altherium/components/AltheriumDiceCard'
+import { DhDiceCard } from '../../sheets/daggerheart/components/DhDiceCard'
 import { DieShapeIcon } from './DieShapeIcon'
 import { rollNote } from '../utils/rollNotes'
 import './DiceFab.css'
@@ -165,7 +166,8 @@ export function DiceFab() {
   // Altherium: o painel do canto ganha a aba "Meus dados" (os conjuntos de dados da conta).
   const altherium = campaign?.id === campaignId && campaign?.system === 'altherium'
   // O cartão 3D (palco, rolador e "Meus dados") vale pro D&D e pro Altherium.
-  const card3d = dnd || altherium
+  const daggerheart = campaign?.id === campaignId && campaign?.system === 'daggerheart'
+  const card3d = dnd || altherium || daggerheart
   useEffect(() => { if (adapted) loadTdaFonts() }, [adapted])
 
   // ── Notificação de resultado ──
@@ -298,6 +300,12 @@ export function DiceFab() {
       {altherium && (
         <Presence show={isOpen} exitMs={180}>
           {() => <AltheriumDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} />}
+        </Presence>
+      )}
+
+      {daggerheart && (
+        <Presence show={isOpen} exitMs={180}>
+          {() => <DhDiceCard campaignId={campaignId} currentUserId={user.id} onClose={close} />}
         </Presence>
       )}
 
