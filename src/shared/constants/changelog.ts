@@ -16,6 +16,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.44',
+    date:    '2026-11-16',
+    title:   'DaggerHeart chegou: campanhas e ficha do Livro Básico',
+    items: [
+      'Novo sistema ao criar campanha: DaggerHeart, com as 9 classes do Livro Básico (Bardo, Druida, Feiticeiro, Guardião, Guerreiro, Ladino, Mago, Patrulheiro e Serafim), 2 subclasses cada, 18 ancestralidades (com opção mista) e 9 comunidades.',
+      'A ficha segue o desenho do livro: Evasão e Armadura em escudos, seis atributos, limiares de dano Menor, Maior e Grave, casas de Vida, Fadiga e Esperança, Ouro, armas ativas com Proficiência, armadura e inventário. Os números (limiares, Evasão, Armadura, espaços) se calculam sozinhos.',
+      'As 189 cartas de domínio (9 domínios, níveis 1 a 10) em português, com a mão de até 5 cartas, a reserva e o custo de troca. Armas e armaduras dos 4 patamares para escolher, ou crie a sua.',
+      'Assistente de criação em 7 passos e aba Subir de nível até o 10: conquistas de cada patamar, quadro de escolhas, subclasse melhorada e multiclasse.',
+      'Testes com os Dados de Dualidade (2d12, Esperança e Medo, crítico), gastando Esperança em Experiências, com vantagem e desvantagem, e dano com Proficiência. Tudo aparece no histórico de rolagens da mesa.',
+      'Descansos curto e longo, Movimento de Morte, Forma de Fera do druida e Companheiro Animal do patrulheiro. O mestre vê e edita as fichas da mesa e cria fichas de NPC.',
+    ],
+  },
+  {
     version: '2.43',
     date:    '2026-11-14',
     title:   'Ficha de D&D mais organizada: origem das habilidades, inventário em ordem e descrições menores',
