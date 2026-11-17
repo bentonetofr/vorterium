@@ -325,3 +325,14 @@ textarea.dh-inline:hover:not(:disabled), textarea.dh-inline:focus { border-color
 .dh-cards__bar, .dh-cards__bar strong, .dh-cards > .dh-check { color: var(--text-primary, #e8e6df); }
 .dh-cardgrid > .dh-empty, .dh-cards .dh-empty { color: var(--text-secondary, #a9a79f); }
 .dh-notice { color: var(--dh-ink); }
+
+/* palco 3D dos Dados de Dualidade */
+.dh-roll__stage { position: relative; display: block; width: 100%; height: 230px; margin: 8px 0; padding: 0; overflow: hidden; border: 2px solid var(--dh-ink); border-radius: 8px; background: #15121f; cursor: pointer; }
+.dh-roll__stage:disabled { cursor: default; }
+.dh-roll__canvas { position: absolute; inset: 0; }
+.dh-roll__simple { position: absolute; inset: 0; display: grid; place-items: center; font-size: 72px; font-weight: 800; color: #fff3d0; }
+.dh-roll__hint { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 4px 14px; border-radius: 6px; background: #000a; color: #f6e8c0; font-size: 13px; white-space: nowrap; }
+.dh-roll__legend { position: absolute; left: 10px; top: 8px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #e8e2f4; text-transform: uppercase; letter-spacing: 0.08em; }
+.dh-roll__legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+.dh-roll__legend .is-hope { background: #f0c24a; }
+.dh-roll__legend .is-fear { background: #8a5cd8; }

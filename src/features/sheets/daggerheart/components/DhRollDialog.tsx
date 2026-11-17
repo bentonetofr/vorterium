@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { damageFormula, experienceMod, flatDamageBonus, hopeSlots, proficiency } from '../model/derive'
 import { dualityEffects, dualityLabel, type DualityResult } from '../model/dice'
 import type { DhDamageType, DhSheetData } from '../model/types'
-import { rollDamage, rollDualityDice, type DamageResult, type DhRollTarget } from '../services/dhRolls'
+import { rollDamage, rollDualityStaged, type DamageResult, type DhRollTarget } from '../services/dhRolls'
+import { useDiceStage } from '../../dnd/rolls/useDiceStage'
+import { DH_HOPE_SKIN } from '../../../dice3d/skins'
+import type { StageDie } from '../../../dice3d/DiceStage'
 import { signed } from './DhUi'
 
 // ────────────────────────────────────────────────────────
@@ -41,6 +44,21 @@ export function DhRollDialog({ spec, data, update, target, onClose }: Props) {
   const [result, setResult] = useState<DualityResult | null>(null)
   const [damage, setDamage] = useState<DamageResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [hopeD20, setHopeD20] = useState(false)
+  const [spin, setSpin] = useState<number | null>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const { stage, simple } = useDiceStage(stageRef, 'stage')
+  useEffect(() => { if (stage && !busy && !result) void stage.idle('d12', DH_HOPE_SKIN) }, [stage, busy, result])
+
+  /** Anima os dados no palco 3D (ou, sem WebGL, um número girando) e só então mostra o resultado. */
+  async function play(dice: StageDie[], skin: string, last: number) {
+    if (stage) { await stage.roll(dice, { skin }); return }
+    await new Promise<void>((resolve) => {
+      const end = performance.now() + 900
+      const tick = () => { if (performance.now() < end) { setSpin(1 + Math.floor(Math.random() * 12)); requestAnimationFrame(tick) } else { setSpin(last); resolve() } }
+      tick()
+    })
+  }
 
   const hopeLeft = data.hope - used.length
   const expTotal = useMemo(() => used.reduce((n, id) => n + experienceMod(data, id), 0), [used, data])
@@ -57,13 +75,17 @@ export function DhRollDialog({ spec, data, update, target, onClose }: Props) {
     setDamage(null)
     try {
       const names = used.map((id) => data.experiences.find((e) => e.id === id)?.name).filter(Boolean)
-      const res = await rollDualityDice({
+      setResult(null)
+      const staged = await rollDualityStaged({
         ...target,
         label: `${spec.label}${names.length ? ` (${names.join(', ')})` : ''}`,
         modifier,
         difficulty: diff !== null && Number.isFinite(diff) ? diff : null,
         advantage: adv,
+        hopeSides: hopeD20 ? 20 : 12,
       })
+      await play(staged.dice, staged.skin, staged.result.hope)
+      const res = staged.result
       setResult(res)
       const fx = reaction ? { hope: 0, clearStress: 0, gmFear: 0 } : dualityEffects(res)
       update((d) => ({
@@ -84,14 +106,16 @@ export function DhRollDialog({ spec, data, update, target, onClose }: Props) {
     setBusy(true)
     setError(null)
     try {
-      setDamage(await rollDamage({
+      const dmg = await rollDamage({
         ...target,
         label: `Dano: ${spec.attack.weaponName}`,
         dice: spec.attack.dice,
         proficiency: proficiency(data),
         extra: flatDamageBonus(data, spec.attack.damageType),
         critical: result.kind === 'critico',
-      }))
+      })
+      await play(dmg.stage, dmg.skin, dmg.total)
+      setDamage(dmg)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível rolar o dano.')
     } finally {
@@ -138,11 +162,15 @@ export function DhRollDialog({ spec, data, update, target, onClose }: Props) {
           <label>Dificuldade
             <input type="number" value={difficulty} placeholder="—" onChange={(e) => setDifficulty(e.target.value)} />
           </label>
+          <label className="dh-check"><input type="checkbox" checked={hopeD20} onChange={(e) => setHopeD20(e.target.checked)} /> Esperança em d20</label>
           <label className="dh-check"><input type="checkbox" checked={reaction} onChange={(e) => setReaction(e.target.checked)} /> Teste de reação</label>
         </div>
 
-        <button type="button" className="btn btn-primary dh-roll__go" onClick={() => void roll()} disabled={busy}>
-          {busy ? 'Rolando…' : 'Rolar os Dados de Dualidade'}
+        <button type="button" className="dh-roll__stage" onClick={() => { if (!busy) void roll() }} disabled={busy} aria-label="Rolar os Dados de Dualidade">
+          <div ref={stageRef} className="dh-roll__canvas" aria-hidden="true" />
+          {simple && <span className="dh-roll__simple" aria-hidden="true">{spin ?? '2d12'}</span>}
+          {!busy && !result && <span className="dh-roll__hint">Clique nos dados para rolar</span>}
+          <span className="dh-roll__legend" aria-hidden="true"><i className="is-hope" />Esperança<i className="is-fear" />Medo</span>
         </button>
 
         {error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>}

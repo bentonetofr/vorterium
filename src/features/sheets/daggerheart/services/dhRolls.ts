@@ -2,6 +2,9 @@ import { parseDiceFormula, recordRoll, rollParsedFormula } from '../../../dice/s
 import { getMyDiceSkin } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { duality, dualityLabel, rollDie, type DualityResult } from '../model/dice'
+import { DH_FEAR_SKIN, DH_HOPE_SKIN } from '../../../dice3d/skins'
+import type { StageDie } from '../../../dice3d/DiceStage'
+import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 
 // ────────────────────────────────────────────────────────
 // Rolagens do DaggerHeart na mesa: os Dados de Dualidade (2d12: o primeiro é o Dado de Esperança, o segundo o de Medo)
@@ -23,7 +26,18 @@ export interface DualityArgs extends DhRollTarget {
   hopeSides?: number
 }
 
+export interface DualityRolled {
+  result: DualityResult
+  /** Os dados para o palco 3D: Esperança (dourado), Medo (roxo) e, se houver, o d6 de vantagem ou desvantagem. */
+  dice: StageDie[]
+  skin: string
+}
+
 export async function rollDualityDice(a: DualityArgs): Promise<DualityResult> {
+  return (await rollDualityStaged(a)).result
+}
+
+export async function rollDualityStaged(a: DualityArgs): Promise<DualityRolled> {
   const skin = await getMyDiceSkin().catch(() => DEFAULT_SKIN)
   const rolled = rollParsedFormula(parseDiceFormula('2d12'))
   const first = rolled.breakdown[0]
@@ -42,7 +56,12 @@ export async function rollDualityDice(a: DualityArgs): Promise<DualityResult> {
     skin,
     context: { system: 'daggerheart', kind: 'custom', sheet_id: a.sheetId, character: a.character, dc: a.difficulty ?? null },
   })
-  return res
+  const dice: StageDie[] = [
+    { kind: a.hopeSides === 20 ? 'd20' : 'd12', value: hope, skin: DH_HOPE_SKIN },
+    { kind: 'd12', value: fear, skin: DH_FEAR_SKIN },
+  ]
+  if (a.advantage) dice.push({ kind: 'd6', value: advDie, skin })
+  return { result: res, dice, skin }
 }
 
 export interface DamageArgs extends DhRollTarget {
@@ -59,6 +78,9 @@ export interface DamageResult {
   total: number
   formula: string
   dice: number[]
+  /** Dados para o palco 3D. */
+  stage: StageDie[]
+  skin: string
 }
 
 export async function rollDamage(a: DamageArgs): Promise<DamageResult> {
@@ -79,7 +101,7 @@ export async function rollDamage(a: DamageArgs): Promise<DamageResult> {
     skin,
     context: { system: 'daggerheart', kind: 'damage', sheet_id: a.sheetId, character: a.character },
   })
-  return { total: rolled.total, formula, dice }
+  return { total: rolled.total, formula, dice, stage: stageDiceFor(rolled.breakdown, skin), skin }
 }
 
 /** Rolagem livre de uma fórmula (Dado de Inspiração, Dados de Oração, efeitos de cartas…). */
