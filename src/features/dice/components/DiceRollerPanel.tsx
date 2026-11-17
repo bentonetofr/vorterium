@@ -9,6 +9,8 @@ import {
 import { formatRelativeTime, useRecentRolls } from '../useRecentRolls'
 import { useCurrentCampaign } from '../../campaigns/CurrentCampaignContext'
 import { isTerraDevastadaFamily } from '../../../shared/constants/systems'
+import { rollDualityStaged } from '../../sheets/daggerheart/services/dhRolls'
+import { dualityLabel, type DualityResult } from '../../sheets/daggerheart/model/dice'
 import type { DiceRoll } from '../../../shared/types'
 import { D3_NOTE, rollNote } from '../utils/rollNotes'
 import './DiceRollerPanel.css'
@@ -51,12 +53,34 @@ function signStr(n: number): string {
 
 const EXAMPLE_FORMULAS = ['2d6+3', '2#d20', '2@d20', '1#d3+4']
 
+/** DaggerHeart: dados da rolagem rápida (sem d2, d3 e d100) e exemplos de fórmula. */
+const DH_QUICK = ['1d4', '1d6', '1d8', '1d10', '1d12', '1d20']
+const DH_EXAMPLES = ['2d8+3', '3d6+2', '1d20', '1d12+4']
+
+/** Os dois dados de uma rolagem de Dualidade gravada (Esperança e Medo), ou null se não for uma. */
+function dualityDice(roll: DiceRoll): { hope: number; fear: number; total: number | null } | null {
+  if (roll.roll_context?.system !== 'daggerheart' || roll.formula !== '2d12') return null
+  const t = roll.roll_breakdown?.[0]
+  const r = t && 'results' in t ? (t.results as number[]) : null
+  if (!r || r.length < 2) return null
+  const m = roll.roll_label?.match(/= (-?\d+) ·/)
+  return { hope: r[0], fear: r[1], total: m ? Number(m[1]) : null }
+}
+
 const EVENS_POOLS = Array.from({ length: EVENS_MAX_DICE }, (_, i) => i + 1)
 
 export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRoll }: DiceRollerPanelProps) {
   // Terra Devastada rola testes de pares — atalho de 1d a 6d no topo.
   const { campaign } = useCurrentCampaign()
   const isTerraDevastada = campaign?.id === campaignId && isTerraDevastadaFamily(campaign.system)
+  const isDh = campaign?.id === campaignId && campaign.system === 'daggerheart'
+
+  // ── Dualidade (DaggerHeart) ──
+  const [dhMod, setDhMod] = useState(0)
+  const [dhAdv, setDhAdv] = useState<'vantagem' | 'desvantagem' | null>(null)
+  const [dhD20, setDhD20] = useState(false)
+  const [dhDiff, setDhDiff] = useState('')
+  const [dhResult, setDhResult] = useState<DualityResult | null>(null)
 
   // ── Rolagem ──
   const [rolling, setRolling]     = useState(false)
@@ -73,6 +97,22 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
   // ── Histórico (carrega e recebe as rolagens dos outros ao vivo) ──
   const { history, loading: histLoading, refreshing: histRefreshing, error: histError, reload: loadHistory } =
     useRecentRolls(campaignId, currentUserId, RECENT_ROLLS_LIMIT)
+
+  async function rollDh() {
+    setRollError(null); setRolling(true)
+    try {
+      const diff = dhDiff.trim() === '' ? null : Number(dhDiff)
+      const staged = await rollDualityStaged({
+        campaignId, sheetId: null, character: '', label: 'Dualidade', modifier: dhMod,
+        advantage: dhAdv, hopeSides: dhD20 ? 20 : 12, difficulty: diff !== null && Number.isFinite(diff) ? diff : null,
+      })
+      setDhResult(staged.result)
+      onRoll(staged.roll)
+      await loadHistory(true)
+    } catch (err) {
+      setRollError(err instanceof Error ? err.message : 'Não foi possível registrar a rolagem.')
+    } finally { setRolling(false) }
+  }
 
   // ── Executar rolagem ──
   async function executeRoll(formula: string, evensPool?: number) {
@@ -153,6 +193,44 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
         Rolagem privada
       </label>
 
+      {/* ── Dados de Dualidade (DaggerHeart) ── */}
+      {isDh && (
+        <div className="dice-section dh-duality">
+          <h4 className="dice-section__title">Dados de Dualidade</h4>
+          <div className="dh-duality__row">
+            <span className="dh-duality__dice" aria-hidden="true"><i className="is-hope">12</i><i className="is-fear">12</i></span>
+            <label>Modificador
+              <span className="dh-duality__step">
+                <button type="button" onClick={() => setDhMod((n) => Math.max(-5, n - 1))} aria-label="Diminuir o modificador">−</button>
+                <output>{signStr(dhMod)}</output>
+                <button type="button" onClick={() => setDhMod((n) => Math.min(12, n + 1))} aria-label="Aumentar o modificador">+</button>
+              </span>
+            </label>
+            <label>Dificuldade
+              <input type="number" inputMode="numeric" value={dhDiff} placeholder="—" onChange={(e) => setDhDiff(e.target.value)} />
+            </label>
+          </div>
+          <div className="dh-duality__row">
+            <span className="dh-duality__seg" role="group" aria-label="Vantagem ou desvantagem">
+              <button type="button" className={dhAdv === 'vantagem' ? 'is-on' : ''} onClick={() => setDhAdv(dhAdv === 'vantagem' ? null : 'vantagem')}>Vantagem</button>
+              <button type="button" className={dhAdv === 'desvantagem' ? 'is-on' : ''} onClick={() => setDhAdv(dhAdv === 'desvantagem' ? null : 'desvantagem')}>Desvantagem</button>
+            </span>
+            <label className="dh-duality__check"><input type="checkbox" checked={dhD20} onChange={(e) => setDhD20(e.target.checked)} /> Esperança em d20</label>
+          </div>
+          <button type="button" className="btn btn-primary dh-duality__go" onClick={() => void rollDh()} disabled={rolling}>
+            {rolling ? 'Rolando…' : 'Rolar Dualidade'}
+          </button>
+          {dhResult && (
+            <div className={`dh-duality__result dh-duality__result--${dhResult.kind}`} role="status">
+              <span className="dh-duality__chips"><i className="is-hope">{dhResult.hope}</i><i className="is-fear">{dhResult.fear}</i>{dhResult.advantageDie > 0 && <i className="is-adv">{dhResult.advantage === 'vantagem' ? '+' : '−'}{dhResult.advantageDie}</i>}</span>
+              <strong>{dhResult.total}</strong>
+              <span>{dualityLabel(dhResult)}</span>
+            </div>
+          )}
+          <p className="dice-custom__examples-label">Esperança maior: você ganha Esperança. Medo maior: o mestre ganha Medo. Dados iguais: sucesso crítico.</p>
+        </div>
+      )}
+
       {/* ── Teste de pares (Terra Devastada) ── */}
       {isTerraDevastada && (
         <div className="dice-section">
@@ -178,7 +256,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
       <div className="dice-section">
         <h4 className="dice-section__title">Rolagem rápida</h4>
         <div className="quick-roll-btns" role="group" aria-label="Rolagem rápida">
-          {QUICK_FORMULAS.map((f) => (
+          {(isDh ? DH_QUICK : QUICK_FORMULAS).map((f) => (
             <button
               key={f}
               className="quick-roll-btn"
@@ -227,7 +305,7 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
 
           <div className="dice-custom__examples">
             <span className="dice-custom__examples-label">Exemplos:</span>
-            {EXAMPLE_FORMULAS.map((f) => (
+            {(isDh ? DH_EXAMPLES : EXAMPLE_FORMULAS).map((f) => (
               <button
                 key={f}
                 type="button"
@@ -313,16 +391,27 @@ export function DiceRollerPanel({ campaignId, currentUserId, onRoll, onRequestRo
                           <span className="dice-history__private-badge" title="Rolagem privada" aria-label="Rolagem privada">🔒</span>
                         )}
                       </span>
-                      <span className="dice-history__formula">
-                        {roll.formula ?? roll.die_type}
-                      </span>
-                      <span className="dice-history__result">{roll.result}</span>
+                      {(() => {
+                        const dd = dualityDice(roll)
+                        return dd ? (
+                          <>
+                            <span className="dice-history__formula dh-duality__chips"><i className="is-hope">{dd.hope}</i><i className="is-fear">{dd.fear}</i></span>
+                            <span className="dice-history__result">{dd.total ?? roll.result}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="dice-history__formula">{roll.formula ?? roll.die_type}</span>
+                            <span className="dice-history__result">{roll.result}</span>
+                          </>
+                        )
+                      })()}
                       <span className="dice-history__time">
                         {formatRelativeTime(roll.created_at)}
                       </span>
                     </div>
 
                     {rollNote(roll) && <p className="dice-history__note">{rollNote(roll)}</p>}
+                    {roll.roll_context?.system === 'daggerheart' && roll.roll_label && <p className="dice-history__note">{roll.roll_label}</p>}
 
                     {hasBreakdown && (
                       <div className="dice-history__row-detail">

@@ -359,3 +359,29 @@
 
 /* observação que acompanha certas rolagens (o 1d3) */
 .dice-history__note { margin: 2px 0 0; font-size: var(--text-xs); font-style: italic; color: var(--accent-bright); }
+
+/* ── DaggerHeart: Dados de Dualidade ── */
+.dh-duality__row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 10px; }
+.dh-duality__row label { display: flex; align-items: center; gap: 8px; font-size: var(--text-sm, 13px); color: var(--text-secondary); }
+.dh-duality__row input[type='number'] { width: 70px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border-base); background: rgba(0, 0, 0, 0.25); color: var(--text-primary); }
+.dh-duality__dice { display: inline-flex; gap: 6px; }
+.dh-duality__dice i, .dh-duality__chips i { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 7px; font-style: normal; font-weight: 800; font-size: 13px; border: 2px solid transparent; }
+.dh-duality__dice .is-hope, .dh-duality__chips .is-hope { background: #f0c24a; color: #1d1604; border-color: #7b5f12; }
+.dh-duality__dice .is-fear, .dh-duality__chips .is-fear { background: #6c4fa3; color: #fff; border-color: #3b2a63; }
+.dh-duality__chips .is-adv { background: #2f4a33; color: #dff3d8; border-color: #4b7f52; }
+.dh-duality__chips { display: inline-flex; gap: 4px; }
+.dh-duality__step { display: inline-flex; align-items: center; border: 1px solid var(--border-base); border-radius: 8px; overflow: hidden; }
+.dh-duality__step button { width: 28px; height: 28px; background: none; border: 0; color: var(--text-primary); font-size: 16px; cursor: pointer; }
+.dh-duality__step output { min-width: 34px; text-align: center; font-weight: 800; color: var(--text-primary); }
+.dh-duality__seg { display: inline-flex; border: 1px solid var(--border-base); border-radius: 8px; overflow: hidden; }
+.dh-duality__seg button { background: none; border: 0; border-right: 1px solid var(--border-base); padding: 5px 12px; color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer; }
+.dh-duality__seg button:last-child { border-right: 0; }
+.dh-duality__seg button.is-on { background: var(--accent, #ffb86b); color: #1a1208; font-weight: 700; }
+.dh-duality__check { cursor: pointer; }
+.dh-duality__go { width: 100%; }
+.dh-duality__result { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 10px; margin-top: 10px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-base); background: rgba(0, 0, 0, 0.25); }
+.dh-duality__result strong { font-size: 26px; color: var(--text-primary); }
+.dh-duality__result span:last-child { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 12px; color: var(--text-secondary); }
+.dh-duality__result--esperanca { border-color: #c9a032; }
+.dh-duality__result--medo { border-color: #8a5cd8; }
+.dh-duality__result--critico { border-color: #f0c24a; background: rgba(240, 194, 74, 0.14); }

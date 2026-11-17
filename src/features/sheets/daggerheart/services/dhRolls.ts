@@ -3,6 +3,7 @@ import { getMyDiceSkin } from '../../../dice3d/diceSkinService'
 import { DEFAULT_SKIN } from '../../../dice3d/skins'
 import { duality, dualityLabel, rollDie, type DualityResult } from '../model/dice'
 import { DH_FEAR_SKIN, DH_HOPE_SKIN } from '../../../dice3d/skins'
+import type { DiceRoll } from '../../../../shared/types'
 import type { StageDie } from '../../../dice3d/DiceStage'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 
@@ -13,7 +14,8 @@ import { stageDiceFor } from '../../dnd/rolls/diceKinds'
 
 export interface DhRollTarget {
   campaignId: string
-  sheetId: string
+  /** Sem ficha (rolador de dados do site), vai vazio. */
+  sheetId: string | null
   character: string
 }
 
@@ -27,6 +29,7 @@ export interface DualityArgs extends DhRollTarget {
 }
 
 export interface DualityRolled {
+  roll: DiceRoll
   result: DualityResult
   /** Os dados para o palco 3D: Esperança (dourado), Medo (roxo) e, se houver, o d6 de vantagem ou desvantagem. */
   dice: StageDie[]
@@ -51,17 +54,17 @@ export async function rollDualityStaged(a: DualityArgs): Promise<DualityRolled> 
   const sign = a.modifier >= 0 ? `+${a.modifier}` : `${a.modifier}`
   const adv = a.advantage ? ` ${a.advantage === 'vantagem' ? '+' : '−'}d6(${advDie})` : ''
   const label = `${a.label}: ${hope}+${fear} ${sign}${adv} = ${res.total} · ${dualityLabel(res)}`
-  await recordRoll(a.campaignId, rolled, false, {
+  const roll = await recordRoll(a.campaignId, rolled, false, {
     label,
     skin,
-    context: { system: 'daggerheart', kind: 'custom', sheet_id: a.sheetId, character: a.character, dc: a.difficulty ?? null },
+    context: { system: 'daggerheart', kind: 'custom', ...(a.sheetId ? { sheet_id: a.sheetId } : {}), character: a.character, dc: a.difficulty ?? null },
   })
   const dice: StageDie[] = [
     { kind: a.hopeSides === 20 ? 'd20' : 'd12', value: hope, skin: DH_HOPE_SKIN },
     { kind: 'd12', value: fear, skin: DH_FEAR_SKIN },
   ]
   if (a.advantage) dice.push({ kind: 'd6', value: advDie, skin })
-  return { result: res, dice, skin }
+  return { roll, result: res, dice, skin }
 }
 
 export interface DamageArgs extends DhRollTarget {
@@ -99,7 +102,7 @@ export async function rollDamage(a: DamageArgs): Promise<DamageResult> {
   await recordRoll(a.campaignId, rolled, false, {
     label: `${a.label}${a.critical ? ' (crítico)' : ''}: ${formula} = ${rolled.total}`,
     skin,
-    context: { system: 'daggerheart', kind: 'damage', sheet_id: a.sheetId, character: a.character },
+    context: { system: 'daggerheart', kind: 'damage', sheet_id: a.sheetId ?? undefined, character: a.character },
   })
   return { total: rolled.total, formula, dice, stage: stageDiceFor(rolled.breakdown, skin), skin }
 }
@@ -111,7 +114,7 @@ export async function rollFree(a: DhRollTarget & { label: string; formula: strin
   await recordRoll(a.campaignId, rolled, false, {
     label: `${a.label}: ${a.formula} = ${rolled.total}`,
     skin,
-    context: { system: 'daggerheart', kind: 'custom', sheet_id: a.sheetId, character: a.character },
+    context: { system: 'daggerheart', kind: 'custom', sheet_id: a.sheetId ?? undefined, character: a.character },
   })
   return rolled.total
 }
