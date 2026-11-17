@@ -77,7 +77,7 @@ export const SYSTEMS_CATALOG: SystemEntry[] = [
     // Guardado no Painel de controle (recurso 'daggerheart').
     id:          'daggerheart',
     label:       'DaggerHeart',
-    description: 'Fantasia de ação do SRD 2.0 (Darrington Press): Duality Dice (2d12), Esperança e Medo, limiares de dano e cartas de domínio.',
+    description: 'Fantasia heroica do Livro Básico (Darrington Press): nove classes, domínios e cartas, Dados de Dualidade (2d12) com Esperança e Medo, limiares de dano e ficha no desenho do livro.',
     status:      'available',
     icon:        '⚄',
   },

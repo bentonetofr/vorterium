@@ -1,31 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useFeature } from '../../../control/siteFeatures'
-import { DH_FEATURE, DH_CLASS_LABELS } from '../constants/daggerheart'
-import {
-  createMyDhSheet,
-  getDhSheetsByCampaign,
-  getMyFullDhSheet,
-  updateDhSheet,
-} from '../services/dhSheetService'
-import type { DhCharacterSheet, DhFullSheet, DhSheetUpdateInput } from '../rules/types'
-import { DhSheetForm } from './DhSheetForm'
+import { useCallback, useEffect, useState } from 'react'
 import { Loader } from '../../../../shared/components/Loader'
-import '../../components/SheetPanel.css'
-import './DaggerheartSheet.css'
+import { useFeature } from '../../../control/siteFeatures'
+import { dhClass } from '../catalog/classes'
+import { DH_FEATURE } from '../constants/daggerheart'
+import { hpSlots, stressSlots } from '../model/derive'
+import { getCampaignDhSheets, getOrCreateMyDhSheet, subscribeToCampaignDhSheets, type DhSheet as DhSheetRecord, type DhSheetWithProfile } from '../services/dhSheetService'
+import { DhSheet } from './DhSheet'
 
 // ────────────────────────────────────────────────────────
-// Painel de ficha DaggerHeart: jogador edita a sua; mestre vê cards da mesa.
+// Aba Ficha das campanhas de DaggerHeart: o jogador edita a sua; o mestre vê as da mesa e abre qualquer uma.
 // ────────────────────────────────────────────────────────
 
-interface DhSheetPanelProps {
+interface Props {
   campaignId: string
-  userRole:   'master' | 'player'
+  userRole: 'master' | 'player'
 }
 
-export function DhSheetPanel({ campaignId, userRole }: DhSheetPanelProps) {
+export function DhSheetPanel({ campaignId, userRole }: Props) {
   const feature = useFeature(DH_FEATURE)
   return (
-    <section className="sheet-panel">
+    <section className="sheet-panel dh-panel">
       <header className="sheet-panel__header">
         <div className="sheet-panel__title-row">
           <span className="sheet-panel__icon" aria-hidden="true">⚄</span>
@@ -35,175 +29,64 @@ export function DhSheetPanel({ campaignId, userRole }: DhSheetPanelProps) {
       <div className="sheet-panel__body">
         {!feature.visible
           ? <p className="sheet-empty">A ficha de DaggerHeart ainda não foi liberada. Volte em breve.</p>
-          : userRole === 'player'
-            ? <PlayerView campaignId={campaignId} />
-            : <MasterView campaignId={campaignId} />
-        }
+          : userRole === 'player' ? <PlayerView campaignId={campaignId} /> : <MasterView campaignId={campaignId} />}
       </div>
     </section>
   )
 }
 
-// ── Jogador ────────────────────────────────────────────
-
 function PlayerView({ campaignId }: { campaignId: string }) {
-  const [full, setFull]       = useState<DhFullSheet | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-
+  const [sheet, setSheet] = useState<DhSheetRecord | null>(null)
+  const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    ;(async () => {
-      try {
-        const existing = await getMyFullDhSheet(campaignId)
-        const result   = existing ?? await createMyDhSheet(campaignId)
-        if (!cancelled) { setFull(result); setError(null) }
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Não foi possível carregar a ficha.')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
+    let alive = true
+    setSheet(null)
+    getOrCreateMyDhSheet(campaignId)
+      .then((s) => { if (alive) { setSheet(s); setError(null) } })
+      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : 'Não foi possível carregar a ficha.') })
+    return () => { alive = false }
   }, [campaignId])
-
-  if (loading) return <div className="sheet-loading"><Loader small /></div>
-  if (error)   return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
-  if (!full)   return null
-  return (
-    <SheetEditor full={full} onSheetUpdated={(sheet) => setFull((prev) => prev ? { ...prev, sheet } : prev)} />
-  )
+  if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
+  if (!sheet) return <div className="sheet-loading"><Loader small /></div>
+  return <DhSheet key={sheet.id} sheet={sheet} canEdit />
 }
 
-// ── Mestre ─────────────────────────────────────────────
-
-type SheetWithName = DhCharacterSheet & { playerName?: string }
-
 function MasterView({ campaignId }: { campaignId: string }) {
-  const [sheets, setSheets]   = useState<SheetWithName[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-  const [editing, setEditing] = useState<SheetWithName | null>(null)
-  const formRef = useRef<HTMLDivElement>(null)
+  const [sheets, setSheets] = useState<DhSheetWithProfile[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!editing || !window.matchMedia('(max-width: 768px)').matches) return
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [editing?.id])
-
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
-    try {
-      setSheets(await getDhSheetsByCampaign(campaignId))
-      setError(null)
-    } catch (err) {
-      if (!silent) setError(err instanceof Error ? err.message : 'Não foi possível carregar as fichas.')
-    } finally {
-      if (!silent) setLoading(false)
-    }
+  const load = useCallback(async () => {
+    try { setSheets(await getCampaignDhSheets(campaignId)); setError(null) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar as fichas.') }
   }, [campaignId])
+  useEffect(() => { void load(); return subscribeToCampaignDhSheets(campaignId, () => { void load() }) }, [campaignId, load])
 
-  useEffect(() => { void load() }, [load])
-
-  function handleSheetUpdated(sheet: DhCharacterSheet) {
-    setSheets((prev) => prev.map((s) => s.id === sheet.id ? { ...s, ...sheet } : s))
-    setEditing((prev) => prev?.id === sheet.id ? { ...prev, ...sheet } : prev)
-  }
-
-  if (loading) return <div className="sheet-loading"><Loader small /></div>
-  if (error)   return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
+  if (error) return <div className="sheet-feedback sheet-feedback--error" role="alert">{error}</div>
+  if (!sheets) return <div className="sheet-loading"><Loader small /></div>
   if (sheets.length === 0) return <p className="sheet-empty">Nenhum jogador criou ficha de DaggerHeart ainda.</p>
+  const open = sheets.find((s) => s.id === openId) ?? null
 
   return (
     <div className="sheets-list-wrapper">
       <div className="sheets-cards anim-stagger">
         {sheets.map((s) => {
-          const hpPct = s.hp_max > 0 ? Math.round((s.hp_current / s.hp_max) * 100) : 0
-          const stressPct = s.stress_max > 0 ? Math.round((s.stress_current / s.stress_max) * 100) : 0
-          const cls = DH_CLASS_LABELS[s.class_key] ?? s.class_key
+          const cls = dhClass(s.data.classKey)
+          const hp = hpSlots(s.data)
+          const st = stressSlots(s.data)
           return (
-            <button
-              key={s.id} type="button"
-              className={`sheet-card ${editing?.id === s.id ? 'sheet-card--active' : ''}`}
-              onClick={() => setEditing(s)} aria-pressed={editing?.id === s.id}
-            >
+            <button key={s.id} type="button" className={`sheet-card ${openId === s.id ? 'sheet-card--active' : ''}`} onClick={() => setOpenId(s.id)} aria-pressed={openId === s.id}>
               <div className="sheet-card__top">
-                <span className="sheet-card__avatar">{(s.character_name ?? '?').charAt(0).toUpperCase()}</span>
-                <span className="sheet-card__player">{s.character_name ?? 'Sem nome'}</span>
+                <span className="sheet-card__avatar">{(s.data.name || s.profile?.display_name || '?').charAt(0).toUpperCase()}</span>
+                <span className="sheet-card__player">{s.data.name || 'Sem nome'}</span>
               </div>
-              <span className="sheet-card__char">{cls} · Nível {s.level}</span>
-              <div className="sheet-card__bars">
-                <DhCardBar sigla="PV" current={s.hp_current} max={s.hp_max} pct={hpPct} tone="vitality" />
-                <DhCardBar sigla="Estresse" current={s.stress_current} max={s.stress_max} pct={stressPct} tone="hunger" />
-              </div>
+              <span className="sheet-card__char">{cls ? `${cls.name} · Nível ${s.data.level}` : 'Sem classe'}{s.profile?.display_name ? ` · ${s.profile.display_name}` : ''}</span>
+              <div className="dh-minibars"><span>PV {hp - s.data.hpMarked}/{hp}</span><span>Fadiga {st - s.data.stressMarked}/{st}</span><span>Esperança {s.data.hope}</span></div>
             </button>
           )
         })}
       </div>
-
-      {editing ? (
-        <div className="sheets-list__form" ref={formRef}>
-          <SheetEditor
-            full={{ sheet: editing, experiences: [], cards: [], weapons: [], inventory: [] }}
-            ownerName={editing.character_name ?? 'Personagem'}
-            onSheetUpdated={handleSheetUpdated}
-          />
-        </div>
-      ) : (
-        <p className="sheet-empty sheet-empty--hint">Selecione um jogador acima para ver e editar a ficha.</p>
-      )}
-    </div>
-  )
-}
-
-// ── Editor ─────────────────────────────────────────────
-
-interface SheetEditorProps {
-  full:           DhFullSheet
-  ownerName?:     string
-  onSheetUpdated: (sheet: DhCharacterSheet) => void
-}
-
-function SheetEditor({ full, ownerName, onSheetUpdated }: SheetEditorProps) {
-  const [saveError, setSaveError] = useState<string | null>(null)
-
-  async function handleSave(patch: DhSheetUpdateInput) {
-    setSaveError(null)
-    try {
-      onSheetUpdated(await updateDhSheet(full.sheet.id, patch))
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Não foi possível salvar a ficha.')
-      throw err
-    }
-  }
-
-  return (
-    <DhSheetForm
-      key={full.sheet.id}
-      full={full}
-      ownerName={ownerName}
-      onSave={handleSave}
-      saveError={saveError}
-    />
-  )
-}
-
-// ── Barrinha de card ────────────────────────────────────
-
-function DhCardBar({ sigla, current, max, pct, tone }: {
-  sigla: string; current: number; max: number; pct: number; tone: string
-}) {
-  return (
-    <div className={`sheet-card__bar sheet-card__bar--${tone === 'hunger' ? 'vitality' : tone}`}
-      style={{ '--bar-color': tone === 'hunger' ? '#e6916e' : undefined } as React.CSSProperties}>
-      <div className="sheet-card__bar-top">
-        <span className="sheet-card__bar-sigla">{sigla}</span>
-        <span className="sheet-card__bar-values">{current} / {max}</span>
-      </div>
-      <div className="sheet-card__bar-track">
-        <div className="sheet-card__bar-fill" style={{ width: `${pct}%` }} />
-      </div>
+      {open ? <div className="sheets-list__form"><DhSheet key={open.id} sheet={open} canEdit playerName={open.profile?.display_name ?? undefined} /></div>
+        : <p className="sheet-empty sheet-empty--hint">Selecione um jogador acima para ver e editar a ficha.</p>}
     </div>
   )
 }

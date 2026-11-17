@@ -1,335 +1,92 @@
+import { supabase, uniqueChannel } from '../../../../shared/lib/supabase'
+import type { ProfilePublic } from '../../../../shared/types'
+import { emptySheet, normalizeSheet } from '../model/defaults'
+import type { DhSheetData, DhSheetRow } from '../model/types'
+
 // ────────────────────────────────────────────────────────
-// Serviço — Ficha DaggerHeart
-// CRUD completo para dh_character_sheets e tabelas filhas.
+// Ficha de DaggerHeart: a tabela dh_sheets (migration 20240238) guarda a ficha inteira numa coluna jsonb, uma linha por
+// jogador e campanha. A leitura sempre passa por `normalizeSheet`, então fichas incompletas ou antigas não quebram a tela.
 // ────────────────────────────────────────────────────────
 
-import { supabase } from '../../../../shared/lib/supabase'
-import { getDhClass } from '../catalog/classes'
-import type {
-  DhCharacterSheet,
-  DhDomainCard,
-  DhDomainCardInput,
-  DhExperience,
-  DhExperienceInput,
-  DhFullSheet,
-  DhInventoryItem,
-  DhInventoryItemInput,
-  DhSheetUpdateInput,
-  DhWeapon,
-  DhWeaponInput,
-  DhClassKey,
-} from '../rules/types'
-import { DH_HOPE_START, DH_STRESS_START } from '../constants/daggerheart'
+const TABLE = 'dh_sheets'
 
-// ── Leitura ───────────────────────────────────────────────
+export interface DhSheet {
+  id: string
+  campaign_id: string
+  user_id: string
+  data: DhSheetData
+  created_at: string
+  updated_at: string
+}
 
-export async function getMyDhSheet(
-  campaignId: string,
-): Promise<DhCharacterSheet | null> {
+export interface DhSheetWithProfile extends DhSheet {
+  profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
+}
+
+function fromRow(row: DhSheetRow): DhSheet {
+  return { ...row, data: normalizeSheet(row.data) }
+}
+
+export async function getMyDhSheet(campaignId: string): Promise<DhSheet | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuário não autenticado.')
-
-  const { data, error } = await supabase
-    .from('dh_character_sheets')
-    .select('*')
-    .eq('campaign_id', campaignId)
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (error) throw new Error('Não foi possível carregar a ficha.')
-  return data as DhCharacterSheet | null
+  const { data, error } = await supabase.from(TABLE).select('*').eq('campaign_id', campaignId).eq('user_id', user.id).maybeSingle()
+  if (error) throw new Error('Não foi possível carregar a ficha. Confira se a migration de DaggerHeart já rodou.')
+  return data ? fromRow(data as DhSheetRow) : null
 }
 
-export async function getDhSheetsByCampaign(
-  campaignId: string,
-): Promise<DhCharacterSheet[]> {
-  const { data, error } = await supabase
-    .from('dh_character_sheets')
-    .select('*')
-    .eq('campaign_id', campaignId)
-    .order('created_at')
-
-  if (error) throw new Error('Não foi possível carregar as fichas.')
-  return (data ?? []) as DhCharacterSheet[]
-}
-
-/** Carrega a ficha completa com todas as tabelas filhas. */
-export async function getMyFullDhSheet(
-  campaignId: string,
-): Promise<DhFullSheet | null> {
-  const sheet = await getMyDhSheet(campaignId)
-  if (!sheet) return null
-
-  const [expRes, cardsRes, weaponsRes, invRes] = await Promise.all([
-    supabase.from('dh_experiences').select('*').eq('sheet_id', sheet.id).order('sort_order'),
-    supabase.from('dh_domain_cards').select('*').eq('sheet_id', sheet.id),
-    supabase.from('dh_weapons').select('*').eq('sheet_id', sheet.id),
-    supabase.from('dh_inventory').select('*').eq('sheet_id', sheet.id).order('sort_order'),
-  ])
-
-  if (expRes.error)     throw new Error('Erro ao carregar experiências.')
-  if (cardsRes.error)   throw new Error('Erro ao carregar cartas de domínio.')
-  if (weaponsRes.error) throw new Error('Erro ao carregar armas.')
-  if (invRes.error)     throw new Error('Erro ao carregar inventário.')
-
-  return {
-    sheet,
-    experiences: (expRes.data ?? []) as DhExperience[],
-    cards:       (cardsRes.data ?? []) as DhDomainCard[],
-    weapons:     (weaponsRes.data ?? []) as DhWeapon[],
-    inventory:   (invRes.data ?? []) as DhInventoryItem[],
-  }
-}
-
-// ── Criação ───────────────────────────────────────────────
-
-/**
- * Cria uma ficha DaggerHeart vazia com os valores default da classe escolhida.
- * As duas experiências iniciais (modifier +2) são criadas junto.
- */
-export async function createMyDhSheet(
-  campaignId: string,
-  classKey:   DhClassKey = 'warrior',
-): Promise<DhFullSheet> {
+export async function getOrCreateMyDhSheet(campaignId: string): Promise<DhSheet> {
+  const existing = await getMyDhSheet(campaignId)
+  if (existing) return existing
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuário não autenticado.')
-
-  const cls = getDhClass(classKey)
-
-  const { data: sheet, error } = await supabase
-    .from('dh_character_sheets')
-    .insert({
-      campaign_id:    campaignId,
-      user_id:        user.id,
-      class_key:      classKey,
-      level:          1,
-      proficiency:    1,
-      evasion:        cls.evasion,
-      hp_current:     cls.hp_max,
-      hp_max:         cls.hp_max,
-      stress_current: 0,
-      stress_max:     DH_STRESS_START,
-      hope:           DH_HOPE_START,
-      spellcast_trait: cls.spellcast_trait ?? null,
-      armor_base_major:  3,
-      armor_base_severe: 7,
-      armor_score:       0,
-      armor_score_current: 0,
-      gold_handfuls: 1,
-    })
-    .select()
-    .single()
-
-  if (error || !sheet) throw new Error('Não foi possível criar a ficha.')
-
-  const typedSheet = sheet as DhCharacterSheet
-
-  // Cria as 2 experiências padrão (labels em branco para o jogador preencher)
-  const { data: exps, error: expErr } = await supabase
-    .from('dh_experiences')
-    .insert([
-      { sheet_id: typedSheet.id, label: '', modifier: 2, sort_order: 0 },
-      { sheet_id: typedSheet.id, label: '', modifier: 2, sort_order: 1 },
-    ])
-    .select()
-
-  if (expErr) throw new Error('Não foi possível criar as experiências iniciais.')
-
-  return {
-    sheet:       typedSheet,
-    experiences: (exps ?? []) as DhExperience[],
-    cards:       [],
-    weapons:     [],
-    inventory:   [],
-  }
+  const { data, error } = await supabase.from(TABLE).insert({ campaign_id: campaignId, user_id: user.id, data: emptySheet() }).select('*').single()
+  if (error) throw new Error('Não foi possível criar a ficha. Confira se a migration de DaggerHeart já rodou.')
+  return fromRow(data as DhSheetRow)
 }
 
-// ── Atualização da ficha principal ────────────────────────
+/** Grava a ficha inteira (a RLS deixa o dono e o mestre da campanha). */
+export async function saveDhSheet(sheetId: string, data: DhSheetData): Promise<DhSheet> {
+  const { data: row, error } = await supabase.from(TABLE).update({ data }).eq('id', sheetId).select('*').single()
+  if (error) throw new Error('Não foi possível salvar a ficha.')
+  return fromRow(row as DhSheetRow)
+}
 
-export async function updateDhSheet(
-  sheetId: string,
-  patch:   DhSheetUpdateInput,
-): Promise<DhCharacterSheet> {
+interface RawWithProfile extends DhSheetRow {
+  profiles: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
+}
+
+/** Todas as fichas da campanha, com o perfil de quem joga (visão do mestre). */
+export async function getCampaignDhSheets(campaignId: string): Promise<DhSheetWithProfile[]> {
   const { data, error } = await supabase
-    .from('dh_character_sheets')
-    .update(patch)
-    .eq('id', sheetId)
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível atualizar a ficha.')
-  return data as DhCharacterSheet
+    .from(TABLE)
+    .select('*, profiles!user_id(id, display_name, avatar_url)')
+    .eq('campaign_id', campaignId)
+    .order('created_at', { ascending: true })
+  if (error) throw new Error('Não foi possível carregar as fichas da campanha.')
+  return ((data ?? []) as unknown as RawWithProfile[]).map(({ profiles, ...row }) => ({ ...fromRow(row), profile: profiles }))
 }
 
-// ── Experiências ──────────────────────────────────────────
-
-export async function addDhExperience(
-  sheetId: string,
-  input:   DhExperienceInput,
-): Promise<DhExperience> {
-  const { data, error } = await supabase
-    .from('dh_experiences')
-    .insert({ sheet_id: sheetId, ...input })
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível adicionar a experiência.')
-  return data as DhExperience
+export async function deleteDhSheet(sheetId: string): Promise<void> {
+  const { error } = await supabase.from(TABLE).delete().eq('id', sheetId)
+  if (error) throw new Error('Não foi possível apagar a ficha.')
 }
 
-export async function updateDhExperience(
-  id:    string,
-  patch: Partial<DhExperienceInput>,
-): Promise<DhExperience> {
-  const { data, error } = await supabase
-    .from('dh_experiences')
-    .update(patch)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível atualizar a experiência.')
-  return data as DhExperience
-}
-
-export async function deleteDhExperience(id: string): Promise<void> {
-  const { error } = await supabase.from('dh_experiences').delete().eq('id', id)
-  if (error) throw new Error('Não foi possível remover a experiência.')
-}
-
-// ── Cartas de Domínio ─────────────────────────────────────
-
-export async function addDhDomainCard(
-  sheetId: string,
-  input:   DhDomainCardInput,
-): Promise<DhDomainCard> {
-  const { data, error } = await supabase
-    .from('dh_domain_cards')
-    .insert({ sheet_id: sheetId, is_equipped: true, card_level: 1, ...input })
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível adicionar a carta de domínio.')
-  return data as DhDomainCard
-}
-
-export async function updateDhDomainCard(
-  id:    string,
-  patch: Partial<DhDomainCardInput & { is_equipped: boolean }>,
-): Promise<DhDomainCard> {
-  const { data, error } = await supabase
-    .from('dh_domain_cards')
-    .update(patch)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível atualizar a carta de domínio.')
-  return data as DhDomainCard
-}
-
-export async function deleteDhDomainCard(id: string): Promise<void> {
-  const { error } = await supabase.from('dh_domain_cards').delete().eq('id', id)
-  if (error) throw new Error('Não foi possível remover a carta de domínio.')
-}
-
-// ── Armas ─────────────────────────────────────────────────
-
-export async function addDhWeapon(
-  sheetId: string,
-  input:   DhWeaponInput,
-): Promise<DhWeapon> {
-  const { data, error } = await supabase
-    .from('dh_weapons')
-    .insert({ sheet_id: sheetId, is_primary: true, is_equipped: true, damage_mod: 0, ...input })
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível adicionar a arma.')
-  return data as DhWeapon
-}
-
-export async function updateDhWeapon(
-  id:    string,
-  patch: Partial<DhWeaponInput & { is_primary: boolean; is_equipped: boolean }>,
-): Promise<DhWeapon> {
-  const { data, error } = await supabase
-    .from('dh_weapons')
-    .update(patch)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível atualizar a arma.')
-  return data as DhWeapon
-}
-
-export async function deleteDhWeapon(id: string): Promise<void> {
-  const { error } = await supabase.from('dh_weapons').delete().eq('id', id)
-  if (error) throw new Error('Não foi possível remover a arma.')
-}
-
-// ── Inventário ────────────────────────────────────────────
-
-export async function addDhInventoryItem(
-  sheetId: string,
-  input:   DhInventoryItemInput,
-): Promise<DhInventoryItem> {
-  const { data, error } = await supabase
-    .from('dh_inventory')
-    .insert({ sheet_id: sheetId, quantity: 1, ...input })
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível adicionar o item.')
-  return data as DhInventoryItem
-}
-
-export async function updateDhInventoryItem(
-  id:    string,
-  patch: Partial<DhInventoryItemInput>,
-): Promise<DhInventoryItem> {
-  const { data, error } = await supabase
-    .from('dh_inventory')
-    .update(patch)
-    .eq('id', id)
-    .select()
-    .single()
-
-  if (error || !data) throw new Error('Não foi possível atualizar o item.')
-  return data as DhInventoryItem
-}
-
-export async function deleteDhInventoryItem(id: string): Promise<void> {
-  const { error } = await supabase.from('dh_inventory').delete().eq('id', id)
-  if (error) throw new Error('Não foi possível remover o item.')
-}
-
-// ── Realtime ──────────────────────────────────────────────
-
-/**
- * Subscrição em tempo real para mudanças na ficha principal.
- * Retorna a função de cancelamento.
- */
-export function subscribeDhSheet(
-  sheetId:  string,
-  onChange: (sheet: DhCharacterSheet) => void,
-): () => void {
+/** Mudanças em uma ficha (tempo real, respeita a RLS): quem edita de outro lugar (o mestre, outra aba) aparece aqui. */
+export function subscribeToDhSheet(sheetId: string, onChange: (sheet: DhSheet) => void): () => void {
   const channel = supabase
-    .channel(`dh_sheet_${sheetId}`)
-    .on(
-      'postgres_changes',
-      {
-        event:  '*',
-        schema: 'public',
-        table:  'dh_character_sheets',
-        filter: `id=eq.${sheetId}`,
-      },
-      (payload) => {
-        if (payload.new) onChange(payload.new as DhCharacterSheet)
-      },
-    )
+    .channel(uniqueChannel(`dh_sheet:${sheetId}`))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: TABLE, filter: `id=eq.${sheetId}` },
+      (payload) => onChange(fromRow(payload.new as DhSheetRow)))
     .subscribe()
+  return () => { void supabase.removeChannel(channel) }
+}
 
-  return () => { supabase.removeChannel(channel) }
+/** Mudanças na lista de fichas da campanha (mestre). */
+export function subscribeToCampaignDhSheets(campaignId: string, onChange: () => void): () => void {
+  const channel = supabase
+    .channel(uniqueChannel(`dh_sheets:${campaignId}`))
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE, filter: `campaign_id=eq.${campaignId}` }, () => onChange())
+    .subscribe()
+  return () => { void supabase.removeChannel(channel) }
 }
