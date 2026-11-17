@@ -4,7 +4,9 @@ import { useFeature } from '../../../control/siteFeatures'
 import { dhClass } from '../catalog/classes'
 import { DH_FEATURE } from '../constants/daggerheart'
 import { hpSlots, stressSlots } from '../model/derive'
+import { normalizeSheet } from '../model/defaults'
 import { getCampaignDhSheets, getOrCreateMyDhSheet, subscribeToCampaignDhSheets, type DhSheet as DhSheetRecord, type DhSheetWithProfile } from '../services/dhSheetService'
+import { NpcSection } from '../../components/NpcSection'
 import { DhSheet } from './DhSheet'
 
 // ────────────────────────────────────────────────────────
@@ -30,6 +32,22 @@ export function DhSheetPanel({ campaignId, userRole }: Props) {
         {!feature.visible
           ? <p className="sheet-empty">A ficha de DaggerHeart ainda não foi liberada. Volte em breve.</p>
           : userRole === 'player' ? <PlayerView campaignId={campaignId} /> : <MasterView campaignId={campaignId} />}
+        {feature.visible && (
+          <NpcSection<DhSheetRecord>
+            table="dh_sheets"
+            campaignId={campaignId}
+            userRole={userRole}
+            summary={(s) => {
+              const d = normalizeSheet(s.data)
+              const cls = dhClass(d.classKey)
+              return {
+                line: cls ? `${cls.name} · Nível ${d.level}` : 'Sem classe',
+                bars: <div className="dh-minibars"><span>PV {hpSlots(d) - d.hpMarked}/{hpSlots(d)}</span><span>Fadiga {stressSlots(d) - d.stressMarked}/{stressSlots(d)}</span></div>,
+              }
+            }}
+            renderSheet={(s, { readOnly }) => <DhSheet key={s.id} sheet={{ ...s, data: normalizeSheet(s.data) }} canEdit={!readOnly} playerName="NPC" />}
+          />
+        )}
       </div>
     </section>
   )

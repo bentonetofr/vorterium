@@ -264,6 +264,9 @@ export interface DhSheetRow {
   id: string
   campaign_id: string
   user_id: string
+  character_name: string | null
+  is_npc?: boolean
+  npc_visible?: boolean
   data: DhSheetData
   created_at: string
   updated_at: string

@@ -14,6 +14,9 @@ export interface DhSheet {
   id: string
   campaign_id: string
   user_id: string
+  character_name: string | null
+  is_npc?: boolean
+  npc_visible?: boolean
   data: DhSheetData
   created_at: string
   updated_at: string
@@ -23,14 +26,14 @@ export interface DhSheetWithProfile extends DhSheet {
   profile: Pick<ProfilePublic, 'id' | 'display_name' | 'avatar_url'> | null
 }
 
-function fromRow(row: DhSheetRow): DhSheet {
+export function fromRow(row: DhSheetRow): DhSheet {
   return { ...row, data: normalizeSheet(row.data) }
 }
 
 export async function getMyDhSheet(campaignId: string): Promise<DhSheet | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Usuário não autenticado.')
-  const { data, error } = await supabase.from(TABLE).select('*').eq('campaign_id', campaignId).eq('user_id', user.id).maybeSingle()
+  const { data, error } = await supabase.from(TABLE).select('*').eq('campaign_id', campaignId).eq('user_id', user.id).eq('is_npc', false).maybeSingle()
   if (error) throw new Error('Não foi possível carregar a ficha. Confira se a migration de DaggerHeart já rodou.')
   return data ? fromRow(data as DhSheetRow) : null
 }
@@ -62,6 +65,7 @@ export async function getCampaignDhSheets(campaignId: string): Promise<DhSheetWi
     .from(TABLE)
     .select('*, profiles!user_id(id, display_name, avatar_url)')
     .eq('campaign_id', campaignId)
+    .eq('is_npc', false)
     .order('created_at', { ascending: true })
   if (error) throw new Error('Não foi possível carregar as fichas da campanha.')
   return ((data ?? []) as unknown as RawWithProfile[]).map(({ profiles, ...row }) => ({ ...fromRow(row), profile: profiles }))
