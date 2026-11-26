@@ -6,6 +6,7 @@ import { experienceMod, maxCardLevel, ownedDomains, tierOf } from '../model/deri
 import { achievementsAt, advanceChoices, domainPickCap, newExperienceId, pickCost, unmarkedTraits, validateAdvancement, type AdvanceChoice } from '../model/levelUp'
 import type { DhAdvancement, DhClassKey, DhDomain, DhPick, DhSheetData } from '../model/types'
 import { Banner, signed, DhSelect } from './DhUi'
+import { DhCardShowcase } from './DhCardShowcase'
 import { DhTraitRadar } from './DhTraitRadar'
 
 // ────────────────────────────────────────────────────────
@@ -274,8 +275,5 @@ function CardSelect({ data, level, extra, value, onChange, cap }: { data: DhShee
   const owned = new Set([...data.loadout, ...data.vault, ...extra.flatMap((p) => (p.opt === 'domain' ? [p.card] : []))])
   const doms = ownedDomains(probe)
   const list = DOMAIN_CARDS.filter((c) => doms.includes(c.domain) && c.level <= Math.min(cap, maxCardLevel(probe, c.domain)) && (!owned.has(c.id) || c.id === value))
-  return (
-    <DhSelect label="Carta de domínio" value={value} onChange={onChange}
-      options={[{ value: '', label: 'Escolha uma carta…' }, ...doms.flatMap((d) => list.filter((c) => c.domain === d).map((c) => ({ value: c.id, label: `${DOMAINS[d].name} · Nível ${c.level} · ${c.name}` })))]} />
-  )
+  return <DhCardShowcase cards={list} domains={doms} value={value} onChange={onChange} hint={`Aparecem as cartas dos seus domínios até o nível ${Math.min(cap, Math.max(0, ...doms.map((d) => maxCardLevel(probe, d))))}, que você ainda não tem.`} />
 }
