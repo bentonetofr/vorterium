@@ -22,7 +22,7 @@ const CAMERAS: { id: Camera; label: string }[] = [
   { id: 'livre', label: 'Câmera livre' },
 ]
 /** Mesmas reações que o motor aceita. */
-const EMOJIS = ['👏', '😮', '😂', '❤️', '🔥', '🎉', '😱', '🤔']
+const EMOJIS = ['👏', '😮', '😂', '❤︎', '🔥', '🎉', '😱', '🤔']
 const REACT_COOLDOWN_MS = 700
 
 /**

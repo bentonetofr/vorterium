@@ -1,3 +1,12 @@
+/* Emojis do site: sempre vazados e de uma cor só (a do texto), nunca coloridos. A fonte abaixo cobre as faixas de emoji com os
+   símbolos monocromáticos do sistema; font-variant-emoji reforça nos navegadores que já aceitam. */
+@font-face {
+  font-family: 'Vt Emoji Mono';
+  src: local('Segoe UI Symbol'), local('Apple Symbols'), local('Noto Sans Symbols 2'), local('Noto Sans Symbols'), local('DejaVu Sans');
+  unicode-range: U+231A-23FF, U+2600-27BF, U+2B50, U+2B55, U+1F000-1F2FF, U+1F300-1FAFF;
+}
+html { font-variant-emoji: text; }
+
 /* ═══════════════════════════════════════════════════════════
    VORTERIUM — Design System
    Azul-noite com um único acento dourado. Títulos em Fraunces (serifa
@@ -43,10 +52,10 @@
   --success:  #4d9e78;
 
   /* Tipografia */
-  --font-display: 'Fraunces', 'EB Garamond', Georgia, serif;
-  --font-body:    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-label:   'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono:    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Vt Emoji Mono', 'Fraunces', 'EB Garamond', Georgia, serif;
+  --font-body: 'Vt Emoji Mono',    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-label: 'Vt Emoji Mono',   'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Vt Emoji Mono',    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Ficha de Altherium: títulos e números grandes (--font-rune) e texto de
      sabor (--font-quill). Eram Cinzel e Almendra; hoje são as fontes do
      site, pra ficha não parecer de outro lugar. */

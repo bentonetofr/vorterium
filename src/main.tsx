@@ -4,10 +4,12 @@ import ReactDOM from 'react-dom/client'
 import { AppProviders } from './app/providers'
 import { installNoSpaceActivation } from './shared/lib/noSpaceActivation'
 import { installScrollReveal } from './shared/lib/scrollReveal'
+import { installMonoEmoji } from './shared/lib/monoEmoji'
 import './shared/lib/installApp' // ouve desde o começo o aviso de que dá pra instalar (ele só vem uma vez)
 
 installNoSpaceActivation()
 installScrollReveal()
+installMonoEmoji()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
