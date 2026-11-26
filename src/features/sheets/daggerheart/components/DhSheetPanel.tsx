@@ -7,6 +7,7 @@ import { hpSlots, stressSlots } from '../model/derive'
 import { normalizeSheet } from '../model/defaults'
 import { getCampaignDhSheets, getOrCreateMyDhSheet, subscribeToCampaignDhSheets, type DhSheet as DhSheetRecord, type DhSheetWithProfile } from '../services/dhSheetService'
 import { NpcSection } from '../../components/NpcSection'
+import { DhGmSection } from './DhGmSection'
 import { DhSheet } from './DhSheet'
 
 // ────────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ export function DhSheetPanel({ campaignId, userRole }: Props) {
         {!feature.visible
           ? <p className="sheet-empty">A ficha de DaggerHeart ainda não foi liberada. Volte em breve.</p>
           : userRole === 'player' ? <PlayerView campaignId={campaignId} /> : <MasterView campaignId={campaignId} />}
+        {feature.visible && <DhGmSection campaignId={campaignId} isMaster={userRole === 'master'} />}
         {feature.visible && (
           <NpcSection<DhSheetRecord>
             table="dh_sheets"

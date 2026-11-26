@@ -389,3 +389,75 @@ textarea.dh-inline:hover:not(:disabled), textarea.dh-inline:focus { border-color
 .dh-auto__grid label { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
 .dh-dialog h4 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
 .dh-dialog .dh-hint { color: var(--dh-ink-soft); font-size: 12.5px; }
+
+/* ── Carta no desenho do livro: escudo de nível com o símbolo do domínio, tipo, nome e custo de troca ── */
+.dh-card { padding: 0; overflow: hidden; border: 2px solid var(--dh-domain); border-top-width: 2px; border-radius: 10px; background: var(--dh-paper); }
+.dh-card > header { grid-template-columns: auto 1fr auto; gap: 10px; padding: 8px 10px 8px 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--dh-domain) 38%, var(--dh-paper)), var(--dh-paper-2)); border-bottom: 1px solid var(--dh-domain); }
+.dh-card__lvl { display: grid; justify-items: center; align-content: start; gap: 0; width: 34px; height: 46px; padding: 4px 0 0; background: var(--dh-domain); color: #fff; clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); }
+.dh-card__lvl b { font-size: 17px; line-height: 1; }
+.dh-card__lvl .dh-domain-icon { margin-top: 2px; }
+.dh-card__titles { display: grid; gap: 1px; min-width: 0; }
+.dh-card__type { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; color: var(--dh-ink-soft); }
+.dh-card__titles h4 { margin: 0; font-size: 16px; line-height: 1.15; }
+.dh-card__dom { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--dh-ink-soft); }
+.dh-card__recall { display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px; border: 1.5px solid var(--dh-domain); border-radius: 12px; font-weight: 800; font-size: 14px; background: var(--dh-field); }
+.dh-card__recall i { font-style: normal; color: var(--dh-hope); }
+.dh-card__text { padding: 8px 12px 2px; }
+.dh-card > footer { padding: 4px 12px 10px; }
+.dh-domain-icon { flex-shrink: 0; vertical-align: -3px; }
+.dh-head__dots { display: flex; gap: 8px; margin-top: 6px; }
+.dh-head__dots .dh-domain-icon { filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.25)); }
+.dh-seg button .dh-domain-icon { vertical-align: -2px; }
+
+/* ── Medo público no cabeçalho da campanha ── */
+.dh-fear { display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px; border: 1px solid #5a3f93; border-radius: 8px; background: rgba(60, 40, 110, 0.35); color: #e6dcff; font-size: 12px; }
+.dh-fear[data-state='loading'] { opacity: 0.5; }
+.dh-fear[data-state='failed'] { border-color: var(--border-base); background: none; color: var(--text-muted); }
+.dh-fear__label { font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; font-size: 10px; color: #b995f5; }
+.dh-fear__skulls { display: inline-flex; gap: 3px; }
+.dh-fear__skulls i { width: 9px; height: 12px; border-radius: 5px 5px 3px 3px; border: 1.5px solid #5a3f93; background: transparent; transition: background 0.2s, box-shadow 0.2s; }
+.dh-fear__skulls i.is-on { background: #9a68e8; border-color: #c9a8ff; box-shadow: 0 0 6px rgba(154, 104, 232, 0.8); }
+.dh-fear__n { font-size: 15px; min-width: 18px; text-align: center; }
+.dh-fear__ctl { display: inline-flex; gap: 2px; }
+.dh-fear__ctl button { width: 22px; height: 22px; padding: 0; border: 1px solid #5a3f93; border-radius: 6px; background: none; color: #e6dcff; font-size: 14px; cursor: pointer; }
+.dh-fear__ctl button:hover:not(:disabled) { background: rgba(154, 104, 232, 0.3); }
+.dh-fear__ctl button:disabled { opacity: 0.35; cursor: default; }
+.dh-fear__err { color: #ff9a9a; }
+
+/* ── Adversários e ambientes (mestre) ── */
+.dh-gm { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--border-base); }
+.dh-gm__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.dh-gm__head h3 { margin: 0; font-size: 16px; color: var(--text-primary); }
+.dh-gm .dh-seg { background: none; }
+.dh-gm .dh-seg button { background: var(--bg-elevated, #151a2b); color: var(--text-secondary); border-color: var(--border-base); }
+.dh-gm .dh-seg button.is-on { background: var(--accent, #ffb86b); color: #1a1208; }
+.dh-gm .btn { background: var(--bg-elevated, #151a2b); color: var(--text-primary); border: 1px solid var(--border-base); border-radius: 6px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+.dh-gm__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.dh-gm .dh-empty { color: var(--text-muted); }
+.dh-gm__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.dh-gm__card { position: relative; padding: 8px 10px; border: 1px solid var(--border-base); border-radius: 8px; background: var(--bg-elevated, #151a2b); }
+.dh-gm__card.is-on { border-color: #8a5cd8; }
+.dh-gm__open { display: grid; gap: 2px; width: 100%; text-align: left; background: none; border: 0; padding: 0; color: var(--text-primary); cursor: pointer; font: inherit; }
+.dh-gm__open small { color: var(--text-muted); }
+.dh-gm__tools { display: flex; gap: 12px; margin-top: 6px; }
+.dh-gm .dh-link { color: #8fb4e8; }
+.dh-gm__badge { position: absolute; right: 8px; top: 8px; font-style: normal; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 1px 7px; border-radius: 10px; background: rgba(75, 127, 82, 0.3); color: #b6e0b8; }
+
+.dh-gmsheet { margin-top: 10px; }
+.dh-gmsheet__top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dh-gmsheet__name { font-size: 22px; font-weight: 800; }
+.dh-gmsheet__sub { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 2px 0 6px; color: var(--dh-ink-soft); }
+.dh-gmsheet__sub select { background: var(--dh-field); color: var(--dh-ink); border: 1px solid var(--dh-line); border-radius: 4px; padding: 3px 8px; font: inherit; font-size: 13px; }
+.dh-gmsheet__nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px 14px; margin: 8px 0; }
+.dh-gmsheet__nums label, .dh-gmsheet__atk label { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+.dh-gmsheet__atk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.dh-gmsheet__atk .dh-inline { width: auto; min-width: 120px; flex: 1; }
+.dh-gmsheet__atk select { background: var(--dh-field); color: var(--dh-ink); border: 1px solid var(--dh-line); border-radius: 4px; padding: 3px 8px; font: inherit; font-size: 13px; }
+.dh-gmfeat { margin: 10px 0; padding: 8px 10px; border-left: 3px solid #8a5cd8; background: var(--dh-field-2); border-radius: 0 6px 6px 0; }
+.dh-gmfeat__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.dh-gmfeat__head .dh-inline { flex: 1; min-width: 160px; font-weight: 800; }
+.dh-gmfeat__head select { background: var(--dh-field); color: var(--dh-ink); border: 1px solid var(--dh-line); border-radius: 4px; padding: 3px 6px; font: inherit; font-size: 13px; }
+.dh-gmfeat__q { font-style: italic; color: var(--dh-ink-soft); font-size: 13px; }
+
+.dh-box input.dh-gmsheet__name:not([type='checkbox']):not([type='range']) { font-size: 22px; font-weight: 800; }
+.dh-gmsheet > p { font-size: 14px; margin: 8px 0 2px; }

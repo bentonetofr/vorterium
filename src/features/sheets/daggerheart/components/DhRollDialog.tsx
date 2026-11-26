@@ -83,6 +83,7 @@ export function DhRollDialog({ spec, data, update, target, onClose }: Props) {
         difficulty: diff !== null && Number.isFinite(diff) ? diff : null,
         advantage: adv,
         hopeSides: hopeD20 ? 20 : 12,
+        reaction,
       })
       await play(staged.dice, staged.skin, staged.result.hope)
       const res = staged.result

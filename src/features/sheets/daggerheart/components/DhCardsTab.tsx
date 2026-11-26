@@ -4,6 +4,7 @@ import { DOMAIN_CARDS, domainCard } from '../catalog/domainCards'
 import { cardsInHand, markStress, maxCardLevel, ownedDomains } from '../model/derive'
 import { LOADOUT_MAX } from '../model/defaults'
 import type { DhDomain, DhDomainCard, DhSheetData } from '../model/types'
+import { DomainIcon } from './DomainIcon'
 import { RuleText } from './DhUi'
 
 // ────────────────────────────────────────────────────────
@@ -112,14 +113,15 @@ export function CardView({ card, used, onUsed, actions, compact }: { card: DhDom
   return (
     <article className={`dh-card${used ? ' is-used' : ''}`} style={{ '--dh-domain': dom.color } as React.CSSProperties}>
       <header onClick={() => setOpen(!open)}>
-        <span className="dh-card__lvl">{card.level}</span>
-        <div>
-          <small>{CARD_TYPE_LABEL[card.type]} · {dom.name}</small>
+        <span className="dh-card__lvl" aria-label={`Nível ${card.level}`}><b>{card.level}</b><DomainIcon domain={card.domain} size={16} colored={false} title={false} /></span>
+        <div className="dh-card__titles">
+          <small className="dh-card__type">{CARD_TYPE_LABEL[card.type]}</small>
           <h4>{card.name}</h4>
+          <small className="dh-card__dom"><DomainIcon domain={card.domain} size={12} title={false} /> {dom.name}</small>
         </div>
-        <span className="dh-card__recall" title="Custo de troca">⚡ {card.recall}</span>
+        <span className="dh-card__recall" title="Custo de troca (Fadiga para trazer da reserva fora do descanso)"><i aria-hidden="true">⚡</i>{card.recall}</span>
       </header>
-      {open && <RuleText text={card.text} />}
+      {open && <div className="dh-card__text"><RuleText text={card.text} /></div>}
       <footer>
         {onUsed && <label className="dh-check"><input type="checkbox" checked={!!used} onChange={onUsed} /> Usada</label>}
         {actions}
@@ -147,7 +149,7 @@ function CardBrowser({ data, onClose, onPick }: { data: DhSheetData; onClose: ()
       <div className="dh-picker__bar">
         <span className="dh-seg" role="group">
           <button type="button" className={dom === 'todos' ? 'is-on' : ''} onClick={() => setDom('todos')}>Todos</button>
-          {domains.map((d) => <button key={d} type="button" className={dom === d ? 'is-on' : ''} onClick={() => setDom(d)}>{DOMAINS[d].name}</button>)}
+          {domains.map((d) => <button key={d} type="button" className={dom === d ? 'is-on' : ''} onClick={() => setDom(d)}><DomainIcon domain={d} size={14} title={false} /> {DOMAINS[d].name}</button>)}
         </span>
         <input type="search" placeholder="Buscar" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar carta" />
         <label className="dh-check"><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Ver acima do meu nível</label>

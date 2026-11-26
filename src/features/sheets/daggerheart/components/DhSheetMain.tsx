@@ -13,6 +13,7 @@ import { DH_TRAITS } from '../model/types'
 import type { DhRollTarget } from '../services/dhRolls'
 import { rollFree } from '../services/dhRolls'
 import { DhAutomationPanel } from './DhAutomationPanel'
+import { DomainIcon } from './DomainIcon'
 import { DhGearPicker } from './DhGearPicker'
 import { DhRollDialog, type RollSpec } from './DhRollDialog'
 import { Banner, Inline, RuleText, Slots, Stepper, signed } from './DhUi'
@@ -131,7 +132,7 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
         <div className="dh-head__class">
           <h2>{cls?.name ?? 'Sem classe'}</h2>
           <p>{doms.map((d) => DOMAINS[d].name).join(' & ')}</p>
-          <span className="dh-head__dots" aria-hidden="true">{doms.map((d) => <i key={d} style={{ background: DOMAINS[d].color }} />)}</span>
+          <span className="dh-head__dots">{doms.map((d) => <DomainIcon key={d} domain={d} size={22} />)}</span>
         </div>
         <div className="dh-head__fields">
           <label className="dh-field dh-field--name"><span>Nome</span><Inline value={data.name} onChange={(v) => set('name', v)} disabled={!ed} maxLength={120} aria-label="Nome do personagem" /></label>

@@ -118,7 +118,7 @@ export function DhDiceCard({ campaignId, currentUserId, onClose }: Props) {
       const staged = await rollDualityStaged({
         campaignId, sheetId: sheet?.id ?? null, character: data?.name.trim() ?? '',
         label: `${traitName ?? 'Dualidade'}${names.length ? ` (${names.join(', ')})` : ''}`,
-        modifier, advantage: adv, hopeSides: d20 ? 20 : 12, difficulty: d !== null && Number.isFinite(d) ? d : null,
+        modifier, advantage: adv, hopeSides: d20 ? 20 : 12, reaction, difficulty: d !== null && Number.isFinite(d) ? d : null,
       })
       await play(staged.dice, staged.skin, staged.result.hope)
       setResult(staged.result)
@@ -136,7 +136,7 @@ export function DhDiceCard({ campaignId, currentUserId, onClose }: Props) {
             exps.length ? `−${exps.length} Esperança (Experiências)` : '',
             fx.hope ? '+1 Esperança' : '',
             fx.clearStress ? '−1 Fadiga (crítico)' : '',
-            fx.gmFear ? 'O mestre ganha 1 Medo' : '',
+            fx.gmFear ? 'O mestre ganha 1 Medo (já somado no contador)' : '',
           ].filter(Boolean)
           setNote(bits.length ? bits.join(' · ') : null)
         } catch { setNote('Não deu para atualizar a ficha: ajuste a Esperança à mão.') }

@@ -5,6 +5,7 @@ import { getCampaignWithRole } from '../services/campaignService'
 import { touchCampaignPresence } from '../../activity/services/activityService'
 import { refreshLiveSession } from '../../sessions/services/liveSession'
 import { SessionLiveBadge } from '../../sessions/components/SessionLiveBadge'
+import { FearCounter } from '../../sheets/daggerheart/components/FearCounter'
 import { SessionEndPrompt } from '../../sessions/components/SessionEndPrompt'
 import { formatRole, getCampaignStatusLabel, getCampaignStatusClass } from '../../../shared/utils/campaign'
 import { getSystemLabel, getSystemStatus, STATUS_LABELS } from '../../../shared/constants/systems'
@@ -204,6 +205,7 @@ export function CampaignAreaLayout() {
               {getCampaignStatusLabel(campaign.status)}
             </span>
             {!campaign.observer && <SessionLiveBadge campaignId={campaign.id} isMaster={campaign.role === 'master'} />}
+            <FearCounter campaignId={campaign.id} isMaster={campaign.role === 'master' && !campaign.observer} />
           </div>
         </div>
       </header>

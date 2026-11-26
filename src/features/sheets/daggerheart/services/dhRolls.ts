@@ -6,6 +6,7 @@ import { DH_FEAR_SKIN, DH_HOPE_SKIN } from '../../../dice3d/skins'
 import type { DiceRoll } from '../../../../shared/types'
 import type { StageDie } from '../../../dice3d/DiceStage'
 import { stageDiceFor } from '../../dnd/rolls/diceKinds'
+import { gainFear } from './dhFearService'
 
 // ────────────────────────────────────────────────────────
 // Rolagens do DaggerHeart na mesa: os Dados de Dualidade (2d12: o primeiro é o Dado de Esperança, o segundo o de Medo)
@@ -24,6 +25,8 @@ export interface DualityArgs extends DhRollTarget {
   modifier: number
   difficulty?: number | null
   advantage?: 'vantagem' | 'desvantagem' | null
+  /** Teste de reação: não gera Esperança nem Medo. */
+  reaction?: boolean
   /** Dado de Esperança diferente de d12 (ex.: d20 em algumas habilidades). */
   hopeSides?: number
 }
@@ -59,6 +62,8 @@ export async function rollDualityStaged(a: DualityArgs): Promise<DualityRolled> 
     skin,
     context: { system: 'daggerheart', kind: 'custom', ...(a.sheetId ? { sheet_id: a.sheetId } : {}), character: a.character, dc: a.difficulty ?? null },
   })
+  // rolou com Medo: o mestre ganha 1 Medo, à vista de todos (teste de reação não conta)
+  if (!a.reaction && res.kind === 'medo') void gainFear(a.campaignId).catch(() => {})
   const dice: StageDie[] = [
     { kind: a.hopeSides === 20 ? 'd20' : 'd12', value: hope, skin: DH_HOPE_SKIN },
     { kind: 'd12', value: fear, skin: DH_FEAR_SKIN },
