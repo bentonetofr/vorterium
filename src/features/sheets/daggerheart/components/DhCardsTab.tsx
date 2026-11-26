@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { DOMAINS, CARD_TYPE_LABEL, DOMAIN_ORDER } from '../catalog/rules'
-import { DOMAIN_CARDS, domainCard } from '../catalog/domainCards'
+import { DOMAIN_CARDS, cardImage, domainCard } from '../catalog/domainCards'
 import { cardsInHand, markStress, maxCardLevel, ownedDomains } from '../model/derive'
 import { LOADOUT_MAX } from '../model/defaults'
 import type { DhDomain, DhDomainCard, DhSheetData } from '../model/types'
@@ -106,20 +106,15 @@ function markStressMany(d: DhSheetData, amount: number): { stressMarked: number;
 }
 
 export function CardView({ card, used, onUsed, actions, compact }: { card: DhDomainCard; used?: boolean; onUsed?: () => void; actions?: React.ReactNode; compact?: boolean }) {
-  const [open, setOpen] = useState(!compact)
   const dom = DOMAINS[card.domain]
   return (
-    <article className={`dh-card${used ? ' is-used' : ''}`} style={{ '--dh-domain': dom.color } as React.CSSProperties}>
-      <header onClick={() => setOpen(!open)}>
-        <span className="dh-card__lvl" aria-label={`Nível ${card.level}`}><b>{card.level}</b><DomainIcon domain={card.domain} size={16} colored={false} title={false} /></span>
-        <div className="dh-card__titles">
-          <small className="dh-card__type">{CARD_TYPE_LABEL[card.type]}</small>
-          <h4>{card.name}</h4>
-          <small className="dh-card__dom"><DomainIcon domain={card.domain} size={12} title={false} /> {dom.name}</small>
-        </div>
-        <span className="dh-card__recall" title="Custo de troca (Fadiga para trazer da reserva fora do descanso)"><i aria-hidden="true">⚡</i>{card.recall}</span>
-      </header>
-      {open && <div className="dh-card__text"><RuleText text={card.text} /></div>}
+    <article className={`dh-card dh-card--img${used ? ' is-used' : ''}${compact ? ' is-compact' : ''}`} style={{ '--dh-domain': dom.color } as React.CSSProperties}>
+      <img className="dh-card__img" src={cardImage(card.id)} width={360} height={504} loading="lazy" draggable={false}
+        alt={`${card.name}: ${CARD_TYPE_LABEL[card.type]} de ${dom.name}, nível ${card.level}, custo de troca ${card.recall}`} />
+      <details className="dh-card__more">
+        <summary>Texto da carta</summary>
+        <div className="dh-card__text"><RuleText text={card.text} /></div>
+      </details>
       <footer>
         {onUsed && <label className="dh-check"><input type="checkbox" checked={!!used} onChange={onUsed} /> Usada</label>}
         {actions}

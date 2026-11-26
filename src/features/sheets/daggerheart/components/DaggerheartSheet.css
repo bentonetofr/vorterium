@@ -580,3 +580,17 @@ button.dh-select:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .dh-nar__unsure { border-style: dashed; }
 .dh-nar__unsure b { color: var(--dh-ink-soft); }
+
+/* ── Cartas de domínio: a imagem do jogo como rosto da carta, com os controles do site embaixo ── */
+.dh-cardgrid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px 14px; }
+.dh-card.dh-card--img { padding: 0; overflow: visible; border: 0; background: transparent; border-radius: 0; }
+.dh-card__img { display: block; width: 100%; max-width: 360px; height: auto; margin-inline: auto; border-radius: 14px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); user-select: none; transition: opacity 0.2s, filter 0.2s, transform 0.2s; }
+.dh-card--img:hover .dh-card__img { transform: translateY(-2px); }
+.dh-card--img.is-used { opacity: 1; }
+.dh-card--img.is-used .dh-card__img { opacity: 0.5; filter: grayscale(0.7); }
+.dh-card--img > footer { justify-content: center; padding: 8px 4px 0; margin-top: 0; }
+.dh-card__more { max-width: 360px; margin: 6px auto 0; font-size: 12.5px; }
+.dh-card__more summary { cursor: pointer; text-align: center; color: var(--dh-ink-soft); letter-spacing: 0.04em; }
+.dh-card__more .dh-card__text { padding: 8px 4px 0; }
+.dh-browser .dh-cardgrid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.dh-card__img { aspect-ratio: 360 / 504; background: var(--dh-field); }

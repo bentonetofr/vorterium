@@ -73,7 +73,7 @@ describe('catálogo do Livro Básico', () => {
   })
 
   it('cartas conhecidas aparecem com nível, domínio e custo de troca certos', () => {
-    expect(domainCard('rune-ward')).toMatchObject({ domain: 'arcano', level: 1, recall: 0, type: 'feitico', name: 'Proteção Rúnica' })
+    expect(domainCard('rune-ward')).toMatchObject({ domain: 'arcano', level: 1, recall: 0, type: 'feitico', name: 'Talismã Rúnico' })
     expect(domainCard('resurrection')).toMatchObject({ domain: 'esplendor', level: 10, name: 'Ressurreição' })
     expect(domainCard('book-of-ava')?.type).toBe('grimorio')
   })
@@ -313,5 +313,22 @@ describe('ficha rápida', () => {
     const a = { ...emptyAnswers(), ...suggestedFor('bardo'), classKey: 'bardo' as const, secondaryId: 'small-dagger' }
     expect(buildQuickSheet(a).secondary?.catalogId).toBe('small-dagger')
     expect(buildQuickSheet({ ...a, primaryId: 'longsword' }).secondary).toBeNull()
+  })
+})
+
+describe('imagens das cartas de domínio', () => {
+  it('cada uma das 189 cartas tem a sua imagem em public/dh/cartas', async () => {
+    const { existsSync } = await import('node:fs')
+    const { DOMAIN_CARDS } = await import('../catalog/domainCards')
+    expect(DOMAIN_CARDS).toHaveLength(189)
+    const faltam = DOMAIN_CARDS.filter((c) => !existsSync(`public/dh/cartas/${c.id}.webp`)).map((c) => c.id)
+    expect(faltam).toEqual([])
+  })
+  it('nenhum nome de carta se repete dentro do mesmo domínio', async () => {
+    const { DOMAIN_CARDS } = await import('../catalog/domainCards')
+    for (const d of new Set(DOMAIN_CARDS.map((c) => c.domain))) {
+      const names = DOMAIN_CARDS.filter((c) => c.domain === d).map((c) => c.name.toLowerCase())
+      expect(new Set(names).size, d).toBe(names.length)
+    }
   })
 })
