@@ -6,6 +6,7 @@ import { DOMAIN_CARDS, domainCard } from '../catalog/domainCards'
 import { WEAPONS, weaponEntry } from '../catalog/weapons'
 import { DOMAIN_ORDER } from '../catalog/rules'
 import { emptySheet, normalizeSheet } from './defaults'
+import { buildQuickSheet, emptyAnswers, suggestedFor, traitsValid } from './quick'
 import { addGold, damageFormula, evasion, hpFromDamage, hpSlots, markStress, proficiency, stressSlots, thresholds, tierOf, traitValue } from './derive'
 import { duality, dualityEffects, dualityLabel } from './dice'
 import { advanceChoices, applyAdvancement, undoLastAdvancement, validateAdvancement } from './levelUp'
@@ -258,5 +259,59 @@ describe('subida de nível', () => {
     expect(thresholds(s)).toEqual({ major: 12, severe: 20 })
     s = applyAdvancement(s, adv(5, [{ opt: 'subclass', tier: 3 }, { opt: 'hp', tier: 2 }], 'get-back-up', 'x5'), 'D')
     expect(thresholds(s)).toEqual({ major: 7 + 5 + 3, severe: 15 + 5 + 3 })
+  })
+})
+
+describe('valores manuais (janela Automatizar)', () => {
+  it('um valor manual vale no lugar do cálculo e some ao voltar ao automático', () => {
+    const s = feiticeiro()
+    expect(evasion(s)).toBe(11)
+    expect(evasion({ ...s, manual: { evasion: 15 } })).toBe(15)
+    expect(thresholds({ ...s, manual: { major: 9 } })).toEqual({ major: 9, severe: 12 })
+    expect(hpSlots({ ...s, manual: { hp: 9 } })).toBe(9)
+    expect(stressSlots({ ...s, manual: { stress: 20 } })).toBe(12)
+    expect(proficiency({ ...s, manual: { proficiency: 3 } })).toBe(3)
+    expect(traitValue({ ...s, manual: { 'trait:instinct': 4 } }, 'instinct')).toBe(4)
+    expect(evasion({ ...s, manual: {} })).toBe(11)
+  })
+
+  it('normalizeSheet: ficha com classe conta como começada; manual ruim é descartado', () => {
+    expect(normalizeSheet({ classKey: 'mago' }).started).toBe(true)
+    expect(normalizeSheet({}).started).toBe(false)
+    expect(normalizeSheet({ started: true }).started).toBe(true)
+    expect(normalizeSheet({ manual: { evasion: 12, lixo: 3, hp: 'x' } }).manual).toEqual({ evasion: 12 })
+  })
+})
+
+describe('ficha rápida', () => {
+  it('monta a ficha de nível 1 com as respostas', () => {
+    const a = emptyAnswers()
+    const done = {
+      ...a, ...suggestedFor('guerreiro'), name: ' Tabby ', pronouns: 'Ela/Dela', classKey: 'guerreiro' as const, subclassKey: 'escolhido_bravura', ancestryKey: 'orc', communityKey: 'montanhesa',
+      experiences: ['Soldado', 'Amiga de todos'] as [string, string], cards: ['reckless', 'whirlwind'],
+    }
+    const s = buildQuickSheet(done)
+    expect(s.started).toBe(true)
+    expect(s.name).toBe('Tabby')
+    expect(s.level).toBe(1)
+    expect(s.primary?.catalogId).toBe('longsword')
+    expect(s.secondary).toBeNull()
+    expect(s.armor?.catalogId).toBe('chainmail-armor')
+    expect(s.experiences.map((e) => e.name)).toEqual(['Soldado', 'Amiga de todos'])
+    expect(s.loadout).toEqual(['reckless', 'whirlwind'])
+    expect(s.inventory.some((i) => i.includes('Poção'))).toBe(true)
+    expect(traitsValid(s.traits)).toBe(true)
+    expect(evasion(s)).toBe(10)
+  })
+
+  it('valida a distribuição dos atributos', () => {
+    expect(traitsValid({ agility: 2, strength: 1, finesse: 1, instinct: 0, presence: 0, knowledge: -1 })).toBe(true)
+    expect(traitsValid({ agility: 2, strength: 2, finesse: 1, instinct: 0, presence: 0, knowledge: -1 })).toBe(false)
+  })
+
+  it('arma secundária só entra com a principal de uma mão', () => {
+    const a = { ...emptyAnswers(), ...suggestedFor('bardo'), classKey: 'bardo' as const, secondaryId: 'small-dagger' }
+    expect(buildQuickSheet(a).secondary?.catalogId).toBe('small-dagger')
+    expect(buildQuickSheet({ ...a, primaryId: 'longsword' }).secondary).toBeNull()
   })
 })

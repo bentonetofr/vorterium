@@ -9,7 +9,7 @@ import { emptySheet } from '../src/features/sheets/daggerheart/model/defaults'
 import { armorToSlot, weaponToSlot } from '../src/features/sheets/daggerheart/model/gear'
 import type { DhSheetData } from '../src/features/sheets/daggerheart/model/types'
 import { DhCardsTab } from '../src/features/sheets/daggerheart/components/DhCardsTab'
-import { DhCreator } from '../src/features/sheets/daggerheart/components/DhCreator'
+import { DhSheet } from '../src/features/sheets/daggerheart/components/DhSheet'
 import { DhExtraTab } from '../src/features/sheets/daggerheart/components/DhExtraTab'
 import { DhLevelTab } from '../src/features/sheets/daggerheart/components/DhLevelTab'
 import { DhPersonTab } from '../src/features/sheets/daggerheart/components/DhPersonTab'
@@ -37,7 +37,7 @@ function Demo() {
   const update = (fn: (x: DhSheetData) => DhSheetData) => setD(fn)
   const target = { campaignId: 'x', sheetId: 'y', character: d.name }
   if (new URLSearchParams(location.search).has('dados')) return <DhDiceCard campaignId="x" currentUserId="y" onClose={() => {}} />
-  if (criar) return <div style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}><DhCreator initial={emptySheet()} onDone={(x) => { setD(x); setCriar(false) }} /></div>
+  if (criar) return <div style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}><DhSheet sheet={{ id: 'teste', campaign_id: 'x', user_id: 'y', character_name: null, data: emptySheet(), created_at: '', updated_at: '' }} canEdit /><DialogHost /></div>
   return (
     <div style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>

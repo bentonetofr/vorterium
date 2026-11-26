@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ancestry, community } from '../catalog/heritage'
+import { ANCESTRIES, COMMUNITIES, ancestry, community } from '../catalog/heritage'
 import { DOMAINS, RANGE_INFO, TRAIT_INFO } from '../catalog/rules'
-import { dhClass } from '../catalog/classes'
+import { CLASSES, dhClass } from '../catalog/classes'
 import {
   addGold, allTraitValues, armorScore, attackModifier, currentClass, currentSubclass, damageFormula, evasion, flatDamageBonus, hopeSlots, hpFromDamage,
   hpSlots, markedTraits, proficiency, spellcastTrait, stressSlots, subclassStage, thresholds, traitValue, ancestryFeatures, multiclassPick,
@@ -12,6 +12,7 @@ import type { DhSheetData, DhTrait, DhWeaponSlot } from '../model/types'
 import { DH_TRAITS } from '../model/types'
 import type { DhRollTarget } from '../services/dhRolls'
 import { rollFree } from '../services/dhRolls'
+import { DhAutomationPanel } from './DhAutomationPanel'
 import { DhGearPicker } from './DhGearPicker'
 import { DhRollDialog, type RollSpec } from './DhRollDialog'
 import { Banner, Inline, RuleText, Slots, Stepper, signed } from './DhUi'
@@ -36,7 +37,7 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
   const sub = currentSubclass(data)
   const [roll, setRoll] = useState<RollSpec | null>(null)
   const [picker, setPicker] = useState<Picker>(null)
-  const [editNums, setEditNums] = useState(false)
+  const [autoOpen, setAutoOpen] = useState(false)
   const [damage, setDamage] = useState('')
   const [useArmor, setUseArmor] = useState(true)
   const [notice, setNotice] = useState<string | null>(null)
@@ -162,31 +163,48 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
 
       {ed && (
         <div className="dh-tools">
-          <button type="button" className={`dh-link${editNums ? ' is-on' : ''}`} onClick={() => setEditNums(!editNums)}>{editNums ? 'Fechar ajustes' : 'Ajustar números'}</button>
+          <button type="button" className="dh-link" onClick={() => setAutoOpen(true)}>Automatizar</button>
           {spell && <button type="button" className="dh-link" onClick={openSpellRoll}>Teste de conjuração ({TRAIT_INFO[spell].label} {signed(tv[spell])})</button>}
         </div>
       )}
-      {editNums && ed && (
-        <div className="dh-adjust">
-          <p>Atributos base (antes das subidas): </p>
-          <div className="dh-adjust__traits">
-            {DH_TRAITS.map((t) => (
-              <label key={t}>{TRAIT_INFO[t].label}
-                <Stepper value={data.traits[t]} min={-5} max={8} label={TRAIT_INFO[t].label} format={signed} onChange={(v) => update((d) => ({ ...d, traits: { ...d.traits, [t]: v } }))} />
-              </label>
-            ))}
+
+      {ed && (!cls || !sub || !data.ancestryKey || !data.communityKey) && (
+        <section className="dh-origin" aria-label="Origem do personagem">
+          <h4>Origem do personagem</h4>
+          <p className="dh-hint">Ao escolher, o site já aplica: a classe traz Evasão, Vida, domínios e habilidades; a subclasse, as habilidades e o atributo de conjuração; a herança, as habilidades dela.</p>
+          <div className="dh-form">
+            <label>Classe
+              <select value={data.classKey ?? ''} onChange={(e) => update((d) => ({ ...d, classKey: (e.target.value || null) as DhSheetData['classKey'], subclassKey: null }))}>
+                <option value="">Escolha…</option>
+                {CLASSES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
+              </select>
+            </label>
+            <label>Subclasse
+              <select value={data.subclassKey ?? ''} disabled={!cls} onChange={(e) => set('subclassKey', e.target.value || null)}>
+                <option value="">Escolha…</option>
+                {cls?.subclasses.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
+              </select>
+            </label>
+            <label>Ancestralidade
+              <select value={data.ancestryKey ?? ''} onChange={(e) => update((d) => ({ ...d, ancestryKey: e.target.value || null, ancestry2Key: d.ancestry2Key === e.target.value ? null : d.ancestry2Key }))}>
+                <option value="">Escolha…</option>
+                {ANCESTRIES.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
+              </select>
+            </label>
+            <label>Segunda ancestralidade (mista)
+              <select value={data.ancestry2Key ?? ''} disabled={!data.ancestryKey} onChange={(e) => set('ancestry2Key', e.target.value || null)}>
+                <option value="">Nenhuma</option>
+                {ANCESTRIES.filter((x) => x.key !== data.ancestryKey).map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
+              </select>
+            </label>
+            <label>Comunidade
+              <select value={data.communityKey ?? ''} onChange={(e) => set('communityKey', e.target.value || null)}>
+                <option value="">Escolha…</option>
+                {COMMUNITIES.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
+              </select>
+            </label>
           </div>
-          <div className="dh-adjust__grid">
-            <label>Evasão extra<Stepper value={data.evasionBonus} min={-10} max={10} label="Evasão extra" format={signed} onChange={(v) => set('evasionBonus', v)} /></label>
-            <label>Armadura extra<Stepper value={data.armorBonus} min={-10} max={10} label="Armadura extra" format={signed} onChange={(v) => set('armorBonus', v)} /></label>
-            <label>Limiar maior extra<Stepper value={data.majorBonus} min={-20} max={40} label="Limiar maior extra" format={signed} onChange={(v) => set('majorBonus', v)} /></label>
-            <label>Limiar grave extra<Stepper value={data.severeBonus} min={-20} max={40} label="Limiar grave extra" format={signed} onChange={(v) => set('severeBonus', v)} /></label>
-            <label>Espaços de Vida extras<Stepper value={data.hpBonus} min={0} max={6} label="Vida extra" onChange={(v) => set('hpBonus', v)} /></label>
-            <label>Espaços de Fadiga extras<Stepper value={data.stressBonus} min={0} max={6} label="Fadiga extra" onChange={(v) => set('stressBonus', v)} /></label>
-            <label>Cicatrizes (Esperança perdida)<Stepper value={data.scars} min={0} max={HOPE_MAX} label="Cicatrizes" onChange={(v) => update((d) => ({ ...d, scars: v, hope: Math.min(d.hope, HOPE_MAX - v) }))} /></label>
-          </div>
-          <p className="dh-adjust__hint">Use os extras para efeitos de cartas e habilidades que o site não calcula sozinho (Vitalidade, Armadura Corporal, feitiços de proteção…).</p>
-        </div>
+        </section>
       )}
 
       {notice && <p className="dh-notice" role="status" onClick={() => setNotice(null)}>{notice}</p>}
@@ -348,6 +366,7 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
         </div>
       </div>
 
+      {autoOpen && <DhAutomationPanel data={data} update={update} onClose={() => setAutoOpen(false)} />}
       {roll && <DhRollDialog spec={roll} data={data} update={update} target={target} onClose={() => setRoll(null)} />}
       {picker?.kind === 'armor' && <DhGearPicker kind="armor" tier={tier} onClose={() => setPicker(null)} onPick={(a) => set('armor', a)} />}
       {picker?.kind === 'weapon' && (

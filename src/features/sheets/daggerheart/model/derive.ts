@@ -50,9 +50,21 @@ export function multiclassPick(s: DhSheetData): Extract<DhPick, { opt: 'multicla
   return (picksOf(s, 'multiclass')[0] as Extract<DhPick, { opt: 'multiclass' }> | undefined) ?? null
 }
 
+// ── Valores manuais (janela Automatizar) ───────────────
+
+export type ManualKey = 'evasion' | 'armor' | 'major' | 'severe' | 'hp' | 'stress' | 'hope' | 'proficiency' | `trait:${DhTrait}`
+
+/** O valor digitado à mão para este item, ou undefined se ele está no automático. */
+export function manualOf(s: DhSheetData, key: ManualKey): number | undefined {
+  const v = s.manual?.[key]
+  return typeof v === 'number' ? v : undefined
+}
+
 // ── Proficiência ───────────────────────────────────────
 
 export function proficiency(s: DhSheetData): number {
+  const m = manualOf(s, 'proficiency')
+  if (m !== undefined) return Math.max(0, m)
   const achievements = ACHIEVEMENT_LEVELS.filter((l) => s.level >= l).length
   return Math.min(8, 1 + achievements + picksOf(s, 'proficiency').length)
 }
@@ -86,6 +98,8 @@ function weaponMods(w: DhWeaponSlot): DhModifiers {
 }
 
 export function traitValue(s: DhSheetData, trait: DhTrait): number {
+  const m = manualOf(s, `trait:${trait}`)
+  if (m !== undefined) return m
   let v = s.traits[trait] + traitBonusFromPicks(s, trait)
   for (const m of equippedMods(s)) {
     v += (m.traits?.[trait] ?? 0) + (m.allTraits ?? 0)
@@ -136,6 +150,8 @@ function subclassHas(s: DhSheetData, name: string): boolean {
 }
 
 export function hpSlots(s: DhSheetData): number {
+  const m = manualOf(s, 'hp')
+  if (m !== undefined) return Math.max(1, Math.min(HP_SLOTS_MAX, m))
   const base = currentClass(s)?.hp ?? 6
   let n = base + picksOf(s, 'hp').length + s.hpBonus
   if (hasAncestryFeature(s, 'Resistência')) n += 1
@@ -144,6 +160,8 @@ export function hpSlots(s: DhSheetData): number {
 }
 
 export function stressSlots(s: DhSheetData): number {
+  const m = manualOf(s, 'stress')
+  if (m !== undefined) return Math.max(1, Math.min(STRESS_SLOTS_MAX, m))
   let n = 6 + picksOf(s, 'stress').length + s.stressBonus
   if (hasAncestryFeature(s, 'Resiliência')) n += 1
   if (subclassHas(s, 'Vem Tranquilo')) n += 1
@@ -151,6 +169,8 @@ export function stressSlots(s: DhSheetData): number {
 }
 
 export function hopeSlots(s: DhSheetData): number {
+  const m = manualOf(s, 'hope')
+  if (m !== undefined) return Math.max(0, Math.min(HOPE_MAX + 1, m))
   const companion = s.companion?.picks.includes('luz') ? 1 : 0
   return Math.max(0, HOPE_MAX - s.scars + companion)
 }
@@ -158,6 +178,8 @@ export function hopeSlots(s: DhSheetData): number {
 // ── Evasão, Armadura e limiares ────────────────────────
 
 export function evasion(s: DhSheetData): number {
+  const m = manualOf(s, 'evasion')
+  if (m !== undefined) return Math.max(0, m)
   const base = currentClass(s)?.evasion ?? 10
   let n = base + s.evasionBonus + picksOf(s, 'evasion').length
   if (hasAncestryFeature(s, 'Ágil')) n += 1
@@ -167,6 +189,8 @@ export function evasion(s: DhSheetData): number {
 }
 
 export function armorScore(s: DhSheetData): number {
+  const m = manualOf(s, 'armor')
+  if (m !== undefined) return Math.max(0, Math.min(ARMOR_SCORE_MAX, m))
   if (!s.armor) {
     // sem armadura o personagem não tem Pontos de Armadura (a carta Armadura Corporal é tratada à parte pelo bônus manual)
     return Math.max(0, Math.min(ARMOR_SCORE_MAX, s.armorBonus))
@@ -198,7 +222,10 @@ export function thresholds(s: DhSheetData): Thresholds {
     severe += proficiency(s)
   }
   for (const w of [s.primary, s.secondary]) severe += w?.catalogId ? (weaponMods(w).severe ?? 0) : 0
-  return { major: major + s.majorBonus, severe: severe + s.severeBonus }
+  return {
+    major: manualOf(s, 'major') ?? major + s.majorBonus,
+    severe: manualOf(s, 'severe') ?? severe + s.severeBonus,
+  }
 }
 
 /** Quantos Pontos de Vida o dano marca, pelos limiares (0 = nenhum). Com a regra opcional de dano massivo, o dobro do grave marca 4. */

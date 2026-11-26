@@ -212,6 +212,10 @@ export interface DhTrackers {
 
 export interface DhSheetData {
   v: 1
+  /** A pessoa já escolheu como montar a ficha (manualmente ou pelo formulário rápido); antes disso aparece a janela de escolha. */
+  started: boolean
+  /** Valores digitados à mão no lugar do cálculo automático (janela Automatizar). Chaves em ManualKey. */
+  manual: Record<string, number>
   name: string
   pronouns: string
   level: number

@@ -39,6 +39,8 @@ export function emptySheet(classKey: DhClassKey | null = null): DhSheetData {
   const cls = dhClass(classKey)
   return {
     v: 1,
+    started: false,
+    manual: {},
     name: '',
     pronouns: '',
     level: 1,
@@ -134,6 +136,8 @@ export function normalizeSheet(raw: unknown): DhSheetData {
   return {
     ...d,
     v: 1,
+    started: r.started === true || classKey !== null,
+    manual: normalizeManual(r.manual),
     name: str(r.name, 120),
     pronouns: str(r.pronouns, 60),
     level: num(r.level, 1, 1, MAX_LEVEL),
@@ -197,6 +201,17 @@ export function normalizeSheet(raw: unknown): DhSheetData {
     companion: r.companion && typeof r.companion === 'object' ? normalizeCompanion(r.companion as Record<string, unknown>) : null,
     notes: str(r.notes, 20000),
   }
+}
+
+const MANUAL_KEYS = new Set(['evasion', 'armor', 'major', 'severe', 'hp', 'stress', 'hope', 'proficiency', ...DH_TRAITS.map((t) => `trait:${t}`)])
+
+function normalizeManual(v: unknown): Record<string, number> {
+  const out: Record<string, number> = {}
+  if (!v || typeof v !== 'object') return out
+  for (const [k, n] of Object.entries(v as Record<string, unknown>)) {
+    if (MANUAL_KEYS.has(k) && typeof n === 'number' && Number.isFinite(n)) out[k] = Math.max(-20, Math.min(99, Math.round(n)))
+  }
+  return out
 }
 
 function normalizeCompanion(c: Record<string, unknown>): DhCompanion {

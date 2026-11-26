@@ -5,7 +5,8 @@ import type { DhSheetData } from '../model/types'
 import type { DhSheet as DhSheetRecord } from '../services/dhSheetService'
 import { useDhSheet } from '../services/useDhSheet'
 import { DhCardsTab } from './DhCardsTab'
-import { DhCreator } from './DhCreator'
+import { DhQuickForm } from './DhQuickForm'
+import { DhStartChoice } from './DhStartChoice'
 import { DhExtraTab, hasBeastform, hasCompanion } from './DhExtraTab'
 import { DhLevelTab } from './DhLevelTab'
 import { DhPersonTab, Notes } from './DhPersonTab'
@@ -28,7 +29,10 @@ type Tab = 'ficha' | 'cartas' | 'nivel' | 'personagem' | 'descanso' | 'extras' |
 export function DhSheet({ sheet, canEdit, playerName }: Props) {
   const { data, update, status, error } = useDhSheet(sheet)
   const [tab, setTab] = useState<Tab>('ficha')
-  const created = !!data.classKey && !!data.subclassKey
+  const [quick, setQuick] = useState(false)
+  const started = data.started || !!data.classKey
+  /** Quem abre a ficha em branco escolhe como montar; o mestre olhando a ficha de um jogador não. */
+  const mine = canEdit && (!playerName || playerName === 'NPC')
   const extras = hasBeastform(data) || hasCompanion(data)
   const tabs: { id: Tab; label: string }[] = [
     { id: 'ficha', label: 'Ficha' },
@@ -44,9 +48,15 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setTab)
   const target = { campaignId: sheet.campaign_id, sheetId: sheet.id, character: data.name.trim() || currentClass(data)?.name || 'Personagem' }
 
-  if (!created) {
-    if (!canEdit) return <p className="sheet-empty">{playerName ?? 'O jogador'} ainda não criou o personagem.</p>
-    return <DhCreator initial={data} onDone={(d: DhSheetData) => update(() => d)} />
+  if (!started) {
+    if (!mine) return <p className="sheet-empty">{playerName ?? 'O jogador'} ainda não montou o personagem.</p>
+    return (
+      <>
+        <p className="sheet-empty">Escolha como montar a ficha.</p>
+        {!quick && <DhStartChoice onManual={() => update((d) => ({ ...d, started: true }))} onQuick={() => setQuick(true)} />}
+        {quick && <DhQuickForm onCancel={() => setQuick(false)} onDone={(d: DhSheetData) => { update(() => d); setQuick(false) }} />}
+      </>
+    )
   }
 
   return (
