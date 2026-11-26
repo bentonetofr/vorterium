@@ -7,7 +7,7 @@ import { newId } from '../model/defaults'
 import { createGmSheet, deleteGmSheet, listGmSheets, setGmVisible, subscribeGmSheets, useGmSheet, type GmRow } from '../services/dhGmService'
 import { useFear } from '../services/dhFearService'
 import { rollFree } from '../services/dhRolls'
-import { Banner, Inline, RuleText, Slots, Stepper, signed } from './DhUi'
+import { Inline, RuleText, Slots, Stepper, signed } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // Adversários e ambientes (capítulo 4): na aba Ficha, o mestre cria e edita os blocos no formato do livro, joga o ataque e o dano
@@ -93,6 +93,20 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
   )
 }
 
+// ── peças comuns ──
+
+function Title({ children, right }: { children: string; right?: React.ReactNode }) {
+  return <div className="dh-gmtitle"><span>{children}</span>{right}</div>
+}
+
+function Fld({ label, wide, children }: { label: string; wide?: boolean; children: React.ReactNode }) {
+  return <label className={`dh-fld${wide ? ' dh-fld--wide' : ''}`}><span>{label}</span>{children}</label>
+}
+
+function SaveState({ status }: { status: 'ok' | 'salvando' | 'erro' }) {
+  return <span className={`dh-status__dot dh-status__dot--${status}`}>{status === 'salvando' ? 'Salvando…' : status === 'erro' ? 'Erro ao salvar' : 'Salvo'}</span>
+}
+
 // ── blocos de habilidades (iguais nos dois) ──
 
 function FeatureBlock({ f, canEdit, onChange, onRemove, onUse, fear }: { f: DhGmFeature; canEdit: boolean; onChange: (f: DhGmFeature) => void; onRemove: () => void; onUse?: () => void; fear: number }) {
@@ -122,7 +136,7 @@ function FeatureBlock({ f, canEdit, onChange, onRemove, onUse, fear }: { f: DhGm
 function Features({ features, canEdit, onChange, fear, onUse }: { features: DhGmFeature[]; canEdit: boolean; onChange: (f: DhGmFeature[]) => void; fear: ReturnType<typeof useFear>; onUse: (f: DhGmFeature) => void }) {
   return (
     <>
-      <Banner right={canEdit ? <button type="button" className="dh-link" onClick={() => onChange([...features, newFeature('acao')])}>+ Habilidade</button> : null}>Habilidades</Banner>
+      <Title right={canEdit ? <button type="button" className="dh-link" onClick={() => onChange([...features, newFeature('acao')])}>+ Habilidade</button> : null}>Habilidades</Title>
       {features.length === 0 && <p className="dh-empty">Sem habilidades.</p>}
       {features.map((f) => (
         <FeatureBlock key={f.id} f={f} canEdit={canEdit} fear={fear.value}
@@ -170,78 +184,87 @@ export function AdversarySheet({ row, campaignId, canEdit }: { row: GmRow<DhAdve
 
   return (
     <section className="dh-box dh-gmsheet">
-      <Banner right={canEdit ? <span className={`dh-status__dot dh-status__dot--${status}`}>{status === 'salvando' ? 'Salvando…' : status === 'erro' ? 'Erro ao salvar' : 'Salvo'}</span> : null}>Adversário</Banner>
-      <div className="dh-gmsheet__top">
-        <div>
+      <header className="dh-gmhead">
+        <div className="dh-gmhead__main">
+          <p className="dh-gmhead__meta"><span>Adversário</span>{canEdit && <SaveState status={status} />}</p>
           <Inline className="dh-gmsheet__name" value={a.name} onChange={(v) => set('name', v)} disabled={!canEdit} maxLength={120} aria-label="Nome" />
-          <p className="dh-gmsheet__sub">
+          <div className="dh-gmtags">
             {canEdit ? (
               <>
                 <select value={a.tier} aria-label="Patamar" onChange={(e) => set('tier', Number(e.target.value) as DhAdversary['tier'])}>{[1, 2, 3, 4].map((t) => <option key={t} value={t}>Patamar {t}</option>)}</select>
                 <select value={ADVERSARY_KINDS.includes(a.kind as typeof ADVERSARY_KINDS[number]) ? a.kind : 'Padrão'} aria-label="Tipo" onChange={(e) => set('kind', e.target.value)}>{ADVERSARY_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
               </>
-            ) : <em>Patamar {a.tier} · {a.kind}</em>}
-          </p>
+            ) : <><em>Patamar {a.tier}</em><em>{a.kind}</em></>}
+          </div>
         </div>
-        <div className="dh-shield dh-shield--evasion"><b>{a.difficulty}</b><span>Dif.</span></div>
-      </div>
-      <Inline multiline rows={2} maxLength={1500} value={a.description} onChange={(v) => set('description', v)} disabled={!canEdit} placeholder="Descrição" aria-label="Descrição" />
-      <p><strong>Motivações e impulsos:</strong></p>
-      <Inline value={a.motives} onChange={(v) => set('motives', v)} disabled={!canEdit} maxLength={600} placeholder="Ex.: caçar, proteger, enganar" aria-label="Motivações e impulsos" />
-
-      {canEdit && (
-        <div className="dh-gmsheet__nums">
-          <label>Dificuldade<Stepper value={a.difficulty} min={0} max={40} label="Dificuldade" onChange={(v) => set('difficulty', v)} /></label>
-          <label>Limiar maior<Stepper value={a.major} min={0} max={80} label="Limiar maior" onChange={(v) => set('major', v)} /></label>
-          <label>Limiar grave<Stepper value={a.severe} min={0} max={120} label="Limiar grave" onChange={(v) => set('severe', v)} /></label>
-          <label>Vida<Stepper value={a.hp} min={1} max={30} label="Vida" onChange={(v) => set('hp', v)} /></label>
-          <label>Fadiga<Stepper value={a.stress} min={0} max={20} label="Fadiga" onChange={(v) => set('stress', v)} /></label>
+        <div className="dh-gmdif">
+          <span>Dificuldade</span>
+          {canEdit ? <Stepper value={a.difficulty} min={0} max={40} label="Dificuldade" onChange={(v) => set('difficulty', v)} /> : <b>{a.difficulty}</b>}
         </div>
-      )}
-      <div className="dh-thresholds" aria-label="Limiares de dano do adversário">
-        <span className="dh-th dh-th--minor"><b>Menor</b><small>1 PV</small></span>
-        <span className="dh-th__num">{a.major}</span>
-        <span className="dh-th dh-th--major"><b>Maior</b><small>2 PV</small></span>
-        <span className="dh-th__num">{a.severe}</span>
-        <span className="dh-th dh-th--severe"><b>Grave</b><small>3 PV</small></span>
-      </div>
-      <div className="dh-row"><span className="dh-row__label">PV</span><Slots open={a.hp} total={Math.max(a.hp, 1)} marked={a.hpMarked} label="Vida do adversário" tone="hp" onChange={canEdit ? (n) => set('hpMarked', n) : undefined} /></div>
-      <div className="dh-row"><span className="dh-row__label">Fadiga</span><Slots open={a.stress} total={Math.max(a.stress, 1)} marked={a.stressMarked} label="Fadiga do adversário" tone="stress" onChange={canEdit ? (n) => set('stressMarked', n) : undefined} /></div>
+      </header>
 
-      <Banner>Ataque padrão</Banner>
-      <div className="dh-gmsheet__atk">
-        <Inline value={a.attackName} onChange={(v) => set('attackName', v)} disabled={!canEdit} maxLength={80} aria-label="Nome do ataque" />
-        {canEdit ? <label>Bônus<Stepper value={a.attackBonus} min={-5} max={20} label="Bônus de ataque" format={signed} onChange={(v) => set('attackBonus', v)} /></label> : <b>{signed(a.attackBonus)}</b>}
-        {canEdit
-          ? <select value={a.attackRange} aria-label="Alcance" onChange={(e) => set('attackRange', e.target.value as DhAdversary['attackRange'])}>{RANGE_ORDER.map((r) => <option key={r} value={r}>{RANGE_INFO[r].label}</option>)}</select>
-          : <span>{RANGE_INFO[a.attackRange].label}</span>}
-        {canEdit ? <Inline value={a.damage} onChange={(v) => set('damage', v)} maxLength={30} placeholder="2d8+3" aria-label="Dano" /> : <b>{a.damage}</b>}
-        {canEdit && <select value={a.damageType} aria-label="Tipo de dano" onChange={(e) => set('damageType', e.target.value as DhAdversary['damageType'])}><option value="fis">físico</option><option value="mag">mágico</option></select>}
-      </div>
-      {canEdit && (
-        <div className="dh-actions">
-          <span className="dh-seg" role="group" aria-label="Como rolar"><button type="button" className={adv === 'desv' ? 'is-on' : ''} onClick={() => setAdv(adv === 'desv' ? 'normal' : 'desv')}>Desvantagem</button><button type="button" className={adv === 'vant' ? 'is-on' : ''} onClick={() => setAdv(adv === 'vant' ? 'normal' : 'vant')}>Vantagem</button></span>
-          <button type="button" className="btn" disabled={busy} onClick={() => void attack()}>Rolar ataque (d20)</button>
-          <button type="button" className="btn" disabled={busy} onClick={() => void damage()}>Rolar dano</button>
+      <div className="dh-gmbody">
+        <Inline multiline rows={2} maxLength={1500} value={a.description} onChange={(v) => set('description', v)} disabled={!canEdit} placeholder="Descrição" aria-label="Descrição" />
+        <Fld label="Motivações e impulsos"><Inline value={a.motives} onChange={(v) => set('motives', v)} disabled={!canEdit} maxLength={600} placeholder="Ex.: caçar, proteger, enganar" aria-label="Motivações e impulsos" /></Fld>
+
+        <div className="dh-track" aria-label="Limiares de dano do adversário">
+          <div className="dh-track__seg dh-track__seg--minor"><b>Menor</b><small>1 PV</small></div>
+          <div className="dh-track__cut"><small>a partir de</small>{canEdit ? <Stepper value={a.major} min={0} max={80} label="Limiar maior" onChange={(v) => set('major', v)} /> : <b>{a.major}</b>}</div>
+          <div className="dh-track__seg dh-track__seg--major"><b>Maior</b><small>2 PV</small></div>
+          <div className="dh-track__cut"><small>a partir de</small>{canEdit ? <Stepper value={a.severe} min={0} max={120} label="Limiar grave" onChange={(v) => set('severe', v)} /> : <b>{a.severe}</b>}</div>
+          <div className="dh-track__seg dh-track__seg--severe"><b>Grave</b><small>3 PV</small></div>
         </div>
-      )}
-      {out && <p className="dh-notice" role="status" onClick={() => setOut(null)}>{out}</p>}
 
-      <Banner right={canEdit ? <button type="button" className="dh-link" onClick={() => set('experiences', [...a.experiences, { id: newId(), name: '', mod: 2 }])}>+ Experiência</button> : null}>Experiência</Banner>
-      <ul className="dh-exps">
-        {a.experiences.map((e) => (
-          <li key={e.id}>
-            <Inline value={e.name} onChange={(v) => set('experiences', a.experiences.map((x) => (x.id === e.id ? { ...x, name: v } : x)))} disabled={!canEdit} placeholder="Experiência do adversário" maxLength={80} aria-label="Experiência" />
-            {canEdit ? <Stepper value={e.mod} min={-5} max={12} label="Bônus" format={signed} onChange={(v) => set('experiences', a.experiences.map((x) => (x.id === e.id ? { ...x, mod: v } : x)))} /> : <b>{signed(e.mod)}</b>}
-            {canEdit && <button type="button" className="dh-x" aria-label="Remover Experiência" onClick={() => set('experiences', a.experiences.filter((x) => x.id !== e.id))}>×</button>}
-          </li>
-        ))}
-        {a.experiences.length === 0 && <li className="dh-empty">Nenhuma.</li>}
-      </ul>
+        <div className="dh-vitals">
+          <div className="dh-vital dh-vital--hp">
+            <div className="dh-vital__top"><span>Vida</span><b>{a.hp - a.hpMarked}<small>/{a.hp}</small></b>{canEdit && <Stepper value={a.hp} min={1} max={30} label="Vida" onChange={(v) => set('hp', v)} />}</div>
+            <Slots open={a.hp} total={Math.max(a.hp, 1)} marked={a.hpMarked} label="Vida do adversário" tone="hp" onChange={canEdit ? (n) => set('hpMarked', n) : undefined} />
+          </div>
+          <div className="dh-vital dh-vital--stress">
+            <div className="dh-vital__top"><span>Fadiga</span><b>{a.stress - a.stressMarked}<small>/{a.stress}</small></b>{canEdit && <Stepper value={a.stress} min={0} max={20} label="Fadiga" onChange={(v) => set('stress', v)} />}</div>
+            <Slots open={a.stress} total={Math.max(a.stress, 1)} marked={a.stressMarked} label="Fadiga do adversário" tone="stress" onChange={canEdit ? (n) => set('stressMarked', n) : undefined} />
+          </div>
+        </div>
 
-      <Features features={a.features} canEdit={canEdit} fear={fear} onChange={(f) => set('features', f)} onUse={(f) => void use(f, a.name)} />
-      {msg && <p className="dh-notice" role="status" onClick={() => setMsg(null)}>{msg}</p>}
-      {canEdit && <label className="dh-qa">Anotações do mestre<Inline multiline rows={3} maxLength={8000} value={a.notes} onChange={(v) => set('notes', v)} aria-label="Anotações" /></label>}
+        <div className="dh-atk">
+          <Title>Ataque padrão</Title>
+          <div className="dh-atk__grid">
+            <Fld label="Nome" wide><Inline value={a.attackName} onChange={(v) => set('attackName', v)} disabled={!canEdit} maxLength={80} aria-label="Nome do ataque" /></Fld>
+            <Fld label="Bônus">{canEdit ? <Stepper value={a.attackBonus} min={-5} max={20} label="Bônus de ataque" format={signed} onChange={(v) => set('attackBonus', v)} /> : <b>{signed(a.attackBonus)}</b>}</Fld>
+            <Fld label="Alcance">{canEdit
+              ? <select value={a.attackRange} aria-label="Alcance" onChange={(e) => set('attackRange', e.target.value as DhAdversary['attackRange'])}>{RANGE_ORDER.map((r) => <option key={r} value={r}>{RANGE_INFO[r].label}</option>)}</select>
+              : <b>{RANGE_INFO[a.attackRange].label}</b>}</Fld>
+            <Fld label="Dano">{canEdit ? <Inline value={a.damage} onChange={(v) => set('damage', v)} maxLength={30} placeholder="2d8+3" aria-label="Dano" /> : <b>{a.damage}</b>}</Fld>
+            <Fld label="Tipo">{canEdit
+              ? <select value={a.damageType} aria-label="Tipo de dano" onChange={(e) => set('damageType', e.target.value as DhAdversary['damageType'])}><option value="fis">Físico</option><option value="mag">Mágico</option></select>
+              : <b>{a.damageType === 'mag' ? 'Mágico' : 'Físico'}</b>}</Fld>
+          </div>
+          {canEdit && (
+            <div className="dh-atk__roll">
+              <span className="dh-seg" role="group" aria-label="Como rolar"><button type="button" className={adv === 'desv' ? 'is-on' : ''} onClick={() => setAdv(adv === 'desv' ? 'normal' : 'desv')}>Desvantagem</button><button type="button" className={adv === 'vant' ? 'is-on' : ''} onClick={() => setAdv(adv === 'vant' ? 'normal' : 'vant')}>Vantagem</button></span>
+              <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void attack()}>Rolar ataque (d20)</button>
+              <button type="button" className="btn" disabled={busy} onClick={() => void damage()}>Rolar dano</button>
+            </div>
+          )}
+          {out && <p className="dh-notice" role="status" onClick={() => setOut(null)}>{out}</p>}
+        </div>
+
+        <Title right={canEdit ? <button type="button" className="dh-link" onClick={() => set('experiences', [...a.experiences, { id: newId(), name: '', mod: 2 }])}>+ Experiência</button> : null}>Experiências</Title>
+        <ul className="dh-gmexps">
+          {a.experiences.map((e) => (
+            <li key={e.id}>
+              <Inline value={e.name} onChange={(v) => set('experiences', a.experiences.map((x) => (x.id === e.id ? { ...x, name: v } : x)))} disabled={!canEdit} placeholder="Experiência do adversário" maxLength={80} aria-label="Experiência" />
+              {canEdit ? <Stepper value={e.mod} min={-5} max={12} label="Bônus" format={signed} onChange={(v) => set('experiences', a.experiences.map((x) => (x.id === e.id ? { ...x, mod: v } : x)))} /> : <b>{signed(e.mod)}</b>}
+              {canEdit && <button type="button" className="dh-x" aria-label="Remover Experiência" onClick={() => set('experiences', a.experiences.filter((x) => x.id !== e.id))}>×</button>}
+            </li>
+          ))}
+          {a.experiences.length === 0 && <li className="dh-empty">Nenhuma.</li>}
+        </ul>
+
+        <Features features={a.features} canEdit={canEdit} fear={fear} onChange={(f) => set('features', f)} onUse={(f) => void use(f, a.name)} />
+        {msg && <p className="dh-notice" role="status" onClick={() => setMsg(null)}>{msg}</p>}
+        {canEdit && <Fld label="Anotações do mestre"><Inline multiline rows={3} maxLength={8000} value={a.notes} onChange={(v) => set('notes', v)} aria-label="Anotações" /></Fld>}
+      </div>
     </section>
   )
 }
@@ -255,26 +278,32 @@ export function EnvironmentSheet({ row, campaignId, canEdit }: { row: GmRow<DhEn
   const set = <K extends keyof DhEnvironment>(k: K, v: DhEnvironment[K]) => update((d) => ({ ...d, [k]: v }))
   return (
     <section className="dh-box dh-gmsheet">
-      <Banner right={canEdit ? <span className={`dh-status__dot dh-status__dot--${status}`}>{status === 'salvando' ? 'Salvando…' : status === 'erro' ? 'Erro ao salvar' : 'Salvo'}</span> : null}>Ambiente</Banner>
-      <Inline className="dh-gmsheet__name" value={e.name} onChange={(v) => set('name', v)} disabled={!canEdit} maxLength={120} aria-label="Nome" />
-      <p className="dh-gmsheet__sub">
-        {canEdit ? (
-          <>
-            <select value={e.tier} aria-label="Patamar" onChange={(ev) => set('tier', Number(ev.target.value) as DhEnvironment['tier'])}>{[1, 2, 3, 4].map((t) => <option key={t} value={t}>Patamar {t}</option>)}</select>
-            <select value={ENVIRONMENT_KINDS.includes(e.kind as typeof ENVIRONMENT_KINDS[number]) ? e.kind : 'Exploração'} aria-label="Tipo" onChange={(ev) => set('kind', ev.target.value)}>{ENVIRONMENT_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
-            <label className="dh-miniedit">Dificuldade <Stepper value={e.difficulty} min={0} max={40} label="Dificuldade" onChange={(v) => set('difficulty', v)} /></label>
-          </>
-        ) : <em>Patamar {e.tier} · {e.kind} · Dificuldade {e.difficulty}</em>}
-      </p>
-      <Inline multiline rows={2} maxLength={1500} value={e.description} onChange={(v) => set('description', v)} disabled={!canEdit} placeholder="Descrição" aria-label="Descrição" />
-      <p><strong>Impulsos:</strong></p>
-      <Inline value={e.impulses} onChange={(v) => set('impulses', v)} disabled={!canEdit} maxLength={600} placeholder="Ex.: desorientar e confundir" aria-label="Impulsos" />
-      <p><strong>Dificuldade:</strong> {e.difficulty}</p>
-      <p><strong>Adversários:</strong></p>
-      <Inline multiline rows={2} maxLength={800} value={e.adversaries} onChange={(v) => set('adversaries', v)} disabled={!canEdit} placeholder="Quem costuma aparecer aqui" aria-label="Adversários" />
-      <Features features={e.features} canEdit={canEdit} fear={fear} onChange={(f) => set('features', f)} onUse={(f) => void use(f, e.name)} />
-      {msg && <p className="dh-notice" role="status" onClick={() => setMsg(null)}>{msg}</p>}
-      {canEdit && <label className="dh-qa">Anotações do mestre<Inline multiline rows={3} maxLength={8000} value={e.notes} onChange={(v) => set('notes', v)} aria-label="Anotações" /></label>}
+      <header className="dh-gmhead">
+        <div className="dh-gmhead__main">
+          <p className="dh-gmhead__meta"><span>Ambiente</span>{canEdit && <SaveState status={status} />}</p>
+          <Inline className="dh-gmsheet__name" value={e.name} onChange={(v) => set('name', v)} disabled={!canEdit} maxLength={120} aria-label="Nome" />
+          <div className="dh-gmtags">
+            {canEdit ? (
+              <>
+                <select value={e.tier} aria-label="Patamar" onChange={(ev) => set('tier', Number(ev.target.value) as DhEnvironment['tier'])}>{[1, 2, 3, 4].map((t) => <option key={t} value={t}>Patamar {t}</option>)}</select>
+                <select value={ENVIRONMENT_KINDS.includes(e.kind as typeof ENVIRONMENT_KINDS[number]) ? e.kind : 'Exploração'} aria-label="Tipo" onChange={(ev) => set('kind', ev.target.value)}>{ENVIRONMENT_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+              </>
+            ) : <><em>Patamar {e.tier}</em><em>{e.kind}</em></>}
+          </div>
+        </div>
+        <div className="dh-gmdif">
+          <span>Dificuldade</span>
+          {canEdit ? <Stepper value={e.difficulty} min={0} max={40} label="Dificuldade" onChange={(v) => set('difficulty', v)} /> : <b>{e.difficulty}</b>}
+        </div>
+      </header>
+      <div className="dh-gmbody">
+        <Inline multiline rows={2} maxLength={1500} value={e.description} onChange={(v) => set('description', v)} disabled={!canEdit} placeholder="Descrição" aria-label="Descrição" />
+        <Fld label="Impulsos"><Inline value={e.impulses} onChange={(v) => set('impulses', v)} disabled={!canEdit} maxLength={600} placeholder="Ex.: desorientar e confundir" aria-label="Impulsos" /></Fld>
+        <Fld label="Adversários"><Inline multiline rows={2} maxLength={800} value={e.adversaries} onChange={(v) => set('adversaries', v)} disabled={!canEdit} placeholder="Quem costuma aparecer aqui" aria-label="Adversários" /></Fld>
+        <Features features={e.features} canEdit={canEdit} fear={fear} onChange={(f) => set('features', f)} onUse={(f) => void use(f, e.name)} />
+        {msg && <p className="dh-notice" role="status" onClick={() => setMsg(null)}>{msg}</p>}
+        {canEdit && <Fld label="Anotações do mestre"><Inline multiline rows={3} maxLength={8000} value={e.notes} onChange={(v) => set('notes', v)} aria-label="Anotações" /></Fld>}
+      </div>
     </section>
   )
 }
