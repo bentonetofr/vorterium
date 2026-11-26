@@ -686,3 +686,17 @@ button.dh-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .dh-head__level span { display: block; margin: 5px 10px 0; padding: 2px 0 3px; border-radius: 4px; font-size: 8.5px; background: var(--dh-ink); color: var(--dh-paper); }
 
 .dh-th__num { clip-path: none; border: 0; width: 46px; height: 38px; padding-right: 6px; background: transparent url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%20preserveAspectRatio=%27none%27%3E%3Cpath%20d=%27M6%203H72Q77%203%2080%207L97%2046Q99%2050%2097%2054L80%2093Q77%2097%2072%2097H6Q2%2097%202%2093V7Q2%203%206%203Z%27%20fill=%27%2312172a%27%20stroke=%27%23e9e7df%27%20stroke-width=%272.6%27%20stroke-linejoin=%27round%27%20vector-effect=%27non-scaling-stroke%27/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+
+/* ═══ Caixas de seleção no desenho da ficha ═══ */
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) input[type='checkbox'] {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative;
+  width: 20px; height: 20px; margin: 0; vertical-align: -5px; cursor: pointer;
+  border: 2px solid var(--dh-line, #3d4560); border-radius: 7px; background: var(--dh-field, #0e1221) center / 14px 14px no-repeat;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) input[type='checkbox']:hover:not(:disabled) { border-color: var(--dh-hope, #c9a032); transform: scale(1.08); }
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) input[type='checkbox']:active:not(:disabled) { transform: scale(0.88); }
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) input[type='checkbox']:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(201, 160, 50, 0.3); }
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) input[type='checkbox']:checked { background-color: var(--dh-hope, #c9a032); border-color: var(--dh-hope, #c9a032); background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%3E%3Cpath%20d=%27M3.4%208.6l3%203%206.2-6.8%27%20fill=%27none%27%20stroke=%27%231a1405%27%20stroke-width=%272.4%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3C/svg%3E"); animation: dh-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) input[type='checkbox']:disabled { opacity: 0.45; cursor: not-allowed; }
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-creator, .dh-gm, .dhd) label:has(> input[type='checkbox']), .dh-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
