@@ -878,3 +878,17 @@ button.dh-show__thumb.is-on { border-color: var(--dh-hope); box-shadow: 0 0 0 3p
   .dh-show__big.is-empty { min-height: 120px; }
 }
 @media (prefers-reduced-motion: reduce) { .dh-show__big img, .dh-show__check { animation: none; } }
+
+/* ═══ Pegar carta: janela suspensa central ═══ */
+.dh-browser.dh-browser--modal { width: min(1040px, 95vw); max-height: 90vh; display: flex; flex-direction: column; margin: 0; padding: 16px 18px 14px; border-radius: 14px; background: var(--dh-paper); }
+.dh-browser--modal .dh-dialog__head { align-items: flex-start; }
+.dh-browser--modal .dh-dialog__head h3 { margin: 2px 0 0; font-size: 22px; }
+.dh-browser--modal .dh-picker__bar { margin: 10px 0 8px; gap: 10px 14px; }
+.dh-browser__search { flex: 1; min-width: 150px; max-width: 260px; padding: 7px 12px; border: 1.5px solid var(--dh-line); border-radius: 9px; background: var(--dh-field); color: var(--dh-ink); font: inherit; font-size: 13.5px; }
+.dh-browser__search:focus { outline: none; border-color: var(--dh-hope); box-shadow: 0 0 0 3px rgba(201, 160, 50, 0.25); }
+.dh-browser__notice { margin: 0 0 8px; }
+.dh-browser__body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 4px 10px; margin: 0 -4px; }
+.dh-browser--modal .dh-cardgrid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px 16px; }
+.dh-browser--modal .dh-card--img > footer .btn { min-width: 110px; }
+.dh-browser--modal .dh-dialog__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid var(--dh-line); margin-top: 6px; }
+.dh-browser__count { font-size: 13px; color: var(--dh-ink-soft); }

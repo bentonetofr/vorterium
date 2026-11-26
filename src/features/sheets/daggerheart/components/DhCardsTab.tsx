@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { DOMAINS, CARD_TYPE_LABEL, DOMAIN_ORDER } from '../catalog/rules'
 import { DOMAIN_CARDS, cardImage, domainCard } from '../catalog/domainCards'
 import { cardsInHand, markStress, maxCardLevel, ownedDomains } from '../model/derive'
@@ -133,24 +134,44 @@ function CardBrowser({ data, onClose, onPick }: { data: DhSheetData; onClose: ()
     domains.includes(c.domain) && !owned.has(c.id) && (dom === 'todos' || c.domain === dom)
     && (all || c.level <= maxCardLevel(data, c.domain)) && (!q.trim() || c.name.toLowerCase().includes(q.trim().toLowerCase())),
   ).sort((a, b) => a.level - b.level || DOMAIN_ORDER.indexOf(a.domain) - DOMAIN_ORDER.indexOf(b.domain)), [domains, owned, dom, all, q, data])
+  const [last, setLast] = useState<string | null>(null)
+
+  function pick(c: DhDomainCard) {
+    const to = cardsInHand(data) < LOADOUT_MAX ? 'para a mão' : 'para a reserva (a mão está cheia)'
+    onPick(c.id)
+    setLast(`${c.name} foi ${to}.`)
+  }
+
   return (
-    <div className="dh-browser">
-      <header className="dh-dialog__head">
-        <h3>Cartas de domínio</h3>
-        <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
-      </header>
-      <div className="dh-picker__bar">
-        <span className="dh-seg" role="group">
-          <button type="button" className={dom === 'todos' ? 'is-on' : ''} onClick={() => setDom('todos')}>Todos</button>
-          {domains.map((d) => <button key={d} type="button" className={dom === d ? 'is-on' : ''} onClick={() => setDom(d)}><DomainIcon domain={d} size={14} title={false} /> {DOMAINS[d].name}</button>)}
-        </span>
-        <input type="search" placeholder="Buscar" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar carta" />
-        <label className="dh-check"><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Ver acima do meu nível</label>
+    <ModalOverlay onClose={onClose}>
+      <div className="dh-dialog dh-browser dh-browser--modal" role="dialog" aria-modal="true" aria-label="Pegar carta de domínio">
+        <header className="dh-dialog__head">
+          <div>
+            <small className="dh-lvl__kicker">Cartas dos seus domínios</small>
+            <h3>Pegar carta</h3>
+          </div>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        </header>
+        <div className="dh-picker__bar">
+          <span className="dh-seg" role="group">
+            <button type="button" className={dom === 'todos' ? 'is-on' : ''} onClick={() => setDom('todos')}>Todos</button>
+            {domains.map((d) => <button key={d} type="button" className={dom === d ? 'is-on' : ''} onClick={() => setDom(d)}><DomainIcon domain={d} size={14} title={false} /> {DOMAINS[d].name}</button>)}
+          </span>
+          <input type="search" className="dh-browser__search" placeholder="Buscar pelo nome" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar carta" />
+          <label className="dh-check"><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> Ver acima do meu nível</label>
+        </div>
+        {last && <p className="dh-notice dh-browser__notice" role="status" onClick={() => setLast(null)}>{last}</p>}
+        <div className="dh-browser__body">
+          <div className="dh-cardgrid">
+            {list.map((c) => <CardView key={c.id} card={c} compact actions={<button type="button" className="btn btn-primary" onClick={() => pick(c)}>Pegar</button>} />)}
+            {list.length === 0 && <p className="dh-empty">Nenhuma carta disponível com esses filtros.</p>}
+          </div>
+        </div>
+        <footer className="dh-dialog__foot">
+          <span className="dh-browser__count">{list.length} {list.length === 1 ? 'carta disponível' : 'cartas disponíveis'}</span>
+          <button type="button" className="btn" onClick={onClose}>Concluir</button>
+        </footer>
       </div>
-      <div className="dh-cardgrid">
-        {list.map((c) => <CardView key={c.id} card={c} compact actions={<button type="button" className="btn" onClick={() => onPick(c.id)}>Pegar</button>} />)}
-        {list.length === 0 && <p className="dh-empty">Nenhuma carta disponível.</p>}
-      </div>
-    </div>
+    </ModalOverlay>
   )
 }
