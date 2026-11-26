@@ -1,7 +1,8 @@
 import { ANCESTRIES, COMMUNITIES, ancestry, community } from '../catalog/heritage'
 import { CLASSES } from '../catalog/classes'
 import { DESCRIPTION_HINTS, EXPERIENCE_EXAMPLES } from '../catalog/rules'
-import { currentClass, currentSubclass } from '../model/derive'
+import { currentClass, currentSubclass, subclassStage } from '../model/derive'
+import { DhSubclassTimeline } from './DhSubclassTimeline'
 import type { DhSheetData } from '../model/types'
 import { confirmDialog } from '../../../../shared/components/dialogs'
 import { Banner, Inline, RuleText, DhSelect } from './DhUi'
@@ -47,7 +48,12 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
           </label>
         </div>
         {cls && <p className="dh-hint">{cls.description}</p>}
-        {sub && <p className="dh-hint"><em>{sub.tagline}</em></p>}
+        {sub && (
+          <>
+            <p className="dh-hint"><em>{sub.tagline}</em></p>
+            <DhSubclassTimeline sub={sub} stage={subclassStage(data)} />
+          </>
+        )}
       </section>
 
       <section className="dh-box">

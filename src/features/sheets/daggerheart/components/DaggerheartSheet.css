@@ -892,3 +892,26 @@ button.dh-show__thumb.is-on { border-color: var(--dh-hope); box-shadow: 0 0 0 3p
 .dh-browser--modal .dh-card--img > footer .btn { min-width: 110px; }
 .dh-browser--modal .dh-dialog__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid var(--dh-line); margin-top: 6px; }
 .dh-browser__count { font-size: 13px; color: var(--dh-ink-soft); }
+
+/* ═══ Subclasse como linha do tempo ═══ */
+.dh-tl { list-style: none; position: relative; display: grid; gap: 10px; margin: 12px 0 2px; padding: 0 0 0 36px; }
+.dh-tl::before { content: ""; position: absolute; left: 13px; top: 16px; bottom: 16px; width: 2px; background: var(--dh-line); border-radius: 2px; }
+.dh-tl__step { position: relative; border: 1.5px solid var(--dh-line); border-radius: 12px; background: var(--dh-field); padding: 10px 14px 12px; transition: border-color 0.2s, background 0.2s, opacity 0.2s; }
+.dh-tl__dot { position: absolute; left: -33px; top: 12px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--dh-field-2, #20263a); border: 2px solid var(--dh-line); color: var(--dh-ink-soft); font-size: 12px; font-weight: 700; }
+.dh-tl__step header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; }
+.dh-tl__step header b { font-size: 15px; font-weight: 600; color: var(--dh-ink); }
+.dh-tl__step header em { font-style: normal; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dh-ink-soft); }
+.dh-tl__feat { margin-top: 8px; }
+.dh-tl__feat h5 { margin: 0 0 2px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--dh-ink); }
+.dh-tl__feat p, .dh-tl__feat li { font-size: 13px; line-height: 1.5; color: var(--dh-ink-soft); }
+.dh-tl__feat p { margin: 2px 0; }
+.dh-tl__feat ul { margin: 2px 0; padding-left: 18px; }
+.dh-tl__how { margin: 8px 0 0; font-size: 12px; color: var(--dh-ink-soft); font-style: italic; }
+.dh-tl__step.is-on { border-color: var(--dh-hope); background: rgba(201, 160, 50, 0.08); }
+.dh-tl__step.is-on .dh-tl__dot { background: var(--dh-hope); border-color: var(--dh-hope); color: #1a1405; }
+.dh-tl__step.is-on header em { color: var(--dh-hope); }
+.dh-tl__step.is-next .dh-tl__dot { border-color: var(--dh-hope); color: var(--dh-hope); }
+.dh-tl__step.is-next { border-style: dashed; }
+.dh-tl__step.is-lock { opacity: 0.7; }
+.dh-tl__step.is-lock .dh-tl__feat p, .dh-tl__step.is-lock .dh-tl__feat li { color: var(--dh-ink-soft); }
+@media (max-width: 520px) { .dh-tl { padding-left: 30px; } .dh-tl__dot { left: -30px; } }
