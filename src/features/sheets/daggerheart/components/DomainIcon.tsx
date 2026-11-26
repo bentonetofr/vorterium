@@ -3,11 +3,13 @@ import { DOMAINS } from '../catalog/rules'
 
 // ────────────────────────────────────────────────────────
 // A faixa de cada domínio, igual à do livro (cor própria e o emblema branco). Fica no cabeçalho da classe, nos seletores de
-// domínio e onde mais o domínio precisar de marca. As imagens estão em public/dh/dominios (uma por domínio, fundo transparente).
+// domínio e onde mais o domínio precisar de marca. São vetores (SVG) em public/dh/dominios, nítidos em qualquer tamanho: a faixa
+// foi montada aqui e os emblemas vêm do repositório Foundryborne/daggerheart (assets/icons/domains), que os distribui sob a
+// Darrington Press Community Gaming License (DPCGL). Daggerheart é marca da Critical Role / Darrington Press.
 // ────────────────────────────────────────────────────────
 
 export function domainBanner(domain: DhDomain): string {
-  return `${import.meta.env.BASE_URL}dh/dominios/${domain}.webp`
+  return `${import.meta.env.BASE_URL}dh/dominios/${domain}.svg`
 }
 
 interface Props {
