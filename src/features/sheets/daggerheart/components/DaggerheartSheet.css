@@ -732,3 +732,12 @@ button.dh-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .dh-card--img > footer .dh-link:last-child, .dh-gm__tools .dh-link:last-child { color: #e89a9a; }
 .dh-card--img > footer .dh-link:last-child:hover:not(:disabled), .dh-gm__tools .dh-link:last-child:hover:not(:disabled) { border-color: #d46a6a; color: #ff9a9a; background: rgba(179, 74, 74, 0.14); }
 .dh-card--img > footer { gap: 8px; }
+
+/* ── Janelinha de descrição do domínio (aparece ao lado do mouse, depois de 1 segundo) ── */
+.dh-domain-icon[tabindex] { cursor: help; outline: none; border-radius: 4px; }
+.dh-domain-icon[tabindex]:focus-visible { box-shadow: 0 0 0 2px #c9a032; }
+@keyframes dh-tip-in { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
+.dh-domtip { position: fixed; z-index: 2000; max-width: calc(100vw - 20px); padding: 10px 14px 12px; pointer-events: none; color: #e9e7df; background: #12172a; border: 1.5px solid var(--dh-domain, #c9a032); border-radius: 10px; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.4); animation: dh-tip-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; font-family: inherit; }
+.dh-domtip b { display: block; margin-bottom: 4px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dh-domain, #c9a032); }
+.dh-domtip p { margin: 0; font-size: 13px; line-height: 1.45; color: #cfd2e0; }
+@media (prefers-reduced-motion: reduce) { .dh-domtip { animation: none; } }
