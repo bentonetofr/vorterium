@@ -707,3 +707,28 @@ button.dh-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .dh-head__dots .dh-domain-icon { filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.55)); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .dh-head__dots .dh-domain-icon:hover { transform: translateY(-3px) scale(1.08); }
 .dh-seg button .dh-domain-icon { width: 15px; margin-right: 4px; vertical-align: -5px; }
+
+/* ═══ Botões de texto (antes links sublinhados) no desenho da ficha ═══ */
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-gm, .dh-creator, .dh-box) .dh-link,
+.dh-link {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; min-height: 30px;
+  border: 1.5px solid var(--dh-line, #3d4560); border-radius: 9px; background: var(--dh-field, #0e1221);
+  color: var(--dh-ink, #e9e7df); font: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; text-decoration: none; cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+:is(.dh-sheet, .dh-dialog, .dh-browser, .dh-gm, .dh-creator, .dh-box) .dh-link:hover:not(:disabled),
+.dh-link:hover:not(:disabled) { border-color: var(--dh-hope, #c9a032); color: var(--dh-hope, #c9a032); background: var(--dh-hover, #282f4a); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); }
+.dh-link:active:not(:disabled) { transform: scale(0.95); box-shadow: none; }
+.dh-link:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.dh-link.is-on { border-color: var(--dh-hope); color: var(--dh-hope); background: rgba(201, 160, 50, 0.12); }
+/* as ferramentas da ficha (Automatizar, teste de conjuração) ganham um ponto dourado */
+.dh-tools { gap: 10px; padding: 4px 16px 10px; }
+.dh-tools .dh-link::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--dh-hope); box-shadow: 0 0 8px rgba(201, 160, 50, 0.7); }
+/* nos títulos de seção (+ Experiência, + Habilidade): menores, discretos */
+.dh-banner .dh-link, .dh-gmtitle .dh-link { min-height: 24px; padding: 2px 10px; font-size: 12px; border-radius: 7px; border-color: rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.05); box-shadow: none; text-transform: none; letter-spacing: 0; color: var(--dh-ink); }
+.dh-banner .dh-link:hover:not(:disabled), .dh-gmtitle .dh-link:hover:not(:disabled) { box-shadow: none; transform: translateY(-1px); }
+/* ações que apagam */
+.dh-card--img > footer .dh-link:last-child, .dh-gm__tools .dh-link:last-child { color: #e89a9a; }
+.dh-card--img > footer .dh-link:last-child:hover:not(:disabled), .dh-gm__tools .dh-link:last-child:hover:not(:disabled) { border-color: #d46a6a; color: #ff9a9a; background: rgba(179, 74, 74, 0.14); }
+.dh-card--img > footer { gap: 8px; }
