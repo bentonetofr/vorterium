@@ -132,7 +132,7 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
         <div className="dh-head__class">
           <h2>{cls?.name ?? 'Sem classe'}</h2>
           <p>{doms.map((d) => DOMAINS[d].name).join(' & ')}</p>
-          <span className="dh-head__dots">{doms.map((d) => <DomainIcon key={d} domain={d} size={22} />)}</span>
+          <span className="dh-head__dots">{doms.map((d) => <DomainIcon key={d} domain={d} size={32} />)}</span>
         </div>
         <div className="dh-head__fields">
           <label className="dh-field dh-field--name"><span>Nome</span><Inline value={data.name} onChange={(v) => set('name', v)} disabled={!ed} maxLength={120} aria-label="Nome do personagem" /></label>
