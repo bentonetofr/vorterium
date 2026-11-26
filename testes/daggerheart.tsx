@@ -63,7 +63,7 @@ function Demo() {
         <button className="btn" onClick={() => setD({ ...exemplo(), classKey: 'druida', subclassKey: 'protetor_elementos' })}>druida</button>
       </div>
       <div className="dh-sheet">
-        {tab === 'ficha' && <DhSheetMain data={d} update={update} target={target} canEdit />}
+        {tab === 'ficha' && <DhSheetMain data={d} update={update} target={target} canEdit onOpenTab={setTab} />}
         {tab === 'cartas' && <DhCardsTab data={d} update={update} canEdit />}
         {tab === 'nivel' && <DhLevelTab data={d} update={update} canEdit />}
         {tab === 'personagem' && <DhPersonTab data={d} update={update} canEdit />}

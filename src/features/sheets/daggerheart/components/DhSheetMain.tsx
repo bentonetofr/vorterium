@@ -29,11 +29,13 @@ interface Props {
   update: (fn: (d: DhSheetData) => DhSheetData) => void
   target: DhRollTarget
   canEdit: boolean
+  /** Abre outra aba da ficha (os campos de herança e subclasse do cabeçalho levam à aba Personagem). */
+  onOpenTab?: (tab: string) => void
 }
 
 type Picker = { kind: 'armor' } | { kind: 'weapon'; where: 'primary' | 'secondary' | 'inv0' | 'inv1' } | null
 
-export function DhSheetMain({ data, update, target, canEdit }: Props) {
+export function DhSheetMain({ data, update, target, canEdit, onOpenTab }: Props) {
   const cls = currentClass(data)
   const sub = currentSubclass(data)
   const [roll, setRoll] = useState<RollSpec | null>(null)
@@ -137,10 +139,23 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
         <div className="dh-head__fields">
           <label className="dh-field dh-field--name"><span>Nome</span><Inline value={data.name} onChange={(v) => set('name', v)} disabled={!ed} maxLength={120} aria-label="Nome do personagem" /></label>
           <label className="dh-field dh-field--pron"><span>Pronomes</span><Inline value={data.pronouns} onChange={(v) => set('pronouns', v)} disabled={!ed} maxLength={60} aria-label="Pronomes" /></label>
-          <label className="dh-field"><span>Herança</span><Inline value={heritage} onChange={(v) => set('ancestryName', v)} disabled aria-label="Herança" /></label>
-          <label className="dh-field"><span>Subclasse</span><Inline value={sub?.name ?? ''} onChange={() => {}} disabled aria-label="Subclasse" /></label>
+          {ed && onOpenTab
+            ? (
+              <>
+                <button type="button" className="dh-field dh-field--link" onClick={() => onOpenTab('personagem')} title="Trocar ancestralidade e comunidade (aba Personagem)"><span>Herança</span><b>{heritage || 'Escolher'}</b></button>
+                <button type="button" className="dh-field dh-field--link" onClick={() => onOpenTab('personagem')} title="Trocar classe e subclasse (aba Personagem)"><span>Subclasse</span><b>{sub?.name ?? 'Escolher'}</b></button>
+              </>
+            )
+            : (
+              <>
+                <label className="dh-field"><span>Herança</span><Inline value={heritage} onChange={(v) => set('ancestryName', v)} disabled aria-label="Herança" /></label>
+                <label className="dh-field"><span>Subclasse</span><Inline value={sub?.name ?? ''} onChange={() => {}} disabled aria-label="Subclasse" /></label>
+              </>
+            )}
         </div>
-        <div className="dh-head__level" aria-label={`Nível ${data.level}`}><b>{data.level}</b><span>Nível</span></div>
+        {ed
+          ? <button type="button" className="dh-head__level dh-head__level--link" aria-label={`Nível ${data.level}: abrir o Automatizar para mudar`} title="Mudar o nível (Automatizar)" onClick={() => setAutoOpen(true)}><b>{data.level}</b><span>Nível</span></button>
+          : <div className="dh-head__level" aria-label={`Nível ${data.level}`}><b>{data.level}</b><span>Nível</span></div>}
       </header>
 
       {/* ── Evasão, Armadura e atributos ── */}

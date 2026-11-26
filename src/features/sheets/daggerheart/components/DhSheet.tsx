@@ -92,7 +92,7 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
       </nav>
 
       <div style={panelsStyle}>
-        {tab === 'ficha' && <div className="anim-tab-panel"><DhSheetMain data={data} update={update} target={target} canEdit={canEdit} /></div>}
+        {tab === 'ficha' && <div className="anim-tab-panel"><DhSheetMain data={data} update={update} target={target} canEdit={canEdit} onOpenTab={(t) => selectTab(t as typeof tab)} /></div>}
         {tab === 'cartas' && <div className="anim-tab-panel"><DhCardsTab data={data} update={update} canEdit={canEdit} /></div>}
         {tab === 'nivel' && <div className="anim-tab-panel"><DhLevelTab data={data} update={update} canEdit={canEdit} /></div>}
         {tab === 'personagem' && <div className="anim-tab-panel"><DhPersonTab data={data} update={update} canEdit={canEdit} /></div>}
