@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
 import { ARMORS } from '../catalog/armor'
 import { CLASSES, dhClass } from '../catalog/classes'
@@ -24,6 +24,10 @@ import { signed, DhSelect } from './DhUi'
 interface Props {
   onDone: (data: DhSheetData) => void
   onCancel: () => void
+  /** Respostas já preenchidas (vêm do formulário de narrativa). */
+  initial?: QuickAnswers
+  /** Em que pergunta abrir (id do passo): 'classe' para ajustar do começo, 'resumo' para só conferir. */
+  startAt?: 'classe' | 'resumo'
 }
 
 interface Step {
@@ -50,9 +54,10 @@ function Choice<T extends string>({ items, value, onPick, cols = 1 }: { items: {
   )
 }
 
-export function DhQuickForm({ onDone, onCancel }: Props) {
-  const [a, setA] = useState<QuickAnswers>(emptyAnswers)
+export function DhQuickForm({ onDone, onCancel, initial, startAt }: Props) {
+  const [a, setA] = useState<QuickAnswers>(() => initial ?? emptyAnswers())
   const [i, setI] = useState(0)
+  const jumped = useRef(false)
   /** Fichas depois de cada subida já aplicada (a primeira é a de nível 1). */
   const [states, setStates] = useState<DhSheetData[]>([])
   const set = (patch: Partial<QuickAnswers>) => { setA((x) => ({ ...x, ...patch })); setStates([]) }
@@ -207,6 +212,15 @@ export function DhQuickForm({ onDone, onCancel }: Props) {
         <li>{current.loadout.length + current.vault.length} cartas de domínio</li>
       </ul>
     ),
+  })
+
+  // vindo da narrativa: abre direto no passo pedido (a 1ª subida de nível, se houver, ou o resumo)
+  useEffect(() => {
+    if (jumped.current || !startAt) return
+    jumped.current = true
+    const target = startAt === 'resumo' ? (levelSteps.length ? `n${levelSteps[0]}` : 'resumo') : 'classe'
+    const idx = steps.findIndex((x) => x.id === target)
+    if (idx > 0) setI(idx)
   })
 
   const step = steps[Math.min(i, steps.length - 1)]

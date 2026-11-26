@@ -33,13 +33,15 @@ export interface QuickAnswers {
   carry: string
   experiences: [string, string]
   cards: string[]
+  /** Anotações iniciais da ficha (a narrativa escreve aqui a história do personagem). */
+  notes: string
 }
 
 export function emptyAnswers(): QuickAnswers {
   return {
     name: '', pronouns: '', level: 1, classKey: null, subclassKey: null, ancestryKey: null, ancestry2Key: null, communityKey: null,
     traits: { agility: 0, strength: 0, finesse: 0, instinct: 0, presence: 0, knowledge: 0 },
-    primaryId: '', secondaryId: '', armorId: '', potion: 0, keepsake: 0, carry: '', experiences: ['', ''], cards: [],
+    primaryId: '', secondaryId: '', armorId: '', potion: 0, keepsake: 0, carry: '', experiences: ['', ''], cards: [], notes: '',
   }
 }
 
@@ -85,5 +87,6 @@ export function buildQuickSheet(a: QuickAnswers): DhSheetData {
     experiences: a.experiences.filter((e) => e.trim()).map((e) => ({ id: newId(), name: e.trim(), mod: 2 })),
     loadout: [...a.cards],
     hope: 2,
+    notes: a.notes,
   }
 }

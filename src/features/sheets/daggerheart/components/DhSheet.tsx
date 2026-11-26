@@ -5,7 +5,9 @@ import type { DhSheetData } from '../model/types'
 import type { DhSheet as DhSheetRecord } from '../services/dhSheetService'
 import { useDhSheet } from '../services/useDhSheet'
 import { DhCardsTab } from './DhCardsTab'
+import { DhNarrativeForm } from './DhNarrativeForm'
 import { DhQuickForm } from './DhQuickForm'
+import type { QuickAnswers } from '../model/quick'
 import { DhStartChoice } from './DhStartChoice'
 import { DhExtraTab, hasBeastform, hasCompanion } from './DhExtraTab'
 import { DhLevelTab } from './DhLevelTab'
@@ -30,6 +32,9 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
   const { data, update, status, error } = useDhSheet(sheet)
   const [tab, setTab] = useState<Tab>('ficha')
   const [quick, setQuick] = useState(false)
+  const [narrative, setNarrative] = useState(false)
+  /** Respostas montadas pela narrativa, entregues ao formulário rápido para conferir ou ajustar. */
+  const [fromNarrative, setFromNarrative] = useState<{ answers: QuickAnswers; startAt: 'classe' | 'resumo' } | null>(null)
   const started = data.started || !!data.classKey
   /** Quem abre a ficha em branco escolhe como montar; o mestre olhando a ficha de um jogador não. */
   const mine = canEdit && (!playerName || playerName === 'NPC')
@@ -53,8 +58,10 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
     return (
       <>
         <p className="sheet-empty">Escolha como montar a ficha.</p>
-        {!quick && <DhStartChoice onManual={() => update((d) => ({ ...d, started: true }))} onQuick={() => setQuick(true)} />}
+        {!quick && !narrative && !fromNarrative && <DhStartChoice onManual={() => update((d) => ({ ...d, started: true }))} onQuick={() => setQuick(true)} onNarrative={() => setNarrative(true)} />}
         {quick && <DhQuickForm onCancel={() => setQuick(false)} onDone={(d: DhSheetData) => { update(() => d); setQuick(false) }} />}
+        {narrative && <DhNarrativeForm onCancel={() => setNarrative(false)} onDone={(answers, startAt) => { setFromNarrative({ answers, startAt }); setNarrative(false) }} />}
+        {fromNarrative && <DhQuickForm initial={fromNarrative.answers} startAt={fromNarrative.startAt} onCancel={() => { setFromNarrative(null); setNarrative(true) }} onDone={(d: DhSheetData) => { update(() => d); setFromNarrative(null) }} />}
       </>
     )
   }
