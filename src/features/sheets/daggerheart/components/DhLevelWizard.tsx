@@ -4,8 +4,9 @@ import { CLASSES } from '../catalog/classes'
 import { DOMAIN_CARDS } from '../catalog/domainCards'
 import { experienceMod, maxCardLevel, ownedDomains, tierOf } from '../model/derive'
 import { achievementsAt, advanceChoices, domainPickCap, newExperienceId, pickCost, unmarkedTraits, validateAdvancement, type AdvanceChoice } from '../model/levelUp'
-import type { DhAdvancement, DhClassKey, DhDomain, DhPick, DhSheetData, DhTrait } from '../model/types'
+import type { DhAdvancement, DhClassKey, DhDomain, DhPick, DhSheetData } from '../model/types'
 import { Banner, signed, DhSelect } from './DhUi'
+import { DhTraitRadar } from './DhTraitRadar'
 
 // ────────────────────────────────────────────────────────
 // O passo de uma subida de nível (usado na aba Subir de nível e, no formulário da ficha rápida, uma vez por nível):
@@ -230,21 +231,9 @@ export function describePick(p: DhPick, data: DhSheetData): string {
   }
 }
 
-function TraitSelect({ value, options, onChange, label }: { value: DhTrait; options: DhTrait[]; onChange: (t: DhTrait) => void; label: string }) {
-  return (
-    <DhSelect label={label} value={value} onChange={(v) => onChange(v as DhTrait)} options={options.map((t) => ({ value: t, label: TRAIT_INFO[t].label }))} />
-  )
-}
-
 function PickForm({ data, level, pick, onChange, extraExp }: { data: DhSheetData; level: number; pick: DhPick; onChange: (p: DhPick) => void; extraExp: { id: string; name: string } | null }) {
   if (pick.opt === 'traits') {
-    const free = unmarkedTraits(data, level)
-    return (
-      <div className="dh-pick__body">
-        <TraitSelect label="Primeiro atributo" value={pick.traits[0]} options={free} onChange={(t) => onChange({ ...pick, traits: [t, pick.traits[1]] })} />
-        <TraitSelect label="Segundo atributo" value={pick.traits[1]} options={free} onChange={(t) => onChange({ ...pick, traits: [pick.traits[0], t] })} />
-      </div>
-    )
+    return <DhTraitRadar data={data} level={level} picks={pick.traits} onChange={(traits) => onChange({ ...pick, traits })} />
   }
   if (pick.opt === 'experiences') {
     const exps = [...data.experiences, ...(extraExp ? [{ id: extraExp.id, name: extraExp.name, mod: 2 }] : [])]
