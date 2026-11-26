@@ -18,15 +18,11 @@ export function DhStartChoice({ onManual, onQuick }: Props) {
         <p className="dh-hint">Escolha como quer começar. Nos dois casos dá para mudar tudo na ficha depois.</p>
         <div className="dh-start__options">
           <button type="button" className="dh-start__opt" onClick={onManual}>
-            <em className="dh-start__icon" aria-hidden="true">✎</em>
             <b>Fazer manualmente</b>
-            <small className="dh-start__tag">Para quem já conhece o sistema</small>
             <span>A ficha abre em branco e você preenche tudo na própria ficha. Para quem já conhece o sistema: o site calcula o que as regras mandam e cada número pode ser trocado por um valor seu.</span>
           </button>
           <button type="button" className="dh-start__opt dh-start__opt--quick" onClick={onQuick}>
-            <em className="dh-start__icon" aria-hidden="true">✦</em>
             <b>Criar ficha rápida</b>
-            <small className="dh-start__tag">Uma pergunta por vez</small>
             <span>Um formulário com uma pergunta por vez, só o essencial: nome, classe, herança, atributos, equipamento, Experiências e cartas. No fim a ficha sai pronta.</span>
           </button>
         </div>
