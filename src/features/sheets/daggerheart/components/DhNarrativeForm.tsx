@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ModalOverlay } from '../../../../shared/components/ModalOverlay'
-import { QUESTIONS, answered, recommend, type NQuestion, type NarrativeAnswers } from '../model/narrative'
+import { DONT_KNOW, answered, recommend, visibleQuestions, type NQuestion, type NarrativeAnswers } from '../model/narrative'
 import type { QuickAnswers } from '../model/quick'
 
 // ────────────────────────────────────────────────────────
@@ -18,12 +18,16 @@ interface Props {
 function Question({ q, value, onChange, onEnter }: { q: NQuestion; value: string[]; onChange: (v: string[]) => void; onEnter: () => void }) {
   if (q.kind === 'text') {
     return (
-      <input autoFocus className="dh-q__input" value={value[0] ?? ''} maxLength={q.id === 'nome' ? 120 : 200} placeholder={q.placeholder}
-        onChange={(e) => onChange([e.target.value])} onKeyDown={(e) => { if (e.key === 'Enter') onEnter() }} />
+      <>
+        <input autoFocus className="dh-q__input" value={value[0] ?? ''} maxLength={q.id === 'nome' ? 120 : 200} placeholder={q.placeholder}
+          onChange={(e) => onChange([e.target.value])} onKeyDown={(e) => { if (e.key === 'Enter') onEnter() }} />
+        {q.examples && <div className="dh-chips">{q.examples.map((x) => <button key={x} type="button" onClick={() => onChange([x])}>{x}</button>)}</div>}
+      </>
     )
   }
   const many = q.kind === 'many'
   const max = q.max ?? 1
+  const unsure = value.includes(DONT_KNOW)
   return (
     <div className={`dh-q__choices dh-q__choices--${(q.options?.length ?? 0) > 7 ? 2 : 1}`} role={many ? 'group' : 'radiogroup'}>
       {(q.options ?? []).map((o) => {
@@ -32,15 +36,22 @@ function Question({ q, value, onChange, onEnter }: { q: NQuestion; value: string
           <button key={o.id} type="button" role={many ? undefined : 'radio'} aria-checked={many ? undefined : on} aria-pressed={many ? on : undefined} className={`dh-q__choice${on ? ' is-on' : ''}`}
             onClick={() => {
               if (!many) { onChange([o.id]); return }
-              if (on) onChange(value.filter((x) => x !== o.id))
-              else if (value.length < max) onChange([...value, o.id])
-              else onChange([...value.slice(1), o.id])
+              const mine = value.filter((x) => x !== DONT_KNOW)
+              if (on) onChange(mine.filter((x) => x !== o.id))
+              else if (mine.length < max) onChange([...mine, o.id])
+              else onChange([...mine.slice(1), o.id])
             }}>
             <b>{o.label}</b>
             {o.sub && <small>{o.sub}</small>}
           </button>
         )
       })}
+      {q.id !== 'nivel' && (
+        <button type="button" role={many ? undefined : 'radio'} aria-checked={many ? undefined : unsure} aria-pressed={many ? unsure : undefined} className={`dh-q__choice dh-nar__unsure${unsure ? ' is-on' : ''}`} onClick={() => onChange([DONT_KNOW])}>
+          <b>Não sei: escolha por mim</b>
+          <small>O site decide pelo conjunto das suas outras respostas.</small>
+        </button>
+      )}
     </div>
   )
 }
@@ -48,9 +59,10 @@ function Question({ q, value, onChange, onEnter }: { q: NQuestion; value: string
 export function DhNarrativeForm({ onCancel, onDone }: Props) {
   const [answers, setAnswers] = useState<NarrativeAnswers>({})
   const [i, setI] = useState(0)
-  const total = QUESTIONS.length + 1
-  const isResult = i >= QUESTIONS.length
-  const q = isResult ? null : QUESTIONS[i]
+  const list = useMemo(() => visibleQuestions(answers), [answers])
+  const total = list.length + 1
+  const isResult = i >= list.length
+  const q = isResult ? null : list[i]
   const rec = useMemo(() => (isResult ? recommend(answers) : null), [isResult, answers])
 
   const ok = q ? answered(q, answers) : true
@@ -78,6 +90,7 @@ export function DhNarrativeForm({ onCancel, onDone }: Props) {
                   </li>
                 ))}
               </ul>
+              {rec.storyPrompts.length > 0 && <p className="dh-hint">Para quem ainda está imaginando o personagem: as anotações da ficha trazem seu resumo e perguntas do guia da classe, por exemplo “{rec.storyPrompts[0]}”. Responda quando quiser.</p>}
               {rec.alternatives.length > 0 && <p className="dh-hint">Outras classes que também combinam: {rec.alternatives.join(' e ')}. Para trocar, use “Ajustar passo a passo”.</p>}
             </>
           )}

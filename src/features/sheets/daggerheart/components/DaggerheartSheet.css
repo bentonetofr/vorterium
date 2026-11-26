@@ -577,3 +577,6 @@ button.dh-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .dh-dialog.dh-start { width: min(900px, 94vw); }
 .dh-nar__sum { gap: 12px; }
 .dh-nar__why { display: block; margin-top: 2px; color: var(--dh-ink-soft); font-size: 12.5px; line-height: 1.4; }
+
+.dh-nar__unsure { border-style: dashed; }
+.dh-nar__unsure b { color: var(--dh-ink-soft); }

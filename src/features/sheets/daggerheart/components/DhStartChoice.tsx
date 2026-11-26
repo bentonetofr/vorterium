@@ -28,7 +28,7 @@ export function DhStartChoice({ onManual, onQuick, onNarrative }: Props) {
           </button>
           <button type="button" className="dh-start__opt dh-start__opt--story" onClick={onNarrative}>
             <b>Criar ficha por narrativa</b>
-            <span>Para quem tem uma ideia de personagem mas não sabe qual classe ou herança combina. Você responde várias perguntas sobre a história, a personalidade e o jeito de jogar, e o site monta a melhor ficha, explicando cada escolha.</span>
+            <span>Para quem tem pouca ideia do personagem, ou não sabe qual classe e herança combinam. Você responde perguntas fáceis (até com cenas de aventura, e pode dizer “não sei”), e o site monta a melhor ficha, sugere ideias de história e explica cada escolha.</span>
           </button>
         </div>
       </div>

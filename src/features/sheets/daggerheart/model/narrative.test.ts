@@ -3,15 +3,15 @@ import { armorEntry } from '../catalog/armor'
 import { dhClass } from '../catalog/classes'
 import { weaponEntry } from '../catalog/weapons'
 import { evasion, hpSlots } from './derive'
-import { QUESTIONS, answered, recommend, type NarrativeAnswers } from './narrative'
+import { DONT_KNOW, QUESTIONS, answered, recommend, visibleQuestions, type NarrativeAnswers } from './narrative'
 import { buildQuickSheet, traitsValid } from './quick'
 
 function base(over: NarrativeAnswers = {}): NarrativeAnswers {
   // respostas neutras: a primeira opção de cada pergunta obrigatória, o resto vem do teste
-  const a: NarrativeAnswers = { nome: ['Teste'], nivel: ['1'] }
+  const a: NarrativeAnswers = { nome: ['Teste'], nivel: ['1'], ideias: ['muitas'] }
   for (const q of QUESTIONS) {
     if (q.kind === 'text') continue
-    if (q.id === 'nivel') continue
+    if (q.id === 'nivel' || q.id === 'ideias') continue
     a[q.id] = [q.options![0].id]
   }
   return { ...a, ...over }
@@ -131,6 +131,50 @@ describe('ficha por narrativa', () => {
       expect(hpSlots(sheet)).toBeGreaterThan(0)
       expect(evasion(sheet)).toBeGreaterThan(0)
       expect(sheet.loadout).toHaveLength(2)
+    }
+  })
+
+  it('quem tem pouca ideia vê cenas e guia; quem tem muita vê as perguntas de história', () => {
+    const few = visibleQuestions({ ideias: ['nenhuma'] }).map((q) => q.id)
+    const many = visibleQuestions({ ideias: ['muitas'] }).map((q) => q.id)
+    expect(few).toContain('cena_dragao')
+    expect(few).not.toContain('sonho')
+    expect(few).not.toContain('passado')
+    expect(many).not.toContain('cena_dragao')
+    expect(many).toContain('sonho')
+    expect(visibleQuestions({ ideias: ['algumas'] }).map((q) => q.id)).toEqual(expect.arrayContaining(['cena_dragao', 'sonho']))
+  })
+
+  it('as cenas mostram o jeito de jogar de quem tem pouca ideia', () => {
+    const sneaky = recommend(base({ ideias: ['nenhuma'], cena_dragao: ['esgueirar'], cena_festa: ['segue'], cena_ponte: ['improviso'], cena_animal: ['segue'], cena_taverna: ['sai'], cena_livro: ['arromba'], arquetipo: ['trapaceiro'], magia: ['nenhuma'] }))
+    expect(sneaky.answers.classKey).toBe('ladino')
+    const healer = recommend(base({ ideias: ['nenhuma'], cena_dragao: ['protege'], cena_festa: ['papo'], cena_ponte: ['fe'], cena_animal: ['cuida'], cena_taverna: ['separa'], cena_livro: ['pessoas'], arquetipo: ['curandeiro'], papel: ['cura'], posicao: ['meio'], resistencia: ['equilibra'], ameaca: ['conversa'], encurralado: ['fe'], quero: ['curar'], fonte: ['natureza'], aparencia: ['folhas'], magia: ['pouca'], motivacao: ['proteger'] }))
+    expect(['druida', 'serafim', 'bardo']).toContain(healer.answers.classKey)
+  })
+
+  it('"não sei" conta como resposta e não muda a escolha; tudo "não sei" ainda gera ficha válida', () => {
+    const q = QUESTIONS.find((x) => x.id === 'arquetipo')!
+    expect(answered(q, { arquetipo: [DONT_KNOW] })).toBe(true)
+    const a: NarrativeAnswers = { nome: ['Sem Ideia'], nivel: ['1'], ideias: ['nenhuma'] }
+    for (const x of visibleQuestions(a)) if (x.kind !== 'text' && x.id !== 'nivel' && x.id !== 'ideias') a[x.id] = [DONT_KNOW]
+    const r = recommend(a)
+    expect(r.answers.classKey).toBeTruthy()
+    expect(traitsValid(r.answers.traits)).toBe(true)
+    expect(r.answers.cards).toHaveLength(2)
+    expect(r.answers.experiences[0].length).toBeGreaterThan(0)
+  })
+
+  it('quem tem pouca ideia recebe um resumo e as perguntas do guia da classe nas anotações', () => {
+    const r = recommend(base({ ideias: ['nenhuma'], nome: ['Lyra'] }))
+    expect(r.pitch).toContain('Lyra')
+    expect(r.storyPrompts.length).toBeGreaterThan(0)
+    expect(r.notes).toContain(r.storyPrompts[0])
+    expect(recommend(base({ ideias: ['muitas'] })).storyPrompts).toHaveLength(0)
+  })
+
+  it('as sugestões de texto existem (nome, frase, passado, sonho, item)', () => {
+    for (const id of ['nome', 'frase', 'passado', 'sonho', 'item']) {
+      expect(QUESTIONS.find((x) => x.id === id)!.examples!.length, id).toBeGreaterThanOrEqual(5)
     }
   })
 

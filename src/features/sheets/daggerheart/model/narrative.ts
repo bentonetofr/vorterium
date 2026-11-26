@@ -64,17 +64,35 @@ export interface NQuestion {
   mult?: number
   optional?: boolean
   placeholder?: string
+  /** Sugestões que a pessoa pode clicar para preencher o texto (quem não tem ideia se inspira nelas). */
+  examples?: string[]
+  /** A pergunta só aparece quando isto é verdade (ex.: perguntas de cena só para quem tem pouca ideia). */
+  when?: (a: NarrativeAnswers) => boolean
   options?: NOption[]
 }
 
 const lvl = (n: number): NOption => ({ id: String(n), label: `Nível ${n}`, sub: n === 1 ? 'Começo da campanha' : undefined })
 
+const NAME_IDEAS = ['Aria', 'Bram', 'Cael', 'Dara', 'Eron', 'Fyra', 'Garrick', 'Hana', 'Ilan', 'Jora', 'Kael', 'Lyra', 'Mira', 'Nym', 'Orin', 'Pelle', 'Quill', 'Rhea', 'Sorin', 'Tala']
+
+const few = (a: NarrativeAnswers) => a.ideias?.[0] !== 'muitas'
+const some = (a: NarrativeAnswers) => a.ideias?.[0] !== 'nenhuma'
+
 export const QUESTIONS: NQuestion[] = [
   // ── Conceito ──
-  { id: 'nome', group: 'Conceito', title: 'Qual é o nome do personagem?', hint: 'Pode ser mudado depois.', kind: 'text', placeholder: 'Nome' },
+  { id: 'nome', group: 'Conceito', title: 'Qual é o nome do personagem?', hint: 'Pode ser mudado depois. Sem ideia? Clique em uma das sugestões.', kind: 'text', placeholder: 'Nome', examples: NAME_IDEAS },
   { id: 'pronomes', group: 'Conceito', title: 'Quais são os pronomes dele?', hint: 'Opcional.', kind: 'text', optional: true, placeholder: 'Ele/Dele, Ela/Dela, Elu/Delu…' },
   { id: 'nivel', group: 'Conceito', title: 'Em que nível ele começa?', hint: 'A maioria das mesas começa no nível 1. Se for mais alto, você escolhe as subidas de cada nível depois.', kind: 'one', options: Array.from({ length: 10 }, (_, k) => lvl(k + 1)) },
-  { id: 'frase', group: 'Conceito', title: 'Em uma frase, quem é essa pessoa?', hint: 'Opcional. Vai para as anotações da ficha.', kind: 'text', optional: true, placeholder: 'Ex.: uma ex-soldada que fugiu da guerra e agora só quer paz' },
+  {
+    id: 'ideias', group: 'Conceito', kind: 'one', title: 'Quanta ideia você já tem sobre esse personagem?', hint: 'Sem problema nenhum se for pouca. Com pouca ideia, eu faço perguntas simples, com cenas de aventura e escolhas fáceis, e monto o resto para você.',
+    options: [
+      { id: 'nenhuma', label: 'Quase nenhuma: me guie', sub: 'Perguntas com situações fáceis. Eu sugiro o nome, a história e as ideias.' },
+      { id: 'algumas', label: 'Algumas ideias soltas', sub: 'Um pouco de cada: cenas e perguntas sobre o personagem.' },
+      { id: 'muitas', label: 'Já imagino bastante coisa', sub: 'Perguntas mais detalhadas sobre a história, o passado e os sonhos dele.' },
+    ],
+  },
+  { id: 'frase', group: 'Conceito', title: 'Em uma frase, quem é essa pessoa?', hint: 'Opcional. Vai para as anotações da ficha. Sem ideia? Pode pular ou clicar numa sugestão.', kind: 'text', optional: true, when: some, placeholder: 'Ex.: uma ex-soldada que fugiu da guerra e agora só quer paz',
+    examples: ['Um(a) viajante em busca de um lugar para chamar de lar', 'Um(a) herói(na) improvável que só queria uma vida simples', 'Alguém com um passado que prefere esquecer', 'Um(a) aventureiro(a) atrás de fama e fortuna', 'Um(a) protetor(a) de uma vila que perdeu tudo'] },
   {
     id: 'arquetipo', group: 'Conceito', mult: 2, kind: 'one', title: 'Qual arquétipo mais parece com a ideia que você tem?', hint: 'Escolha o que chega mais perto. As próximas perguntas refinam.',
     options: [
@@ -92,6 +110,73 @@ export const QUESTIONS: NQuestion[] = [
       { id: 'selvagem', label: 'O poder indomado', sub: 'Uma força que ele mal controla.', t: { wild: 3, magic: 2, melee: 1 } },
     ],
   },
+  // ── Cenas (para quem tem pouca ideia): escolhas fáceis que mostram o jeito de jogar ──
+  {
+    id: 'cena_dragao', group: 'Cenas', mult: 1.3, kind: 'one', when: few, title: 'Cena: o grupo encontra um dragão dormindo sobre um monte de tesouro. O que você faria?', hint: 'Não existe resposta certa: escolha o que seria mais divertido para você.',
+    options: [
+      { id: 'esgueirar', label: 'Me esgueiro e pego o que puder sem acordá-lo', t: { stealth: 3, trickery: 2 } },
+      { id: 'plano', label: 'Monto um plano para o grupo atacar junto', t: { war: 3, social: 1, control: 1 } },
+      { id: 'ataque', label: 'Parto para cima antes que ele acorde', t: { melee: 3, wild: 1 } },
+      { id: 'conversa', label: 'Tento conversar: até dragões têm vaidade', t: { social: 3, trickery: 1 } },
+      { id: 'estudo', label: 'Estudo a criatura e procuro pontos fracos', t: { lore: 3, control: 1 } },
+      { id: 'longe', label: 'Fico longe, com a mira pronta', t: { ranged: 3 } },
+      { id: 'protege', label: 'Fico perto dos aliados, pronto para protegê-los se der errado', t: { tank: 2, support: 2, divine: 1 } },
+    ],
+  },
+  {
+    id: 'cena_festa', group: 'Cenas', mult: 1.3, kind: 'one', when: few, title: 'Cena: numa festa de nobres, você descobre que há um espião entre os convidados.',
+    options: [
+      { id: 'papo', label: 'Puxo conversa até ele se entregar', t: { social: 3 } },
+      { id: 'segue', label: 'Observo de longe e sigo a pessoa', t: { stealth: 2, lore: 1 } },
+      { id: 'confusao', label: 'Invento uma confusão para distrair todo mundo', t: { trickery: 3, social: 1 } },
+      { id: 'comanda', label: 'Aviso os guardas e assumo o controle da situação', t: { war: 2, social: 1, melee: 1 } },
+      { id: 'magia', label: 'Uso um feitiço discreto para descobrir quem é', t: { magic: 3, control: 1 } },
+      { id: 'encara', label: 'Encaro a pessoa de frente e peço explicações', t: { melee: 1, tank: 1, social: 1 } },
+    ],
+  },
+  {
+    id: 'cena_ponte', group: 'Cenas', mult: 1.3, kind: 'one', when: few, title: 'Cena: uma ponte está desabando e um aliado está do outro lado.',
+    options: [
+      { id: 'corre', label: 'Corro para alcançá-lo', t: { speed: 3 } },
+      { id: 'segura', label: 'Seguro a ponte enquanto ele passa', t: { tank: 3, melee: 1 } },
+      { id: 'corda', label: 'Atiro uma corda com uma flecha', t: { ranged: 2, nature: 1, trickery: 1 } },
+      { id: 'magia', label: 'Uso magia para atravessar ou segurá-la', t: { magic: 3 } },
+      { id: 'fe', label: 'Peço ajuda a algo maior e confio', t: { divine: 2, support: 2 } },
+      { id: 'improviso', label: 'Aposto na sorte e improviso', t: { trickery: 2, speed: 1 } },
+    ],
+  },
+  {
+    id: 'cena_animal', group: 'Cenas', mult: 1.3, kind: 'one', when: few, title: 'Cena: no meio da floresta, você encontra um animal ferido.',
+    options: [
+      { id: 'cuida', label: 'Cuido das feridas dele', t: { healing: 3, nature: 1 } },
+      { id: 'amigo', label: 'Tento acalmá-lo e fazer amizade', t: { companion: 3, nature: 1 } },
+      { id: 'cuidado', label: 'Primeiro olho em volta: o que o feriu pode estar por perto', t: { stealth: 1, ranged: 1, lore: 1 } },
+      { id: 'magia', label: 'Uso magia para entender o que ele sente', t: { magic: 2, nature: 2 } },
+      { id: 'segue', label: 'Sigo meu caminho: não é problema meu', t: { trickery: 1, vengeance: 1, melee: 1 } },
+    ],
+  },
+  {
+    id: 'cena_taverna', group: 'Cenas', mult: 1.3, kind: 'one', when: few, title: 'Cena: uma briga de taverna está prestes a começar.',
+    options: [
+      { id: 'separa', label: 'Entro no meio para separar todo mundo', t: { tank: 2, support: 1, melee: 1 } },
+      { id: 'soco', label: 'Dou o primeiro soco', t: { melee: 3 } },
+      { id: 'piada', label: 'Conto uma piada para esfriar os ânimos', t: { social: 3 } },
+      { id: 'sai', label: 'Saio de fininho e aproveito a confusão', t: { trickery: 2, stealth: 1 } },
+      { id: 'olha', label: 'Fico de lado e vejo quem é quem', t: { lore: 1, stealth: 1, control: 1 } },
+      { id: 'anima', label: 'Subo no balcão e animo a multidão', t: { social: 2, support: 1, magic: 1 } },
+    ],
+  },
+  {
+    id: 'cena_livro', group: 'Cenas', mult: 1.3, kind: 'one', when: few, title: 'Cena: numa biblioteca antiga, há um livro trancado por magia.',
+    options: [
+      { id: 'estuda', label: 'Estudo os símbolos até entender', t: { lore: 3, magic: 1 } },
+      { id: 'arromba', label: 'Arrombo a tranca com jeitinho', t: { stealth: 2, trickery: 2 } },
+      { id: 'forca', label: 'Quebro a tranca na força', t: { melee: 2, wild: 1 } },
+      { id: 'magia', label: 'Respondo à magia com a minha', t: { magic: 3 } },
+      { id: 'pessoas', label: 'Procuro quem guarda a chave', t: { social: 2 } },
+    ],
+  },
+
   {
     id: 'quero', group: 'Conceito', kind: 'many', max: 3, mult: 1, title: 'O que você mais quer fazer na mesa?', hint: 'Escolha até 3.',
     options: [
@@ -364,7 +449,7 @@ export const QUESTIONS: NQuestion[] = [
     ],
   },
   {
-    id: 'passado', group: 'Origem', kind: 'text', optional: true, title: 'Escreva uma frase sobre o passado dele.', hint: 'Opcional. Se escrever, ela vira a primeira Experiência (uma palavra ou frase específica, sem magias ou habilidades).', placeholder: 'Ex.: Ex-guarda-costas do rei caído',
+    id: 'passado', group: 'Origem', kind: 'text', optional: true, when: some, title: 'Escreva uma frase sobre o passado dele.', hint: 'Opcional. Se escrever, ela vira a primeira Experiência (uma palavra ou frase específica, sem magias ou habilidades).', placeholder: 'Ex.: Ex-guarda-costas do rei caído', examples: ['Fugitivo(a) do exército', 'Aprendiz de curandeiro(a)', 'Ex-guarda-costas', 'Órfão(ã) criado(a) na estrada', 'Estudioso(a) expulso(a) da academia', 'Herdeiro(a) de uma família caída'],
   },
 
   // ── Personalidade ──
@@ -412,11 +497,38 @@ export const QUESTIONS: NQuestion[] = [
       { id: 'solidao', label: 'Medo de ficar sozinho' }, { id: 'ganancia', label: 'Ganância' }, { id: 'curiosidade', label: 'Curiosidade que atrai problemas' },
     ],
   },
-  { id: 'sonho', group: 'Personalidade', kind: 'text', optional: true, title: 'O que ele sonha em alcançar?', hint: 'Opcional. Vai para as anotações da ficha.', placeholder: 'Ex.: reconstruir a vila onde nasceu' },
-  { id: 'item', group: 'Personalidade', kind: 'text', optional: true, title: 'Tem algo que ele carrega por motivo sentimental?', hint: 'Opcional. Vai para as anotações da ficha.', placeholder: 'Ex.: um anel quebrado da mãe' },
+  { id: 'sonho', group: 'Personalidade', kind: 'text', optional: true, when: some, examples: ['Reconstruir a vila onde nasceu', 'Ficar famoso(a) no mundo todo', 'Encontrar quem sumiu', 'Provar que estavam errados sobre mim', 'Ter um lar de verdade'], title: 'O que ele sonha em alcançar?', hint: 'Opcional. Vai para as anotações da ficha.', placeholder: 'Ex.: reconstruir a vila onde nasceu' },
+  { id: 'item', group: 'Personalidade', kind: 'text', optional: true, when: some, examples: ['Um anel quebrado', 'Uma carta que nunca foi aberta', 'Um amuleto de família', 'Um mapa rasgado', 'Um brinquedo de infância'], title: 'Tem algo que ele carrega por motivo sentimental?', hint: 'Opcional. Vai para as anotações da ficha.', placeholder: 'Ex.: um anel quebrado da mãe' },
 ]
 
 export type NarrativeAnswers = Record<string, string[]>
+
+/** Experiências sugeridas por classe, para quem não escolheu ofício ou talento (dá para trocar na ficha). */
+const CLASS_EXP: Record<DhClassKey, [string, string]> = {
+  bardo: ['Contador de histórias', 'Encantador'],
+  druida: ['Sussurrador de animais', 'Sobrevivencialista'],
+  feiticeiro: ['Aprendiz rápido', 'Presença intimidadora'],
+  guardiao: ['Guarda-costas', 'Leal'],
+  guerreiro: ['Soldado', 'Calejado em batalha'],
+  ladino: ['Ladrão', 'Pés leves'],
+  mago: ['Estudioso', 'Rato de biblioteca'],
+  patrulheiro: ['Rastreador', 'Sobrevivencialista'],
+  serafim: ['Sacerdote', 'Leal'],
+}
+
+/** As perguntas que valem para estas respostas (quem tem pouca ideia vê cenas; quem tem muita vê as de história). */
+export function visibleQuestions(answers: NarrativeAnswers): NQuestion[] {
+  return QUESTIONS.filter((q) => !q.when || q.when(answers))
+}
+
+/** Resposta "não sei": a pergunta conta como respondida, mas não muda nada na escolha. */
+export const DONT_KNOW = '_'
+
+/** Tira as respostas de perguntas que não estão mais visíveis (a pessoa voltou e mudou "quanta ideia tem"). */
+function pruned(answers: NarrativeAnswers): NarrativeAnswers {
+  const keep = new Set(visibleQuestions(answers).map((q) => q.id))
+  return Object.fromEntries(Object.entries(answers).filter(([k]) => keep.has(k)))
+}
 
 // ── afinidades de cada classe, subclasse, ancestralidade e comunidade ──
 
@@ -601,6 +713,10 @@ export interface Recommendation {
   /** Anotações da ficha escritas a partir da narrativa. */
   notes: string
   cardNames: string[]
+  /** Perguntas do guia da classe para a pessoa imaginar a história aos poucos (só para quem tem pouca ideia). */
+  storyPrompts: string[]
+  /** Resumo em uma linha do personagem montado. */
+  pitch: string
 }
 
 function textOf(answers: NarrativeAnswers, id: string): string {
@@ -612,7 +728,8 @@ function label(id: string, answers: NarrativeAnswers): string {
   return q ? optionsPicked(q, answers).map((o) => o.label).join(', ') : ''
 }
 
-export function recommend(answers: NarrativeAnswers): Recommendation {
+export function recommend(raw: NarrativeAnswers): Recommendation {
+  const answers = pruned(raw)
   const p = profileOf(answers)
   const tags = p.tags
   const norm = normalized(tags)
@@ -693,8 +810,9 @@ export function recommend(answers: NarrativeAnswers): Recommendation {
   const ex1 = textOf(answers, 'passado') || picked('oficio')?.ex || ''
   let ex2 = picked('talento')?.ex || ''
   if (ex2 && ex2.toLowerCase() === ex1.toLowerCase()) ex2 = ''
-  const fallbackExp = ['Viajante do mundo', 'Sobrevivente']
-  const experiences: [string, string] = [ex1 || fallbackExp[0], ex2 || fallbackExp.find((x) => x.toLowerCase() !== (ex1 || fallbackExp[0]).toLowerCase())!]
+  const fallbackExp = CLASS_EXP[classKey]
+  const firstExp = ex1 || fallbackExp.find((x) => x.toLowerCase() !== ex2.toLowerCase())!
+  const experiences: [string, string] = [firstExp, ex2 || fallbackExp.find((x) => x.toLowerCase() !== firstExp.toLowerCase())!]
 
   // cartas: 2 de nível 1 dos domínios da classe, pelo que combina com as afinidades
   const l1 = DOMAIN_CARDS.filter((c) => cls.domains.includes(c.domain) && c.level === 1)
@@ -734,6 +852,11 @@ export function recommend(answers: NarrativeAnswers): Recommendation {
 
   // anotações escritas a partir da narrativa
   const lines: string[] = []
+  const pitchAnc = ANCESTRIES.find((x) => x.key === ancestryKey)
+  const pitchAnc2 = ANCESTRIES.find((x) => x.key === ancestry2Key)
+  const pitchCom = COMMUNITIES.find((x) => x.key === communityKey)
+  const pitch = `${nome || 'Personagem'}: ${pitchAnc?.name ?? ''}${pitchAnc2 ? ` e ${pitchAnc2.name}` : ''}, ${cls.name} (${sub.name}), da comunidade ${pitchCom?.name ?? ''}.`
+  lines.push(pitch)
   const frase = textOf(answers, 'frase')
   if (frase) lines.push(frase)
   const add = (title: string, value: string) => { if (value) lines.push(`${title}: ${value}`) }
@@ -743,7 +866,9 @@ export function recommend(answers: NarrativeAnswers): Recommendation {
   add('Defeito ou medo', label('defeito', answers))
   add('Sonho', textOf(answers, 'sonho'))
   add('Item querido', textOf(answers, 'item'))
-  a.notes = lines.length ? `História (montada pelo formulário de narrativa)\n${lines.join('\n')}` : ''
+  const storyPrompts = answers.ideias?.[0] === 'muitas' ? [] : cls.background
+  if (storyPrompts.length) lines.push('', 'Para imaginar a história aos poucos (perguntas do guia da classe):', ...storyPrompts.map((x) => `• ${x}`))
+  a.notes = `História (montada pelo formulário de narrativa)\n${lines.join('\n')}`
 
   const anc = ANCESTRIES.find((x) => x.key === ancestryKey)
   const anc2 = ANCESTRIES.find((x) => x.key === ancestry2Key)
@@ -756,11 +881,11 @@ export function recommend(answers: NarrativeAnswers): Recommendation {
     { label: 'Comunidade', value: com?.name ?? '', why: p.com[communityKey] ? 'pelo lugar onde ele cresceu e pela relação dele com a autoridade.' : `${joinWhy(why(norm, COM_VEC[communityKey] ?? {}))}.` },
     { label: 'Atributos', value: topTraits.map((t) => `${labelTrait(t)} ${finalTraits[t] > 0 ? '+' : ''}${finalTraits[t]}`).join(' · '), why: `os mais altos seguem o que você contou sobre o jeito dele${sub.spellcast ? ` e o atributo de conjuração de ${sub.name}` : ''}.` },
     { label: 'Equipamento', value: `${primary.name}${secondaryId ? ` + ${WEAPONS.find((w) => w.id === secondaryId)?.name ?? ''}` : ''} · ${armorEntry(armorId)?.name ?? 'sem armadura'}`, why: 'escolhidos pelo estilo de luta, pela arma que você imaginou e pelos atributos dele.' },
-    { label: 'Experiências', value: experiences.join(' · '), why: 'vêm do ofício e do talento que você escolheu (ou da frase sobre o passado).' },
+    { label: 'Experiências', value: experiences.join(' · '), why: ex1 || ex2 ? 'vêm do ofício e do talento que você escolheu (ou da frase sobre o passado)' + (ex1 && ex2 ? '.' : '; a outra é uma sugestão da classe, troque por algo da história dele.') : 'sugestões da classe para começar; troque por algo da história dele (uma palavra ou frase específica).' },
     { label: 'Cartas de domínio', value: [first, second].map((c) => c.name).join(' · '), why: 'as duas que mais ajudam no estilo que você descreveu.' },
   ]
   const alternatives = orderedClasses.slice(1, 3).map((k) => dhClass(k)!.name)
-  return { answers: a, reasons, alternatives, notes: a.notes, cardNames: [first.name, second.name] }
+  return { answers: a, reasons, alternatives, notes: a.notes, cardNames: [first.name, second.name], storyPrompts, pitch }
 }
 
 function labelTrait(t: DhTrait): string {
