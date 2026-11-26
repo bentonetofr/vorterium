@@ -7,7 +7,7 @@ import { newId } from '../model/defaults'
 import { createGmSheet, deleteGmSheet, listGmSheets, setGmVisible, subscribeGmSheets, useGmSheet, type GmRow } from '../services/dhGmService'
 import { useFear } from '../services/dhFearService'
 import { rollFree } from '../services/dhRolls'
-import { Inline, RuleText, Slots, Stepper, signed } from './DhUi'
+import { Inline, RuleText, Slots, Stepper, signed, DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // Adversários e ambientes (capítulo 4): na aba Ficha, o mestre cria e edita os blocos no formato do livro, joga o ataque e o dano
@@ -115,7 +115,7 @@ function FeatureBlock({ f, canEdit, onChange, onRemove, onUse, fear }: { f: DhGm
       <div className="dh-gmfeat__head">
         <Inline value={f.name} onChange={(v) => onChange({ ...f, name: v })} disabled={!canEdit} placeholder="Nome da habilidade" maxLength={120} aria-label="Nome da habilidade" />
         {canEdit
-          ? <select value={f.kind} aria-label="Tipo da habilidade" onChange={(e) => onChange({ ...f, kind: e.target.value as DhGmFeature['kind'] })}>{Object.entries(KIND_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+          ? <DhSelect label="Tipo da habilidade" value={f.kind} onChange={(v) => onChange({ ...f, kind: v as DhGmFeature['kind'] })} options={Object.entries(KIND_LABEL).map(([k, v]) => ({ value: k, label: v }))} />
           : <em>({KIND_LABEL[f.kind]})</em>}
         {canEdit
           ? <label className="dh-miniedit">Medo <Stepper value={f.fearCost} min={0} max={12} label="Custo em Medo" onChange={(v) => onChange({ ...f, fearCost: v })} /></label>
@@ -191,8 +191,8 @@ export function AdversarySheet({ row, campaignId, canEdit }: { row: GmRow<DhAdve
           <div className="dh-gmtags">
             {canEdit ? (
               <>
-                <select value={a.tier} aria-label="Patamar" onChange={(e) => set('tier', Number(e.target.value) as DhAdversary['tier'])}>{[1, 2, 3, 4].map((t) => <option key={t} value={t}>Patamar {t}</option>)}</select>
-                <select value={ADVERSARY_KINDS.includes(a.kind as typeof ADVERSARY_KINDS[number]) ? a.kind : 'Padrão'} aria-label="Tipo" onChange={(e) => set('kind', e.target.value)}>{ADVERSARY_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+                <DhSelect label="Patamar" value={String(a.tier)} onChange={(v) => set('tier', Number(v) as DhAdversary['tier'])} options={[1, 2, 3, 4].map((t) => ({ value: String(t), label: `Patamar ${t}` }))} />
+                <DhSelect label="Tipo" value={ADVERSARY_KINDS.includes(a.kind as typeof ADVERSARY_KINDS[number]) ? a.kind : 'Padrão'} onChange={(v) => set('kind', v)} options={ADVERSARY_KINDS.map((k) => ({ value: k, label: k }))} />
               </>
             ) : <><em>Patamar {a.tier}</em><em>{a.kind}</em></>}
           </div>
@@ -232,11 +232,11 @@ export function AdversarySheet({ row, campaignId, canEdit }: { row: GmRow<DhAdve
             <Fld label="Nome" wide><Inline value={a.attackName} onChange={(v) => set('attackName', v)} disabled={!canEdit} maxLength={80} aria-label="Nome do ataque" /></Fld>
             <Fld label="Bônus">{canEdit ? <Stepper value={a.attackBonus} min={-5} max={20} label="Bônus de ataque" format={signed} onChange={(v) => set('attackBonus', v)} /> : <b>{signed(a.attackBonus)}</b>}</Fld>
             <Fld label="Alcance">{canEdit
-              ? <select value={a.attackRange} aria-label="Alcance" onChange={(e) => set('attackRange', e.target.value as DhAdversary['attackRange'])}>{RANGE_ORDER.map((r) => <option key={r} value={r}>{RANGE_INFO[r].label}</option>)}</select>
+              ? <DhSelect label="Alcance" value={a.attackRange} onChange={(v) => set('attackRange', v as DhAdversary['attackRange'])} options={RANGE_ORDER.map((r) => ({ value: r, label: RANGE_INFO[r].label }))} />
               : <b>{RANGE_INFO[a.attackRange].label}</b>}</Fld>
             <Fld label="Dano">{canEdit ? <Inline value={a.damage} onChange={(v) => set('damage', v)} maxLength={30} placeholder="2d8+3" aria-label="Dano" /> : <b>{a.damage}</b>}</Fld>
             <Fld label="Tipo">{canEdit
-              ? <select value={a.damageType} aria-label="Tipo de dano" onChange={(e) => set('damageType', e.target.value as DhAdversary['damageType'])}><option value="fis">Físico</option><option value="mag">Mágico</option></select>
+              ? <DhSelect label="Tipo de dano" value={a.damageType} onChange={(v) => set('damageType', v as DhAdversary['damageType'])} options={[{ value: 'fis', label: 'Físico' }, { value: 'mag', label: 'Mágico' }]} />
               : <b>{a.damageType === 'mag' ? 'Mágico' : 'Físico'}</b>}</Fld>
           </div>
           {canEdit && (
@@ -285,8 +285,8 @@ export function EnvironmentSheet({ row, campaignId, canEdit }: { row: GmRow<DhEn
           <div className="dh-gmtags">
             {canEdit ? (
               <>
-                <select value={e.tier} aria-label="Patamar" onChange={(ev) => set('tier', Number(ev.target.value) as DhEnvironment['tier'])}>{[1, 2, 3, 4].map((t) => <option key={t} value={t}>Patamar {t}</option>)}</select>
-                <select value={ENVIRONMENT_KINDS.includes(e.kind as typeof ENVIRONMENT_KINDS[number]) ? e.kind : 'Exploração'} aria-label="Tipo" onChange={(ev) => set('kind', ev.target.value)}>{ENVIRONMENT_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+                <DhSelect label="Patamar" value={String(e.tier)} onChange={(v) => set('tier', Number(v) as DhEnvironment['tier'])} options={[1, 2, 3, 4].map((t) => ({ value: String(t), label: `Patamar ${t}` }))} />
+                <DhSelect label="Tipo" value={ENVIRONMENT_KINDS.includes(e.kind as typeof ENVIRONMENT_KINDS[number]) ? e.kind : 'Exploração'} onChange={(v) => set('kind', v)} options={ENVIRONMENT_KINDS.map((k) => ({ value: k, label: k }))} />
               </>
             ) : <><em>Patamar {e.tier}</em><em>{e.kind}</em></>}
           </div>

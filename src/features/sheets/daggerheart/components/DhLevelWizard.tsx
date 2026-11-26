@@ -5,7 +5,7 @@ import { DOMAIN_CARDS } from '../catalog/domainCards'
 import { experienceMod, maxCardLevel, ownedDomains } from '../model/derive'
 import { achievementsAt, advanceChoices, domainPickCap, newExperienceId, pickCost, unmarkedTraits, validateAdvancement, type AdvanceChoice } from '../model/levelUp'
 import type { DhAdvancement, DhClassKey, DhDomain, DhPick, DhSheetData, DhTrait } from '../model/types'
-import { Banner, signed } from './DhUi'
+import { Banner, signed, DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // O passo de uma subida de nível (usado na aba Subir de nível e, no formulário da ficha rápida, uma vez por nível):
@@ -139,9 +139,7 @@ export function describePick(p: DhPick, data: DhSheetData): string {
 
 function TraitSelect({ value, options, onChange, label }: { value: DhTrait; options: DhTrait[]; onChange: (t: DhTrait) => void; label: string }) {
   return (
-    <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value as DhTrait)}>
-      {options.map((t) => <option key={t} value={t}>{TRAIT_INFO[t].label}</option>)}
-    </select>
+    <DhSelect label={label} value={value} onChange={(v) => onChange(v as DhTrait)} options={options.map((t) => ({ value: t, label: TRAIT_INFO[t].label }))} />
   )
 }
 
@@ -160,10 +158,8 @@ function PickForm({ data, level, pick, onChange, extraExp }: { data: DhSheetData
     return (
       <div className="dh-pick__body">
         {[0, 1].map((i) => (
-          <select key={i} aria-label={`Experiência ${i + 1}`} value={pick.ids[i]} onChange={(e) => { const ids: [string, string] = [...pick.ids]; ids[i] = e.target.value; onChange({ ...pick, ids }) }}>
-            <option value="">Escolha…</option>
-            {exps.map((e) => <option key={e.id} value={e.id}>{e.name || 'Sem nome'} ({signed(experienceMod(data, e.id))} → {signed(experienceMod(data, e.id) + 1)})</option>)}
-          </select>
+          <DhSelect key={i} label={`Experiência ${i + 1}`} value={pick.ids[i]} onChange={(v) => { const ids: [string, string] = [...pick.ids]; ids[i] = v; onChange({ ...pick, ids }) }}
+            options={[{ value: '', label: 'Escolha…' }, ...exps.map((e) => ({ value: e.id, label: `${e.name || 'Sem nome'} (${signed(experienceMod(data, e.id))} → ${signed(experienceMod(data, e.id) + 1)})` }))]} />
         ))}
       </div>
     )
@@ -176,18 +172,14 @@ function PickForm({ data, level, pick, onChange, extraExp }: { data: DhSheetData
     const mine = new Set(ownedDomains(data))
     return (
       <div className="dh-pick__body">
-        <select aria-label="Classe" value={pick.classKey} onChange={(e) => {
-          const c = CLASSES.find((x) => x.key === e.target.value as DhClassKey)!
+        <DhSelect label="Classe" value={pick.classKey} onChange={(v) => {
+          const c = CLASSES.find((x) => x.key === v as DhClassKey)!
           onChange({ ...pick, classKey: c.key, domain: c.domains.find((d) => !mine.has(d)) ?? c.domains[0], subclassKey: c.subclasses[0].key })
-        }}>
-          {CLASSES.filter((c) => c.key !== data.classKey).map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-        </select>
-        <select aria-label="Domínio" value={pick.domain} onChange={(e) => onChange({ ...pick, domain: e.target.value as DhDomain })}>
-          {cls.domains.map((d) => <option key={d} value={d} disabled={mine.has(d)}>{DOMAINS[d].name}{mine.has(d) ? ' (você já tem)' : ''}</option>)}
-        </select>
-        <select aria-label="Subclasse" value={pick.subclassKey} onChange={(e) => onChange({ ...pick, subclassKey: e.target.value })}>
-          {cls.subclasses.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}
-        </select>
+        }} options={CLASSES.filter((c) => c.key !== data.classKey).map((c) => ({ value: c.key, label: c.name }))} />
+        <DhSelect label="Domínio" value={pick.domain} onChange={(v) => onChange({ ...pick, domain: v as DhDomain })}
+          options={cls.domains.map((d) => ({ value: d, label: `${DOMAINS[d].name}${mine.has(d) ? ' (você já tem)' : ''}`, disabled: mine.has(d) }))} />
+        <DhSelect label="Subclasse" value={pick.subclassKey} onChange={(v) => onChange({ ...pick, subclassKey: v })}
+          options={cls.subclasses.map((x) => ({ value: x.key, label: x.name }))} />
         <p className="dh-hint">Cartas do domínio novo: só até metade do seu nível (arredondado para cima). Você ganha a habilidade de classe e a carta fundamental da subclasse.</p>
       </div>
     )
@@ -201,13 +193,7 @@ function CardSelect({ data, level, extra, value, onChange, cap }: { data: DhShee
   const doms = ownedDomains(probe)
   const list = DOMAIN_CARDS.filter((c) => doms.includes(c.domain) && c.level <= Math.min(cap, maxCardLevel(probe, c.domain)) && (!owned.has(c.id) || c.id === value))
   return (
-    <select aria-label="Carta de domínio" value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">Escolha uma carta…</option>
-      {doms.map((d) => (
-        <optgroup key={d} label={DOMAINS[d].name}>
-          {list.filter((c) => c.domain === d).map((c) => <option key={c.id} value={c.id}>Nível {c.level} · {c.name}</option>)}
-        </optgroup>
-      ))}
-    </select>
+    <DhSelect label="Carta de domínio" value={value} onChange={onChange}
+      options={[{ value: '', label: 'Escolha uma carta…' }, ...doms.flatMap((d) => list.filter((c) => c.domain === d).map((c) => ({ value: c.id, label: `${DOMAINS[d].name} · Nível ${c.level} · ${c.name}` })))]} />
   )
 }

@@ -13,7 +13,7 @@ import { buildQuickSheet, emptyAnswers, suggestedFor, traitsValid, type QuickAns
 import type { DhDomain, DhSheetData } from '../model/types'
 import { DH_TRAITS } from '../model/types'
 import { DhLevelWizard } from './DhLevelWizard'
-import { signed } from './DhUi'
+import { signed, DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // Ficha rápida: uma janela no centro com UMA pergunta por vez, na ordem do livro (quem é, classe, herança, atributos,
@@ -108,9 +108,8 @@ export function DhQuickForm({ onDone, onCancel }: Props) {
         <div className="dh-q__traits">
           {DH_TRAITS.map((t) => (
             <label key={t}><span>{TRAIT_INFO[t].label}<small>{TRAIT_INFO[t].verbs.join(' · ')}</small></span>
-              <select value={a.traits[t]} onChange={(e) => set({ traits: { ...a.traits, [t]: Number(e.target.value) } })}>
-                {[2, 1, 0, -1].map((v) => <option key={v} value={v}>{signed(v)}</option>)}
-              </select>
+              <DhSelect label={TRAIT_INFO[t].label} value={String(a.traits[t])} onChange={(v) => set({ traits: { ...a.traits, [t]: Number(v) } })}
+                options={[2, 1, 0, -1].map((v) => ({ value: String(v), label: signed(v) }))} />
             </label>
           ))}
         </div>

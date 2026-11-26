@@ -3,7 +3,7 @@ import { COMPANION_PICKS, RANGE_INFO, RANGE_ORDER, TRAIT_INFO } from '../catalog
 import { evasion, multiclassPick, proficiency, tierOf } from '../model/derive'
 import { emptyCompanion, newId } from '../model/defaults'
 import type { DhSheetData } from '../model/types'
-import { Banner, Inline, RuleText, Stepper, signed } from './DhUi'
+import { Banner, Inline, RuleText, Stepper, signed, DhSelect } from './DhUi'
 import { Slots } from './DhUi'
 
 // ────────────────────────────────────────────────────────
@@ -93,10 +93,10 @@ function CompanionPanel({ data, update, canEdit }: Props) {
         <label>Evasão <Stepper value={c.evasion + (c.picks.includes('atento') ? 2 : 0)} min={0} max={30} label="Evasão do companheiro" disabled={!canEdit} onChange={(v) => set({ evasion: v - (c.picks.includes('atento') ? 2 : 0) })} /></label>
         <label>Ataque padrão<Inline value={c.attack} onChange={(v) => set({ attack: v })} disabled={!canEdit} maxLength={200} placeholder="Como ele causa dano" aria-label="Ataque do companheiro" /></label>
         <label>Dado de dano
-          <select value={c.damageDie} disabled={!canEdit} onChange={(e) => set({ damageDie: Number(e.target.value) as typeof c.damageDie })}>{dieSteps.map((n) => <option key={n} value={n}>d{n}</option>)}</select>
+          <DhSelect label="Dado de dano" value={String(c.damageDie)} disabled={!canEdit} onChange={(v) => set({ damageDie: Number(v) as typeof c.damageDie })} options={dieSteps.map((n) => ({ value: String(n), label: `d${n}` }))} />
         </label>
         <label>Alcance
-          <select value={RANGE_ORDER[rangeIdx]} disabled={!canEdit} onChange={(e) => set({ range: e.target.value as typeof c.range })}>{RANGE_ORDER.map((r) => <option key={r} value={r}>{RANGE_INFO[r].label}</option>)}</select>
+          <DhSelect label="Alcance" value={RANGE_ORDER[rangeIdx]} disabled={!canEdit} onChange={(v) => set({ range: v as typeof c.range })} options={RANGE_ORDER.map((r) => ({ value: r, label: RANGE_INFO[r].label }))} />
         </label>
       </div>
       <p className="dh-hint">Feroz: {fierce}× (aumenta o dado ou o alcance em um passo cada vez). Ao mandá-lo atacar, ele usa sua Proficiência ({proficiency(data)}).</p>

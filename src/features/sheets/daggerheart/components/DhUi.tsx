@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Select } from '../../../../shared/components/Select'
 
 // ────────────────────────────────────────────────────────
 // Peças pequenas da ficha, no desenho do livro: faixa de título, fileira de casas (Vida, Fadiga, Armadura, Esperança),
@@ -131,4 +132,11 @@ export function RuleText({ text }: { text: string }) {
   })
   flush(lines.length)
   return <div className="dh-rule-text">{out}</div>
+}
+
+export interface DhOption { value: string; label: string; disabled?: boolean }
+
+/** Lista de escolha no visual do site (a lista aberta do <select> nativo é do sistema e não aceita estilo). */
+export function DhSelect({ value, options, onChange, disabled, label, className = '' }: { value: string; options: DhOption[]; onChange: (v: string) => void; disabled?: boolean; label: string; className?: string }) {
+  return <Select plain className={`dh-select ${className}`.trim()} options={options} value={value} onChange={onChange} disabled={disabled} aria-label={label} />
 }

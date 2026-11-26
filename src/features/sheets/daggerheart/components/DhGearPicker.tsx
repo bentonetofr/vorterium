@@ -6,6 +6,7 @@ import { WEAPONS } from '../catalog/weapons'
 import { armorToSlot, weaponToSlot } from '../model/gear'
 import type { DhArmorSlot, DhDamageType, DhRange, DhTier, DhWeaponSlot, DhWeaponTrait } from '../model/types'
 import { emptyWeaponSlot } from '../model/defaults'
+import { DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // Escolher arma ou armadura do Livro Básico (por patamar, com busca) ou inventar a sua.
@@ -101,24 +102,20 @@ function CustomWeapon({ onSave, onBack }: { onSave: (w: DhWeaponSlot) => void; o
     <form className="dh-form" onSubmit={(e) => { e.preventDefault(); if (w.name.trim()) onSave({ ...w, name: w.name.trim() }) }}>
       <label>Nome<input value={w.name} maxLength={120} onChange={(e) => setW({ ...w, name: e.target.value })} autoFocus /></label>
       <label>Atributo
-        <select value={w.trait} onChange={(e) => setW({ ...w, trait: e.target.value as DhWeaponTrait })}>
-          {Object.entries(TRAIT_INFO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          <option value="conjuracao">Conjuração</option>
-        </select>
+        <DhSelect label="Atributo" value={w.trait} onChange={(v) => setW({ ...w, trait: v as DhWeaponTrait })}
+          options={[...Object.entries(TRAIT_INFO).map(([k, v]) => ({ value: k, label: v.label })), { value: 'conjuracao', label: 'Conjuração' }]} />
       </label>
       <label>Alcance
-        <select value={w.range} onChange={(e) => setW({ ...w, range: e.target.value as DhRange })}>
-          {Object.entries(RANGE_INFO).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-        </select>
+        <DhSelect label="Alcance" value={w.range} onChange={(v) => setW({ ...w, range: v as DhRange })}
+          options={Object.entries(RANGE_INFO).map(([k, v]) => ({ value: k, label: v.label }))} />
       </label>
       <label>Dado de dano (ex.: d8+3)<input value={w.dice} maxLength={12} onChange={(e) => setW({ ...w, dice: e.target.value })} /></label>
       <label>Tipo
-        <select value={w.damageType} onChange={(e) => setW({ ...w, damageType: e.target.value as DhDamageType })}>
-          <option value="fis">Físico</option><option value="mag">Mágico</option><option value="ambos">Físico ou mágico</option>
-        </select>
+        <DhSelect label="Tipo de dano" value={w.damageType} onChange={(v) => setW({ ...w, damageType: v as DhDamageType })}
+          options={[{ value: 'fis', label: 'Físico' }, { value: 'mag', label: 'Mágico' }, { value: 'ambos', label: 'Físico ou mágico' }]} />
       </label>
       <label>Mãos
-        <select value={w.hands} onChange={(e) => setW({ ...w, hands: Number(e.target.value) as 1 | 2 })}><option value={1}>Uma</option><option value={2}>Duas</option></select>
+        <DhSelect label="Mãos" value={String(w.hands)} onChange={(v) => setW({ ...w, hands: Number(v) as 1 | 2 })} options={[{ value: '1', label: 'Uma' }, { value: '2', label: 'Duas' }]} />
       </label>
       <label className="dh-form__wide">Característica<textarea rows={2} value={w.feature} maxLength={600} onChange={(e) => setW({ ...w, feature: e.target.value })} /></label>
       <footer className="dh-dialog__foot">

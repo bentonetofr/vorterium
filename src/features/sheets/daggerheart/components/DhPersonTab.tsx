@@ -4,7 +4,7 @@ import { DESCRIPTION_HINTS, EXPERIENCE_EXAMPLES } from '../catalog/rules'
 import { currentClass, currentSubclass } from '../model/derive'
 import type { DhSheetData } from '../model/types'
 import { confirmDialog } from '../../../../shared/components/dialogs'
-import { Banner, Inline, RuleText } from './DhUi'
+import { Banner, Inline, RuleText, DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // Personagem: classe e subclasse, herança (ancestralidade, mista, comunidade), descrição, perguntas de origem e vínculos.
@@ -38,16 +38,12 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
         <Banner>Classe</Banner>
         <div className="dh-form">
           <label>Classe
-            <select value={data.classKey ?? ''} disabled={!canEdit} onChange={(e) => void changeClass(e.target.value)}>
-              <option value="">Escolha…</option>
-              {CLASSES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-            </select>
+            <DhSelect label="Classe" value={data.classKey ?? ''} disabled={!canEdit} onChange={(v) => void changeClass(v)}
+              options={[{ value: '', label: 'Escolha…' }, ...CLASSES.map((c) => ({ value: c.key, label: c.name }))]} />
           </label>
           <label>Subclasse
-            <select value={data.subclassKey ?? ''} disabled={!canEdit || !cls} onChange={(e) => set({ subclassKey: e.target.value || null })}>
-              <option value="">Escolha…</option>
-              {cls?.subclasses.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}
-            </select>
+            <DhSelect label="Subclasse" value={data.subclassKey ?? ''} disabled={!canEdit || !cls} onChange={(v) => set({ subclassKey: v || null })}
+              options={[{ value: '', label: 'Escolha…' }, ...(cls?.subclasses ?? []).map((x) => ({ value: x.key, label: x.name }))]} />
           </label>
         </div>
         {cls && <p className="dh-hint">{cls.description}</p>}
@@ -58,22 +54,16 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
         <Banner>Herança</Banner>
         <div className="dh-form">
           <label>Ancestralidade
-            <select value={data.ancestryKey ?? ''} disabled={!canEdit} onChange={(e) => set({ ancestryKey: e.target.value || null })}>
-              <option value="">Escolha…</option>
-              {ANCESTRIES.map((a) => <option key={a.key} value={a.key}>{a.name}</option>)}
-            </select>
+            <DhSelect label="Ancestralidade" value={data.ancestryKey ?? ''} disabled={!canEdit} onChange={(v) => set({ ancestryKey: v || null })}
+              options={[{ value: '', label: 'Escolha…' }, ...ANCESTRIES.map((a) => ({ value: a.key, label: a.name }))]} />
           </label>
           <label>Segunda ancestralidade (mista)
-            <select value={data.ancestry2Key ?? ''} disabled={!canEdit || !data.ancestryKey} onChange={(e) => set({ ancestry2Key: e.target.value || null })}>
-              <option value="">Nenhuma</option>
-              {ANCESTRIES.filter((a) => a.key !== data.ancestryKey).map((a) => <option key={a.key} value={a.key}>{a.name}</option>)}
-            </select>
+            <DhSelect label="Segunda ancestralidade" value={data.ancestry2Key ?? ''} disabled={!canEdit || !data.ancestryKey} onChange={(v) => set({ ancestry2Key: v || null })}
+              options={[{ value: '', label: 'Nenhuma' }, ...ANCESTRIES.filter((a) => a.key !== data.ancestryKey).map((a) => ({ value: a.key, label: a.name }))]} />
           </label>
           <label>Comunidade
-            <select value={data.communityKey ?? ''} disabled={!canEdit} onChange={(e) => set({ communityKey: e.target.value || null })}>
-              <option value="">Escolha…</option>
-              {COMMUNITIES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-            </select>
+            <DhSelect label="Comunidade" value={data.communityKey ?? ''} disabled={!canEdit} onChange={(v) => set({ communityKey: v || null })}
+              options={[{ value: '', label: 'Escolha…' }, ...COMMUNITIES.map((c) => ({ value: c.key, label: c.name }))]} />
           </label>
           <label>Como o personagem se define (ex.: goblin-orc)
             <Inline value={data.ancestryName} onChange={(v) => set({ ancestryName: v })} disabled={!canEdit} maxLength={120} aria-label="Nome da herança" />

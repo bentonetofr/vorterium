@@ -16,7 +16,7 @@ import { DhAutomationPanel } from './DhAutomationPanel'
 import { DomainIcon } from './DomainIcon'
 import { DhGearPicker } from './DhGearPicker'
 import { DhRollDialog, type RollSpec } from './DhRollDialog'
-import { Banner, Inline, RuleText, Slots, Stepper, signed } from './DhUi'
+import { Banner, Inline, RuleText, Slots, Stepper, signed, DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // A ficha no desenho do livro: faixa da classe, escudos de Evasão e Armadura, seis atributos, Dano e Saúde com os
@@ -175,34 +175,24 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
           <p className="dh-hint">Ao escolher, o site já aplica: a classe traz Evasão, Vida, domínios e habilidades; a subclasse, as habilidades e o atributo de conjuração; a herança, as habilidades dela.</p>
           <div className="dh-form">
             <label>Classe
-              <select value={data.classKey ?? ''} onChange={(e) => update((d) => ({ ...d, classKey: (e.target.value || null) as DhSheetData['classKey'], subclassKey: null }))}>
-                <option value="">Escolha…</option>
-                {CLASSES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-              </select>
+              <DhSelect label="Classe" value={data.classKey ?? ''} onChange={(v) => update((d) => ({ ...d, classKey: (v || null) as DhSheetData['classKey'], subclassKey: null }))}
+                options={[{ value: '', label: 'Escolha…' }, ...CLASSES.map((c) => ({ value: c.key, label: c.name }))]} />
             </label>
             <label>Subclasse
-              <select value={data.subclassKey ?? ''} disabled={!cls} onChange={(e) => set('subclassKey', e.target.value || null)}>
-                <option value="">Escolha…</option>
-                {cls?.subclasses.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
-              </select>
+              <DhSelect label="Subclasse" value={data.subclassKey ?? ''} disabled={!cls} onChange={(v) => set('subclassKey', v || null)}
+                options={[{ value: '', label: 'Escolha…' }, ...(cls?.subclasses ?? []).map((x) => ({ value: x.key, label: x.name }))]} />
             </label>
             <label>Ancestralidade
-              <select value={data.ancestryKey ?? ''} onChange={(e) => update((d) => ({ ...d, ancestryKey: e.target.value || null, ancestry2Key: d.ancestry2Key === e.target.value ? null : d.ancestry2Key }))}>
-                <option value="">Escolha…</option>
-                {ANCESTRIES.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
-              </select>
+              <DhSelect label="Ancestralidade" value={data.ancestryKey ?? ''} onChange={(v) => update((d) => ({ ...d, ancestryKey: v || null, ancestry2Key: d.ancestry2Key === v ? null : d.ancestry2Key }))}
+                options={[{ value: '', label: 'Escolha…' }, ...ANCESTRIES.map((x) => ({ value: x.key, label: x.name }))]} />
             </label>
             <label>Segunda ancestralidade (mista)
-              <select value={data.ancestry2Key ?? ''} disabled={!data.ancestryKey} onChange={(e) => set('ancestry2Key', e.target.value || null)}>
-                <option value="">Nenhuma</option>
-                {ANCESTRIES.filter((x) => x.key !== data.ancestryKey).map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
-              </select>
+              <DhSelect label="Segunda ancestralidade" value={data.ancestry2Key ?? ''} disabled={!data.ancestryKey} onChange={(v) => set('ancestry2Key', v || null)}
+                options={[{ value: '', label: 'Nenhuma' }, ...ANCESTRIES.filter((x) => x.key !== data.ancestryKey).map((x) => ({ value: x.key, label: x.name }))]} />
             </label>
             <label>Comunidade
-              <select value={data.communityKey ?? ''} onChange={(e) => set('communityKey', e.target.value || null)}>
-                <option value="">Escolha…</option>
-                {COMMUNITIES.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}
-              </select>
+              <DhSelect label="Comunidade" value={data.communityKey ?? ''} onChange={(v) => set('communityKey', v || null)}
+                options={[{ value: '', label: 'Escolha…' }, ...COMMUNITIES.map((x) => ({ value: x.key, label: x.name }))]} />
             </label>
           </div>
         </section>

@@ -23,6 +23,8 @@ export interface SelectOption {
   label: string
   /** Ícone opcional, mostrado antes do nome (no botão e na lista). */
   icon?: ReactNode
+  /** Aparece na lista, mas não dá para escolher. */
+  disabled?: boolean
 }
 
 interface SelectProps {
@@ -87,7 +89,7 @@ export function Select({
 
   function choose(index: number) {
     const option = options[index]
-    if (!option) return
+    if (!option || option.disabled) return
     if (value === undefined) setOwnValue(option.value)
     if (option.value !== current) onChange(option.value)
     setOpen(false)
@@ -213,11 +215,13 @@ export function Select({
                   id={`${listId}-${index}`}
                   role="option"
                   aria-selected={option.value === current}
+                  aria-disabled={option.disabled || undefined}
                   className={[
                     'select-list__option',
                     index === active ? 'select-list__option--active' : '',
                     option.value === current ? 'select-list__option--selected' : '',
                     option.value === '' ? 'select-list__option--empty' : '',
+                    option.disabled ? 'select-list__option--disabled' : '',
                   ].filter(Boolean).join(' ')}
                   onMouseEnter={() => setActive(index)}
                   onClick={() => choose(index)}

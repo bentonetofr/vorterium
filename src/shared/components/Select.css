@@ -97,3 +97,5 @@
 @media (pointer: coarse) {
   .select-list__option { min-height: 40px; }
 }
+
+.select-list__option--disabled { opacity: 0.45; cursor: not-allowed; }

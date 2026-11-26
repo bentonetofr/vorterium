@@ -5,7 +5,7 @@ import { cardsInHand, markStress, maxCardLevel, ownedDomains } from '../model/de
 import { LOADOUT_MAX } from '../model/defaults'
 import type { DhDomain, DhDomainCard, DhSheetData } from '../model/types'
 import { DomainIcon } from './DomainIcon'
-import { RuleText } from './DhUi'
+import { RuleText, DhSelect } from './DhUi'
 
 // ────────────────────────────────────────────────────────
 // Cartas de domínio: a mão (até 5 ativas; a carta Notoriedade não conta) e a reserva. Trocar fora do descanso custa Fadiga
@@ -80,10 +80,8 @@ export function DhCardsTab({ data, update, canEdit }: Props) {
             actions={canEdit ? (
               <>
                 {!full ? <button type="button" className="dh-link" onClick={() => toHand(c.id)}>Trazer para a mão{resting ? '' : ` (${c.recall} Fadiga)`}</button> : (
-                  <select aria-label="Trocar com" defaultValue="" onChange={(e) => { if (e.target.value) toHand(c.id, e.target.value) }}>
-                    <option value="">Trocar com… {resting ? '' : `(${c.recall} Fadiga)`}</option>
-                    {hand.filter((h) => h.id !== 'notorious').map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
-                  </select>
+                  <DhSelect label="Trocar com" value="" onChange={(v) => { if (v) toHand(c.id, v) }}
+                    options={[{ value: '', label: `Trocar com…${resting ? '' : ` (${c.recall} Fadiga)`}` }, ...hand.filter((h) => h.id !== 'notorious').map((h) => ({ value: h.id, label: h.name }))]} />
                 )}
                 <button type="button" className="dh-link" onClick={() => remove(c.id)}>Descartar</button>
               </>
