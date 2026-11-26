@@ -594,3 +594,95 @@ button.dh-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .dh-card__more .dh-card__text { padding: 8px 4px 0; }
 .dh-browser .dh-cardgrid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 .dh-card__img { aspect-ratio: 360 / 504; background: var(--dh-field); }
+
+/* ═══ Animações fluidas ═══ */
+@keyframes dh-pop { 0% { transform: scale(0.55); opacity: 0; } 60% { transform: scale(1.14); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes dh-bump { 0% { transform: translateY(5px) scale(0.86); opacity: 0.2; } 55% { transform: translateY(-2px) scale(1.12); opacity: 1; } 100% { transform: none; } }
+@keyframes dh-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes dh-step { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+@keyframes dh-skull { 0% { transform: scale(0.6) rotate(-14deg); } 55% { transform: scale(1.22) rotate(6deg); } 100% { transform: none; } }
+@keyframes dh-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(201, 160, 50, 0); } 50% { box-shadow: 0 0 0 6px rgba(201, 160, 50, 0.18); } }
+@keyframes dh-sheen { from { background-position: -160% 0; } to { background-position: 260% 0; } }
+
+.dh-num { display: inline-block; animation: dh-bump 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.dh-shield b.dh-num, .dh-trait b.dh-num { display: block; }
+.dh-hud span { transition: border-color 0.2s, transform 0.2s, background 0.2s; }
+.dh-hud span:hover { transform: translateY(-2px); border-color: #4a5478; }
+
+/* casas (Vida, Fadiga, Armadura, Esperança): enchem com um pulinho e respondem ao toque */
+.dh-slot { transition: background-color 0.22s ease, border-color 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s; }
+.dh-slot:hover:not(:disabled) { transform: translateY(-2px) scale(1.1); }
+.dh-slot:active:not(:disabled) { transform: scale(0.82); }
+.dh-slot.is-marked { animation: dh-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.dh-slots--diamond .dh-slot.is-marked { animation: none; box-shadow: 0 0 10px rgba(201, 160, 50, 0.55); }
+
+/* atributos, escudos e botões */
+.dh-trait { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, border-color 0.2s, box-shadow 0.2s; }
+.dh-trait:hover { transform: translateY(-3px); border-color: var(--dh-hope); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35); }
+.dh-trait:active { transform: scale(0.96); }
+.dh-shield { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s; }
+.dh-shield:hover { transform: translateY(-3px); filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.4)); }
+.dh-box .btn, .dh-dialog .btn, .dh-link, .dh-seg button, .dh-stepper button { transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; }
+.dh-box .btn:hover:not(:disabled), .dh-dialog .btn:hover:not(:disabled) { transform: translateY(-1px); }
+.dh-box .btn:active:not(:disabled), .dh-dialog .btn:active:not(:disabled), .dh-stepper button:active:not(:disabled) { transform: scale(0.94); }
+.dh-box .btn-primary:not(:disabled), .dh-dialog .btn-primary:not(:disabled) { animation: dh-glow 2.8s ease-in-out infinite; }
+.dh-box { transition: border-color 0.2s, box-shadow 0.25s; }
+.dh-box:hover { box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); }
+.dh-notice { animation: dh-rise 0.3s ease both; }
+
+/* cartas: entram em sequência e flutuam ao passar o mouse */
+.dh-cardgrid > .dh-card { animation: dh-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dh-cardgrid > :nth-child(2) { animation-delay: 0.05s; }
+.dh-cardgrid > :nth-child(3) { animation-delay: 0.1s; }
+.dh-cardgrid > :nth-child(4) { animation-delay: 0.15s; }
+.dh-cardgrid > :nth-child(5) { animation-delay: 0.2s; }
+.dh-cardgrid > :nth-child(n+6) { animation-delay: 0.25s; }
+.dh-card__img { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s, opacity 0.25s, filter 0.25s; }
+.dh-card--img:hover .dh-card__img { transform: translateY(-6px) scale(1.02); box-shadow: 0 16px 30px rgba(0, 0, 0, 0.55); }
+
+/* perguntas dos formulários: cada uma desliza para dentro; a barra de progresso corre */
+.dh-q__body { animation: dh-step 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dh-q__progress i { transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1); background-size: 200% 100%; }
+.dh-q__choice { animation: dh-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dh-q__choices > :nth-child(2) { animation-delay: 0.03s; }
+.dh-q__choices > :nth-child(3) { animation-delay: 0.06s; }
+.dh-q__choices > :nth-child(4) { animation-delay: 0.09s; }
+.dh-q__choices > :nth-child(5) { animation-delay: 0.12s; }
+.dh-q__choices > :nth-child(n+6) { animation-delay: 0.15s; }
+.dh-start__opt { transition: border-color 0.2s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s; }
+.dh-start__opt:hover { transform: translateY(-5px); box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4); }
+.dh-start__opt:active { transform: scale(0.98); }
+
+/* Medo: as caveiras balançam ao encher */
+.dh-skull.is-on svg { animation: dh-skull 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.dh-skull:not(:disabled):active svg { transform: scale(0.8); }
+
+/* fichas do mestre: blocos aparecem em sequência */
+.dh-gmsheet { animation: dh-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dh-gmbody > * { animation: dh-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dh-gmbody > :nth-child(2) { animation-delay: 0.04s; }
+.dh-gmbody > :nth-child(3) { animation-delay: 0.08s; }
+.dh-gmbody > :nth-child(4) { animation-delay: 0.12s; }
+.dh-gmbody > :nth-child(5) { animation-delay: 0.16s; }
+.dh-gmbody > :nth-child(n+6) { animation-delay: 0.2s; }
+.dh-gmfeat { transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+.dh-gmfeat:hover { transform: translateX(3px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); }
+.dh-track__seg { transition: filter 0.2s; }
+.dh-track__seg:hover { filter: brightness(1.25); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dh-sheet *, .dh-dialog *, .dh-gm *, .dh-fear *, .dh-skull * { animation: none !important; transition-duration: 0.01ms !important; }
+}
+
+/* ═══ Escudos: o desenho de antes (ponta embaixo), mas com o contorno acompanhando a forma inteira, sem parecer cortado ═══ */
+.dh-shield, .dh-head__level { clip-path: none; border: 0; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; }
+.dh-shield { width: 88px; height: 100px; padding: 11px 0 0; background-color: transparent; background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20112%27%20preserveAspectRatio=%27none%27%3E%3Cpath%20d=%27M7%202H93Q98%202%2098%207V68Q98%2075%2092%2079L55%20107Q50%20111%2045%20107L8%2079Q2%2075%202%2068V7Q2%202%207%202Z%27%20fill=%27%2320263a%27%20stroke=%27%23e9e7df%27%20stroke-width=%272.6%27%20stroke-linejoin=%27round%27%20vector-effect=%27non-scaling-stroke%27/%3E%3C/svg%3E"); }
+.dh-shield--evasion { background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20112%27%20preserveAspectRatio=%27none%27%3E%3Cpath%20d=%27M7%202H93Q98%202%2098%207V68Q98%2075%2092%2079L55%20107Q50%20111%2045%20107L8%2079Q2%2075%202%2068V7Q2%202%207%202Z%27%20fill=%27%2320263a%27%20stroke=%27%23c9a032%27%20stroke-width=%272.6%27%20stroke-linejoin=%27round%27%20vector-effect=%27non-scaling-stroke%27/%3E%3C/svg%3E"); }
+.dh-shield--armor { background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20112%27%20preserveAspectRatio=%27none%27%3E%3Cpath%20d=%27M7%202H93Q98%202%2098%207V68Q98%2075%2092%2079L55%20107Q50%20111%2045%20107L8%2079Q2%2075%202%2068V7Q2%202%207%202Z%27%20fill=%27%2320263a%27%20stroke=%27%237d93a6%27%20stroke-width=%272.6%27%20stroke-linejoin=%27round%27%20vector-effect=%27non-scaling-stroke%27/%3E%3C/svg%3E"); }
+.dh-shield b { font-size: 30px; line-height: 1.05; }
+.dh-shield span { margin: 7px 13px 0; padding: 3px 0 4px; border-radius: 4px; font-size: 9px; letter-spacing: 0.06em; background: var(--dh-ink); color: var(--dh-paper); }
+.dh-head__level { width: 64px; height: 76px; padding: 9px 0 0; background-color: transparent; background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20112%27%20preserveAspectRatio=%27none%27%3E%3Cpath%20d=%27M7%202H93Q98%202%2098%207V68Q98%2075%2092%2079L55%20107Q50%20111%2045%20107L8%2079Q2%2075%202%2068V7Q2%202%207%202Z%27%20fill=%27%2320263a%27%20stroke=%27%23e9e7df%27%20stroke-width=%272.6%27%20stroke-linejoin=%27round%27%20vector-effect=%27non-scaling-stroke%27/%3E%3C/svg%3E"); }
+.dh-head__level b { font-size: 28px; line-height: 1.05; }
+.dh-head__level span { display: block; margin: 5px 10px 0; padding: 2px 0 3px; border-radius: 4px; font-size: 8.5px; background: var(--dh-ink); color: var(--dh-paper); }
+
+.dh-th__num { clip-path: none; border: 0; width: 46px; height: 38px; padding-right: 6px; background: transparent url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%20preserveAspectRatio=%27none%27%3E%3Cpath%20d=%27M6%203H72Q77%203%2080%207L97%2046Q99%2050%2097%2054L80%2093Q77%2097%2072%2097H6Q2%2097%202%2093V7Q2%203%206%203Z%27%20fill=%27%2312172a%27%20stroke=%27%23e9e7df%27%20stroke-width=%272.6%27%20stroke-linejoin=%27round%27%20vector-effect=%27non-scaling-stroke%27/%3E%3C/svg%3E") center / 100% 100% no-repeat; }

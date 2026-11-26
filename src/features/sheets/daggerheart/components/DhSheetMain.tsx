@@ -145,9 +145,9 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
 
       {/* ── Evasão, Armadura e atributos ── */}
       <section className="dh-stats">
-        <div className="dh-shield dh-shield--evasion"><b>{evasion(data)}</b><span>Evasão</span><small>Começa em {cls?.evasion ?? 10}</small></div>
+        <div className="dh-shield dh-shield--evasion"><b key={evasion(data)} className="dh-num">{evasion(data)}</b><span>Evasão</span><small>Começa em {cls?.evasion ?? 10}</small></div>
         <div className="dh-armor">
-          <div className="dh-shield dh-shield--armor"><b>{armor}</b><span>Armadura</span></div>
+          <div className="dh-shield dh-shield--armor"><b key={armor} className="dh-num">{armor}</b><span>Armadura</span></div>
           <Slots open={armor} total={ARMOR_SCORE_MAX} marked={data.armorMarked} shape="shield" label="Pontos de Armadura" tone="armor" onChange={ed ? (n) => set('armorMarked', n) : undefined} />
         </div>
         <div className="dh-traits">
@@ -155,7 +155,7 @@ export function DhSheetMain({ data, update, target, canEdit }: Props) {
             <button key={t} type="button" className="dh-trait" onClick={() => openTraitRoll(t)} title={`Rolar ${TRAIT_INFO[t].label}`}>
               <span className="dh-trait__name">{TRAIT_INFO[t].label}</span>
               <i className={`dh-trait__mark${marked.has(t) ? ' is-on' : ''}`} aria-label={marked.has(t) ? 'Marcado' : 'Livre'} />
-              <b>{signed(tv[t])}</b>
+              <b key={tv[t]} className="dh-num">{signed(tv[t])}</b>
               <small>{TRAIT_INFO[t].verbs.join(' · ')}</small>
             </button>
           ))}

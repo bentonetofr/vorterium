@@ -75,11 +75,11 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
       {error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>}
 
       <div className="dh-hud" aria-label="Resumo do personagem">
-        <span><i>Vida</i><b className={data.hpMarked >= hpSlots(data) ? 'is-bad' : ''}>{hpSlots(data) - data.hpMarked}<small>/{hpSlots(data)}</small></b></span>
-        <span><i>Fadiga</i><b className={data.stressMarked >= stressSlots(data) ? 'is-bad' : ''}>{stressSlots(data) - data.stressMarked}<small>/{stressSlots(data)}</small></b></span>
-        <span><i>Esperança</i><b>{data.hope}<small>/{hopeSlots(data)}</small></b></span>
-        <span><i>Armadura</i><b>{Math.max(0, armorScore(data) - data.armorMarked)}<small>/{armorScore(data)}</small></b></span>
-        <span><i>Evasão</i><b>{evasion(data)}</b></span>
+        <span><i>Vida</i><b key={hpSlots(data) - data.hpMarked} className={`dh-num${data.hpMarked >= hpSlots(data) ? ' is-bad' : ''}`}>{hpSlots(data) - data.hpMarked}<small>/{hpSlots(data)}</small></b></span>
+        <span><i>Fadiga</i><b key={stressSlots(data) - data.stressMarked} className={`dh-num${data.stressMarked >= stressSlots(data) ? ' is-bad' : ''}`}>{stressSlots(data) - data.stressMarked}<small>/{stressSlots(data)}</small></b></span>
+        <span><i>Esperança</i><b key={data.hope} className="dh-num">{data.hope}<small>/{hopeSlots(data)}</small></b></span>
+        <span><i>Armadura</i><b key={Math.max(0, armorScore(data) - data.armorMarked)} className="dh-num">{Math.max(0, armorScore(data) - data.armorMarked)}<small>/{armorScore(data)}</small></b></span>
+        <span><i>Evasão</i><b key={evasion(data)} className="dh-num">{evasion(data)}</b></span>
       </div>
 
       <nav ref={tabsRef} className="campaign-tabs dh-tabs" role="tablist" aria-label="Seções da ficha">

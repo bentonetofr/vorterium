@@ -251,7 +251,7 @@ export function DhQuickForm({ onDone, onCancel, initial, startAt }: Props) {
         <p className="dh-q__count">Pergunta {i + 1} de {steps.length}</p>
         <h3 className="dh-q__title">{step.question}</h3>
         {step.hint && <p className="dh-hint">{step.hint}</p>}
-        <div className="dh-q__body" onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') next() }}>{step.body}</div>
+        <div key={step.id} className="dh-q__body" onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') next() }}>{step.body}</div>
         <footer className="dh-dialog__foot">
           <button type="button" className="btn" onClick={back}>{i === 0 ? 'Cancelar' : 'Voltar'}</button>
           {!step.own && <button type="button" className="btn btn-primary" disabled={!step.valid} onClick={next}>{last ? 'Criar ficha' : 'Continuar'}</button>}

@@ -217,11 +217,11 @@ export function AdversarySheet({ row, campaignId, canEdit }: { row: GmRow<DhAdve
 
         <div className="dh-vitals">
           <div className="dh-vital dh-vital--hp">
-            <div className="dh-vital__top"><span>Vida</span><b>{a.hp - a.hpMarked}<small>/{a.hp}</small></b>{canEdit && <Stepper value={a.hp} min={1} max={30} label="Vida" onChange={(v) => set('hp', v)} />}</div>
+            <div className="dh-vital__top"><span>Vida</span><b key={a.hp - a.hpMarked} className="dh-num">{a.hp - a.hpMarked}<small>/{a.hp}</small></b>{canEdit && <Stepper value={a.hp} min={1} max={30} label="Vida" onChange={(v) => set('hp', v)} />}</div>
             <Slots open={a.hp} total={Math.max(a.hp, 1)} marked={a.hpMarked} label="Vida do adversário" tone="hp" onChange={canEdit ? (n) => set('hpMarked', n) : undefined} />
           </div>
           <div className="dh-vital dh-vital--stress">
-            <div className="dh-vital__top"><span>Fadiga</span><b>{a.stress - a.stressMarked}<small>/{a.stress}</small></b>{canEdit && <Stepper value={a.stress} min={0} max={20} label="Fadiga" onChange={(v) => set('stress', v)} />}</div>
+            <div className="dh-vital__top"><span>Fadiga</span><b key={a.stress - a.stressMarked} className="dh-num">{a.stress - a.stressMarked}<small>/{a.stress}</small></b>{canEdit && <Stepper value={a.stress} min={0} max={20} label="Fadiga" onChange={(v) => set('stress', v)} />}</div>
             <Slots open={a.stress} total={Math.max(a.stress, 1)} marked={a.stressMarked} label="Fadiga do adversário" tone="stress" onChange={canEdit ? (n) => set('stressMarked', n) : undefined} />
           </div>
         </div>

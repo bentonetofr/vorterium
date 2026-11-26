@@ -318,10 +318,10 @@ describe('ficha rápida', () => {
 
 describe('imagens das cartas de domínio', () => {
   it('cada uma das 189 cartas tem a sua imagem em public/dh/cartas', async () => {
-    const { existsSync } = await import('node:fs')
+    const files = Object.keys(import.meta.glob('/public/dh/cartas/*.webp'))
     const { DOMAIN_CARDS } = await import('../catalog/domainCards')
     expect(DOMAIN_CARDS).toHaveLength(189)
-    const faltam = DOMAIN_CARDS.filter((c) => !existsSync(`public/dh/cartas/${c.id}.webp`)).map((c) => c.id)
+    const faltam = DOMAIN_CARDS.filter((c) => !files.includes(`/public/dh/cartas/${c.id}.webp`)).map((c) => c.id)
     expect(faltam).toEqual([])
   })
   it('nenhum nome de carta se repete dentro do mesmo domínio', async () => {

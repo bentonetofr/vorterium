@@ -78,7 +78,7 @@ export function DhNarrativeForm({ onCancel, onDone }: Props) {
         <h3 className="dh-q__title">{q ? q.title : `Montei a ficha${rec?.answers.name ? ` de ${rec.answers.name}` : ''}`}</h3>
         {q?.hint && <p className="dh-hint">{q.hint}</p>}
         {isResult && <p className="dh-hint">Com base no que você contou, esta é a combinação que mais se encaixa. Dá para ajustar tudo antes de criar, e depois na própria ficha.</p>}
-        <div className="dh-q__body">
+        <div key={q ? q.id : 'resultado'} className="dh-q__body">
           {q && <Question q={q} value={answers[q.id] ?? []} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} onEnter={next} />}
           {rec && (
             <>
