@@ -65,7 +65,7 @@ export function DhAutomationPanel({ data, update, onClose }: Props) {
         <p className="dh-hint">Tudo vem calculado pelas regras do livro (Automático). Em Manual você digita o valor e o site deixa de calcular aquele item; dá para voltar ao Automático quando quiser.</p>
 
         <div className="dh-auto__level">
-          <span><b>Nível</b><small>Em geral sobe pela aba Subir de nível; aqui você acerta o número direto, se entrou numa mesa já avançada.</small></span>
+          <span><b>Nível</b><small>Em geral sobe pelo botão Subir de nível, no fim das abas; aqui você acerta o número direto, se entrou numa mesa já avançada.</small></span>
           <Stepper value={data.level} min={1} max={MAX_LEVEL} label="Nível" onChange={(v) => update((d) => ({ ...d, level: v }))} />
         </div>
 

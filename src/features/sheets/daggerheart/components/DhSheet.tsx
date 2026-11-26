@@ -10,14 +10,14 @@ import { DhQuickForm } from './DhQuickForm'
 import type { QuickAnswers } from '../model/quick'
 import { DhStartChoice } from './DhStartChoice'
 import { DhExtraTab, hasBeastform, hasCompanion } from './DhExtraTab'
-import { DhLevelTab } from './DhLevelTab'
+import { DhLevelDialog } from './DhLevelTab'
 import { DhPersonTab, Notes } from './DhPersonTab'
 import { DhRestTab } from './DhRestTab'
 import { DhSheetMain } from './DhSheetMain'
 
 // ────────────────────────────────────────────────────────
 // A ficha aberta: sem classe ainda, o assistente de criação; com ela, as abas (Ficha no desenho do livro, Cartas,
-// Subir de nível, Personagem, Descanso, Extras da classe e Anotações). Tudo salva sozinho.
+// Personagem, Descanso, Extras da classe e Anotações). Tudo salva sozinho.
 // ────────────────────────────────────────────────────────
 
 interface Props {
@@ -26,13 +26,15 @@ interface Props {
   playerName?: string
 }
 
-type Tab = 'ficha' | 'cartas' | 'nivel' | 'personagem' | 'descanso' | 'extras' | 'notas'
+type Tab = 'ficha' | 'cartas' | 'personagem' | 'descanso' | 'extras' | 'notas'
 
 export function DhSheet({ sheet, canEdit, playerName }: Props) {
   const { data, update, status, error } = useDhSheet(sheet)
   const [tab, setTab] = useState<Tab>('ficha')
   const [quick, setQuick] = useState(false)
   const [narrative, setNarrative] = useState(false)
+  /** A janela de subir de nível (o botão no fim da barra de abas). */
+  const [levelOpen, setLevelOpen] = useState(false)
   /** Respostas montadas pela narrativa, entregues ao formulário rápido para conferir ou ajustar. */
   const [fromNarrative, setFromNarrative] = useState<{ answers: QuickAnswers; startAt: 'classe' | 'resumo' } | null>(null)
   const started = data.started || !!data.classKey
@@ -42,7 +44,6 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'ficha', label: 'Ficha' },
     { id: 'cartas', label: 'Cartas' },
-    { id: 'nivel', label: 'Subir de nível' },
     { id: 'personagem', label: 'Personagem' },
     { id: 'descanso', label: 'Descanso' },
     ...(extras ? [{ id: 'extras' as Tab, label: hasBeastform(data) ? 'Forma de Fera' : 'Companheiro' }] : []),
@@ -88,13 +89,22 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
             <span className="campaign-tab__label">{t.label}</span>
           </button>
         ))}
+        {canEdit && (
+          <button type="button" className="campaign-tab dh-tabs__level" onClick={() => setLevelOpen(true)} title="Subir de nível: abre uma janela com as escolhas do novo nível">
+            <svg className="dh-tabs__levelicon" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+              <path d="M10 2.6 16.4 9H12v4.2H8V9H3.6z" fill="currentColor" />
+              <path d="M5.5 16.4h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <span className="campaign-tab__label">Subir de nível</span>
+          </button>
+        )}
         <TabIndicator activeKey={tab} />
       </nav>
+      {levelOpen && <DhLevelDialog data={data} update={update} canEdit={canEdit} onClose={() => setLevelOpen(false)} />}
 
       <div style={panelsStyle}>
         {tab === 'ficha' && <div className="anim-tab-panel"><DhSheetMain data={data} update={update} target={target} canEdit={canEdit} onOpenTab={(t) => selectTab(t as typeof tab)} /></div>}
         {tab === 'cartas' && <div className="anim-tab-panel"><DhCardsTab data={data} update={update} canEdit={canEdit} /></div>}
-        {tab === 'nivel' && <div className="anim-tab-panel"><DhLevelTab data={data} update={update} canEdit={canEdit} /></div>}
         {tab === 'personagem' && <div className="anim-tab-panel"><DhPersonTab data={data} update={update} canEdit={canEdit} /></div>}
         {tab === 'descanso' && <div className="anim-tab-panel"><DhRestTab data={data} update={update} canEdit={canEdit} /></div>}
         {tab === 'extras' && <div className="anim-tab-panel"><DhExtraTab data={data} update={update} canEdit={canEdit} /></div>}

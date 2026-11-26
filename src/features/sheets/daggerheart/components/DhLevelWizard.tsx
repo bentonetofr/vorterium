@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { ADVANCE_OPTIONS, DOMAINS, TRAIT_INFO } from '../catalog/rules'
 import { CLASSES } from '../catalog/classes'
 import { DOMAIN_CARDS } from '../catalog/domainCards'
-import { experienceMod, maxCardLevel, ownedDomains } from '../model/derive'
+import { experienceMod, maxCardLevel, ownedDomains, tierOf } from '../model/derive'
 import { achievementsAt, advanceChoices, domainPickCap, newExperienceId, pickCost, unmarkedTraits, validateAdvancement, type AdvanceChoice } from '../model/levelUp'
 import type { DhAdvancement, DhClassKey, DhDomain, DhPick, DhSheetData, DhTrait } from '../model/types'
 import { Banner, signed, DhSelect } from './DhUi'
@@ -27,14 +27,17 @@ interface WizardProps {
   cancelLabel?: string
   /** Sem a moldura de caixa e o título (quando já está dentro de uma janela). */
   bare?: boolean
+  /** Uma pergunta por vez (conquistas, quadro, detalhes, carta e confirmação), para a janela de subir de nível. */
+  stepped?: boolean
 }
 
-export function DhLevelWizard({ data, onApply, onCancel, applyLabel, cancelLabel = 'Cancelar', bare }: WizardProps) {
+export function DhLevelWizard({ data, onApply, onCancel, applyLabel, cancelLabel = 'Cancelar', bare, stepped }: WizardProps) {
   const next = data.level + 1
   const [picks, setPicks] = useState<Draft[]>([])
   const [expName, setExpName] = useState('')
   const [card, setCard] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [step, setStep] = useState(0)
   const expId = useMemo(() => newExperienceId(), [data.level])
   const ach = achievementsAt(next)
   const choices = advanceChoices(data, next)
@@ -64,26 +67,26 @@ export function DhLevelWizard({ data, onApply, onCancel, applyLabel, cancelLabel
     if (check) { setError(check); return }
     if (ach.experience && !expName.trim()) { setError('Dê um nome à nova Experiência.'); return }
     await onApply(adv, expName.trim())
-    setPicks([]); setExpName(''); setCard(''); setError(null)
+    setPicks([]); setExpName(''); setCard(''); setError(null); setStep(0)
   }
 
-  const body = (
+  const achBlock = (
+    <div className="dh-ach">
+      <h4>Conquistas do nível</h4>
+      {!ach.experience && <p>Nenhuma conquista especial neste nível.</p>}
+      {ach.experience && (
+        <>
+          <p>Uma Experiência nova (+2) e +1 de Proficiência{ach.clearsMarks ? '; as marcas dos atributos são limpas' : ''}.</p>
+          <label>Nome da nova Experiência
+            <input value={expName} maxLength={120} onChange={(e) => setExpName(e.target.value)} placeholder="Específica, como “Contrabandista do Porto Velho”" />
+          </label>
+        </>
+      )}
+    </div>
+  )
+
+  const boardBlock = (
     <>
-      <p className="dh-hint">Ao subir, seus limiares de dano aumentam em +1 (nível + base da armadura).</p>
-
-      <div className="dh-ach">
-        <h4>Conquistas do nível</h4>
-        {!ach.experience && <p>Nenhuma conquista especial neste nível.</p>}
-        {ach.experience && (
-          <>
-            <p>Uma Experiência nova (+2) e +1 de Proficiência{ach.clearsMarks ? '; as marcas dos atributos são limpas' : ''}.</p>
-            <label>Nome da nova Experiência
-              <input value={expName} maxLength={120} onChange={(e) => setExpName(e.target.value)} placeholder="Específica, como “Contrabandista do Porto Velho”" />
-            </label>
-          </>
-        )}
-      </div>
-
       <div className="dh-board__head">
         <h4>Escolha duas opções do quadro</h4>
         <span className="dh-board__spent" role="status" aria-label={`${spent} de 2 escolhas feitas`}>
@@ -123,24 +126,86 @@ export function DhLevelWizard({ data, onApply, onCancel, applyLabel, cancelLabel
           </ul>
         </section>
       ))}
+    </>
+  )
 
-      {picks.map((d, i) => (
-        <div key={i} className="dh-pick">
-          <header><b>{OPT_LABEL.get(d.pick.opt)}</b> <small>(patamar {d.pick.tier})</small> <button type="button" className="dh-x" aria-label="Tirar" onClick={() => setPicks((p) => p.filter((_, j) => j !== i))}>×</button></header>
-          <PickForm data={data} level={next} pick={d.pick} onChange={(p) => patch(i, p)} extraExp={ach.experience && expName.trim() ? { id: expId, name: expName.trim() } : null} />
-        </div>
-      ))}
+  const picksBlock = picks.map((d, i) => (
+    <div key={i} className="dh-pick">
+      <header><b>{OPT_LABEL.get(d.pick.opt)}</b> <small>(patamar {d.pick.tier})</small> <button type="button" className="dh-x" aria-label="Tirar" onClick={() => setPicks((p) => p.filter((_, j) => j !== i))}>×</button></header>
+      <PickForm data={data} level={next} pick={d.pick} onChange={(p) => patch(i, p)} extraExp={ach.experience && expName.trim() ? { id: expId, name: expName.trim() } : null} />
+    </div>
+  ))
 
+  const cardBlock = (
+    <>
       <h4>Carta de domínio do nível</h4>
       <CardSelect data={data} level={next} extra={picks.map((d) => d.pick)} value={card} onChange={setCard} cap={10} />
+    </>
+  )
 
-      {error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>}
+  const errorBlock = error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>
+
+  const body = (
+    <>
+      <p className="dh-hint">Ao subir, seus limiares de dano aumentam em +1 (nível + base da armadura).</p>
+      {achBlock}
+      {boardBlock}
+      {picksBlock}
+      {cardBlock}
+      {errorBlock}
       <div className="dh-actions">
         <button type="button" className="btn btn-primary" disabled={spent !== 2 || !card} onClick={() => void confirm()}>{applyLabel ?? `Confirmar nível ${next}`}</button>
         {onCancel && <button type="button" className="btn" onClick={onCancel}>{cancelLabel}</button>}
       </div>
     </>
   )
+
+  // ── uma pergunta por vez (a janela de subir de nível) ──
+  const needsDetails = picks.some((d) => d.pick.opt === 'traits' || d.pick.opt === 'experiences' || d.pick.opt === 'domain' || d.pick.opt === 'multiclass')
+  const stepIds = ['conquistas', 'quadro', ...(needsDetails ? ['detalhes'] : []), 'carta', 'confirmar'] as const
+  const cur = stepIds[Math.min(step, stepIds.length - 1)]
+  const STEP_TITLE: Record<(typeof stepIds)[number], string> = { conquistas: `Nível ${next}: conquistas`, quadro: 'Quais são as duas escolhas?', detalhes: 'Detalhes das escolhas', carta: 'Qual carta de domínio entra?', confirmar: 'Tudo certo?' }
+  const stepOk: Record<(typeof stepIds)[number], boolean> = {
+    conquistas: !ach.experience || expName.trim().length > 0,
+    quadro: spent === 2,
+    detalhes: true,
+    carta: !!card,
+    confirmar: true,
+  }
+  const lastStep = cur === 'confirmar'
+
+  if (stepped) {
+    return (
+      <div className="dh-lvlsteps">
+        <div className="dh-lvlsteps__dots" aria-hidden="true">
+          {stepIds.map((id, k) => <i key={id} className={k < stepIds.indexOf(cur) ? 'is-done' : k === stepIds.indexOf(cur) ? 'is-now' : ''} />)}
+        </div>
+        <p className="dh-lvlsteps__count">Pergunta {stepIds.indexOf(cur) + 1} de {stepIds.length}</p>
+        <h3 className="dh-lvlsteps__title">{STEP_TITLE[cur]}</h3>
+        <div className="dh-lvlsteps__body" key={cur}>
+          {cur === 'conquistas' && <>{achBlock}<p className="dh-hint">Ao subir, seus limiares de dano aumentam em +1 (nível + base da armadura).</p></>}
+          {cur === 'quadro' && boardBlock}
+          {cur === 'detalhes' && <>{picksBlock}</>}
+          {cur === 'carta' && cardBlock}
+          {cur === 'confirmar' && (
+            <ul className="dh-q__sum dh-lvlsteps__sum">
+              <li><b>Nível {next}</b> · Patamar {tierOf(next)}</li>
+              {ach.experience && <li>Experiência nova: <b>{expName.trim()}</b> (+2)</li>}
+              {picks.map((d, i) => <li key={i}>{describePick(d.pick, data)}</li>)}
+              <li>Carta de domínio: <b>{DOMAIN_CARDS.find((c) => c.id === card)?.name ?? '—'}</b></li>
+            </ul>
+          )}
+          {errorBlock}
+        </div>
+        <footer className="dh-dialog__foot">
+          <button type="button" className="btn" onClick={() => { setError(null); if (step === 0) onCancel?.(); else setStep(step - 1) }}>{step === 0 ? cancelLabel : 'Voltar'}</button>
+          {lastStep
+            ? <button type="button" className="btn btn-primary" onClick={() => void confirm()}>{applyLabel ?? `Subir para o nível ${next}`}</button>
+            : <button type="button" className="btn btn-primary" disabled={!stepOk[cur]} onClick={() => { setError(null); setStep(step + 1) }}>Continuar</button>}
+        </footer>
+      </div>
+    )
+  }
 
   if (bare) return <div className="dh-level__wizard">{body}</div>
   return (

@@ -785,3 +785,36 @@ button.dh-board__box.is-picked::after { border-color: #1a1405; }
 .dh-history li { padding: 8px 12px; border: 1px solid var(--dh-line); border-left: 4px solid var(--dh-armor); border-radius: 8px; background: var(--dh-field-2); font-size: 13.5px; line-height: 1.45; animation: dh-rise 0.3s ease both; }
 .dh-history li b { color: var(--dh-hope); }
 @media (max-width: 560px) { .dh-board__row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* ═══ Botão "Subir de nível" no fim da barra de abas + a janela de perguntas ═══ */
+.dh-tabs .dh-tabs__level { display: inline-flex; align-items: center; gap: 7px; margin-left: 6px; position: relative; color: var(--dh-hope, #c9a032); border: 1.5px dashed rgba(201, 160, 50, 0.55); border-radius: 10px; background: rgba(201, 160, 50, 0.08); cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; }
+.dh-tabs .dh-tabs__level:hover { background: rgba(201, 160, 50, 0.18); border-style: solid; border-color: var(--dh-hope, #c9a032); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35); }
+.dh-tabs .dh-tabs__level:active { transform: scale(0.96); }
+.dh-tabs .dh-tabs__level .campaign-tab__label { color: inherit; }
+.dh-tabs__levelicon { flex: none; animation: dh-lift 2.4s ease-in-out infinite; }
+@keyframes dh-lift { 0%, 100% { transform: translateY(1px); } 50% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .dh-tabs__levelicon { animation: none; } }
+
+.dh-lvl { width: min(760px, 94vw); max-height: 90vh; overflow-y: auto; }
+.dh-lvl .dh-dialog__head { align-items: flex-start; }
+.dh-lvl .dh-dialog__head h3 { margin: 2px 0 0; font-size: 22px; }
+.dh-lvl__kicker { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dh-ink-soft); }
+.dh-lvl__stats { margin: 4px 0 12px; font-size: 13.5px; color: var(--dh-ink-soft); }
+.dh-lvl__stats b { color: var(--dh-ink); }
+.dh-lvl__history { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--dh-line); }
+.dh-lvl__history summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--dh-ink-soft); }
+
+.dh-lvlsteps__dots { display: flex; gap: 6px; margin-bottom: 8px; }
+.dh-lvlsteps__dots i { flex: 1; height: 5px; border-radius: 4px; background: var(--dh-line); transition: background 0.3s, box-shadow 0.3s; }
+.dh-lvlsteps__dots i.is-done { background: var(--dh-hope); }
+.dh-lvlsteps__dots i.is-now { background: linear-gradient(90deg, var(--dh-hope), #a07cf0); box-shadow: 0 0 10px rgba(160, 124, 240, 0.5); }
+.dh-lvlsteps__count { margin: 0; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dh-ink-soft); }
+.dh-lvlsteps__title { margin: 4px 0 10px; font-size: 22px; line-height: 1.25; color: var(--dh-ink); }
+.dh-lvlsteps__body { animation: dh-step 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; min-height: 160px; }
+.dh-lvlsteps__sum { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dh-lvlsteps__sum li { padding: 10px 14px; border: 1px solid var(--dh-line); border-left: 4px solid var(--dh-hope); border-radius: 8px; background: var(--dh-field-2); font-size: 14.5px; }
+.dh-lvlsteps__sum small { display: block; margin-top: 2px; color: var(--dh-ink-soft); }
+.dh-lvlsteps .dh-dialog__foot { margin-top: 14px; }
+
+/* os títulos das perguntas já dizem o assunto: some o título repetido do bloco */
+.dh-lvlsteps__body > h4, .dh-lvlsteps__body .dh-ach > h4 { display: none; }
