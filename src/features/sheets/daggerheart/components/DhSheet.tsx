@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { TabIndicator, useStableTabPanels, useTabDirection } from '../../../../shared/components/TabIndicator'
-import { currentClass } from '../model/derive'
+import { armorScore, currentClass, evasion, hopeSlots, hpSlots, stressSlots } from '../model/derive'
 import type { DhSheetData } from '../model/types'
 import type { DhSheet as DhSheetRecord } from '../services/dhSheetService'
 import { useDhSheet } from '../services/useDhSheet'
@@ -66,6 +66,14 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
         <span className={`dh-status__dot dh-status__dot--${status}`}>{status === 'salvando' ? 'Salvando…' : status === 'erro' ? 'Erro ao salvar' : 'Salvo'}</span>
       </div>
       {error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>}
+
+      <div className="dh-hud" aria-label="Resumo do personagem">
+        <span><i>Vida</i><b className={data.hpMarked >= hpSlots(data) ? 'is-bad' : ''}>{hpSlots(data) - data.hpMarked}<small>/{hpSlots(data)}</small></b></span>
+        <span><i>Fadiga</i><b className={data.stressMarked >= stressSlots(data) ? 'is-bad' : ''}>{stressSlots(data) - data.stressMarked}<small>/{stressSlots(data)}</small></b></span>
+        <span><i>Esperança</i><b>{data.hope}<small>/{hopeSlots(data)}</small></b></span>
+        <span><i>Armadura</i><b>{Math.max(0, armorScore(data) - data.armorMarked)}<small>/{armorScore(data)}</small></b></span>
+        <span><i>Evasão</i><b>{evasion(data)}</b></span>
+      </div>
 
       <nav ref={tabsRef} className="campaign-tabs dh-tabs" role="tablist" aria-label="Seções da ficha">
         {tabs.map((t) => (

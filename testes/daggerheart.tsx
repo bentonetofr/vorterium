@@ -16,7 +16,7 @@ import { DhPersonTab } from '../src/features/sheets/daggerheart/components/DhPer
 import { DhRestTab } from '../src/features/sheets/daggerheart/components/DhRestTab'
 import { DhDiceCard } from '../src/features/sheets/daggerheart/components/DhDiceCard'
 import { AdversarySheet, EnvironmentSheet } from '../src/features/sheets/daggerheart/components/DhGmSection'
-import { FearCounter } from '../src/features/sheets/daggerheart/components/FearCounter'
+import { FearCounter, Skull } from '../src/features/sheets/daggerheart/components/FearCounter'
 import { ENVIRONMENT_PRESETS, emptyAdversary } from '../src/features/sheets/daggerheart/model/gm'
 import { DhSheetMain } from '../src/features/sheets/daggerheart/components/DhSheetMain'
 
@@ -33,6 +33,17 @@ function exemplo(): DhSheetData {
   }
 }
 
+function MedoDemo() {
+  const [v, setV] = useState(5)
+  return (
+    <div style={{ padding: 24 }}>
+      <span className="dh-fear"><span className="dh-fear__label">Medo</span>
+        <span className="dh-fear__skulls">{Array.from({ length: 12 }, (_, i) => <Skull key={i} on={i < v} disabled={false} label="caveira" onClick={() => setV(i + 1 === v ? i : i + 1)} />)}</span>
+        <b className="dh-fear__n">{v}</b></span>
+    </div>
+  )
+}
+
 function Demo() {
   const [d, setD] = useState<DhSheetData>(exemplo())
   const [tab, setTab] = useState('ficha')
@@ -40,6 +51,7 @@ function Demo() {
   const update = (fn: (x: DhSheetData) => DhSheetData) => setD(fn)
   const target = { campaignId: 'x', sheetId: 'y', character: d.name }
   if (new URLSearchParams(location.search).has('gm')) return <div className="dh-sheet" style={{ padding: 16, maxWidth: 900, margin: '0 auto' }}><AdversarySheet row={{ id: 'a', campaign_id: 'x', kind: 'adversary', visible: false, updated_at: '', data: { ...emptyAdversary(), name: 'Lobo Sombrio', kind: 'Bruto', features: [{ id: 'f', name: 'Mordida Voraz', kind: 'acao', fearCost: 1, text: 'Ataca todos em alcance corpo a corpo.', questions: '' }] } }} campaignId="x" canEdit /><EnvironmentSheet row={{ id: 'e', campaign_id: 'x', kind: 'environment', visible: false, updated_at: '', data: ENVIRONMENT_PRESETS[0].build() }} campaignId="x" canEdit /></div>
+  if (new URLSearchParams(location.search).has('medo')) return <MedoDemo />
   if (new URLSearchParams(location.search).has('dados')) return <DhDiceCard campaignId="x" currentUserId="y" onClose={() => {}} />
   if (criar) return <div style={{ padding: 16, maxWidth: 1100, margin: '0 auto' }}><DhSheet sheet={{ id: 'teste', campaign_id: 'x', user_id: 'y', character_name: null, data: emptySheet(), created_at: '', updated_at: '' }} canEdit /><DialogHost /></div>
   return (

@@ -97,7 +97,7 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
 
 function FeatureBlock({ f, canEdit, onChange, onRemove, onUse, fear }: { f: DhGmFeature; canEdit: boolean; onChange: (f: DhGmFeature) => void; onRemove: () => void; onUse?: () => void; fear: number }) {
   return (
-    <div className="dh-gmfeat">
+    <div className="dh-gmfeat" data-kind={f.kind}>
       <div className="dh-gmfeat__head">
         <Inline value={f.name} onChange={(v) => onChange({ ...f, name: v })} disabled={!canEdit} placeholder="Nome da habilidade" maxLength={120} aria-label="Nome da habilidade" />
         {canEdit
