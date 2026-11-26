@@ -12,6 +12,7 @@ import { getCampaignTdSheets } from '../../sheets/terraDevastada/services/tdShee
 import { getCampaignTdaSheets } from '../../sheets/terraDevastadaAdaptada/services/tdaSheetService'
 import { getCampaignVtmSheets } from '../../sheets/vampiro/services/vampiroSheetService'
 import { getCampaignDndSheets } from '../../sheets/dnd/services/dndSheetService'
+import { getCampaignDhSheets } from '../../sheets/daggerheart/services/dhSheetService'
 import {
   getInitiativeParticipants,
   getInitiativeState,
@@ -129,6 +130,13 @@ async function loadSheetsSummary(campaign: CampaignWithRole): Promise<SheetsSumm
     return isMaster
       ? { kind: 'master', count: sheets.length }
       : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.character_name ?? null }
+  }
+  if (campaign.system === 'daggerheart') {
+    // a linha da ficha nasce quando o jogador abre a aba; só conta como criada depois que ele escolheu como montar, deu nome ou escolheu a classe
+    const sheets = (await getCampaignDhSheets(campaign.id)).filter((s) => s.data.started || s.data.name.trim() !== '' || s.data.classKey !== null)
+    return isMaster
+      ? { kind: 'master', count: sheets.length }
+      : { kind: 'player', exists: sheets.length > 0, name: sheets[0]?.data.name.trim() || null }
   }
   if (isMaster) return { kind: 'master', count: (await getCampaignSheets(campaign.id)).length }
   const mine = await getMySheet(campaign.id)

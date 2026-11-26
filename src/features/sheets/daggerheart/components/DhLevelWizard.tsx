@@ -13,6 +13,7 @@ import { Banner, signed, DhSelect } from './DhUi'
 // ────────────────────────────────────────────────────────
 
 const OPT_LABEL = new Map<string, string>(ADVANCE_OPTIONS.map((o) => [o.opt, o.label]))
+const TIER_LEVELS: Record<number, string> = { 2: '2 a 4', 3: '5 a 7', 4: '8 a 10' }
 
 type Draft = { choice: AdvanceChoice; pick: DhPick }
 
@@ -38,6 +39,7 @@ export function DhLevelWizard({ data, onApply, onCancel, applyLabel, cancelLabel
   const ach = achievementsAt(next)
   const choices = advanceChoices(data, next)
   const spent = picks.reduce((n, p) => n + pickCost(p.pick.opt), 0)
+  const tiersShown = [...new Set(choices.map((c) => c.tier))].sort((x, z) => z - x)
 
   function choose(c: AdvanceChoice) {
     if (c.blocked || spent + c.cost > 2) return
@@ -82,19 +84,45 @@ export function DhLevelWizard({ data, onApply, onCancel, applyLabel, cancelLabel
         )}
       </div>
 
-      <h4>Escolha duas opções <small>({spent}/2)</small></h4>
-      <ul className="dh-opts">
-        {choices.map((c) => {
-          const dis = !!c.blocked || spent + c.cost > 2
-          return (
-            <li key={`${c.opt}${c.tier}`} className={dis ? 'is-off' : ''}>
-              <span className="dh-opts__tier">P{c.tier}</span>
-              <span>{OPT_LABEL.get(c.opt)} <small>{c.blocked ?? `${c.remaining} casa${c.remaining === 1 ? '' : 's'} livre${c.remaining === 1 ? '' : 's'}`}</small></span>
-              <button type="button" className="btn" disabled={dis} onClick={() => choose(c)}>Escolher</button>
-            </li>
-          )
-        })}
-      </ul>
+      <div className="dh-board__head">
+        <h4>Escolha duas opções do quadro</h4>
+        <span className="dh-board__spent" role="status" aria-label={`${spent} de 2 escolhas feitas`}>
+          {[0, 1].map((k) => <i key={k} className={k < spent ? 'is-on' : ''} />)}
+        </span>
+      </div>
+      <p className="dh-hint">Cada casinha vazia é uma vez que a opção ainda pode ser escolhida. Clique numa casinha vazia para marcar; clique numa dourada para desmarcar.</p>
+      {tiersShown.map((t) => (
+        <section key={t} className="dh-board">
+          <h5>Patamar {t} <small>(níveis {TIER_LEVELS[t]})</small></h5>
+          <ul className="dh-board__rows">
+            {choices.filter((c) => c.tier === t).map((c) => {
+              const cap = (ADVANCE_OPTIONS.find((o) => o.opt === c.opt)?.slots as Record<number, number> | undefined)?.[c.tier] ?? 0
+              const used = cap - c.remaining
+              const mine = picks.filter((d) => d.choice.opt === c.opt && d.choice.tier === c.tier).length
+              const blocked = !!c.blocked
+              const full = spent + c.cost > 2
+              return (
+                <li key={`${c.opt}${c.tier}`} className={`dh-board__row${blocked && mine === 0 ? ' is-off' : ''}`}>
+                  <span className="dh-board__boxes" role="group" aria-label={`${OPT_LABEL.get(c.opt)}: ${cap} casas`}>
+                    {Array.from({ length: cap }, (_, k) => {
+                      const state = k < used ? 'used' : k < used + mine ? 'picked' : 'free'
+                      const canClick = state === 'free' ? !blocked && !full : state === 'picked'
+                      return (
+                        <button key={k} type="button" className={`dh-board__box is-${state}`} disabled={!canClick}
+                          aria-label={state === 'used' ? 'Casa já usada' : state === 'picked' ? 'Casa marcada agora: clique para desmarcar' : 'Casa livre: clique para escolher'}
+                          onClick={() => {
+                            if (state === 'picked') { const at = picks.map((d) => d.choice.opt === c.opt && d.choice.tier === c.tier).lastIndexOf(true); setPicks((p) => p.filter((_, j) => j !== at)) } else choose(c)
+                          }} />
+                      )
+                    })}
+                  </span>
+                  <span className="dh-board__text">{OPT_LABEL.get(c.opt)}{c.blocked && mine === 0 && <small>{c.blocked}</small>}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
 
       {picks.map((d, i) => (
         <div key={i} className="dh-pick">

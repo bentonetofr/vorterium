@@ -239,8 +239,8 @@ export async function markPrivateThreadRead(campaignId: string, otherUserId: str
 // ────────────────────────────────────────────────────────
 // Rostos dos personagens — a barra de conversas mostra o retrato do
 // PERSONAGEM (não a foto do jogador). Procura nas fichas de todos os
-// sistemas (a RLS devolve só o que a pessoa pode ver); só Altherium tem
-// retrato, os outros ficam com o nome pra inicial.
+// sistemas (a RLS devolve só o que a pessoa pode ver); só Altherium, Terra Devastada
+// adaptada, Vampiro e D&D têm retrato, os outros ficam com o nome pra inicial.
 // ────────────────────────────────────────────────────────
 
 export interface CharacterFace {
@@ -252,16 +252,18 @@ export async function getCharacterFaces(campaignId: string): Promise<Map<string,
   type Row = { user_id: string; character_name: string | null; portrait_url?: string | null }
   // NPCs são do mestre: o retrato e o nome dele vêm da ficha de jogador.
   const pc = await pcOnly()
-  const [alth, vtm, td, tda, generic] = await Promise.all([
+  const [alth, vtm, td, tda, generic, dnd, dh] = await Promise.all([
     supabase.from('altherium_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('vtm_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('td_character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
     supabase.from('tda_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
     supabase.from('character_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
+    supabase.from('dnd_character_sheets').select('user_id, character_name, portrait_url').eq('campaign_id', campaignId).match(pc),
+    supabase.from('dh_sheets').select('user_id, character_name').eq('campaign_id', campaignId).match(pc),
   ])
 
   const faces = new Map<string, CharacterFace>()
-  for (const res of [alth, vtm, td, tda, generic]) {
+  for (const res of [alth, vtm, td, tda, generic, dnd, dh]) {
     for (const row of (res.data ?? []) as Row[]) {
       const current = faces.get(row.user_id)
       const name = row.character_name?.trim() || null
