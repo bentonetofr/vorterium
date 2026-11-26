@@ -11,6 +11,8 @@ import stylesSource from './styles.ts?raw'
 const LAZY_CSS = [
   // assistente de importar ficha por PDF: só classes próprias (dimp-*)
   'features/sheets/dnd/import/DndImport.css',
+  // criação de ficha de D&D (rápida e por narrativa): só classes próprias (dcr-*), chega com o assistente
+  'features/sheets/dnd/create/DndCreate.css',
 ]
 
 const GLOBAIS = ['index.css', 'shared/theme/motion.css', 'shared/theme/refine.css', 'shared/theme/touch.css']

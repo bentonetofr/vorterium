@@ -1,0 +1,38 @@
+/* ────────────────────────────────────────────────────────
+   Criação de ficha de D&D: janela de escolha, barra de progresso e detalhes do assistente. Usa as classes do importador
+   (dimp-*) para os cards e só acrescenta o que é da criação (dcr-*).
+   ──────────────────────────────────────────────────────── */
+
+.dcr__options { display: grid; gap: var(--space-3, 12px); }
+.dcr__opt {
+  display: grid; gap: 6px; text-align: left; padding: var(--space-4, 16px); cursor: pointer; color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-base, rgba(255, 255, 255, 0.14)); border-radius: var(--radius-md, 10px);
+  transition: border-color 0.18s, background 0.18s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s;
+}
+.dcr__opt b { font-family: var(--font-display); font-size: var(--text-lg, 18px); font-weight: 600; }
+.dcr__opt span { font-size: var(--text-sm, 14px); line-height: 1.5; color: var(--text-secondary); }
+.dcr__opt:hover:not(:disabled) { border-color: var(--dimp-gold, #e8b85c); background: rgba(232, 184, 92, 0.07); transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35); }
+.dcr__opt:active:not(:disabled) { transform: scale(0.99); }
+.dcr__opt:disabled { opacity: 0.5; cursor: not-allowed; }
+.dcr__opt--quick { border-color: rgba(217, 54, 62, 0.45); }
+.dcr__opt--story { border-color: rgba(232, 184, 92, 0.55); }
+
+.dcr__bar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.dcr__bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--dimp-accent, #d9363e), var(--dimp-gold, #e8b85c)); transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+
+.dcr__why { display: grid; gap: 10px; }
+.dcr__why small { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--text-xs, 12px); }
+
+.dimp__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dimp__chip { padding: 4px 10px; font-size: var(--text-xs, 12px); color: var(--text-secondary); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-base, rgba(255, 255, 255, 0.14)); border-radius: 6px; cursor: pointer; transition: border-color 0.15s, color 0.15s, transform 0.15s; }
+.dimp__chip:hover { color: var(--text-primary); border-color: var(--dimp-gold, #e8b85c); transform: translateY(-1px); }
+
+/* as perguntas entram deslizando, em sequência */
+@keyframes dcr-step { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+.dcr .dimp__card { animation: dcr-step 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dcr .dimp__options > li { animation: dcr-step 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.dcr .dimp__options > li:nth-child(2) { animation-delay: 0.03s; }
+.dcr .dimp__options > li:nth-child(3) { animation-delay: 0.06s; }
+.dcr .dimp__options > li:nth-child(4) { animation-delay: 0.09s; }
+.dcr .dimp__options > li:nth-child(n+5) { animation-delay: 0.12s; }
+@media (prefers-reduced-motion: reduce) { .dcr *, .dcr { animation: none !important; transition-duration: 0.01ms !important; } }

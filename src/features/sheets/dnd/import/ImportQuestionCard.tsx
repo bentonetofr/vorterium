@@ -91,6 +91,9 @@ function TextBody({ q, onAnswer }: { q: Extract<Question, { kind: 'text' }>; onA
           : <input type="text" className="dimp__input" value={text} placeholder={q.placeholder} autoFocus maxLength={200}
               onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onAnswer(text) }} aria-label={q.title} />}
       </div>
+      {q.examples && q.examples.length > 0 && (
+        <div className="dimp__chips">{q.examples.map((x) => <button key={x} type="button" className="dimp__chip" onClick={() => setText(x)}>{x}</button>)}</div>
+      )}
       <div className="dimp__actions"><button type="button" className="dimp__go" onClick={() => onAnswer(text)}>Continuar</button></div>
     </>
   )

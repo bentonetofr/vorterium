@@ -33,7 +33,7 @@ export type Question =
   | (QuestionBase & { kind: 'choice'; options: QuestionOption[]; recommended?: string })
   | (QuestionBase & { kind: 'multi'; options: MultiOption[] })
   | (QuestionBase & { kind: 'number'; min: number; max: number; defaultValue?: number; unit?: string })
-  | (QuestionBase & { kind: 'text'; placeholder?: string; defaultValue?: string; multiline?: boolean })
+  | (QuestionBase & { kind: 'text'; placeholder?: string; defaultValue?: string; multiline?: boolean; examples?: string[] })
 
 export type Answers = Record<string, Answer>
 

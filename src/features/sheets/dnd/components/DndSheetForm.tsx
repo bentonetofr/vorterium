@@ -25,10 +25,15 @@ import type { SheetCtx } from './sheetContext'
 import { DndRollProvider } from '../rolls/DndRollProvider'
 // o assistente de importar PDF só é baixado quando alguém abre
 const DndImportWizard = lazy(() => import('../import/DndImportWizard').then((m) => ({ default: m.DndImportWizard })))
+// a criação de ficha (janela de escolha, ficha rápida e ficha por narrativa) também só é baixada quando aparece
+const DndCreateChoice = lazy(() => import('../create/DndCreateChoice').then((m) => ({ default: m.DndCreateChoice })))
+const DndCreateWizard = lazy(() => import('../create/DndCreateWizard').then((m) => ({ default: m.DndCreateWizard })))
+const DndNarrativeWizard = lazy(() => import('../create/DndNarrativeWizard').then((m) => ({ default: m.DndNarrativeWizard })))
 import { Presence } from '../../../../shared/components/Presence'
 import './DndSheet.css'
 import './DndMotion.css'
 import { LoreEditor } from '../../../lore/LoreEditor'
+import { isBlankSheet } from '../create/blank'
 
 // ────────────────────────────────────────────────────────
 // Ficha de D&D 5e (2014): cabeçalho, sete abas e salvamento automático igual
@@ -50,6 +55,8 @@ interface DndSheetFormProps {
   portraitBusy:     boolean
   onPortraitChange: (file: File) => Promise<void>
   onPortraitRemove: () => void
+  /** Oferece a janela de criação (manual, rápida ou por narrativa) numa ficha em branco. Padrão: só na ficha do próprio jogador. */
+  offerCreation?:   boolean
 }
 
 const AUTOSAVE_DELAY_MS = 800
@@ -85,7 +92,7 @@ const CaracteristicasTab = memo(DndCaracteristicasTab)
 const HistoriaTab = memo(DndHistoriaTab)
 const AnotacoesTab = memo(DndAnotacoesTab)
 
-export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false, onSave, saveError, portraitBusy, onPortraitChange, onPortraitRemove }: DndSheetFormProps) {
+export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false, onSave, saveError, portraitBusy, onPortraitChange, onPortraitRemove, offerCreation }: DndSheetFormProps) {
   const data = useDndSheetData(sheet.id, sheet.campaign_id)
   const [form, setForm] = useState<DndForm>(() => formFromSheet(sheet))
   const [error, setError] = useState<string | null>(null)
@@ -95,6 +102,11 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
   // importar a ficha por PDF: enquanto grava, o salvamento automático espera (senão gravaria a ficha antiga por cima)
   const [importOpen, setImportOpen] = useState(false)
   const importLock = useRef(false)
+  // criar a ficha: a janela de escolha só aparece numa ficha em branco (ver create/blank.ts), uma vez por abertura
+  const [creation, setCreation] = useState<null | 'choice' | 'quick' | 'narrative'>(null)
+  const [creationBusy, setCreationBusy] = useState(false)
+  const [creationError, setCreationError] = useState<string | null>(null)
+  const creationChecked = useRef(false)
   const tabDir = useTabDirection(TAB_IDS, activeTab)
   const { tabsRef, selectTab, panelsStyle } = useStableTabPanels(setActiveTab)
 
@@ -211,6 +223,26 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
       }
     }
   }, [readOnly, flush])
+
+  useEffect(() => {
+    if (!ready || creationChecked.current) return
+    creationChecked.current = true
+    const may = (offerCreation ?? (!readOnly && !isNpc && !ownerName)) && !data.degraded
+    if (may && isBlankSheet(sheet, data)) setCreation('choice')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
+
+  /** "Fazer manualmente": só marca a escolha e abre a ficha em branco. */
+  async function chooseManual() {
+    setCreationBusy(true); setCreationError(null)
+    try {
+      await onSave({ choices: { ...((sheet.choices ?? {}) as Record<string, unknown>), creation: 'manual' } })
+      setCreation(null)
+    } catch (err) {
+      setCreationError(err instanceof Error ? err.message : 'Não foi possível abrir a ficha.')
+    } finally { setCreationBusy(false) }
+  }
+  const lockSave = useCallback((on: boolean) => { importLock.current = on }, [])
 
   const set = useCallback(<K extends keyof DndForm>(key: K, value: DndForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -417,6 +449,16 @@ export function DndSheetForm({ sheet, ownerName, readOnly = false, isNpc = false
 
       <Presence show={importOpen}>
         {() => <Suspense fallback={null}><DndImportWizard sheet={sheet} data={data} saveSheet={onSave} lock={(on) => { importLock.current = on }} onClose={() => setImportOpen(false)} /></Suspense>}
+      </Presence>
+
+      <Presence show={creation !== null}>
+        {() => (
+          <Suspense fallback={null}>
+            {creation === 'choice' && <DndCreateChoice onManual={() => void chooseManual()} onQuick={() => setCreation('quick')} onNarrative={() => setCreation('narrative')} busy={creationBusy} error={creationError} />}
+            {creation === 'quick' && <DndCreateWizard mode="quick" sheet={sheet} data={data} saveSheet={onSave} lock={lockSave} onClose={() => setCreation('choice')} onCreated={() => setCreation(null)} />}
+            {creation === 'narrative' && <DndNarrativeWizard sheet={sheet} data={data} saveSheet={onSave} lock={lockSave} onClose={() => setCreation('choice')} onCreated={() => setCreation(null)} />}
+          </Suspense>
+        )}
       </Presence>
 
       <footer className="dsh-sheet__footer">

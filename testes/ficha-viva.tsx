@@ -37,7 +37,7 @@ seedFakeDb(empty ? {} : {
 })
 
 function Preview() {
-  const [sheet, setSheet] = useState<DndCharacterSheet>(() => (empty ? makeSheet({ character_name: null, race_key: null, subrace_key: null, background_key: null, class_key: null, level: 1, hp_current: 10, hp_max: 10, hp_temp: 0, conditions: [], exhaustion: 0, experience: 0 }) : makeSheet()))
+  const [sheet, setSheet] = useState<DndCharacterSheet>(() => (empty ? makeSheet({ character_name: null, player_name: null, alignment: null, race: null, background: null, class_name: null, race_key: null, subrace_key: null, background_key: null, class_key: null, level: 1, hp_current: 10, hp_max: 10, hp_temp: 0, conditions: [], exhaustion: 0, experience: 0, inspiration: false, strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10, choices: {}, strength_save_proficient: false, dexterity_save_proficient: false, constitution_save_proficient: false, intelligence_save_proficient: false, wisdom_save_proficient: false, charisma_save_proficient: false }) : makeSheet()))
   async function save(data: DndCharacterSheetUpdateInput) {
     await new Promise((r) => setTimeout(r, 300))
     setSheet((s) => ({ ...s, ...data, updated_at: new Date().toISOString() }) as DndCharacterSheet)
@@ -45,6 +45,7 @@ function Preview() {
   return (
     <DndSheetForm
       sheet={sheet} onSave={save} saveError={null} portraitBusy={false} isNpc /* sem login: esconde o botão do boneco do Vortable */
+      offerCreation={empty && params.get('criacao') !== '0'} /* ficha em branco: abre a janela de criação (?criacao=0 desliga) */
       onPortraitChange={async () => {}} onPortraitRemove={() => {}}
     />
   )
