@@ -1,0 +1,42 @@
+Sons dos dados do Vorterium
+===========================
+
+As batidas desta pasta foram recortadas (uma batida por arquivo), normalizadas e convertidas para WAV a partir de gravações
+livres encontradas na internet. Nada aqui foi gravado para o Vorterium. O site é de uso entre amigos, sem fins comerciais.
+
+Pacotes de origem
+-----------------
+Kenney, "Casino Audio" (CC0)
+  https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips
+  -> bancos "dado" e "ceramica"
+
+Kenney, "RPG Audio" (CC0)
+  https://opengameart.org/content/50-rpg-sound-effects
+  -> bancos "suave", "papel" e "sino"
+
+"100 CC0 metal and wood SFX" (CC0)
+  https://opengameart.org/content/100-cc0-metal-and-wood-sfx
+  -> bancos "madeira" e "metal"
+
+"75 CC0 breaking / falling / hit sfx" (CC0)
+  https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx
+  -> bancos "madeira", "pedra", "metal" e "vidro"
+
+"Wooden dice on wodden table roll" (CC0)
+  https://opengameart.org/content/wooden-dice-on-wodden-table-roll
+  -> banco "madeira" (batidas fatiadas da gravação)
+
+"Metal Impact Sounds" (CC0)
+  https://opengameart.org/content/metal-impact-sounds
+  -> bancos "metal" e "sino"
+
+"Multiple Dice Rolling" (CC-BY 3.0 ou GPL 3)
+  https://opengameart.org/content/multiple-dice-rolling
+  -> banco "dado" (batidas fatiadas da gravação)
+
+"5 dice rolling" (LGPL 2/3)
+  https://opengameart.org/content/5-dice-rolling
+  -> banco "dado" (batidas fatiadas da gravação)
+
+Como os bancos entram no jogo: src/features/dice3d/diceSamples.ts (qual banco cada conjunto de dados usa) e
+src/features/dice3d/sound.ts (como a batida toca).

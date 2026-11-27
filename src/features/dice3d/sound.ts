@@ -1,5 +1,10 @@
 import { soundVolume } from '../settings/settingsStore'
+import { BANK_SIZE, bankFiles, bankUrl, hitBrightness, hitGain, samplePlan, type SampleBank } from './diceSamples'
 // ────────────────────────────────────────────────────────
+// O som dos dados toca batidas GRAVADAS (public/sons/dados, ver diceSamples.ts): cada material (madeira, pedra, metal, vidro...)
+// tem o seu banco de gravações, e as vozes da coleção escolhem o banco, o tom e o que fica por cima. Enquanto as gravações não
+// carregaram (ou se faltarem), a batida é gerada na hora, como descrito abaixo.
+//
 // Som dos dados gerado na hora (Web Audio), sem arquivos. Um dado batendo numa
 // mesa de madeira tem duas partes:
 //   • o "toc": a madeira ressoando, um corpo oco que cai rápido e sobe um
@@ -324,6 +329,60 @@ function breath(a: AudioContext, out: AudioNode, t: number, h: Hiss, volume: num
   src.stop(t + h.dur + 0.02)
 }
 
+// ── Gravações ───────────────────────────────────────────
+
+const banks = new Map<SampleBank, AudioBuffer[]>()
+const loading = new Map<SampleBank, Promise<void>>()
+
+function loadBank(a: AudioContext, bank: SampleBank): Promise<void> {
+  let p = loading.get(bank)
+  if (!p) {
+    p = Promise.allSettled(bankFiles(bank).map(async (f) => {
+      const res = await fetch(bankUrl(bank, f))
+      if (!res.ok) throw new Error(`${res.status} ${f}`)
+      return a.decodeAudioData(await res.arrayBuffer())
+    })).then((all) => {
+      const ok = all.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
+      // só vale o banco se veio inteiro o bastante; senão tenta de novo na próxima vez
+      if (ok.length >= Math.ceil(BANK_SIZE[bank] / 2)) banks.set(bank, ok)
+      else loading.delete(bank)
+    })
+    loading.set(bank, p)
+  }
+  return p
+}
+
+/** Carrega as gravações que a voz usa (e as do dado com dado). Pode ser chamada à vontade: cada banco só baixa uma vez. */
+export function prepareDiceSound(voice?: DiceVoice): Promise<void> {
+  if (muted || soundVolume('dice') === 0) return Promise.resolve()
+  const a = audio()
+  if (!a) return Promise.resolve()
+  const wanted = new Set<SampleBank>([samplePlan(voice, false).bank, samplePlan(voice, true).bank])
+  return Promise.all([...wanted].map((b) => loadBank(a, b))).then(() => undefined, () => undefined)
+}
+
+/** Uma batida gravada: sorteia um arquivo do banco, afina, filtra pela força e soma o que a voz mantém por cima. */
+function playSample(a: AudioContext, out: AudioNode, t: number, buffers: AudioBuffer[], strength: number, withDie: boolean, voice?: DiceVoice): void {
+  const sp = samplePlan(voice, withDie)
+  const s = Number.isFinite(strength) ? Math.max(0, Math.min(1, strength)) : 0
+  const src = a.createBufferSource()
+  src.buffer = buffers[Math.min(buffers.length - 1, Math.floor(Math.random() * buffers.length))]
+  src.playbackRate.value = sp.rate * (0.95 + Math.random() * 0.1) * (0.97 + s * 0.06)
+  const lp = a.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = hitBrightness(s)
+  const g = a.createGain()
+  g.gain.value = hitGain(s) * sp.gain * 0.8 * (withDie ? 0.85 : 1)
+  src.connect(lp).connect(g).connect(out)
+  src.start(t)
+  if (sp.ring > 0 || sp.hiss > 0) {
+    const r = hitRecipe(s, withDie, Math.random, voice)
+    const level = r.volume * (withDie ? 0.6 : 0.85)
+    if (sp.ring > 0) for (const p of r.ring) ring(a, out, t + (p.delay ?? 0), p, level * sp.ring)
+    if (r.hiss && sp.hiss > 0) breath(a, out, t + (r.hiss.delay ?? 0), r.hiss, level * sp.hiss)
+  }
+}
+
 /** Uma batida: força de 0 a 1; `withDie` = dado com dado (mais estalo, menos madeira); `voice` = o material do conjunto. */
 export function playDiceHit(strength: number, withDie: boolean, voice?: DiceVoice): void {
   const level = soundVolume('dice')
@@ -336,6 +395,11 @@ export function playDiceHit(strength: number, withDie: boolean, voice?: DiceVoic
   while (recent.length && now - recent[0] > 0.05) recent.shift()
   if (recent.length >= 6 && strength < 0.5) return
   recent.push(now)
+
+  // com as gravações carregadas, toca a gravação do material (a batida sintetizada abaixo fica de reserva)
+  const recorded = banks.get(samplePlan(voice, withDie).bank)
+  if (recorded?.length) { playSample(a, bus, now + 0.001, recorded, strength, withDie, voice); return }
+  void prepareDiceSound(voice)
 
   const r = hitRecipe(strength, withDie, Math.random, voice)
   const t = now + 0.001
@@ -367,10 +431,11 @@ export function playDiceHit(strength: number, withDie: boolean, voice?: DiceVoic
 /** Um dado "caindo" curtinho, para ouvir como o conjunto soa (usado ao escolher um conjunto na lista). */
 export function playSkinPreview(voice?: DiceVoice): void {
   const hits = [0.95, 0.65, 0.8, 0.4, 0.45, 0.25]
-  hits.forEach((s, i) => window.setTimeout(() => playDiceHit(s, i % 3 === 2, voice), i * (80 + i * 22)))
+  // as gravações do material carregam primeiro (rápido, são pequenas); sem elas a prévia toca a batida sintetizada
+  void prepareDiceSound(voice).then(() => hits.forEach((s, i) => window.setTimeout(() => playDiceHit(s, i % 3 === 2, voice), i * (80 + i * 22))))
 }
 
 export function playDiceRattle(voice?: DiceVoice): void {
   const hits = [0.95, 0.7, 0.8, 0.45, 0.5, 0.3, 0.2, 0.12]
-  hits.forEach((s, i) => window.setTimeout(() => playDiceHit(s, i % 3 === 2, voice), i * (70 + i * 14)))
+  void prepareDiceSound(voice).then(() => hits.forEach((s, i) => window.setTimeout(() => playDiceHit(s, i % 3 === 2, voice), i * (70 + i * 14))))
 }

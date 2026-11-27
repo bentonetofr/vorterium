@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { hitRecipe, type DiceVoice } from './sound'
 import { ALL_SKINS, COLLECTION_SKINS } from './skins'
+import { BANK_SIZE, VOICE_SAMPLES, bankFiles, bankUrl, hitBrightness, hitGain, samplePlan, type SampleBank } from './diceSamples'
+
+const WAVS = Object.keys(import.meta.glob('/public/sons/dados/*/*.wav'))
 
 const fixed = (v: number) => () => v
 
@@ -97,5 +100,66 @@ describe('as vozes dos conjuntos da coleção', () => {
   it('o prisma toca uma nota da escala a cada batida', () => {
     const notes = new Set([0.05, 0.3, 0.55, 0.8, 0.95].map((x) => Math.round(hitRecipe(0.6, false, fixed(x), 'prisma').ring[0].freq)))
     expect(notes.size).toBeGreaterThan(2)
+  })
+})
+
+describe('batidas gravadas dos dados', () => {
+  const banks = Object.keys(BANK_SIZE) as SampleBank[]
+  const voices = [...new Set(ALL_SKINS.map((s) => s.sound).filter((v): v is DiceVoice => !!v))]
+
+  it('todo arquivo de todo banco existe em public/sons/dados, e não sobra arquivo fora da lista', () => {
+    const listed = banks.flatMap((b) => bankFiles(b).map((f) => `/public/sons/dados/${b}/${f}`))
+    for (const f of listed) expect(WAVS, f).toContain(f)
+    expect(WAVS.length).toBe(listed.length)
+  })
+
+  it('toda voz da coleção escolhe um banco que existe, com tom e volume tocáveis', () => {
+    for (const v of voices) {
+      const p = VOICE_SAMPLES[v]
+      expect(p, v).toBeTruthy()
+      expect(banks, v).toContain(p.bank)
+      expect(p.rate, v).toBeGreaterThan(0.4)
+      expect(p.rate, v).toBeLessThan(1.6)
+      expect(p.gain, v).toBeGreaterThan(0)
+      expect(p.ring, v).toBeGreaterThanOrEqual(0)
+      expect(p.ring, v).toBeLessThanOrEqual(1)
+      expect(p.hiss, v).toBeGreaterThanOrEqual(0)
+      expect(p.hiss, v).toBeLessThanOrEqual(1)
+    }
+    expect(Object.keys(VOICE_SAMPLES)).toHaveLength(voices.length)
+  })
+
+  it('só mantém a camada sintetizada que a voz realmente tem (sem ressonância ou sopro inventado)', () => {
+    for (const v of voices) {
+      const p = VOICE_SAMPLES[v]
+      const r = hitRecipe(0.7, false, fixed(0.5), v)
+      if (p.ring > 0) expect(r.ring.length, v).toBeGreaterThan(0)
+      if (p.hiss > 0) expect(r.hiss, v).not.toBeNull()
+    }
+  })
+
+  it('a madeira velha bate na madeira; dado com dado vira o estalo da resina; as outras vozes não mudam', () => {
+    expect(samplePlan(undefined, false).bank).toBe('madeira')
+    expect(samplePlan(undefined, true).bank).toBe('dado')
+    expect(samplePlan('granito', true).bank).toBe('pedra')
+    expect(samplePlan('vidro', true).bank).toBe('vidro')
+    expect(samplePlan('vortice', true).bank).toBe('dado')   // madeira com redemoinho: o estalo muda, o redemoinho fica
+    expect(samplePlan('vortice', true).ring).toBe(1)
+  })
+
+  it('mais força, mais volume e mais brilho; força fora de 0 a 1 não quebra', () => {
+    expect(hitGain(1)).toBeGreaterThan(hitGain(0.5))
+    expect(hitGain(0.5)).toBeGreaterThan(hitGain(0.05))
+    expect(hitBrightness(1)).toBeGreaterThan(hitBrightness(0.1))
+    for (const s of [-4, 0, 1, 9, Number.NaN]) {
+      expect(hitGain(s)).toBeGreaterThan(0)
+      expect(hitGain(s)).toBeLessThanOrEqual(1)
+      expect(hitBrightness(s)).toBeGreaterThan(1000)
+    }
+  })
+
+  it('o endereço do arquivo respeita a base do site e não duplica barras', () => {
+    expect(bankUrl('madeira', 'madeira-01.wav')).toMatch(/^\/.*sons\/dados\/madeira\/madeira-01\.wav$/)
+    expect(bankUrl('madeira', 'madeira-01.wav')).not.toContain('//')
   })
 })

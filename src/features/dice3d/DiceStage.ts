@@ -5,7 +5,7 @@ import { BASE_CAMERA, fitCamera, floorArena, placeCamera, type ScreenBox } from 
 import { DIE_RADIUS, STEP_HZ, simulateThrow, type SimResult, type ThrowStyle } from './simulate'
 import { animateDieGlow, disposeDieMesh, ensureDiceFont, makeDieMesh } from './dieMesh'
 import { getSkin } from './skins'
-import { playDiceHit, type DiceVoice } from './sound'
+import { playDiceHit, prepareDiceSound, type DiceVoice } from './sound'
 import { LITE_DICE } from './lite'
 
 // ────────────────────────────────────────────────────────
@@ -319,6 +319,8 @@ export class DiceStage {
       dice: live, sim, start: performance.now(), speed: opts.speed ?? Math.min(1.25, Math.max(1, sim.steps / (STEP_HZ * 7))), sound: opts.sound !== false,
       sounds: [...sim.impacts].sort((x, y) => x.step - y.step), nextSound: 0, dx, dz, phase: 'run', settleStart: 0, resolve,
     }
+    // as gravações dos materiais destes dados carregam enquanto eles caem (cada banco só baixa uma vez)
+    if (th.sound) for (const v of new Set(live.map((d) => d.voice))) void prepareDiceSound(v)
     this.throws.push(th)
     if (!this.raf) this.raf = requestAnimationFrame(this.loop)
     return { done, remove: () => this.removeThrow(th) }
