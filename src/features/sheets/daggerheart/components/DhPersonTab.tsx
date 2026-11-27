@@ -50,8 +50,8 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
               options={[{ value: '', label: 'Escolha…' }, ...(cls?.subclasses ?? []).map((x) => ({ value: x.key, label: x.name }))]} />
           </label>
         </div>
-        {classMore && (
-          <div id="dh-class-more">
+        <div id="dh-class-more" className={`dh-collapse${classMore ? ' is-open' : ''}`} aria-hidden={!classMore}>
+          <div className="dh-collapse__in">
             {cls && <p className="dh-hint">{cls.description}</p>}
             {sub && (
               <>
@@ -60,7 +60,7 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
               </>
             )}
           </div>
-        )}
+        </div>
       </section>
 
       <section className="dh-box">
