@@ -260,6 +260,27 @@ export function hitRecipe(strength: number, withDie: boolean, rnd: () => number 
 
 let ctx: AudioContext | null = null
 let bus: GainNode | null = null
+let roomIn: GainNode | null = null
+let voiceBus: BiquadFilterNode | null = null
+
+/** A resposta de uma sala pequena e macia: ruído que apaga rápido e vai ficando escuro (meio segundo). */
+function roomImpulse(a: AudioContext): AudioBuffer {
+  const len = Math.floor(a.sampleRate * 0.5)
+  const buf = a.createBuffer(2, len, a.sampleRate)
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c)
+    let lp = 0
+    const pre = Math.floor(a.sampleRate * (0.006 + c * 0.003))
+    for (let i = pre; i < len; i++) {
+      const t = (i - pre) / a.sampleRate
+      // quanto mais tarde, mais escuro: o filtro de um polo fecha com o tempo
+      const k = 0.5 - Math.min(0.42, t * 1.6)
+      lp += k * ((Math.random() * 2 - 1) - lp)
+      d[i] = lp * Math.exp(-t / 0.1)
+    }
+  }
+  return buf
+}
 let noise: AudioBuffer | null = null
 let muted = false
 const recent: number[] = []
@@ -272,16 +293,28 @@ function audio(): AudioContext | null {
   if (!Ctor) return null
   if (!ctx) {
     ctx = new Ctor()
-    // um compressor leve segura o barulho quando vários dados batem juntos
+    // o compressor segura o barulho quando vários dados batem juntos (firme, para nunca estourar)
     const comp = ctx.createDynamicsCompressor()
-    comp.threshold.value = -16
-    comp.knee.value = 18
-    comp.ratio.value = 4
-    comp.attack.value = 0.002
-    comp.release.value = 0.12
+    comp.threshold.value = -22
+    comp.knee.value = 24
+    comp.ratio.value = 8
+    comp.attack.value = 0.003
+    comp.release.value = 0.2
     bus = ctx.createGain()
-    bus.gain.value = 0.9
+    bus.gain.value = 0.7
     bus.connect(comp).connect(ctx.destination)
+    // um pouco de ambiente (uma salinha) deixa as batidas macias, em vez de secas e coladas no ouvido
+    const room = ctx.createConvolver()
+    room.buffer = roomImpulse(ctx)
+    roomIn = ctx.createGain()
+    roomIn.gain.value = 0.2
+    roomIn.connect(room).connect(bus)
+    // as camadas sintetizadas das vozes passam por um filtro que tira o agudo cortante
+    voiceBus = ctx.createBiquadFilter()
+    voiceBus.type = 'lowpass'
+    voiceBus.frequency.value = 5200
+    voiceBus.Q.value = 0.5
+    voiceBus.connect(bus)
   }
   if (ctx.state === 'suspended') void ctx.resume()
   if (!noise) {
@@ -372,14 +405,20 @@ function playSample(a: AudioContext, out: AudioNode, t: number, buffers: AudioBu
   lp.type = 'lowpass'
   lp.frequency.value = hitBrightness(s)
   const g = a.createGain()
-  g.gain.value = hitGain(s) * sp.gain * 0.8 * (withDie ? 0.85 : 1)
+  // subida de 2 ms em vez de um corte seco: sem estalo digital no começo da batida
+  const peak = hitGain(s) * sp.gain * (withDie ? 0.85 : 1)
+  g.gain.setValueAtTime(0.0001, t)
+  g.gain.linearRampToValueAtTime(peak, t + 0.002)
   src.connect(lp).connect(g).connect(out)
+  if (roomIn) g.connect(roomIn)
   src.start(t)
   if (sp.ring > 0 || sp.hiss > 0) {
     const r = hitRecipe(s, withDie, Math.random, voice)
-    const level = r.volume * (withDie ? 0.6 : 0.85)
-    if (sp.ring > 0) for (const p of r.ring) ring(a, out, t + (p.delay ?? 0), p, level * sp.ring)
-    if (r.hiss && sp.hiss > 0) breath(a, out, t + (r.hiss.delay ?? 0), r.hiss, level * sp.hiss)
+    // as camadas sintetizadas ficam bem mais baixas que a gravação: dão a cor do material, sem brigar com ela
+    const level = r.volume * (withDie ? 0.6 : 0.85) * 0.45
+    const layer = voiceBus ?? out
+    if (sp.ring > 0) for (const p of r.ring) ring(a, layer, t + (p.delay ?? 0), p, level * sp.ring)
+    if (r.hiss && sp.hiss > 0) breath(a, layer, t + (r.hiss.delay ?? 0), r.hiss, level * sp.hiss)
   }
 }
 
@@ -389,7 +428,7 @@ export function playDiceHit(strength: number, withDie: boolean, voice?: DiceVoic
   if (muted || level === 0) return
   const a = audio()
   if (!a || !bus) return
-  bus.gain.value = 0.9 * level
+  bus.gain.value = 0.7 * level
   const now = a.currentTime
   // muitas batidas no mesmo instante viram só um chiado: descarta as mais fracas
   while (recent.length && now - recent[0] > 0.05) recent.shift()

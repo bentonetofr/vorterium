@@ -99,8 +99,8 @@ export function hitGain(strength: number): number {
   return 0.1 + Math.pow(s, 0.85) * 0.9
 }
 
-/** Brilho da batida: as fracas perdem os agudos (corte do filtro, em Hz). */
+/** Brilho da batida: as fracas perdem os agudos (corte do filtro, em Hz). Nunca passa de 7,5 kHz: o agudo cortante cansa o ouvido. */
 export function hitBrightness(strength: number): number {
   const s = Number.isFinite(strength) ? Math.max(0, Math.min(1, strength)) : 0
-  return 2400 + s * 15600
+  return 2400 + s * 5100
 }
