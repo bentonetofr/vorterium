@@ -1,5 +1,5 @@
 import { soundVolume } from '../settings/settingsStore'
-import { BANK_SIZE, bankFiles, bankUrl, hitBrightness, hitGain, samplePlan, type SampleBank } from './diceSamples'
+import { BANK_SIZE, MAX_RATE, bankFiles, bankUrl, hitCutoff, hitGain, samplePlan, softenHiss, softenPartial, type SampleBank } from './diceSamples'
 // ────────────────────────────────────────────────────────
 // O som dos dados toca batidas GRAVADAS (public/sons/dados, ver diceSamples.ts): cada material (madeira, pedra, metal, vidro...)
 // tem o seu banco de gravações, e as vozes da coleção escolhem o banco, o tom e o que fica por cima. Enquanto as gravações não
@@ -312,7 +312,7 @@ function audio(): AudioContext | null {
     // as camadas sintetizadas das vozes passam por um filtro que tira o agudo cortante
     voiceBus = ctx.createBiquadFilter()
     voiceBus.type = 'lowpass'
-    voiceBus.frequency.value = 5200
+    voiceBus.frequency.value = 3000
     voiceBus.Q.value = 0.5
     voiceBus.connect(bus)
   }
@@ -400,10 +400,12 @@ function playSample(a: AudioContext, out: AudioNode, t: number, buffers: AudioBu
   const s = Number.isFinite(strength) ? Math.max(0, Math.min(1, strength)) : 0
   const src = a.createBufferSource()
   src.buffer = buffers[Math.min(buffers.length - 1, Math.floor(Math.random() * buffers.length))]
-  src.playbackRate.value = sp.rate * (0.95 + Math.random() * 0.1) * (0.97 + s * 0.06)
+  // nunca mais agudo que o gravado: acelerar a gravação deixa o som fino e cansativo
+  src.playbackRate.value = Math.min(MAX_RATE, sp.rate * (0.95 + Math.random() * 0.1) * (0.97 + s * 0.06))
   const lp = a.createBiquadFilter()
   lp.type = 'lowpass'
-  lp.frequency.value = hitBrightness(s)
+  lp.frequency.value = hitCutoff(s, sp.tone)
+  lp.Q.value = 0.5
   const g = a.createGain()
   // subida de 2 ms em vez de um corte seco: sem estalo digital no começo da batida
   const peak = hitGain(s) * sp.gain * (withDie ? 0.85 : 1)
@@ -415,10 +417,11 @@ function playSample(a: AudioContext, out: AudioNode, t: number, buffers: AudioBu
   if (sp.ring > 0 || sp.hiss > 0) {
     const r = hitRecipe(s, withDie, Math.random, voice)
     // as camadas sintetizadas ficam bem mais baixas que a gravação: dão a cor do material, sem brigar com ela
-    const level = r.volume * (withDie ? 0.6 : 0.85) * 0.45
+    const level = r.volume * (withDie ? 0.6 : 0.85) * 0.33
     const layer = voiceBus ?? out
-    if (sp.ring > 0) for (const p of r.ring) ring(a, layer, t + (p.delay ?? 0), p, level * sp.ring)
-    if (r.hiss && sp.hiss > 0) breath(a, layer, t + (r.hiss.delay ?? 0), r.hiss, level * sp.hiss)
+    // sem apito fino nem chiado agudo: os apitos dobram para oitavas mais graves e o chiado vira uma faixa média
+    if (sp.ring > 0) for (const p of r.ring) ring(a, layer, t + (p.delay ?? 0), softenPartial(p), level * sp.ring)
+    if (r.hiss && sp.hiss > 0) breath(a, layer, t + (r.hiss.delay ?? 0), softenHiss(r.hiss), level * sp.hiss)
   }
 }
 

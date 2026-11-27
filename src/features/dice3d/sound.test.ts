@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { hitRecipe, type DiceVoice } from './sound'
 import { ALL_SKINS, COLLECTION_SKINS } from './skins'
-import { BANK_SIZE, VOICE_SAMPLES, bankFiles, bankUrl, hitBrightness, hitGain, samplePlan, type SampleBank } from './diceSamples'
+import { BANK_SIZE, LAYER_TOP_HZ, MAX_RATE, MAX_TONE, VOICE_SAMPLES, bankFiles, bankUrl, hitBrightness, hitCutoff, hitGain, samplePlan, softenHiss, softenPartial, type SampleBank } from './diceSamples'
 
 const WAVS = Object.keys(import.meta.glob('/public/sons/dados/*/*.wav'))
 
@@ -119,7 +119,9 @@ describe('batidas gravadas dos dados', () => {
       expect(p, v).toBeTruthy()
       expect(banks, v).toContain(p.bank)
       expect(p.rate, v).toBeGreaterThan(0.4)
-      expect(p.rate, v).toBeLessThan(1.6)
+      expect(p.rate, v).toBeLessThanOrEqual(MAX_RATE)
+      expect(p.tone, v).toBeLessThanOrEqual(MAX_TONE)
+      expect(p.tone, v).toBeGreaterThan(1500)
       expect(p.gain, v).toBeGreaterThan(0)
       expect(p.ring, v).toBeGreaterThanOrEqual(0)
       expect(p.ring, v).toBeLessThanOrEqual(1)
@@ -144,7 +146,7 @@ describe('batidas gravadas dos dados', () => {
     expect(samplePlan('granito', true).bank).toBe('pedra')
     expect(samplePlan('vidro', true).bank).toBe('vidro')
     expect(samplePlan('vortice', true).bank).toBe('dado')   // madeira com redemoinho: o estalo muda, o redemoinho fica
-    expect(samplePlan('vortice', true).ring).toBe(1)
+    expect(samplePlan('vortice', true).ring).toBe(VOICE_SAMPLES.vortice.ring)
   })
 
   it('mais força, mais volume e mais brilho; força fora de 0 a 1 não quebra', () => {
@@ -155,7 +157,30 @@ describe('batidas gravadas dos dados', () => {
       expect(hitGain(s)).toBeGreaterThan(0)
       expect(hitGain(s)).toBeLessThanOrEqual(1)
       expect(hitBrightness(s)).toBeGreaterThan(1000)
+      expect(hitBrightness(s)).toBeLessThanOrEqual(5500)
     }
+  })
+
+  it('conforto: o agudo é fechado, os conjuntos brilhantes soam mais abafados', () => {
+    for (const v of voices) {
+      const p = VOICE_SAMPLES[v]
+      expect(hitCutoff(1, p.tone), v).toBeLessThanOrEqual(MAX_TONE)
+      if (p.bank === 'vidro') expect(p.tone, v).toBeLessThanOrEqual(2600)
+    }
+    expect(hitCutoff(0.1, 3000)).toBeLessThan(hitCutoff(1, 3000))
+  })
+
+  it('os apitos sintéticos dobram para oitavas mais graves (mesma nota) e o chiado agudo vira faixa média', () => {
+    const fino = softenPartial({ freq: 7600, to: 3800, gain: 0.3, decay: 0.1 })
+    expect(fino.freq).toBeLessThanOrEqual(LAYER_TOP_HZ)
+    expect(Math.log2(7600 / fino.freq) % 1).toBeCloseTo(0, 5)
+    expect(fino.to! / fino.freq).toBeCloseTo(0.5, 5)
+    expect(softenPartial({ freq: 880, gain: 0.3, decay: 0.1 }).freq).toBe(880)
+    for (const v of voices) for (const p of hitRecipe(0.8, false, fixed(0.5), v).ring) expect(softenPartial(p).freq, v).toBeLessThanOrEqual(LAYER_TOP_HZ)
+    const h = softenHiss({ dur: 0.1, cutoff: 6200, q: 2, gain: 0.5, type: 'highpass' })
+    expect(h.type).toBe('bandpass')
+    expect(h.cutoff).toBeLessThanOrEqual(2400)
+    expect(softenHiss({ dur: 0.1, cutoff: 9000, q: 1, gain: 0.5, type: 'lowpass' }).cutoff).toBeLessThanOrEqual(3200)
   })
 
   it('o endereço do arquivo respeita a base do site e não duplica barras', () => {
