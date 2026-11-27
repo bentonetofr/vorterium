@@ -24,8 +24,8 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
   const a1 = ancestry(data.ancestryKey)
   const comm = community(data.communityKey)
   const set = (patch: Partial<DhSheetData>) => update((d) => ({ ...d, ...patch }))
-  // "Ver menos" deixa só a classe e a subclasse; "Ver mais" mostra a descrição e a linha do tempo da subclasse.
-  const [classMore, setClassMore] = useState(true)
+  // Começa recolhido: só a classe e a subclasse. "Ver mais" mostra a descrição e a linha do tempo da subclasse; "Ver menos" recolhe de novo.
+  const [classMore, setClassMore] = useState(false)
 
   async function changeClass(key: string) {
     if (key === data.classKey) return
