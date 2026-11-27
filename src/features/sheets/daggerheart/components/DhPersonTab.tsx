@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ANCESTRIES, COMMUNITIES, ancestry, community } from '../catalog/heritage'
 import { CLASSES } from '../catalog/classes'
 import { DESCRIPTION_HINTS, EXPERIENCE_EXAMPLES } from '../catalog/rules'
@@ -23,6 +24,8 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
   const a1 = ancestry(data.ancestryKey)
   const comm = community(data.communityKey)
   const set = (patch: Partial<DhSheetData>) => update((d) => ({ ...d, ...patch }))
+  // "Ver menos" deixa só a classe e a subclasse; "Ver mais" mostra a descrição e a linha do tempo da subclasse.
+  const [classMore, setClassMore] = useState(true)
 
   async function changeClass(key: string) {
     if (key === data.classKey) return
@@ -36,7 +39,7 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
   return (
     <div className="dh-person">
       <section className="dh-box">
-        <Banner>Classe</Banner>
+        <Banner right={<button type="button" className="dh-link" aria-expanded={classMore} aria-controls="dh-class-more" onClick={() => setClassMore((v) => !v)}>{classMore ? 'Ver menos' : 'Ver mais'}</button>}>Classe</Banner>
         <div className="dh-form">
           <label>Classe
             <DhSelect label="Classe" value={data.classKey ?? ''} disabled={!canEdit} onChange={(v) => void changeClass(v)}
@@ -47,12 +50,16 @@ export function DhPersonTab({ data, update, canEdit }: Props) {
               options={[{ value: '', label: 'Escolha…' }, ...(cls?.subclasses ?? []).map((x) => ({ value: x.key, label: x.name }))]} />
           </label>
         </div>
-        {cls && <p className="dh-hint">{cls.description}</p>}
-        {sub && (
-          <>
-            <p className="dh-hint"><em>{sub.tagline}</em></p>
-            <DhSubclassTimeline sub={sub} stage={subclassStage(data)} />
-          </>
+        {classMore && (
+          <div id="dh-class-more">
+            {cls && <p className="dh-hint">{cls.description}</p>}
+            {sub && (
+              <>
+                <p className="dh-hint"><em>{sub.tagline}</em></p>
+                <DhSubclassTimeline sub={sub} stage={subclassStage(data)} />
+              </>
+            )}
+          </div>
         )}
       </section>
 
