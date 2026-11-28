@@ -9,13 +9,17 @@ interface Props {
   onManual: () => void
   onQuick: () => void
   onNarrative: () => void
+  onClose: () => void
 }
 
-export function DhStartChoice({ onManual, onQuick, onNarrative }: Props) {
+export function DhStartChoice({ onManual, onQuick, onNarrative, onClose }: Props) {
   return (
-    <ModalOverlay onClose={() => {}} closeDisabled>
+    <ModalOverlay onClose={onClose}>
       <div className="dh-dialog dh-start" role="dialog" aria-modal="true" aria-label="Como montar a ficha">
-        <header className="dh-dialog__head"><h3>Montar a ficha de DaggerHeart</h3></header>
+        <header className="dh-dialog__head">
+          <h3>Montar a ficha de DaggerHeart</h3>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">×</button>
+        </header>
         <p className="dh-hint">Escolha como quer começar. Nos três casos dá para mudar tudo na ficha depois.</p>
         <div className="dh-start__options">
           <button type="button" className="dh-start__opt" onClick={onManual}>

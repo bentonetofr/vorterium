@@ -341,6 +341,7 @@ textarea.dh-inline:hover:not(:disabled), textarea.dh-inline:focus { border-color
 .dh-roll__legend .is-fear { background: #8a5cd8; }
 
 /* ── janela de escolha, formulário rápido e Automatizar ── */
+.sheet-empty .btn-primary { margin-top: 10px; }
 .dh-start { width: min(680px, 94vw); }
 .dh-start__options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
 .dh-start__opt { display: grid; gap: 8px; text-align: left; padding: 18px 16px; border: 2px solid var(--dh-line); border-radius: 8px; background: var(--dh-field); color: var(--dh-ink); cursor: pointer; font: inherit; transition: border-color 0.12s, transform 0.12s; }

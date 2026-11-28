@@ -52,6 +52,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Aba Subir de nível até o 10: conquistas de cada patamar, quadro de escolhas, subclasse melhorada e multiclasse.',
       'Testes com os Dados de Dualidade rolando em 3D: um d12 dourado de Esperança e um d12 roxo de Medo (mais o d6 de vantagem ou desvantagem), com o resultado do livro (sucesso ou falha com Esperança ou Medo, crítico nos dados iguais), Experiências que gastam Esperança, Esperança em d20 e dano com Proficiência. Tudo aparece no histórico de rolagens da mesa.',
       'Descansos curto e longo, Movimento de Morte, Forma de Fera do druida e Companheiro Animal do patrulheiro. O mestre vê e edita as fichas da mesa e cria fichas de NPC.',
+      'DaggerHeart: ao abrir a ficha em branco, agora aparece um botão "Criar ficha" em vez da janela de como montar já aberta. A janela só abre ao clicar nele, e ganhou um × no canto para fechar e voltar ao botão.',
     ],
   },
   {

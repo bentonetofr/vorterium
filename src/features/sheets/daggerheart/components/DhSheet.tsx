@@ -33,6 +33,7 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
   const [tab, setTab] = useState<Tab>('ficha')
   const [quick, setQuick] = useState(false)
   const [narrative, setNarrative] = useState(false)
+  const [choosing, setChoosing] = useState(false)
   /** A janela de subir de nível (o botão no fim da barra de abas). */
   const [levelOpen, setLevelOpen] = useState(false)
   /** Respostas montadas pela narrativa, entregues ao formulário rápido para conferir ou ajustar. */
@@ -58,8 +59,20 @@ export function DhSheet({ sheet, canEdit, playerName }: Props) {
     if (!mine) return <p className="sheet-empty">{playerName ?? 'O jogador'} ainda não montou o personagem.</p>
     return (
       <>
-        <p className="sheet-empty">Escolha como montar a ficha.</p>
-        {!quick && !narrative && !fromNarrative && <DhStartChoice onManual={() => update((d) => ({ ...d, started: true }))} onQuick={() => setQuick(true)} onNarrative={() => setNarrative(true)} />}
+        {!quick && !narrative && !fromNarrative && !choosing && (
+          <div className="sheet-empty">
+            <p>Escolha como montar a ficha.</p>
+            <button type="button" className="btn-primary" onClick={() => setChoosing(true)}>Criar ficha</button>
+          </div>
+        )}
+        {choosing && (
+          <DhStartChoice
+            onManual={() => { update((d) => ({ ...d, started: true })); setChoosing(false) }}
+            onQuick={() => { setQuick(true); setChoosing(false) }}
+            onNarrative={() => { setNarrative(true); setChoosing(false) }}
+            onClose={() => setChoosing(false)}
+          />
+        )}
         {quick && <DhQuickForm onCancel={() => setQuick(false)} onDone={(d: DhSheetData) => { update(() => d); setQuick(false) }} />}
         {narrative && <DhNarrativeForm onCancel={() => setNarrative(false)} onDone={(answers, startAt) => { setFromNarrative({ answers, startAt }); setNarrative(false) }} />}
         {fromNarrative && <DhQuickForm initial={fromNarrative.answers} startAt={fromNarrative.startAt} onCancel={() => { setFromNarrative(null); setNarrative(true) }} onDone={(d: DhSheetData) => { update(() => d); setFromNarrative(null) }} />}
