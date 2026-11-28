@@ -135,8 +135,8 @@ export const DICE_SKINS: readonly DiceSkin[] = ALL_SKINS.filter((s) => !s.hidden
 export const DH_HOPE_SKIN = 'dh-esperanca'
 export const DH_FEAR_SKIN = 'dh-medo'
 const SPECIAL_SKINS: readonly DiceSkin[] = [
-  { ...base, id: DH_HOPE_SKIN, name: 'Dado de Esperança', body: '#f0c24a', bodyEdge: '#8a5f10', ink: '#2a1a04', trim: '#fff0b8', glow: '#ffcf5a', glowPower: 0.45, roughness: 0.22, metalness: 0.5, inkMetal: true, bump: 0.8, clearcoat: 0.8, sound: 'sino' },
-  { ...base, id: DH_FEAR_SKIN, name: 'Dado de Medo', body: '#2a1650', bodyEdge: '#07030f', ink: '#efe4ff', trim: '#9a68e8', glow: '#a070ff', glowPower: 0.8, roughness: 0.18, glass: true, bump: 0.9, clearcoat: 1, sound: 'vazio', glowAnim: 'pulso' },
+  { ...base, id: DH_HOPE_SKIN, name: 'Dado de Esperança', body: '#f0c24a', bodyEdge: '#8a5f10', ink: '#2a1a04', trim: '#fff0b8', glow: '#ffcf5a', glowPower: 0.45, roughness: 0.22, metalness: 0.5, inkMetal: true, bump: 0.8, clearcoat: 0.8, sound: 'esperanca' },
+  { ...base, id: DH_FEAR_SKIN, name: 'Dado de Medo', body: '#2a1650', bodyEdge: '#07030f', ink: '#efe4ff', trim: '#9a68e8', glow: '#a070ff', glowPower: 0.8, roughness: 0.18, glass: true, bump: 0.9, clearcoat: 1, sound: 'medo', glowAnim: 'pulso' },
 ]
 
 /** Os que existem na mesa: os de todos e os exclusivos (quem não tem acesso também vê o dado de quem tem). */

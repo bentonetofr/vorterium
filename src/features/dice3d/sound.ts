@@ -30,6 +30,8 @@ export interface Hiss { dur: number; cutoff: number; q: number; gain: number; ty
 /** As vozes dos conjuntos da coleção (o campo `sound` de skins.ts). */
 export type DiceVoice = 'granito' | 'plastico' | 'betinha' | 'osso' | 'ferro' | 'argila' | 'giz' | 'cobre' | 'marfim' | 'onix' | 'ametista' | 'granada' | 'jade' | 'fume' | 'gelo' | 'magma' | 'meteorito' | 'fungo' | 'ambar' | 'morte' | 'vagalumes' | 'runico' | 'vortice'
   | 'cortica' | 'cera' | 'vidro' | 'papel' | 'sino' | 'relogio' | 'perola' | 'trovao' | 'olho' | 'cosmos' | 'dragao' | 'espelho' | 'vazio' | 'prisma'
+  // os dois dados de Dualidade do DaggerHeart (não são conjuntos para escolher)
+  | 'esperanca' | 'medo'
 
 export interface HitRecipe {
   /** Corpo de madeira (toc). */
@@ -205,6 +207,10 @@ const VOICES: Record<DiceVoice, (s: number, rnd: () => number) => VoiceShape> = 
     wood: 0.2, resin: 0.03, click: 0.08,
     ring: [{ freq: 68 + rnd() * 8, to: 30, gain: 1, decay: 0.45 + s * 0.3 }, { freq: 136, to: 62, gain: 0.3, decay: 0.3 }, { freq: 2100 + rnd() * 400, to: 600, gain: 0.07, decay: 0.25, delay: 0.02 }],
   }),
+  // dado de Esperança (DaggerHeart): toc quente de madeira com o tique do dado (só a reserva, enquanto as gravações carregam)
+  esperanca: () => ({ wood: 0.9, woodPitch: 0.9, resin: 0.35, click: 0.45 }),
+  // dado de Medo (DaggerHeart): pancada funda e macia, sem zumbido
+  medo: () => ({ wood: 1, woodPitch: 0.7, resin: 0.04, click: 0.2 }),
   // prisma: cada batida é uma nota de cristal, e a quinta dela chega logo depois
   prisma: (s, rnd) => {
     const n = choose(rnd, PRISM_NOTES)

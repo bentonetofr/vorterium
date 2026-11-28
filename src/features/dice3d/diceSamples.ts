@@ -11,11 +11,11 @@ import type { DiceVoice, Hiss, Partial_ } from './sound'
 // Origem e licenças: public/sons/dados/CREDITOS.txt.
 // ────────────────────────────────────────────────────────
 
-export type SampleBank = 'madeira' | 'dado' | 'pedra' | 'metal' | 'vidro' | 'suave' | 'papel' | 'sino' | 'ceramica'
+export type SampleBank = 'madeira' | 'dado' | 'pedra' | 'metal' | 'vidro' | 'suave' | 'papel' | 'sino' | 'ceramica' | 'esperanca' | 'medo'
 
 /** Quantos arquivos cada banco tem (os nomes são `<banco>-01.wav`, `<banco>-02.wav`...). */
 export const BANK_SIZE: Record<SampleBank, number> = {
-  madeira: 22, dado: 17, pedra: 10, metal: 14, vidro: 6, suave: 7, papel: 5, sino: 4, ceramica: 10,
+  madeira: 22, dado: 17, pedra: 10, metal: 14, vidro: 6, suave: 7, papel: 5, sino: 4, ceramica: 10, esperanca: 25, medo: 8,
 }
 
 export function bankFiles(bank: SampleBank): string[] {
@@ -94,6 +94,9 @@ export const VOICE_SAMPLES: Record<DiceVoice, SamplePlan> = {
   espelho: plan('vidro', 0.95, 0.8, 0, 1, 2200),
   vazio: plan('suave', 0.6, 0.8, 0, 0.5),
   prisma: plan('vidro', 1, 0.8, 0, 1, 2400),
+  // ── os dados de Dualidade do DaggerHeart: só gravações, sem camada sintetizada ──
+  esperanca: plan('esperanca', 1.04, 0, 0, 1, 3400),
+  medo: plan('medo', 1, 0, 0, 1, 1900),
 }
 
 /** Que gravação usar numa batida: a madeira velha e as vozes de madeira passam para o estalo da resina quando é dado com dado. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hitRecipe, type DiceVoice } from './sound'
-import { ALL_SKINS, COLLECTION_SKINS } from './skins'
+import { ALL_SKINS, COLLECTION_SKINS, DH_FEAR_SKIN, DH_HOPE_SKIN, getSkin } from './skins'
 import { BANK_SIZE, LAYER_TOP_HZ, MAX_RATE, MAX_TONE, VOICE_SAMPLES, bankFiles, bankUrl, hitBrightness, hitCutoff, hitGain, samplePlan, softenHiss, softenPartial, type SampleBank } from './diceSamples'
 
 const WAVS = Object.keys(import.meta.glob('/public/sons/dados/*/*.wav'))
@@ -128,7 +128,7 @@ describe('batidas gravadas dos dados', () => {
       expect(p.hiss, v).toBeGreaterThanOrEqual(0)
       expect(p.hiss, v).toBeLessThanOrEqual(1)
     }
-    expect(Object.keys(VOICE_SAMPLES)).toHaveLength(voices.length)
+    expect(Object.keys(VOICE_SAMPLES)).toHaveLength(voices.length + 2)   // + Esperança e Medo, do DaggerHeart
   })
 
   it('só mantém a camada sintetizada que a voz realmente tem (sem ressonância ou sopro inventado)', () => {
@@ -181,6 +181,25 @@ describe('batidas gravadas dos dados', () => {
     expect(h.type).toBe('bandpass')
     expect(h.cutoff).toBeLessThanOrEqual(2400)
     expect(softenHiss({ dur: 0.1, cutoff: 9000, q: 1, gain: 0.5, type: 'lowpass' }).cutoff).toBeLessThanOrEqual(3200)
+  })
+
+  it('os dados de Dualidade do DaggerHeart têm voz própria e suave: só gravações quentes, sem sino, zumbido nem camada sintetizada', () => {
+    expect(getSkin(DH_HOPE_SKIN).sound).toBe('esperanca')
+    expect(getSkin(DH_FEAR_SKIN).sound).toBe('medo')
+    const hope = samplePlan('esperanca', false)
+    const fear = samplePlan('medo', false)
+    expect(hope.bank).toBe('esperanca')
+    expect(fear.bank).toBe('medo')
+    for (const p of [hope, fear]) {
+      expect(p.ring).toBe(0)
+      expect(p.hiss).toBe(0)
+      expect(p.rate).toBeLessThanOrEqual(MAX_RATE)
+    }
+    expect(fear.tone).toBeLessThan(hope.tone)            // o Medo é o mais abafado e fundo
+    expect(samplePlan('esperanca', true).bank).toBe('esperanca')
+    // não usam mais os bancos de sino e de pancada abafada dos outros conjuntos
+    expect(hope.bank).not.toBe('sino')
+    expect(fear.bank).not.toBe('suave')
   })
 
   it('o endereço do arquivo respeita a base do site e não duplica barras', () => {
