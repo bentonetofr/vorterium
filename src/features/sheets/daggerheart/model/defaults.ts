@@ -1,6 +1,7 @@
 import { dhClass } from '../catalog/classes'
 import type { DhClassKey, DhCompanion, DhModifiers, DhSheetData, DhTrait, DhTrackers, DhWeaponSlot } from './types'
 import { DH_TRAITS } from './types'
+import { normalizeCardCounters, normalizeCounters } from './counters'
 
 // ────────────────────────────────────────────────────────
 // Ficha em branco e normalização do que vem do banco (a ficha inteira mora em uma coluna jsonb,
@@ -72,6 +73,8 @@ export function emptySheet(classKey: DhClassKey | null = null): DhSheetData {
     loadout: [],
     vault: [],
     cardsUsed: [],
+    counters: [],
+    cardCounters: {},
     advancements: [],
     description: { clothes: '', eyes: '', body: '', skin: '', attitude: '' },
     background: ['', '', ''],
@@ -180,6 +183,8 @@ export function normalizeSheet(raw: unknown): DhSheetData {
     loadout: (Array.isArray(r.loadout) ? r.loadout : []).filter((i): i is string => typeof i === 'string').slice(0, 40),
     vault: (Array.isArray(r.vault) ? r.vault : []).filter((i): i is string => typeof i === 'string').slice(0, 80),
     cardsUsed: (Array.isArray(r.cardsUsed) ? r.cardsUsed : []).filter((i): i is string => typeof i === 'string').slice(0, 80),
+    counters: normalizeCounters(r.counters),
+    cardCounters: normalizeCardCounters(r.cardCounters),
     advancements: (Array.isArray(r.advancements) ? r.advancements : []).slice(0, 9).flatMap((a) => {
       const x = (a && typeof a === 'object' ? a : {}) as Record<string, unknown>
       if (typeof x.level !== 'number' || !Array.isArray(x.picks)) return []

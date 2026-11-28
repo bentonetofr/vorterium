@@ -7,6 +7,8 @@ import { LOADOUT_MAX } from '../model/defaults'
 import type { DhDomain, DhDomainCard, DhSheetData } from '../model/types'
 import { DomainIcon } from './DomainIcon'
 import { RuleText, DhSelect } from './DhUi'
+import { DhCounters } from './DhCounters'
+import type { DhCounter } from '../model/counters'
 
 // ────────────────────────────────────────────────────────
 // Cartas de domínio: a mão (até 5 ativas; a carta Notoriedade não conta) e a reserva. Trocar fora do descanso custa Fadiga
@@ -51,10 +53,23 @@ export function DhCardsTab({ data, update, canEdit }: Props) {
   }
 
   function remove(id: string) {
-    update((d) => ({ ...d, loadout: d.loadout.filter((x) => x !== id), vault: d.vault.filter((x) => x !== id), cardsUsed: d.cardsUsed.filter((x) => x !== id) }))
+    update((d) => ({ ...d, loadout: d.loadout.filter((x) => x !== id), vault: d.vault.filter((x) => x !== id), cardsUsed: d.cardsUsed.filter((x) => x !== id), cardCounters: withoutKey(d.cardCounters, id) }))
   }
 
   const full = inHand >= LOADOUT_MAX
+
+  /** Os marcadores de uma carta: quem só olha vê os que existem; quem edita pode criar. */
+  function cardCounters(id: string) {
+    const list = data.cardCounters[id] ?? []
+    if (!canEdit && list.length === 0) return undefined
+    return {
+      list, canEdit,
+      onChange: (next: DhCounter[]) => update((d) => {
+        const rest = withoutKey(d.cardCounters, id)
+        return { ...d, cardCounters: next.length ? { ...rest, [id]: next } : rest }
+      }),
+    }
+  }
 
   return (
     <div className="dh-cards">
@@ -68,7 +83,7 @@ export function DhCardsTab({ data, update, canEdit }: Props) {
       <h3 className="dh-cards__h">Mão (cartas ativas)</h3>
       <div className="dh-cardgrid">
         {hand.map((c) => (
-          <CardView key={c.id} card={c} used={data.cardsUsed.includes(c.id)} onUsed={canEdit ? () => toggleUsed(c.id) : undefined}
+          <CardView key={c.id} card={c} used={data.cardsUsed.includes(c.id)} onUsed={canEdit ? () => toggleUsed(c.id) : undefined} counters={cardCounters(c.id)}
             actions={canEdit ? <><button type="button" className="dh-link" onClick={() => toVault(c.id)}>Guardar na reserva</button><button type="button" className="dh-link" onClick={() => remove(c.id)}>Descartar</button></> : null} />
         ))}
         {hand.length === 0 && <p className="dh-empty">Nenhuma carta na mão.</p>}
@@ -77,7 +92,7 @@ export function DhCardsTab({ data, update, canEdit }: Props) {
       <h3 className="dh-cards__h">Reserva</h3>
       <div className="dh-cardgrid">
         {vault.map((c) => (
-          <CardView key={c.id} card={c}
+          <CardView key={c.id} card={c} counters={cardCounters(c.id)}
             actions={canEdit ? (
               <>
                 {!full ? <button type="button" className="dh-link" onClick={() => toHand(c.id)}>Trazer para a mão{resting ? '' : ` (${c.recall} Fadiga)`}</button> : (
@@ -96,6 +111,11 @@ export function DhCardsTab({ data, update, canEdit }: Props) {
   )
 }
 
+function withoutKey<T>(o: Record<string, T>, key: string): Record<string, T> {
+  const { [key]: _gone, ...rest } = o
+  return rest
+}
+
 function markStressMany(d: DhSheetData, amount: number): { stressMarked: number; hpMarked: number } {
   let cur = { ...d }
   let res = { stressMarked: d.stressMarked, hpMarked: d.hpMarked }
@@ -106,7 +126,7 @@ function markStressMany(d: DhSheetData, amount: number): { stressMarked: number;
   return res
 }
 
-export function CardView({ card, used, onUsed, actions, compact }: { card: DhDomainCard; used?: boolean; onUsed?: () => void; actions?: React.ReactNode; compact?: boolean }) {
+export function CardView({ card, used, onUsed, actions, compact, counters }: { card: DhDomainCard; used?: boolean; onUsed?: () => void; actions?: React.ReactNode; compact?: boolean; counters?: { list: DhCounter[]; onChange: (next: DhCounter[]) => void; canEdit: boolean } }) {
   const dom = DOMAINS[card.domain]
   return (
     <article className={`dh-card dh-card--img${used ? ' is-used' : ''}${compact ? ' is-compact' : ''}`} style={{ '--dh-domain': dom.color } as React.CSSProperties}>
@@ -116,6 +136,7 @@ export function CardView({ card, used, onUsed, actions, compact }: { card: DhDom
         <summary>Texto da carta</summary>
         <div className="dh-card__text"><RuleText text={card.text} /></div>
       </details>
+      {counters && <DhCounters compact counters={counters.list} canEdit={counters.canEdit} label={`Marcadores de ${card.name}`} onChange={counters.onChange} />}
       <footer>
         {onUsed && <label className="dh-check"><input type="checkbox" checked={!!used} onChange={onUsed} /> Usada</label>}
         {actions}

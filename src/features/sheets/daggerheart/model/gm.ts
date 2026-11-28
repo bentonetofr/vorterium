@@ -1,4 +1,5 @@
 import { newId } from './defaults'
+import { cloneCounters, normalizeCounters, type DhCounter } from './counters'
 import type { DhRange } from './types'
 
 // ────────────────────────────────────────────────────────
@@ -46,6 +47,8 @@ export interface DhAdversary {
   damageType: 'fis' | 'mag'
   experiences: { id: string; name: string; mod: number }[]
   features: DhGmFeature[]
+  /** Marcadores (Veneno 2, Atordoado 1...). */
+  counters: DhCounter[]
   notes: string
 }
 
@@ -59,6 +62,8 @@ export interface DhEnvironment {
   difficulty: number
   adversaries: string
   features: DhGmFeature[]
+  /** Marcadores (Contagem de Progresso, rodadas...). */
+  counters: DhCounter[]
   notes: string
 }
 
@@ -69,12 +74,12 @@ export function newFeature(kind: DhFeatureKind = 'passiva'): DhGmFeature {
 export function emptyAdversary(): DhAdversary {
   return {
     v: 1, name: 'Novo adversário', tier: 1, kind: 'Padrão', description: '', motives: '', difficulty: 11, major: 7, severe: 12, hp: 5, stress: 3, hpMarked: 0, stressMarked: 0,
-    attackBonus: 1, attackName: 'Ataque', attackRange: 'melee', damage: '1d8+2', damageType: 'fis', experiences: [], features: [], notes: '',
+    attackBonus: 1, attackName: 'Ataque', attackRange: 'melee', damage: '1d8+2', damageType: 'fis', experiences: [], features: [], counters: [], notes: '',
   }
 }
 
 export function emptyEnvironment(): DhEnvironment {
-  return { v: 1, name: 'Novo ambiente', tier: 1, kind: 'Exploração', description: '', impulses: '', difficulty: 11, adversaries: '', features: [], notes: '' }
+  return { v: 1, name: 'Novo ambiente', tier: 1, kind: 'Exploração', description: '', impulses: '', difficulty: 11, adversaries: '', features: [], counters: [], notes: '' }
 }
 
 function num(v: unknown, fallback: number, min: number, max: number): number {
@@ -121,6 +126,7 @@ export function normalizeAdversary(raw: unknown): DhAdversary {
       return typeof x.name === 'string' ? [{ id: str(x.id, 20) || newId(), name: str(x.name, 80), mod: num(x.mod, 2, -5, 12) }] : []
     }),
     features: features(r.features),
+    counters: normalizeCounters(r.counters),
     notes: str(r.notes, 8000),
   }
 }
@@ -138,8 +144,36 @@ export function normalizeEnvironment(raw: unknown): DhEnvironment {
     difficulty: num(r.difficulty, d.difficulty, 0, 40),
     adversaries: str(r.adversaries, 800),
     features: features(r.features),
+    counters: normalizeCounters(r.counters),
     notes: str(r.notes, 8000),
   }
+}
+
+/** O próximo nome livre para uma cópia: "Goblin" vira "Goblin (2)", "Goblin (3)"... (ignora o "(n)" que já esteja no nome). */
+export function nextCopyName(name: string, taken: Iterable<string>): string {
+  const base = name.replace(/\s*\(\d+\)\s*$/, '').trim() || name.trim() || 'Cópia'
+  const used = new Set(taken)
+  let n = 2
+  while (used.has(`${base} (${n})`)) n++
+  return `${base} (${n})`.slice(0, 120)
+}
+
+/**
+ * Uma cópia da ficha para usar mais de um inimigo igual: tudo igual, mas começando "inteira" (Vida e Fadiga sem marcas, marcadores
+ * zerados) e com ids novos nas habilidades, nas Experiências e nos marcadores.
+ */
+export function duplicateGm<T extends DhAdversary | DhEnvironment>(data: T, name: string): T {
+  const base = {
+    ...data,
+    name,
+    features: data.features.map((f) => ({ ...f, id: newId() })),
+    counters: cloneCounters(data.counters, true),
+  }
+  if ('hp' in data) {
+    const a = data as DhAdversary
+    return { ...base, hpMarked: 0, stressMarked: 0, experiences: a.experiences.map((e) => ({ ...e, id: newId() })) } as unknown as T
+  }
+  return base as T
 }
 
 /** Ambientes prontos do livro (para começar de um modelo). */

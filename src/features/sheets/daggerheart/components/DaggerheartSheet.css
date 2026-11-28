@@ -929,3 +929,28 @@ button.dh-show__thumb.is-on { border-color: var(--dh-hope); box-shadow: 0 0 0 3p
   .dh-collapse, .dh-collapse.is-open { transition: none; }
   .dh-collapse.is-open .dh-tl::before, .dh-collapse.is-open .dh-tl__step, .dh-collapse.is-open .dh-tl__dot { animation: none; }
 }
+
+/* ═══ Marcadores (contadores) ═══ */
+.dh-ctrs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.dh-ctrs__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.dh-ctr { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 8px 4px 10px; border: 1.5px solid var(--dh-line); border-radius: 10px; background: var(--dh-field); transition: border-color 0.2s, background 0.2s; }
+.dh-ctr.has-value { border-color: rgba(201, 160, 50, 0.6); background: rgba(201, 160, 50, 0.07); }
+.dh-ctr.is-full { border-color: var(--dh-hope); }
+.dh-ctr .dh-ctr__name { width: 8.5em; min-width: 5em; font-size: 13px; font-weight: 600; }
+span.dh-ctr__name { width: auto; padding: 0; color: var(--dh-ink); }
+.dh-ctr__value { min-width: 1.6em; text-align: center; font-size: 15px; color: var(--dh-hope); }
+.dh-ctr__of { color: var(--dh-ink-soft); font-size: 12px; }
+.dh-ctr__max { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--dh-ink-soft); }
+.dh-ctr__max input { width: 3.1em; padding: 2px 4px; border: 1px solid var(--dh-line); border-radius: 6px; background: transparent; color: var(--dh-ink); font: inherit; font-size: 12px; text-align: center; }
+.dh-ctr__max input:focus { outline: none; border-color: var(--dh-hope); }
+.dh-ctrs__add { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.dh-ctrs__reset { margin-left: auto; }
+.dh-ctrs--compact { margin: 4px 0 2px; }
+.dh-ctrs--compact .dh-ctr { padding: 3px 6px 3px 8px; gap: 6px; }
+.dh-ctrs--compact .dh-ctr .dh-ctr__name { width: 6.5em; min-width: 4em; font-size: 12px; }
+.dh-ctrs--compact .dh-ctrs__add { justify-content: center; }
+.dh-card--img .dh-ctrs { padding: 6px 4px 0; justify-items: center; }
+.dh-card--img .dh-ctrs__list { justify-content: center; }
+.dh-gm__open .dh-gm__ctrs { color: var(--dh-hope); font-weight: 600; }
+.dh-ctr { animation: dh-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) { .dh-ctr { animation: none; } }

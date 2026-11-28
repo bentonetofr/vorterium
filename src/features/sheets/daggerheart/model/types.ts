@@ -3,6 +3,8 @@
 // Pontos de Vida (PV), Pontos de Fadiga (Stress), Pontos de Esperança, Pontos de Armadura, patamar, limiares de dano.
 // ────────────────────────────────────────────────────────
 
+import type { DhCounter } from './counters'
+
 /** Os seis atributos do personagem. */
 export type DhTrait = 'agility' | 'strength' | 'finesse' | 'instinct' | 'presence' | 'knowledge'
 export const DH_TRAITS: readonly DhTrait[] = ['agility', 'strength', 'finesse', 'instinct', 'presence', 'knowledge']
@@ -254,6 +256,10 @@ export interface DhSheetData {
   vault: string[]
   /** Cartas já usadas (limite de uso esgotado) até o próximo descanso. */
   cardsUsed: string[]
+  /** Marcadores do personagem (Veneno 2, Munição 3...). */
+  counters: DhCounter[]
+  /** Marcadores de cada carta de domínio, por id da carta. */
+  cardCounters: Record<string, DhCounter[]>
   advancements: DhAdvancement[]
   description: { clothes: string; eyes: string; body: string; skin: string; attitude: string }
   background: string[]

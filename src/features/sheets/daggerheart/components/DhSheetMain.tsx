@@ -17,6 +17,7 @@ import { DomainIcon } from './DomainIcon'
 import { DhGearPicker } from './DhGearPicker'
 import { DhRollDialog, type RollSpec } from './DhRollDialog'
 import { Banner, Inline, RuleText, Slots, Stepper, signed, DhSelect } from './DhUi'
+import { DhCounters } from './DhCounters'
 
 // ────────────────────────────────────────────────────────
 // A ficha no desenho do livro: faixa da classe, escudos de Evasão e Armadura, seis atributos, Dano e Saúde com os
@@ -253,6 +254,12 @@ export function DhSheetMain({ data, update, target, canEdit, onOpenTab }: Props)
                 {ed && <button type="button" className="btn" onClick={useHopeFeature} disabled={data.hope < 3}>Gastar 3 Esperança</button>}
               </div>
             )}
+          </section>
+
+          <section className="dh-box">
+            <Banner>Marcadores</Banner>
+            {!ed && data.counters.length === 0 && <p className="dh-empty">Nenhum marcador.</p>}
+            <DhCounters counters={data.counters} canEdit={ed} label="Marcadores do personagem" onChange={(counters) => update((d) => ({ ...d, counters }))} />
           </section>
 
           <section className="dh-box">

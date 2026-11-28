@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { Loader } from '../../../../shared/components/Loader'
 import { confirmDialog } from '../../../../shared/components/dialogs'
 import { RANGE_INFO, RANGE_ORDER } from '../catalog/rules'
-import { ADVERSARY_KINDS, ENVIRONMENT_KINDS, ENVIRONMENT_PRESETS, emptyAdversary, emptyEnvironment, newFeature, type DhAdversary, type DhEnvironment, type DhGmFeature, type DhGmKind } from '../model/gm'
+import { ADVERSARY_KINDS, ENVIRONMENT_KINDS, ENVIRONMENT_PRESETS, duplicateGm, emptyAdversary, emptyEnvironment, newFeature, nextCopyName, type DhAdversary, type DhEnvironment, type DhGmFeature, type DhGmKind } from '../model/gm'
 import { newId } from '../model/defaults'
+import { counterSummary } from '../model/counters'
 import { createGmSheet, deleteGmSheet, listGmSheets, setGmVisible, subscribeGmSheets, useGmSheet, type GmRow } from '../services/dhGmService'
 import { useFear } from '../services/dhFearService'
 import { rollFree } from '../services/dhRolls'
 import { Inline, RuleText, Slots, Stepper, signed, DhSelect } from './DhUi'
+import { DhCounters } from './DhCounters'
 
 // ────────────────────────────────────────────────────────
 // Adversários e ambientes (capítulo 4): na aba Ficha, o mestre cria e edita os blocos no formato do livro, joga o ataque e o dano
@@ -23,6 +25,7 @@ const TAB_LABEL: Record<Tab, string> = { adversary: 'Adversários', environment:
 export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMaster: boolean }) {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('adversary')
   const [openId, setOpenId] = useState<string | null>(null)
 
@@ -48,6 +51,19 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
     try { await setGmVisible(row.id, !row.visible); setRows((r) => (r ?? []).map((x) => (x.id === row.id ? { ...x, visible: !x.visible } : x))) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível mudar.') }
   }
 
+  /** Uma cópia pronta para usar (mais de um inimigo igual): mesmo bloco, Vida e marcadores zerados, nome "Goblin (2)". Fica visível se o original estiver. */
+  async function duplicate(row: Row) {
+    try {
+      const name = nextCopyName(row.data.name, (rows ?? []).filter((r) => r.kind === row.kind).map((r) => r.data.name))
+      const created = await createGmSheet(campaignId, row.kind, duplicateGm(row.data, name))
+      let copy: Row = created
+      if (row.visible) { await setGmVisible(created.id, true); copy = { ...created, visible: true } }
+      setRows((r) => [...(r ?? []), copy])
+      setNotice(`Criado “${name}”.`)
+      setError(null)
+    } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível duplicar.') }
+  }
+
   return (
     <section className="dh-gm" aria-label="Adversários e ambientes">
       <header className="dh-gm__head">
@@ -57,6 +73,7 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
         </span>
       </header>
       {error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>}
+      {notice && <p className="dh-notice" role="status" onClick={() => setNotice(null)}>{notice}</p>}
       {!rows && !error && <div className="sheet-loading"><Loader small /></div>}
 
       {rows && (
@@ -73,9 +90,11 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
                 <button type="button" className="dh-gm__open" onClick={() => setOpenId(openId === r.id ? null : r.id)} aria-pressed={openId === r.id}>
                   <b>{r.data.name}</b>
                   <small>Patamar {r.data.tier} · {r.data.kind} · Dif. {r.data.difficulty}{r.kind === 'adversary' ? ` · Vida ${(r.data as DhAdversary).hp}` : ''}</small>
+                  {counterSummary(r.data.counters) && <small className="dh-gm__ctrs">{counterSummary(r.data.counters)}</small>}
                 </button>
                 {isMaster && (
                   <span className="dh-gm__tools">
+                    <button type="button" className="dh-link" onClick={() => void duplicate(r)} title="Cria uma cópia pronta para usar (Vida e marcadores zerados)">Duplicar</button>
                     <button type="button" className="dh-link" onClick={() => void toggleVisible(r)}>{r.visible ? 'Esconder' : 'Mostrar aos jogadores'}</button>
                     <button type="button" className="dh-link" onClick={() => void remove(r)}>Apagar</button>
                   </span>
@@ -226,6 +245,13 @@ export function AdversarySheet({ row, campaignId, canEdit }: { row: GmRow<DhAdve
           </div>
         </div>
 
+        {(canEdit || a.counters.length > 0) && (
+          <>
+            <Title>Marcadores</Title>
+            <DhCounters counters={a.counters} canEdit={canEdit} label="Marcadores do adversário" onChange={(c) => set('counters', c)} />
+          </>
+        )}
+
         <div className="dh-atk">
           <Title>Ataque padrão</Title>
           <div className="dh-atk__grid">
@@ -300,6 +326,12 @@ export function EnvironmentSheet({ row, campaignId, canEdit }: { row: GmRow<DhEn
         <Inline multiline rows={2} maxLength={1500} value={e.description} onChange={(v) => set('description', v)} disabled={!canEdit} placeholder="Descrição" aria-label="Descrição" />
         <Fld label="Impulsos"><Inline value={e.impulses} onChange={(v) => set('impulses', v)} disabled={!canEdit} maxLength={600} placeholder="Ex.: desorientar e confundir" aria-label="Impulsos" /></Fld>
         <Fld label="Adversários"><Inline multiline rows={2} maxLength={800} value={e.adversaries} onChange={(v) => set('adversaries', v)} disabled={!canEdit} placeholder="Quem costuma aparecer aqui" aria-label="Adversários" /></Fld>
+        {(canEdit || e.counters.length > 0) && (
+          <>
+            <Title>Marcadores</Title>
+            <DhCounters counters={e.counters} canEdit={canEdit} label="Marcadores do ambiente" onChange={(c) => set('counters', c)} />
+          </>
+        )}
         <Features features={e.features} canEdit={canEdit} fear={fear} onChange={(f) => set('features', f)} onUse={(f) => void use(f, e.name)} />
         {msg && <p className="dh-notice" role="status" onClick={() => setMsg(null)}>{msg}</p>}
         {canEdit && <Fld label="Anotações do mestre"><Inline multiline rows={3} maxLength={8000} value={e.notes} onChange={(v) => set('notes', v)} aria-label="Anotações" /></Fld>}
