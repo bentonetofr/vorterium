@@ -1,0 +1,91 @@
+/* ═══ Janelas flutuantes da mesa ═══
+   Camadas: cabeçalho do app 500 · janelas 600+ (fixadas 760+) · barra de janelas 980 · janelas modais 1000. */
+
+.fw {
+  position: fixed; display: flex; flex-direction: column; min-width: 0;
+  background: var(--bg-elevated, #12172a); color: var(--text-primary, #e9e7df);
+  border: 1.5px solid var(--border-base, #3d4560); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  outline: none;
+  transition: height 0.24s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.18s, border-color 0.18s, opacity 0.18s, transform 0.18s, visibility 0s;
+  animation: fw-in 0.24s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+.fw.is-front { border-color: #c9a032; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65); }
+.fw.is-pin { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(201, 160, 50, 0.35); }
+.fw.is-drag { transition: none; box-shadow: 0 26px 48px rgba(0, 0, 0, 0.72); user-select: none; }
+.fw.is-snap { transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), top 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.18s, border-color 0.18s; }
+.fw.is-min { opacity: 0; transform: scale(0.92) translateY(16px); pointer-events: none; visibility: hidden; transition: opacity 0.18s, transform 0.18s, visibility 0s 0.18s; }
+@keyframes fw-in { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+.fw__bar {
+  display: flex; align-items: center; gap: 8px; flex: none; height: 40px; padding: 0 6px 0 10px;
+  background: #0a0d18; border-bottom: 1px solid var(--border-base, #2c3450);
+  cursor: grab; touch-action: none; user-select: none;
+}
+.fw.is-drag .fw__bar { cursor: grabbing; }
+.fw.is-col .fw__bar { border-bottom-color: transparent; }
+.fw__grip { flex: none; width: 8px; height: 16px; background: radial-gradient(#6b7394 1.2px, transparent 1.4px) 0 0 / 8px 5px; opacity: 0.8; }
+.fw__av { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; overflow: hidden; background: #201f1a; border: 1px solid #c9a032; color: #e0c168; font-size: 12px; font-weight: 700; }
+.fw__av img { width: 100%; height: 100%; object-fit: cover; }
+.fw__title { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 0 1 auto; }
+.fw__title b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fw__title small { color: var(--text-muted, #a0a5ba); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fw__mini { display: flex; flex: 1 1 auto; min-width: 0; gap: 8px; margin-left: 4px; font-size: 12px; color: var(--text-muted, #a0a5ba); overflow: hidden; white-space: nowrap; }
+.fw__mini .dh-minibars { margin: 0; display: flex; gap: 10px; }
+.fw__ctl { margin-left: auto; display: flex; gap: 2px; flex: none; }
+.fw__ctl button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 7px; background: none; color: #8f96b3; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.fw__ctl button:hover { background: #20263a; color: #fff; }
+.fw__ctl button.is-on { color: #e0c168; }
+.fw__ctl .fw__close:hover { background: rgba(212, 106, 106, 0.2); color: #ff9a9a; }
+.fw__ctl button:focus-visible { outline: 2px solid #c9a032; outline-offset: -2px; }
+
+.fw__body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 10px 12px 14px; overscroll-behavior: contain; }
+.fw.is-col .fw__body { visibility: hidden; }
+
+.fw__rs {
+  position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 52%, #566090 52%, #566090 60%, transparent 60%, transparent 72%, #566090 72%, #566090 80%, transparent 80%);
+  opacity: 0.8;
+}
+.fw__rs:hover { opacity: 1; }
+.fw.is-col .fw__rs { display: none; }
+
+/* ── barra de baixo ── */
+.fwdock {
+  position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 980;
+  display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 20px); padding: 6px 8px;
+  background: rgba(10, 13, 24, 0.94); border: 1px solid #2c3450; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px); animation: fw-dock-in 0.24s ease both;
+}
+@keyframes fw-dock-in { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.fwdock__list { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; overflow-x: auto; min-width: 0; scrollbar-width: thin; }
+.fwchip { display: flex; align-items: stretch; flex: none; border: 1px solid #3d4560; border-radius: 9px; background: #12172a; overflow: hidden; animation: fw-chip-in 0.22s ease both; transition: border-color 0.15s, background 0.15s; }
+@keyframes fw-chip-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fwchip.is-front { border-color: #c9a032; background: #201f1a; }
+.fwchip.is-min { opacity: 0.8; border-style: dashed; }
+.fwchip:hover { border-color: #8a93b8; }
+.fwchip__main { display: flex; align-items: center; gap: 8px; max-width: 200px; padding: 5px 4px 5px 10px; border: 0; background: none; color: #cfd2e0; font: inherit; font-size: 12.5px; cursor: pointer; }
+.fwchip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fwchip__main small { color: #d46a6a; font-size: 11px; white-space: nowrap; }
+.fwchip__x { width: 22px; border: 0; background: none; color: #8f96b3; font-size: 15px; line-height: 1; cursor: pointer; }
+.fwchip__x:hover { color: #ff9a9a; }
+.fwdock__tools { display: flex; gap: 4px; flex: none; padding-left: 8px; border-left: 1px solid #2c3450; }
+.fwdock__btn { padding: 5px 9px; border: 1px solid transparent; border-radius: 8px; background: none; color: #a0a5ba; font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
+.fwdock__btn:hover:not(:disabled) { color: #e0c168; border-color: #3d4560; }
+.fwdock__btn:disabled { opacity: 0.4; cursor: default; }
+.fwdock__btn--danger:hover:not(:disabled) { color: #ff9a9a; border-color: rgba(212, 106, 106, 0.5); }
+
+/* ── celular: a janela da frente ocupa a tela toda; as outras ficam na barra de baixo ── */
+@media (max-width: 768px) {
+  .fw { left: 0 !important; top: 0 !important; width: 100vw !important; height: calc(100dvh - 56px) !important; border-radius: 0; border-width: 0 0 1.5px; transition: none; }
+  .fw:not(.is-front) { display: none; }
+  .fw.is-col { height: 40px !important; }
+  .fw__bar { cursor: default; }
+  .fw__grip, .fw__rs, .fw__ctl button[aria-label^="Fixar"], .fw__ctl button[aria-label^="Desafixar"] { display: none; }
+  .fwdock { left: 0; right: 0; bottom: 0; transform: none; max-width: none; width: 100%; border-radius: 0; border-width: 1px 0 0; animation: none; padding: 8px 10px; }
+  .fwdock__tools { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fw, .fw.is-snap, .fw.is-min, .fwdock, .fwchip { animation: none; transition: none; }
+}

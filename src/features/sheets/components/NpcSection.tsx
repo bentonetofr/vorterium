@@ -17,6 +17,8 @@ import type { SpecialNpc } from '../../../vendor/vortable/vortable'
 import { useAuth } from '../../auth/AuthProvider'
 import './SheetPanel.css'
 import { confirmDialog } from '../../../shared/components/dialogs'
+import { FloatingWindow } from '../../../shared/components/floating/FloatingWindow'
+import { useFloatingStoreOptional, useOpenIds } from '../../../shared/components/floating/FloatingProvider'
 
 // ────────────────────────────────────────────────────────
 // Seção de NPCs na aba Ficha, igual pra todos os sistemas.
@@ -32,6 +34,8 @@ export interface NpcSummary {
   line:      string
   portrait?: string | null
   bars?:     ReactNode
+  /** Resumo curtinho para a barra de janelas (ex.: "PV 6/6"), só usado quando as fichas abrem em janelas. */
+  badge?:    string
 }
 
 interface NpcSectionProps<T extends NpcSheetBase> {
@@ -41,10 +45,17 @@ interface NpcSectionProps<T extends NpcSheetBase> {
   summary:    (sheet: T) => NpcSummary
   /** A ficha completa do sistema. readOnly = jogador lendo NPC mostrado. */
   renderSheet: (sheet: T, opts: { readOnly: boolean; onUpdated: (sheet: T) => void }) => ReactNode
+  /** Abre a ficha numa janela flutuante (precisa estar dentro de um FloatingProvider) em vez de esticar a página. */
+  floating?: boolean
 }
 
-export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole, summary, renderSheet }: NpcSectionProps<T>) {
+export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole, summary, renderSheet, floating }: NpcSectionProps<T>) {
   const isMaster = userRole === 'master'
+  const fw = useFloatingStoreOptional()
+  const winMode = !!floating && !!fw
+  const winPrefix = `npc:${table}:`
+  const winIds = useOpenIds(winPrefix)
+  const [loadedOnce, setLoadedOnce] = useState(false)
   const [ready, setReady]     = useState(false)
   const [npcs, setNpcs]       = useState<T[]>([])
   const [error, setError]     = useState<string | null>(null)
@@ -73,6 +84,7 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
     try {
       const list = await listNpcs<T>(table, campaignId)
       setNpcs(list)
+      setLoadedOnce(true)
       setError(null)
       // NPC aberto sumiu (apagado, ou o mestre escondeu): fecha.
       setOpen((prev) => (prev && !list.some((n) => n.id === prev.id) ? null : prev))
@@ -92,8 +104,14 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
     return () => { f.stop(); feed.current = null; document.removeEventListener('visibilitychange', onVisible) }
   }, [ready, table, campaignId, load])
 
+  // NPC que sumiu (apagado, ou escondido pelo mestre) leva a janela junto
   useEffect(() => {
-    if (!open || !window.matchMedia('(max-width: 768px)').matches) return
+    if (!winMode || !loadedOnce) return
+    for (const wid of winIds) if (!npcs.some((n) => winPrefix + n.id === wid)) fw!.close(wid)
+  }, [winMode, loadedOnce, winIds, npcs, winPrefix, fw])
+
+  useEffect(() => {
+    if (winMode || !open || !window.matchMedia('(max-width: 768px)').matches) return
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [open?.id])
 
@@ -113,7 +131,8 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
   const create = () => run('new', async () => {
     const npc = await createNpc<T>(table, campaignId)
     setNpcs((prev) => [...prev, npc])
-    setOpen(npc)
+    if (winMode) fw!.open(winPrefix + npc.id)
+    else setOpen(npc)
   })
 
   const toggle = (npc: T) => run(npc.id, async () => {
@@ -132,6 +151,7 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
       void deleteNpcCharacter(campaignId, npcCharacterKey(table, npc.id)).catch(() => {})
       setNpcs((prev) => prev.filter((n) => n.id !== npc.id))
       setOpen((prev) => (prev?.id === npc.id ? null : prev))
+      if (winMode) fw!.close(winPrefix + npc.id)
       feed.current?.ping()
     })
   }
@@ -172,10 +192,10 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
             {npcs.map((npc) => {
               const sum = summary(npc)
               const name = npc.character_name?.trim() || 'Sem nome'
-              const active = open?.id === npc.id
+              const active = winMode ? winIds.includes(winPrefix + npc.id) : open?.id === npc.id
               return (
                 <div key={npc.id} className={`sheet-card npc-card ${active ? 'sheet-card--active' : ''}${isMaster && !npc.npc_visible ? ' npc-card--hidden' : ''}`}>
-                  <button type="button" className="npc-card__open" onClick={() => setOpen(active ? null : npc)} aria-pressed={active}>
+                  <button type="button" className="npc-card__open" onClick={() => (winMode ? fw!.open(winPrefix + npc.id) : setOpen(active ? null : npc))} aria-pressed={active}>
                     <div className="sheet-card__top">
                       <span className="sheet-card__avatar" aria-hidden={sum.portrait ? undefined : true}>
                         {sum.portrait
@@ -228,7 +248,12 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
         />
       )}
 
-      {open && (
+      {winMode && winIds.map((wid) => {
+        const npc = npcs.find((n) => winPrefix + n.id === wid)
+        return npc ? <NpcWindow<T> key={wid} winId={wid} npc={npc} isMaster={isMaster} summary={summary} renderSheet={renderSheet} onUpdated={handleUpdated} /> : null
+      })}
+
+      {!winMode && open && (
         <div className="sheets-list__form" ref={formRef}>
           {outdated && latest && (
             <div className="sheet-outdated" role="status">
@@ -244,6 +269,41 @@ export function NpcSection<T extends NpcSheetBase>({ table, campaignId, userRole
         </div>
       )}
     </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────
+// A ficha de um NPC numa janela flutuante: guarda uma cópia tirada ao abrir (a lista segue o Realtime; a ficha aberta só muda
+// com os saves de quem está editando) e avisa quando a ficha mudou em outro lugar.
+// ────────────────────────────────────────────────────────
+
+interface NpcWindowProps<T extends NpcSheetBase> {
+  winId: string
+  npc: T
+  isMaster: boolean
+  summary: (sheet: T) => NpcSummary
+  renderSheet: NpcSectionProps<T>['renderSheet']
+  onUpdated: (sheet: T) => void
+}
+
+function NpcWindow<T extends NpcSheetBase>({ winId, npc, isMaster, summary, renderSheet, onUpdated }: NpcWindowProps<T>) {
+  const [snap, setSnap] = useState<T>(npc)
+  const sum = summary(npc)
+  const name = npc.character_name?.trim() || 'Sem nome'
+  const outdated = Date.parse(npc.updated_at) > Date.parse(snap.updated_at)
+  return (
+    <FloatingWindow id={winId} title={name} subtitle={sum.line} badge={sum.badge} mini={sum.bars}
+      avatar={sum.portrait ? <img src={sum.portrait} alt="" /> : name.charAt(0).toUpperCase()}>
+      {outdated && (
+        <div className="sheet-outdated" role="status">
+          <span>{isMaster ? 'Esta ficha mudou em outra aba. Recarregar?' : 'O mestre atualizou esta ficha. Recarregar?'}</span>
+          <button type="button" className="btn btn-ghost sheet-outdated__btn" onClick={() => setSnap(npc)}>Recarregar</button>
+        </div>
+      )}
+      {isMaster
+        ? renderSheet(snap, { readOnly: false, onUpdated: (u) => { setSnap((p) => ({ ...p, ...u })); onUpdated(u) } })
+        : <ReadOnlyFrame>{renderSheet(snap, { readOnly: true, onUpdated: () => {} })}</ReadOnlyFrame>}
+    </FloatingWindow>
   )
 }
 

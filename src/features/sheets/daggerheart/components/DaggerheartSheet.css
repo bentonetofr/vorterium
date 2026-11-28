@@ -955,3 +955,27 @@ span.dh-ctr__name { width: auto; padding: 0; color: var(--dh-ink); }
 .dh-gm__open .dh-gm__ctrs { color: var(--dh-hope); font-weight: 600; }
 .dh-ctr { animation: dh-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 @media (prefers-reduced-motion: reduce) { .dh-ctr { animation: none; } }
+
+/* ═══ Fichas em janelas flutuantes ═══ */
+.dh-gm--win { margin: 0; padding: 0; border: 0; }
+.dh-gm--win .dh-gmsheet { margin-top: 0; }
+.fw__body > .sheet-outdated { margin-bottom: 8px; }
+
+/* botões do cartão do mestre (Duplicar, Mostrar, Apagar): numa linha só ou quebrando entre botões, nunca texto em três linhas */
+.dh-gm__tools { flex-wrap: wrap; gap: 6px 8px; }
+.dh-gm__tools .dh-link { white-space: nowrap; min-height: 28px; padding: 3px 10px; font-size: 12px; }
+
+/* a ficha lá dentro segue a largura da JANELA (e não a da tela): mesmas faixas das regras de tela acima */
+.fw-w860 .dh-head { grid-template-columns: 1fr auto; }
+.fw-w860 .dh-head__fields { grid-column: 1 / -1; grid-row: 2; }
+.fw-w860 .dh-stats { grid-template-columns: auto 1fr; }
+.fw-w860 .dh-traits { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fw-w860 .dh-cols { grid-template-columns: 1fr; }
+.fw-w640 .dh-gmhead { flex-direction: column; }
+.fw-w640 .dh-gmdif { grid-auto-flow: column; justify-content: space-between; min-width: 0; }
+.fw-w640 .dh-vitals { grid-template-columns: 1fr; }
+.fw-w640 .dh-track { grid-template-columns: 1fr; }
+.fw-w640 .dh-track__cut { grid-auto-flow: column; justify-content: space-between; border-inline: 0; border-block: 1px solid var(--dh-line); }
+.fw-w640 .dh-radar { grid-template-columns: 1fr; }
+.fw-w560 .dh-head__fields { grid-template-columns: 1fr; }
+.fw-w560 .dh-board__row { grid-template-columns: 1fr; gap: 6px; }

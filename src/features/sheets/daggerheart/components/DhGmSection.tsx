@@ -9,6 +9,8 @@ import { createGmSheet, deleteGmSheet, listGmSheets, setGmVisible, subscribeGmSh
 import { useFear } from '../services/dhFearService'
 import { rollFree } from '../services/dhRolls'
 import { Inline, RuleText, Slots, Stepper, signed, DhSelect } from './DhUi'
+import { FloatingWindow } from '../../../../shared/components/floating/FloatingWindow'
+import { useFloatingStore, useOpenIds } from '../../../../shared/components/floating/FloatingProvider'
 import { DhCounters } from './DhCounters'
 
 // ────────────────────────────────────────────────────────
@@ -27,24 +29,30 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('adversary')
-  const [openId, setOpenId] = useState<string | null>(null)
+  const fw = useFloatingStore()
+  const openIds = useOpenIds(WIN)
 
   const load = useCallback(async () => {
     try { setRows(await listGmSheets(campaignId)); setError(null) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar.') }
   }, [campaignId])
   useEffect(() => { void load(); return subscribeGmSheets(campaignId, () => { void load() }) }, [campaignId, load])
 
+  // uma ficha que sumiu (apagada, ou escondida pelo mestre) leva a janela junto
+  useEffect(() => {
+    if (!rows) return
+    for (const wid of openIds) if (!rows.some((r) => winId(r.id) === wid)) fw.close(wid)
+  }, [rows, openIds, fw])
+
   if (!isMaster && (!rows || rows.length === 0)) return null
   const list = (rows ?? []).filter((r) => r.kind === tab)
-  const open = (rows ?? []).find((r) => r.id === openId) ?? null
 
   async function create(kind: DhGmKind, data: DhAdversary | DhEnvironment) {
-    try { const row = await createGmSheet(campaignId, kind, data); setRows((r) => [...(r ?? []), row]); setOpenId(row.id) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível criar.') }
+    try { const row = await createGmSheet(campaignId, kind, data); setRows((r) => [...(r ?? []), row]); fw.open(winId(row.id)) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível criar.') }
   }
 
   async function remove(row: Row) {
     if (!(await confirmDialog({ title: `Apagar “${row.data.name}”?`, message: 'A ficha some para todos e não dá para desfazer.', confirmLabel: 'Apagar', tone: 'danger' }))) return
-    try { await deleteGmSheet(row.id); setRows((r) => (r ?? []).filter((x) => x.id !== row.id)); if (openId === row.id) setOpenId(null) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível apagar.') }
+    try { await deleteGmSheet(row.id); setRows((r) => (r ?? []).filter((x) => x.id !== row.id)); fw.close(winId(row.id)) } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível apagar.') }
   }
 
   async function toggleVisible(row: Row) {
@@ -69,7 +77,7 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
       <header className="dh-gm__head">
         <h3>{isMaster ? 'Adversários e ambientes' : 'Mostrados pelo mestre'}</h3>
         <span className="dh-seg" role="tablist" aria-label="Tipo de ficha">
-          {(Object.keys(TAB_LABEL) as Tab[]).map((t) => <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'is-on' : ''} onClick={() => { setTab(t); setOpenId(null) }}>{TAB_LABEL[t]}</button>)}
+          {(Object.keys(TAB_LABEL) as Tab[]).map((t) => <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'is-on' : ''} onClick={() => setTab(t)}>{TAB_LABEL[t]}</button>)}
         </span>
       </header>
       {error && <p className="sheet-feedback sheet-feedback--error" role="alert">{error}</p>}
@@ -86,8 +94,8 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
           {list.length === 0 && <p className="dh-empty">{isMaster ? `Nenhum ${tab === 'adversary' ? 'adversário' : 'ambiente'} ainda.` : 'Nada mostrado ainda.'}</p>}
           <div className="dh-gm__cards">
             {list.map((r) => (
-              <article key={r.id} className={`dh-gm__card${openId === r.id ? ' is-on' : ''}`}>
-                <button type="button" className="dh-gm__open" onClick={() => setOpenId(openId === r.id ? null : r.id)} aria-pressed={openId === r.id}>
+              <article key={r.id} className={`dh-gm__card${openIds.includes(winId(r.id)) ? ' is-on' : ''}`}>
+                <button type="button" className="dh-gm__open" onClick={() => fw.open(winId(r.id))} aria-pressed={openIds.includes(winId(r.id))}>
                   <b>{r.data.name}</b>
                   <small>Patamar {r.data.tier} · {r.data.kind} · Dif. {r.data.difficulty}{r.kind === 'adversary' ? ` · Vida ${(r.data as DhAdversary).hp}` : ''}</small>
                   {counterSummary(r.data.counters) && <small className="dh-gm__ctrs">{counterSummary(r.data.counters)}</small>}
@@ -103,12 +111,36 @@ export function DhGmSection({ campaignId, isMaster }: { campaignId: string; isMa
               </article>
             ))}
           </div>
-          {open && (open.kind === 'adversary'
-            ? <AdversarySheet key={open.id} row={open as GmRow<DhAdversary>} campaignId={campaignId} canEdit={isMaster} />
-            : <EnvironmentSheet key={open.id} row={open as GmRow<DhEnvironment>} campaignId={campaignId} canEdit={isMaster} />)}
+          {openIds.map((wid) => {
+            const r = (rows ?? []).find((x) => winId(x.id) === wid)
+            return r ? <GmWindow key={wid} row={r} campaignId={campaignId} canEdit={isMaster} /> : null
+          })}
         </>
       )}
     </section>
+  )
+}
+
+// ── janelas ──
+
+const WIN = 'gm:'
+const winId = (rowId: string) => `${WIN}${rowId}`
+
+/** A ficha do adversário ou do ambiente numa janela flutuante (as cores da ficha vêm do .dh-gm, então ele envolve o conteúdo). */
+function GmWindow({ row, campaignId, canEdit }: { row: Row; campaignId: string; canEdit: boolean }) {
+  const adv = row.kind === 'adversary' ? (row.data as DhAdversary) : null
+  const mini = adv
+    ? <div className="dh-minibars"><span>Vida {adv.hp - adv.hpMarked}/{adv.hp}</span><span>Fadiga {adv.stress - adv.stressMarked}/{adv.stress}</span></div>
+    : <span>Ambiente · Dif. {row.data.difficulty}</span>
+  return (
+    <FloatingWindow id={winId(row.id)} title={row.data.name} subtitle={`${row.kind === 'adversary' ? 'Adversário' : 'Ambiente'} · Patamar ${row.data.tier}`}
+      avatar={row.data.name.charAt(0).toUpperCase() || '?'} mini={mini} badge={adv ? `Vida ${adv.hp - adv.hpMarked}/${adv.hp}` : undefined}>
+      <div className="dh-gm dh-gm--win">
+        {row.kind === 'adversary'
+          ? <AdversarySheet row={row as GmRow<DhAdversary>} campaignId={campaignId} canEdit={canEdit} />
+          : <EnvironmentSheet row={row as GmRow<DhEnvironment>} campaignId={campaignId} canEdit={canEdit} />}
+      </div>
+    </FloatingWindow>
   )
 }
 
